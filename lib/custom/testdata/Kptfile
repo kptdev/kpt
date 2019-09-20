@@ -1,0 +1,34 @@
+metadata:
+  name: nginx
+commands:
+- command:
+    use: "image"
+    path: ["set"]
+    short: "set the image on an application"
+    long: |
+      Set the image on an application
+    example: |
+      # set image --old foo --new bar
+    inputs:
+    - type: string
+      name: new-image
+      required: true
+      description: "the new image to set"
+    - type: string
+      name: old-image
+      required: true
+      description: "the old image to replace"
+  pipeline:
+    filters:
+    - kind: Modifier
+      pipeline:
+      - kind: HasFilter
+        pipeline:
+        - kind: AnnotationGetter
+          key: name
+          value: '{{ arg 0 }}'
+      - kind: PathGetter
+        path: ['spec', 'template', 'spec', 'containers', '[name={{ arg 0 }}]', 'image']
+      - kind: SedFilter
+        stringMatch: '{{ input "old-image" }}'
+        replace: '{{ input "new-image" }}'

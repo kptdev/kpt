@@ -1,0 +1,31 @@
+dist: xenial
+
+language: go
+go: "1.12.x"
+go_import_path: /skaffold
+
+git:
+  submodules: false
+
+branches:
+  only:
+    - master
+
+jobs:
+  include:
+    - os: linux
+      name: "Linux"
+      script:
+        - make
+    - os: osx
+      name: "OSX"
+      script:
+        - make
+    - os: windows
+      name: "Windows"
+      env:
+        - GO111MODULE=on
+        - GOFLAGS="-mod=vendor"
+      script:
+	- make
+

@@ -1,0 +1,48 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: java
+  name: app
+spec:
+  minReadySeconds: 5
+  selector:
+    matchLabels:
+      app: java
+  template:
+    metadata:
+      labels:
+        app: java
+    spec:
+      containers:
+      - command:
+        - java
+        - -jar
+        - /app.jar
+        env:
+        - name: JAVA_OPTS
+          value: -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap
+            -Djava.security.egd=file:/dev/./urandom
+        envFrom:
+        - configMapRef:
+            name: app-config
+        image: gcr.io/project/app:version
+        imagePullPolicy: Always
+        name: app
+        ports:
+        - containerPort: 80
+      restartPolicy: Always
