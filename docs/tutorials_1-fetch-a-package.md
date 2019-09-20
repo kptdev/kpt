@@ -1,6 +1,6 @@
-## tutorials fetch-package
+## tutorials 1-fetch-a-package
 
-Tutorial for fetching a package
+Tutorial for fetching a package from a remote source
 
 ### Synopsis
 
@@ -160,13 +160,13 @@ may be fetched from sources such as git:
 
 
 ```
-tutorials fetch-package [flags]
+tutorials 1-fetch-a-package [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for fetch-package
+  -h, --help   help for 1-fetch-a-package
 ```
 
 ### SEE ALSO

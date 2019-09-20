@@ -1,4 +1,4 @@
-## tutorials update-package
+## tutorials 3-update-a-local-package
 
 Update a previously fetched package 
 
@@ -174,13 +174,13 @@ Local packages may be updated with upstream package changes.
 
 
 ```
-tutorials update-package [flags]
+tutorials 3-update-a-local-package [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for update-package
+  -h, --help   help for 3-update-a-local-package
 ```
 
 ### SEE ALSO
