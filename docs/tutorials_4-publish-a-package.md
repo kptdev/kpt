@@ -1,4 +1,4 @@
-## tutorials publish-package
+## tutorials 4-publish-a-package
 
 Publish a new package
 
@@ -17,13 +17,13 @@ package discovery.
 
 
 ```
-tutorials publish-package [flags]
+tutorials 4-publish-a-package [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for publish-package
+  -h, --help   help for 4-publish-a-package
 ```
 
 ### SEE ALSO

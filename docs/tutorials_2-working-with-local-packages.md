@@ -1,6 +1,6 @@
-## tutorials working-with-local-packages
+## tutorials 2-working-with-local-packages
 
-Working with local packages
+Tutorial for  with local packages
 
 ### Synopsis
 
@@ -52,7 +52,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
   cat prints the raw package Resources.
 
-## Format the configuration for a package
+## Format the Resources for a package (like go fmt)
 
 	$ kpt fmt wordpress/
 
@@ -136,13 +136,13 @@ Kpt provides various tools for working with local packages once they are fetched
 
 
 ```
-tutorials working-with-local-packages [flags]
+tutorials 2-working-with-local-packages [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for working-with-local-packages
+  -h, --help   help for 2-working-with-local-packages
 ```
 
 ### SEE ALSO

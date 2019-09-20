@@ -20,15 +20,15 @@ var Tutorials = &cobra.Command{
 	Use:     "tutorials",
 	Short:   `Contains tutorials for using kpt`,
 	Long:    `Contains tutorials for using kpt.`,
-	Example: `kpt tutorials fetch-package`,
+	Example: `kpt tutorials 1-fetch-a-package`,
 }
 
 func init() {
 
 	Tutorials.AddCommand(
 		&cobra.Command{
-			Use:   "fetch-package",
-			Short: "Tutorial for fetching a package",
+			Use:   "1-fetch-a-package",
+			Short: "Tutorial for fetching a package from a remote source",
 			Long: `Packages are directories of Kubernetes Resource Configuration which
 may be fetched from sources such as git:
 
@@ -187,8 +187,8 @@ may be fetched from sources such as git:
 
 	Tutorials.AddCommand(
 		&cobra.Command{
-			Use:   "working-with-local-packages",
-			Short: "Working with local packages",
+			Use:   "2-working-with-local-packages",
+			Short: "Tutorial for  with local packages",
 			Long: `Kpt provides various tools for working with local packages once they are fetched.
 
   First stage a package to work with
@@ -237,7 +237,7 @@ may be fetched from sources such as git:
 
   cat prints the raw package Resources.
 
-## Format the configuration for a package
+## Format the Resources for a package (like go fmt)
 
 	$ kpt fmt wordpress/
 
@@ -323,7 +323,7 @@ may be fetched from sources such as git:
 
 	Tutorials.AddCommand(
 		&cobra.Command{
-			Use:   "update-package",
+			Use:   "3-update-a-local-package",
 			Short: "Update a previously fetched package ",
 			Long: `Local packages may be updated with upstream package changes.
 
@@ -497,7 +497,7 @@ may be fetched from sources such as git:
 
 	Tutorials.AddCommand(
 		&cobra.Command{
-			Use:   "publish-package",
+			Use:   "4-publish-a-package",
 			Short: "Publish a new package",
 			Long: `While packages may be published as directories of raw Configuration,
 kpt supports blessing a directory with additional package metadata that can benift
