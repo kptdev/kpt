@@ -1,6 +1,6 @@
 ## tutorials 2-working-with-local-packages
 
-Tutorial for  with local packages
+Tutorial for working with local packages
 
 ### Synopsis
 
