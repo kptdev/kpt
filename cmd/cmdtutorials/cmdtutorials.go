@@ -188,7 +188,7 @@ may be fetched from sources such as git:
 	Tutorials.AddCommand(
 		&cobra.Command{
 			Use:   "2-working-with-local-packages",
-			Short: "Tutorial for  with local packages",
+			Short: "Tutorial for working with local packages",
 			Long: `Kpt provides various tools for working with local packages once they are fetched.
 
   First stage a package to work with
