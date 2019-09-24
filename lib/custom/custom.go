@@ -39,7 +39,8 @@ type CommandBuilder struct {
 func (c CommandBuilder) BuildCommands() error {
 	b, err := ioutil.ReadFile(filepath.Join(c.PkgPath, "Kptfile"))
 	if err != nil {
-		return err
+		// ok if no Kptfile, just don't have any custom commands
+		return nil
 	}
 
 	cmds := &CommandList{}
@@ -118,7 +119,7 @@ func (c CommandBuilder) BuildCommand(rc ResourceCommand) error {
 			Outputs: outputs,
 		}.Execute()
 	}
-	addCommand(c.RootCmd, cbra, append(c.CmdPath, rc.Command.Path...))
+	AddCommand(c.RootCmd, cbra, append(c.CmdPath, rc.Command.Path...))
 	return nil
 }
 
@@ -226,9 +227,9 @@ func parse(cmd Command) (*cobra.Command, Inputs, error) {
 	return cbra, inputs, nil
 }
 
-// addCommand adds the subcmd to root at the provided path.
+// AddCommand adds the subcmd to root at the provided path.
 // An empty path will add subcmd as a sub-command of root.
-func addCommand(root, subcmd *cobra.Command, path []string) {
+func AddCommand(root, subcmd *cobra.Command, path []string) {
 	next := root
 	// For each element on the Path
 	for i := range path {

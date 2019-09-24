@@ -183,7 +183,7 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			g := &TestSetupManager{
 				T: t, Name: string(u.updater),
 			}
-			//defer g.Clean()
+			defer g.Clean()
 			if !g.Init() {
 				return
 			}
@@ -426,7 +426,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 					{Data: testutil.Dataset3},
 				},
 			}
-			//defer g.Clean()
+			defer g.Clean()
 			if !g.Init() {
 				return
 			}

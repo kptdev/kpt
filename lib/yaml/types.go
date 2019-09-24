@@ -81,6 +81,12 @@ type Filter interface {
 	Filter(object *RNode) (*RNode, error)
 }
 
+type FilterFunc func(object *RNode) (*RNode, error)
+
+func (f FilterFunc) Filter(object *RNode) (*RNode, error) {
+	return f(object)
+}
+
 // RNode provides functions for manipulating Kubernetes Resources
 // Objects unmarshalled into *yaml.Nodes
 type RNode struct {

@@ -26,7 +26,6 @@ spec:
     app: wordpress
     tier: frontend
   type: NodePort
-
 ---
 apiVersion: v1
 kind: Service
