@@ -85,6 +85,10 @@ Stage the package:
 	$ kpt cockroachdb/ get replicas cockroachdb
 	5
 
+## Other commands
+
+  Explore the rest of the commands listed by -h.
+
 
 ```
 tutorials 3-modifying-local-packages [flags]

@@ -55,6 +55,19 @@ type LocalPackageReadWriter struct {
 	SetAnnotations map[string]string `yaml:"setAnnotations,omitempty"`
 }
 
+type PackageBuffer struct {
+	Nodes []*yaml.RNode
+}
+
+func (r *PackageBuffer) Read() ([]*yaml.RNode, error) {
+	return r.Nodes, nil
+}
+
+func (r *PackageBuffer) Write(nodes []*yaml.RNode) error {
+	r.Nodes = nodes
+	return nil
+}
+
 func (r LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 	return LocalPackageReader{
 		PackagePath:         r.PackagePath,
