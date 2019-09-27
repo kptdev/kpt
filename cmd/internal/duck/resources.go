@@ -18,17 +18,24 @@ import (
 	"fmt"
 	"strings"
 
-	"lib.kpt.dev/custom"
-
 	"github.com/spf13/cobra"
+	"kpt.dev/internal/pkgfile"
+	"lib.kpt.dev/custom"
 )
 
 func SetResources(resourceName, resourceType string,
 	f func(name string) []string) func(string, *cobra.Command) error {
 	return func(pkgPath string, cmd *cobra.Command) error {
 		h := helper{
+			Id:      "set-" + resourceName + "-" + resourceType,
 			pkgPath: pkgPath,
 			enabled: ContainerField,
+		}
+		if pkgPath != "" {
+			kptfile, err := pkgfile.ReadFile(pkgPath)
+			if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
+				return nil
+			}
 		}
 
 		if enabled, err := h.isEnabled(); err != nil || !enabled {
@@ -75,8 +82,15 @@ func GetResources(resourceName, resourceType string,
 	f func(name string) []string) func(pkgPath string, cmd *cobra.Command) error {
 	return func(pkgPath string, cmd *cobra.Command) error {
 		h := helper{
+			Id:      "get-" + resourceName + "-" + resourceType,
 			pkgPath: pkgPath,
 			enabled: ContainerField,
+		}
+		if pkgPath != "" {
+			kptfile, err := pkgfile.ReadFile(pkgPath)
+			if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
+				return nil
+			}
 		}
 
 		if enabled, err := h.isEnabled(); err != nil || !enabled {

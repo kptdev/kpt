@@ -21,8 +21,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"kpt.dev/cmdreconcile"
-
 	"github.com/spf13/cobra"
 	"kpt.dev/cmdbless"
 	"kpt.dev/cmdcat"
@@ -34,6 +32,8 @@ import (
 	"kpt.dev/cmdgrep"
 	"kpt.dev/cmdhelp"
 	"kpt.dev/cmdman"
+	"kpt.dev/cmdmerge"
+	"kpt.dev/cmdreconcile"
 	"kpt.dev/cmdtree"
 	"kpt.dev/cmdtutorials"
 	"kpt.dev/cmdupdate"
@@ -62,6 +62,7 @@ func main() {
 	cmd.AddCommand(cmdget.Cmd().C)
 	cmd.AddCommand(cmdbless.Cmd().C)
 	cmd.AddCommand(cmdman.Cmd().C)
+	cmd.AddCommand(cmdmerge.Cmd().C)
 	cmd.AddCommand(cmdreconcile.Cmd().C)
 	cmd.AddCommand(cmdtree.Cmd().C)
 	cmd.AddCommand(cmdupdate.Cmd().C)

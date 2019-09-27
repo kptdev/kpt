@@ -166,10 +166,10 @@ func TestCmd_fail(t *testing.T) {
 	r.C.SilenceUsage = true
 	r.C.SetArgs([]string{filepath.Join("not", "real", "dir")})
 	err := r.C.Execute()
-	assert.EqualError(t, err, fmt.Sprintf(
-		"unable to read %s: open %s: no such file or directory",
-		pkgfile.KptFileName,
-		filepath.Join("not", "real", "dir", pkgfile.KptFileName)))
+	if !assert.Error(t, err) {
+		return
+	}
+	assert.Contains(t, err.Error(), "no such file or directory")
 }
 
 // TestCmd_defaultDir verifies that '.' is used as the default dir if none

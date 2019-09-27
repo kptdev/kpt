@@ -473,8 +473,11 @@ func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 	}
 
 	if rn.YNode().Kind != kind {
+		s, _ := rn.String()
 		return fmt.Errorf(
-			"wrong Node Kind expected: %v was %v", kind, rn.YNode().Kind)
+			"wrong Node Kind for %s expected: %v was %v: value: {%s}",
+			strings.Join(rn.FieldPath(), "."),
+			kind, rn.YNode().Kind, strings.TrimSpace(s))
 	}
 
 	if kind == yaml.MappingNode {

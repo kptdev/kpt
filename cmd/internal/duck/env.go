@@ -19,13 +19,21 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"kpt.dev/internal/pkgfile"
 	"lib.kpt.dev/custom"
 )
 
 func SetEnv(pkgPath string, cmd *cobra.Command) error {
 	h := helper{
+		Id:      "set-env",
 		pkgPath: pkgPath,
 		enabled: ContainerField,
+	}
+	if pkgPath != "" {
+		kptfile, err := pkgfile.ReadFile(pkgPath)
+		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
+			return nil
+		}
 	}
 
 	if enabled, err := h.isEnabled(); err != nil || !enabled {
@@ -71,8 +79,15 @@ Command is enabled for a package by having a Resource with the field: %s
 
 func GetEnv(pkgPath string, cmd *cobra.Command) error {
 	h := helper{
+		Id:      "get-env",
 		pkgPath: pkgPath,
 		enabled: ContainerField,
+	}
+	if pkgPath != "" {
+		kptfile, err := pkgfile.ReadFile(pkgPath)
+		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
+			return nil
+		}
 	}
 
 	if enabled, err := h.isEnabled(); err != nil || !enabled {

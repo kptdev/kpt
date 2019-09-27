@@ -32,6 +32,7 @@ Description:
 * [kpt get](kpt_get.md)	 - Fetch a package from a git repository
 * [kpt grep](kpt_grep.md)	 - Search for matching Resources in a package
 * [kpt man](kpt_man.md)	 - Format and display package documentation if it exists
+* [kpt merge](kpt_merge.md)	 - Merge Resource configuration files
 * [kpt reconcile](kpt_reconcile.md)	 - Reconcile runs transformers against the package Resources
 * [kpt tree](kpt_tree.md)	 - Display package Resource structure
 * [kpt update](kpt_update.md)	 - Update a local package with changes from a remote source repo

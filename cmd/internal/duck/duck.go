@@ -42,7 +42,6 @@ func AddCommands(pkgPath string, root *cobra.Command) error {
 	for i := range commands {
 		if err := commands[i](pkgPath, root); err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
-			return err
 		}
 	}
 	return nil
@@ -96,6 +95,8 @@ func EnvVarField(container, variable string) []string {
 type helper struct {
 	command *cobra.Command
 
+	Id string
+
 	// pkgPath is the path to a kpt package
 	pkgPath string
 
@@ -122,9 +123,8 @@ func (h helper) isEnabled() (bool, error) {
 	err := kio.Pipeline{
 		Inputs: []kio.Reader{kio.LocalPackageReader{PackagePath: h.pkgPath}},
 		Filters: []kio.Filter{
-			kio.MatchFilter{
-				Filters: []yaml.YFilter{{Filter: yaml.Lookup(h.enabled...)}},
-			},
+			kio.MatchFilter{Filters: []yaml.YFilter{{Filter: yaml.Lookup(h.enabled...)}}},
+			kio.MatchFilter{Filters: []yaml.YFilter{{Filter: h}}},
 		},
 		Outputs: []kio.Writer{kio.WriterFunc(func(r []*yaml.RNode) error {
 			if len(r) > 0 {
@@ -134,6 +134,18 @@ func (h helper) isEnabled() (bool, error) {
 		})},
 	}.Execute()
 	return enabled, err
+}
+
+// Filter returns nil if the command is not enabled for the Resource
+func (h helper) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+	meta, err := object.GetMeta()
+	if err != nil {
+		return nil, err
+	}
+	if _, found := meta.Annotations["kpt.dev/duck/"+h.Id]; found {
+		return nil, nil
+	}
+	return object, nil
 }
 
 // get prints the value of the field to stdOut
@@ -146,6 +158,7 @@ func (h helper) get() error {
 		{Filter: yaml.Match(h.name)},
 	})
 	match = append(match, []yaml.YFilter{{Filter: yaml.Lookup(h.enabled...)}})
+	match = append(match, []yaml.YFilter{{Filter: h}})
 
 	found := false
 	err := kio.Pipeline{
@@ -185,6 +198,7 @@ func (h helper) set() error {
 		{Filter: yaml.Match(h.name)},
 	})
 	match = append(match, []yaml.YFilter{{Filter: yaml.Lookup(h.enabled...)}})
+	match = append(match, []yaml.YFilter{{Filter: h}})
 
 	found := false
 	foundFunc := func(object *yaml.RNode) (*yaml.RNode, error) {

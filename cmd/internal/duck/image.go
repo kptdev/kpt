@@ -18,15 +18,22 @@ import (
 	"fmt"
 	"strings"
 
-	"lib.kpt.dev/custom"
-
 	"github.com/spf13/cobra"
+	"kpt.dev/internal/pkgfile"
+	"lib.kpt.dev/custom"
 )
 
 func SetImage(pkgPath string, cmd *cobra.Command) error {
 	h := helper{
+		Id:      "set-image",
 		pkgPath: pkgPath,
 		enabled: ContainerField,
+	}
+	if pkgPath != "" {
+		kptfile, err := pkgfile.ReadFile(pkgPath)
+		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
+			return nil
+		}
 	}
 
 	if enabled, err := h.isEnabled(); err != nil || !enabled {
@@ -69,8 +76,15 @@ Command is enabled for a package by having a Resource with the field: %s
 
 func GetImage(pkgPath string, cmd *cobra.Command) error {
 	h := helper{
+		Id:      "get-image",
 		pkgPath: pkgPath,
 		enabled: ContainerField,
+	}
+	if pkgPath != "" {
+		kptfile, err := pkgfile.ReadFile(pkgPath)
+		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
+			return nil
+		}
 	}
 
 	if enabled, err := h.isEnabled(); err != nil || !enabled {
