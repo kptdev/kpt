@@ -36,12 +36,14 @@ tidy:
 	(cd lib/ && go mod tidy)
 
 license:
-	(cd cmd/ && go run github.com/google/addlicense  -y 2019 -l apache .)
-	(cd lib/ &&  go run github.com/google/addlicense  -y 2019 -l apache .)
+	(which addlicense || go get github.com/google/addlicense)
+	(cd cmd/ && addlicense  -y 2019 -l apache .)
+	(cd lib/ &&  addlicense  -y 2019 -l apache .)
 
 lint:
-	(cd cmd/ && go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./...)
-	(cd lib/ && go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./...)
+	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0)
+	(cd cmd/ && golangci-lint run ./...)
+	(cd lib/ && golangci-lint run ./...)
 
 test:
 	(cd cmd/ && go test -cover ./...)
