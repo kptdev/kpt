@@ -30,17 +30,24 @@ var Transformers = &cobra.Command{
   Transformers, passing in both the Transformer Resource to the container (via Env Var)
   and the full set of Resources in the package (via stdin).  The Transformer writes out
   the new set of package resources to its stdout, and these are written back to the package.
+  Note: the container has the network disabled (loopback only), so it cannot fetch remote files.
 
   Transformers may be used to:
   - Generate new Resources from abstractions
   - Apply cross-cutting values to all Resource in the package
   - Enforce cross-cutting policy constraints amongst all Resource in the package
 
-  Transformers may be published as containers whose CMD:
+  Examples of Transformers:
+  - Replace a field on some / all Resources from the transformer config or an environment variable
+  - Define abstractions and generate Resources using templates, DSLs, typescript programs, etc
+  - Validate all container images use a tag
+  - Validate all workloads have a PodDisruptionBudget
+
+ Transformers may be published as containers whose CMD:
   - Reads the collection of Resources from STDIN
   - Reads the transformer configuration from the API_CONFIG env var.
   - Writes the set of Resources to create or update to STDOUT
 
-  See https://github.com/GoogleContainerTools/kpt/testutil/transformer for Transformer example.
+  See https://github.com/GoogleContainerTools/kpt/testutil/transformer for an Transformer example.
 `,
 }

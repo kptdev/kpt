@@ -458,6 +458,15 @@ func IsFoundOrError(rn *RNode, err error) bool {
 	return rn != nil || err != nil
 }
 
+func ErrorIfAnyInvalid(kind yaml.Kind, rn ...*RNode) error {
+	for i := range rn {
+		if err := ErrorIfInvalid(rn[i], kind); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 	if rn == nil || rn.YNode() == nil {
 		return fmt.Errorf("missing value")
