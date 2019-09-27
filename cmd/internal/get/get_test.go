@@ -82,8 +82,8 @@ func TestCommand_Run(t *testing.T) {
 // - KptFile should have the subdir listed
 func TestCommand_Run_subdir(t *testing.T) {
 	subdir := "java"
-	g, dir, _ := testutil.SetupDefaultRepoAndWorkspace(t)
-	//defer clean()
+	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	defer clean()
 
 	err := Command{Git: pkgfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},

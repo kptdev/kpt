@@ -28,6 +28,54 @@ var requiredResourcePackageAnnotations = []string{
 	IndexAnnotation, ModeAnnotation, PathAnnotation,
 }
 
+type LocalPackageReadWriter struct {
+	Kind string `yaml:"kind,omitempty"`
+
+	// PackagePath is the path to the package directory.
+	PackagePath string `yaml:"path,omitempty"`
+
+	// MatchFilesGlob configures Read to only read Resources from files matching any of the
+	// provided patterns.
+	// Defaults to ["*.yaml", "*.yml"] if empty.  To match all files specify ["*"].
+	MatchFilesGlob []string `yaml:"matchFilesGlob,omitempty"`
+
+	// IncludeSubpackages will configure Read to read Resources from subpackages.
+	// Subpackages are identified by having a Kptfile.
+	IncludeSubpackages bool `yaml:"includeSubpackages,omitempty"`
+
+	// ErrorIfNonResources will configure Read to throw an error if yaml missing missing
+	// apiVersion or kind is read.
+	ErrorIfNonResources bool `yaml:"errorIfNonResources,omitempty"`
+
+	// OmitReaderAnnotations will cause the reader to skip annotating Resources with the file
+	// path and mode.
+	OmitReaderAnnotations bool `yaml:"omitReaderAnnotations,omitempty"`
+
+	// SetAnnotations are annotations to set on the Resources as they are read.
+	SetAnnotations map[string]string `yaml:"setAnnotations,omitempty"`
+}
+
+func (r LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
+	return LocalPackageReader{
+		PackagePath:         r.PackagePath,
+		MatchFilesGlob:      r.MatchFilesGlob,
+		IncludeSubpackages:  r.IncludeSubpackages,
+		ErrorIfNonResources: r.ErrorIfNonResources,
+		SetAnnotations:      r.SetAnnotations,
+	}.Read()
+}
+
+func (r LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
+	var clear []string
+	for k := range r.SetAnnotations {
+		clear = append(clear, k)
+	}
+	return LocalPackageWriter{
+		PackagePath:      r.PackagePath,
+		ClearAnnotations: clear,
+	}.Write(nodes)
+}
+
 // LocalPackageReader reads ResourceNodes from a local package.
 type LocalPackageReader struct {
 	Kind string `yaml:"kind,omitempty"`

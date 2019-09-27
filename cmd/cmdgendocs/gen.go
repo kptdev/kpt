@@ -17,6 +17,7 @@ package cmdgendocs
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+	"kpt.dev/internal/duck"
 )
 
 var noop = func(cmd *cobra.Command, args []string) {}
@@ -25,6 +26,7 @@ func getHelpTopics(cmd *cobra.Command, dir string) error {
 	var tutorials *cobra.Command
 	var apis *cobra.Command
 	for _, c := range cmd.Commands() {
+		c.DisableAutoGenTag = true
 		if c.Use == "tutorials" {
 			tutorials = c
 			// so it gets picked up for gen
@@ -55,5 +57,26 @@ func getHelpTopics(cmd *cobra.Command, dir string) error {
 			return err
 		}
 	}
+
+	// do duck-typed commands
+	cmd = duck.HelpCommand
+	cmd.DisableAutoGenTag = true
+	if err := duck.AddCommands("", cmd); err != nil {
+		return err
+	}
+	// move the commands up a level
+	for _, c := range cmd.Commands() {
+		if c.Name() == "get" || c.Name() == "set" {
+			cmd.RemoveCommand(c)
+			for _, s := range c.Commands() {
+				s.Use = c.Name() + "-" + s.Use
+			}
+			cmd.AddCommand(c.Commands()...)
+		}
+	}
+	if err := doc.GenMarkdownTree(cmd, dir); err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -80,6 +80,53 @@ func (f Modifier) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	return input, nil
 }
 
+type MatchModifyFilter struct {
+	Kind string `yaml:"kind,omitempty"`
+
+	MatchFilters []yaml.YFilters `yaml:"match,omitempty"`
+
+	ModifyFilters yaml.YFilters `yaml:"modify,omitempty"`
+}
+
+var _ Filter = &MatchModifyFilter{}
+
+func (f MatchModifyFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	var matches = input
+	var err error
+	for _, filter := range f.MatchFilters {
+		matches, err = MatchFilter{Filters: filter}.Filter(matches)
+		if err != nil {
+			return nil, err
+		}
+	}
+	_, err = Modifier{Filters: f.ModifyFilters}.Filter(matches)
+	if err != nil {
+		return nil, err
+	}
+	return input, nil
+}
+
+type MatchFilter struct {
+	Kind string `yaml:"kind,omitempty"`
+
+	Filters yaml.YFilters `yaml:"pipeline,omitempty"`
+}
+
+var _ Filter = &MatchFilter{}
+
+func (f MatchFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	var output []*yaml.RNode
+	for i := range input {
+		if v, err := input[i].Pipe(f.Filters.Filters()...); err != nil {
+			return nil, err
+		} else if v == nil {
+			continue
+		}
+		output = append(output, input[i])
+	}
+	return output, nil
+}
+
 type FilenameFmtVerb string
 
 const (

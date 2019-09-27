@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -189,8 +188,6 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 	return g.CopyAddData(data)
 }
 
-var testIndex uint32
-
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
 func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 	// configure the path to the test dataset
@@ -205,8 +202,7 @@ func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 	g.DatasetDirectory = ds
 
 	// create the test repo directory
-	dir, err := ioutil.TempDir("",
-		fmt.Sprintf("%s-upstream-%v-", TmpDirPrefix, atomic.AddUint32(&testIndex, 1)))
+	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-upstream-", TmpDirPrefix))
 	if err != nil {
 		return err
 	}
@@ -251,8 +247,7 @@ func SetupDefaultRepoAndWorkspace(t *testing.T) (*TestGitRepo, string, func()) {
 	assert.NoError(t, err)
 
 	// setup the directory to clone to
-	dir, err := ioutil.TempDir("",
-		fmt.Sprintf("test-kpt-local-%v-", atomic.AddUint32(&testIndex, 1)))
+	dir, err := ioutil.TempDir("", "test-kpt-local-")
 	assert.NoError(t, err)
 	err = os.Chdir(dir)
 	assert.NoError(t, err)

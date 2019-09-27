@@ -35,6 +35,7 @@ import (
 	"kpt.dev/cmdtree"
 	"kpt.dev/cmdtutorials"
 	"kpt.dev/cmdupdate"
+	"kpt.dev/internal/duck"
 	"lib.kpt.dev/custom"
 )
 
@@ -67,14 +68,43 @@ func main() {
 	cmd.AddCommand(cmdhelp.Kptfile)
 	cmd.AddCommand(cmdhelp.PackageStructure)
 	cmd.AddCommand(cmdtutorials.Tutorials)
+	cmd.AddCommand(duck.HelpCommand)
 
 	if len(os.Args) > 1 {
-		if f, err := os.Stat(os.Args[1]); err == nil && f.IsDir() {
-			os.Args[1] = strings.TrimSuffix(os.Args[1], "/")
-			os.Args[1] = strings.TrimPrefix(os.Args[1], "./")
-			name := filepath.Base(os.Args[1])
+		arg := os.Args[1]
+		if arg == "help" {
+			arg = os.Args[2]
+		}
+
+		if f, err := os.Stat(arg); err == nil && f.IsDir() {
+			arg = strings.TrimSuffix(arg, "/")
+			arg = strings.TrimPrefix(arg, "./")
+			if os.Args[1] == "help" {
+				os.Args[2] = arg
+			} else {
+				os.Args[1] = arg
+			}
+			name := filepath.Base(arg)
+
+			cmd.AddCommand(&cobra.Command{
+				Use:   arg,
+				Short: fmt.Sprintf("%s package specific commands", arg),
+				Long: fmt.Sprintf(`%s package specific commands.
+
+Contains commands enabled specifically for the %s package -- either through duck-typing off
+the structure of the Resources, or through custom commands published as part of the package
+itself.`, arg, arg),
+			})
+
+			// Duck commands
+			if err := duck.AddCommands(arg, cmd); err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				os.Exit(1)
+			}
+
+			// Custom commands
 			err := custom.CommandBuilder{
-				PkgPath: os.Args[1],
+				PkgPath: arg,
 				RootCmd: cmd,
 				Name:    name,
 				CmdPath: []string{name},

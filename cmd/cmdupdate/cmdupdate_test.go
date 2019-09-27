@@ -15,7 +15,6 @@
 package cmdupdate_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,10 +32,9 @@ import (
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, dir, _ := testutil.SetupDefaultRepoAndWorkspace(t)
-	//defer clean()
+	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	defer clean()
 	dest := filepath.Join(dir, g.RepoName)
-	fmt.Println(dir)
 
 	// clone the repo
 	getCmd := cmdget.Cmd()

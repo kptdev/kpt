@@ -75,6 +75,12 @@ type Writer interface {
 	Write([]*yaml.RNode) error
 }
 
+type WriterFunc func([]*yaml.RNode) error
+
+func (fn WriterFunc) Write(o []*yaml.RNode) error {
+	return fn(o)
+}
+
 // Filter modifies a collection of Resource Configuration by returning the modified slice.
 // When possible, Filters should be serializable to yaml so that they can be described
 // declaratively as data.

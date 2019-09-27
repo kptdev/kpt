@@ -321,9 +321,99 @@ may be fetched from sources such as git:
 `,
 		})
 
+	Tutorials.AddCommand(&cobra.Command{
+		Use:   "3-modifying-local-packages",
+		Short: "Use package-specific commands to modify package contents",
+		Long: `Resources in local packages may be modified using commands which are dynamically
+enabled based on the package content -- e.g. the 'set image' command is available if the 
+package contains a Resource with 'spec.template.spec.containers'.
+
+Stage the package:
+
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+
+## Show the set of commands available for the package
+
+	$ kpt cockroachdb/ -h
+	...
+	Available Commands:
+	  get         
+	  set
+	...
+
+  2 subcommand groups are shown
+
+	$ kpt cockroachdb/ get -h
+	...
+	Available Commands:
+	  cpu-limits          Get cpu-limits for a container
+	  cpu-reservations    Get cpu-reservations for a container
+	  env                 Get an environment variable from a container
+	  image               Get image for a container
+	  memory-limits       Get memory-limits for a container
+	  memory-reservations Get memory-reservations for a container
+	  replicas            Get the replicas for a Resource
+
+  This is the set of get commands enabled for the cockroachdb package
+
+
+	$ kpt cockroachdb/ set -h
+	...
+	Available Commands:
+	  cpu-limits          Set cpu-limits for a container
+	  cpu-reservations    Set cpu-reservations for a container
+	  env                 Set an environment variable on a container
+	  image               Set the image on a container
+	  memory-limits       Set memory-limits for a container
+	  memory-reservations Set memory-reservations for a container
+	  replicas            Set the replicas for a Resource
+
+
+  This is the set of set commands enabled for the cockroachdb package
+
+
+## Get and Set the image
+
+	$ kpt tree cockroachdb/
+	cockroachdb
+	├── [cockroachdb-statefulset.yaml]  v1.Service cockroachdb
+	├── [cockroachdb-statefulset.yaml]  apps/v1.StatefulSet cockroachdb
+	├── [cockroachdb-statefulset.yaml]  policy/v1beta1.PodDisruptionBudget cockroachdb-budget
+	└── [cockroachdb-statefulset.yaml]  v1.Service cockroachdb-public
+
+  tree listed the Resources to operate against
+
+	$ kpt cockroachdb/ get image cockroachdb
+	cockroachdb/cockroach:v1.1.0
+
+  get image printed the container image for the Resource + Container matching the name "cockroachdb"
+
+	$ kpt cockroachdb/ set image cockroachdb --value cockroachdb/cockroach:v1.1.1
+	$ kpt cockroachdb/ get image cockroachdb
+	cockroachdb/cockroach:v1.1.1
+
+  set image set the container image to a new value
+
+## Get and Set the replicas
+
+	$ kpt cockroachdb/ get replicas cockroachdb
+	3
+
+  get replicas printed the current replica count
+
+	$ kpt cockroachdb/ set replicas cockroachdb --value 5
+	$ kpt cockroachdb/ get replicas cockroachdb
+	5
+
+## Other commands
+
+  Explore the rest of the commands listed by -h.
+`,
+	})
+
 	Tutorials.AddCommand(
 		&cobra.Command{
-			Use:   "3-update-a-local-package",
+			Use:   "4-update-a-local-package",
 			Short: "Update a previously fetched package ",
 			Long: `Local packages may be updated with upstream package changes.
 
@@ -434,7 +524,7 @@ may be fetched from sources such as git:
 
   Make local edits to the package.  Edit a field that will be changed upstream.
 
-	sed -i '' 's/replicas: 3/replicas: 11/g' ./cockroachdb/cockroachdb-statefulset.yaml
+	kpt cockroachdb set replicas cockroachdb --value 11
 	git add . && git commit -m 'change cockroachdb replicas from 3 to 11'
 
   View the 3way diff -- requires a diff viewer capable of 3way diffs (e.g. meld)
@@ -497,7 +587,7 @@ may be fetched from sources such as git:
 
 	Tutorials.AddCommand(
 		&cobra.Command{
-			Use:   "4-publish-a-package",
+			Use:   "5-publish-a-package",
 			Short: "Publish a new package",
 			Long: `While packages may be published as directories of raw Configuration,
 kpt supports blessing a directory with additional package metadata that can benift

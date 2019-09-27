@@ -46,6 +46,7 @@ Built-in documentation has also been rendered as markdown files for friendly web
 
 - Tutorials: [tutorials](docs/tutorials.md)
 - Command Reference: [docs](docs/kpt.md)
+- Package Duck-Typed Command Reference: [docs](docs/duck-typed.md)
 
 ## Lead Developers
 
