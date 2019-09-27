@@ -41,10 +41,8 @@ var PackageStructure = &cobra.Command{
 
   A configuration directory may be blessed with recommended kpt package metadata
   files using 'kpt bless dir/'
-
-Examples:
-
-  # * 1 resource per-file
+ `,
+	Example: ` # * 1 resource per-file
   # * flat structure
   
   $ tree cockroachdb
@@ -69,5 +67,6 @@ Examples:
   │   ├── Kptfile
   │   └── mysql.yaml
   └── wordpress
-      └── wordpress.yaml`,
+      └── wordpress.yaml
+`,
 }

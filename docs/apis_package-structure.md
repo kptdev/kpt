@@ -27,10 +27,16 @@ Description:
 
   A configuration directory may be blessed with recommended kpt package metadata
   files using 'kpt bless dir/'
+ 
 
-Examples:
+```
+apis package-structure [flags]
+```
 
-  # * 1 resource per-file
+### Examples
+
+```
+ # * 1 resource per-file
   # * flat structure
   
   $ tree cockroachdb
@@ -57,8 +63,6 @@ Examples:
   └── wordpress
       └── wordpress.yaml
 
-```
-apis package-structure [flags]
 ```
 
 ### Options
