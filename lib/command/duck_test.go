@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package duck
+package command
 
 import (
 	"bytes"
@@ -22,9 +22,10 @@ import (
 	"strings"
 	"testing"
 
+	"lib.kpt.dev/testutil"
+
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"kpt.dev/util/testutil"
 )
 
 func Test(t *testing.T) {

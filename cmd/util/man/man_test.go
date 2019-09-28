@@ -24,7 +24,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	. "kpt.dev/util/man"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/kptfile"
 )
 
 // TestMan_Execute verifies that Execute will find the man page file,
@@ -34,7 +34,7 @@ func TestMan_Execute(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, pkgfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -195,7 +195,7 @@ func TestMan_Execute_failNoManPage(t *testing.T) {
 	}
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, pkgfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -228,7 +228,7 @@ func TestMan_Execute_failBadPath(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, pkgfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -257,7 +257,7 @@ func TestMan_Execute_failLocation(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, pkgfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:

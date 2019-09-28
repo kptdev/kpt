@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package grep_test
+package filters_test
 
 import (
 	"bytes"
 	"testing"
 
-	"lib.kpt.dev/kio/filters"
-
-	"lib.kpt.dev/yaml"
-
 	"github.com/stretchr/testify/assert"
-	"lib.kpt.dev/grep"
 	"lib.kpt.dev/kio"
+	. "lib.kpt.dev/kio/filters"
+	"lib.kpt.dev/yaml"
 )
 
-func TestFilter_Filter(t *testing.T) {
+func TestGrepFilter_Filter(t *testing.T) {
 	in := `kind: Deployment
 metadata:
   labels:
@@ -60,7 +57,7 @@ spec:
 	out := &bytes.Buffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
-		Filters: []kio.Filter{grep.Filter{Path: []string{"metadata", "name"}, Value: "foo"}},
+		Filters: []kio.Filter{GrepFilter{Path: []string{"metadata", "name"}, Value: "foo"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
@@ -92,7 +89,7 @@ spec:
 	out = &bytes.Buffer{}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
-		Filters: []kio.Filter{grep.Filter{Path: []string{"kind"}, Value: "Deployment"}},
+		Filters: []kio.Filter{GrepFilter{Path: []string{"kind"}, Value: "Deployment"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
@@ -124,7 +121,7 @@ spec:
 	out = &bytes.Buffer{}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
-		Filters: []kio.Filter{grep.Filter{Path: []string{"spec", "replicas"}, Value: "3"}},
+		Filters: []kio.Filter{GrepFilter{Path: []string{"spec", "replicas"}, Value: "3"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
@@ -146,7 +143,7 @@ spec:
 	out = &bytes.Buffer{}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
-		Filters: []kio.Filter{grep.Filter{Path: []string{"spec", "not-present"}, Value: "3"}},
+		Filters: []kio.Filter{GrepFilter{Path: []string{"spec", "not-present"}, Value: "3"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
@@ -157,12 +154,12 @@ spec:
 	}
 }
 
-func TestFilter_init(t *testing.T) {
-	assert.Equal(t, grep.Filter{}, filters.Filters["GrepFilter"]())
+func TestGrepFilter_init(t *testing.T) {
+	assert.Equal(t, GrepFilter{}, Filters["GrepFilter"]())
 }
 
-func TestFilter_error(t *testing.T) {
-	_, err := grep.Filter{Path: []string{"metadata", "name"},
+func TestGrepFilter_error(t *testing.T) {
+	_, err := GrepFilter{Path: []string{"metadata", "name"},
 		Value: "foo"}.Filter([]*yaml.RNode{{}})
 	if !assert.Error(t, err) {
 		t.FailNow()

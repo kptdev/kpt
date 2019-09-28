@@ -18,8 +18,9 @@ import (
 	"bytes"
 	"testing"
 
+	"lib.kpt.dev/kio/filters"
+
 	"github.com/stretchr/testify/assert"
-	"lib.kpt.dev/fmtr"
 	"lib.kpt.dev/yaml"
 	. "lib.kpt.dev/yaml/walk/merge"
 )
@@ -104,13 +105,13 @@ spec:
         - name: DEMO_FAREWELL
           value: "Such a sweet sorrow"
 `
-	b, err := fmtr.FormatInput(bytes.NewBufferString(expected))
+	b, err := filters.FormatInput(bytes.NewBufferString(expected))
 	if !assert.NoError(t, err) {
 		return
 	}
 	expected = b.String()
 
-	b, err = fmtr.FormatInput(bytes.NewBufferString(actual))
+	b, err = filters.FormatInput(bytes.NewBufferString(actual))
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -160,13 +161,13 @@ spec:
         - name: DEMO_FAREWELL
           value: "Such a sweet sorrow"
 `
-	b, err := fmtr.FormatInput(bytes.NewBufferString(expected))
+	b, err := filters.FormatInput(bytes.NewBufferString(expected))
 	if !assert.NoError(t, err) {
 		return
 	}
 	expected = b.String()
 
-	b, err = fmtr.FormatInput(bytes.NewBufferString(actual))
+	b, err = filters.FormatInput(bytes.NewBufferString(actual))
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -229,13 +230,13 @@ spec:
         - name: DEMO_FAREWELL
           value: "Such a sweet sorrow"
 `
-	b, err := fmtr.FormatInput(bytes.NewBufferString(expected))
+	b, err := filters.FormatInput(bytes.NewBufferString(expected))
 	if !assert.NoError(t, err) {
 		return
 	}
 	expected = b.String()
 
-	b, err = fmtr.FormatInput(bytes.NewBufferString(actual))
+	b, err = filters.FormatInput(bytes.NewBufferString(actual))
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -300,13 +301,13 @@ spec:
           value: "Another Env Not In The Dest"
 `
 
-	b, err := fmtr.FormatInput(bytes.NewBufferString(expected))
+	b, err := filters.FormatInput(bytes.NewBufferString(expected))
 	if !assert.NoError(t, err) {
 		return
 	}
 	expected = b.String()
 
-	b, err = fmtr.FormatInput(bytes.NewBufferString(actual))
+	b, err = filters.FormatInput(bytes.NewBufferString(actual))
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -365,13 +366,13 @@ spec:
           value: "Such a sweet sorrow"
 `
 
-	b, err := fmtr.FormatInput(bytes.NewBufferString(expected))
+	b, err := filters.FormatInput(bytes.NewBufferString(expected))
 	if !assert.NoError(t, err) {
 		return
 	}
 	expected = b.String()
 
-	b, err = fmtr.FormatInput(bytes.NewBufferString(actual))
+	b, err = filters.FormatInput(bytes.NewBufferString(actual))
 	if !assert.NoError(t, err) {
 		return
 	}

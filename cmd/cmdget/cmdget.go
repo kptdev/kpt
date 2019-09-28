@@ -22,11 +22,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"lib.kpt.dev/kio/filters"
-
 	"github.com/spf13/cobra"
 	"kpt.dev/util/get"
 	"kpt.dev/util/get/getioreader"
+	"lib.kpt.dev/kio/filters"
 )
 
 // Cmd returns a command runner

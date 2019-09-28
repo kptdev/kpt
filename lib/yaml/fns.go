@@ -385,7 +385,7 @@ type FieldSetter struct {
 	StringValue string `yaml:"stringValue,omitempty"`
 }
 
-// FieldSetter returns an Filter that sets the named field to the given value.
+// FieldSetter returns an GrepFilter that sets the named field to the given value.
 func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 	if s.StringValue != "" && s.Value == nil {
 		s.Value = NewScalarRNode(s.StringValue)

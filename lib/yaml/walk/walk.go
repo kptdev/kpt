@@ -60,7 +60,7 @@ type Visitor interface {
 	SetComments(source, dest *yaml.RNode) error
 }
 
-// NoOp is returned if Filter should do nothing after calling Set
+// NoOp is returned if GrepFilter should do nothing after calling Set
 var NoOp *yaml.RNode = nil
 
 // DefaultVisitor is a no-op visitor.
@@ -88,9 +88,9 @@ func (DefaultVisitor) SetComments(source, dest *yaml.RNode) error {
 	return nil
 }
 
-// Filter walks the Source RNode and modifies the RNode provided to Filter.
+// GrepFilter walks the Source RNode and modifies the RNode provided to GrepFilter.
 type Filter struct {
-	// Visitor is invoked by Filter
+	// Visitor is invoked by GrepFilter
 	Visitor
 
 	// Source is the RNode to walk.  All Source fields and associative list elements
@@ -101,7 +101,7 @@ type Filter struct {
 	Path []string
 }
 
-// Filter implements yaml.Filter
+// GrepFilter implements yaml.GrepFilter
 func (l Filter) Filter(dest *yaml.RNode) (*yaml.RNode, error) {
 	// invoke the handler for the corresponding node type
 	switch dest.YNode().Kind {

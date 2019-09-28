@@ -12,28 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package grep
+package filters
 
 import (
-	"lib.kpt.dev/kio/filters"
-	"lib.kpt.dev/yaml"
-
 	"lib.kpt.dev/kio"
+	"lib.kpt.dev/yaml"
 )
 
-func init() {
-	filters.Filters["GrepFilter"] = func() kio.Filter { return Filter{} }
-}
-
-// Filter filters RNodes with a matching field
-type Filter struct {
+// GrepFilter filters RNodes with a matching field
+type GrepFilter struct {
 	Path  []string `yaml:"path,omitempty"`
 	Value string   `yaml:"value,omitempty"`
 }
 
-var _ kio.Filter = Filter{}
+var _ kio.Filter = GrepFilter{}
 
-func (f Filter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (f GrepFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	var output kio.ResourceNodeSlice
 	for i := range input {
 		node := input[i]

@@ -17,7 +17,7 @@ package cmdgendocs
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
-	"kpt.dev/util/duck"
+	"lib.kpt.dev/command"
 )
 
 var noop = func(cmd *cobra.Command, args []string) {}
@@ -59,9 +59,9 @@ func getHelpTopics(cmd *cobra.Command, dir string) error {
 	}
 
 	// do duck-typed commands
-	cmd = duck.HelpCommand
+	cmd = command.HelpCommand
 	cmd.DisableAutoGenTag = true
-	if err := duck.AddCommands("", cmd); err != nil {
+	if err := command.AddCommands("", cmd); err != nil {
 		return err
 	}
 	// move the commands up a level

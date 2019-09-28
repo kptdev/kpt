@@ -39,7 +39,7 @@ var Filters = map[string]func() Filter{
 	"TeePiper":          func() Filter { return &TeePiper{} },
 }
 
-// YFilter wraps the Filter interface so it can be unmarshalled into a struct.
+// YFilter wraps the GrepFilter interface so it can be unmarshalled into a struct.
 type YFilter struct {
 	Filter
 }
@@ -59,7 +59,7 @@ func (y *YFilter) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			knownFilters = append(knownFilters, k)
 		}
 		sort.Strings(knownFilters)
-		return fmt.Errorf("unsupported Filter Kind %s:  may be one of: [%s]",
+		return fmt.Errorf("unsupported GrepFilter Kind %s:  may be one of: [%s]",
 			meta.Kind, strings.Join(knownFilters, ","))
 	} else {
 		y.Filter = filter()

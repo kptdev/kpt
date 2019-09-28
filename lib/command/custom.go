@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package custom
+package command
 
 import (
 	"bytes"
@@ -25,6 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/yaml"
 )
 
@@ -43,7 +44,7 @@ func (c CommandBuilder) BuildCommands() error {
 		return nil
 	}
 
-	cmds := &CommandList{}
+	cmds := &kptfile.CommandList{}
 	d := yaml.NewDecoder(bytes.NewBuffer(b))
 	if err := d.Decode(cmds); err != nil {
 		return err
@@ -59,7 +60,7 @@ func (c CommandBuilder) BuildCommands() error {
 }
 
 // Build builds the new command and adds it to root under its path
-func (c CommandBuilder) BuildCommand(rc ResourceCommand) error {
+func (c CommandBuilder) BuildCommand(rc kptfile.ResourceCommand) error {
 	cbra, inputs, err := parse(rc.Command)
 	if err != nil {
 		return err
@@ -102,7 +103,7 @@ func (c CommandBuilder) BuildCommand(rc ResourceCommand) error {
 		}
 
 		d := yaml.NewDecoder(o)
-		p := &Pipeline{}
+		p := &kptfile.Pipeline{}
 		if err := d.Decode(p); err != nil {
 			return err
 		}
@@ -115,7 +116,7 @@ func (c CommandBuilder) BuildCommand(rc ResourceCommand) error {
 		}
 		return kio.Pipeline{
 			Inputs:  []kio.Reader{kio.LocalPackageReader{PackagePath: c.PkgPath}},
-			Filters: p.kioFilters(),
+			Filters: p.KioFilters(),
 			Outputs: outputs,
 		}.Execute()
 	}
@@ -166,7 +167,7 @@ func (i Inputs) Input(key string) string {
 }
 
 // parse parses cmd into a cobra.Command
-func parse(cmd Command) (*cobra.Command, Inputs, error) {
+func parse(cmd kptfile.Command) (*cobra.Command, Inputs, error) {
 	inputs := Inputs{}
 
 	// create the cobra command by copying values from the cli
@@ -185,33 +186,33 @@ func parse(cmd Command) (*cobra.Command, Inputs, error) {
 	for i := range cmd.Inputs {
 		cmdFlag := cmd.Inputs[i]
 		switch cmdFlag.Type {
-		case String:
+		case kptfile.String:
 			if inputs.Strings == nil {
 				inputs.Strings = map[string]*string{}
 			}
 			// Create a string flag and register it
 			inputs.Strings[cmdFlag.Name] = cbra.Flags().String(cmdFlag.Name,
 				cmdFlag.StringValue, cmdFlag.Description)
-		case StringSlice:
+		case kptfile.StringSlice:
 			if inputs.StringSlices == nil {
 				inputs.StringSlices = map[string]*[]string{}
 			}
 			// Create a string slice flag and register it
 			inputs.StringSlices[cmdFlag.Name] = cbra.Flags().StringSlice(
 				cmdFlag.Name, cmdFlag.StringSliceValue, cmdFlag.Description)
-		case Int:
+		case kptfile.Int:
 			if inputs.Ints == nil {
 				inputs.Ints = map[string]*int32{}
 			}
 			// Create an int flag and register it
 			inputs.Ints[cmdFlag.Name] = cbra.Flags().Int32(cmdFlag.Name, cmdFlag.IntValue, cmdFlag.Description)
-		case Float:
+		case kptfile.Float:
 			if inputs.Floats == nil {
 				inputs.Floats = map[string]*float64{}
 			}
 			// Create a float flag and register it
 			inputs.Floats[cmdFlag.Name] = cbra.Flags().Float64(cmdFlag.Name, cmdFlag.FloatValue, cmdFlag.Description)
-		case Bool:
+		case kptfile.Bool:
 			if inputs.Bools == nil {
 				inputs.Bools = map[string]*bool{}
 			}

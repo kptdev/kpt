@@ -16,11 +16,9 @@
 package cmdcat
 
 import (
-	"lib.kpt.dev/kio"
-
-	"lib.kpt.dev/fmtr"
-
 	"github.com/spf13/cobra"
+	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kio/filters"
 )
 
 // Cmd returns a command runner.
@@ -67,14 +65,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			PackagePath: a,
 		})
 	}
-	var filters []kio.Filter
+	var f []kio.Filter
 	if r.Format {
-		filters = append(filters, fmtr.Formatter{})
+		f = append(f, filters.FormatFilter{})
 	}
-	return kio.Pipeline{
-		Inputs:  inputs,
-		Filters: filters,
-		Outputs: []kio.Writer{
-			kio.ByteWriter{Writer: c.OutOrStdout()}},
-	}.Execute()
+	return kio.Pipeline{Inputs: inputs, Filters: f,
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: c.OutOrStdout()}}}.Execute()
 }

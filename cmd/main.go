@@ -37,8 +37,7 @@ import (
 	"kpt.dev/cmdtree"
 	"kpt.dev/cmdtutorials"
 	"kpt.dev/cmdupdate"
-	"kpt.dev/util/duck"
-	"lib.kpt.dev/custom"
+	"lib.kpt.dev/command"
 )
 
 var cmd = &cobra.Command{
@@ -71,7 +70,7 @@ func main() {
 	cmd.InitDefaultHelpCmd()
 	cmd.AddCommand(cmdhelp.Apis)
 	cmd.AddCommand(cmdtutorials.Tutorials)
-	cmd.AddCommand(duck.HelpCommand)
+	cmd.AddCommand(command.HelpCommand)
 
 	if len(os.Args) > 1 {
 		arg := os.Args[1]
@@ -100,13 +99,13 @@ itself.`, arg, arg),
 			})
 
 			// Duck commands
-			if err := duck.AddCommands(arg, cmd); err != nil {
+			if err := command.AddCommands(arg, cmd); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
 
 			// Custom commands
-			err := custom.CommandBuilder{
+			err := command.CommandBuilder{
 				PkgPath: arg,
 				RootCmd: cmd,
 				Name:    name,

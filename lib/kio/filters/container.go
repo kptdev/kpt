@@ -26,7 +26,7 @@ import (
 	"lib.kpt.dev/yaml"
 )
 
-// Filter filters Resources using a container image.
+// GrepFilter filters Resources using a container image.
 // The container must start a process that reads the list of
 // input Resources from stdin, reads the Configuration from the env
 // API_CONFIG, and writes the filtered Resources to stdout.
@@ -47,7 +47,7 @@ type ContainerFilter struct {
 	args []string
 }
 
-// Filter implements kio.Filter
+// GrepFilter implements kio.GrepFilter
 func (c *ContainerFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	// get the command to filter the Resources
 	cmd, err := c.getCommand()
@@ -107,7 +107,7 @@ func (c *ContainerFilter) getArgs() []string {
 
 }
 
-// getCommand returns a command which will apply the Filter using the container image
+// getCommand returns a command which will apply the GrepFilter using the container image
 func (c *ContainerFilter) getCommand() (*exec.Cmd, error) {
 	// encode the filter command API configuration
 	cfg := &bytes.Buffer{}

@@ -22,12 +22,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"kpt.dev/util/copyutil"
 	"kpt.dev/util/get"
-	"kpt.dev/util/gitutil"
-	"kpt.dev/util/pkgfile"
-	"kpt.dev/util/testutil"
 	. "kpt.dev/util/update"
+	"lib.kpt.dev/copyutil"
+	"lib.kpt.dev/gitutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/kptfile/kptfileutil"
+	"lib.kpt.dev/testutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -264,7 +265,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			testutil.Dataset3,                        // expect no changes to the data
 			"local package files have been modified", // expect an error
 			func(writer *TestSetupManager) string { // expect Kptfile to keep the commit
-				f, err := pkgfile.ReadFile(filepath.Join(writer.localGitDir, writer.RepoName))
+				f, err := kptfileutil.ReadFile(filepath.Join(writer.localGitDir, writer.RepoName))
 				if !assert.NoError(writer.T, err) {
 					return ""
 				}
@@ -275,7 +276,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			testutil.Dataset3,                        // expect no changes to the data
 			"local package files have been modified", // expect an error
 			func(writer *TestSetupManager) string { // expect Kptfile to keep the commit
-				f, err := pkgfile.ReadFile(filepath.Join(writer.localGitDir, writer.RepoName))
+				f, err := kptfileutil.ReadFile(filepath.Join(writer.localGitDir, writer.RepoName))
 				if !assert.NoError(writer.T, err) {
 					return ""
 				}
@@ -761,7 +762,7 @@ func (g *TestSetupManager) Init() bool {
 
 	if !assert.NoError(g.T, get.Command{
 		Destination: g.targetDir,
-		Git: pkgfile.Git{
+		Git: kptfile.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
@@ -813,12 +814,12 @@ func (g *TestSetupManager) AssertKptfile(commit, ref string) bool {
 	if g.targetDir != "" {
 		name = g.targetDir
 	}
-	expectedKptfile := pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(name, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	expectedKptfile := kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(name, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: g.GetSubDirectory,
 				Repo:      g.RepoDirectory,
 				Ref:       ref,

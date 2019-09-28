@@ -24,7 +24,7 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/yaml"
 )
 
@@ -100,9 +100,9 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	if _, err = os.Stat(filepath.Join(args[0], "Kptfile")); os.IsNotExist(err) {
 		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], "Kptfile"))
-		kptfile := pkgfile.KptFile{
+		kptfile := kptfile.KptFile{
 			ResourceMeta: yaml.ResourceMeta{ObjectMeta: yaml.ObjectMeta{Name: r.Name}},
-			PackageMeta: pkgfile.PackageMeta{
+			PackageMeta: kptfile.PackageMeta{
 				ShortDescription: r.Description,
 				Url:              r.Url,
 				Tags:             r.Tags,

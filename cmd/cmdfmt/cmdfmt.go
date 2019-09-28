@@ -19,7 +19,7 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"lib.kpt.dev/fmtr"
+	"lib.kpt.dev/kio/filters"
 )
 
 // Cmd returns a command runner.
@@ -81,7 +81,7 @@ type Runner struct {
 func (r *Runner) runE(c *cobra.Command, args []string) error {
 	// format stdin if there are no args
 	if len(args) == 0 {
-		b, err := fmtr.FormatInput(c.InOrStdin())
+		b, err := filters.FormatInput(c.InOrStdin())
 		if err != nil {
 			return err
 		}
@@ -90,7 +90,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	for i := range args {
-		err := fmtr.FormatFileOrDirectory(args[i])
+		err := filters.FormatFileOrDirectory(args[i])
 		if err != nil {
 			return err
 		}

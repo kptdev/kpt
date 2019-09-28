@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"kpt.dev/util/testutil"
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
+	"lib.kpt.dev/testutil"
 	"lib.kpt.dev/yaml"
 )
 

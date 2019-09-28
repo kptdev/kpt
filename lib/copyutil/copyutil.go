@@ -22,8 +22,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/util/sets"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/sets"
+
+	"lib.kpt.dev/kptfile"
 )
 
 // CopyDir copies a src directory to a dst directory.  CopyDir skips copying the .git directory from the src.
@@ -68,9 +69,9 @@ func CopyDir(src string, dst string) error {
 //
 // Diff is guaranteed to return a non-empty set if any files differ, but
 // this set is not guaranteed to contain all differing files.
-func Diff(sourceDir, destDir string) (sets.String, error) {
+func Diff(sourceDir, destDir string) (sets.Set, error) {
 	// get set of filenames in the package source
-	upstreamFiles := sets.NewString()
+	upstreamFiles := sets.Set{}
 	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -81,7 +82,7 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 			return nil
 		}
 		// skip the kptfile
-		if strings.Contains(path, pkgfile.KptFileName) {
+		if strings.Contains(path, kptfile.KptFileName) {
 			return nil
 		}
 
@@ -89,11 +90,11 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 		return nil
 	})
 	if err != nil {
-		return sets.String{}, err
+		return sets.Set{}, err
 	}
 
 	// get set of filenames in the cloned package
-	localFiles := sets.NewString()
+	localFiles := sets.Set{}
 	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -104,7 +105,7 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 			return nil
 		}
 		// skip the kptfile
-		if strings.Contains(path, pkgfile.KptFileName) {
+		if strings.Contains(path, kptfile.KptFileName) {
 			return nil
 		}
 
@@ -112,12 +113,11 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 		return nil
 	})
 	if err != nil {
-		return sets.String{}, err
+		return sets.Set{}, err
 	}
 
 	// verify the source and cloned packages have the same set of filenames
-	diff := upstreamFiles.Difference(localFiles)
-	diff.Insert(localFiles.Difference(upstreamFiles).List()...)
+	diff := upstreamFiles.SymmetricDifference(localFiles)
 
 	// verify file contents match
 	for _, f := range upstreamFiles.Intersection(localFiles).List() {

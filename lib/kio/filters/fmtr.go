@@ -29,7 +29,7 @@
 //
 // A subset of well known known unordered lists are sorted by element field
 // values.
-package fmtr
+package filters
 
 import (
 	"bytes"
@@ -38,7 +38,6 @@ import (
 	"sort"
 
 	"lib.kpt.dev/kio"
-	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/yaml"
 )
 
@@ -101,10 +100,6 @@ var fieldSortOrder = []string{
 	"secretKeyRef", "prefix", "configMapRef", "secretRef",
 }
 
-func init() {
-	filters.Filters["Formatter"] = func() kio.Filter { return &Formatter{} }
-}
-
 type set map[string]interface{}
 
 func newSet(values ...string) set {
@@ -155,7 +150,7 @@ func FormatInput(input io.Reader) (*bytes.Buffer, error) {
 	buff := &bytes.Buffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{kio.ByteReader{Reader: input}},
-		Filters: []kio.Filter{Formatter{}},
+		Filters: []kio.Filter{FormatFilter{}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
 	}.Execute()
 
@@ -169,16 +164,16 @@ func FormatFileOrDirectory(path string) error {
 		Inputs: []kio.Reader{kio.LocalPackageReader{
 			PackagePath: path,
 		}},
-		Filters: []kio.Filter{Formatter{}},
+		Filters: []kio.Filter{FormatFilter{}},
 		Outputs: []kio.Writer{kio.LocalPackageWriter{PackagePath: path}},
 	}.Execute()
 }
 
-type Formatter struct{}
+type FormatFilter struct{}
 
-var _ kio.Filter = Formatter{}
+var _ kio.Filter = FormatFilter{}
 
-func (f Formatter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
+func (f FormatFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
 	for i := range slice {
 		kindNode, err := slice[i].Pipe(yaml.Get("kind"))
 		if err != nil {

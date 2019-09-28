@@ -90,7 +90,7 @@ func NewRNode(value *yaml.Node) *RNode {
 	return &RNode{value: value}
 }
 
-// Filter may modify or walk the RNode.
+// GrepFilter may modify or walk the RNode.
 // When possible, Filters should be serializable to yaml so that they can be described
 // declaratively as data.
 //
@@ -174,14 +174,14 @@ func (rn *RNode) GetMeta() (ResourceMeta, error) {
 	return m, nil
 }
 
-// Pipe sequentially invokes each Filter, and passes the result to the next
-// Filter.
+// Pipe sequentially invokes each GrepFilter, and passes the result to the next
+// GrepFilter.
 //
 // Analogous to http://www.linfo.org/pipes.html
 //
-// * rn is provided as input to the first Filter.
-// * if any Filter returns an error, immediately return the error
-// * if any Filter returns a nil RNode, immediately return nil, nil
+// * rn is provided as input to the first GrepFilter.
+// * if any GrepFilter returns an error, immediately return the error
+// * if any GrepFilter returns a nil RNode, immediately return nil, nil
 // * if all Filters succeed with non-empty results, return the final result
 func (rn *RNode) Pipe(functions ...Filter) (*RNode, error) {
 	// check if rn is nil to make chaining Pipe calls easier

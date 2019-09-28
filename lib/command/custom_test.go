@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package custom_test
+package command_test
 
 import (
 	"io"
@@ -23,9 +23,8 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"lib.kpt.dev/custom"
-
 	"github.com/stretchr/testify/assert"
+	"lib.kpt.dev/command"
 )
 
 func TestCommandBuilder_Build(t *testing.T) {
@@ -33,7 +32,7 @@ func TestCommandBuilder_Build(t *testing.T) {
 	root := &cobra.Command{
 		Use: "test-kpt",
 	}
-	err := custom.CommandBuilder{
+	err := command.CommandBuilder{
 		PkgPath: dir,
 		RootCmd: root,
 	}.BuildCommands()
@@ -108,7 +107,7 @@ func TestCommandBuilder_Build_noMatch(t *testing.T) {
 	root := &cobra.Command{
 		Use: "test-kpt",
 	}
-	err := custom.CommandBuilder{
+	err := command.CommandBuilder{
 		PkgPath: dir,
 		RootCmd: root,
 	}.BuildCommands()

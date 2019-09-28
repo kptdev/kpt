@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkgfile_test
+package kptfile_test
 
 import (
 	"fmt"
@@ -20,9 +20,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"lib.kpt.dev/kptfile/kptfileutil"
+
 	"github.com/stretchr/testify/assert"
-	. "kpt.dev/util/pkgfile"
-	"kpt.dev/util/testutil"
+	. "lib.kpt.dev/kptfile"
+	"lib.kpt.dev/testutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -44,7 +46,7 @@ upstream:
 `), 0600)
 	assert.NoError(t, err)
 
-	f, err := ReadFile(dir)
+	f, err := kptfileutil.ReadFile(dir)
 	assert.NoError(t, err)
 	assert.Equal(t, KptFile{
 		ResourceMeta: yaml.NewResourceMeta("cockroachdb", TypeMeta),
@@ -78,7 +80,7 @@ upstream:
 `), 0600)
 	assert.NoError(t, err)
 
-	f, err := ReadFile(dir)
+	f, err := kptfileutil.ReadFile(dir)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "no such file or directory")
 	assert.Equal(t, KptFile{}, f)
@@ -102,7 +104,7 @@ upstreamBadField:
 `), 0600)
 	assert.NoError(t, err)
 
-	f, err := ReadFile(dir)
+	f, err := kptfileutil.ReadFile(dir)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "upstreamBadField not found")
 	assert.Equal(t, KptFile{}, f)

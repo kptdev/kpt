@@ -11,18 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package tree_test
+package kio_test
 
 import (
 	"bytes"
 	"testing"
 
-	"lib.kpt.dev/yaml"
-
-	"lib.kpt.dev/tree"
-
 	"github.com/stretchr/testify/assert"
-	"lib.kpt.dev/kio"
+	. "lib.kpt.dev/kio"
+	"lib.kpt.dev/yaml"
 )
 
 func TestPrinter_Write(t *testing.T) {
@@ -77,9 +74,9 @@ spec:
     app: nginx
 `
 	out := &bytes.Buffer{}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
-		Outputs: []kio.Writer{tree.Printer{Writer: out}},
+	err := Pipeline{
+		Inputs:  []Reader{ByteReader{Reader: bytes.NewBufferString(in)}},
+		Outputs: []Writer{TreeWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -150,9 +147,9 @@ spec:
     app: nginx
 `
 	out := &bytes.Buffer{}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
-		Outputs: []kio.Writer{tree.Printer{Writer: out}},
+	err := Pipeline{
+		Inputs:  []Reader{ByteReader{Reader: bytes.NewBufferString(in)}},
+		Outputs: []Writer{TreeWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -266,9 +263,9 @@ spec:
     app: nginx
 `
 	out := &bytes.Buffer{}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
-		Outputs: []kio.Writer{tree.Printer{Writer: out}},
+	err := Pipeline{
+		Inputs:  []Reader{ByteReader{Reader: bytes.NewBufferString(in)}},
+		Outputs: []Writer{TreeWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -290,7 +287,7 @@ spec:
 
 func TestPrinter_metaError(t *testing.T) {
 	out := &bytes.Buffer{}
-	err := tree.Printer{Writer: out}.Write([]*yaml.RNode{{}})
+	err := TreeWriter{Writer: out}.Write([]*yaml.RNode{{}})
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

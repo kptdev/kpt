@@ -20,8 +20,8 @@ import (
 	"io"
 	"strings"
 
-	"kpt.dev/util/gitutil"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/gitutil"
+	"lib.kpt.dev/kptfile/kptfileutil"
 )
 
 // Updater updates a package to a new upstream version.
@@ -120,7 +120,7 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 
 	// write the Kptfile so the patch sees the updates to it.  use the version we read
 	// locally so there aren't merge conflicts if the remote was changed.
-	if err := pkgfile.WriteFile(u.gitRunner.Dir, u.UpdateOptions.KptFile); err != nil {
+	if err := kptfileutil.WriteFile(u.gitRunner.Dir, u.UpdateOptions.KptFile); err != nil {
 		return fmt.Errorf("update failed: unable to write Kptfile: %v", err)
 	}
 	if err := u.gitRunner.Run("add", "Kptfile"); err != nil {
@@ -144,14 +144,14 @@ func (u *GitPatchUpdater) commitTargetFiles() error {
 	}
 
 	// write the updated Kptfile so changes to it are included in the patch
-	updatedKptfile, err := pkgfile.ReadFile(u.PackagePath)
+	updatedKptfile, err := kptfileutil.ReadFile(u.PackagePath)
 	if err != nil {
 		return fmt.Errorf("update failed: unable to read Kptfile: %v", err)
 	}
 	updatedKptfile.Upstream.Git.Commit = u.toCommit           // set the commit we are updating to
 	updatedKptfile.Upstream.Git.Ref = u.UpdateOptions.ToRef   // set the ref we are updating to
 	updatedKptfile.Upstream.Git.Repo = u.UpdateOptions.ToRepo // set the repo we are using for the update
-	if err := pkgfile.WriteFile(u.gitRunner.Dir, updatedKptfile); err != nil {
+	if err := kptfileutil.WriteFile(u.gitRunner.Dir, updatedKptfile); err != nil {
 		return fmt.Errorf("update failed: unable to write Kptfile: %v", err)
 	}
 
