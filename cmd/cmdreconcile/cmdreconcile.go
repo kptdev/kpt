@@ -40,6 +40,10 @@ kpt reconcile my-package/
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 	}
+
+	r.C.Flags().StringSliceVar(&r.APIs, "api-resource", []string{},
+		"additional API resources to reconcile")
+	r.C.Flags().BoolVar(&r.DryRun, "dry-run", false, "print results to stdout")
 	return r
 }
 
@@ -47,8 +51,14 @@ kpt reconcile my-package/
 type Runner struct {
 	IncludeSubpackages bool
 	C                  *cobra.Command
+	DryRun             bool
+	APIs               []string
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	return reconcile.Cmd{PkgPath: args[0]}.Execute()
+	rec := reconcile.Cmd{PkgPath: args[0], ApisPkgs: r.APIs}
+	if r.DryRun {
+		rec.Output = c.OutOrStdout()
+	}
+	return rec.Execute()
 }

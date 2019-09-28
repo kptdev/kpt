@@ -27,7 +27,9 @@ kpt reconcile my-package/
 ### Options
 
 ```
-  -h, --help   help for reconcile
+      --apis strings   additional apis to reconcile
+      --dry-run        print results to stdout
+  -h, --help           help for reconcile
 ```
 
 ### SEE ALSO
