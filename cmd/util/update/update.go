@@ -22,13 +22,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"kpt.dev/util/gitutil"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/gitutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/kptfile/kptfileutil"
 )
 
 type UpdateOptions struct {
 	// KptFile is the current local package KptFile
-	KptFile pkgfile.KptFile
+	KptFile kptfile.KptFile
 
 	// ToRef is the ref to update to
 	ToRef string
@@ -130,7 +131,7 @@ func (u Command) Run() error {
 		return fmt.Errorf("package path must be under current working directory")
 	}
 
-	kptfile, err := pkgfile.ReadFileStrict(u.Path)
+	kptfile, err := kptfileutil.ReadFileStrict(u.Path)
 	if err != nil {
 		return fmt.Errorf("unable to read package Kptfile: %v", err)
 	}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tree
+package kio
 
 import (
 	"fmt"
@@ -26,12 +26,12 @@ import (
 	"lib.kpt.dev/yaml"
 )
 
-type Printer struct {
+type TreeWriter struct {
 	Writer io.Writer
 	Root   string
 }
 
-func (p Printer) Write(nodes []*yaml.RNode) error {
+func (p TreeWriter) Write(nodes []*yaml.RNode) error {
 	nodeIndex := map[string][]*yaml.RNode{}
 
 	// index the ResourceNodes by package

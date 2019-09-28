@@ -27,7 +27,7 @@ import (
 	"strings"
 
 	"github.com/cpuguy83/go-md2man/md2man"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/kptfile/kptfileutil"
 )
 
 // Command displays local package documentation as man pages.
@@ -55,7 +55,7 @@ func (m Command) Run() error {
 	}
 
 	// lookup the path to the man page
-	k, err := pkgfile.ReadFile(m.Path)
+	k, err := kptfileutil.ReadFile(m.Path)
 	if err != nil {
 		return err
 	}

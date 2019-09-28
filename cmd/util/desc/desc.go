@@ -21,7 +21,8 @@ import (
 	"path/filepath"
 
 	"github.com/olekukonko/tablewriter"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/kptfile/kptfileutil"
 )
 
 // Command prints information about the given packages.
@@ -47,7 +48,7 @@ func (c Command) Run() error {
 		if !info.IsDir() {
 			continue
 		}
-		kptFile, err := pkgfile.ReadFile(path)
+		kptFile, err := kptfileutil.ReadFile(path)
 		if err != nil {
 			continue
 		}
@@ -95,5 +96,5 @@ func shortSHA(sha string) string {
 // pkgInfo wraps KptFile with local directory path info.
 type pkgInfo struct {
 	localDir string
-	pkgfile.KptFile
+	kptfile.KptFile
 }

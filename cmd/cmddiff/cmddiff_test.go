@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmddiff"
 	"kpt.dev/cmdget"
-	"kpt.dev/util/testutil"
+	"lib.kpt.dev/testutil"
 )
 
 func TestCmdInvalidDiffType(t *testing.T) {

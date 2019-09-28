@@ -24,8 +24,8 @@ import (
 
 	"gotest.tools/assert"
 	"kpt.dev/cmddesc"
-	"kpt.dev/util/pkgfile"
-	"kpt.dev/util/testutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/testutil"
 )
 
 // TestDesc_Execute tests happy path for Describe command.
@@ -38,7 +38,7 @@ func TestDesc_Execute(t *testing.T) {
 	}()
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, pkgfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:

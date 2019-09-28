@@ -17,7 +17,6 @@ package cmdmerge
 
 import (
 	"github.com/spf13/cobra"
-	"lib.kpt.dev/fmtr"
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
 )
@@ -90,6 +89,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		outputs = append(outputs, kio.ByteWriter{Writer: c.OutOrStdout()})
 	}
 
-	filters := []kio.Filter{filters.MergeFilter{}, fmtr.Formatter{}}
+	filters := []kio.Filter{filters.MergeFilter{}, filters.FormatFilter{}}
 	return kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: outputs}.Execute()
 }

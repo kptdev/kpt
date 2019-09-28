@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
- * Package testutil contains utilities for writing kpt integration tests.
- */
-package testutil
+// Package custom contains libraries for building customizable packages through exposing
+// commands to generate and modify packaged configuration.
+package command

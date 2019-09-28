@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package custom
+package kptfile
 
 import (
 	"lib.kpt.dev/kio"
@@ -45,16 +45,11 @@ type Pipeline struct {
 	Filters []filters.KFilter `yaml:"filters"`
 }
 
-func (p Pipeline) kioFilters() []kio.Filter {
+func (p Pipeline) KioFilters() []kio.Filter {
 	var f []kio.Filter
 	for i := range p.Filters {
 		f = append(f, p.Filters[i].Filter)
 	}
-	//f = append(f, kio.FilterFunc(func(in []*yaml.RNode) ([]*yaml.RNode, error) {
-	//	s, _ := yaml.Marshal(in)
-	//	fmt.Println(string(s))
-	//	return in, nil
-	//}))
 	return f
 }
 

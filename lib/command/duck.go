@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package duck contains instances of duck-type commands.
-package duck
+package command
 
 import (
 	"fmt"
@@ -137,7 +137,7 @@ func (h helper) isEnabled() (bool, error) {
 	return enabled, err
 }
 
-// Filter returns nil if the command is not enabled for the Resource
+// GrepFilter returns nil if the command is not enabled for the Resource
 func (h helper) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	meta, err := object.GetMeta()
 	if err != nil {

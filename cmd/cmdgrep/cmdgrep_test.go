@@ -21,9 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"kpt.dev/cmdgrep"
-
 	"github.com/stretchr/testify/assert"
+	"kpt.dev/cmdgrep"
 )
 
 // TestCmd_files verifies grep reads the files and filters them

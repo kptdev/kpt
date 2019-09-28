@@ -19,7 +19,7 @@ import (
 )
 
 // walkAssociativeSequence descends into each element and pairs src and dest by an associative
-// key, recursively invoking Filter on each match.
+// key, recursively invoking GrepFilter on each match.
 func (l Filter) walkAssociativeSequence(dest *yaml.RNode) error {
 	key := dest.GetAssociativeKey()
 	return l.Source.VisitElements(func(srcElem *yaml.RNode) error {

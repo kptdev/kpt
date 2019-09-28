@@ -24,9 +24,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"kpt.dev/util/copyutil"
 	"kpt.dev/util/get"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/copyutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/kptfile/kptfileutil"
 )
 
 // DiffType represents type of comparison to be performed.
@@ -94,7 +95,7 @@ type Command struct {
 func (c *Command) Run() error {
 	c.DefaultValues()
 
-	kptFile, err := pkgfile.ReadFile(c.Path)
+	kptFile, err := kptfileutil.ReadFile(c.Path)
 	if err != nil {
 		return fmt.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
@@ -260,7 +261,7 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 // prepareForDiff removes metadata such as .git and Kptfile from a staged package
 // to exclude them from diffing.
 func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
-	excludePaths := []string{".git", pkgfile.KptFileName}
+	excludePaths := []string{".git", kptfile.KptFileName}
 	for _, path := range excludePaths {
 		path = filepath.Join(dir, path)
 		if err := os.RemoveAll(path); err != nil {
@@ -284,7 +285,7 @@ func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 		return dir, err
 	}
 	cmdGet := &get.Command{
-		Git:         pkgfile.Git{Repo: repo, Directory: path, Ref: ref},
+		Git:         kptfile.Git{Repo: repo, Directory: path, Ref: ref},
 		Destination: dir,
 		Clean:       true,
 	}

@@ -21,10 +21,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"kpt.dev/util/pkgfile"
-	"lib.kpt.dev/fmtr"
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
+	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/yaml"
 )
 
@@ -38,7 +37,7 @@ func Get(path, pattern string, input io.Reader) error {
 	fs := &filters.FileSetter{FilenamePattern: pattern, Mode: fmt.Sprintf("%d", 0600)}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{kio.ByteReader{Reader: input}},
-		Filters: []kio.Filter{fs, fmtr.Formatter{}},
+		Filters: []kio.Filter{fs, filters.FormatFilter{}},
 		Outputs: []kio.Writer{
 			kio.ByteWriter{Writer: b, KeepReaderAnnotations: true},
 			kio.LocalPackageWriter{PackagePath: path},
@@ -48,17 +47,17 @@ func Get(path, pattern string, input io.Reader) error {
 		return err
 	}
 
-	k := pkgfile.KptFile{
+	k := kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			Kind:       "Kptfile",
 			ObjectMeta: yaml.ObjectMeta{Name: filepath.Base(path)},
 		},
-		Upstream: pkgfile.Upstream{
-			Type:  pkgfile.StdinOrigin,
-			Stdin: pkgfile.Stdin{Original: b.String(), FilenamePattern: fs.FilenamePattern},
+		Upstream: kptfile.Upstream{
+			Type:  kptfile.StdinOrigin,
+			Stdin: kptfile.Stdin{Original: b.String(), FilenamePattern: fs.FilenamePattern},
 		},
 	}
-	f, err := os.OpenFile(filepath.Join(path, pkgfile.KptFileName),
+	f, err := os.OpenFile(filepath.Join(path, kptfile.KptFileName),
 		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return err

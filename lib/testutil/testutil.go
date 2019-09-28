@@ -27,9 +27,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	assertnow "gotest.tools/assert"
-	"kpt.dev/util/copyutil"
-	"kpt.dev/util/gitutil"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/copyutil"
+	"lib.kpt.dev/gitutil"
+	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/yaml"
 )
 
@@ -76,13 +76,13 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool 
 }
 
 // AssertKptfile verifies the contents of the KptFile matches the provided value.
-func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg pkgfile.KptFile) bool {
+func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfile.KptFile) bool {
 	// read the actual generated KptFile
-	b, err := ioutil.ReadFile(filepath.Join(cloned, pkgfile.KptFileName))
+	b, err := ioutil.ReadFile(filepath.Join(cloned, kptfile.KptFileName))
 	if !assert.NoError(t, err, g.Updater) {
 		return false
 	}
-	actual := pkgfile.KptFile{}
+	actual := kptfile.KptFile{}
 	d := yaml.NewDecoder(bytes.NewBuffer(b))
 	d.KnownFields(true)
 	if !assert.NoError(t, d.Decode(&actual), g.Updater) {

@@ -20,8 +20,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"lib.kpt.dev/grep"
 	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kio/filters"
 )
 
 // Cmd returns a command runner.
@@ -72,7 +72,7 @@ type Runner struct {
 	IncludeSubpackages bool
 	KeepAnnotations    bool
 	C                  *cobra.Command
-	grep.Filter
+	filters.GrepFilter
 	Format bool
 }
 
@@ -114,7 +114,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	var filters = []kio.Filter{r.Filter}
+	var filters = []kio.Filter{r.GrepFilter}
 
 	var inputs []kio.Reader
 	for _, a := range args[1:] {

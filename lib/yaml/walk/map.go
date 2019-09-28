@@ -18,7 +18,7 @@ import (
 	"lib.kpt.dev/yaml"
 )
 
-// walkMap descends into each map key-value pair, recursively invoking Filter on each match --
+// walkMap descends into each map key-value pair, recursively invoking GrepFilter on each match --
 // calling SetMapField on each pair where either the src or dest has an empty or missing value.
 func (l Filter) walkMap(dest *yaml.RNode) error {
 	return l.Source.VisitFields(func(srcField *yaml.MapNode) error {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fmtr_test
+package filters_test
 
 import (
 	"bytes"
@@ -24,8 +24,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	. "lib.kpt.dev/fmtr"
-	"lib.kpt.dev/fmtr/testyaml"
+	. "lib.kpt.dev/kio/filters"
+	"lib.kpt.dev/kio/filters/testyaml"
 )
 
 // TestFormatInput_configMap verifies a ConfigMap yaml is formatted correctly

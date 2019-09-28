@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmdfmt"
-	"lib.kpt.dev/fmtr/testyaml"
+	"lib.kpt.dev/kio/filters/testyaml"
 )
 
 // TestCmd_files verifies the fmt command formats the files

@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"os"
 
-	"kpt.dev/util/copyutil"
 	"kpt.dev/util/get"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/copyutil"
+	"lib.kpt.dev/kptfile"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
 
@@ -44,7 +44,7 @@ func (u FastForwardUpdater) Update(options UpdateOptions) error {
 
 // errorIfChanged returns an error if the package at pkgPath has changed from the upstream
 // source referenced by g.
-func errorIfChanged(g pkgfile.Git, pkgPath string) error {
+func errorIfChanged(g kptfile.Git, pkgPath string) error {
 	original := &git.RepoSpec{
 		OrgRepo: g.Repo,
 		Path:    g.Directory,

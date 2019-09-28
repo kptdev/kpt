@@ -47,7 +47,7 @@ func (fn WriterFunc) Write(o []*yaml.RNode) error {
 	return fn(o)
 }
 
-// Filter modifies a collection of Resource Configuration by returning the modified slice.
+// GrepFilter modifies a collection of Resource Configuration by returning the modified slice.
 // When possible, Filters should be serializable to yaml so that they can be described
 // declaratively as data.
 //
@@ -56,7 +56,7 @@ type Filter interface {
 	Filter([]*yaml.RNode) ([]*yaml.RNode, error)
 }
 
-// FilterFunc can be used to implement Filter by defining a function.
+// FilterFunc can be used to implement GrepFilter by defining a function.
 type FilterFunc func([]*yaml.RNode) ([]*yaml.RNode, error)
 
 func (fn FilterFunc) Filter(o []*yaml.RNode) ([]*yaml.RNode, error) {

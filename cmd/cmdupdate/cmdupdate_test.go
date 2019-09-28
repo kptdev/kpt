@@ -23,10 +23,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmdget"
 	"kpt.dev/cmdupdate"
-	"kpt.dev/util/gitutil"
-	"kpt.dev/util/pkgfile"
-	"kpt.dev/util/testutil"
 	"kpt.dev/util/update"
+	"lib.kpt.dev/gitutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/testutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -79,12 +79,12 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertKptfile(t, dest, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	if !g.AssertKptfile(t, dest, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",

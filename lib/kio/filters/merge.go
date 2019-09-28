@@ -20,7 +20,7 @@ import (
 	"lib.kpt.dev/yaml/walk/merge"
 )
 
-// Filter merges Resources with the Group/Version/Kind/Namespace/Name together using
+// GrepFilter merges Resources with the Group/Version/Kind/Namespace/Name together using
 // a 2-way merge strategy.
 //
 // - Fields set to null in the source will be cleared from the destination
@@ -36,7 +36,7 @@ type mergeKey struct {
 	name       string
 }
 
-// Filter implements kio.Filter by merge Resources with the same G/V/K/NS/N
+// GrepFilter implements kio.GrepFilter by merge Resources with the same G/V/K/NS/N
 func (c MergeFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 	// index the Resources by G/V/K/NS/N
 	index := map[mergeKey][]*yaml.RNode{}

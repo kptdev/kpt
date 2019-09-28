@@ -26,11 +26,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"kpt.dev/util/copyutil"
 	. "kpt.dev/util/diff"
 	"kpt.dev/util/get"
-	"kpt.dev/util/pkgfile"
-	"kpt.dev/util/testutil"
+	"lib.kpt.dev/copyutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/testutil"
 )
 
 // TestCommand_RunRemoteDiff verifies Command can show changes for remote diff
@@ -67,7 +67,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = get.Command{Git: pkgfile.Git{
+	err = get.Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
@@ -139,7 +139,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = get.Command{Git: pkgfile.Git{
+	err = get.Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
@@ -205,7 +205,7 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 
-	err = get.Command{Git: pkgfile.Git{
+	err = get.Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)

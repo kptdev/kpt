@@ -21,8 +21,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	. "kpt.dev/util/get"
-	"kpt.dev/util/pkgfile"
-	"kpt.dev/util/testutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/testutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -34,7 +34,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
 func TestCommand_Run_failNoRevision(t *testing.T) {
-	err := Command{Git: pkgfile.Git{Repo: "foo"}}.Run()
+	err := Command{Git: kptfile.Git{Repo: "foo"}}.Run()
 	assert.EqualError(t, err, "must specify ref")
 }
 
@@ -46,7 +46,7 @@ func TestCommand_Run(t *testing.T) {
 	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
 	defer clean()
 
-	err := Command{Git: pkgfile.Git{
+	err := Command{Git: kptfile.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Ref:       "master",
 		Directory: "/",
@@ -61,12 +61,12 @@ func TestCommand_Run(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -85,7 +85,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
 	defer clean()
 
-	err := Command{Git: pkgfile.Git{
+	err := Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: filepath.Base(subdir),
 	}.Run()
@@ -98,12 +98,12 @@ func TestCommand_Run_subdir(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(subdir, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(subdir, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
@@ -120,7 +120,7 @@ func TestCommand_Run_destination(t *testing.T) {
 	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
 	defer clean()
 
-	err := Command{Git: pkgfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"}, Destination: dest}.Run()
+	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"}, Destination: dest}.Run()
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -130,12 +130,12 @@ func TestCommand_Run_destination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(dest, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(dest, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -156,7 +156,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		Git:         pkgfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: subdir},
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: subdir},
 		Destination: dest,
 	}.Run()
 	assert.NoError(t, err)
@@ -168,12 +168,12 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(dest, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(dest, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "master",
@@ -210,7 +210,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NotEqual(t, commit, commit2)
 
 	err = Command{
-		Git:         pkgfile.Git{Repo: g.RepoDirectory, Ref: "refs/heads/exp", Directory: "/"},
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "refs/heads/exp", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
 
@@ -219,12 +219,12 @@ func TestCommand_Run_branch(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
@@ -265,7 +265,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = Command{Git: pkgfile.Git{
+	err = Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
@@ -275,12 +275,12 @@ func TestCommand_Run_tag(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
@@ -301,7 +301,7 @@ func TestCommand_Run_clean(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		Git:         pkgfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
 
@@ -313,12 +313,12 @@ func TestCommand_Run_clean(t *testing.T) {
 	r := filepath.Join(dir, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
 
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -339,18 +339,18 @@ func TestCommand_Run_clean(t *testing.T) {
 
 	// configure clone to clean the existing dir
 	err = Command{
-		Git:         pkgfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory), Clean: true}.Run()
 	assert.NoError(t, err)
 
 	// verify files are updated
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -370,7 +370,7 @@ func TestCommand_Run_failClean(t *testing.T) {
 	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
 	defer clean()
 
-	err := Command{Git: pkgfile.Git{
+	err := Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory),
 	}.Run()
@@ -383,12 +383,12 @@ func TestCommand_Run_failClean(t *testing.T) {
 	// verify the cloned contents matches the repository
 	r := filepath.Join(dir, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -399,7 +399,7 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	// configure clone to clean the existing dir, but fail
 	err = Command{
-		Git:         pkgfile.Git{Repo: g.RepoDirectory, Ref: "refs/heads/not-real", Directory: "/"},
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "refs/heads/not-real", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory),
 		Clean:       true,
 	}.Run()
@@ -408,12 +408,12 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	// verify files weren't deleted
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -430,7 +430,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		Git:         pkgfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
 
@@ -441,12 +441,12 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	// verify the cloned contents matches the repository
 	r := filepath.Join(dir, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -463,18 +463,18 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// try to clone and expect a failure
 	err = Command{
-		Git:         pkgfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.EqualError(t, err, fmt.Sprintf("destination directory %s already exists", g.RepoName))
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, r, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -488,7 +488,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	_, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
 	defer clean()
 
-	err := Command{Git: pkgfile.Git{Repo: "foo", Directory: "/", Ref: "refs/heads/master"}, Destination: "foo"}.Run()
+	err := Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "refs/heads/master"}, Destination: "foo"}.Run()
 	assert.EqualError(t, err, "failed to clone git repo: trouble fetching refs/heads/master: exit status 128")
 }
 
@@ -496,7 +496,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
 	defer clean()
 
-	err := Command{Git: pkgfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/heads/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
+	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/heads/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.EqualError(t, err, "failed to clone git repo: trouble fetching refs/heads/foo: exit status 128")
 }
 
@@ -504,23 +504,23 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
 	defer clean()
 
-	err := Command{Git: pkgfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/tags/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
+	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/tags/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.EqualError(t, err, "failed to clone git repo: trouble fetching refs/tags/foo: exit status 128")
 }
 
 func TestCommand_DefaultValues_AtVersion(t *testing.T) {
-	c := Command{Git: pkgfile.Git{Repo: "foo", Directory: "/", Ref: "r"}, Destination: "/"}
+	c := Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "r"}, Destination: "/"}
 	assert.NoError(t, c.DefaultValues())
 
-	c = Command{Git: pkgfile.Git{Repo: "foo", Directory: "bar"}, Destination: "/"}
+	c = Command{Git: kptfile.Git{Repo: "foo", Directory: "bar"}, Destination: "/"}
 	assert.EqualError(t, c.DefaultValues(), "must specify ref")
 
-	c = Command{Git: pkgfile.Git{Ref: "foo", Repo: "bar"}, Destination: "/"}
+	c = Command{Git: kptfile.Git{Ref: "foo", Repo: "bar"}, Destination: "/"}
 	assert.EqualError(t, c.DefaultValues(), "must specify remote subdirectory")
 
-	c = Command{Git: pkgfile.Git{Ref: "foo", Directory: "bar"}, Destination: "/"}
+	c = Command{Git: kptfile.Git{Ref: "foo", Directory: "bar"}, Destination: "/"}
 	assert.EqualError(t, c.DefaultValues(), "must specify repo")
 
-	c = Command{Git: pkgfile.Git{Repo: "foo", Directory: "/", Ref: "r"}}
+	c = Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "r"}}
 	assert.EqualError(t, c.DefaultValues(), "must specify destination")
 }

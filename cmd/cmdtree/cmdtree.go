@@ -20,7 +20,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"lib.kpt.dev/kio"
-	"lib.kpt.dev/tree"
 )
 
 // Cmd returns a command runner.
@@ -69,6 +68,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 	return kio.Pipeline{
 		Inputs:  []kio.Reader{input},
-		Outputs: []kio.Writer{tree.Printer{Root: root, Writer: c.OutOrStdout()}},
+		Outputs: []kio.Writer{kio.TreeWriter{Root: root, Writer: c.OutOrStdout()}},
 	}.Execute()
 }

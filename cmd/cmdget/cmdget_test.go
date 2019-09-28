@@ -24,8 +24,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmdget"
-	"kpt.dev/util/pkgfile"
-	"kpt.dev/util/testutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/testutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -44,12 +44,12 @@ func TestCmd_execute(t *testing.T) {
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, dest, pkgfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, pkgfile.TypeMeta),
-		PackageMeta:  pkgfile.PackageMeta{},
-		Upstream: pkgfile.Upstream{
+	g.AssertKptfile(t, dest, kptfile.KptFile{
+		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
+		PackageMeta:  kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
 			Type: "git",
-			Git: pkgfile.Git{
+			Git: kptfile.Git{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",

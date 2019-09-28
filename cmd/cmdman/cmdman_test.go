@@ -24,7 +24,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmdman"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/kptfile"
 )
 
 // TestCmd_execute tests that the command displays package documentation.
@@ -33,7 +33,7 @@ func TestCmd_execute(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, pkgfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: KptFile
 metadata:
@@ -181,5 +181,5 @@ func TestCmd_defaultDir(t *testing.T) {
 	err := r.C.Execute()
 	assert.EqualError(t, err, fmt.Sprintf(
 		"unable to read %s: open %s: no such file or directory",
-		pkgfile.KptFileName, pkgfile.KptFileName))
+		kptfile.KptFileName, kptfile.KptFileName))
 }

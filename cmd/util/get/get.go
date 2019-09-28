@@ -24,8 +24,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"kpt.dev/util/copyutil"
-	"kpt.dev/util/pkgfile"
+	"lib.kpt.dev/copyutil"
+	"lib.kpt.dev/kptfile"
+	"lib.kpt.dev/kptfile/kptfileutil"
 	"lib.kpt.dev/yaml"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
@@ -33,7 +34,7 @@ import (
 // Command fetches a package from a git repository and copies it to a local directory.
 type Command struct {
 	// Git contains information about the git repo to fetch
-	pkgfile.Git
+	kptfile.Git
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -124,13 +125,13 @@ func (c *Command) DefaultValues() error {
 // cloneFrom values.
 func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	// read KptFile cloned with the package if it exists
-	kpgfile, err := pkgfile.ReadFile(c.Destination)
+	kpgfile, err := kptfileutil.ReadFile(c.Destination)
 	if err != nil {
 		// no KptFile present, create a default
-		kpgfile = pkgfile.KptFile{
+		kpgfile = kptfile.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
-				ApiVersion: pkgfile.TypeMeta.ApiVersion,
-				Kind:       pkgfile.TypeMeta.Kind,
+				ApiVersion: kptfile.TypeMeta.ApiVersion,
+				Kind:       kptfile.TypeMeta.Kind,
 				ObjectMeta: yaml.ObjectMeta{Name: c.Name},
 			},
 		}
@@ -148,8 +149,8 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	commit := strings.TrimSpace(string(b))
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.Upstream = pkgfile.Upstream{
-		Type: pkgfile.GitOrigin,
+	kpgfile.Upstream = kptfile.Upstream{
+		Type: kptfile.GitOrigin,
 		Git:  c.Git,
 	}
 	kpgfile.Upstream.Git.Commit = commit
@@ -159,5 +160,5 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filepath.Join(c.Destination, pkgfile.KptFileName), contents, 0600)
+	return ioutil.WriteFile(filepath.Join(c.Destination, kptfile.KptFileName), contents, 0600)
 }

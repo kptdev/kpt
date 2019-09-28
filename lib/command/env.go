@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package duck
+package command
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/util/pkgfile"
-	"lib.kpt.dev/custom"
+	"lib.kpt.dev/kptfile/kptfileutil"
 )
 
 func SetEnv(pkgPath string, cmd *cobra.Command) error {
@@ -30,7 +29,7 @@ func SetEnv(pkgPath string, cmd *cobra.Command) error {
 		enabled: ContainerField,
 	}
 	if pkgPath != "" {
-		kptfile, err := pkgfile.ReadFile(pkgPath)
+		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
 		}
@@ -69,9 +68,9 @@ Command is enabled for a package by having a Resource with the field: %s
 		return h.set()
 	}
 	if pkgPath != "" {
-		custom.AddCommand(cmd, c, []string{pkgPath, "set"})
+		AddCommand(cmd, c, []string{pkgPath, "set"})
 	} else {
-		custom.AddCommand(cmd, c, []string{"set"})
+		AddCommand(cmd, c, []string{"set"})
 	}
 
 	return nil
@@ -84,7 +83,7 @@ func GetEnv(pkgPath string, cmd *cobra.Command) error {
 		enabled: ContainerField,
 	}
 	if pkgPath != "" {
-		kptfile, err := pkgfile.ReadFile(pkgPath)
+		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
 		}
@@ -120,9 +119,9 @@ Command is enabled for a package by having a Resource with the field: %s
 		return h.get()
 	}
 	if pkgPath != "" {
-		custom.AddCommand(cmd, c, []string{pkgPath, "get"})
+		AddCommand(cmd, c, []string{pkgPath, "get"})
 	} else {
-		custom.AddCommand(cmd, c, []string{"get"})
+		AddCommand(cmd, c, []string{"get"})
 	}
 	return nil
 }
