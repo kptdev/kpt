@@ -37,8 +37,7 @@ tidy:
 
 license:
 	(which addlicense || go get github.com/google/addlicense)
-	(cd cmd/ && addlicense  -y 2019 -l apache .)
-	(cd lib/ &&  addlicense  -y 2019 -l apache .)
+	addlicense  -y 2019 -l apache .
 
 lint:
 	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0)

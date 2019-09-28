@@ -23,5 +23,6 @@ require (
 	golang.org/x/tools v0.0.0-20190912215617-3720d1ec3678 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20190924164351-c8b7dadae555 // indirect
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
+	k8s.io/apimachinery v0.0.0-20190927035529-0104e33c351d // indirect
 	mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f // indirect
 )

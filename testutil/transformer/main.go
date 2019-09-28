@@ -1,8 +1,23 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"text/template"
@@ -37,6 +52,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// copy the input resources so we merge our changes
+	if _, err := io.Copy(os.Stdout, os.Stdin); err != nil {
+		panic(err)
+	}
+	fmt.Println("\n---")
+
 	// Default the Replicas field
 	r := os.Getenv("REPLICAS")
 	if r != "" && api.Replicas == nil {
@@ -52,7 +73,9 @@ func main() {
 		api.Replicas = &r
 	}
 
-	// Define the template
+	// Define the template.
+	// Disable the duck-commands for this generated Resource so that users don't override
+	// the generated values.
 	deployment := `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -61,6 +84,10 @@ metadata:
     kpt.dev/kio/index: 0
     kpt.dev/kio/path: generated/{{ .Metadata.Name }}-deployment.yaml
     kpt.dev/kio/mode: 384
+    kpt.dev/duck/set-image: disabled
+    kpt.dev/duck/get-image: disabled
+    kpt.dev/duck/set-replicas: disabled
+    kpt.dev/duck/get-replicas: disabled
 spec:
   replicas: {{ .Replicas }}
   template:

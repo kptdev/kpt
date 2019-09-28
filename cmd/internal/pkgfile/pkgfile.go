@@ -41,7 +41,22 @@ type KptFile struct {
 	// PackageMeta contains information about the package
 	PackageMeta PackageMeta `yaml:"packageMetadata,omitempty"`
 
+	DisableDuckCommands []string `yaml:"disableDuckCommands,omitempty"`
+
 	Commands []custom.ResourceCommand `yaml:"commands,omitempty"`
+
+	// Reconcilers maps apiVersions to container images to use for reconciling them
+	Reconcilers map[string]string `yaml:"reconcilers,omitempty"`
+}
+
+// IsDuckCommandEnabled returns true if the duck-command with id has NOT been disabled in k.
+func (k KptFile) IsDuckCommandEnabled(id string) bool {
+	for _, c := range k.DisableDuckCommands {
+		if c == id {
+			return false
+		}
+	}
+	return true
 }
 
 type PackageMeta struct {
@@ -114,7 +129,15 @@ const KptFileName = "Kptfile"
 // ReadFile reads the KptFile in the given directory
 func ReadFile(dir string) (KptFile, error) {
 	kpgfile := KptFile{ResourceMeta: TypeMeta}
+
 	f, err := os.Open(filepath.Join(dir, KptFileName))
+
+	// if we are in a package subdirectory, find the parent dir with the Kptfile.
+	// this is necessary to parse the duck-commands for sub-directories of a package
+	for os.IsNotExist(err) && filepath.Dir(dir) != dir {
+		dir = filepath.Dir(dir)
+		f, err = os.Open(filepath.Join(dir, KptFileName))
+	}
 	if err != nil {
 		return KptFile{}, fmt.Errorf("unable to read %s: %v", KptFileName, err)
 	}
