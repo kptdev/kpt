@@ -24,7 +24,7 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/internal/pkgfile"
+	"kpt.dev/util/pkgfile"
 	"lib.kpt.dev/yaml"
 )
 

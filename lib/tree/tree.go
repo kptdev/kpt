@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/xlab/treeprint"
-	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kio/kioutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -41,7 +41,7 @@ func (p Printer) Write(nodes []*yaml.RNode) error {
 			// not a resource
 			continue
 		}
-		pkg := meta.Annotations[kio.PackageAnnotation]
+		pkg := meta.Annotations[kioutil.PackageAnnotation]
 		nodeIndex[pkg] = append(nodeIndex[pkg], nodes[i])
 	}
 
@@ -53,8 +53,8 @@ func (p Printer) Write(nodes []*yaml.RNode) error {
 			// should have already fetched meta for each node
 			metai, _ := pkgNodes[i].GetMeta()
 			metaj, _ := pkgNodes[j].GetMeta()
-			pi := metai.Annotations[kio.PathAnnotation]
-			pj := metaj.Annotations[kio.PathAnnotation]
+			pi := metai.Annotations[kioutil.PathAnnotation]
+			pj := metaj.Annotations[kioutil.PathAnnotation]
 			if filepath.Base(pi) != filepath.Base(pj) {
 				return filepath.Base(pi) < filepath.Base(pj)
 			}
@@ -103,7 +103,7 @@ func (p Printer) Write(nodes []*yaml.RNode) error {
 		for i := range leaves {
 			leaf := leaves[i]
 			meta, _ := leaf.GetMeta()
-			path := meta.Annotations[kio.PathAnnotation]
+			path := meta.Annotations[kioutil.PathAnnotation]
 			path = filepath.Base(path)
 			value := fmt.Sprintf("%s.%s %s", meta.ApiVersion, meta.Kind, meta.Name)
 			if len(meta.Namespace) > 0 {

@@ -19,7 +19,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/internal/desc"
+	"kpt.dev/util/desc"
 )
 
 // Cmd returns a command runner.

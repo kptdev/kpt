@@ -16,6 +16,7 @@ package custom
 
 import (
 	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kio/filters"
 )
 
 type CommandList struct {
@@ -41,7 +42,7 @@ type Pipeline struct {
 
 	// Transformers are transformations applied to the Resource Configuration.
 	// They are applied in the order they are specified.
-	Filters []kio.KFilter `yaml:"filters"`
+	Filters []filters.KFilter `yaml:"filters"`
 }
 
 func (p Pipeline) kioFilters() []kio.Filter {

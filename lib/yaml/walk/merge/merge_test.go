@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package merge
+package merge_test
 
 import (
 	"bytes"
@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"lib.kpt.dev/fmtr"
 	"lib.kpt.dev/yaml"
+	. "lib.kpt.dev/yaml/walk/merge"
 )
 
 const dest = `

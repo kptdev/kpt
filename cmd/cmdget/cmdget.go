@@ -22,11 +22,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kio/filters"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/internal/get"
-	"kpt.dev/internal/get/getioreader"
+	"kpt.dev/util/get"
+	"kpt.dev/util/get/getioreader"
 )
 
 // Cmd returns a command runner
@@ -81,7 +81,7 @@ Args:
 		SuggestFor:   []string{"clone", "cp", "fetch"},
 	}
 	r.C = c
-	c.Flags().StringVar(&r.FilenamePattern, "pattern", kio.DefaultFilenamePattern,
+	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,
 		`Pattern to use for writing files.  
 May contain the following formatting verbs
 %n: metadata.name, %s: metadata.namespace, %k: kind

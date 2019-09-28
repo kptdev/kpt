@@ -22,13 +22,13 @@ commands:
     filters:
     - kind: Modifier
       pipeline:
-      - kind: HasFilter
+      - kind: FilterMatcher
         pipeline:
         - kind: AnnotationGetter
           key: name
           value: '{{ arg 0 }}'
       - kind: PathGetter
         path: ['spec', 'template', 'spec', 'containers', '[name={{ arg 0 }}]', 'image']
-      - kind: SedFilter
+      - kind: ValueReplacer
         stringMatch: '{{ input "old-image" }}'
         replace: '{{ input "new-image" }}'

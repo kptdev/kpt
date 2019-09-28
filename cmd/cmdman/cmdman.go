@@ -17,7 +17,7 @@ package cmdman
 
 import (
 	"github.com/spf13/cobra"
-	"kpt.dev/internal/man"
+	"kpt.dev/util/man"
 )
 
 // Cmd returns a command runner.

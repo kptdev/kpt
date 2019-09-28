@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	"lib.kpt.dev/kio/kioutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -41,7 +42,7 @@ type LocalPackageWriter struct {
 var _ Writer = LocalPackageWriter{}
 
 func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
-	if err := ErrorIfMissingAnnotation(nodes, requiredResourcePackageAnnotations...); err != nil {
+	if err := kioutil.ErrorIfMissingAnnotation(nodes, requiredResourcePackageAnnotations...); err != nil {
 		return err
 	}
 
@@ -62,15 +63,15 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 		return err
 	}
 	for k := range outputFiles {
-		if err = sortNodes(outputFiles[k]); err != nil {
+		if err = kioutil.SortNodes(outputFiles[k]); err != nil {
 			return err
 		}
 	}
 
 	if !r.KeepReaderAnnotations {
-		r.ClearAnnotations = append(r.ClearAnnotations, ModeAnnotation)
-		r.ClearAnnotations = append(r.ClearAnnotations, PackageAnnotation)
-		r.ClearAnnotations = append(r.ClearAnnotations, PathAnnotation)
+		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.ModeAnnotation)
+		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.PackageAnnotation)
+		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.PathAnnotation)
 	}
 
 	// validate outputs before writing any
@@ -156,7 +157,7 @@ func (r LocalPackageWriter) indexByFilePath(
 	for i := range nodes {
 		// parse the file write path
 		node := nodes[i]
-		value, err := node.Pipe(yaml.GetAnnotation(PathAnnotation))
+		value, err := node.Pipe(yaml.GetAnnotation(kioutil.PathAnnotation))
 		if err != nil {
 			// this should never happen if errorIfMissingRequiredAnnotation was run
 			return nil, nil, err
@@ -173,14 +174,14 @@ func (r LocalPackageWriter) indexByFilePath(
 		}
 
 		// parse the file write mode
-		value, err = node.Pipe(yaml.GetAnnotation(ModeAnnotation))
+		value, err = node.Pipe(yaml.GetAnnotation(kioutil.ModeAnnotation))
 		if err != nil {
 			// this should never happen if errorIfMissingRequiredAnnotation was run
 			return nil, nil, err
 		}
 		mode, err := strconv.Atoi(value.YNode().Value)
 		if err != nil {
-			return nil, nil, fmt.Errorf("unable to parse %s: %v", ModeAnnotation, err)
+			return nil, nil, fmt.Errorf("unable to parse %s: %v", kioutil.ModeAnnotation, err)
 		}
 		if m, found := outputModes[path]; found {
 			if m != mode {

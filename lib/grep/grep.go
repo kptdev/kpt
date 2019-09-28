@@ -15,13 +15,14 @@
 package grep
 
 import (
+	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/yaml"
 
 	"lib.kpt.dev/kio"
 )
 
 func init() {
-	kio.Filters["GrepFilter"] = func() kio.Filter { return Filter{} }
+	filters.Filters["GrepFilter"] = func() kio.Filter { return Filter{} }
 }
 
 // Filter filters RNodes with a matching field

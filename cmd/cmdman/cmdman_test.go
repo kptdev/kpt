@@ -24,7 +24,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmdman"
-	"kpt.dev/internal/pkgfile"
+	"kpt.dev/util/pkgfile"
 )
 
 // TestCmd_execute tests that the command displays package documentation.

@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/internal/update"
+	"kpt.dev/util/update"
 )
 
 // Cmd returns a command runner.

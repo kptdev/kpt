@@ -17,7 +17,7 @@ package cmdgendocs
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
-	"kpt.dev/internal/duck"
+	"kpt.dev/util/duck"
 )
 
 var noop = func(cmd *cobra.Command, args []string) {}
