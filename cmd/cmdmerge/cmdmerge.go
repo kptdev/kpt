@@ -17,6 +17,7 @@ package cmdmerge
 
 import (
 	"github.com/spf13/cobra"
+	"lib.kpt.dev/fmtr"
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
 )
@@ -25,12 +26,12 @@ import (
 func Cmd() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:   "merge",
+		Use:   "merge [SOURCE_DIR...] [DESTINATION_DIR]",
 		Short: "Merge Resource configuration files",
 		Long: `Merge Resource configuration files
 
-Merge reads Kubernetes Resource yaml configuration files from stdin and write the result to
-stdout.
+Merge reads Kubernetes Resource yaml configuration files from stdin or sources packages and write
+the result to stdout or a destination package.
 
 Resources are merged using the Resource [apiVersion, kind, name, namespace] as the key.  If any of
 these are missing, merge will default the missing values to empty.
@@ -57,7 +58,6 @@ Merge uses the following rules for merging a source Resource into a destination 
 		Example:      `cat resources_and_patches.yaml | kpt merge > merged_resources.yaml`,
 		RunE:         r.runE,
 		SilenceUsage: true,
-		Args:         cobra.ExactArgs(0),
 	}
 	r.C = c
 	return r
@@ -69,9 +69,27 @@ type Runner struct {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	return kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: c.InOrStdin()}},
-		Filters: []kio.Filter{filters.MergeFilter{}},
-		Outputs: []kio.Writer{kio.ByteWriter{Writer: c.OutOrStdout()}},
-	}.Execute()
+	var inputs []kio.Reader
+	// add the packages in reverse order -- the arg list should be highest precedence first
+	// e.g. merge from -> to, but the MergeFilter is highest precedence last
+	for i := len(args) - 1; i >= 0; i-- {
+		inputs = append(inputs, kio.LocalPackageReader{PackagePath: args[i]})
+	}
+	// if there is no "from" package, read from stdin
+	if len(inputs) < 2 {
+		inputs = append(inputs, kio.ByteReader{Reader: c.InOrStdin()})
+	}
+
+	// write to the "to" package if specified
+	var outputs []kio.Writer
+	if len(args) != 0 {
+		outputs = append(outputs, kio.LocalPackageWriter{PackagePath: args[len(args)-1]})
+	}
+	// if there is no "to" package, write to stdout
+	if len(outputs) == 0 {
+		outputs = append(outputs, kio.ByteWriter{Writer: c.OutOrStdout()})
+	}
+
+	filters := []kio.Filter{filters.MergeFilter{}, fmtr.Formatter{}}
+	return kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: outputs}.Execute()
 }

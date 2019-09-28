@@ -6,8 +6,8 @@ Merge Resource configuration files
 
 Merge Resource configuration files
 
-Merge reads Kubernetes Resource yaml configuration files from stdin and write the result to
-stdout.
+Merge reads Kubernetes Resource yaml configuration files from stdin or sources packages and write
+the result to stdout or a destination package.
 
 Resources are merged using the Resource [apiVersion, kind, name, namespace] as the key.  If any of
 these are missing, merge will default the missing values to empty.
@@ -33,7 +33,7 @@ Merge uses the following rules for merging a source Resource into a destination 
 
 
 ```
-kpt merge [flags]
+kpt merge [SOURCE_DIR...] [DESTINATION_DIR] [flags]
 ```
 
 ### Examples
