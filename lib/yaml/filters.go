@@ -30,13 +30,13 @@ var Filters = map[string]func() Filter{
 	"FieldClearer":      func() Filter { return &FieldClearer{} },
 	"FieldMatcher":      func() Filter { return &FieldMatcher{} },
 	"FieldSetter":       func() Filter { return &FieldSetter{} },
-	"HasFilter":         func() Filter { return &HasFilter{} },
+	"FilterMatcher":     func() Filter { return &FilterMatcher{} },
 	"PathGetter":        func() Filter { return &PathGetter{} },
 	"Parser":            func() Filter { return &Parser{} },
-	"PrefixFilter":      func() Filter { return &PrefixFilter{} },
-	"SedFilter":         func() Filter { return &SedFilter{} },
-	"SuffixFilter":      func() Filter { return &SuffixFilter{} },
-	"TeeFilter":         func() Filter { return &TeeFilter{} },
+	"PrefixSetter":      func() Filter { return &PrefixSetter{} },
+	"ValueReplacer":     func() Filter { return &ValueReplacer{} },
+	"SuffixSetter":      func() Filter { return &SuffixSetter{} },
+	"TeePiper":          func() Filter { return &TeePiper{} },
 }
 
 // YFilter wraps the Filter interface so it can be unmarshalled into a struct.
@@ -80,14 +80,14 @@ func (y YFilters) Filters() []Filter {
 	return f
 }
 
-type HasFilter struct {
+type FilterMatcher struct {
 	Kind string `yaml:"kind"`
 
-	// Filters are the set of Filters run by TeeFilter.
+	// Filters are the set of Filters run by TeePiper.
 	Filters YFilters `yaml:"pipeline,omitempty"`
 }
 
-func (t HasFilter) Filter(rn *RNode) (*RNode, error) {
+func (t FilterMatcher) Filter(rn *RNode) (*RNode, error) {
 	v, err := rn.Pipe(t.Filters.Filters()...)
 	if v == nil || err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (t HasFilter) Filter(rn *RNode) (*RNode, error) {
 	return rn, err
 }
 
-type SedFilter struct {
+type ValueReplacer struct {
 	Kind string `yaml:"kind"`
 
 	StringMatch string `yaml:"stringMatch"`
@@ -105,7 +105,7 @@ type SedFilter struct {
 	Count       int    `yaml:"count"`
 }
 
-func (s SedFilter) Filter(object *RNode) (*RNode, error) {
+func (s ValueReplacer) Filter(object *RNode) (*RNode, error) {
 	if s.Count == 0 {
 		s.Count = -1
 	}
@@ -114,35 +114,35 @@ func (s SedFilter) Filter(object *RNode) (*RNode, error) {
 	} else if s.RegexMatch != "" {
 		r, err := regexp.Compile(s.RegexMatch)
 		if err != nil {
-			return nil, fmt.Errorf("SedFilter RegexMatch does not compile: %v", err)
+			return nil, fmt.Errorf("ValueReplacer RegexMatch does not compile: %v", err)
 		}
 		object.value.Value = r.ReplaceAllString(object.value.Value, s.Replace)
 	} else {
-		return nil, fmt.Errorf("SedFilter missing StringMatch and RegexMatch")
+		return nil, fmt.Errorf("ValueReplacer missing StringMatch and RegexMatch")
 	}
 	return object, nil
 }
 
-type PrefixFilter struct {
+type PrefixSetter struct {
 	Kind string `yaml:"kind"`
 
 	Value string `yaml:"value"`
 }
 
-func (s PrefixFilter) Filter(object *RNode) (*RNode, error) {
+func (s PrefixSetter) Filter(object *RNode) (*RNode, error) {
 	if !strings.HasPrefix(object.value.Value, s.Value) {
 		object.value.Value = s.Value + object.value.Value
 	}
 	return object, nil
 }
 
-type SuffixFilter struct {
+type SuffixSetter struct {
 	Kind string `yaml:"kind"`
 
 	Value string `yaml:"value"`
 }
 
-func (s SuffixFilter) Filter(object *RNode) (*RNode, error) {
+func (s SuffixSetter) Filter(object *RNode) (*RNode, error) {
 	if !strings.HasSuffix(object.value.Value, s.Value) {
 		object.value.Value = object.value.Value + s.Value
 	}

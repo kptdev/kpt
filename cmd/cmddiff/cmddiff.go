@@ -19,8 +19,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/internal/argutil"
-	"kpt.dev/internal/diff"
+	"kpt.dev/util/argutil"
+	"kpt.dev/util/diff"
 )
 
 // Cmd returns a command runner.

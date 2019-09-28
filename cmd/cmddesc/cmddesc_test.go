@@ -24,8 +24,8 @@ import (
 
 	"gotest.tools/assert"
 	"kpt.dev/cmddesc"
-	"kpt.dev/internal/pkgfile"
-	"kpt.dev/internal/testutil"
+	"kpt.dev/util/pkgfile"
+	"kpt.dev/util/testutil"
 )
 
 // TestDesc_Execute tests happy path for Describe command.

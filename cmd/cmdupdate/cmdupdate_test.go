@@ -23,10 +23,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmdget"
 	"kpt.dev/cmdupdate"
-	"kpt.dev/internal/gitutil"
-	"kpt.dev/internal/pkgfile"
-	"kpt.dev/internal/testutil"
-	"kpt.dev/internal/update"
+	"kpt.dev/util/gitutil"
+	"kpt.dev/util/pkgfile"
+	"kpt.dev/util/testutil"
+	"kpt.dev/util/update"
 	"lib.kpt.dev/yaml"
 )
 

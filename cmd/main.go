@@ -37,7 +37,7 @@ import (
 	"kpt.dev/cmdtree"
 	"kpt.dev/cmdtutorials"
 	"kpt.dev/cmdupdate"
-	"kpt.dev/internal/duck"
+	"kpt.dev/util/duck"
 	"lib.kpt.dev/custom"
 )
 

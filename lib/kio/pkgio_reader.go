@@ -19,13 +19,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"lib.kpt.dev/kio/kioutil"
 	"lib.kpt.dev/yaml"
 )
 
 // requiredResourcePackageAnnotations are annotations that are required to write resources back to
 // files.
 var requiredResourcePackageAnnotations = []string{
-	IndexAnnotation, ModeAnnotation, PathAnnotation,
+	kioutil.IndexAnnotation, kioutil.ModeAnnotation, kioutil.PathAnnotation,
 }
 
 type LocalPackageReadWriter struct {
@@ -217,9 +218,9 @@ func (r *LocalPackageReader) initReaderAnnotations(path string, info os.FileInfo
 		r.SetAnnotations = map[string]string{}
 	}
 	if !r.OmitReaderAnnotations {
-		r.SetAnnotations[PackageAnnotation] = filepath.Dir(path)
-		r.SetAnnotations[PathAnnotation] = path
-		r.SetAnnotations[ModeAnnotation] = fmt.Sprintf("%d", info.Mode())
+		r.SetAnnotations[kioutil.PackageAnnotation] = filepath.Dir(path)
+		r.SetAnnotations[kioutil.PathAnnotation] = path
+		r.SetAnnotations[kioutil.ModeAnnotation] = fmt.Sprintf("%d", info.Mode())
 	}
 }
 

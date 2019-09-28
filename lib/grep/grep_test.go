@@ -18,6 +18,8 @@ import (
 	"bytes"
 	"testing"
 
+	"lib.kpt.dev/kio/filters"
+
 	"lib.kpt.dev/yaml"
 
 	"github.com/stretchr/testify/assert"
@@ -156,7 +158,7 @@ spec:
 }
 
 func TestFilter_init(t *testing.T) {
-	assert.Equal(t, grep.Filter{}, kio.Filters["GrepFilter"]())
+	assert.Equal(t, grep.Filter{}, filters.Filters["GrepFilter"]())
 }
 
 func TestFilter_error(t *testing.T) {

@@ -19,6 +19,7 @@ import (
 	"io"
 	"sort"
 
+	"lib.kpt.dev/kio/kioutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -94,7 +95,7 @@ func (r ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error
 		r.SetAnnotations = map[string]string{}
 	}
 	if !r.OmitReaderAnnotations {
-		r.SetAnnotations[IndexAnnotation] = fmt.Sprintf("%d", index)
+		r.SetAnnotations[kioutil.IndexAnnotation] = fmt.Sprintf("%d", index)
 	}
 	var keys []string
 	for k := range r.SetAnnotations {

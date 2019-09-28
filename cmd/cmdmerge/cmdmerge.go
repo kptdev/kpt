@@ -16,10 +16,9 @@
 package cmdmerge
 
 import (
-	"lib.kpt.dev/kio"
-	"lib.kpt.dev/kio/merge"
-
 	"github.com/spf13/cobra"
+	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kio/filters"
 )
 
 // Cmd returns a command runner.
@@ -72,7 +71,7 @@ type Runner struct {
 func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return kio.Pipeline{
 		Inputs:  []kio.Reader{kio.ByteReader{Reader: c.InOrStdin()}},
-		Filters: []kio.Filter{merge.Filter{}},
+		Filters: []kio.Filter{filters.MergeFilter{}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: c.OutOrStdout()}},
 	}.Execute()
 }

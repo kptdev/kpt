@@ -17,6 +17,7 @@ package kio
 import (
 	"io"
 
+	"lib.kpt.dev/kio/kioutil"
 	"lib.kpt.dev/yaml"
 )
 
@@ -39,7 +40,7 @@ type ByteWriter struct {
 var _ Writer = ByteWriter{}
 
 func (w ByteWriter) Write(nodes []*yaml.RNode) error {
-	if err := sortNodes(nodes); err != nil {
+	if err := kioutil.SortNodes(nodes); err != nil {
 		return err
 	}
 
@@ -49,7 +50,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 
 		// clean resources by removing annotations set by the Reader
 		if !w.KeepReaderAnnotations {
-			_, err := nodes[i].Pipe(yaml.ClearAnnotation(IndexAnnotation))
+			_, err := nodes[i].Pipe(yaml.ClearAnnotation(kioutil.IndexAnnotation))
 			if err != nil {
 				return err
 			}

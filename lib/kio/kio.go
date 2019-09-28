@@ -17,42 +17,8 @@
 package kio
 
 import (
-	"fmt"
-
 	"lib.kpt.dev/yaml"
 )
-
-type AnnotationKey = string
-
-const (
-	// IndexAnnotation records the index of a specific resource in a file or input stream.
-	IndexAnnotation AnnotationKey = "kpt.dev/kio/index"
-
-	// PathAnnotation records the path to the file the Resource was read from
-	PathAnnotation AnnotationKey = "kpt.dev/kio/path"
-
-	// PackageAnnotation records the name of the package the Resource was read from
-	PackageAnnotation AnnotationKey = "kpt.dev/kio/package"
-
-	// ModeAnnotation records the mode of the file the Resource was read from
-	ModeAnnotation AnnotationKey = "kpt.dev/kio/mode"
-)
-
-// ErrorIfMissingAnnotation validates the provided annotations are present on the given resources
-func ErrorIfMissingAnnotation(nodes []*yaml.RNode, keys ...AnnotationKey) error {
-	for _, key := range keys {
-		for _, node := range nodes {
-			val, err := node.Pipe(yaml.GetAnnotation(key))
-			if err != nil {
-				return err
-			}
-			if val == nil {
-				return fmt.Errorf("missing package annotation %s", key)
-			}
-		}
-	}
-	return nil
-}
 
 // Reader reads ResourceNodes. Analogous to io.Reader.
 type Reader interface {

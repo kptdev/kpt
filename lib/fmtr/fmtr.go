@@ -38,6 +38,7 @@ import (
 	"sort"
 
 	"lib.kpt.dev/kio"
+	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/yaml"
 )
 
@@ -101,7 +102,7 @@ var fieldSortOrder = []string{
 }
 
 func init() {
-	kio.Filters["Formatter"] = func() kio.Filter { return &Formatter{} }
+	filters.Filters["Formatter"] = func() kio.Filter { return &Formatter{} }
 }
 
 type set map[string]interface{}

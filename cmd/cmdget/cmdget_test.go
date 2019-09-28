@@ -24,8 +24,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/cmdget"
-	"kpt.dev/internal/pkgfile"
-	"kpt.dev/internal/testutil"
+	"kpt.dev/util/pkgfile"
+	"kpt.dev/util/testutil"
 	"lib.kpt.dev/yaml"
 )
 

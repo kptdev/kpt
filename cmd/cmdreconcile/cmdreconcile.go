@@ -16,9 +16,8 @@
 package cmdreconcile
 
 import (
-	"kpt.dev/internal/reconcile"
-
 	"github.com/spf13/cobra"
+	"kpt.dev/util/reconcile"
 )
 
 // Cmd returns a command runner.

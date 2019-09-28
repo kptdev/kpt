@@ -10,9 +10,9 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0
 	gotest.tools v2.2.0+incompatible
-	k8s.io/apimachinery v0.0.0-20190830154629-f1cbc0c8ff07
+	k8s.io/apimachinery v0.0.0-20190927035529-0104e33c351d
 	lib.kpt.dev v0.0.0
-	sigs.k8s.io/kustomize/v3 v3.1.1-0.20190830180857-4ebad27d7a6d
+	sigs.k8s.io/kustomize/v3 v3.2.0
 )
 
 replace lib.kpt.dev => ../lib/

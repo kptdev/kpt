@@ -425,20 +425,20 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 // May be used to fork sub-filters from a call.
 // e.g. locate field, set value; locate another field, set another value
 func Tee(filters ...Filter) Filter {
-	return TeeFilter{Filters: filters}
+	return TeePiper{Filters: filters}
 }
 
-// TeeFilter Calls a slice of Filters and returns its input.
+// TeePiper Calls a slice of Filters and returns its input.
 // May be used to fork sub-filters from a call.
 // e.g. locate field, set value; locate another field, set another value
-type TeeFilter struct {
+type TeePiper struct {
 	Kind string `yaml:"kind,omitempty"`
 
-	// Filters are the set of Filters run by TeeFilter.
+	// Filters are the set of Filters run by TeePiper.
 	Filters []Filter `yaml:"filters,omitempty"`
 }
 
-func (t TeeFilter) Filter(rn *RNode) (*RNode, error) {
+func (t TeePiper) Filter(rn *RNode) (*RNode, error) {
 	_, err := rn.Pipe(t.Filters...)
 	return rn, err
 }
