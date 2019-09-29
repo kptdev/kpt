@@ -69,9 +69,9 @@ func CopyDir(src string, dst string) error {
 //
 // Diff is guaranteed to return a non-empty set if any files differ, but
 // this set is not guaranteed to contain all differing files.
-func Diff(sourceDir, destDir string) (sets.Set, error) {
+func Diff(sourceDir, destDir string) (sets.String, error) {
 	// get set of filenames in the package source
-	upstreamFiles := sets.Set{}
+	upstreamFiles := sets.String{}
 	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -90,11 +90,11 @@ func Diff(sourceDir, destDir string) (sets.Set, error) {
 		return nil
 	})
 	if err != nil {
-		return sets.Set{}, err
+		return sets.String{}, err
 	}
 
 	// get set of filenames in the cloned package
-	localFiles := sets.Set{}
+	localFiles := sets.String{}
 	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -113,7 +113,7 @@ func Diff(sourceDir, destDir string) (sets.Set, error) {
 		return nil
 	})
 	if err != nil {
-		return sets.Set{}, err
+		return sets.String{}, err
 	}
 
 	// verify the source and cloned packages have the same set of filenames

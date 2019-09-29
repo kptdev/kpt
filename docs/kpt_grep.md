@@ -43,6 +43,7 @@ kpt grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-pack
       --annotate              annotate resources with their file origins. (default true)
   -h, --help                  help for grep
       --include-subpackages   also print resources from subpackages. (default true)
+  -v, --invert-match           Selected Resources are those not matching any of the specified patterns..
 ```
 
 ### SEE ALSO

@@ -15,16 +15,16 @@
 package yaml
 
 import (
-	"path/filepath"
+	"regexp"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
-// PathGetter returns the RNode under Path.
+// PathMatcher returns all RNodes matching the path wrapped in a SequenceNode.
+// Lists may have multiple elements matching the path, and each matching element
+// is added to the return result.
+// If Path points to a SequenceNode, the SequenceNode is wrapped in another SequenceNode
+// If Path does not contain any lists, the result is still wrapped in a SequenceNode of len == 1
 type PathMatcher struct {
-	child bool
-
 	Kind string `yaml:"kind,omitempty"`
 
 	// Path is a slice of parts leading to the RNode to lookup.
@@ -40,93 +40,170 @@ type PathMatcher struct {
 	// See Elem for more on List Entries.
 	//
 	// Examples:
-	// * spec.template.spec.container with matching name: [name=nginx]
-	// * spec.template.spec.container.argument matching a value: [=-jar]
+	// * spec.template.spec.container with matching name: [name=nginx] -- match 'name': 'nginx'
+	// * spec.template.spec.container.argument matching a value: [=-jar] -- match '-jar'
 	Path []string `yaml:"path,omitempty"`
 
-	Match []string
+	// Matches is set by PathMatch to publish the matched element values for each node.
+	// After running  PathMatcher.Filter, each node from the SequenceNode result may be
+	// looked up in Matches to find the field values that were matched.
+	Matches map[*Node][]string
+
+	// StripComments may be set to remove the comments on the matching Nodes.
+	// This is useful for if the nodes are to be printed in FlowStyle.
+	StripComments bool
+
+	val        *RNode
+	field      string
+	matchRegex string
 }
 
-func (l *PathMatcher) Filter(rn *RNode) (*RNode, error) {
-	if len(l.Path) == 0 {
-		// found the node
-		return rn, nil
+func (p *PathMatcher) stripComments(n *Node) {
+	if n == nil {
+		return
 	}
-	if !l.child {
-		l.Path = cleanPath(l.Path)
-	}
-	if IsListIndex(l.Path[0]) {
-		return l.doElem(rn)
-	} else {
-		return l.doField(rn)
+	if p.StripComments {
+		n.LineComment = ""
+		n.HeadComment = ""
+		n.FootComment = ""
+		for i := range n.Content {
+			p.stripComments(n.Content[i])
+		}
 	}
 }
 
-func (l *PathMatcher) doElem(rn *RNode) (*RNode, error) {
-	name, match, err := SplitIndexNameValue(l.Path[0])
+func (p *PathMatcher) Filter(rn *RNode) (*RNode, error) {
+	val, err := p.filter(rn)
 	if err != nil {
 		return nil, err
 	}
-	node := NewRNode(&yaml.Node{Kind: yaml.SequenceNode})
-
-	// add each of the matching elements to a sequence return value
-	err = rn.VisitElements(func(elem *RNode) error {
-		if name == "" {
-			// primitive type
-			s, err := elem.String()
-			if err != nil {
-				return err
-			}
-			match, err := filepath.Match(match, strings.TrimSpace(s))
-			if err != nil || !match {
-				return err
-			}
-			node.YNode().Content = append(node.YNode().Content, elem.YNode())
-		}
-
-		// find each of the matching elements
-		val := elem.Field(name)
-		if val == nil || val.Value == nil {
-			return nil
-		}
-		s, err := val.Value.String()
-		if err != nil {
-			return err
-		}
-		s = strings.TrimSpace(s)
-		match, err := filepath.Match(match, s)
-		if err != nil || !match {
-			return err
-		}
-
-		l.Match = append(l.Match, s)
-
-		add, err := elem.Pipe(&PathMatcher{Path: l.Path[1:], child: true})
-		if err != nil || add == nil {
-			return err
-		}
-		if add.YNode().Kind == yaml.SequenceNode {
-			// returns a sequence, add all of the elements
-			node.YNode().Content = append(node.YNode().Content, add.YNode().Content...)
-		} else {
-			// add the matching value
-			node.YNode().Content = append(node.YNode().Content, add.YNode())
-		}
-		return nil
-	})
-	if err != nil || len(node.Content()) == 0 {
-		// error or no results
-		return nil, err
-	}
-	return node, nil
+	p.stripComments(val.YNode())
+	return val, err
 }
 
-func (l *PathMatcher) doField(rn *RNode) (*RNode, error) {
-	field, err := rn.Pipe(Get(l.Path[0]))
+func (p *PathMatcher) filter(rn *RNode) (*RNode, error) {
+	p.Matches = map[*Node][]string{}
+
+	if len(p.Path) == 0 {
+		// return the element wrapped in a SequenceNode
+		p.appendRNode("", rn)
+		return p.val, nil
+	}
+
+	if IsListIndex(p.Path[0]) {
+		// match seq elements
+		return p.doSeq(rn)
+	} else {
+		// match a field
+		return p.doField(rn)
+	}
+}
+
+func (p *PathMatcher) doField(rn *RNode) (*RNode, error) {
+	// lookup the field
+	field, err := rn.Pipe(Get(p.Path[0]))
 	if err != nil || field == nil {
+		// if the field doesn't exist, return nil
 		return nil, err
 	}
-	return field.Pipe(&PathMatcher{Path: l.Path[1:], child: true})
+
+	// recurse on the field, removing the first element of the path
+	pm := &PathMatcher{Path: p.Path[1:]}
+	p.val, err = pm.filter(field)
+	p.Matches = pm.Matches
+	return p.val, err
+}
+
+// doSeq iterates over a sequence and appends elements matching the path regex to p.Val
+func (p *PathMatcher) doSeq(rn *RNode) (*RNode, error) {
+
+	// parse the field + match pair
+	var err error
+	p.field, p.matchRegex, err = SplitIndexNameValue(p.Path[0])
+	if err != nil {
+		return nil, err
+	}
+
+	if p.field == "" {
+		err = rn.VisitElements(p.visitPrimitiveElem)
+	} else {
+		err = rn.VisitElements(p.visitElem)
+	}
+	if err != nil || p.val == nil || len(p.val.YNode().Content) == 0 {
+		return nil, err
+	}
+
+	return p.val, nil
+}
+
+func (p *PathMatcher) visitPrimitiveElem(elem *RNode) error {
+	r, err := regexp.Compile(p.matchRegex)
+	if err != nil {
+		return err
+	}
+
+	str, err := elem.String()
+	if err != nil {
+		return err
+	}
+	str = strings.TrimSpace(str)
+	if !r.MatchString(str) {
+		return nil
+	}
+
+	p.appendRNode("", elem)
+	return nil
+}
+
+func (p *PathMatcher) visitElem(elem *RNode) error {
+	r, err := regexp.Compile(p.matchRegex)
+	if err != nil {
+		return err
+	}
+
+	// check if this elements field matches the regex
+	val := elem.Field(p.field)
+	if val == nil || val.Value == nil {
+		return nil
+	}
+	str, err := val.Value.String()
+	if err != nil {
+		return err
+	}
+	str = strings.TrimSpace(str)
+	if !r.MatchString(str) {
+		return nil
+	}
+
+	// recurse on the matching element
+	pm := &PathMatcher{Path: p.Path[1:]}
+	add, err := pm.filter(elem)
+	for k, v := range pm.Matches {
+		p.Matches[k] = v
+	}
+	if err != nil || add == nil {
+		return err
+	}
+	p.append(str, add.Content()...)
+	return nil
+}
+
+func (p *PathMatcher) appendRNode(path string, node *RNode) {
+	p.append(path, node.YNode())
+}
+
+func (p *PathMatcher) append(path string, nodes ...*Node) {
+	if p.val == nil {
+		p.val = NewRNode(&Node{Kind: SequenceNode})
+	}
+	for i := range nodes {
+		node := nodes[i]
+		p.val.YNode().Content = append(p.val.YNode().Content, node)
+		// record the path if specified
+		if path != "" {
+			p.Matches[node] = append(p.Matches[node], path)
+		}
+	}
 }
 
 func cleanPath(path []string) []string {

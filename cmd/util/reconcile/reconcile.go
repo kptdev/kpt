@@ -88,16 +88,15 @@ func (r Cmd) Execute() error {
 
 	pkgIO := kio.LocalPackageReadWriter{PackagePath: r.PkgPath}
 	inputs := []kio.Reader{pkgIO}
+	var outputs []kio.Writer
 	if r.Output == nil {
 		// write back to the package
-		return kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: []kio.Writer{pkgIO}}.
-			Execute()
+		outputs = append(outputs, pkgIO)
 	} else {
 		// write to the output instead of the package
-		return kio.Pipeline{
-			Inputs: inputs, Filters: filters,
-			Outputs: []kio.Writer{kio.ByteWriter{Writer: r.Output}}}.Execute()
+		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
+	return kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: outputs}.Execute()
 }
 
 // init initializes the Cmd with a filterProvider

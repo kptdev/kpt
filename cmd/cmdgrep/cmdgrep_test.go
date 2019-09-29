@@ -197,7 +197,7 @@ spec:
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "multiple '='")
+	assert.Contains(t, err.Error(), "ambiguous match")
 
 	// fmt the files
 	b = &bytes.Buffer{}
