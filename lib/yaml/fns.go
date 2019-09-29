@@ -275,7 +275,7 @@ func (l PathGetter) Filter(rn *RNode) (*RNode, error) {
 	match := rn
 
 	// iterate over path until encountering an error or missing value
-	l.cleanPath()
+	l.Path = cleanPath(l.Path)
 	for i := range l.Path {
 		var part, nextPart string
 		part = l.Path[i]
@@ -332,18 +332,6 @@ func (l PathGetter) doField(
 		return rn.Pipe(Get(name))
 	}
 	return rn.Pipe(FieldMatcher{Name: name, Create: &RNode{value: &yaml.Node{Kind: kind, Style: l.Style}}})
-}
-
-func (l *PathGetter) cleanPath() {
-	var p []string
-	for _, elem := range l.Path {
-		elem = strings.TrimSpace(elem)
-		if len(elem) == 0 {
-			continue
-		}
-		p = append(p, elem)
-	}
-	l.Path = p
 }
 
 func (l PathGetter) getKind(nextPart string) yaml.Kind {

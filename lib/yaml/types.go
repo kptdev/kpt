@@ -257,6 +257,14 @@ func (rn *RNode) String() (string, error) {
 	return b.String(), err
 }
 
+func (rn *RNode) MustString() string {
+	s, err := rn.String()
+	if err != nil {
+		panic(err)
+	}
+	return s
+}
+
 // Content returns the value node's Content field.
 func (rn *RNode) Content() []*yaml.Node {
 	return rn.YNode().Content
