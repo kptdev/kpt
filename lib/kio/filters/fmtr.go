@@ -317,7 +317,7 @@ func (s sortedSeqContents) Less(i, j int) bool {
 			iValue = s.Content[i].Content[a+1].Value
 		}
 	}
-	for a := range s.Content[i].Content {
+	for a := range s.Content[j].Content {
 		if a%2 != 0 {
 			continue // not a fieldNameIndex
 		}
