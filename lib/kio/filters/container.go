@@ -94,9 +94,14 @@ func (c *ContainerFilter) getArgs() []string {
 	// libraries, and ensures things like auth work the same as if the container
 	// was run from the cli.
 	args := []string{"docker", "run",
-		"--rm",              // delete the container afterward
-		"-i",                // enable stdin
-		"--network", "none", // disable the network for added security
+		"--rm",                                              // delete the container afterward
+		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR", // attach stdin, stdout, stderr
+
+		// added security options
+		"--network", "none", // disable the network
+		"--user", "nobody", // run as nobody
+		"--read-only",                      // make fs read only
+		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 	}
 
 	// export the local environment vars to the container
