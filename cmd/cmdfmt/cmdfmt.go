@@ -16,7 +16,7 @@
 package cmdfmt
 
 import (
-	"io"
+	"lib.kpt.dev/kio"
 
 	"github.com/spf13/cobra"
 	"lib.kpt.dev/kio/filters"
@@ -55,10 +55,10 @@ field paths.
 `,
 		Example: `
 	# format file1.yaml and file2.yml
-    kpt fmt file1.yaml file2.yml
+	kpt fmt file1.yaml file2.yml
 
 	# format all *.yaml and *.yml recursively traversing directories
-    kpt fmt dir/
+	kpt fmt dir/
 
 	# format kubectl output
 	kubectl get -o yaml deployments | kpt fmt
@@ -69,28 +69,44 @@ field paths.
 		RunE:         r.runE,
 		SilenceUsage: true,
 	}
+	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,
+		`pattern to use for generating filenames for resources -- may contain the following
+formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'}`)
+	c.Flags().BoolVar(&r.SetFilenames, "set-filenames", false,
+		`if true, set default filenames on Resources without them`)
 	r.C = c
 	return r
 }
 
 // Runner contains the run function
 type Runner struct {
-	C *cobra.Command
+	C               *cobra.Command
+	FilenamePattern string
+	SetFilenames    bool
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	f := []kio.Filter{filters.FormatFilter{}}
+
+	// format with file names
+	if r.SetFilenames {
+		f = append(f, &filters.FileSetter{FilenamePattern: r.FilenamePattern})
+	}
+
 	// format stdin if there are no args
 	if len(args) == 0 {
-		b, err := filters.FormatInput(c.InOrStdin())
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(c.OutOrStdout(), b)
-		return err
+		return kio.Pipeline{
+			Inputs:  []kio.Reader{kio.ByteReader{Reader: c.InOrStdin()}},
+			Filters: f,
+			Outputs: []kio.Writer{kio.ByteWriter{Writer: c.OutOrStdout()}},
+		}.Execute()
 	}
 
 	for i := range args {
-		err := filters.FormatFileOrDirectory(args[i])
+		path := args[i]
+		rw := kio.LocalPackageReadWriter{PackagePath: path}
+		err := kio.Pipeline{
+			Inputs: []kio.Reader{rw}, Filters: f, Outputs: []kio.Writer{rw}}.Execute()
 		if err != nil {
 			return err
 		}

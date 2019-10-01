@@ -39,10 +39,10 @@ kpt fmt [flags]
 ```
 
 	# format file1.yaml and file2.yml
-    kpt fmt file1.yaml file2.yml
+	kpt fmt file1.yaml file2.yml
 
 	# format all *.yaml and *.yml recursively traversing directories
-    kpt fmt dir/
+	kpt fmt dir/
 
 	# format kubectl output
 	kubectl get -o yaml deployments | kpt fmt
@@ -55,7 +55,10 @@ kpt fmt [flags]
 ### Options
 
 ```
-  -h, --help   help for fmt
+  -h, --help             help for fmt
+      --pattern string   pattern to use for generating filenames for resources -- may contain the following
+                         formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'} (default "%n_%k.yaml")
+      --set-filenames    if true, set default filenames on Resources without them
 ```
 
 ### SEE ALSO

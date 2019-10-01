@@ -178,7 +178,7 @@ type FieldMatcher struct {
 	Kind string `yaml:"kind,omitempty"`
 
 	// Name of the field to return
-	Name string `yaml:"path,omitempty"`
+	Name string `yaml:"name,omitempty"`
 
 	// YNode of the field to return.
 	// Optional.  Will only need to match field name if unset.
