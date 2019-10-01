@@ -27,10 +27,11 @@ import (
 // Filters are the list of known filters for unmarshalling a filter into a concrete
 // implementation.
 var Filters = map[string]func() kio.Filter{
-	"Modifier":     func() kio.Filter { return &Modifier{} },
-	"FileSetter":   func() kio.Filter { return &FileSetter{} },
-	"GrepFilter":   func() kio.Filter { return GrepFilter{} },
-	"FormatFilter": func() kio.Filter { return &FormatFilter{} },
+	"FileSetter":    func() kio.Filter { return &FileSetter{} },
+	"FormatFilter":  func() kio.Filter { return &FormatFilter{} },
+	"GrepFilter":    func() kio.Filter { return GrepFilter{} },
+	"MatchModifier": func() kio.Filter { return &MatchModifyFilter{} },
+	"Modifier":      func() kio.Filter { return &Modifier{} },
 }
 
 // filter wraps a kio.filter so that it can be unmarshalled from yaml.
