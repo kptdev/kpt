@@ -16,6 +16,7 @@ package yaml
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
@@ -186,6 +187,8 @@ type FieldMatcher struct {
 
 	StringValue string `yaml:"stringValue,omitempty"`
 
+	StringRegexValue string `yaml:"stringRegexValue,omitempty"`
+
 	// Create will cause the field to be created with this value
 	// if it is set.
 	Create *RNode `yaml:"create,omitempty"`
@@ -200,7 +203,17 @@ func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 		if err := ErrorIfInvalid(rn, yaml.ScalarNode); err != nil {
 			return nil, err
 		}
-		if rn.value.Value == f.Value.YNode().Value {
+		if f.StringRegexValue != "" {
+			// TODO(pwittrock): pre-compile this when unmarshalling and cache to a field
+			rg, err := regexp.Compile(f.StringRegexValue)
+			if err != nil {
+				return nil, err
+			}
+			if match := rg.MatchString(rn.value.Value); match {
+				return rn, nil
+			}
+			return nil, nil
+		} else if rn.value.Value == f.Value.YNode().Value {
 			return rn, nil
 		} else {
 			return nil, nil
@@ -275,7 +288,7 @@ func (l PathGetter) Filter(rn *RNode) (*RNode, error) {
 	match := rn
 
 	// iterate over path until encountering an error or missing value
-	l.cleanPath()
+	l.Path = cleanPath(l.Path)
 	for i := range l.Path {
 		var part, nextPart string
 		part = l.Path[i]
@@ -332,18 +345,6 @@ func (l PathGetter) doField(
 		return rn.Pipe(Get(name))
 	}
 	return rn.Pipe(FieldMatcher{Name: name, Create: &RNode{value: &yaml.Node{Kind: kind, Style: l.Style}}})
-}
-
-func (l *PathGetter) cleanPath() {
-	var p []string
-	for _, elem := range l.Path {
-		elem = strings.TrimSpace(elem)
-		if len(elem) == 0 {
-			continue
-		}
-		p = append(p, elem)
-	}
-	l.Path = p
 }
 
 func (l PathGetter) getKind(nextPart string) yaml.Kind {
@@ -489,14 +490,14 @@ func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
 	return nil
 }
 
-// IsListIndex returns true if p is an index into a Seq.
+// IsListIndex returns true if p is an index into a Val.
 // e.g. [fieldName=fieldValue]
 // e.g. [=primitiveValue]
 func IsListIndex(p string) bool {
 	return strings.HasPrefix(p, "[") && strings.HasSuffix(p, "]")
 }
 
-// SplitIndexNameValue splits a lookup part Seq index into the field name
+// SplitIndexNameValue splits a lookup part Val index into the field name
 // and field value to match.
 // e.g. splits [name=nginx] into (name, nginx)
 // e.g. splits [=-jar] into ("", jar)

@@ -14,13 +14,13 @@
 
 package sets
 
-type Set map[string]interface{}
+type String map[string]interface{}
 
-func (s Set) Len() int {
+func (s String) Len() int {
 	return len(s)
 }
 
-func (s Set) List() []string {
+func (s String) List() []string {
 	var val []string
 	for k := range s {
 		val = append(val, k)
@@ -28,14 +28,19 @@ func (s Set) List() []string {
 	return val
 }
 
-func (s Set) Insert(vals ...string) {
+func (s String) Has(val string) bool {
+	_, found := s[val]
+	return found
+}
+
+func (s String) Insert(vals ...string) {
 	for _, val := range vals {
 		s[val] = nil
 	}
 }
 
-func (s Set) Difference(s2 Set) Set {
-	s3 := Set{}
+func (s String) Difference(s2 String) String {
+	s3 := String{}
 	for k := range s {
 		if _, found := s2[k]; !found {
 			s3.Insert(k)
@@ -44,8 +49,8 @@ func (s Set) Difference(s2 Set) Set {
 	return s3
 }
 
-func (s Set) SymmetricDifference(s2 Set) Set {
-	s3 := Set{}
+func (s String) SymmetricDifference(s2 String) String {
+	s3 := String{}
 	for k := range s {
 		if _, found := s2[k]; !found {
 			s3.Insert(k)
@@ -59,8 +64,8 @@ func (s Set) SymmetricDifference(s2 Set) Set {
 	return s3
 }
 
-func (s Set) Intersection(s2 Set) Set {
-	s3 := Set{}
+func (s String) Intersection(s2 String) String {
+	s3 := String{}
 	for k := range s {
 		if _, found := s2[k]; found {
 			s3.Insert(k)

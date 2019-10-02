@@ -20,6 +20,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/api/resource"
+	"kpt.dev/util/argutil"
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
 )
@@ -62,6 +64,8 @@ kpt grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-pack
 		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", true,
 		"annotate resources with their file origins.")
+	c.Flags().BoolVarP(&r.InvertMatch, "invert-match", "v", false,
+		" Selected Resources are those not matching any of the specified patterns..")
 
 	r.C = c
 	return r
@@ -77,38 +81,50 @@ type Runner struct {
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	// fixup '\.' so we don't split on it
-	match := strings.Replace(args[0], "\\.", "$$$$", -1)
-	parts := strings.Split(match, ".")
-	for i := range parts {
-		parts[i] = strings.Replace(parts[i], "$$$$", ".", -1)
+	r.GrepFilter.Compare = func(a, b string) (int, error) {
+		qa, err := resource.ParseQuantity(a)
+		if err != nil {
+			return 0, fmt.Errorf("%s: %v", a, err)
+		}
+		qb, err := resource.ParseQuantity(b)
+		if err != nil {
+			return 0, err
+		}
+
+		return qa.Cmp(qb), err
+	}
+	parts, err := argutil.ParseFieldPath(args[0])
+	if err != nil {
+		return err
 	}
 
-	// split the list index from the list field
-	var newParts []string
-	for i := range parts {
-		if !strings.Contains(parts[i], "[") {
-			newParts = append(newParts, parts[i])
-			continue
-		}
-		p := strings.Split(parts[i], "[")
-		if len(p) != 2 {
-			return fmt.Errorf("unrecognized path element: %s.  "+
-				"Should be of the form 'list[field=value]'", parts[i])
-		}
-		p[1] = "[" + p[1]
-		newParts = append(newParts, p[0], p[1])
+	var last []string
+	if strings.Contains(parts[len(parts)-1], ">=") {
+		last = strings.Split(parts[len(parts)-1], ">=")
+		r.MatchType = filters.GreaterThanEq
+	} else if strings.Contains(parts[len(parts)-1], "<=") {
+		last = strings.Split(parts[len(parts)-1], "<=")
+		r.MatchType = filters.LessThanEq
+	} else if strings.Contains(parts[len(parts)-1], ">") {
+		last = strings.Split(parts[len(parts)-1], ">")
+		r.MatchType = filters.GreaterThan
+	} else if strings.Contains(parts[len(parts)-1], "<") {
+		last = strings.Split(parts[len(parts)-1], "<")
+		r.MatchType = filters.LessThan
+	} else {
+		last = strings.Split(parts[len(parts)-1], "=")
+		r.MatchType = filters.Regexp
 	}
-	parts = newParts
-
-	last := strings.Split(parts[len(parts)-1], "=")
 	if len(last) > 2 {
 		return fmt.Errorf(
-			"ambiguous match -- multiple '=' in final path element: %s", parts[len(parts)-1])
+			"ambiguous match -- multiple of ['<', '>', '<=', '>=', '=' in final path element: %s",
+			parts[len(parts)-1])
 	}
+
 	if len(last) > 1 {
 		r.Value = last[1]
 	}
+
 	r.Path = append(parts[:len(parts)-1], last[0])
 	return nil
 }

@@ -117,6 +117,15 @@ Kpt provides various tools for working with local packages once they are fetched
   tree will read from stdin if no arguments are provided.  grep can be used with
   tree to only print a subset of the package.
 
+	# display workloads less than 3 replicas
+	kpt grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kpt grep "spec.replicas<3" | kpt tree --replicas
+
+	# display workloads without an image tag
+	kpt grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kpt grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kpt tree --image --name
+
+	# display workloads with greater than 1.0 cpu-limits
+	kpt grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kpt tree --name --resources
+
 ## Combing grep and get
 
 	$ kpt grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress

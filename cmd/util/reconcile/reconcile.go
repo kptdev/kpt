@@ -15,6 +15,7 @@
 package reconcile
 
 import (
+	"io"
 	"regexp"
 
 	"lib.kpt.dev/kio"
@@ -26,6 +27,10 @@ import (
 type Cmd struct {
 	// PkgPath is the path to the package to reconcile
 	PkgPath string
+
+	ApisPkgs []string
+
+	Output io.Writer
 
 	// filterProvider may be override by tests to mock invoking containers
 	filterProvider func(string, *yaml.RNode) kio.Filter
@@ -62,6 +67,17 @@ func (r Cmd) Execute() error {
 		return err
 	}
 
+	// read manual apis and write to the buffer
+	for i := range r.ApisPkgs {
+		err := kio.Pipeline{
+			Inputs:  []kio.Reader{kio.LocalPackageReader{PackagePath: r.ApisPkgs[i]}},
+			Outputs: []kio.Writer{buff},
+		}.Execute()
+		if err != nil {
+			return err
+		}
+	}
+
 	// reconcile each local API
 	var filters []kio.Filter
 	for i := range buff.Nodes {
@@ -69,12 +85,18 @@ func (r Cmd) Execute() error {
 		img := getContainerName(api)
 		filters = append(filters, r.filterProvider(img, api))
 	}
+
 	pkgIO := kio.LocalPackageReadWriter{PackagePath: r.PkgPath}
-	return kio.Pipeline{
-		Inputs:  []kio.Reader{pkgIO},
-		Filters: filters,
-		Outputs: []kio.Writer{pkgIO},
-	}.Execute()
+	inputs := []kio.Reader{pkgIO}
+	var outputs []kio.Writer
+	if r.Output == nil {
+		// write back to the package
+		outputs = append(outputs, pkgIO)
+	} else {
+		// write to the output instead of the package
+		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
+	}
+	return kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: outputs}.Execute()
 }
 
 // init initializes the Cmd with a filterProvider

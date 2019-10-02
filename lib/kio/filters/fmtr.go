@@ -41,110 +41,6 @@ import (
 	"lib.kpt.dev/yaml"
 )
 
-// fieldSortOrder contains the relative ordering of fields when formatting an
-// object.
-var fieldSortOrder = []string{
-	// top-level metadata
-	"name", "generateName", "namespace", "clusterName",
-	"apiVersion", "kind", "metadata", "type",
-	"labels", "annotations",
-	"spec", "status",
-
-	// secret and configmap
-	"stringData", "data", "binaryData",
-
-	//cronjobspec,  daemonsetspec, deploymentspec, statefulsetspec,
-	// jobspec fields
-	"parallelism", "completions", "activeDeadlineSeconds", "backoffLimit",
-	"replicas", "selector", "manualSelector", "template",
-	"ttlSecondsAfterFinished", "volumeClaimTemplates", "service", "serviceName",
-	"podManagementPolicy", "updateStrategy", "strategy", "minReadySeconds",
-	"revision", "revisionHistoryLimit", "paused", "progressDeadlineSeconds",
-
-	// podspec
-	// podspec scalars
-	"restartPolicy", "terminationGracePeriodSeconds",
-	"activeDeadlineSeconds", "dnsPolicy", "serviceAccountName",
-	"serviceAccount", "automountServiceAccountToken", "nodeName",
-	"hostNetwork", "hostPID", "hostIPC", "shareProcessNamespace", "hostname",
-	"subdomain", "schedulerName", "priorityClassName", "priority",
-	"runtimeClassName", "enableServiceLinks",
-
-	// podspec lists and maps
-	"nodeSelector", "hostAliases",
-
-	// podspec objects
-	"initContainers", "containers", "volumes", "securityContext",
-	"imagePullSecrets", "affinity", "tolerations", "dnsConfig",
-	"readinessGates",
-
-	// containers
-	"image", "command", "args", "workingDir", "ports", "envFrom", "env",
-	"resources", "volumeMounts", "volumeDevices", "livenessProbe",
-	"readinessProbe", "lifecycle", "terminationMessagePath",
-	"terminationMessagePolicy", "imagePullPolicy", "securityContext",
-	"stdin", "stdinOnce", "tty",
-
-	// service
-	"clusterIP", "externalIPs", "loadBalancerIP", "loadBalancerSourceRanges",
-	"externalName", "externalTrafficPolicy", "sessionAffinity",
-
-	// ports
-	"protocol", "port", "targetPort", "hostPort", "containerPort", "hostIP",
-
-	// volumemount
-	"readOnly", "mountPath", "subPath", "subPathExpr", "mountPropagation",
-
-	// envvar + envvarsource
-	"value", "valueFrom", "fieldREf", "resourceFieldRef", "configMapKeyRef",
-	"secretKeyRef", "prefix", "configMapRef", "secretRef",
-}
-
-type set map[string]interface{}
-
-func newSet(values ...string) set {
-	m := map[string]interface{}{}
-	for _, value := range values {
-		m[value] = nil
-	}
-	return m
-}
-
-func (s set) Has(key string) bool {
-	_, found := s[key]
-	return found
-}
-
-// whitelistedListSortKinds contains the set of kinds that are whitelisted
-// for sorting list field elements
-var whitelistedListSortKinds = newSet(
-	"CronJob", "DaemonSet", "Deployment", "Job", "ReplicaSet", "StatefulSet",
-	"ValidatingWebhookConfiguration")
-
-// whitelistedListSortApis contains the set of apis that are whitelisted for
-// sorting list field elements
-var whitelistedListSortApis = newSet(
-	"apps/v1", "apps/v1beta1", "apps/v1beta2", "batch/v1", "batch/v1beta1",
-	"extensions/v1beta1", "v1", "admissionregistration.k8s.io/v1beta1")
-
-// whitelistedListSortFields contains json paths to list fields that should
-// be sorted, and the field they should be sorted by
-var whitelistedListSortFields = map[string]string{
-	".spec.template.spec.containers": "name",
-	".webhooks.rules.operations":     "",
-}
-
-// fieldMap indexes fields and maps them to relative precedence
-var fieldMap map[string]int
-
-func init() {
-	// create an index of field orderings
-	fieldMap = map[string]int{}
-	for i, f := range fieldSortOrder {
-		fieldMap[f] = i + 1
-	}
-}
-
 // FormatInput returns the formatted input.
 func FormatInput(input io.Reader) (*bytes.Buffer, error) {
 	buff := &bytes.Buffer{}
@@ -213,8 +109,9 @@ func (f *formatter) fmtNode(n *yaml.Node, path string) error {
 
 	// sort the order of sequence elements if it is whitelisted
 	if n.Kind == yaml.SequenceNode {
-		if whitelistedListSortKinds.Has(f.kind) && whitelistedListSortApis.Has(f.apiVersion) {
-			if sortField, found := whitelistedListSortFields[path]; found {
+		if yaml.WhitelistedListSortKinds.Has(f.kind) &&
+			yaml.WhitelistedListSortApis.Has(f.apiVersion) {
+			if sortField, found := yaml.WhitelistedListSortFields[path]; found {
 				sort.Sort(sortedSeqContents{Node: *n, sortField: sortField})
 			}
 		}
@@ -265,8 +162,8 @@ func (s sortedMapContents) Less(i, j int) bool {
 	jFieldName := s.Content[jFieldNameIndex].Value
 
 	// order by their precedence values looked up from the index
-	iOrder, foundI := fieldMap[iFieldName]
-	jOrder, foundJ := fieldMap[jFieldName]
+	iOrder, foundI := yaml.FieldOrder[iFieldName]
+	jOrder, foundJ := yaml.FieldOrder[jFieldName]
 	if foundI && foundJ {
 		return iOrder < jOrder
 	}
@@ -321,6 +218,7 @@ func (s sortedSeqContents) Less(i, j int) bool {
 		if a%2 != 0 {
 			continue // not a fieldNameIndex
 		}
+
 		// locate the index of the sortField field
 		if s.Content[j].Content[a].Value == s.sortField {
 			// a is the yaml node for the field key, a+1 is the node for the field value

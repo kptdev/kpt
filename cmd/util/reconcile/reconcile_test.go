@@ -96,6 +96,124 @@ replace: StatefulSet
 	assert.Contains(t, string(b), "kind: StatefulSet")
 }
 
+func TestCmd_Execute_APIs(t *testing.T) {
+	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	defer clean()
+	if !assert.NoError(t, os.Chdir(filepath.Dir(g.RepoDirectory))) {
+		return
+	}
+	c := filepath.Base(g.RepoDirectory)
+	if !assert.NoError(t, os.Chdir(filepath.Dir(g.RepoDirectory))) {
+		return
+	}
+
+	// write a test filter
+	f := `apiVersion: gcr.io/example.com/image:version
+kind: ValueReplacer
+stringMatch: Deployment
+replace: StatefulSet
+`
+	tmpF, err := ioutil.TempFile("", "filter*.yaml")
+	if !assert.NoError(t, err) {
+		return
+	}
+	os.RemoveAll(tmpF.Name())
+	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(f), 0600)) {
+		return
+	}
+
+	instance := Cmd{
+		ApisPkgs: []string{tmpF.Name()},
+		PkgPath:  c,
+		filterProvider: func(s string, node *yaml.RNode) kio.Filter {
+			// parse the filter from the input
+			filter := yaml.YFilter{}
+			b := &bytes.Buffer{}
+			e := yaml.NewEncoder(b)
+			if !assert.NoError(t, e.Encode(node.YNode())) {
+				t.FailNow()
+			}
+			e.Close()
+			d := yaml.NewDecoder(b)
+			if !assert.NoError(t, d.Decode(&filter)) {
+				t.FailNow()
+			}
+
+			return filters.Modifier{
+				Filters: []yaml.YFilter{{Filter: yaml.Lookup("kind")}, filter},
+			}
+		},
+	}
+	err = instance.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(g.RepoDirectory, "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Contains(t, string(b), "kind: StatefulSet")
+}
+
+func TestCmd_Execute_Stdout(t *testing.T) {
+	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	defer clean()
+	if !assert.NoError(t, os.Chdir(filepath.Dir(g.RepoDirectory))) {
+		return
+	}
+	c := filepath.Base(g.RepoDirectory)
+	if !assert.NoError(t, os.Chdir(filepath.Dir(g.RepoDirectory))) {
+		return
+	}
+
+	// write a test filter
+	f := `apiVersion: gcr.io/example.com/image:version
+kind: ValueReplacer
+stringMatch: Deployment
+replace: StatefulSet
+`
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(g.RepoDirectory, "filter.yaml"), []byte(f), 0600)) {
+		return
+	}
+
+	out := &bytes.Buffer{}
+	instance := Cmd{
+		Output:  out,
+		PkgPath: c,
+		filterProvider: func(s string, node *yaml.RNode) kio.Filter {
+			// parse the filter from the input
+			filter := yaml.YFilter{}
+			b := &bytes.Buffer{}
+			e := yaml.NewEncoder(b)
+			if !assert.NoError(t, e.Encode(node.YNode())) {
+				t.FailNow()
+			}
+			e.Close()
+			d := yaml.NewDecoder(b)
+			if !assert.NoError(t, d.Decode(&filter)) {
+				t.FailNow()
+			}
+
+			return filters.Modifier{
+				Filters: []yaml.YFilter{{Filter: yaml.Lookup("kind")}, filter},
+			}
+		},
+	}
+	err := instance.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(g.RepoDirectory, "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.NotContains(t, string(b), "kind: StatefulSet")
+	assert.Contains(t, out.String(), "kind: StatefulSet")
+}
+
 func Test_getContainerName(t *testing.T) {
 	// make sure gcr.io works
 	n, err := yaml.Parse(`apiVersion: gcr.io/foo/bar:something

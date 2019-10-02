@@ -18,6 +18,9 @@ import (
 	"bytes"
 	"errors"
 	"reflect"
+	"strings"
+
+	"lib.kpt.dev/sets"
 
 	"gopkg.in/yaml.v3"
 )
@@ -121,6 +124,8 @@ type RNode struct {
 	// list entry: list entry value
 	// object root: object root
 	value *yaml.Node
+
+	Match []string
 }
 
 // MapNode wraps a field key and value.
@@ -245,16 +250,50 @@ func (rn *RNode) FieldPath() []string {
 	return rn.fieldPath
 }
 
-// NewScalarRNode returns the yaml NewScalarRNode representation of the RNode value.
-func (rn *RNode) String() (string, error) {
-	if rn == nil || rn.value == nil {
+const (
+	Trim = "Trim"
+	Flow = "Flow"
+)
+
+func String(node *yaml.Node, opts ...string) (string, error) {
+	if node == nil {
 		return "", nil
 	}
+	optsSet := sets.String{}
+	optsSet.Insert(opts...)
+	if optsSet.Has(Flow) {
+		oldStyle := node.Style
+		defer func() {
+			node.Style = oldStyle
+		}()
+		node.Style = yaml.FlowStyle
+	}
+
 	b := &bytes.Buffer{}
 	e := NewEncoder(b)
-	err := e.Encode(rn.value)
+	err := e.Encode(node)
 	e.Close()
-	return b.String(), err
+	val := b.String()
+	if optsSet.Has(Trim) {
+		val = strings.TrimSpace(val)
+	}
+	return val, err
+}
+
+// NewScalarRNode returns the yaml NewScalarRNode representation of the RNode value.
+func (rn *RNode) String() (string, error) {
+	if rn == nil {
+		return "", nil
+	}
+	return String(rn.value)
+}
+
+func (rn *RNode) MustString() string {
+	s, err := rn.String()
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
 // Content returns the value node's Content field.

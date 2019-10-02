@@ -93,6 +93,7 @@ func TestCmd_stdin(t *testing.T) {
 	// fmt the files
 	b := &bytes.Buffer{}
 	r := cmdtree.Cmd()
+	r.C.SetArgs([]string{})
 	r.C.SetIn(bytes.NewBufferString(`apiVersion: extensions/v1
 kind: Deployment
 metadata:

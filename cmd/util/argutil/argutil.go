@@ -55,3 +55,31 @@ func ParseDirVersionWithDefaults(dirVer string) (string, string, error) {
 	}
 	return dir, version, nil
 }
+
+// ParseFieldPath parse a flag value into a field path
+// TODO(pwittrock): Extract this into lib.kpt.dev
+func ParseFieldPath(path string) ([]string, error) {
+	// fixup '\.' so we don't split on it
+	match := strings.ReplaceAll(path, "\\.", "$$$$")
+	parts := strings.Split(match, ".")
+	for i := range parts {
+		parts[i] = strings.ReplaceAll(parts[i], "$$$$", ".")
+	}
+
+	// split the list index from the list field
+	var newParts []string
+	for i := range parts {
+		if !strings.Contains(parts[i], "[") {
+			newParts = append(newParts, parts[i])
+			continue
+		}
+		p := strings.Split(parts[i], "[")
+		if len(p) != 2 {
+			return nil, fmt.Errorf("unrecognized path element: %s.  "+
+				"Should be of the form 'list[field=value]'", parts[i])
+		}
+		p[1] = "[" + p[1]
+		newParts = append(newParts, p[0], p[1])
+	}
+	return newParts, nil
+}
