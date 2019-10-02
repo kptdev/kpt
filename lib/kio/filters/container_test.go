@@ -46,9 +46,12 @@ metadata:
 
 	expected := []string{
 		"docker", "run",
-		"--rm",              // clean up the container
-		"-i",                // enable stdin
-		"--network", "none", // disable the network for added security
+		"--rm",
+		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
+		"--network", "none",
+		"--user", "nobody",
+		"--read-only",
+		"--security-opt=no-new-privileges",
 		"-e", "API_CONFIG", // the api config
 	}
 	for _, e := range os.Environ() {
