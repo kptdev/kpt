@@ -45,7 +45,7 @@ import (
 func FormatInput(input io.Reader) (*bytes.Buffer, error) {
 	buff := &bytes.Buffer{}
 	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: input}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: input}},
 		Filters: []kio.Filter{FormatFilter{}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: buff}},
 	}.Execute()

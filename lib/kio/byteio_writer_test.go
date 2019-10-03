@@ -24,6 +24,53 @@ import (
 
 // TestByteWriter_Write_withoutAnnotations tests:
 // - Resource Config ordering is preserved if no annotations are present
+func TestByteWriter_Write_wrapped(t *testing.T) {
+	node1, err := yaml.Parse(`a: b #first
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	node2, err := yaml.Parse(`c: d # second
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+	node3, err := yaml.Parse(`e: f
+g:
+  h:
+  - i # has a list
+  - j
+`)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	buff := &bytes.Buffer{}
+	err = ByteWriter{
+		Writer:             buff,
+		FunctionConfig:     node3,
+		WrappingKind:       InputOutputListKind,
+		WrappingApiVersion: InputOutputListApiVersion}.
+		Write([]*yaml.RNode{node2, node1})
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
+kind: InputOutputList
+items:
+- c: d # second
+- a: b #first
+functionConfig:
+  e: f
+  g:
+    h:
+    - i # has a list
+    - j
+`, buff.String())
+}
+
+// TestByteWriter_Write_withoutAnnotations tests:
+// - Resource Config ordering is preserved if no annotations are present
 func TestByteWriter_Write_withoutAnnotations(t *testing.T) {
 	node1, err := yaml.Parse(`a: b #first
 `)

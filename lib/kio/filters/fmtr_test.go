@@ -75,8 +75,6 @@ metadata:
 data:
   # this is color
   color: purple
-  # that was color
-
   # this is how
   how: fairlyNice
   # this is textmode

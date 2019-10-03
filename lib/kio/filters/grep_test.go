@@ -56,7 +56,7 @@ spec:
 `
 	out := &bytes.Buffer{}
 	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(in)}},
 		Filters: []kio.Filter{GrepFilter{Path: []string{"metadata", "name"}, Value: "foo"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()
@@ -88,7 +88,7 @@ spec:
 
 	out = &bytes.Buffer{}
 	err = kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(in)}},
 		Filters: []kio.Filter{GrepFilter{Path: []string{"kind"}, Value: "Deployment"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()
@@ -120,7 +120,7 @@ spec:
 
 	out = &bytes.Buffer{}
 	err = kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(in)}},
 		Filters: []kio.Filter{GrepFilter{Path: []string{"spec", "replicas"}, Value: "3"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()
@@ -142,7 +142,7 @@ spec:
 
 	out = &bytes.Buffer{}
 	err = kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(in)}},
 		Filters: []kio.Filter{GrepFilter{Path: []string{"spec", "not-present"}, Value: "3"}},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out}},
 	}.Execute()

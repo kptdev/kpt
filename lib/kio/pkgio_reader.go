@@ -25,12 +25,25 @@ import (
 
 // requiredResourcePackageAnnotations are annotations that are required to write resources back to
 // files.
-var requiredResourcePackageAnnotations = []string{
-	kioutil.IndexAnnotation, kioutil.ModeAnnotation, kioutil.PathAnnotation,
+var requiredResourcePackageAnnotations = []string{kioutil.IndexAnnotation, kioutil.PathAnnotation}
+
+type PackageBuffer struct {
+	Nodes []*yaml.RNode
+}
+
+func (r *PackageBuffer) Read() ([]*yaml.RNode, error) {
+	return r.Nodes, nil
+}
+
+func (r *PackageBuffer) Write(nodes []*yaml.RNode) error {
+	r.Nodes = nodes
+	return nil
 }
 
 type LocalPackageReadWriter struct {
 	Kind string `yaml:"kind,omitempty"`
+
+	KeepReaderAnnotations bool `yaml:"keepReaderAnnotations,omitempty"`
 
 	// PackagePath is the path to the package directory.
 	PackagePath string `yaml:"path,omitempty"`
@@ -56,19 +69,6 @@ type LocalPackageReadWriter struct {
 	SetAnnotations map[string]string `yaml:"setAnnotations,omitempty"`
 }
 
-type PackageBuffer struct {
-	Nodes []*yaml.RNode
-}
-
-func (r *PackageBuffer) Read() ([]*yaml.RNode, error) {
-	return r.Nodes, nil
-}
-
-func (r *PackageBuffer) Write(nodes []*yaml.RNode) error {
-	r.Nodes = nodes
-	return nil
-}
-
 func (r LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
 	return LocalPackageReader{
 		PackagePath:         r.PackagePath,
@@ -85,8 +85,9 @@ func (r LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
 		clear = append(clear, k)
 	}
 	return LocalPackageWriter{
-		PackagePath:      r.PackagePath,
-		ClearAnnotations: clear,
+		PackagePath:           r.PackagePath,
+		ClearAnnotations:      clear,
+		KeepReaderAnnotations: r.KeepReaderAnnotations,
 	}.Write(nodes)
 }
 
@@ -191,7 +192,7 @@ func (r *LocalPackageReader) readFile(path string, info os.FileInfo) ([]*yaml.RN
 		return nil, err
 	}
 	defer f.Close()
-	rr := ByteReader{
+	rr := &ByteReader{
 		Reader:                f,
 		OmitReaderAnnotations: r.OmitReaderAnnotations,
 		SetAnnotations:        r.SetAnnotations,
@@ -220,7 +221,6 @@ func (r *LocalPackageReader) initReaderAnnotations(path string, info os.FileInfo
 	if !r.OmitReaderAnnotations {
 		r.SetAnnotations[kioutil.PackageAnnotation] = filepath.Dir(path)
 		r.SetAnnotations[kioutil.PathAnnotation] = path
-		r.SetAnnotations[kioutil.ModeAnnotation] = fmt.Sprintf("%d", info.Mode())
 	}
 }
 

@@ -23,6 +23,59 @@ import (
 	"lib.kpt.dev/yaml"
 )
 
+const (
+	InputOutputListKind       = "InputOutputList"
+	InputOutputListApiVersion = "kpt.dev/v1alpha1"
+)
+
+// ByteReadWriter reads from an input and writes to an output
+type ByteReadWriter struct {
+	// Reader is where ResourceNodes are decoded from.
+	Reader io.Reader
+
+	// Writer is where ResourceNodes are encoded.
+	Writer io.Writer
+
+	// OmitReaderAnnotations will configures Read to skip setting the kpt.dev/kio/index
+	// annotation on Resources as they are Read.
+	OmitReaderAnnotations bool
+
+	// KeepReaderAnnotations if set will keep the Reader specific annotations when writing
+	// the Resources, otherwise they will be cleared.
+	KeepReaderAnnotations bool
+
+	// Style is a style that is set on the Resource Node Document.
+	Style yaml.Style
+
+	FunctionConfig *yaml.RNode
+
+	WrappingApiVersion string
+	WrappingKind       string
+}
+
+func (rw *ByteReadWriter) Read() ([]*yaml.RNode, error) {
+	b := &ByteReader{
+		Reader:                rw.Reader,
+		OmitReaderAnnotations: rw.OmitReaderAnnotations,
+	}
+	val, err := b.Read()
+	rw.FunctionConfig = b.FunctionConfig
+	rw.WrappingApiVersion = b.WrappingApiVersion
+	rw.WrappingKind = b.WrappingKind
+	return val, err
+}
+
+func (rw *ByteReadWriter) Write(nodes []*yaml.RNode) error {
+	return ByteWriter{
+		Writer:                rw.Writer,
+		KeepReaderAnnotations: rw.KeepReaderAnnotations,
+		Style:                 rw.Style,
+		FunctionConfig:        rw.FunctionConfig,
+		WrappingApiVersion:    rw.WrappingApiVersion,
+		WrappingKind:          rw.WrappingKind,
+	}.Write(nodes)
+}
+
 // ByteReader decodes ResourceNodes from bytes.
 // By default, Read will set the kpt.dev/kio/index annotation on each RNode as it
 // is read so they can be written back in the same order.
@@ -37,11 +90,16 @@ type ByteReader struct {
 	// SetAnnotations is a map of caller specified annotations to set on resources as they are read
 	// These are independent of the annotations controlled by OmitReaderAnnotations
 	SetAnnotations map[string]string
+
+	FunctionConfig *yaml.RNode
+
+	WrappingApiVersion string
+	WrappingKind       string
 }
 
-var _ Reader = ByteReader{}
+var _ Reader = &ByteReader{}
 
-func (r ByteReader) Read() ([]*yaml.RNode, error) {
+func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	output := ResourceNodeSlice{}
 	decoder := yaml.NewDecoder(r.Reader)
 	index := 0
@@ -53,8 +111,35 @@ func (r ByteReader) Read() ([]*yaml.RNode, error) {
 		if err != nil {
 			return nil, err
 		}
-		if node == nil {
+		if yaml.IsEmpty(node) {
 			// empty value
+			continue
+		}
+
+		// ok if no metadata -- assume not an InputList
+		meta, _ := node.GetMeta()
+
+		// the elements are wrapped in an InputList, unwrap them
+		// don't check apiVersion, we haven't standardized on the domain
+		if (meta.Kind == InputOutputListKind || meta.Kind == "List") &&
+			node.Field("items") != nil {
+			r.WrappingKind = meta.Kind
+			r.WrappingApiVersion = meta.ApiVersion
+
+			// unwrap the list
+			fc := node.Field("functionConfig")
+			if fc != nil {
+				r.FunctionConfig = fc.Value
+			}
+
+			items := node.Field("items")
+			if items != nil {
+				for i := range items.Value.Content() {
+					// add items
+					output = append(output, yaml.NewRNode(items.Value.Content()[i]))
+				}
+
+			}
 			continue
 		}
 
@@ -73,7 +158,7 @@ func isEmptyDocument(node *yaml.Node) bool {
 		node.Content[0].Tag == yaml.NullNodeTag
 }
 
-func (r ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
+func (r *ByteReader) decode(index int, decoder *yaml.Decoder) (*yaml.RNode, error) {
 	node := &yaml.Node{}
 	err := decoder.Decode(node)
 	if err == io.EOF {

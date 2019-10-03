@@ -85,13 +85,9 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	var root = "."
 	if len(args) == 1 {
 		root = filepath.Clean(args[0])
-		input = kio.LocalPackageReader{
-			PackagePath: args[0],
-		}
+		input = kio.LocalPackageReader{PackagePath: args[0]}
 	} else {
-		input = kio.ByteReader{
-			Reader: c.InOrStdin(),
-		}
+		input = &kio.ByteReader{Reader: c.InOrStdin()}
 	}
 
 	var fields []kio.TreeWriterField

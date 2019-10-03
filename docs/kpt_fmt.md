@@ -55,10 +55,11 @@ kpt fmt [flags]
 ### Options
 
 ```
-  -h, --help             help for fmt
-      --pattern string   pattern to use for generating filenames for resources -- may contain the following
-                         formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'} (default "%n_%k.yaml")
-      --set-filenames    if true, set default filenames on Resources without them
+  -h, --help               help for fmt
+      --keep-annotations   if true, keep index and filename annotations set on Resources.
+      --pattern string     pattern to use for generating filenames for resources -- may contain the following
+                           formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'} (default "%n_%k.yaml")
+      --set-filenames      if true, set default filenames on Resources without them
 ```
 
 ### SEE ALSO

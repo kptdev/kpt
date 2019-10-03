@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"lib.kpt.dev/kio/kioutil"
@@ -58,7 +57,7 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 	if err := r.errorIfMissingRequiredAnnotation(nodes); err != nil {
 		return err
 	}
-	outputFiles, outputModes, err := r.indexByFilePath(nodes)
+	outputFiles, err := r.indexByFilePath(nodes)
 	if err != nil {
 		return err
 	}
@@ -69,7 +68,6 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 	}
 
 	if !r.KeepReaderAnnotations {
-		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.ModeAnnotation)
 		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.PackageAnnotation)
 		r.ClearAnnotations = append(r.ClearAnnotations, kioutil.PathAnnotation)
 	}
@@ -90,11 +88,6 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 		if err != nil {
 			return err
 		}
-
-		if _, found := outputModes[path]; !found {
-			// this should never happen - coding error
-			return fmt.Errorf("no output mode for %s", path)
-		}
 	}
 
 	// write files
@@ -105,11 +98,7 @@ func (r LocalPackageWriter) Write(nodes []*yaml.RNode) error {
 			return err
 		}
 
-		f, err := os.OpenFile(
-			outputPath,
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-			os.FileMode(outputModes[path]),
-		)
+		f, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(0600))
 		if err != nil {
 			return err
 		}
@@ -148,48 +137,27 @@ func (r LocalPackageWriter) errorIfMissingRequiredAnnotation(nodes []*yaml.RNode
 	return nil
 }
 
-func (r LocalPackageWriter) indexByFilePath(
-	nodes []*yaml.RNode) (map[string][]*yaml.RNode,
-	map[string]int, error) {
+func (r LocalPackageWriter) indexByFilePath(nodes []*yaml.RNode) (map[string][]*yaml.RNode, error) {
 
 	outputFiles := map[string][]*yaml.RNode{}
-	outputModes := map[string]int{}
 	for i := range nodes {
 		// parse the file write path
 		node := nodes[i]
 		value, err := node.Pipe(yaml.GetAnnotation(kioutil.PathAnnotation))
 		if err != nil {
 			// this should never happen if errorIfMissingRequiredAnnotation was run
-			return nil, nil, err
+			return nil, err
 		}
 		path := value.YNode().Value
 		outputFiles[path] = append(outputFiles[path], node)
 
 		if filepath.IsAbs(path) {
-			return nil, nil, fmt.Errorf("package paths may not be absolute paths")
+			return nil, fmt.Errorf("package paths may not be absolute paths")
 		}
 		if strings.Contains(filepath.Clean(path), "..") {
-			return nil, nil, fmt.Errorf("resource must be written under package %s: %s",
+			return nil, fmt.Errorf("resource must be written under package %s: %s",
 				r.PackagePath, filepath.Clean(path))
 		}
-
-		// parse the file write mode
-		value, err = node.Pipe(yaml.GetAnnotation(kioutil.ModeAnnotation))
-		if err != nil {
-			// this should never happen if errorIfMissingRequiredAnnotation was run
-			return nil, nil, err
-		}
-		mode, err := strconv.Atoi(value.YNode().Value)
-		if err != nil {
-			return nil, nil, fmt.Errorf("unable to parse %s: %v", kioutil.ModeAnnotation, err)
-		}
-		if m, found := outputModes[path]; found {
-			if m != mode {
-				return nil, nil, fmt.Errorf("conflicting file modes %d %d", m, mode)
-			}
-		} else {
-			outputModes[path] = mode
-		}
 	}
-	return outputFiles, outputModes, nil
+	return outputFiles, nil
 }

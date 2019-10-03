@@ -33,9 +33,6 @@ const (
 
 	// PackageAnnotation records the name of the package the Resource was read from
 	PackageAnnotation AnnotationKey = "kpt.dev/kio/package"
-
-	// ModeAnnotation records the mode of the file the Resource was read from
-	ModeAnnotation AnnotationKey = "kpt.dev/kio/mode"
 )
 
 // ErrorIfMissingAnnotation validates the provided annotations are present on the given resources

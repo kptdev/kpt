@@ -67,6 +67,7 @@ field paths.
 	kustomize build | kpt fmt
 `,
 		RunE:         r.runE,
+		PreRunE:      r.preRunE,
 		SilenceUsage: true,
 	}
 	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,
@@ -74,6 +75,8 @@ field paths.
 formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'}`)
 	c.Flags().BoolVar(&r.SetFilenames, "set-filenames", false,
 		`if true, set default filenames on Resources without them`)
+	c.Flags().BoolVar(&r.KeepAnnotations, "keep-annotations", false,
+		`if true, keep index and filename annotations set on Resources.`)
 	r.C = c
 	return r
 }
@@ -83,6 +86,14 @@ type Runner struct {
 	C               *cobra.Command
 	FilenamePattern string
 	SetFilenames    bool
+	KeepAnnotations bool
+}
+
+func (r *Runner) preRunE(c *cobra.Command, args []string) error {
+	if r.SetFilenames {
+		r.KeepAnnotations = true
+	}
+	return nil
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
@@ -95,16 +106,20 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// format stdin if there are no args
 	if len(args) == 0 {
+		rw := &kio.ByteReadWriter{
+			Reader:                c.InOrStdin(),
+			Writer:                c.OutOrStdout(),
+			KeepReaderAnnotations: r.KeepAnnotations,
+		}
 		return kio.Pipeline{
-			Inputs:  []kio.Reader{kio.ByteReader{Reader: c.InOrStdin()}},
-			Filters: f,
-			Outputs: []kio.Writer{kio.ByteWriter{Writer: c.OutOrStdout()}},
-		}.Execute()
+			Inputs: []kio.Reader{rw}, Filters: f, Outputs: []kio.Writer{rw}}.Execute()
 	}
 
 	for i := range args {
 		path := args[i]
-		rw := kio.LocalPackageReadWriter{PackagePath: path}
+		rw := kio.LocalPackageReadWriter{
+			PackagePath:           path,
+			KeepReaderAnnotations: r.KeepAnnotations}
 		err := kio.Pipeline{
 			Inputs: []kio.Reader{rw}, Filters: f, Outputs: []kio.Writer{rw}}.Execute()
 		if err != nil {

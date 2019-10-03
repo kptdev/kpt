@@ -13,10 +13,9 @@ Description:
   - have an annotation 'kpt.dev/container: CONTAINER_NAME'
 
   When 'kpt reconcile pkg/' is run, it will run instances of containers it finds from
-  Transformers, passing in both the Transformer Resource to the container (via Env Var)
-  and the full set of Resources in the package (via stdin).  The Transformer writes out
-  the new set of package resources to its stdout, and these are written back to the package.
-  Note: the container has the network disabled (loopback only), so it cannot fetch remote files.
+  Transformers, passing in both the Transformer Resource and the full set of Resources in
+  the package to the container via stdin.  The Transformer writes out
+  the new set of package resources to stdout, and these are written back to the package.
 
   Transformers may be used to:
   - Generate new Resources from abstractions
@@ -29,10 +28,38 @@ Description:
   - Validate all container images use a tag
   - Validate all workloads have a PodDisruptionBudget
 
- Transformers may be published as containers whose CMD:
-  - Reads the collection of Resources from STDIN
-  - Reads the transformer configuration from the API_CONFIG env var.
-  - Writes the set of Resources to create or update to STDOUT
+  kpt will pass the config and resources to stdin using an InputOutputList:
+
+	apiVersion: kpt.dev/v1alpha1
+	kind: InputOutputList
+	functionConfig:
+	  the: transformer-resource
+	  read:
+	    from:
+	      - the
+	      - package
+	items:
+	- apiVersion: apps/v1
+	  kind: Deployment
+	  spec:
+	    template: {}
+	- apiVersion: v1
+	  kind: Service
+    
+  The Transformer will write the new configs to stdout as an InputOutputList.
+
+  Transformers may:
+  - pipe their output to 'kpt fmt --set-filenames' to set filenames on the outputs
+  - pipe their output to 'kpt merge' to merge multiple copies of the same Resource,
+    this is useful to generate new Resources from templates and merge the changes back
+    in a non-destructive manner.
+
+  The container is run with the following security restrictions:
+  - network is disabled
+  - run as 'nobody' user
+  - disable privilege escalation
+  - container fs is read-only
+  - container is deleted after it completes
 
   See https://github.com/GoogleContainerTools/kpt/testutil/transformer for an Transformer example.
 

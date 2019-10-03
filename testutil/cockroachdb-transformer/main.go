@@ -22,7 +22,9 @@ import (
 	"strconv"
 	"text/template"
 
-	"gopkg.in/yaml.v3"
+	"lib.kpt.dev/yaml"
+
+	"lib.kpt.dev/kio"
 )
 
 type API struct {
@@ -45,19 +47,30 @@ type Metadata struct {
 
 func main() {
 	// Parse the configuration and decode it into an object
-	d := yaml.NewDecoder(bytes.NewBufferString(os.Getenv("API_CONFIG")))
-	d.KnownFields(false)
-	api := &API{}
-	if err := d.Decode(api); err != nil {
+	rw := kio.ByteReadWriter{
+		Reader:                os.Stdin,
+		Writer:                os.Stdout,
+		OmitReaderAnnotations: false,
+		KeepReaderAnnotations: true,
+	}
+	inputs, err := rw.Read()
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
-	// copy the input resources so we merge our changes
-	if _, err := io.Copy(os.Stdout, os.Stdin); err != nil {
-		panic(err)
+	// parse the API
+	api := &API{}
+	b, err := yaml.Marshal(rw.FunctionConfig)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
-	fmt.Println("\n---")
+	err = yaml.UnMarshal(b, api)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
 
 	// Default the Replicas field
 	r := os.Getenv("REPLICAS")
@@ -78,8 +91,27 @@ func main() {
 	// Disable the duck-commands for this generated Resource so that users don't override
 	// the generated values.
 	// Execute the template
+	output := &bytes.Buffer{}
 	t := template.Must(template.New("deployment").Parse(t))
-	if err := t.Execute(os.Stdout, api); err != nil {
+	if err := t.Execute(output, api); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(output.Bytes()))
+	for err != nil {
+		node := &yaml.Node{}
+		err = d.Decode(node)
+		if err == nil {
+			inputs = append(inputs, yaml.NewRNode(node))
+		}
+	}
+	if err != nil && err != io.EOF {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
+	if err = rw.Write(inputs); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}

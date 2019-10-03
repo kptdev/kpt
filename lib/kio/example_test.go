@@ -72,7 +72,7 @@ spec:
 	})
 
 	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: input}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: input}},
 		Filters: []kio.Filter{setAnnotationFn},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: os.Stdout}},
 	}.Execute()

@@ -51,7 +51,7 @@ func TestFileSetter_Filter(t *testing.T) {
 	in := bytes.NewBufferString(r)
 	out := &bytes.Buffer{}
 	err := Pipeline{
-		Inputs:  []Reader{ByteReader{Reader: in}},
+		Inputs:  []Reader{&ByteReader{Reader: in}},
 		Filters: []Filter{&FileSetter{}},
 		Outputs: []Writer{ByteWriter{Writer: out}},
 	}.Execute()
@@ -65,7 +65,6 @@ metadata:
   namespace: bar
   annotations:
     kpt.dev/kio/path: foo1_deployment.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: v1
 kind: Service
@@ -73,7 +72,6 @@ metadata:
   name: foo1
   annotations:
     kpt.dev/kio/path: foo1_service.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -81,7 +79,6 @@ metadata:
   name: foo2
   annotations:
     kpt.dev/kio/path: foo2_deployment.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: v1
 kind: Service
@@ -90,7 +87,6 @@ metadata:
   namespace: bar
   annotations:
     kpt.dev/kio/path: foo2_service.yaml
-    kpt.dev/kio/mode: 384
 `, out.String())
 }
 
@@ -98,7 +94,7 @@ func TestFileSetter_Filter_pattern(t *testing.T) {
 	in := bytes.NewBufferString(r)
 	out := &bytes.Buffer{}
 	err := Pipeline{
-		Inputs: []Reader{ByteReader{Reader: in}},
+		Inputs: []Reader{&ByteReader{Reader: in}},
 		Filters: []Filter{&FileSetter{
 			FilenamePattern: "%n_%s_%k.yaml",
 		}},
@@ -113,7 +109,6 @@ metadata:
   name: foo1
   annotations:
     kpt.dev/kio/path: foo1__service.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -122,7 +117,6 @@ metadata:
   namespace: bar
   annotations:
     kpt.dev/kio/path: foo1_bar_deployment.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -130,7 +124,6 @@ metadata:
   name: foo2
   annotations:
     kpt.dev/kio/path: foo2__deployment.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: v1
 kind: Service
@@ -139,7 +132,6 @@ metadata:
   namespace: bar
   annotations:
     kpt.dev/kio/path: foo2_bar_service.yaml
-    kpt.dev/kio/mode: 384
 `, out.String())
 }
 
@@ -147,7 +139,7 @@ func TestFileSetter_Filter_empty(t *testing.T) {
 	in := bytes.NewBufferString(r)
 	out := &bytes.Buffer{}
 	err := Pipeline{
-		Inputs: []Reader{ByteReader{Reader: in}},
+		Inputs: []Reader{&ByteReader{Reader: in}},
 		Filters: []Filter{&FileSetter{
 			FilenamePattern: "resource.yaml",
 		}},
@@ -163,7 +155,6 @@ metadata:
   namespace: bar
   annotations:
     kpt.dev/kio/path: resource.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -171,7 +162,6 @@ metadata:
   name: foo2
   annotations:
     kpt.dev/kio/path: resource.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: v1
 kind: Service
@@ -180,7 +170,6 @@ metadata:
   namespace: bar
   annotations:
     kpt.dev/kio/path: resource.yaml
-    kpt.dev/kio/mode: 384
 ---
 apiVersion: v1
 kind: Service
@@ -188,6 +177,5 @@ metadata:
   name: foo1
   annotations:
     kpt.dev/kio/path: resource.yaml
-    kpt.dev/kio/mode: 384
 `, out.String())
 }

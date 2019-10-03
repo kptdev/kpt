@@ -44,11 +44,112 @@ i: j
 	return b
 }
 
+func TestByteReader_Read_wrappedInputOutputList(t *testing.T) {
+	r := &ByteReader{Reader: bytes.NewBufferString(`apiVersion: kpt.dev/v1alpha1
+kind: InputOutputList
+functionConfig:
+  foo: bar
+  elems:
+  - a
+  - b
+  - c
+items:
+-  kind: Deployment
+   spec:
+     replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+`)}
+	nodes, err := r.Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// verify the contents
+	if !assert.Len(t, nodes, 2) {
+		return
+	}
+	expected := []string{
+		`kind: Deployment
+spec:
+  replicas: 1
+`,
+		`kind: Service
+spec:
+  selectors:
+    foo: bar
+`,
+	}
+	for i := range nodes {
+		if !assert.Equal(t, expected[i], nodes[i].MustString()) {
+			return
+		}
+	}
+
+	// verify the function config
+	assert.Equal(t, `foo: bar
+elems:
+- a
+- b
+- c
+`, r.FunctionConfig.MustString())
+
+	assert.Equal(t, InputOutputListKind, r.WrappingKind)
+	assert.Equal(t, InputOutputListApiVersion, r.WrappingApiVersion)
+
+}
+
+func TestByteReader_Read_wrappedList(t *testing.T) {
+	r := &ByteReader{Reader: bytes.NewBufferString(`apiVersion: v1
+kind: List
+items:
+-  kind: Deployment
+   spec:
+     replicas: 1
+- kind: Service
+  spec:
+    selectors:
+      foo: bar
+`)}
+	nodes, err := r.Read()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// verify the contents
+	if !assert.Len(t, nodes, 2) {
+		return
+	}
+	expected := []string{
+		`kind: Deployment
+spec:
+  replicas: 1
+`,
+		`kind: Service
+spec:
+  selectors:
+    foo: bar
+`,
+	}
+	for i := range nodes {
+		if !assert.Equal(t, expected[i], nodes[i].MustString()) {
+			return
+		}
+	}
+
+	// verify the function config
+	assert.Nil(t, r.FunctionConfig)
+	assert.Equal(t, "List", r.WrappingKind)
+	assert.Equal(t, "v1", r.WrappingApiVersion)
+}
+
 // TestByteReader_Read tests the default Read behavior
 // - Resources are read into a slice
 // - ReaderAnnotations are set on the ResourceNodes
 func TestByteReader_Read(t *testing.T) {
-	nodes, err := ByteReader{Reader: getByteReaderTestInput(t)}.Read()
+	nodes, err := (&ByteReader{Reader: getByteReaderTestInput(t)}).Read()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -92,7 +193,9 @@ metadata:
 // - Resources are read into a slice
 // - ReaderAnnotations are not set on the ResourceNodes
 func TestByteReader_Read_omitReaderAnnotations(t *testing.T) {
-	nodes, err := ByteReader{Reader: getByteReaderTestInput(t), OmitReaderAnnotations: true}.Read()
+	nodes, err := (&ByteReader{
+		Reader:                getByteReaderTestInput(t),
+		OmitReaderAnnotations: true}).Read()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -122,11 +225,11 @@ func TestByteReader_Read_omitReaderAnnotations(t *testing.T) {
 // - ReaderAnnotations are NOT set on the ResourceNodes
 // - Additional annotations ARE set on the ResourceNodes
 func TestByteReader_Read_setAnnotationsOmitReaderAnnotations(t *testing.T) {
-	nodes, err := ByteReader{
+	nodes, err := (&ByteReader{
 		Reader:                getByteReaderTestInput(t),
 		SetAnnotations:        map[string]string{"foo": "bar"},
 		OmitReaderAnnotations: true,
-	}.Read()
+	}).Read()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -171,10 +274,10 @@ metadata:
 // - ReaderAnnotations ARE set on the ResourceNodes
 // - Additional annotations ARE set on the ResourceNodes
 func TestByteReader_Read_setAnnotations(t *testing.T) {
-	nodes, err := ByteReader{
+	nodes, err := (&ByteReader{
 		Reader:         getByteReaderTestInput(t),
 		SetAnnotations: map[string]string{"foo": "bar"},
-	}.Read()
+	}).Read()
 	if !assert.NoError(t, err) {
 		return
 	}
