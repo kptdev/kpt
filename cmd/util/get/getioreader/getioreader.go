@@ -36,7 +36,7 @@ func Get(path, pattern string, input io.Reader) error {
 	b := &bytes.Buffer{}
 	fs := &filters.FileSetter{FilenamePattern: pattern, Mode: fmt.Sprintf("%d", 0600)}
 	err := kio.Pipeline{
-		Inputs:  []kio.Reader{kio.ByteReader{Reader: input}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: input}},
 		Filters: []kio.Filter{fs, filters.FormatFilter{}},
 		Outputs: []kio.Writer{
 			kio.ByteWriter{Writer: b, KeepReaderAnnotations: true},

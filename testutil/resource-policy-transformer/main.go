@@ -23,9 +23,10 @@ import (
 )
 
 func main() {
+	rw := &kio.ByteReadWriter{Reader: os.Stdin, Writer: os.Stdout, KeepReaderAnnotations: true}
 
 	err := kio.Pipeline{
-		Inputs: []kio.Reader{kio.ByteReader{Reader: os.Stdin}},
+		Inputs: []kio.Reader{rw},
 		Filters: []kio.Filter{kio.FilterFunc(func(in []*yaml.RNode) ([]*yaml.RNode, error) {
 			for _, r := range in {
 				if err := check(r); err != nil {
@@ -34,7 +35,7 @@ func main() {
 			}
 			return in, nil
 		})},
-		Outputs: []kio.Writer{kio.ByteWriter{Writer: os.Stdout}},
+		Outputs: []kio.Writer{rw},
 	}.Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)

@@ -140,7 +140,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		})
 	}
 	if len(inputs) == 0 {
-		inputs = append(inputs, kio.ByteReader{Reader: c.InOrStdin()})
+		inputs = append(inputs, &kio.ByteReader{Reader: c.InOrStdin()})
 	}
 
 	return kio.Pipeline{

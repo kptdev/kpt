@@ -75,8 +75,13 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		inputs = append(inputs, kio.LocalPackageReader{PackagePath: args[i]})
 	}
 	// if there is no "from" package, read from stdin
+	rw := &kio.ByteReadWriter{
+		Reader:                c.InOrStdin(),
+		Writer:                c.OutOrStdout(),
+		KeepReaderAnnotations: true,
+	}
 	if len(inputs) < 2 {
-		inputs = append(inputs, kio.ByteReader{Reader: c.InOrStdin()})
+		inputs = append(inputs, rw)
 	}
 
 	// write to the "to" package if specified
@@ -86,7 +91,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 	// if there is no "to" package, write to stdout
 	if len(outputs) == 0 {
-		outputs = append(outputs, kio.ByteWriter{Writer: c.OutOrStdout()})
+		outputs = append(outputs, rw)
 	}
 
 	filters := []kio.Filter{filters.MergeFilter{}, filters.FormatFilter{}}

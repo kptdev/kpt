@@ -80,14 +80,12 @@ metadata:
   annotations:
     kpt.dev/kio/index: 0
     kpt.dev/kio/path: a/b/a_test.yaml
-    kpt.dev/kio/mode: 384
 ---
 c: d # second
 metadata:
   annotations:
     kpt.dev/kio/index: 1
     kpt.dev/kio/path: a/b/a_test.yaml
-    kpt.dev/kio/mode: 384
 `, string(b))
 
 	b, err = ioutil.ReadFile(filepath.Join(d, "a", "b", "b_test.yaml"))
@@ -103,7 +101,6 @@ metadata:
   annotations:
     kpt.dev/kio/index: 0
     kpt.dev/kio/path: a/b/b_test.yaml
-    kpt.dev/kio/mode: 384
 `, string(b))
 }
 
@@ -155,7 +152,6 @@ metadata:
   annotations:
     kpt.dev/kio/index: 0
     kpt.dev/kio/path: "a/b/../../../b_test.yaml"
-    kpt.dev/kio/mode: 384
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -165,77 +161,6 @@ metadata:
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "resource must be written under package")
-	}
-}
-
-// TestLocalPackageWriter_Write_multipleModes tests:
-// - If multiple file perm modes are specified for the same file, fail
-func TestLocalPackageWriter_Write_multipleModes(t *testing.T) {
-	d, node1, node2, node3 := getWriterInputs(t)
-	defer os.RemoveAll(d)
-
-	node4, err := yaml.Parse(`e: f
-g:
-  h:
-  - i # has a list
-  - j
-metadata:
-  annotations:
-    kpt.dev/kio/index: 0
-    kpt.dev/kio/path: "a/b/c/../b_test.yaml" # use a different path, should still collide
-    kpt.dev/kio/mode: 384
-`)
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, err.Error())
-	}
-
-	node5, err := yaml.Parse(`e: f
-g:
-  h:
-  - i # has a list
-  - j
-metadata:
-  annotations:
-    kpt.dev/kio/index: 0
-    kpt.dev/kio/path: "a/b/b_test.yaml"
-    kpt.dev/kio/mode: 448
-`)
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, err.Error())
-	}
-
-	w := LocalPackageWriter{PackagePath: d}
-	err = w.Write([]*yaml.RNode{node2, node5, node1, node3, node4})
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "conflicting file modes")
-	}
-}
-
-// TestLocalPackageWriter_Write_invalidMode tests:
-// - If a non-int mode is given, fail
-func TestLocalPackageWriter_Write_invalidMode(t *testing.T) {
-	d, node1, node2, node3 := getWriterInputs(t)
-	defer os.RemoveAll(d)
-
-	node4, err := yaml.Parse(`e: f
-g:
-  h:
-  - i # has a list
-  - j
-metadata:
-  annotations:
-    kpt.dev/kio/index: 0
-    kpt.dev/kio/path: "a/b/b_test.yaml" # use a different path, should still collide
-    kpt.dev/kio/mode: a
-`)
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, err.Error())
-	}
-
-	w := LocalPackageWriter{PackagePath: d}
-	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "unable to parse kpt.dev/kio/mode")
 	}
 }
 
@@ -254,7 +179,6 @@ metadata:
   annotations:
     kpt.dev/kio/index: a
     kpt.dev/kio/path: "a/b/b_test.yaml" # use a different path, should still collide
-    kpt.dev/kio/mode: 384
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -282,7 +206,6 @@ metadata:
   annotations:
     kpt.dev/kio/index: a
     kpt.dev/kio/path: "%s/a/b/b_test.yaml" # use a different path, should still collide
-    kpt.dev/kio/mode: 384
 `, d))
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -309,7 +232,6 @@ g:
 metadata:
   annotations:
     kpt.dev/kio/index: a
-    kpt.dev/kio/mode: 384
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -336,7 +258,6 @@ g:
 metadata:
   annotations:
     kpt.dev/kio/path: a/a.yaml
-    kpt.dev/kio/mode: 384
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -346,33 +267,6 @@ metadata:
 	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "kpt.dev/kio/index")
-	}
-}
-
-// TestLocalPackageWriter_Write_missingMode tests:
-// - If kpt.dev/kio/mode is missing, fail
-func TestLocalPackageWriter_Write_missingMode(t *testing.T) {
-	d, node1, node2, node3 := getWriterInputs(t)
-	defer os.RemoveAll(d)
-
-	node4, err := yaml.Parse(`e: f
-g:
-  h:
-  - i # has a list
-  - j
-metadata:
-  annotations:
-    kpt.dev/kio/path: a/a.yaml
-    kpt.dev/kio/index: 0
-`)
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, err.Error())
-	}
-
-	w := LocalPackageWriter{PackagePath: d}
-	err = w.Write([]*yaml.RNode{node2, node1, node3, node4})
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "kpt.dev/kio/mode")
 	}
 }
 
@@ -389,7 +283,6 @@ g:
   - j
 metadata:
   annotations:
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/path: a/
     kpt.dev/kio/index: 0
 `)
@@ -410,7 +303,6 @@ metadata:
   annotations:
     kpt.dev/kio/index: 0
     kpt.dev/kio/path: "a/b/a_test.yaml"
-    kpt.dev/kio/mode: 384
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -420,7 +312,6 @@ metadata:
   annotations:
     kpt.dev/kio/index: 1
     kpt.dev/kio/path: "a/b/a_test.yaml"
-    kpt.dev/kio/mode: 384
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())
@@ -434,7 +325,6 @@ metadata:
   annotations:
     kpt.dev/kio/index: 0
     kpt.dev/kio/path: "a/b/b_test.yaml"
-    kpt.dev/kio/mode: 384
 `)
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, err.Error())

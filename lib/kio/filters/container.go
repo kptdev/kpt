@@ -16,7 +16,6 @@ package filters
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -45,6 +44,8 @@ type ContainerFilter struct {
 
 	// args may be specified by tests to override how a container is spawned
 	args []string
+
+	checkInput func(string)
 }
 
 // GrepFilter implements kio.GrepFilter
@@ -55,41 +56,36 @@ func (c *ContainerFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 		return nil, err
 	}
 
-	// capture the command stdout for the return value
-	out := &bytes.Buffer{}
-	cmd.Stdout = out
-
-	// write the input to the command stdin
 	in := &bytes.Buffer{}
-	cmd.Stdin = in
-	if err := (kio.ByteWriter{Writer: in}).Write(input); err != nil {
+	out := &bytes.Buffer{}
+
+	// write the input
+	err = kio.ByteWriter{
+		WrappingApiVersion: kio.InputOutputListApiVersion,
+		WrappingKind:       kio.InputOutputListKind,
+		Writer:             in, KeepReaderAnnotations: true, FunctionConfig: c.Config}.Write(input)
+	if err != nil {
 		return nil, err
 	}
 
+	// capture the command stdout for the return value
+	r := &kio.ByteReader{Reader: out}
+
 	// do the filtering
+	if c.checkInput != nil {
+		c.checkInput(in.String())
+	}
+	cmd.Stdin = in
+	cmd.Stdout = out
 	if err := cmd.Run(); err != nil {
 		return nil, err
 	}
 
-	// return the filtered Resources
-	var output []*yaml.RNode
-	if output, err = (kio.ByteReader{Reader: out}).Read(); err != nil {
-		return nil, err
-	}
-	for _, n := range output {
-		n.YNode().Style = yaml.FoldedStyle
-	}
-	return output, nil
+	return r.Read()
 }
 
 // getArgs returns the command + args to run to spawn the container
 func (c *ContainerFilter) getArgs() []string {
-	// configure the environment to contain the configuration
-	env := []string{"API_CONFIG"}
-	for _, pair := range os.Environ() {
-		env = append(env, strings.Split(pair, "=")[0])
-	}
-
 	// run the container using docker.  this is simpler than using the docker
 	// libraries, and ensures things like auth work the same as if the container
 	// was run from the cli.
@@ -105,8 +101,8 @@ func (c *ContainerFilter) getArgs() []string {
 	}
 
 	// export the local environment vars to the container
-	for _, e := range env {
-		args = append(args, "-e", e)
+	for _, pair := range os.Environ() {
+		args = append(args, "-e", strings.Split(pair, "=")[0])
 	}
 	return append(args, c.Image)
 
@@ -131,9 +127,9 @@ func (c *ContainerFilter) getCommand() (*exec.Cmd, error) {
 	}
 
 	cmd := exec.Command(c.args[0], c.args[1:]...)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("API_CONFIG=%s", cfg.String()))
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
 
 	// set stderr for err messaging
-	cmd.Stderr = os.Stderr
 	return cmd, nil
 }

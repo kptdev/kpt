@@ -189,11 +189,6 @@ func (f *FileSetter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 				return nil, err
 			}
 		}
-		if _, found := m.Annotations[kioutil.ModeAnnotation]; !found || f.Override {
-			if _, err := input[i].Pipe(yaml.SetAnnotation(kioutil.ModeAnnotation, f.Mode)); err != nil {
-				return nil, err
-			}
-		}
 		resources[file] = append(resources[file], input[i])
 	}
 

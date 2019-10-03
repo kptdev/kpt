@@ -75,7 +75,7 @@ spec:
 `
 	out := &bytes.Buffer{}
 	err := Pipeline{
-		Inputs:  []Reader{ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
 		Outputs: []Writer{TreeWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
@@ -148,7 +148,7 @@ spec:
 `
 	out := &bytes.Buffer{}
 	err := Pipeline{
-		Inputs:  []Reader{ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
 		Outputs: []Writer{TreeWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
@@ -264,7 +264,7 @@ spec:
 `
 	out := &bytes.Buffer{}
 	err := Pipeline{
-		Inputs:  []Reader{ByteReader{Reader: bytes.NewBufferString(in)}},
+		Inputs:  []Reader{&ByteReader{Reader: bytes.NewBufferString(in)}},
 		Outputs: []Writer{TreeWriter{Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {

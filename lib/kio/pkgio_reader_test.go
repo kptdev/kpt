@@ -119,7 +119,6 @@ func TestLocalPackageReader_Read_pkg(t *testing.T) {
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: a_test.yaml
 `,
@@ -127,7 +126,6 @@ metadata:
 metadata:
   annotations:
     kpt.dev/kio/index: 1
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: a_test.yaml
 `,
@@ -140,7 +138,6 @@ g:
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: b_test.yaml
 `,
@@ -184,7 +181,6 @@ func TestLocalPackageReader_Read_file(t *testing.T) {
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: a_test.yaml
 `,
@@ -192,7 +188,6 @@ metadata:
 metadata:
   annotations:
     kpt.dev/kio/index: 1
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: a_test.yaml
 `,
@@ -286,7 +281,6 @@ func TestLocalPackageReader_Read_nestedDirs(t *testing.T) {
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `,
@@ -294,7 +288,6 @@ metadata:
 metadata:
   annotations:
     kpt.dev/kio/index: 1
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `,
@@ -307,7 +300,6 @@ g:
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/b_test.yaml
 `,
@@ -347,7 +339,6 @@ func TestLocalPackageReader_Read_matchRegex(t *testing.T) {
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `, val)
@@ -358,7 +349,6 @@ metadata:
 metadata:
   annotations:
     kpt.dev/kio/index: 1
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `, val)
@@ -388,7 +378,6 @@ func TestLocalPackageReader_Read_skipSubpackage(t *testing.T) {
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `, val)
@@ -399,7 +388,6 @@ metadata:
 metadata:
   annotations:
     kpt.dev/kio/index: 1
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `, val)
@@ -428,7 +416,6 @@ func TestLocalPackageReader_Read_includeSubpackage(t *testing.T) {
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `, val)
@@ -439,7 +426,6 @@ metadata:
 metadata:
   annotations:
     kpt.dev/kio/index: 1
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/b
     kpt.dev/kio/path: a/b/a_test.yaml
 `, val)
@@ -455,7 +441,6 @@ g:
 metadata:
   annotations:
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: a/c
     kpt.dev/kio/path: a/c/c_test.yaml
 `, val)

@@ -35,6 +35,13 @@ type ByteWriter struct {
 
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
+
+	// FunctionConfig is the function config for an InputOutputList.  If non-nil
+	// wrap the results in an InputOutputList.
+	FunctionConfig *yaml.RNode
+
+	WrappingApiVersion string
+	WrappingKind       string
 }
 
 var _ Writer = ByteWriter{}
@@ -76,10 +83,41 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 		if w.Style != 0 {
 			nodes[i].YNode().Style = w.Style
 		}
-		err = encoder.Encode(nodes[i].Document())
-		if err != nil {
-			return err
-		}
 	}
-	return nil
+
+	// don't wrap the elements
+	if w.WrappingKind == "" {
+		for i := range nodes {
+			err := encoder.Encode(nodes[i].Document())
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// wrap the elements in a list
+	items := &yaml.Node{Kind: yaml.SequenceNode}
+	list := &yaml.Node{
+		Kind:  yaml.MappingNode,
+		Style: yaml.FoldedStyle,
+		Content: []*yaml.Node{
+			{Kind: yaml.ScalarNode, Value: "apiVersion"},
+			{Kind: yaml.ScalarNode, Value: w.WrappingApiVersion},
+			{Kind: yaml.ScalarNode, Value: "kind"},
+			{Kind: yaml.ScalarNode, Value: w.WrappingKind},
+			{Kind: yaml.ScalarNode, Value: "items"}, items,
+		}}
+	if w.FunctionConfig != nil && w.WrappingKind == InputOutputListKind {
+		list.Content = append(list.Content,
+			&yaml.Node{Kind: yaml.ScalarNode, Value: "functionConfig"},
+			w.FunctionConfig.YNode())
+	}
+	doc := &yaml.Node{
+		Kind:    yaml.DocumentNode,
+		Style:   yaml.FoldedStyle,
+		Content: []*yaml.Node{list}}
+	for i := range nodes {
+		items.Content = append(items.Content, nodes[i].YNode())
+	}
+	return encoder.Encode(doc)
 }

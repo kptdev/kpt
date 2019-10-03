@@ -52,7 +52,6 @@ metadata:
 		"--user", "nobody",
 		"--read-only",
 		"--security-opt=no-new-privileges",
-		"-e", "API_CONFIG", // the api config
 	}
 	for _, e := range os.Environ() {
 		// the process env
@@ -61,27 +60,20 @@ metadata:
 	expected = append(expected, "example.com:version")
 	assert.Equal(t, expected, cmd.Args)
 
-	foundApi := false
 	foundKpt := false
 	for _, e := range cmd.Env {
 		// verify the command has the right environment variables to pass to the container
 		split := strings.Split(e, "=")
-		if split[0] == "API_CONFIG" {
-			assert.Equal(t,
-				"{apiversion: apps/v1, kind: Deployment, metadata: {name: foo}}\n", split[1])
-			foundApi = true
-		}
 		if split[0] == "KPT_TEST" {
 			assert.Equal(t, "FOO", split[1])
 			foundKpt = true
 		}
 	}
-	assert.True(t, foundApi)
 	assert.True(t, foundKpt)
 }
 
 func TestFilter_Filter(t *testing.T) {
-	cfg, err := yaml.Parse(`apiversion: apps/v1
+	cfg, err := yaml.Parse(`apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
@@ -90,8 +82,8 @@ metadata:
 		return
 	}
 
-	input, err := kio.ByteReader{Reader: bytes.NewBufferString(`
-apiversion: apps/v1
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deployment-foo
@@ -100,39 +92,69 @@ apiVersion: v1
 kind: Service
 metadata:
   name: service-foo
-`)}.Read()
+`)}).Read()
 	if !assert.NoError(t, err) {
 		return
 	}
 
+	called := false
 	result, err := (&ContainerFilter{
 		Image:  "example.com:version",
 		Config: cfg,
 		args:   []string{"sed", "s/Deployment/StatefulSet/g"},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
+kind: InputOutputList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+    annotations:
+      kpt.dev/kio/index: 0
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+    annotations:
+      kpt.dev/kio/index: 1
+functionConfig: {apiVersion: apps/v1, kind: Deployment, metadata: {name: foo}}
+`, s) {
+				t.FailNow()
+			}
+		},
 	}).Filter(input)
 	if !assert.NoError(t, err) {
 		return
 	}
+	if !assert.True(t, called) {
+		return
+	}
 
 	b := &bytes.Buffer{}
-	err = kio.ByteWriter{Writer: b}.Write(result)
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	assert.Equal(t, `apiversion: apps/v1
+	assert.Equal(t, `apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: deployment-foo
+  annotations:
+    kpt.dev/kio/index: 0
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: service-foo
+  annotations:
+    kpt.dev/kio/index: 1
 `, b.String())
 }
 
-func TestFilter_Filter_config(t *testing.T) {
+func TestFilter_Filter_noChange(t *testing.T) {
 	cfg, err := yaml.Parse(`apiversion: apps/v1
 kind: Deployment
 metadata:
@@ -142,7 +164,7 @@ metadata:
 		return
 	}
 
-	input, err := kio.ByteReader{Reader: bytes.NewBufferString(`
+	input, err := (&kio.ByteReader{Reader: bytes.NewBufferString(`
 apiversion: apps/v1
 kind: Deployment
 metadata:
@@ -152,22 +174,48 @@ apiVersion: v1
 kind: Service
 metadata:
   name: service-foo
-`)}.Read()
+`)}).Read()
 	if !assert.NoError(t, err) {
 		return
 	}
 
+	called := false
 	result, err := (&ContainerFilter{
 		Image:  "example.com:version",
 		Config: cfg,
-		args:   []string{"sh", "-c", "echo ${API_CONFIG}"},
+		args:   []string{"sh", "-c", "cat <&0"},
+		checkInput: func(s string) {
+			called = true
+			if !assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
+kind: InputOutputList
+items:
+- apiversion: apps/v1
+  kind: Deployment
+  metadata:
+    name: deployment-foo
+    annotations:
+      kpt.dev/kio/index: 0
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: service-foo
+    annotations:
+      kpt.dev/kio/index: 1
+functionConfig: {apiversion: apps/v1, kind: Deployment, metadata: {name: foo}}
+`, s) {
+				t.FailNow()
+			}
+		},
 	}).Filter(input)
 	if !assert.NoError(t, err) {
 		return
 	}
+	if !assert.True(t, called) {
+		return
+	}
 
 	b := &bytes.Buffer{}
-	err = kio.ByteWriter{Writer: b}.Write(result)
+	err = kio.ByteWriter{Writer: b, KeepReaderAnnotations: true}.Write(result)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -175,6 +223,15 @@ metadata:
 	assert.Equal(t, `apiversion: apps/v1
 kind: Deployment
 metadata:
-  name: foo
+  name: deployment-foo
+  annotations:
+    kpt.dev/kio/index: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-foo
+  annotations:
+    kpt.dev/kio/index: 1
 `, b.String())
 }

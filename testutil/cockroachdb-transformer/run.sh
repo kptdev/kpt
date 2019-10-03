@@ -14,4 +14,4 @@
 # limitations under the License.
 
 # merge the template into the inputs to retain external changes
-app | kpt fmt --pattern "cockroachdb-statefulset.yaml" | kpt merge
+app | kpt fmt --set-filenames | kpt merge

@@ -85,7 +85,6 @@ metadata:
   name: foo
   annotations:
     app: nginx2
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: f1.yaml
 spec:
@@ -96,7 +95,6 @@ metadata:
   name: foo
   annotations:
     app: nginx
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: f1.yaml
 spec:
@@ -110,7 +108,6 @@ metadata:
   name: bar
   annotations:
     app: nginx
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: f2.yaml
 spec:

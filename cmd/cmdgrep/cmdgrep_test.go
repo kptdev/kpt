@@ -87,7 +87,6 @@ metadata:
   annotations:
     app: nginx2
     kpt.dev/kio/index: 0
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: f1.yaml
 spec:
@@ -99,7 +98,6 @@ metadata:
   annotations:
     app: nginx
     kpt.dev/kio/index: 1
-    kpt.dev/kio/mode: 384
     kpt.dev/kio/package: .
     kpt.dev/kio/path: f1.yaml
 spec:
