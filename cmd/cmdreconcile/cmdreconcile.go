@@ -17,6 +17,8 @@ package cmdreconcile
 
 import (
 	"github.com/spf13/cobra"
+	"kpt.dev/cmdreconcile/cmdwrap"
+	"kpt.dev/cmdreconcile/cmdxargs"
 	"kpt.dev/util/reconcile"
 )
 
@@ -44,6 +46,8 @@ kpt reconcile my-package/
 	r.C.Flags().StringSliceVar(&r.APIs, "api-resource", []string{},
 		"additional API resources to reconcile")
 	r.C.Flags().BoolVar(&r.DryRun, "dry-run", false, "print results to stdout")
+	r.C.AddCommand(cmdxargs.Cmd().C)
+	r.C.AddCommand(cmdwrap.Cmd().C)
 	return r
 }
 

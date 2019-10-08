@@ -38,7 +38,9 @@ func TestCmd(t *testing.T) {
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(d, "my-pkg", "Kptfile"))
 	assert.NoError(t, err)
-	assert.Equal(t, `metadata:
+	assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
+kind: KptFile
+metadata:
   name: my-pkg
 packageMetadata:
   tags:

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdcat_test
+package cmdrc_test
 
 import (
 	"bytes"
@@ -22,10 +22,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"kpt.dev/cmdcat"
+	"kpt.dev/cmdrc"
 )
-
-// TODO(pwittrock): write tests for reading / writing ResourceLists
 
 func TestCmd_files(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt-test")
@@ -73,48 +71,14 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := cmdcat.Cmd()
+	r := cmdrc.Cmd()
 	r.C.SetArgs([]string{d})
 	r.C.SetOut(b)
 	if !assert.NoError(t, r.C.Execute()) {
 		return
 	}
 
-	if !assert.Equal(t, `kind: Deployment
-metadata:
-  labels:
-    app: nginx2
-  name: foo
-  annotations:
-    app: nginx2
-    kpt.dev/kio/package: .
-    kpt.dev/kio/path: f1.yaml
-spec:
-  replicas: 1
----
-kind: Service
-metadata:
-  name: foo
-  annotations:
-    app: nginx
-    kpt.dev/kio/package: .
-    kpt.dev/kio/path: f1.yaml
-spec:
-  selector:
-    app: nginx
----
-kind: Deployment
-metadata:
-  labels:
-    app: nginx
-  name: bar
-  annotations:
-    app: nginx
-    kpt.dev/kio/package: .
-    kpt.dev/kio/path: f2.yaml
-spec:
-  replicas: 3
-`, b.String()) {
+	if !assert.Equal(t, "Deployment: 2\nService: 1\n", b.String()) {
 		return
 	}
 }

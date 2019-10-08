@@ -1,24 +1,10 @@
-// Copyright 2019 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+## apis reconcilers
 
-package cmdhelp
 
-import "github.com/spf13/cobra"
 
-var Reconcilers = &cobra.Command{
-	Use: "reconcilers",
-	Long: `Description:
+### Synopsis
+
+Description:
   Reconcilers are client-side versions of the Kubernetes Controller Reconcile functions which
   implement Kubernetes APIs in the cluster.
 
@@ -40,18 +26,18 @@ var Reconcilers = &cobra.Command{
 
   Reconcilers are configured as Resources within the package, and are identified by one of:
 
-  - having an apiVersion starting with ` + "`" + `*.gcr.io` + "`" + ` or ` + "`" + `docker.io` + "`" + `
-  - having an annotation ` + "`" + `kpt.dev/container: CONTAINER_NAME` + "`" + `
+  - having an apiVersion starting with `*.gcr.io` or `docker.io`
+  - having an annotation `kpt.dev/container: CONTAINER_NAME`
 
   Example Reconciler config in pkg/example-reconciler.yaml which would be triggered
-  by running ` + "`" + `kpt reconcile pkg/` + "`" + `
+  by running `kpt reconcile pkg/`
 
 	apiVersion: gcr.io/kpt-dev/example-reconciler
 	kind: ExampleReconciler
 	spec:
 	  someField: someValue
 
-  In the preceding example, ` + "`" + `kpt reconcile pkg/` + "`" + ` would:
+  In the preceding example, `kpt reconcile pkg/` would:
 
   - run a new container from the image gcr.io/kpt-dev/example-reconciler
   - provide the current contents of pkg/ package to the container on stdin
@@ -108,12 +94,12 @@ var Reconcilers = &cobra.Command{
   This is possible using "kpt cat" to generate the reconciler input for a package and piping it to
   the Reconciler program.
 
-` + "  - Manually generate input through: `kpt cat --function-config config.yaml --wrap-kind ResourceList --wrap-version kpt.dev/v1alpha1" + `
+  - Manually generate input through: `kpt cat --function-config config.yaml --wrap-kind ResourceList --wrap-version kpt.dev/v1alpha1
     - wraps the pkg/ and config.yaml in a *ResourceList* and writes to stdout
-` + "    - e.g. `kpt cat --function-config config.yaml --wrap-kind ResourceList --wrap-version kpt.dev/v1alpha1 | ./reconciler`" + `
-` + "  - Manually unwrap the output through: `kpt cat`" + `
+    - e.g. `kpt cat --function-config config.yaml --wrap-kind ResourceList --wrap-version kpt.dev/v1alpha1 | ./reconciler`
+  - Manually unwrap the output through: `kpt cat`
   - unwraps the output from the ResourceList produced by the Reconciler
-` + "    - e.g. `... | ./reconciler | kpt cat`" + `
+    - e.g. `... | ./reconciler | kpt cat`
 
   #### Simplifying Reconciler implementation
 
@@ -123,18 +109,18 @@ var Reconcilers = &cobra.Command{
 
   kpt offers several commands that can be combined using pipes that can parse and update Resources.
 
-` + "  - `kpt reconcile xargs` parses the functionConfig into flags and environment variables and invokes the Reconciler" + `
-` + "    - e.g. `kpt reconcile xargs -- ./reconciler`" + `
+  - `kpt reconcile xargs` parses the functionConfig into flags and environment variables and invokes the Reconciler
+    - e.g. `kpt reconcile xargs -- ./reconciler`
   
-` + "  - `kpt merge` merges Resources specified multiple times, allowing templates to simply emit new copies of Resources which be merged into the local package copy." + `
-` + "    - e.g. `... ./reconciler | kpt merge`" + `
+  - `kpt merge` merges Resources specified multiple times, allowing templates to simply emit new copies of Resources which be merged into the local package copy.
+    - e.g. `... ./reconciler | kpt merge`
 
-` + "  - `kpt fmt` formats Resources and generates file names for newly created Resources." + `
-` + "    - e.g. `... ./reconciler | kpt fmt --set-filenames`" + `
-` + "    - **note**: `kpt merge` must come before `kpt fmt` to prevent filenames from being overridden" + `
+  - `kpt fmt` formats Resources and generates file names for newly created Resources.
+    - e.g. `... ./reconciler | kpt fmt --set-filenames`
+    - **note**: `kpt merge` must come before `kpt fmt` to prevent filenames from being overridden
 
-` + "  - `kpt reconcile wrap` combines `xargs`, `merge`, `fmt` into a single command and is the recommended approach for templating abstractions." + `
-` + "    - e.g. `kpt reconcile wrap -- ./reconciler`" + `
+  - `kpt reconcile wrap` combines `xargs`, `merge`, `fmt` into a single command and is the recommended approach for templating abstractions.
+    - e.g. `kpt reconcile wrap -- ./reconciler`
 
   ### Full examples:
 
@@ -142,7 +128,7 @@ var Reconcilers = &cobra.Command{
   - https://github.com/GoogleContainerTools/kpt/testutil/cockroachdb-reconciler
   - https://github.com/GoogleContainerTools/kpt/testutil/resource-policy-reconciler
 
-  ## Local e2e example for running locally outside of ` + "`" + `kpt reconcile` + "`" + `
+  ## Local e2e example for running locally outside of `kpt reconcile`
 
 	$ kpt cat pkg/ --function-config pkg/config.yaml --wrap-kind ResourceList | \
 	kpt reconcile wrap -- ./reconciler | kpt cat
@@ -217,5 +203,19 @@ var Reconcilers = &cobra.Command{
 	spec:
 	  image: gcr.io/sample/image:version
 	  port: 8080
-`,
-}
+
+
+```
+apis reconcilers [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for reconcilers
+```
+
+### SEE ALSO
+
+* [apis](apis.md)	 - Contains api information for kpt
+

@@ -45,7 +45,8 @@ cat resources_and_patches.yaml | kpt merge > merged_resources.yaml
 ### Options
 
 ```
-  -h, --help   help for merge
+  -h, --help           help for merge
+      --invert-order   if true, merge Resources in the reverse order
 ```
 
 ### SEE ALSO

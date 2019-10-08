@@ -84,12 +84,12 @@ spec:
 
 	if !assert.Equal(t, `
 ├── bar-package
-│   └── [f2.yaml]  .Deployment bar
+│   └── [f2.yaml]  Deployment bar
 └── foo-package
-    ├── [f1.yaml]  .Deployment default/foo
-    ├── [f1.yaml]  .Service default/foo
+    ├── [f1.yaml]  Deployment default/foo
+    ├── [f1.yaml]  Service default/foo
     └── foo-package/3
-        └── [f3.yaml]  .Deployment default/foo
+        └── [f3.yaml]  Deployment default/foo
 `, out.String()) {
 		t.FailNow()
 	}
@@ -156,12 +156,12 @@ spec:
 	}
 
 	if !assert.Equal(t, `
-├── [f1.yaml]  .Service default/foo
-├── [f3.yaml]  .Deployment default/foo
+├── [f1.yaml]  Service default/foo
+├── [f3.yaml]  Deployment default/foo
 ├── bar-package
-│   └── [f2.yaml]  .Deployment bar
+│   └── [f2.yaml]  Deployment bar
 └── foo-package
-    └── [f1.yaml]  .Deployment default/foo
+    └── [f1.yaml]  Deployment default/foo
 `, out.String()) {
 		t.FailNow()
 	}
@@ -272,14 +272,14 @@ spec:
 	}
 
 	if !assert.Equal(t, `
-├── [f1.yaml]  apps/v1.Deployment default/foo
-├── [f1.yaml]  .Service default/foo
-├── [f1.yaml]  apps/v1.Deployment default/foo3
-├── [f1.yaml]  extensions/v1.Deployment default/foo3
-├── [f1.yaml]  extensions/v1.Deployment default/foo3
-├── [f1.yaml]  apps/v1.Deployment default2/foo2
+├── [f1.yaml]  Deployment default/foo
+├── [f1.yaml]  Service default/foo
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default2/foo2
 └── bar-package
-    └── [f2.yaml]  .Deployment bar
+    └── [f2.yaml]  Deployment bar
 `, out.String()) {
 		t.FailNow()
 	}

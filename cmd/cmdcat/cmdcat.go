@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cmdcat contains the fmt command
+// Package cmdcat contains the cat command
 package cmdcat
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
+	"lib.kpt.dev/yaml"
 )
 
 // Cmd returns a command runner.
@@ -34,18 +37,36 @@ func Cmd() *Runner {
 `,
 		Example: `# print Resource config from a package
 kpt cat my-package/
+
+# wrap Resource config from a package in an ResourceList
+kpt cat my-package/ --wrap-kind ResourceList --wrap-version kpt.dev/v1alpha1 --function-config fn.yaml
+
+# unwrap Resource config from a package in an ResourceList
+... | kpt cat
+
+# write as json
+kpt cat my-package
 `,
 		RunE:         r.runE,
 		SilenceUsage: true,
-		Args:         cobra.MinimumNArgs(1),
 	}
 	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
 		"also print resources from subpackages.")
 	c.Flags().BoolVar(&r.Format, "format", true,
 		"format resource config yaml before printing.")
-	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", true,
+	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", false,
 		"annotate resources with their file origins.")
-
+	c.Flags().StringVar(&r.WrapKind, "wrap-kind", "",
+		"if set, wrap the output in this list type kind.")
+	c.Flags().StringVar(&r.WrapApiVersion, "wrap-version", "",
+		"if set, wrap the output in this list type apiVersion.")
+	c.Flags().StringVar(&r.FunctionConfig, "function-config", "",
+		"path to function config to put in ResourceList -- only if wrapped in a ResourceList.")
+	c.Flags().StringSliceVar(&r.Styles, "style", []string{},
+		"yaml styles to apply.  may be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', "+
+			"'FoldedStyle', 'FlowStyle'.")
+	c.Flags().BoolVar(&r.StripComments, "strip-comments", false,
+		"remove comments from yaml.")
 	r.C = c
 	return r
 }
@@ -55,20 +76,56 @@ type Runner struct {
 	IncludeSubpackages bool
 	Format             bool
 	KeepAnnotations    bool
+	WrapKind           string
+	WrapApiVersion     string
+	FunctionConfig     string
+	Styles             []string
+	StripComments      bool
 	C                  *cobra.Command
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	// if there is a function-config specified, emit it
+	var functionConfig *yaml.RNode
+	if r.FunctionConfig != "" {
+		configs, err := kio.LocalPackageReader{PackagePath: r.FunctionConfig,
+			OmitReaderAnnotations: !r.KeepAnnotations}.Read()
+		if err != nil {
+			return err
+		}
+		if len(configs) != 1 {
+			return fmt.Errorf("expected exactly 1 functionConfig, found %d", len(configs))
+		}
+		functionConfig = configs[0]
+	}
+
 	var inputs []kio.Reader
 	for _, a := range args {
 		inputs = append(inputs, kio.LocalPackageReader{
-			PackagePath: a,
+			PackagePath:        a,
+			IncludeSubpackages: r.IncludeSubpackages,
 		})
 	}
-	var f []kio.Filter
-	if r.Format {
-		f = append(f, filters.FormatFilter{})
+	if len(inputs) == 0 {
+		inputs = append(inputs, &kio.ByteReader{Reader: c.InOrStdin()})
 	}
-	return kio.Pipeline{Inputs: inputs, Filters: f,
-		Outputs: []kio.Writer{kio.ByteWriter{Writer: c.OutOrStdout()}}}.Execute()
+	var fltr []kio.Filter
+	if r.Format {
+		fltr = append(fltr, filters.FormatFilter{})
+	}
+	if r.StripComments {
+		fltr = append(fltr, filters.StripCommentsFilter{})
+	}
+
+	var outputs []kio.Writer
+	outputs = append(outputs, kio.ByteWriter{
+		Writer:                c.OutOrStdout(),
+		KeepReaderAnnotations: r.KeepAnnotations,
+		WrappingKind:          r.WrapKind,
+		WrappingApiVersion:    r.WrapApiVersion,
+		FunctionConfig:        functionConfig,
+		Style:                 yaml.GetStyle(r.Styles...),
+	})
+
+	return kio.Pipeline{Inputs: inputs, Filters: fltr, Outputs: outputs}.Execute()
 }

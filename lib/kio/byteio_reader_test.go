@@ -44,9 +44,9 @@ i: j
 	return b
 }
 
-func TestByteReader_Read_wrappedInputOutputList(t *testing.T) {
+func TestByteReader_Read_wrappedResourceßßList(t *testing.T) {
 	r := &ByteReader{Reader: bytes.NewBufferString(`apiVersion: kpt.dev/v1alpha1
-kind: InputOutputList
+kind: ResourceList
 functionConfig:
   foo: bar
   elems:
@@ -96,8 +96,8 @@ elems:
 - c
 `, r.FunctionConfig.MustString())
 
-	assert.Equal(t, InputOutputListKind, r.WrappingKind)
-	assert.Equal(t, InputOutputListApiVersion, r.WrappingApiVersion)
+	assert.Equal(t, ResourceListKind, r.WrappingKind)
+	assert.Equal(t, ResourceListApiVersion, r.WrappingApiVersion)
 
 }
 

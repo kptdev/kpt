@@ -57,6 +57,7 @@ kpt fmt [flags]
 ```
   -h, --help               help for fmt
       --keep-annotations   if true, keep index and filename annotations set on Resources.
+      --override           if true, override existing filepath annotations.
       --pattern string     pattern to use for generating filenames for resources -- may contain the following
                            formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace', '%k': 'kind'} (default "%n_%k.yaml")
       --set-filenames      if true, set default filenames on Resources without them
