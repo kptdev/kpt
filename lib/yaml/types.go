@@ -57,6 +57,28 @@ func Parse(value string) (*RNode, error) {
 	return Parser{Value: value}.Filter(nil)
 }
 
+// TODO(pwittrock): test this
+func GetStyle(styles ...string) Style {
+	var style Style
+	for _, s := range styles {
+		switch s {
+		case "TaggedStyle":
+			style |= TaggedStyle
+		case "DoubleQuotedStyle":
+			style |= DoubleQuotedStyle
+		case "SingleQuotedStyle":
+			style |= SingleQuotedStyle
+		case "LiteralStyle":
+			style |= LiteralStyle
+		case "FoldedStyle":
+			style |= FoldedStyle
+		case "FlowStyle":
+			style |= FlowStyle
+		}
+	}
+	return style
+}
+
 // MustParse parses a yaml string into an *RNode and panics if there is an error
 func MustParse(value string) *RNode {
 	v, err := Parser{Value: value}.Filter(nil)

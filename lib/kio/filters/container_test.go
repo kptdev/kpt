@@ -50,7 +50,6 @@ metadata:
 		"-i", "-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
 		"--network", "none",
 		"--user", "nobody",
-		"--read-only",
 		"--security-opt=no-new-privileges",
 	}
 	for _, e := range os.Environ() {
@@ -105,7 +104,7 @@ metadata:
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
-kind: InputOutputList
+kind: ResourceList
 items:
 - apiVersion: apps/v1
   kind: Deployment
@@ -187,7 +186,7 @@ metadata:
 		checkInput: func(s string) {
 			called = true
 			if !assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
-kind: InputOutputList
+kind: ResourceList
 items:
 - apiversion: apps/v1
   kind: Deployment

@@ -53,7 +53,7 @@ func TestFileSetter_Filter(t *testing.T) {
 	err := Pipeline{
 		Inputs:  []Reader{&ByteReader{Reader: in}},
 		Filters: []Filter{&FileSetter{}},
-		Outputs: []Writer{ByteWriter{Writer: out}},
+		Outputs: []Writer{ByteWriter{Sort: true, Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -98,7 +98,7 @@ func TestFileSetter_Filter_pattern(t *testing.T) {
 		Filters: []Filter{&FileSetter{
 			FilenamePattern: "%n_%s_%k.yaml",
 		}},
-		Outputs: []Writer{ByteWriter{Writer: out}},
+		Outputs: []Writer{ByteWriter{Sort: true, Writer: out}},
 	}.Execute()
 	if !assert.NoError(t, err) {
 		return

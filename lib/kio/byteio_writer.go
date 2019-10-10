@@ -36,19 +36,29 @@ type ByteWriter struct {
 	// Style is a style that is set on the Resource Node Document.
 	Style yaml.Style
 
-	// FunctionConfig is the function config for an InputOutputList.  If non-nil
-	// wrap the results in an InputOutputList.
+	// FunctionConfig is the function config for an ResourceList.  If non-nil
+	// wrap the results in an ResourceList.
 	FunctionConfig *yaml.RNode
 
+	// WrappingKind if set will cause ByteWriter to wrap the Resources in
+	// an 'items' field in this kind.  e.g. if WrappingKind is 'List',
+	// ByteWriter will wrap the Resources in a List .items field.
+	WrappingKind string
+
+	// WrappingApiVersion is the apiVersion for WrappingKind
 	WrappingApiVersion string
-	WrappingKind       string
+
+	// Sort if set, will cause ByteWriter to sort the the nodes before writing them.
+	Sort bool
 }
 
 var _ Writer = ByteWriter{}
 
 func (w ByteWriter) Write(nodes []*yaml.RNode) error {
-	if err := kioutil.SortNodes(nodes); err != nil {
-		return err
+	if w.Sort {
+		if err := kioutil.SortNodes(nodes); err != nil {
+			return err
+		}
 	}
 
 	encoder := yaml.NewEncoder(w.Writer)
@@ -99,7 +109,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 	items := &yaml.Node{Kind: yaml.SequenceNode}
 	list := &yaml.Node{
 		Kind:  yaml.MappingNode,
-		Style: yaml.FoldedStyle,
+		Style: w.Style,
 		Content: []*yaml.Node{
 			{Kind: yaml.ScalarNode, Value: "apiVersion"},
 			{Kind: yaml.ScalarNode, Value: w.WrappingApiVersion},
@@ -107,7 +117,7 @@ func (w ByteWriter) Write(nodes []*yaml.RNode) error {
 			{Kind: yaml.ScalarNode, Value: w.WrappingKind},
 			{Kind: yaml.ScalarNode, Value: "items"}, items,
 		}}
-	if w.FunctionConfig != nil && w.WrappingKind == InputOutputListKind {
+	if w.FunctionConfig != nil {
 		list.Content = append(list.Content,
 			&yaml.Node{Kind: yaml.ScalarNode, Value: "functionConfig"},
 			w.FunctionConfig.YNode())

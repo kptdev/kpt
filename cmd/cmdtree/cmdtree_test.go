@@ -81,9 +81,9 @@ spec:
 	}
 
 	if !assert.Equal(t, fmt.Sprintf(`%s
-├── [f1.yaml]  .Deployment foo
-├── [f1.yaml]  .Service foo
-└── [f2.yaml]  .Deployment bar
+├── [f1.yaml]  Deployment foo
+├── [f1.yaml]  Service foo
+└── [f2.yaml]  Deployment bar
 `, d), b.String()) {
 		return
 	}
@@ -194,14 +194,14 @@ spec:
 	}
 
 	if !assert.Equal(t, fmt.Sprintf(`.
-├── [f1.yaml]  apps/v1.Deployment default/foo
-├── [f1.yaml]  .Service default/foo
-├── [f1.yaml]  apps/v1.Deployment default/foo3
-├── [f1.yaml]  extensions/v1.Deployment default/foo3
-├── [f1.yaml]  extensions/v1.Deployment default/foo3
-├── [f1.yaml]  apps/v1.Deployment default2/foo2
+├── [f1.yaml]  Deployment default/foo
+├── [f1.yaml]  Service default/foo
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default/foo3
+├── [f1.yaml]  Deployment default2/foo2
 └── bar-package
-    └── [f2.yaml]  .Deployment bar
+    └── [f2.yaml]  Deployment bar
 `), b.String()) {
 		return
 	}

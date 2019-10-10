@@ -64,7 +64,7 @@ func (m Command) Run() error {
 		if err != nil {
 			return fmt.Errorf("no manual entry for %s", m.Path)
 		}
-		k.PackageMeta.Man = filepath.Join(m.Path, "MAN.md")
+		k.PackageMeta.Man = filepath.Join("MAN.md")
 	}
 
 	// the path separator needs to converted to the OS path.

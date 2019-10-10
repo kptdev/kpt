@@ -23,7 +23,7 @@ import (
 // Expose the yaml.v3 functions so this package can be used as a replacement
 
 type Decoder = yaml.Decoder
-type Encode = yaml.Encoder
+type Encoder = yaml.Encoder
 type IsZeroer = yaml.IsZeroer
 type Kind = yaml.Kind
 type Marshaler = yaml.Marshaler

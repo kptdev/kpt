@@ -77,6 +77,8 @@ formatting substitution verbs {'%n': 'metadata.name', '%s': 'metadata.namespace'
 		`if true, set default filenames on Resources without them`)
 	c.Flags().BoolVar(&r.KeepAnnotations, "keep-annotations", false,
 		`if true, keep index and filename annotations set on Resources.`)
+	c.Flags().BoolVar(&r.Override, "override", false,
+		`if true, override existing filepath annotations.`)
 	r.C = c
 	return r
 }
@@ -87,6 +89,7 @@ type Runner struct {
 	FilenamePattern string
 	SetFilenames    bool
 	KeepAnnotations bool
+	Override        bool
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -101,7 +104,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// format with file names
 	if r.SetFilenames {
-		f = append(f, &filters.FileSetter{FilenamePattern: r.FilenamePattern})
+		f = append(f, &filters.FileSetter{
+			FilenamePattern: r.FilenamePattern,
+			Override:        r.Override,
+		})
 	}
 
 	// format stdin if there are no args

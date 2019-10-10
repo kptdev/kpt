@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	InputOutputListKind       = "InputOutputList"
-	InputOutputListApiVersion = "kpt.dev/v1alpha1"
+	ResourceListKind       = "ResourceList"
+	ResourceListApiVersion = "kpt.dev/v1alpha1"
 )
 
 // ByteReadWriter reads from an input and writes to an output
@@ -121,7 +121,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 
 		// the elements are wrapped in an InputList, unwrap them
 		// don't check apiVersion, we haven't standardized on the domain
-		if (meta.Kind == InputOutputListKind || meta.Kind == "List") &&
+		if (meta.Kind == ResourceListKind || meta.Kind == "List") &&
 			node.Field("items") != nil {
 			r.WrappingKind = meta.Kind
 			r.WrappingApiVersion = meta.ApiVersion

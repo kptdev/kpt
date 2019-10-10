@@ -27,7 +27,9 @@ import (
 // - Fields with matching keys will be merged recursively
 // - Lists with an associative key (e.g. name) will have their elements merged using the key
 // - List without an associative key will have the dest list replaced by the source list
-type MergeFilter struct{}
+type MergeFilter struct {
+	Reverse bool
+}
 
 type mergeKey struct {
 	apiVersion string
@@ -38,6 +40,13 @@ type mergeKey struct {
 
 // GrepFilter implements kio.GrepFilter by merge Resources with the same G/V/K/NS/N
 func (c MergeFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	// invert the merge precedence
+	if c.Reverse {
+		for i, j := 0, len(input)-1; i < j; i, j = i+1, j-1 {
+			input[i], input[j] = input[j], input[i]
+		}
+	}
+
 	// index the Resources by G/V/K/NS/N
 	index := map[mergeKey][]*yaml.RNode{}
 	for i := range input {

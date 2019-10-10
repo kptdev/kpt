@@ -12,16 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdhelp
+package filters
 
-import "github.com/spf13/cobra"
+import (
+	"lib.kpt.dev/kio"
+	"lib.kpt.dev/yaml"
+)
 
-var Apis = &cobra.Command{
-	Use:   "apis",
-	Short: `Contains api information for kpt`,
-	Long:  `Contains api information for kpt.`,
+type StripCommentsFilter struct{}
+
+var _ kio.Filter = StripCommentsFilter{}
+
+func (f StripCommentsFilter) Filter(slice []*yaml.RNode) ([]*yaml.RNode, error) {
+	for i := range slice {
+		stripComments(slice[i].YNode())
+	}
+	return slice, nil
 }
 
-func init() {
-	Apis.AddCommand(PackageStructure, Kptfile, Reconcilers)
+func stripComments(node *yaml.Node) {
+	if node == nil {
+		return
+	}
+	node.HeadComment = ""
+	node.LineComment = ""
+	node.FootComment = ""
+	for i := range node.Content {
+		stripComments(node.Content[i])
+	}
 }

@@ -47,16 +47,17 @@ g:
 
 	buff := &bytes.Buffer{}
 	err = ByteWriter{
+		Sort:               true,
 		Writer:             buff,
 		FunctionConfig:     node3,
-		WrappingKind:       InputOutputListKind,
-		WrappingApiVersion: InputOutputListApiVersion}.
+		WrappingKind:       ResourceListKind,
+		WrappingApiVersion: ResourceListApiVersion}.
 		Write([]*yaml.RNode{node2, node1})
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
-kind: InputOutputList
+kind: ResourceList
 items:
 - c: d # second
 - a: b #first
@@ -147,7 +148,7 @@ metadata:
 	}
 
 	buff := &bytes.Buffer{}
-	err = ByteWriter{Writer: buff, KeepReaderAnnotations: true}.
+	err = ByteWriter{Sort: true, Writer: buff, KeepReaderAnnotations: true}.
 		Write([]*yaml.RNode{node2, node3, node1})
 	if !assert.NoError(t, err) {
 		return
@@ -213,7 +214,7 @@ metadata:
 	}
 
 	buff := &bytes.Buffer{}
-	err = ByteWriter{Writer: buff}.
+	err = ByteWriter{Sort: true, Writer: buff}.
 		Write([]*yaml.RNode{node2, node3, node1})
 	if !assert.NoError(t, err) {
 		return
@@ -270,7 +271,7 @@ g:
 	}
 
 	buff := &bytes.Buffer{}
-	rw := ByteWriter{Writer: buff}
+	rw := ByteWriter{Sort: true, Writer: buff}
 	err = rw.Write([]*yaml.RNode{node2, node3, node1})
 	if !assert.NoError(t, err) {
 		return

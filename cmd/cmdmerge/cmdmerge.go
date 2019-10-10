@@ -59,12 +59,15 @@ Merge uses the following rules for merging a source Resource into a destination 
 		SilenceUsage: true,
 	}
 	r.C = c
+	r.C.Flags().BoolVar(&r.InvertOrder, "invert-order", false,
+		"if true, merge Resources in the reverse order")
 	return r
 }
 
 // Runner contains the run function
 type Runner struct {
-	C *cobra.Command
+	C           *cobra.Command
+	InvertOrder bool
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {

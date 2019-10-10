@@ -61,8 +61,8 @@ func (c *ContainerFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 
 	// write the input
 	err = kio.ByteWriter{
-		WrappingApiVersion: kio.InputOutputListApiVersion,
-		WrappingKind:       kio.InputOutputListKind,
+		WrappingApiVersion: kio.ResourceListApiVersion,
+		WrappingKind:       kio.ResourceListKind,
 		Writer:             in, KeepReaderAnnotations: true, FunctionConfig: c.Config}.Write(input)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (c *ContainerFilter) getArgs() []string {
 		// added security options
 		"--network", "none", // disable the network
 		"--user", "nobody", // run as nobody
-		"--read-only",                      // make fs read only
+		// don't make fs readonly because things like heredoc rely on writing tmp files
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 	}
 

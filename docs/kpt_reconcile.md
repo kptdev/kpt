@@ -35,4 +35,6 @@ kpt reconcile my-package/
 ### SEE ALSO
 
 * [kpt](kpt.md)	 - Kpt Packaging Tool
+* [kpt reconcile wrap](kpt_reconcile_wrap.md)	 - Wrap a reconcile command in xargs and pipe to merge + fmt
+* [kpt reconcile xargs](kpt_reconcile_xargs.md)	 - Convert functionConfig to commandline flags
 

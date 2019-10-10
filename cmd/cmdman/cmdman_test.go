@@ -158,6 +158,142 @@ metadata:
 `, b.String())
 }
 
+func TestCmd_execute_manNotSpecified(t *testing.T) {
+	d, err := ioutil.TempDir("", "kptman")
+	assert.NoError(t, err)
+
+	if !assert.NoError(t, os.Mkdir(filepath.Join(d, "pkg"), 0700)) {
+		return
+	}
+	if !assert.NoError(t, os.Chdir(d)) {
+		return
+	}
+
+	// write the KptFile
+	err = ioutil.WriteFile(filepath.Join(d, "pkg", kptfile.KptFileName), []byte(`
+apiVersion: kpt.dev/v1alpha1
+kind: KptFile
+metadata:
+  name: java
+`), 0600)
+	assert.NoError(t, err)
+
+	// write the man md file
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(filepath.Join(d, "pkg", "MAN.md"), []byte(`
+java 1   "June 2019"  "Application"
+==================================================
+
+# NAME
+  **java**
+
+# SYNOPSIS
+
+kpt clone testdata3/java
+
+# Description
+
+The **java** package runs a container containing a java application.
+  
+# Components
+
+Java server Deployment.
+
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: java
+
+Java server Service
+
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: java
+
+Java server ConfigMap
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: java-config
+`), 0600)
+	assert.NoError(t, err)
+
+	b := &bytes.Buffer{}
+	c := cmdman.Cmd()
+	c.C.SetArgs([]string{"pkg"})
+	c.Command.ManExecCommand = "cat"
+	c.C.SetOut(b)
+	err = c.C.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, `.TH java 1   "June 2019"  "Application"
+
+.SH NAME
+.PP
+\fBjava\fP
+
+
+.SH SYNOPSIS
+.PP
+kpt clone testdata3/java
+
+
+.SH Description
+.PP
+The \fBjava\fP package runs a container containing a java application.
+
+
+.SH Components
+.PP
+Java server Deployment.
+
+.PP
+.RS
+
+.nf
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java
+
+.fi
+.RE
+
+.PP
+Java server Service
+
+.PP
+.RS
+
+.nf
+apiVersion: v1
+kind: Service
+metadata:
+  name: java
+
+.fi
+.RE
+
+.PP
+Java server ConfigMap
+
+.PP
+.RS
+
+.nf
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: java\-config
+
+.fi
+.RE
+`, b.String())
+}
+
 // TestCmd_fail verifies that command returns an error if the directory is
 // not found.
 func TestCmd_fail(t *testing.T) {

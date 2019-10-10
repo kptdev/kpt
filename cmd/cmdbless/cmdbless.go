@@ -100,7 +100,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	if _, err = os.Stat(filepath.Join(args[0], "Kptfile")); os.IsNotExist(err) {
 		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], "Kptfile"))
-		kptfile := kptfile.KptFile{
+		k := kptfile.KptFile{
 			ResourceMeta: yaml.ResourceMeta{ObjectMeta: yaml.ObjectMeta{Name: r.Name}},
 			PackageMeta: kptfile.PackageMeta{
 				ShortDescription: r.Description,
@@ -108,6 +108,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 				Tags:             r.Tags,
 			},
 		}
+
+		// serialize the gvk when writing the Kptfile
+		k.Kind = kptfile.TypeMeta.Kind
+		k.ApiVersion = kptfile.TypeMeta.ApiVersion
 
 		err = func() error {
 			f, err := os.Create(filepath.Join(args[0], "Kptfile"))
@@ -118,7 +122,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			e := yaml.NewEncoder(f)
 
 			defer e.Close()
-			return e.Encode(kptfile)
+			return e.Encode(k)
 		}()
 		if err != nil {
 			return err

@@ -33,6 +33,7 @@ import (
 	"kpt.dev/cmdhelp"
 	"kpt.dev/cmdman"
 	"kpt.dev/cmdmerge"
+	"kpt.dev/cmdrc"
 	"kpt.dev/cmdreconcile"
 	"kpt.dev/cmdtree"
 	"kpt.dev/cmdtutorials"
@@ -62,6 +63,7 @@ func main() {
 	cmd.AddCommand(cmdbless.Cmd().C)
 	cmd.AddCommand(cmdman.Cmd().C)
 	cmd.AddCommand(cmdmerge.Cmd().C)
+	cmd.AddCommand(cmdrc.Cmd().C)
 	cmd.AddCommand(cmdreconcile.Cmd().C)
 	cmd.AddCommand(cmdtree.Cmd().C)
 	cmd.AddCommand(cmdupdate.Cmd().C)

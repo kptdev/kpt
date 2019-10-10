@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,5 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# merge the template into the inputs to retain external changes
-app | kpt merge | kpt fmt --set-filenames --pattern "config/%n_%k.yaml"
+FROM golang:1.13-stretch
+
+# build kpt from local source
+WORKDIR /go/src/
+COPY lib lib/
+COPY cmd/ cmd/
+WORKDIR /go/src/cmd
+RUN go build -v -o /bin/kpt .
+
+# install the reconciler
+COPY testutil/cockroachdb-simple/cockroachdb-template.sh /usr/bin/cockroachdb-template.sh
+CMD ["cockroachdb-template.sh"]

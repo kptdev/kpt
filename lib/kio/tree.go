@@ -157,10 +157,9 @@ func (p TreeWriter) doResource(leaf *yaml.RNode, branch treeprint.Tree) error {
 	meta, _ := leaf.GetMeta()
 	path := meta.Annotations[kioutil.PathAnnotation]
 	path = filepath.Base(path)
-	value := fmt.Sprintf("%s.%s %s", meta.ApiVersion, meta.Kind, meta.Name)
+	value := fmt.Sprintf("%s %s", meta.Kind, meta.Name)
 	if len(meta.Namespace) > 0 {
-		value = fmt.Sprintf("%s.%s %s/%s", meta.ApiVersion, meta.Kind, meta.Namespace,
-			meta.Name)
+		value = fmt.Sprintf("%s %s/%s", meta.Kind, meta.Namespace, meta.Name)
 	}
 
 	fields, err := p.getFields(leaf)

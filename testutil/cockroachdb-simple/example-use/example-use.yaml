@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,5 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# merge the template into the inputs to retain external changes
-app | kpt merge | kpt fmt --set-filenames --pattern "config/%n_%k.yaml"
+# Put this file in a package and call kpt reconcile on the package to invoke the template
+# and merge its results back into the package
+# kpt reconcile pkg/
+apiVersion: gcr.io/pwittrock-dev/myimage:myversion
+kind: CockroachDB
+metadata:
+  name: demo
+spec:
+  replicas: 9
