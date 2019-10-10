@@ -461,11 +461,22 @@ func TestErrorIfInvalid(t *testing.T) {
 		NewRNode(&yaml.Node{Kind: yaml.SequenceNode}), yaml.SequenceNode)
 	assert.NoError(t, err)
 
+	// nil values should pass validation -- they were not specified
 	err = ErrorIfInvalid(&RNode{}, yaml.SequenceNode)
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "missing value")
+	if !assert.NoError(t, err) {
+		t.FailNow()
 	}
 
+	err = ErrorIfInvalid(NewRNode(&Node{Content: []*yaml.Node{{Value: "hello"}}}), yaml.SequenceNode)
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "wrong Node Kind")
+
+	err = ErrorIfInvalid(NewRNode(&yaml.Node{}), yaml.SequenceNode)
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "wrong Node Kind")
+	}
 	err = ErrorIfInvalid(NewRNode(&yaml.Node{}), yaml.MappingNode)
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "wrong Node Kind")

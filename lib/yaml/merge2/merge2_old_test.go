@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package merge_test
+package merge2_test
 
 import (
 	"bytes"
 	"testing"
 
-	"lib.kpt.dev/kio/filters"
-
 	"github.com/stretchr/testify/assert"
+	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/yaml"
-	. "lib.kpt.dev/yaml/walk/merge"
+	. "lib.kpt.dev/yaml/merge2"
 )
 
 const dest = `
@@ -437,7 +436,7 @@ a:
 	}
 	assert.Equal(t, `a:
   b:
-    c: e # line comment
+    c: e
 `, actual)
 }
 
@@ -459,7 +458,7 @@ a:
 	}
 	assert.Equal(t, `a:
   b:
-    # header comment
+    # replace comment
     c: e
 `, actual)
 
@@ -481,7 +480,7 @@ a:
 	assert.Equal(t, `a:
   b:
     c: e
-    # footer comment
+    # replace comment
 `, actual)
 
 	actual, err = MergeStrings(`

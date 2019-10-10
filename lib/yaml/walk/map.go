@@ -15,52 +15,78 @@
 package walk
 
 import (
+	"sort"
+
+	"lib.kpt.dev/sets"
 	"lib.kpt.dev/yaml"
 )
 
-// walkMap descends into each map key-value pair, recursively invoking GrepFilter on each match --
-// calling SetMapField on each pair where either the src or dest has an empty or missing value.
-func (l Filter) walkMap(dest *yaml.RNode) error {
-	return l.Source.VisitFields(func(srcField *yaml.MapNode) error {
-		fieldName := srcField.Key.YNode().Value
-		destField := dest.Field(fieldName)
+// walkMap returns the value of VisitMap
+//
+// - call VisitMap
+// - set the return value on l.Dest
+// - walk each source field
+// - set each source field value on l.Dest
+func (l Walker) walkMap() (*yaml.RNode, error) {
+	// get the new map value
+	dest, err := l.Sources.setDestNode(l.VisitMap(l.Sources))
+	if dest == nil || err != nil {
+		return nil, err
+	}
 
-		// field is missing from either the src or dest -- invoke the Visitor
-		if yaml.IsFieldEmpty(destField) || yaml.IsFieldEmpty(srcField) {
-			r, err := l.SetMapField(srcField, destField)
-			if err != nil || r == nil {
-				if yaml.IsEmpty(destField.Value) {
-					// remove the field if it has been cleared
-					_, err = dest.Pipe(yaml.Clear(fieldName))
-				}
-				return err
-			}
-			if yaml.IsEmpty(r) {
-				_, err = dest.Pipe(yaml.Clear(fieldName))
-			} else {
-				_, err = dest.Pipe(yaml.SetField(fieldName, r))
-			}
-			return err
-		}
-
-		// field is present in both src and dest -- recurse on the values
-		_, err := destField.Value.Pipe(
-			Filter{Visitor: l, Source: srcField.Value, Path: append(l.Path, fieldName)})
+	// recursively set the field values on the map
+	for _, key := range l.fieldNames() {
+		val, err := Walker{Visitor: l,
+			Sources: l.fieldValue(key), Path: append(l.Path, key)}.Walk()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		// clear the field if the value is empty
-		if yaml.IsEmpty(srcField.Value) {
-			_, err = dest.Pipe(yaml.Clear(fieldName))
-		} else {
-			if err = l.SetComments(srcField.Key, destField.Key); err != nil {
-				return err
-			}
-			if err = l.SetComments(srcField.Value, destField.Value); err != nil {
-				return err
-			}
+		// this handles empty and non-empty values
+		_, err = dest.Pipe(yaml.FieldSetter{Name: key, Value: val})
+		if err != nil {
+			return nil, err
 		}
-		return err
-	})
+	}
+
+	return dest, nil
+}
+
+// valueIfPresent returns node.Value if node is non-nil, otherwise returns nil
+func (l Walker) valueIfPresent(node *yaml.MapNode) *yaml.RNode {
+	if node == nil {
+		return nil
+	}
+	return node.Value
+}
+
+// fieldNames returns a sorted slice containing the names of all fields that appear in any of
+// the sources
+func (l Walker) fieldNames() []string {
+	fields := sets.String{}
+	for _, s := range l.Sources {
+		if s == nil {
+			continue
+		}
+		// don't check error, we know this is a mapping node
+		sFields, _ := s.Fields()
+		fields.Insert(sFields...)
+	}
+	result := fields.List()
+	sort.Strings(result)
+	return result
+}
+
+// fieldValue returns a slice containing each source's value for fieldName
+func (l Walker) fieldValue(fieldName string) []*yaml.RNode {
+	var fields []*yaml.RNode
+	for i := range l.Sources {
+		if l.Sources[i] == nil {
+			fields = append(fields, nil)
+			continue
+		}
+		field := l.Sources[i].Field(fieldName)
+		fields = append(fields, l.valueIfPresent(field))
+	}
+	return fields
 }

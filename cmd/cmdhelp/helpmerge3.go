@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package walk
+package cmdhelp
 
-import "lib.kpt.dev/yaml"
+import (
+	"github.com/spf13/cobra"
+	"lib.kpt.dev/yaml/merge3"
+)
 
-// walkScalar returns the value of VisitScalar
-func (l Walker) walkScalar() (*yaml.RNode, error) {
-	return l.VisitScalar(l.Sources)
+var Merge3 = &cobra.Command{
+	Use:  "merge3",
+	Long: merge3.Help,
 }

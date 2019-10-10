@@ -16,115 +16,137 @@ package walk
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"lib.kpt.dev/yaml"
 )
 
-// Visitor is invoked by walk with source and destination node pairs
-type Visitor interface {
-	// SetMapField is called by walk when a field is missing or null on either the source
-	// or destination.
-	//
-	// If a non-nil, non-empty RNode is returned it will be set on the destination.
-	// If an empty RNode (e.g. null) is returned, the field will be cleared from the destination
-	// If a nil RNode is returned, no action will be taken
-	SetMapField(source, dest *yaml.MapNode) (*yaml.RNode, error)
-
-	// SetScalarValue is called by walk on each Scalar node.
-	//
-	// If a non-nil, non-empty RNode is returned it will be set on the destination.
-	// If an empty RNode (e.g. null) is returned, the field will be cleared from the destination
-	// If a nil RNode is returned, no action will be taken
-	SetScalarValue(source, dest *yaml.RNode) (*yaml.RNode, error)
-
-	// SetElement is called by walk on elements in source lists that contain elements with an
-	// associative key.  SetElement is only called on elements which are missing from the
-	// destination list.  See yaml.AssociativeSequenceKeys for the list of recognized keys.
-	// There is no way to delete destination elements in associative lists.
-	// TODO: Support removing elements from associative lists -- maybe use SMP syntax
-	//
-	// If a non-nil, non-empty RNode is returned it will be set on the destination.
-	// If an empty RNode (e.g. null) is returned, the field will be cleared from the destination
-	// If a nil RNode is returned, no action will be taken
-	SetElement(source, dest *yaml.RNode) (*yaml.RNode, error)
-
-	// SetList is called by walk on each non-associative list node.
-	//
-	// If a non-nil, non-empty RNode is returned it will be set on the destination.
-	// If an empty RNode (e.g. null) is returned, the field will be cleared from the destination
-	// If a nil RNode is returned, no action will be taken
-	SetList(source, dest *yaml.RNode) (*yaml.RNode, error)
-
-	// SetComments is called by walk on each source node, and may be used to copy comments
-	// from the source to the destination.  Destination should be updated by the function.
-	SetComments(source, dest *yaml.RNode) error
-}
-
-// NoOp is returned if GrepFilter should do nothing after calling Set
-var NoOp *yaml.RNode = nil
-
-// DefaultVisitor is a no-op visitor.
-// It may be embedded anonymously to keep forwards compatibility when new functions are
-// added to the interface.
-type DefaultVisitor struct{}
-
-func (DefaultVisitor) SetMapField(source, dest *yaml.MapNode) (*yaml.RNode, error) {
-	return nil, nil
-}
-
-func (DefaultVisitor) SetScalarValue(source, dest *yaml.RNode) (*yaml.RNode, error) {
-	return nil, nil
-}
-
-func (DefaultVisitor) SetElement(source, dest *yaml.RNode) (*yaml.RNode, error) {
-	return nil, nil
-}
-
-func (DefaultVisitor) SetList(source, dest *yaml.RNode) (*yaml.RNode, error) {
-	return nil, nil
-}
-
-func (DefaultVisitor) SetComments(source, dest *yaml.RNode) error {
-	return nil
-}
-
-// GrepFilter walks the Source RNode and modifies the RNode provided to GrepFilter.
-type Filter struct {
+// Filter walks the Source RNode and modifies the RNode provided to GrepFilter.
+type Walker struct {
 	// Visitor is invoked by GrepFilter
 	Visitor
 
 	// Source is the RNode to walk.  All Source fields and associative list elements
 	// will be visited.
-	Source *yaml.RNode
+	Sources Sources
 
 	// Path is the field path to the current Source Node.
 	Path []string
 }
 
+func (l Walker) Kind() yaml.Kind {
+	for _, s := range l.Sources {
+		if !yaml.IsEmpty(s) {
+			return s.YNode().Kind
+		}
+	}
+	return 0
+}
+
 // GrepFilter implements yaml.GrepFilter
-func (l Filter) Filter(dest *yaml.RNode) (*yaml.RNode, error) {
+func (l Walker) Walk() (*yaml.RNode, error) {
 	// invoke the handler for the corresponding node type
-	switch dest.YNode().Kind {
+	switch l.Kind() {
 	case yaml.MappingNode:
-		if err := yaml.ErrorIfAnyInvalid(yaml.MappingNode, l.Source, dest); err != nil {
+		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.MappingNode, l.Sources...); err != nil {
 			return nil, err
 		}
-		return dest, l.walkMap(dest)
+		return l.walkMap()
 	case yaml.SequenceNode:
-		if err := yaml.ErrorIfAnyInvalid(yaml.SequenceNode, l.Source, dest); err != nil {
+		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.SequenceNode, l.Sources...); err != nil {
 			return nil, err
 		}
-		if l.Source.IsAssociative() {
-			return dest, l.walkAssociativeSequence(dest)
+		if yaml.IsAssociative(l.Sources) {
+			return l.walkAssociativeSequence()
 		} else {
-			return dest, l.walkNonAssociativeSequence(dest)
+			return l.walkNonAssociativeSequence()
 		}
 	case yaml.ScalarNode:
-		if err := yaml.ErrorIfAnyInvalid(yaml.ScalarNode, l.Source, dest); err != nil {
+		if err := yaml.ErrorIfAnyInvalidAndNonNull(yaml.ScalarNode, l.Sources...); err != nil {
 			return nil, err
 		}
-		return dest, l.walkScalar(dest)
+		return l.walkScalar()
 	default:
-		return dest, fmt.Errorf("unsupported Node Kind")
+		return nil, nil
 	}
+}
+
+const (
+	DestIndex = iota
+	OriginIndex
+	UpdatedIndex
+)
+
+type Sources []*yaml.RNode
+
+// Dest returns the destination node
+func (s Sources) Dest() *yaml.RNode {
+	if len(s) <= DestIndex {
+		return nil
+	}
+	return s[DestIndex]
+}
+
+// Origin returns the origin node
+func (s Sources) Origin() *yaml.RNode {
+	if len(s) <= OriginIndex {
+		return nil
+	}
+	return s[OriginIndex]
+}
+
+// Updated returns the updated node
+func (s Sources) Updated() *yaml.RNode {
+	if len(s) <= UpdatedIndex {
+		return nil
+	}
+	return s[UpdatedIndex]
+}
+
+func (s Sources) String() string {
+	var values []string
+	for i := range s {
+		str, err := s[i].String()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+		}
+		values = append(values, str)
+	}
+	return strings.Join(values, "\n")
+}
+
+// setDestNode sets the destination source node
+func (s Sources) setDestNode(node *yaml.RNode, err error) (*yaml.RNode, error) {
+	if err != nil {
+		return nil, err
+	}
+	s[0] = node
+	return node, nil
+}
+
+type FieldSources []*yaml.MapNode
+
+// Dest returns the destination node
+func (s FieldSources) Dest() *yaml.MapNode {
+	if len(s) <= DestIndex {
+		return nil
+	}
+	return s[DestIndex]
+}
+
+// Origin returns the origin node
+func (s FieldSources) Origin() *yaml.MapNode {
+	if len(s) <= OriginIndex {
+		return nil
+	}
+	return s[OriginIndex]
+}
+
+// Updated returns the updated node
+func (s FieldSources) Updated() *yaml.MapNode {
+	if len(s) <= UpdatedIndex {
+		return nil
+	}
+	return s[UpdatedIndex]
 }

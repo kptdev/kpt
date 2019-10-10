@@ -111,7 +111,7 @@ func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 		if err != nil {
 			return nil, err
 		}
-		if yaml.IsEmpty(node) {
+		if yaml.IsMissingOrNull(node) {
 			// empty value
 			continue
 		}

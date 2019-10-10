@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-errors/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -48,6 +49,73 @@ func (a ElementAppender) Filter(rn *RNode) (*RNode, error) {
 		return NewRNode(a.Elements[0]), nil
 	}
 	return nil, nil
+}
+
+// ElementSetter sets the value for an Element in an associative list.  ElementSetter
+// will remove any elements which are empty.
+type ElementSetter struct {
+	Kind string `yaml:"kind,omitempty"`
+
+	// Element is the new value to set -- remove the existing element if nil
+	Element *Node
+
+	// Key is a field on the elements.  It is used to find the matching element to
+	// update / delete.
+	Key string `yaml:"key,omitempty"`
+
+	// Value is a field value on the elements.  It is used to find matching elements to
+	// update / delete.
+	Value string `yaml:"value,omitempty"`
+}
+
+func (e ElementSetter) Filter(rn *RNode) (*RNode, error) {
+	if err := ErrorIfInvalid(rn, SequenceNode); err != nil {
+		return nil, err
+	}
+
+	// build the new Content slice
+	var newContent []*yaml.Node
+	matchingElementFound := false
+	for i := range rn.YNode().Content {
+		elem := rn.Content()[i]
+
+		// empty elements are not valid -- they at least need an associative key
+		if IsEmpty(NewRNode(elem)) {
+			continue
+		}
+
+		// check if this is the element we are matching
+		val, err := NewRNode(elem).Pipe(FieldMatcher{Name: e.Key, StringValue: e.Value})
+		if err != nil {
+			return nil, err
+		}
+		if val == nil {
+			// not the element we are looking for, keep it in the Content
+			newContent = append(newContent, elem)
+			continue
+		}
+		matchingElementFound = true
+
+		// deletion operation -- remove the element from the new Content
+		if e.Element == nil {
+			continue
+		}
+		// replace operation -- replace the element in the Content
+		newContent = append(newContent, e.Element)
+	}
+	rn.YNode().Content = newContent
+
+	// deletion operation -- return nil
+	if IsMissingOrNull(NewRNode(e.Element)) {
+		return nil, nil
+	}
+
+	// append operation -- add the element to the Content
+	if !matchingElementFound {
+		rn.YNode().Content = append(rn.YNode().Content, e.Element)
+	}
+
+	return NewRNode(e.Element), nil
 }
 
 // Clear returns a FieldClearer
@@ -197,6 +265,11 @@ type FieldMatcher struct {
 func (f FieldMatcher) Filter(rn *RNode) (*RNode, error) {
 	if f.StringValue != "" && f.Value == nil {
 		f.Value = NewScalarRNode(f.StringValue)
+	}
+
+	// never match nil or null fields
+	if IsMissingOrNull(rn) {
+		return nil, nil
 	}
 
 	if f.Name == "" {
@@ -400,7 +473,8 @@ func (s FieldSetter) Filter(rn *RNode) (*RNode, error) {
 		return rn, nil
 	}
 
-	if s.Value == nil {
+	// Clear the field if it is empty, or explicitly null
+	if s.Value == nil || IsNull(s.Value) {
 		return rn.Pipe(Clear(s.Name))
 	}
 
@@ -459,8 +533,11 @@ func IsFoundOrError(rn *RNode, err error) bool {
 	return rn != nil || err != nil
 }
 
-func ErrorIfAnyInvalid(kind yaml.Kind, rn ...*RNode) error {
+func ErrorIfAnyInvalidAndNonNull(kind yaml.Kind, rn ...*RNode) error {
 	for i := range rn {
+		if IsEmpty(rn[i]) {
+			continue
+		}
 		if err := ErrorIfInvalid(rn[i], kind); err != nil {
 			return err
 		}
@@ -469,13 +546,14 @@ func ErrorIfAnyInvalid(kind yaml.Kind, rn ...*RNode) error {
 }
 
 func ErrorIfInvalid(rn *RNode, kind yaml.Kind) error {
-	if rn == nil || rn.YNode() == nil {
-		return fmt.Errorf("missing value")
+	if rn == nil || rn.YNode() == nil || IsNull(rn) {
+		// node has no type, pass validation
+		return nil
 	}
 
 	if rn.YNode().Kind != kind {
 		s, _ := rn.String()
-		return fmt.Errorf(
+		return errors.Errorf(
 			"wrong Node Kind for %s expected: %v was %v: value: {%s}",
 			strings.Join(rn.FieldPath(), "."),
 			kind, rn.YNode().Kind, strings.TrimSpace(s))

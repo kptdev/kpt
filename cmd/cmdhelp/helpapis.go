@@ -23,5 +23,5 @@ var Apis = &cobra.Command{
 }
 
 func init() {
-	Apis.AddCommand(PackageStructure, Kptfile, Reconcilers)
+	Apis.AddCommand(Merge, Merge3, PackageStructure, Reconcilers, Kptfile)
 }
