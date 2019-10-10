@@ -17,7 +17,7 @@ kpt rc DIR... [flags]
 ### Examples
 
 ```
-# print Resource config from a package
+# print Resource counts from a package
 kpt rc my-package/
 
 ```
