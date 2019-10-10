@@ -14,9 +14,25 @@
 
 package walk
 
-import "lib.kpt.dev/yaml"
+import (
+	"lib.kpt.dev/yaml"
+)
 
-// walkScalar returns the value of VisitScalar
-func (l Walker) walkScalar() (*yaml.RNode, error) {
-	return l.VisitScalar(l.Sources)
+type ListKind int32
+
+const (
+	AssociativeList ListKind = 1 + iota
+	NonAssociateList
+)
+
+// Visitor is invoked by walk with source and destination node pairs
+type Visitor interface {
+	VisitMap(nodes Sources) (*yaml.RNode, error)
+
+	VisitScalar(nodes Sources) (*yaml.RNode, error)
+
+	VisitList(nodes Sources, kind ListKind) (*yaml.RNode, error)
 }
+
+// NoOp is returned if GrepFilter should do nothing after calling Set
+var ClearNode *yaml.RNode = nil

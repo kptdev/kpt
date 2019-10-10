@@ -20,9 +20,8 @@ import (
 	"reflect"
 	"strings"
 
-	"lib.kpt.dev/sets"
-
 	"gopkg.in/yaml.v3"
+	"lib.kpt.dev/sets"
 )
 
 const (
@@ -31,12 +30,54 @@ const (
 	NullNodeTag = "!!null"
 )
 
+func NullNode() *RNode {
+	return NewRNode(&Node{Tag: NullNodeTag})
+}
+
+func IsMissingOrNull(node *RNode) bool {
+	if node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag {
+		return true
+	}
+	return false
+}
+
 func IsEmpty(node *RNode) bool {
-	return node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag
+	if node == nil || node.YNode() == nil || node.YNode().Tag == NullNodeTag {
+		return true
+	}
+
+	if node.YNode().Kind == yaml.MappingNode && len(node.YNode().Content) == 0 {
+		return true
+	}
+	if node.YNode().Kind == yaml.SequenceNode && len(node.YNode().Content) == 0 {
+		return true
+	}
+
+	return false
+}
+
+func IsNull(node *RNode) bool {
+	return node != nil && node.YNode() != nil && node.YNode().Tag == NullNodeTag
 }
 
 func IsFieldEmpty(node *MapNode) bool {
-	return node == nil || node.Value == nil || node.Value.YNode() == nil ||
+	if node == nil || node.Value == nil || node.Value.YNode() == nil ||
+		node.Value.YNode().Tag == NullNodeTag {
+		return true
+	}
+
+	if node.Value.YNode().Kind == yaml.MappingNode && len(node.Value.YNode().Content) == 0 {
+		return true
+	}
+	if node.Value.YNode().Kind == yaml.SequenceNode && len(node.Value.YNode().Content) == 0 {
+		return true
+	}
+
+	return false
+}
+
+func IsFieldNull(node *MapNode) bool {
+	return node != nil && node.Value != nil && node.Value.YNode() != nil &&
 		node.Value.YNode().Tag == NullNodeTag
 }
 
@@ -111,7 +152,9 @@ func NewListRNode(values ...string) *RNode {
 
 // NewRNode returns a new *RNode containing the provided value.
 func NewRNode(value *yaml.Node) *RNode {
-	value.Style = 0
+	if value != nil {
+		value.Style = 0
+	}
 	return &RNode{value: value}
 }
 
@@ -154,6 +197,30 @@ type RNode struct {
 type MapNode struct {
 	Key   *RNode
 	Value *RNode
+}
+
+type MapNodeSlice []*MapNode
+
+func (m MapNodeSlice) Keys() []*RNode {
+	var keys []*RNode
+	for i := range m {
+		if m[i] != nil {
+			keys = append(keys, m[i].Key)
+		}
+	}
+	return keys
+}
+
+func (m MapNodeSlice) Values() []*RNode {
+	var values []*RNode
+	for i := range m {
+		if m[i] != nil {
+			values = append(values, m[i].Value)
+		} else {
+			values = append(values, nil)
+		}
+	}
+	return values
 }
 
 // ResourceMeta contains the metadata for a Resource.
@@ -320,6 +387,9 @@ func (rn *RNode) MustString() string {
 
 // Content returns the value node's Content field.
 func (rn *RNode) Content() []*yaml.Node {
+	if rn == nil {
+		return nil
+	}
 	return rn.YNode().Content
 }
 
@@ -380,6 +450,20 @@ func (rn *RNode) Elements() ([]*RNode, error) {
 	return elements, nil
 }
 
+func (rn *RNode) ElementValues(key string) ([]string, error) {
+	if err := ErrorIfInvalid(rn, yaml.SequenceNode); err != nil {
+		return nil, err
+	}
+	var elements []string
+	for i := 0; i < len(rn.Content()); i += 1 {
+		field := NewRNode(rn.Content()[i]).Field(key)
+		if !IsFieldEmpty(field) {
+			elements = append(elements, field.Value.YNode().Value)
+		}
+	}
+	return elements, nil
+}
+
 // Element returns the element in the list which contains the field matching the value.
 // Returns nil for non-SequenceNodes
 func (rn *RNode) Element(key, value string) *RNode {
@@ -416,10 +500,22 @@ var AssociativeSequenceKeys = []string{
 	"mountPath", "devicePath", "ip", "type", "topologyKey", "name", "containerPort",
 }
 
+func IsAssociative(nodes []*RNode) bool {
+	for i := range nodes {
+		node := nodes[i]
+		if IsEmpty(node) {
+			continue
+		}
+		if node.IsAssociative() {
+			return true
+		}
+	}
+	return false
+}
+
 // IsAssociative returns true if the RNode is for an associative list.
 func (rn *RNode) IsAssociative() bool {
-	key := rn.GetAssociativeKey()
-	return key != ""
+	return rn.GetAssociativeKey() != ""
 }
 
 // GetAssociativeKey returns the associative key used to merge the list, or "" if the
@@ -438,11 +534,12 @@ func (rn *RNode) GetAssociativeKey() string {
 
 // checkKey returns true if all elems have the key
 func checkKey(key string, elems []*Node) bool {
+	count := 0
 	for i := range elems {
 		elem := NewRNode(elems[i])
-		if elem.Field(key) == nil {
-			return false
+		if elem.Field(key) != nil {
+			count++
 		}
 	}
-	return true
+	return count == len(elems)
 }

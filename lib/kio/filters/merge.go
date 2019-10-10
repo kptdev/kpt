@@ -17,7 +17,7 @@ package filters
 
 import (
 	"lib.kpt.dev/yaml"
-	"lib.kpt.dev/yaml/walk/merge"
+	"lib.kpt.dev/yaml/merge2"
 )
 
 // GrepFilter merges Resources with the Group/Version/Kind/Namespace/Name together using
@@ -75,7 +75,7 @@ func (c MergeFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 				// first resources, don't merge it
 				merged = resources[i]
 			} else {
-				merged, err = merge.Merge(patch, merged)
+				merged, err = merge2.Merge(patch, merged)
 				if err != nil {
 					return nil, err
 				}

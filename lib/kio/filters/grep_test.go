@@ -159,10 +159,10 @@ func TestGrepFilter_init(t *testing.T) {
 }
 
 func TestGrepFilter_error(t *testing.T) {
-	_, err := GrepFilter{Path: []string{"metadata", "name"},
+	v, err := GrepFilter{Path: []string{"metadata", "name"},
 		Value: "foo"}.Filter([]*yaml.RNode{{}})
-	if !assert.Error(t, err) {
+	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	assert.Contains(t, err.Error(), "missing value")
+	assert.Nil(t, v)
 }

@@ -14,14 +14,11 @@
 
 package walk
 
-import "lib.kpt.dev/yaml"
+import (
+	"lib.kpt.dev/yaml"
+)
 
-// walkNonAssociativeSequence calls SetList
-func (l Filter) walkNonAssociativeSequence(dest *yaml.RNode) error {
-	r, err := l.SetList(l.Source, dest)
-	if err != nil || r == nil {
-		return err
-	}
-	_, err = dest.Pipe(yaml.SetField(r.YNode().Value, r))
-	return err
+// walkNonAssociativeSequence returns the value of VisitList
+func (l Walker) walkNonAssociativeSequence() (*yaml.RNode, error) {
+	return l.VisitList(l.Sources, NonAssociateList)
 }
