@@ -25,18 +25,20 @@ kpt tree my-package/
 ### Options
 
 ```
-      --all                   print all field infos
-      --args                  print args field
-      --command               print command field
-      --env                   print env field
-      --field strings         print field
-  -h, --help                  help for tree
-      --image                 print image field
-      --include-subpackages   also print resources from subpackages. (default true)
-      --name                  print name field
-      --ports                 print ports field
-      --replicas              print replicas field
-      --resources             print resources field
+      --all                       print all field infos
+      --args                      print args field
+      --command                   print command field
+      --env                       print env field
+      --exclude-non-reconcilers   if true, exclude non-reconciler Resources in the output.
+      --field strings             print field
+  -h, --help                      help for tree
+      --image                     print image field
+      --include-reconcilers       if true, include reconciler Resources in the output.
+      --include-subpackages       also print resources from subpackages. (default true)
+      --name                      print name field
+      --ports                     print ports field
+      --replicas                  print replicas field
+      --resources                 print resources field
 ```
 
 ### SEE ALSO

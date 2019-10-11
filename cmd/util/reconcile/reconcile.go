@@ -16,7 +16,6 @@ package reconcile
 
 import (
 	"io"
-	"regexp"
 
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
@@ -36,21 +35,6 @@ type Cmd struct {
 	filterProvider func(string, *yaml.RNode) kio.Filter
 }
 
-// match specifies the set of apiVersions to recognize as being container images
-var match = regexp.MustCompile(`(docker\.io|.*\.?gcr\.io)/.*(:.*)?`)
-
-// matchReconcilableAPIs filters Resources to only include Resources for APIs that
-// may be locally reconciled.
-var matchReconcilableAPIs = kio.FilterFunc(func(inputs []*yaml.RNode) ([]*yaml.RNode, error) {
-	var out []*yaml.RNode
-	for i := range inputs {
-		if getContainerName(inputs[i]) != "" {
-			out = append(out, inputs[i])
-		}
-	}
-	return out, nil
-})
-
 // Execute runs the command
 func (r Cmd) Execute() error {
 	// default the filterProvider if it hasn't been override.  Split out for testing.
@@ -60,7 +44,7 @@ func (r Cmd) Execute() error {
 	buff := &kio.PackageBuffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{kio.LocalPackageReader{PackagePath: r.PkgPath}},
-		Filters: []kio.Filter{matchReconcilableAPIs},
+		Filters: []kio.Filter{&filters.IsReconcilerFilter{}},
 		Outputs: []kio.Writer{buff},
 	}.Execute()
 	if err != nil {
@@ -79,11 +63,11 @@ func (r Cmd) Execute() error {
 	}
 
 	// reconcile each local API
-	var filters []kio.Filter
+	var fltrs []kio.Filter
 	for i := range buff.Nodes {
 		api := buff.Nodes[i]
-		img := getContainerName(api)
-		filters = append(filters, r.filterProvider(img, api))
+		img := filters.GetContainerName(api)
+		fltrs = append(fltrs, r.filterProvider(img, api))
 	}
 
 	pkgIO := &kio.LocalPackageReadWriter{PackagePath: r.PkgPath}
@@ -96,7 +80,7 @@ func (r Cmd) Execute() error {
 		// write to the output instead of the package
 		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
-	return kio.Pipeline{Inputs: inputs, Filters: filters, Outputs: outputs}.Execute()
+	return kio.Pipeline{Inputs: inputs, Filters: fltrs, Outputs: outputs}.Execute()
 }
 
 // init initializes the Cmd with a filterProvider
@@ -106,19 +90,4 @@ func (r *Cmd) init() {
 			return &filters.ContainerFilter{Image: image, Config: api}
 		}
 	}
-}
-
-// getContainerName returns the container image for an API if one exists
-func getContainerName(n *yaml.RNode) string {
-	meta, _ := n.GetMeta()
-	container := meta.Annotations["kpt.dev/container"]
-	if container != "" {
-		return container
-	}
-
-	if match.MatchString(meta.ApiVersion) {
-		return meta.ApiVersion
-	}
-
-	return ""
 }

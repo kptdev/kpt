@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"kpt.dev/util/argutil"
+	"lib.kpt.dev/kio/filters"
 
 	"github.com/spf13/cobra"
 	"lib.kpt.dev/kio"
@@ -59,6 +60,10 @@ kpt tree my-package/
 	c.Flags().BoolVar(&r.env, "env", false, "print env field")
 	c.Flags().BoolVar(&r.all, "all", false, "print all field infos")
 	c.Flags().StringSliceVar(&r.fields, "field", []string{}, "print field")
+	c.Flags().BoolVar(&r.includeReconcilers, "include-reconcilers", false,
+		"if true, include reconciler Resources in the output.")
+	c.Flags().BoolVar(&r.excludeNonReconcilers, "exclude-non-reconcilers", false,
+		"if true, exclude non-reconciler Resources in the output.")
 
 	r.C = c
 	return r
@@ -66,18 +71,20 @@ kpt tree my-package/
 
 // Runner contains the run function
 type Runner struct {
-	IncludeSubpackages bool
-	C                  *cobra.Command
-	name               bool
-	resources          bool
-	ports              bool
-	images             bool
-	replicas           bool
-	all                bool
-	env                bool
-	args               bool
-	cmd                bool
-	fields             []string
+	IncludeSubpackages    bool
+	C                     *cobra.Command
+	name                  bool
+	resources             bool
+	ports                 bool
+	images                bool
+	replicas              bool
+	all                   bool
+	env                   bool
+	args                  bool
+	cmd                   bool
+	fields                []string
+	includeReconcilers    bool
+	excludeNonReconcilers bool
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
@@ -149,8 +156,16 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			newField("spec", "ports"),
 		)
 	}
+
+	// show reconcilers in tree
+	fltrs := []kio.Filter{&filters.IsReconcilerFilter{
+		ExcludeReconcilers:    !r.includeReconcilers,
+		IncludeNonReconcilers: !r.excludeNonReconcilers,
+	}}
+
 	return kio.Pipeline{
 		Inputs:  []kio.Reader{input},
+		Filters: fltrs,
 		Outputs: []kio.Writer{kio.TreeWriter{Root: root, Writer: c.OutOrStdout(), Fields: fields}},
 	}.Execute()
 }

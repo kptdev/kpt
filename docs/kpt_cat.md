@@ -34,15 +34,17 @@ kpt cat my-package
 ### Options
 
 ```
-      --annotate                 annotate resources with their file origins.
-      --format                   format resource config yaml before printing. (default true)
-      --function-config string   path to function config to put in ResourceList -- only if wrapped in a ResourceList.
-  -h, --help                     help for cat
-      --include-subpackages      also print resources from subpackages. (default true)
-      --strip-comments           remove comments from yaml.
-      --style strings            yaml styles to apply.  may be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
-      --wrap-kind string         if set, wrap the output in this list type kind.
-      --wrap-version string      if set, wrap the output in this list type apiVersion.
+      --annotate                  annotate resources with their file origins.
+      --exclude-non-reconcilers   if true, exclude non-reconciler Resources in the output.
+      --format                    format resource config yaml before printing. (default true)
+      --function-config string    path to function config to put in ResourceList -- only if wrapped in a ResourceList.
+  -h, --help                      help for cat
+      --include-reconcilers       if true, include reconciler Resources in the output.
+      --include-subpackages       also print resources from subpackages. (default true)
+      --strip-comments            remove comments from yaml.
+      --style strings             yaml styles to apply.  may be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
+      --wrap-kind string          if set, wrap the output in this list type kind.
+      --wrap-version string       if set, wrap the output in this list type apiVersion.
 ```
 
 ### SEE ALSO
