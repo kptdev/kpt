@@ -47,6 +47,8 @@ pe "clear"
 pe "kpt update cockroachdb/@v1.1.0"
 pe "git diff -u"
 pe "kpt tree cockroachdb/ --image --replicas --name --resources"
+pe "kpt cockroachdb/ get replicas cockroachdb"
+pe "kpt cockroachdb/ get cpu-limits cockroachdb"
 pe "git add . && git commit -m 'update cockroachdb to v1.1.0'"
 pe "clear"
 
