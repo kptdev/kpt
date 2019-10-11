@@ -88,9 +88,10 @@ func (u ResourceMergeUpdater) updatedKptfile(updatedPath string, options UpdateO
 		}
 	}
 
+	// local package controls the upstream field
+	kf.Upstream = options.KptFile.Upstream
 	kf.Upstream.Git.Commit = commit
 	kf.Upstream.Git.Ref = options.ToRef
 	kf.Upstream.Git.Repo = options.ToRepo
-
 	return kf, err
 }
