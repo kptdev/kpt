@@ -64,8 +64,8 @@ func Test(t *testing.T) {
 			name:        "set-image-mysql",
 			command:     []string{"set", "image", "mysql", "--value", "mysql:5.9"},
 			updatedFile: filepath.Join("mysql", "mysql-statefulset.resource.yaml"),
-			replaceOld:  "image: mysql:5.7",
-			replaceNew:  "image: mysql:5.9",
+			replaceOld:  "- name: mysql\n        image: mysql:5.7",
+			replaceNew:  "- name: mysql\n        image: mysql:5.9",
 		},
 		{
 			name:    "get-image-mysql",
@@ -76,14 +76,8 @@ func Test(t *testing.T) {
 			name:        "set-env-mysql",
 			command:     []string{"set", "env", "mysql", "--name", "A", "--value", "B"},
 			updatedFile: filepath.Join("mysql", "mysql-statefulset.resource.yaml"),
-			replaceOld: `      - env:
-        - name: MYSQL_ALLOW_EMPTY_PASSWORD
-          value: "1"`,
-			replaceNew: `      - env:
-        - name: MYSQL_ALLOW_EMPTY_PASSWORD
-          value: "1"
-        - name: A
-          value: B`,
+			replaceOld:  "env:\n        - name: MYSQL_ALLOW_EMPTY_PASSWORD\n          value: \"1\"",
+			replaceNew:  "env:\n        - name: MYSQL_ALLOW_EMPTY_PASSWORD\n          value: \"1\"\n        - name: A\n          value: B",
 		},
 		{
 			name:    "get-env-mysql",

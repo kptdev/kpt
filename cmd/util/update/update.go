@@ -61,9 +61,10 @@ type Updater interface {
 
 var strategies = map[StrategyType]func() Updater{
 	AlphaGitPatch:      func() Updater { return GitPatchUpdater{} },
-	Default:            func() Updater { return FastForwardUpdater{} },
+	Default:            func() Updater { return ResourceMergeUpdater{} },
 	FastForward:        func() Updater { return FastForwardUpdater{} },
 	ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
+	KResourceMerge:     func() Updater { return ResourceMergeUpdater{} },
 }
 
 // StrategyType controls the update strategy to use when the local package
@@ -83,6 +84,8 @@ const (
 
 	// AlphaGitPatch will merge upstream changes using `git format-patch` and `git am`.
 	AlphaGitPatch StrategyType = "alpha-git-patch"
+
+	KResourceMerge StrategyType = "resource-merge"
 
 	// Default defaults to the recommended strategy, which is FailOnChanges.
 	// The recommended strategy may change as new strategies are introduced.

@@ -55,10 +55,12 @@ func (l *Walker) walkAssociativeSequence() (*yaml.RNode, error) {
 			continue
 		}
 
-		// make sure the key is set on the field
-		_, err = val.Pipe(yaml.SetField(key, yaml.NewScalarRNode(value)))
-		if err != nil {
-			return nil, err
+		if val.Field(key) == nil {
+			// make sure the key is set on the field
+			_, err = val.Pipe(yaml.SetField(key, yaml.NewScalarRNode(value)))
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// this handles empty and non-empty values

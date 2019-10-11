@@ -41,9 +41,9 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 		updater StrategyType
 	}{
 		{FastForward},
-		{Default},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 	for _, u := range updates {
 		func() {
@@ -86,6 +86,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 		{FastForward},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 	for _, u := range updates {
 		func() {
@@ -128,9 +129,9 @@ func TestCommand_Run_noChanges(t *testing.T) {
 		err     string
 	}{
 		{FastForward, ""},
-		{Default, ""},
 		{ForceDeleteReplace, ""},
 		{AlphaGitPatch, "no updates"},
+		{KResourceMerge, ""},
 	}
 	for _, u := range updates {
 		func() {
@@ -177,6 +178,7 @@ func TestCommand_Run_noCommit(t *testing.T) {
 		{Default},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 	for _, u := range updates {
 		func() {
@@ -219,6 +221,7 @@ func TestCommand_Run_noAdd(t *testing.T) {
 		{Default},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 	for _, u := range updates {
 		func() {
@@ -272,17 +275,6 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				return f.Upstream.Git.Commit
 			},
 		},
-		{Default,
-			testutil.Dataset3,                        // expect no changes to the data
-			"local package files have been modified", // expect an error
-			func(writer *TestSetupManager) string { // expect Kptfile to keep the commit
-				f, err := kptfileutil.ReadFile(filepath.Join(writer.localGitDir, writer.RepoName))
-				if !assert.NoError(writer.T, err) {
-					return ""
-				}
-				return f.Upstream.Git.Commit
-			},
-		},
 		// forcedeletereplace should reset hard to dataset 2 -- upstream modified copy
 		{ForceDeleteReplace,
 			testutil.Dataset2, // expect the upstream changes
@@ -301,6 +293,14 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				return c
 			},
 		},
+		{KResourceMerge,
+			testutil.DatasetMerged, // expect a merge conflict
+			"",                     // expect an error
+			func(writer *TestSetupManager) string {
+				c, _ := writer.GetCommit() // expect the upstream commit as a staged change
+				return c
+			},
+		},
 	}
 	for _, u := range updates {
 		func() {
@@ -309,14 +309,14 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
 			}
-			defer g.Clean()
+			//defer g.Clean()
 			if !g.Init() {
-				return
+				t.FailNow()
 			}
 
 			// Modify local data to Dataset3
 			if !g.SetLocalData(testutil.Dataset3) {
-				return
+				t.FailNow()
 			}
 
 			// record the expected commit after update
@@ -333,19 +333,22 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			// check the error response
 			if u.expectedErr == "" {
 				if !assert.NoError(t, err, u.updater) {
-					return
+					t.FailNow()
 				}
 			} else {
-				if assert.Error(t, err) {
-					assert.Contains(t, err.Error(), u.expectedErr)
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), u.expectedErr) {
+					t.FailNow()
 				}
 			}
 
 			if !g.AssertLocalDataEquals(u.expectedData) {
-				return
+				t.FailNow()
 			}
 			if !g.AssertKptfile(expectedCommit, "master") {
-				return
+				t.FailNow()
 			}
 		}()
 	}
@@ -360,6 +363,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 		{FastForward},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 	for _, u := range updates {
 		func() {
@@ -415,6 +419,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 		{FastForward},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 	for _, u := range updates {
 		func() {
@@ -485,17 +490,7 @@ func TestCommand_Run_emitPatch(t *testing.T) {
 		return
 	}
 
-	assert.Contains(t, b.String(), `       - env:
-         - name: MYSQL_ALLOW_EMPTY_PASSWORD
-           value: "1"
--        image: mysql:5.7
-+        image: mysql:8.0
-         livenessProbe:
-           exec:
-             command:
-             - mysqladmin
-             - ping
--          initialDelaySeconds: 30
+	assert.Contains(t, b.String(), `-          initialDelaySeconds: 30
 -          periodSeconds: 10
 +          initialDelaySeconds: 45
 +          periodSeconds: 15
@@ -511,6 +506,7 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 		{FastForward},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 	for _, u := range updates {
 		func() {
@@ -530,6 +526,7 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 		{FastForward},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 
 	for _, u := range updates {
@@ -566,6 +563,7 @@ func TestCommand_Run_absolutePath(t *testing.T) {
 		{FastForward},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 
 	for _, u := range updates {
@@ -604,6 +602,7 @@ func TestCommand_Run_relativePath(t *testing.T) {
 		{FastForward},
 		{ForceDeleteReplace},
 		{AlphaGitPatch},
+		{KResourceMerge},
 	}
 
 	for _, u := range updates {

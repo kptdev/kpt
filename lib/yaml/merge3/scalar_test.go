@@ -140,5 +140,7 @@ kind: {}
 apiVersion: apps/v1
 `,
 		`
-apiVersion: apps/v1`, nil},
+apiVersion: apps/v1
+kind: {}
+`, nil},
 }

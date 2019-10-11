@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	"lib.kpt.dev/kio/kioutil"
+	"lib.kpt.dev/sets"
 	"lib.kpt.dev/yaml"
 )
 
@@ -67,28 +68,70 @@ type LocalPackageReadWriter struct {
 
 	// SetAnnotations are annotations to set on the Resources as they are read.
 	SetAnnotations map[string]string `yaml:"setAnnotations,omitempty"`
+
+	// NoDeleteFiles if set to true, LocalPackageReadWriter won't delete any files
+	NoDeleteFiles bool `yaml:"noDeleteFiles,omitempty"`
+
+	files sets.String
 }
 
-func (r LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
-	return LocalPackageReader{
+func (r *LocalPackageReadWriter) Read() ([]*yaml.RNode, error) {
+	nodes, err := LocalPackageReader{
 		PackagePath:         r.PackagePath,
 		MatchFilesGlob:      r.MatchFilesGlob,
 		IncludeSubpackages:  r.IncludeSubpackages,
 		ErrorIfNonResources: r.ErrorIfNonResources,
 		SetAnnotations:      r.SetAnnotations,
 	}.Read()
+	if err != nil {
+		return nil, err
+	}
+	// keep track of all the files
+	if !r.NoDeleteFiles {
+		r.files, err = r.getFiles(nodes)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return nodes, nil
 }
 
-func (r LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
+func (r *LocalPackageReadWriter) Write(nodes []*yaml.RNode) error {
+	newFiles, err := r.getFiles(nodes)
+	if err != nil {
+		return err
+	}
 	var clear []string
 	for k := range r.SetAnnotations {
 		clear = append(clear, k)
 	}
-	return LocalPackageWriter{
+	err = LocalPackageWriter{
 		PackagePath:           r.PackagePath,
 		ClearAnnotations:      clear,
 		KeepReaderAnnotations: r.KeepReaderAnnotations,
 	}.Write(nodes)
+	if err != nil {
+		return err
+	}
+	deleteFiles := r.files.Difference(newFiles)
+	for f := range deleteFiles {
+		if err = os.Remove(filepath.Join(r.PackagePath, f)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *LocalPackageReadWriter) getFiles(nodes []*yaml.RNode) (sets.String, error) {
+	val := sets.String{}
+	for _, n := range nodes {
+		path, _, err := kioutil.GetFileAnnotations(n)
+		if err != nil {
+			return nil, err
+		}
+		val.Insert(path)
+	}
+	return val, nil
 }
 
 // LocalPackageReader reads ResourceNodes from a local package.

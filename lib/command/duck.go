@@ -151,7 +151,7 @@ func (h helper) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 
 // get prints the value of the field to stdOut
 func (h helper) get() error {
-	pkg := kio.LocalPackageReadWriter{PackagePath: h.pkgPath}
+	pkg := &kio.LocalPackageReadWriter{NoDeleteFiles: true, PackagePath: h.pkgPath}
 
 	var match []yaml.YFilters
 	match = append(match, []yaml.YFilter{
@@ -191,7 +191,7 @@ func (h helper) get() error {
 
 // set sets the value of the field to setVal
 func (h helper) set() error {
-	pkg := kio.LocalPackageReadWriter{PackagePath: h.pkgPath}
+	pkg := &kio.LocalPackageReadWriter{NoDeleteFiles: true, PackagePath: h.pkgPath}
 
 	var match []yaml.YFilters
 	match = append(match, []yaml.YFilter{

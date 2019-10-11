@@ -284,22 +284,26 @@ kind: Deployment
 metadata:
   name: foo
   annotations:
-    a: b`,
-		`
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo`,
-		`
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo
-  annotations: {}`,
+    a: b
+`,
 		`
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: foo
+`,
+		`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations: {}
+`,
+		`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+  annotations: {}
 `, nil},
 }

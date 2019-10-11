@@ -21,7 +21,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"lib.kpt.dev/copyutil"
 	. "lib.kpt.dev/kio"
+	"lib.kpt.dev/testutil"
+	"lib.kpt.dev/yaml"
 )
 
 // setup creates directories and files for testing
@@ -444,4 +447,53 @@ metadata:
     kpt.dev/kio/package: a/c
     kpt.dev/kio/path: a/c/c_test.yaml
 `, val)
+}
+
+func TestLocalPackageReaderWriter_DeleteFiles(t *testing.T) {
+	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	defer clean()
+	if !assert.NoError(t, os.Chdir(g.RepoDirectory)) {
+		return
+	}
+
+	rw := LocalPackageReadWriter{PackagePath: "."}
+	nodes, err := rw.Read()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	_, err = os.Stat(filepath.Join("java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	// delete one of the nodes
+	var newNodes []*yaml.RNode
+	for i := range nodes {
+		meta, err := nodes[i].GetMeta()
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		if meta.Name == "app" && meta.Kind == "Deployment" {
+			continue
+		}
+		newNodes = append(newNodes, nodes[i])
+	}
+
+	if !assert.NoError(t, rw.Write(newNodes)) {
+		t.FailNow()
+	}
+
+	_, err = os.Stat(filepath.Join("java", "java-deployment.resource.yaml"))
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+
+	diff, err := copyutil.Diff(filepath.Join(g.DatasetDirectory, testutil.Dataset1), ".")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	assert.ElementsMatch(t,
+		diff.List(),
+		[]string{filepath.Join("java", "java-deployment.resource.yaml")})
 }

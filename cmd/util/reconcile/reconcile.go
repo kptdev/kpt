@@ -86,7 +86,7 @@ func (r Cmd) Execute() error {
 		filters = append(filters, r.filterProvider(img, api))
 	}
 
-	pkgIO := kio.LocalPackageReadWriter{PackagePath: r.PkgPath}
+	pkgIO := &kio.LocalPackageReadWriter{PackagePath: r.PkgPath}
 	inputs := []kio.Reader{pkgIO}
 	var outputs []kio.Writer
 	if r.Output == nil {

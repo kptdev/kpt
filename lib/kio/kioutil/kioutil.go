@@ -35,6 +35,16 @@ const (
 	PackageAnnotation AnnotationKey = "kpt.dev/kio/package"
 )
 
+func GetFileAnnotations(rn *yaml.RNode) (string, string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return "", "", err
+	}
+	path := meta.Annotations[PathAnnotation]
+	index := meta.Annotations[IndexAnnotation]
+	return path, index, nil
+}
+
 // ErrorIfMissingAnnotation validates the provided annotations are present on the given resources
 func ErrorIfMissingAnnotation(nodes []*yaml.RNode, keys ...AnnotationKey) error {
 	for _, key := range keys {

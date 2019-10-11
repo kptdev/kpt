@@ -67,7 +67,7 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, os.Chdir(dir)) {
 		return
 	}
-	updateCmd.C.SetArgs([]string{g.RepoName})
+	updateCmd.C.SetArgs([]string{g.RepoName, "--strategy", "fast-forward"})
 	if !assert.NoError(t, updateCmd.C.Execute()) {
 		return
 	}
@@ -183,7 +183,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", r.Command.Path)
 	assert.Equal(t, "refs/heads/foo", r.Command.Ref)
-	assert.Equal(t, update.FastForward, r.Command.Strategy)
+	assert.Equal(t, update.KResourceMerge, r.Command.Strategy)
 
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.Cmd()
@@ -193,6 +193,15 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", r.Command.Path)
 	assert.Equal(t, update.ForceDeleteReplace, r.Command.Strategy)
+	assert.Equal(t, "", r.Command.Ref)
+
+	r = cmdupdate.Cmd()
+	r.C.RunE = NoOpRunE
+	r.C.SetArgs([]string{"foo", "--strategy", "resource-merge"})
+	err = r.C.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", r.Command.Path)
+	assert.Equal(t, update.KResourceMerge, r.Command.Strategy)
 	assert.Equal(t, "", r.Command.Ref)
 }
 

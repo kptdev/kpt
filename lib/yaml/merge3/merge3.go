@@ -28,7 +28,14 @@ Description:
   into a destination, overriding the destination fields where they have changed between
   original and updated.
 
-  ### Merge Rules
+  ### Resource MergeRules
+
+  - Resources present in the original and deleted from the update are deleted.
+  - Resources missing from the original and added in the update are added.
+  - Resources present only in the dest are kept without changes.
+  - Resources present in both the update and the dest are merged *original + update + dest => dest*.
+
+  ### Field Merge Rules
 
   Fields are recursively merged using the following rules:
 
@@ -63,26 +70,28 @@ Description:
   Any lists where all of the elements contain associative keys will be merged as associative lists.
 `
 
-func Merge(srcOriginal, srcUpdated, dest *yaml.RNode) (*yaml.RNode, error) {
+func Merge(dest, original, update *yaml.RNode) (*yaml.RNode, error) {
+	// if update == nil && original != nil => declarative deletion
+
 	return walk.Walker{Visitor: Visitor{},
-		Sources: []*yaml.RNode{srcOriginal, srcUpdated, dest}}.Walk()
+		Sources: []*yaml.RNode{dest, original, update}}.Walk()
 }
 
-func MergeStrings(srcOriginalStr, srcUpdatedStr, destStr string) (string, error) {
-	srcOriginal, err := yaml.Parse(srcOriginalStr)
+func MergeStrings(dest, original, update string) (string, error) {
+	srcOriginal, err := yaml.Parse(original)
 	if err != nil {
 		return "", err
 	}
-	srcUpdated, err := yaml.Parse(srcUpdatedStr)
+	srcUpdated, err := yaml.Parse(update)
 	if err != nil {
 		return "", err
 	}
-	dest, err := yaml.Parse(destStr)
+	d, err := yaml.Parse(dest)
 	if err != nil {
 		return "", err
 	}
 
-	result, err := Merge(srcOriginal, srcUpdated, dest)
+	result, err := Merge(d, srcOriginal, srcUpdated)
 	if err != nil {
 		return "", err
 	}
