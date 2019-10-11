@@ -67,6 +67,9 @@ func (l Walker) Walk() (*yaml.RNode, error) {
 			return nil, err
 		}
 		return l.walkScalar()
+	case 0:
+		// walk empty nodes as maps
+		return l.walkMap()
 	default:
 		return nil, nil
 	}

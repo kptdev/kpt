@@ -13,6 +13,16 @@
 # limitations under the License.
 
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+  annotations:
+    file/index: "0"
+    file/path: mysql-configmap.resource.yaml
+    package/name: mysql
+    package/original-name: mysql
 data:
   master.cnf: |
     # Apply this config only on the master.
@@ -22,13 +32,3 @@ data:
     # Apply this config only on slaves.
     [mysqld]
     super-read-only
-kind: ConfigMap
-metadata:
-  annotations:
-    file/index: "0"
-    file/path: mysql-configmap.resource.yaml
-    package/name: mysql
-    package/original-name: mysql
-  labels:
-    app: mysql
-  name: mysql

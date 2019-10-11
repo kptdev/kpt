@@ -13,10 +13,10 @@
 # limitations under the License.
 
 apiVersion: v1
-data: {}
 kind: ConfigMap
 metadata:
+  name: app-config
   labels:
     app.kubernetes.io/component: undefined
     app.kubernetes.io/instance: undefined
-  name: app-config
+data: {}

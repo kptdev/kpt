@@ -52,6 +52,8 @@ Flags:
   --strategy:
     Controls how changes to the local package are handled.  Defaults to fast-forward.
 
+    * resource-merge: perform a structural comparison of the original / updated Resources, and merge
+	  the changes into the local package.  See ` + "`kpt help apis merge3` for details on merge." + `
     * fast-forward: fail without updating if the local package was modified since it was fetched.
     * alpha-git-patch: use 'git format-patch' and 'git am' to apply a patch of the
       changes between the source version and destination version.
@@ -86,7 +88,7 @@ Env Vars:
 
 	c.Flags().StringVarP(&r.Repo, "repo", "r", "",
 		"git repo url for updating contents.  defaults to the repo the package was fetched from.")
-	c.Flags().StringVar(&r.strategy, "strategy", string(update.FastForward),
+	c.Flags().StringVar(&r.strategy, "strategy", string(update.KResourceMerge),
 		"update strategy for preserving changes to the local package.")
 	c.Flags().BoolVar(&r.DryRun, "dry-run", false,
 		"print the git patch rather than merging it.")

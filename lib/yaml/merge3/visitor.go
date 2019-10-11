@@ -33,12 +33,12 @@ func (m Visitor) VisitMap(nodes walk.Sources) (*yaml.RNode, error) {
 		// explicitly cleared from either dest or update
 		return walk.ClearNode, nil
 	}
-	if yaml.IsEmpty(nodes.Dest()) && yaml.IsEmpty(nodes.Updated()) {
+	if nodes.Dest() == nil && nodes.Updated() == nil {
 		// implicitly cleared missing from both dest and update
 		return walk.ClearNode, nil
 	}
 
-	if yaml.IsEmpty(nodes.Dest()) {
+	if nodes.Dest() == nil {
 		// not cleared, but missing from the dest
 		// initialize a new value that can be recursively merged
 		return yaml.NewRNode(&yaml.Node{Kind: yaml.MappingNode}), nil

@@ -15,27 +15,26 @@
 apiVersion: v1
 kind: Service
 metadata:
+  name: mysql
   labels:
     app: mysql
-  name: mysql
 spec:
-  clusterIP: None
+  selector:
+    app: mysql
   ports:
   - name: mysql
     port: 3306
-  selector:
-    app: mysql
-
+  clusterIP: None
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  name: mysql-read
   labels:
     app: mysql
-  name: mysql-read
 spec:
+  selector:
+    app: mysql
   ports:
   - name: mysql
     port: 3306
-  selector:
-    app: mysql

@@ -1,8 +1,8 @@
-47c47
+39c39
 <         - containerPort: 8081
 ---
 >         - containerPort: 80
-23,25c23,25
+25,27c25,27
 <   - name: "8081"
 <     port: 8081
 <     targetPort: 8081

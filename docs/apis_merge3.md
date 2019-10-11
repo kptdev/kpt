@@ -11,7 +11,14 @@ Description:
   into a destination, overriding the destination fields where they have changed between
   original and updated.
 
-  ### Merge Rules
+  ### Resource MergeRules
+
+  - Resources present in the original and deleted from the update are deleted.
+  - Resources missing from the original and added in the update are added.
+  - Resources present only in the dest are kept without changes.
+  - Resources present in both the update and the dest are merged *original + update + dest => dest*.
+
+  ### Field Merge Rules
 
   Fields are recursively merged using the following rules:
 

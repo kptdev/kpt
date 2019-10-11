@@ -123,7 +123,8 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	for i := range args {
 		path := args[i]
-		rw := kio.LocalPackageReadWriter{
+		rw := &kio.LocalPackageReadWriter{
+			NoDeleteFiles:         true,
 			PackagePath:           path,
 			KeepReaderAnnotations: r.KeepAnnotations}
 		err := kio.Pipeline{

@@ -172,6 +172,7 @@ kind: Deployment
 spec:
   foo: bar1
   baz: buz
+items: {}
 `,
 	},
 

@@ -39,6 +39,7 @@ const (
 	Dataset1            = "dataset1"
 	Dataset2            = "dataset2"
 	Dataset3            = "dataset3"
+	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"
 )

@@ -143,6 +143,7 @@ kind: Deployment
 `,
 		`
 kind: Deployment
+field: {}
 `,
 	},
 }

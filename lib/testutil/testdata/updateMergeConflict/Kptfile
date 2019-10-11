@@ -1,13 +1,11 @@
 apiVersion: kpt.dev/v1alpha1
 kind: KptFile
 metadata:
-  creationTimestamp: null
-  name: test-kpt-5-892703315
-packageMetadata: {}
+    name: test-kpt-upstream-307571298
 upstream:
-  git:
-    commit: 18c9848f2b6fbf3378251c4d184da26db002a5d0
-    directory: /
-    ref: master
-    repo: /var/folders/9y/zw5z1xvx20v8q01fqvm_mmr00021f3/T/test-kpt-5-892703315
-  type: git
+    type: git
+    git:
+        commit: 8b8b7da7c7d2746f5ca7b7aec4f146a3d10774e4
+        repo: /var/folders/9y/zw5z1xvx20v8q01fqvm_mmr00021f3/T/test-kpt-upstream-307571298
+        directory: /
+        ref: master
