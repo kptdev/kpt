@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"lib.kpt.dev/kio"
@@ -133,3 +134,49 @@ func (c *ContainerFilter) getCommand() (*exec.Cmd, error) {
 	// set stderr for err messaging
 	return cmd, nil
 }
+
+// IsReconcilerFilter filters Resources based on whether or not they are Reconciler Resource.
+// Resources with an apiVersion starting with '*.gcr.io', 'gcr.io' or 'docker.io' are considered
+// Reconciler Resources.
+type IsReconcilerFilter struct {
+	// ExcludeReconcilers if set to true, then Reconcilers will be excluded -- e.g.
+	// Resources with a reconcile container through the apiVersion (gcr.io prefix) or
+	// through the annotations
+	ExcludeReconcilers bool `yaml:"excludeReconcilers,omitempty"`
+
+	// IncludeNonReconcilers if set to true, the NonReconciler will be included.
+	IncludeNonReconcilers bool `yaml:"includeNonReconcilers,omitempty"`
+}
+
+// Filter implements kio.Filter
+func (c *IsReconcilerFilter) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error) {
+	var out []*yaml.RNode
+	for i := range inputs {
+		isContainerResource := GetContainerName(inputs[i]) != ""
+		if isContainerResource && !c.ExcludeReconcilers {
+			out = append(out, inputs[i])
+		}
+		if !isContainerResource && c.IncludeNonReconcilers {
+			out = append(out, inputs[i])
+		}
+	}
+	return out, nil
+}
+
+// GetContainerName returns the container image for an API if one exists
+func GetContainerName(n *yaml.RNode) string {
+	meta, _ := n.GetMeta()
+	container := meta.Annotations["kpt.dev/container"]
+	if container != "" {
+		return container
+	}
+
+	if match.MatchString(meta.ApiVersion) {
+		return meta.ApiVersion
+	}
+
+	return ""
+}
+
+// match specifies the set of apiVersions to recognize as being container images
+var match = regexp.MustCompile(`(docker\.io|.*\.?gcr\.io)/.*(:.*)?`)

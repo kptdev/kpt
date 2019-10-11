@@ -67,21 +67,27 @@ kpt cat my-package
 			"'FoldedStyle', 'FlowStyle'.")
 	c.Flags().BoolVar(&r.StripComments, "strip-comments", false,
 		"remove comments from yaml.")
-	r.C = c
+	c.Flags().BoolVar(&r.IncludeReconcilers, "include-reconcilers", false,
+		"if true, include reconciler Resources in the output.")
+	c.Flags().BoolVar(&r.ExcludeNonReconcilers, "exclude-non-reconcilers", false,
+		"if true, exclude non-reconciler Resources in the output.")
+	r.CobraCommand = c
 	return r
 }
 
 // Runner contains the run function
 type Runner struct {
-	IncludeSubpackages bool
-	Format             bool
-	KeepAnnotations    bool
-	WrapKind           string
-	WrapApiVersion     string
-	FunctionConfig     string
-	Styles             []string
-	StripComments      bool
-	C                  *cobra.Command
+	IncludeSubpackages    bool
+	Format                bool
+	KeepAnnotations       bool
+	WrapKind              string
+	WrapApiVersion        string
+	FunctionConfig        string
+	Styles                []string
+	StripComments         bool
+	IncludeReconcilers    bool
+	ExcludeNonReconcilers bool
+	CobraCommand          *cobra.Command
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
@@ -110,6 +116,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		inputs = append(inputs, &kio.ByteReader{Reader: c.InOrStdin()})
 	}
 	var fltr []kio.Filter
+	// don't include reconcilers
+	fltr = append(fltr, &filters.IsReconcilerFilter{
+		ExcludeReconcilers:    !r.IncludeReconcilers,
+		IncludeNonReconcilers: !r.ExcludeNonReconcilers,
+	})
 	if r.Format {
 		fltr = append(fltr, filters.FormatFilter{})
 	}

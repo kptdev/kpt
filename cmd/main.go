@@ -54,7 +54,7 @@ var cmd = &cobra.Command{
 
 func main() {
 	// sorted lexicographically
-	cmd.AddCommand(cmdcat.Cmd().C)
+	cmd.AddCommand(cmdcat.Cmd().CobraCommand)
 	cmd.AddCommand(cmddesc.Cmd().C)
 	cmd.AddCommand(cmdgrep.Cmd().C)
 	cmd.AddCommand(cmddiff.Cmd().C)

@@ -35,6 +35,13 @@ func TestCmd_files(t *testing.T) {
 	}
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: gcr.io/example/reconciler:v1
+kind: Abstraction
+metadata:
+  name: foo
+spec:
+  replicas: 1
+---
 kind: Deployment
 metadata:
   labels:
@@ -203,6 +210,147 @@ spec:
 └── bar-package
     └── [f2.yaml]  Deployment bar
 `), b.String()) {
+		return
+	}
+}
+
+func TestCmd_includeReconcilers(t *testing.T) {
+	d, err := ioutil.TempDir("", "kpt-test")
+	defer os.RemoveAll(d)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+apiVersion: gcr.io/example/reconciler:v1
+kind: Abstraction
+metadata:
+  name: foo
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := cmdtree.Cmd()
+	r.C.SetArgs([]string{d, "--include-reconcilers"})
+	r.C.SetOut(b)
+	if !assert.NoError(t, r.C.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, fmt.Sprintf(`%s
+├── [f1.yaml]  Deployment foo
+├── [f1.yaml]  Service foo
+├── [f2.yaml]  Deployment bar
+└── [f2.yaml]  Abstraction foo
+`, d), b.String()) {
+		return
+	}
+}
+
+func TestCmd_excludeNonReconcilers(t *testing.T) {
+	d, err := ioutil.TempDir("", "kpt-test")
+	defer os.RemoveAll(d)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+apiVersion: gcr.io/example/reconciler:v1
+kind: Abstraction
+metadata:
+  name: foo
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := cmdtree.Cmd()
+	r.C.SetArgs([]string{d, "--include-reconcilers", "--exclude-non-reconcilers"})
+	r.C.SetOut(b)
+	if !assert.NoError(t, r.C.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, fmt.Sprintf(`%s
+└── [f2.yaml]  Abstraction foo
+`, d), b.String()) {
 		return
 	}
 }
