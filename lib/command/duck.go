@@ -162,22 +162,26 @@ func (h helper) get() error {
 	match = append(match, []yaml.YFilter{{Filter: h}})
 
 	found := false
+
 	err := kio.Pipeline{
 		Inputs: []kio.Reader{pkg},
-		Filters: []kio.Filter{filters.MatchModifyFilter{
-			MatchFilters: match,
-			ModifyFilters: []yaml.YFilter{
-				{Filter: yaml.Lookup(h.field...)},
-				{Filter: yaml.FilterFunc(func(object *yaml.RNode) (*yaml.RNode, error) {
-					value, err := object.String()
-					if err != nil {
-						return nil, err
-					}
-					found = true
-					fmt.Fprintf(h.command.OutOrStdout(), "%s\n", strings.TrimSpace(value))
-					return nil, nil
-				})},
-			}}},
+		Filters: []kio.Filter{
+			filters.MatchModifyFilter{
+				MatchFilters: match,
+				ModifyFilters: []yaml.YFilter{
+					{Filter: yaml.Lookup(h.field...)},
+					{Filter: yaml.FilterFunc(func(object *yaml.RNode) (*yaml.RNode, error) {
+						value, err := object.String()
+						if err != nil {
+							return nil, err
+						}
+						found = true
+						fmt.Fprintf(h.command.OutOrStdout(), "%s\n", strings.TrimSpace(value))
+						return nil, nil
+					})},
+				}},
+			filters.FormatFilter{},
+		},
 		Outputs: []kio.Writer{pkg},
 	}.Execute()
 	if err != nil {
@@ -210,12 +214,14 @@ func (h helper) set() error {
 
 	err := kio.Pipeline{
 		Inputs: []kio.Reader{pkg},
-		Filters: []kio.Filter{filters.MatchModifyFilter{
-			MatchFilters: match,
-			ModifyFilters: []yaml.YFilter{
-				{Filter: yaml.LookupCreate(yaml.ScalarNode, h.field...)},
-				{Filter: yaml.Set(yaml.NewScalarRNode(h.setVal))},
-			}}},
+		Filters: []kio.Filter{
+			filters.MatchModifyFilter{
+				MatchFilters: match,
+				ModifyFilters: []yaml.YFilter{
+					{Filter: yaml.LookupCreate(yaml.ScalarNode, h.field...)},
+					{Filter: yaml.Set(yaml.NewScalarRNode(h.setVal))},
+				}},
+			filters.FormatFilter{}},
 		Outputs: []kio.Writer{pkg},
 	}.Execute()
 	if err != nil {
