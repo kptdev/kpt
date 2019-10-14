@@ -35,14 +35,6 @@ pe "kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 ./c
 pe "git add . && git commit -m 'fetch cockroachdb v1.0.0'"
 pe "clear"
 
-# View
-pe "echo 'view the package contents'"
-pe "tree cockroachdb/"
-pe "kpt rc cockroachdb/"
-pe "kpt tree cockroachdb/ --image --replicas --name --resources"
-pe "kpt cat cockroachdb/ | less"
-pe "clear"
-
 # Customize
 pe "echo 'customize the package'"
 pe "kpt cockroachdb/ set replicas cockroachdb --value 7"
