@@ -22,10 +22,9 @@ import (
 	"strings"
 	"testing"
 
-	"lib.kpt.dev/testutil"
-
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"lib.kpt.dev/testutil"
 )
 
 func Test(t *testing.T) {
@@ -95,11 +94,11 @@ func Test(t *testing.T) {
             cpu: 500m
             memory: 1Gi`,
 			replaceNew: `        resources:
+          limits:
+            cpu: 700m
           requests:
             cpu: 500m
-            memory: 1Gi
-          limits:
-            cpu: 700m`,
+            memory: 1Gi`,
 		},
 		{
 			name:    "get-cpu-limits-mysql",
@@ -135,11 +134,11 @@ func Test(t *testing.T) {
             cpu: 500m
             memory: 1Gi`,
 			replaceNew: `        resources:
+          limits:
+            memory: .7Gi
           requests:
             cpu: 500m
-            memory: 1Gi
-          limits:
-            memory: .7Gi`,
+            memory: 1Gi`,
 		},
 		{
 			name:    "get-memory-limits-mysql",
