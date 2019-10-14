@@ -37,6 +37,10 @@ cd kpt/cmd
 go build ./
 ```
 
+## Demos
+
+- Self-Run Demos: [demos](demos/README.md)
+
 ## Documentation
 
 All documentation is built directly into the command binary and can be accessed from the cli through
