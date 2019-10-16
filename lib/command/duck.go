@@ -116,7 +116,7 @@ type helper struct {
 
 // isEnabled returns nil if the command is enabled
 func (h helper) isEnabled() (bool, error) {
-	if h.pkgPath == "" {
+	if IsWildcardPath(h.pkgPath) {
 		return true, nil
 	}
 
@@ -151,7 +151,26 @@ func (h helper) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 
 // get prints the value of the field to stdOut
 func (h helper) get() error {
-	pkg := &kio.LocalPackageReadWriter{NoDeleteFiles: true, PackagePath: h.pkgPath}
+	var inputs []kio.Reader
+	var outputs []kio.Writer
+	if h.pkgPath != duck {
+		// read from package
+		rw := &kio.LocalPackageReadWriter{
+			NoDeleteFiles: true,
+			PackagePath:   h.pkgPath}
+		inputs = append(inputs, rw)
+		outputs = append(outputs, rw)
+	} else {
+		// read from stdin
+		rw := &kio.ByteReadWriter{
+			OmitReaderAnnotations: true,
+			KeepReaderAnnotations: true,
+			Reader:                h.command.InOrStdin(),
+			Writer:                h.command.OutOrStdout(),
+		}
+		inputs = append(inputs, rw)
+		outputs = append(outputs, rw)
+	}
 
 	var match []yaml.YFilters
 	match = append(match, []yaml.YFilter{
@@ -164,7 +183,7 @@ func (h helper) get() error {
 	found := false
 
 	err := kio.Pipeline{
-		Inputs: []kio.Reader{pkg},
+		Inputs: inputs,
 		Filters: []kio.Filter{
 			filters.MatchModifyFilter{
 				MatchFilters: match,
@@ -182,7 +201,7 @@ func (h helper) get() error {
 				}},
 			filters.FormatFilter{},
 		},
-		Outputs: []kio.Writer{pkg},
+		Outputs: outputs,
 	}.Execute()
 	if err != nil {
 		return err
@@ -195,7 +214,26 @@ func (h helper) get() error {
 
 // set sets the value of the field to setVal
 func (h helper) set() error {
-	pkg := &kio.LocalPackageReadWriter{NoDeleteFiles: true, PackagePath: h.pkgPath}
+	var inputs []kio.Reader
+	var outputs []kio.Writer
+	if h.pkgPath != duck {
+		// read from package
+		rw := &kio.LocalPackageReadWriter{
+			NoDeleteFiles: true,
+			PackagePath:   h.pkgPath}
+		inputs = append(inputs, rw)
+		outputs = append(outputs, rw)
+	} else {
+		// read from stdin
+		rw := &kio.ByteReadWriter{
+			OmitReaderAnnotations: true,
+			KeepReaderAnnotations: true,
+			Reader:                h.command.InOrStdin(),
+			Writer:                h.command.OutOrStdout(),
+		}
+		inputs = append(inputs, rw)
+		outputs = append(outputs, rw)
+	}
 
 	var match []yaml.YFilters
 	match = append(match, []yaml.YFilter{
@@ -213,7 +251,7 @@ func (h helper) set() error {
 	match = append(match, []yaml.YFilter{{Filter: yaml.FilterFunc(foundFunc)}})
 
 	err := kio.Pipeline{
-		Inputs: []kio.Reader{pkg},
+		Inputs: inputs,
 		Filters: []kio.Filter{
 			filters.MatchModifyFilter{
 				MatchFilters: match,
@@ -222,7 +260,7 @@ func (h helper) set() error {
 					{Filter: yaml.Set(yaml.NewScalarRNode(h.setVal))},
 				}},
 			filters.FormatFilter{}},
-		Outputs: []kio.Writer{pkg},
+		Outputs: outputs,
 	}.Execute()
 	if err != nil {
 		return err
@@ -258,4 +296,13 @@ or by the presence of specific Resources types in the package.
 	# get help for a specific package subcommand
 	kpt PKG_NAME/ set image -h
 `,
+}
+
+const (
+	docs = ""
+	duck = "duck"
+)
+
+func IsWildcardPath(pkgPath string) bool {
+	return pkgPath == docs || pkgPath == duck
 }

@@ -28,7 +28,7 @@ func SetEnv(pkgPath string, cmd *cobra.Command) error {
 		pkgPath: pkgPath,
 		enabled: ContainerField,
 	}
-	if pkgPath != "" {
+	if !IsWildcardPath(pkgPath) {
 		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
@@ -54,6 +54,7 @@ Command is enabled for a package by having a Resource with the field: %s
 		Example: fmt.Sprintf(`kpt %s set env NAME --name ENV_NAME --value ENV_VALUE`, pkgPath),
 		Args:    cobra.ExactArgs(1),
 	}
+	h.command = c
 
 	name := c.Flags().String("name", "", "the environment variable name")
 	_ = c.MarkFlagRequired("name")
@@ -82,7 +83,7 @@ func GetEnv(pkgPath string, cmd *cobra.Command) error {
 		pkgPath: pkgPath,
 		enabled: ContainerField,
 	}
-	if pkgPath != "" {
+	if !IsWildcardPath(pkgPath) {
 		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
@@ -108,6 +109,7 @@ Command is enabled for a package by having a Resource with the field: %s
 		Example: fmt.Sprintf(`kpt %s get env NAME --name ENV_NAME`, pkgPath),
 		Args:    cobra.ExactArgs(1),
 	}
+	h.command = c
 
 	name := c.Flags().String("name", "", "the environment variable name")
 	_ = c.MarkFlagRequired("name")
