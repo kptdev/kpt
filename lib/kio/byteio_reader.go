@@ -15,9 +15,11 @@
 package kio
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 
 	"lib.kpt.dev/kio/kioutil"
 	"lib.kpt.dev/yaml"
@@ -101,12 +103,23 @@ var _ Reader = &ByteReader{}
 
 func (r *ByteReader) Read() ([]*yaml.RNode, error) {
 	output := ResourceNodeSlice{}
-	decoder := yaml.NewDecoder(r.Reader)
+
+	// Work around issue: https://github.com/GoogleContainerTools/kpt/issues/46
+	// by manually splitting resources -- otherwise the decoder will get the Resource
+	// boundaries wrong for header comments.
+	input := &bytes.Buffer{}
+	_, err := io.Copy(input, r.Reader)
+	if err != nil {
+		return nil, err
+	}
+	values := strings.Split(input.String(), "\n---\n")
+
 	index := 0
-	for {
+	for i := range values {
+		decoder := yaml.NewDecoder(bytes.NewBufferString(values[i]))
 		node, err := r.decode(index, decoder)
 		if err == io.EOF {
-			break
+			continue
 		}
 		if err != nil {
 			return nil, err

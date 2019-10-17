@@ -28,7 +28,7 @@ func SetReplicas(pkgPath string, cmd *cobra.Command) error {
 		pkgPath: pkgPath,
 		enabled: ReplicasField,
 	}
-	if pkgPath != "" {
+	if !IsWildcardPath(pkgPath) {
 		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
@@ -54,6 +54,7 @@ Command is enabled for a package by having a Resource with the field: %s
 		Example: fmt.Sprintf(`kpt %s set replicas NAME --value VALUE`, pkgPath),
 		Args:    cobra.ExactArgs(1),
 	}
+	h.command = c
 
 	value := c.Flags().Int("value", 0, "the new replicas value")
 	_ = c.MarkFlagRequired("value")
@@ -78,7 +79,7 @@ func GetReplicas(pkgPath string, cmd *cobra.Command) error {
 		pkgPath: pkgPath,
 		enabled: ReplicasField,
 	}
-	if pkgPath != "" {
+	if !IsWildcardPath(pkgPath) {
 		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
@@ -104,6 +105,7 @@ Command is enabled for a package by having a Resource with the field: %s
 		Example: fmt.Sprintf(`kpt %s get replicas NAME`, pkgPath),
 		Args:    cobra.ExactArgs(1),
 	}
+	h.command = c
 
 	c.RunE = func(cmd *cobra.Command, args []string) error {
 		h.name = args[0]

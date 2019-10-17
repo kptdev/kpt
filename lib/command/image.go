@@ -28,7 +28,7 @@ func SetImage(pkgPath string, cmd *cobra.Command) error {
 		pkgPath: pkgPath,
 		enabled: ContainerField,
 	}
-	if pkgPath != "" {
+	if !IsWildcardPath(pkgPath) {
 		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
@@ -54,6 +54,7 @@ Command is enabled for a package by having a Resource with the field: %s
 		Example: fmt.Sprintf(`kpt %s set image NAME --value VALUE`, pkgPath),
 		Args:    cobra.ExactArgs(1),
 	}
+	h.command = c
 
 	value := c.Flags().String("value", "", "the new image value")
 	_ = c.MarkFlagRequired("value")
@@ -79,7 +80,7 @@ func GetImage(pkgPath string, cmd *cobra.Command) error {
 		pkgPath: pkgPath,
 		enabled: ContainerField,
 	}
-	if pkgPath != "" {
+	if !IsWildcardPath(pkgPath) {
 		kptfile, err := kptfileutil.ReadFile(pkgPath)
 		if err == nil && !kptfile.IsDuckCommandEnabled(h.Id) {
 			return nil
@@ -105,6 +106,7 @@ Command is enabled for a package by having a Resource with the field: %s
 		Example: fmt.Sprintf(`kpt %s get image NAME`, pkgPath),
 		Args:    cobra.ExactArgs(1),
 	}
+	h.command = c
 
 	c.RunE = func(cmd *cobra.Command, args []string) error {
 		h.name = args[0]

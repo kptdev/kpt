@@ -80,7 +80,7 @@ func main() {
 			arg = os.Args[2]
 		}
 
-		if f, err := os.Stat(arg); err == nil && f.IsDir() {
+		if f, err := os.Stat(arg); (err == nil && f.IsDir()) || command.IsWildcardPath(arg) {
 			arg = strings.TrimSuffix(arg, "/")
 			arg = strings.TrimPrefix(arg, "./")
 			if os.Args[1] == "help" {
