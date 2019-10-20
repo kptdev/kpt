@@ -15,25 +15,24 @@
 .PHONY: generate license fix vet fmt lint test build tidy
 
 build:
-	(cd cmd/ && go build -o kpt -v .)
-	mv cmd/kpt ./kpt
+	(cd kpt/ && go build -o kpt -v .)
 
 all: generate license fix vet fmt lint test build tidy
 
 fix:
-	(cd cmd/ && go fix ./...)
+	(cd kpt/ && go fix ./...)
 	(cd lib/ &&  go fix ./... )
 
 fmt:
-	(cd cmd/ && go fmt ./...)
+	(cd kpt/ && go fmt ./...)
 	(cd lib/ &&  go fmt ./... )
 
 generate:
-	(cd cmd/ && go generate ./...)
-	(cd lib// && go generate ./...)
+	(cd kpt/ && go generate ./...)
+	(cd lib/ && go generate ./...)
 
 tidy:
-	(cd cmd/ && go mod tidy)
+	(cd kpt/ && go mod tidy)
 	(cd lib/ && go mod tidy)
 
 license:
@@ -44,13 +43,13 @@ license:
 lint:
 	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0)
 	(which golangci-lint || echo "must add `golangci-lint` to your PATH")
-	(cd cmd/ && golangci-lint run ./...)
+	(cd kpt/ && golangci-lint run ./...)
 	(cd lib/ && golangci-lint run ./...)
 
 test:
-	(cd cmd/ && go test -cover ./...)
+	(cd kpt/ && go test -cover ./...)
 	(cd lib/ && go test -cover ./...)
 
 vet:
-	(cd cmd/ && go vet ./...)
+	(cd kpt/ && go vet ./...)
 	(cd lib/ &&  go vet ./... )

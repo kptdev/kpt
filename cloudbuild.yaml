@@ -27,6 +27,7 @@ steps:
         path: /root
   - name: 'mirror.gcr.io/library/golang'
     args: ['make', 'all']
+    env: ['GO111MODULE=on']
     dir: '/workspace'
     volumes:
       - name: home
@@ -34,23 +35,23 @@ steps:
       - name: go-modules
         path: /go
   - name: 'mirror.gcr.io/library/golang'
-    env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0']
+    env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_linux_amd64', '.']
-    dir: '/workspace/cmd'
+    dir: '/workspace/kpt'
     volumes:
     - name: go-modules
       path: /go
   - name: 'mirror.gcr.io/library/golang'
-    env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0']
+    env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_darwin_amd64', '.']
-    dir: '/workspace/cmd'
+    dir: '/workspace/kpt'
     volumes:
     - name: go-modules
       path: /go
   - name: 'mirror.gcr.io/library/golang'
-    env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0']
+    env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_windows_amd64', '.']
-    dir: '/workspace/cmd'
+    dir: '/workspace/kpt'
     volumes:
       - name: go-modules
         path: /go
