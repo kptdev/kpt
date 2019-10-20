@@ -403,8 +403,12 @@ func TestCommand_Run_failClean(t *testing.T) {
 		Destination: filepath.Base(g.RepoDirectory),
 		Clean:       true,
 	}.Run()
-	assert.EqualError(t, err,
-		"failed to clone git repo: trouble fetching refs/heads/not-real: exit status 128")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), "refs/heads/not-real: exit status 128") {
+		t.FailNow()
+	}
 
 	// verify files weren't deleted
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
@@ -489,7 +493,12 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	defer clean()
 
 	err := Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "refs/heads/master"}, Destination: "foo"}.Run()
-	assert.EqualError(t, err, "failed to clone git repo: trouble fetching refs/heads/master: exit status 128")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), "trouble fetching") {
+		t.FailNow()
+	}
 }
 
 func TestCommand_Run_failInvalidBranch(t *testing.T) {
@@ -497,7 +506,12 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	defer clean()
 
 	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/heads/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
-	assert.EqualError(t, err, "failed to clone git repo: trouble fetching refs/heads/foo: exit status 128")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), "refs/heads/foo: exit status 128") {
+		t.FailNow()
+	}
 }
 
 func TestCommand_Run_failInvalidTag(t *testing.T) {
@@ -505,7 +519,12 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	defer clean()
 
 	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/tags/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
-	assert.EqualError(t, err, "failed to clone git repo: trouble fetching refs/tags/foo: exit status 128")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), "refs/tags/foo: exit status 128") {
+		t.FailNow()
+	}
 }
 
 func TestCommand_DefaultValues_AtVersion(t *testing.T) {

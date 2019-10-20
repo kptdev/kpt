@@ -16,6 +16,7 @@
 package get
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -24,10 +25,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"lib.kpt.dev/copyutil"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
 	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
 
@@ -71,7 +74,7 @@ func (c Command) Run() error {
 
 	// clone the repo to a tmp directory.
 	// delete the tmp directory later.
-	err := git.ClonerUsingGitExec(r)
+	err := ClonerUsingGitExec(r)
 	if err != nil {
 		return fmt.Errorf("failed to clone git repo: %v", err)
 	}
@@ -95,6 +98,120 @@ func (c Command) Run() error {
 	if err = (&c).upsertKptfile(r); err != nil {
 		return err
 	}
+	return nil
+}
+
+// Cloner is a function that can clone a git repo.
+type Cloner func(repoSpec *git.RepoSpec) error
+
+// ClonerUsingGitExec uses a local git install, as opposed
+// to say, some remote API, to obtain a local clone of
+// a remote repo.
+func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
+	gitProgram, err := exec.LookPath("git")
+	if err != nil {
+		return errors.Wrap(err, "no 'git' program on path")
+	}
+	repoSpec.Dir, err = fs.NewTmpConfirmedDir()
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(
+		gitProgram,
+		"init",
+		repoSpec.Dir.String())
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	err = cmd.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error initializing empty git repo: %s", out.String())
+		return errors.Wrapf(
+			err,
+			"trouble initializing empty git repo in %s",
+			repoSpec.Dir.String())
+	}
+
+	cmd = exec.Command(
+		gitProgram,
+		"remote",
+		"add",
+		"origin",
+		repoSpec.CloneSpec())
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	cmd.Dir = repoSpec.Dir.String()
+	err = cmd.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error setting git remote: %s", out.String())
+		return errors.Wrapf(
+			err,
+			"trouble adding remote %s",
+			repoSpec.CloneSpec())
+	}
+	if repoSpec.Ref == "" {
+		repoSpec.Ref = "master"
+	}
+
+	err = func() error {
+		cmd = exec.Command(
+			gitProgram,
+			"fetch",
+			"origin",
+			"--depth=1",
+			repoSpec.Ref)
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		cmd.Dir = repoSpec.Dir.String()
+		err = cmd.Run()
+		if err != nil {
+			return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
+		}
+		cmd = exec.Command(
+			gitProgram,
+			"reset",
+			"--hard", "FETCH_HEAD")
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		cmd.Dir = repoSpec.Dir.String()
+		err = cmd.Run()
+		if err != nil {
+			return errors.Wrapf(
+				err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
+		}
+		return nil
+	}()
+	if err != nil {
+		cmd = exec.Command(gitProgram, "fetch", "origin")
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		cmd.Dir = repoSpec.Dir.String()
+		if err = cmd.Run(); err != nil {
+			return errors.Wrapf(err, "trouble fetching origin")
+		}
+		cmd = exec.Command(gitProgram, "reset", "--hard", repoSpec.Ref)
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		cmd.Dir = repoSpec.Dir.String()
+		if err = cmd.Run(); err != nil {
+			return errors.Wrapf(
+				err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
+		}
+	}
+
+	cmd = exec.Command(
+		gitProgram,
+		"submodule",
+		"update",
+		"--init",
+		"--recursive")
+	cmd.Stdout = &out
+	cmd.Dir = repoSpec.Dir.String()
+	err = cmd.Run()
+	if err != nil {
+		return errors.Wrapf(err, "trouble fetching submodules for %s", repoSpec.Ref)
+	}
+
 	return nil
 }
 

@@ -14,10 +14,11 @@
 
 .PHONY: generate license fix vet fmt lint test build tidy
 
-all: generate license fix vet fmt lint test build tidy
-
 build:
 	(cd cmd/ && go build -o kpt -v .)
+	mv cmd/kpt ./kpt
+
+all: generate license fix vet fmt lint test build tidy
 
 fix:
 	(cd cmd/ && go fix ./...)
@@ -37,10 +38,12 @@ tidy:
 
 license:
 	(which addlicense || go get github.com/google/addlicense)
+	(which addlicense || echo "must add `addlicense` to your PATH")
 	addlicense  -y 2019 -l apache .
 
 lint:
 	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0)
+	(which golangci-lint || echo "must add `golangci-lint` to your PATH")
 	(cd cmd/ && golangci-lint run ./...)
 	(cd lib/ && golangci-lint run ./...)
 

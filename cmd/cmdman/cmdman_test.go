@@ -300,6 +300,7 @@ func TestCmd_fail(t *testing.T) {
 	r := cmdman.Cmd()
 	r.C.SilenceErrors = true
 	r.C.SilenceUsage = true
+	r.ManExecCommand = "cat"
 	r.C.SetArgs([]string{filepath.Join("not", "real", "dir")})
 	err := r.C.Execute()
 	if !assert.Error(t, err) {
@@ -314,6 +315,7 @@ func TestCmd_defaultDir(t *testing.T) {
 	r := cmdman.Cmd()
 	r.C.SilenceErrors = true
 	r.C.SilenceUsage = true
+	r.ManExecCommand = "cat"
 	err := r.C.Execute()
 	assert.EqualError(t, err, fmt.Sprintf(
 		"unable to read %s: open %s: no such file or directory",
