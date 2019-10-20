@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"kpt.dev/util/get"
 	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
@@ -37,14 +38,14 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 
 	// get the original repo
 	original := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Commit}
-	if err := git.ClonerUsingGitExec(original); err != nil {
+	if err := get.ClonerUsingGitExec(original); err != nil {
 		return fmt.Errorf("failed to clone git repo: original source: %v", err)
 	}
 	defer os.RemoveAll(original.AbsPath())
 
 	// get the updated repo
 	updated := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: options.ToRef}
-	if err := git.ClonerUsingGitExec(updated); err != nil {
+	if err := get.ClonerUsingGitExec(updated); err != nil {
 		return fmt.Errorf("failed to clone git repo: updated source: %v", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())

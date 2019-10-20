@@ -99,7 +99,10 @@ func TestCmd_fail(t *testing.T) {
 	r.C.SilenceUsage = true
 	r.C.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "./"})
 	err := r.C.Execute()
-	assert.EqualError(t, err, "failed to clone git repo: trouble fetching master: exit status 128")
+	if !assert.Error(t, err) {
+		return
+	}
+	assert.Contains(t, err.Error(), "failed to clone git repo: trouble fetching")
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.

@@ -50,7 +50,7 @@ func errorIfChanged(g kptfile.Git, pkgPath string) error {
 		Path:    g.Directory,
 		Ref:     g.Commit,
 	}
-	err := git.ClonerUsingGitExec(original)
+	err := get.ClonerUsingGitExec(original)
 	if err != nil {
 		return fmt.Errorf("failed cloning git repo: %v", err)
 	}

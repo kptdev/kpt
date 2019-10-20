@@ -33,8 +33,8 @@ users. Group membership at this time is invite only.
 
 ```sh
 git clone git@github.com:GoogleContainerTools/kpt
-cd kpt/cmd
-go build ./
+cd kpt/
+make
 ```
 
 ## Demos

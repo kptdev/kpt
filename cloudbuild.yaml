@@ -1,0 +1,60 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+  - name: 'mirror.gcr.io/library/golang'
+    args: ['git', 'config', '--global', 'user.email', 'you@example.com']
+    dir: '/workspace'
+    volumes:
+      - name: home
+        path: /root
+  - name: 'mirror.gcr.io/library/golang'
+    args: ['git', 'config', '--global', 'user.name', 'Your Name']
+    dir: '/workspace'
+    volumes:
+      - name: home
+        path: /root
+  - name: 'mirror.gcr.io/library/golang'
+    args: ['make', 'all']
+    dir: '/workspace'
+    volumes:
+      - name: home
+        path: /root
+      - name: go-modules
+        path: /go
+  - name: 'mirror.gcr.io/library/golang'
+    env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0']
+    args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_linux_amd64', '.']
+    dir: '/workspace/cmd'
+    volumes:
+    - name: go-modules
+      path: /go
+  - name: 'mirror.gcr.io/library/golang'
+    env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0']
+    args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_darwin_amd64', '.']
+    dir: '/workspace/cmd'
+    volumes:
+    - name: go-modules
+      path: /go
+  - name: 'mirror.gcr.io/library/golang'
+    env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0']
+    args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_windows_amd64', '.']
+    dir: '/workspace/cmd'
+    volumes:
+      - name: go-modules
+        path: /go
+artifacts:
+  objects:
+    location: 'gs://kpt-dev/'
+    paths: ['kpt.${BRANCH_NAME}_darwin_amd64', 'kpt.${BRANCH_NAME}_linux_amd64']
