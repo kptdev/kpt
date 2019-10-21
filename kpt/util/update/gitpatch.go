@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"lib.kpt.dev/gitutil"
@@ -49,7 +50,7 @@ func (u GitPatchUpdater) Update(options UpdateOptions) error {
 
 	// write the patch to a file instead of applying it
 	if options.DryRun {
-		_, err := io.WriteString(options.Output, fmt.Sprintf(
+		_, err := io.WriteString(os.Stderr, fmt.Sprintf(
 			"patch can be applied with 'git am -3 --directory %s'\n", options.PackagePath))
 		if err != nil {
 			return err
@@ -92,14 +93,42 @@ func (u *GitPatchUpdater) calculatePatch() error {
 	return u.formatPatch()
 }
 
+const alphaGitPatchRemote = "kpt-update-alpha-git-patch"
+
 // patchLocalPackage will run 'git am' to patch the local package.
 func (u *GitPatchUpdater) patchLocalPackage() error {
 	g := gitutil.NewLocalGitRunner(u.UpdateOptions.PackagePath)
+
+	// add the cached update as an upstream so git can figure out how to do the
+	// 3-way merge when it looks for the commits in the patch file.
+	fmt.Fprintf(os.Stderr,
+		"fetching upstream updates locally staged at: %s\n", u.gitRunner.RepoDir)
+	// TODO(pwittrock): consider fetching directly without adding using git fetch <path>
+	//                  and determine if there are any benefits in doing so over this approach.
+	if err := g.Run(
+		"remote", "add", alphaGitPatchRemote, u.gitRunner.RepoDir); err != nil {
+		return fmt.Errorf("update failed: failure running git remote %v: %s %s",
+			err, g.Stderr.String(), g.Stdout.String())
+	}
+	defer func() {
+		// delete the remote when we are done
+		err := g.Run("remote", "remove", alphaGitPatchRemote)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "cleanup remote failed: %v\n", err)
+		}
+	}()
+	if err := g.Run("fetch", alphaGitPatchRemote, "master"); err != nil {
+		return fmt.Errorf("update failed: failure running git fetch %v: %s %s",
+			err, g.Stderr.String(), g.Stdout.String())
+	}
+
+	// run `git am` to apply the patch
+	fmt.Fprintf(os.Stderr,
+		"applying upstream updates using `git am -3 --directory %s`\n", u.PackagePath)
 	g.Stdin = &bytes.Buffer{}
 	if _, err := g.Stdin.WriteString(u.patch); err != nil {
 		return err
 	}
-
 	if err := g.Run("am", "-3", "--directory", u.PackagePath); err != nil {
 		return fmt.Errorf("update failed: failure running git am: %v: %s %s",
 			err, g.Stderr.String(), g.Stdout.String())
@@ -120,11 +149,13 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 
 	pf, err := kptfileutil.ReadFile(u.gitRunner.Dir)
 	if err != nil {
-		// found a remote package Kptfile -- take this one over any default that we generated
+		// no upstream Kptfile, use our local copy -- use the local Kptfile value.
 		pf = u.UpdateOptions.KptFile
+	} else {
+		// found upstream Kptfile, use the upstream copy, but set the `upstream` field
+		// since it is owned locally
+		pf.Upstream = u.UpdateOptions.KptFile.Upstream
 	}
-	// no-error additional handling -- if we couldn't read the file -- don't do anything specific
-	// and keep the local Kptfile value
 
 	// write the Kptfile so the patch sees the updates to it.  use the version we read
 	// locally so there aren't merge conflicts if the remote was changed.
