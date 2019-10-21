@@ -15,7 +15,4 @@
 .idea/
 *.iml
 coverage.out
-*/coverage.out
-klib/*/coverage.out
-cmd/kpt
-kpt
+kpt/kpt

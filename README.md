@@ -29,12 +29,36 @@ users. Group membership at this time is invite only.
 
 ## Installation
 
+Binaries:
+
+- https://storage.cloud.google.com/kpt-dev/kpt.master_darwin_amd64
+- https://storage.cloud.google.com/kpt-dev/kpt.master_linux_amd64
+- https://storage.cloud.google.com/kpt-dev/kpt.master_windows_amd64
+
+From Source:
+
 <!-- TODO: change this to `go get kpt.dev@0.1.0` when the domain is setup and the repo is public-->
 
+**Note: requires go 1.12 or higher**
+
 ```sh
+# must be go 1.12 or higher
+go version
+```
+
+```sh
+# clone the repo
 git clone git@github.com:GoogleContainerTools/kpt
-cd kpt/
-make
+```
+
+```sh
+# build the command
+export GO111MODULE=on
+cd kpt/kpt
+go build .
+
+# run the command
+./kpt help
 ```
 
 ## Demos
