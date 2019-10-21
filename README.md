@@ -80,5 +80,4 @@ Built-in documentation has also been rendered as markdown files for friendly web
 ## Lead Developers
 
 - Phillip Wittrock @pwittrock -- Kubernetes kubectl / sig-cli TL (Google)
-- Sunil Arora @droot -- Kubernetes kubebuilder / controller-runtime TL (Google)
-- Jeff Regan @monopole -- Kubernetes kustomize TL (Google)
+
