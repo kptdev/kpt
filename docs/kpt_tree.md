@@ -6,8 +6,22 @@ Display package Resource structure
 
 Display package Resource structure.
 
+kpt tree may be used to print Resources in a package or cluster, preserving structure
+
+Args:
+
   DIR:
     Path to local package directory.
+
+Resource fields may be printed as part of the Resources by specifying the fields as flags.
+
+kpt tree has build-in support for printing common fields, such as replicas, container images,
+container names, etc.
+
+kpt tree supports printing arbitrary fields using the '--field' flag.
+
+By default, kpt tree uses the package structure for the tree structure, however when printing
+from the cluster, the owners structure may be used instead.
 
 
 ```
@@ -17,8 +31,33 @@ kpt tree DIR [flags]
 ### Examples
 
 ```
-# print package structure
+# print Resources using package structure
 kpt tree my-package/
+
+# print replicas, container name, and container image and fields for Resources
+kpt tree my-package --replicas --image --name
+
+# print all common Resource fields
+kpt tree my-package/ --all
+
+# print the "foo"" annotation
+kpt tree my-package/ --field "metadata.annotations.foo" 
+
+# print the "foo"" annotation
+kubectl get all -o yaml | kpt tree my-package/ --structure=graph \
+  --field="status.conditions[type=Completed].status"
+
+# print live Resources from a cluster using owners for structure
+kubectl get all -o yaml | kpt tree --replicas --name --image --structure=graph
+
+
+# print live Resources using owners for structure
+kubectl get all,applications,releasetracks -o yaml | kpt tree --structure=graph \
+  --name --image --replicas \
+  --field="status.conditions[type=Completed].status" \
+  --field="status.conditions[type=Complete].status" \
+  --field="status.conditions[type=Ready].status" \
+  --field="status.conditions[type=ContainersReady].status"
 
 ```
 
@@ -39,6 +78,7 @@ kpt tree my-package/
       --ports                     print ports field
       --replicas                  print replicas field
       --resources                 print resources field
+      --structure string          structure to use for the tree.  may be 'package' or 'owners'. (default "package")
 ```
 
 ### SEE ALSO

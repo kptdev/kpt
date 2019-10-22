@@ -35,11 +35,50 @@ func Cmd() *Runner {
 		Short: "Display package Resource structure",
 		Long: `Display package Resource structure.
 
+kpt tree may be used to print Resources in a package or cluster, preserving structure
+
+Args:
+
   DIR:
     Path to local package directory.
+
+Resource fields may be printed as part of the Resources by specifying the fields as flags.
+
+kpt tree has build-in support for printing common fields, such as replicas, container images,
+container names, etc.
+
+kpt tree supports printing arbitrary fields using the '--field' flag.
+
+By default, kpt tree uses the package structure for the tree structure, however when printing
+from the cluster, the Resource graph structure may be used instead.
 `,
-		Example: `# print package structure
+		Example: `# print Resources using package structure
 kpt tree my-package/
+
+# print replicas, container name, and container image and fields for Resources
+kpt tree my-package --replicas --image --name
+
+# print all common Resource fields
+kpt tree my-package/ --all
+
+# print the "foo"" annotation
+kpt tree my-package/ --field "metadata.annotations.foo" 
+
+# print the "foo"" annotation
+kubectl get all -o yaml | kpt tree my-package/ --structure=graph \
+  --field="status.conditions[type=Completed].status"
+
+# print live Resources from a cluster using graph for structure
+kubectl get all -o yaml | kpt tree --replicas --name --image --structure=graph
+
+
+# print live Resources using graph for structure
+kubectl get all,applications,releasetracks -o yaml | kpt tree --structure=graph \
+  --name --image --replicas \
+  --field="status.conditions[type=Completed].status" \
+  --field="status.conditions[type=Complete].status" \
+  --field="status.conditions[type=Ready].status" \
+  --field="status.conditions[type=ContainersReady].status"
 `,
 		RunE:         r.runE,
 		SilenceUsage: true,
@@ -64,6 +103,8 @@ kpt tree my-package/
 		"if true, include reconciler Resources in the output.")
 	c.Flags().BoolVar(&r.excludeNonReconcilers, "exclude-non-reconcilers", false,
 		"if true, exclude non-reconciler Resources in the output.")
+	c.Flags().StringVar(&r.structure, "structure", "package",
+		"structure to use for the tree.  may be 'package' or 'owners'.")
 
 	r.C = c
 	return r
@@ -85,6 +126,7 @@ type Runner struct {
 	fields                []string
 	includeReconcilers    bool
 	excludeNonReconcilers bool
+	structure             string
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
@@ -166,7 +208,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
-		Outputs: []kio.Writer{kio.TreeWriter{Root: root, Writer: c.OutOrStdout(), Fields: fields}},
+		Outputs: []kio.Writer{kio.TreeWriter{
+			Root:      root,
+			Writer:    c.OutOrStdout(),
+			Fields:    fields,
+			Structure: kio.TreeStructure(r.structure)}},
 	}.Execute()
 }
 
