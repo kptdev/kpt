@@ -26,13 +26,26 @@ import (
 	"lib.kpt.dev/yaml"
 )
 
+type TreeStructure string
+
+const (
+	// TreeStructurePackage configures TreeWriter to generate the tree structure off of the
+	// Resources packages.
+	TreeStructurePackage TreeStructure = "package"
+
+	// TreeStructureOwners configures TreeWriter to generate the tree structure off of the
+	// Resource owners.
+	TreeStructureGraph TreeStructure = "graph"
+)
+
 // TreeWriter prints the package structured as a tree
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
 // used for printing rather than updating or editing.
 type TreeWriter struct {
-	Writer io.Writer
-	Root   string
-	Fields []TreeWriterField
+	Writer    io.Writer
+	Root      string
+	Fields    []TreeWriterField
+	Structure TreeStructure
 }
 
 // TreeWriterField configures a Resource field to be included in the tree
@@ -42,8 +55,7 @@ type TreeWriterField struct {
 	SubName string
 }
 
-// Write writes the ascii tree to p.Writer
-func (p TreeWriter) Write(nodes []*yaml.RNode) error {
+func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	indexByPackage := p.index(nodes)
 
 	// create the new tree
@@ -77,7 +89,8 @@ func (p TreeWriter) Write(nodes []*yaml.RNode) error {
 
 		// print each resource in the package
 		for i := range indexByPackage[pkg] {
-			if err := p.doResource(indexByPackage[pkg][i], branch); err != nil {
+			var err error
+			if _, err = p.doResource(indexByPackage[pkg][i], "", branch); err != nil {
 				return err
 			}
 		}
@@ -85,6 +98,157 @@ func (p TreeWriter) Write(nodes []*yaml.RNode) error {
 
 	_, err := io.WriteString(p.Writer, tree.String())
 	return err
+}
+
+// Write writes the ascii tree to p.Writer
+func (p TreeWriter) Write(nodes []*yaml.RNode) error {
+	switch p.Structure {
+	case TreeStructurePackage:
+		return p.packageStructure(nodes)
+	case TreeStructureGraph:
+		return p.graphStructure(nodes)
+	default:
+		return p.packageStructure(nodes)
+	}
+}
+
+// node wraps a tree node, and any children nodes
+type node struct {
+	p TreeWriter
+	*yaml.RNode
+	children []*node
+}
+
+func (a node) Len() int      { return len(a.children) }
+func (a node) Swap(i, j int) { a.children[i], a.children[j] = a.children[j], a.children[i] }
+func (a node) Less(i, j int) bool {
+	return compareNodes(a.children[i].RNode, a.children[j].RNode)
+}
+
+// Tree adds this node to the root
+func (a node) Tree(root treeprint.Tree) error {
+	sort.Sort(a)
+	branch := root
+	var err error
+
+	// generate a node for the Resource
+	if a.RNode != nil {
+		branch, err = a.p.doResource(a.RNode, "Resource", root)
+		if err != nil {
+			return err
+		}
+	}
+
+	// attach children to the branch
+	for _, n := range a.children {
+		if err := n.Tree(branch); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// graphStructure writes the tree using owners for structure
+func (p TreeWriter) graphStructure(nodes []*yaml.RNode) error {
+	resourceToOwner := map[string]*node{}
+	root := &node{}
+	// index each of the nodes by their owner
+	for _, n := range nodes {
+		ownerVal, err := ownerToString(n)
+		if err != nil {
+			return err
+		}
+		var owner *node
+		if ownerVal == "" {
+			// no owner -- attach to the root
+			owner = root
+		} else {
+			// owner found -- attach to the owner
+			var found bool
+			owner, found = resourceToOwner[ownerVal]
+			if !found {
+				// initialize the owner if not found
+				resourceToOwner[ownerVal] = &node{p: p}
+				owner = resourceToOwner[ownerVal]
+			}
+		}
+
+		nodeVal, err := nodeToString(n)
+		if err != nil {
+			return err
+		}
+		val, found := resourceToOwner[nodeVal]
+		if !found {
+			// initialize the node if not found -- may have already been initialized if it
+			// is the owner of another node
+			resourceToOwner[nodeVal] = &node{p: p}
+			val = resourceToOwner[nodeVal]
+		}
+		val.RNode = n
+		owner.children = append(owner.children, val)
+	}
+
+	for k, v := range resourceToOwner {
+		if v.RNode == nil {
+			return fmt.Errorf(
+				"owner '%s' not found in input, but found as an owner of input objects", k)
+		}
+	}
+
+	// print the tree
+	tree := treeprint.New()
+	if err := root.Tree(tree); err != nil {
+		return err
+	}
+
+	_, err := io.WriteString(p.Writer, tree.String())
+	return err
+}
+
+// nodeToString generates a string to identify the node -- matches ownerToString format
+func nodeToString(node *yaml.RNode) (string, error) {
+	meta, err := node.GetMeta()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s %s/%s", meta.Kind, meta.Namespace, meta.Name), nil
+}
+
+// ownerToString generate a string to identify the owner -- matches nodeToString format
+func ownerToString(node *yaml.RNode) (string, error) {
+	meta, err := node.GetMeta()
+	if err != nil {
+		return "", err
+	}
+	namespace := meta.Namespace
+
+	owners, err := node.Pipe(yaml.Lookup("metadata", "ownerReferences"))
+	if err != nil {
+		return "", err
+	}
+	if owners == nil {
+		return "", nil
+	}
+
+	elements, err := owners.Elements()
+	if err != nil {
+		return "", err
+	}
+	if len(elements) == 0 {
+		return "", err
+	}
+	owner := elements[0]
+	var kind, name string
+
+	if value := owner.Field("kind"); !yaml.IsFieldEmpty(value) {
+		kind = value.Value.YNode().Value
+	}
+	if value := owner.Field("name"); !yaml.IsFieldEmpty(value) {
+		name = value.Value.YNode().Value
+	}
+
+	return fmt.Sprintf("%s %s/%s", kind, namespace, name), nil
 }
 
 // index indexes the Resources by their package
@@ -103,6 +267,39 @@ func (p TreeWriter) index(nodes []*yaml.RNode) map[string][]*yaml.RNode {
 	return indexByPackage
 }
 
+func compareNodes(i, j *yaml.RNode) bool {
+	metai, _ := i.GetMeta()
+	metaj, _ := j.GetMeta()
+	pi := metai.Annotations[kioutil.PathAnnotation]
+	pj := metaj.Annotations[kioutil.PathAnnotation]
+
+	// compare file names
+	if filepath.Base(pi) != filepath.Base(pj) {
+		return filepath.Base(pi) < filepath.Base(pj)
+	}
+
+	// compare namespace
+	if metai.Namespace != metaj.Namespace {
+		return metai.Namespace < metaj.Namespace
+	}
+
+	// compare name
+	if metai.Name != metaj.Name {
+		return metai.Name < metaj.Name
+	}
+
+	// compare kind
+	if metai.Kind != metaj.Kind {
+		return metai.Kind < metaj.Kind
+	}
+
+	// compare apiVersion
+	if metai.ApiVersion != metaj.ApiVersion {
+		return metai.ApiVersion < metaj.ApiVersion
+	}
+	return true
+}
+
 // sort sorts the Resources in the index in display order and returns the ordered
 // keys for the index
 //
@@ -112,39 +309,7 @@ func (p TreeWriter) sort(indexByPackage map[string][]*yaml.RNode) []string {
 	var keys []string
 	for k := range indexByPackage {
 		pkgNodes := indexByPackage[k]
-		sort.Slice(pkgNodes, func(i, j int) bool {
-			// should have already fetched meta for each node
-			metai, _ := pkgNodes[i].GetMeta()
-			metaj, _ := pkgNodes[j].GetMeta()
-			pi := metai.Annotations[kioutil.PathAnnotation]
-			pj := metaj.Annotations[kioutil.PathAnnotation]
-
-			// compare file names
-			if filepath.Base(pi) != filepath.Base(pj) {
-				return filepath.Base(pi) < filepath.Base(pj)
-			}
-
-			// compare namespace
-			if metai.Namespace != metaj.Namespace {
-				return metai.Namespace < metaj.Namespace
-			}
-
-			// compare name
-			if metai.Name != metaj.Name {
-				return metai.Name < metaj.Name
-			}
-
-			// compare kind
-			if metai.Kind != metaj.Kind {
-				return metai.Kind < metaj.Kind
-			}
-
-			// compare apiVersion
-			if metai.ApiVersion != metaj.ApiVersion {
-				return metai.ApiVersion < metaj.ApiVersion
-			}
-			return true
-		})
+		sort.Slice(pkgNodes, func(i, j int) bool { return compareNodes(pkgNodes[i], pkgNodes[j]) })
 		keys = append(keys, k)
 	}
 
@@ -153,10 +318,14 @@ func (p TreeWriter) sort(indexByPackage map[string][]*yaml.RNode) []string {
 	return keys
 }
 
-func (p TreeWriter) doResource(leaf *yaml.RNode, branch treeprint.Tree) error {
+func (p TreeWriter) doResource(leaf *yaml.RNode, metaString string, branch treeprint.Tree) (treeprint.Tree, error) {
 	meta, _ := leaf.GetMeta()
-	path := meta.Annotations[kioutil.PathAnnotation]
-	path = filepath.Base(path)
+	if metaString == "" {
+		path := meta.Annotations[kioutil.PathAnnotation]
+		path = filepath.Base(path)
+		metaString = path
+	}
+
 	value := fmt.Sprintf("%s %s", meta.Kind, meta.Name)
 	if len(meta.Namespace) > 0 {
 		value = fmt.Sprintf("%s %s/%s", meta.Kind, meta.Namespace, meta.Name)
@@ -164,10 +333,10 @@ func (p TreeWriter) doResource(leaf *yaml.RNode, branch treeprint.Tree) error {
 
 	fields, err := p.getFields(leaf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	n := branch.AddMetaBranch(path, value)
+	n := branch.AddMetaBranch(metaString, value)
 	for i := range fields {
 		field := fields[i]
 
@@ -189,7 +358,7 @@ func (p TreeWriter) doResource(leaf *yaml.RNode, branch treeprint.Tree) error {
 		}
 	}
 
-	return nil
+	return n, nil
 }
 
 // getFields looks up p.Fields from leaf and structures them into treeFields.
