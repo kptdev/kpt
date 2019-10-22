@@ -44,6 +44,7 @@ func NewUpstreamGitRunner(uri, dir string, refs ...string) (*GitRunner, error) {
 	if err != nil {
 		return nil, err
 	}
+	g.RepoDir = cacheDir
 	g.Dir = filepath.Join(cacheDir, dir)
 	return g, nil
 }
@@ -57,6 +58,9 @@ func NewLocalGitRunner(pkg string) *GitRunner {
 type GitRunner struct {
 	// Dir is the directory the commands are run in.
 	Dir string
+
+	// RepoDir is the directory of the git repo containing the package
+	RepoDir string
 
 	// Stderr is where the git command Stderr is written
 	Stderr *bytes.Buffer
