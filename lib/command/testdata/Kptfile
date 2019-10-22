@@ -1,6 +1,6 @@
 metadata:
   name: nginx
-commands:
+pipelineCommands:
 - command:
     use: "image"
     path: ["set"]
@@ -32,3 +32,21 @@ commands:
       - kind: ValueReplacer
         stringMatch: '{{ input "old-image" }}'
         replace: '{{ input "new-image" }}'
+duckCommands:
+- duck:
+    resourceName: '{{ arg 0 }}'
+    getSetField: ["spec", "serviceName"]
+    setValue: '{{ input "value" }}'
+  setCommand:
+    use: "service-name RESOURCE_NAME"
+    exactArgs: 1
+    path: ["set"]
+    inputs:
+    - type: string
+      name: value
+      required: true
+      description: "the serviceName to set"
+  getCommand:
+    use: "service-name RESOURCE_NAME"
+    exactArgs: 1
+    path: ["get"]

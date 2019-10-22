@@ -20,16 +20,17 @@ import (
 )
 
 type CommandList struct {
-	ObjectMetadata `yaml:"metadata"`
-	Commands       []ResourceCommand `yaml:"commands"`
+	ObjectMetadata   `yaml:"metadata"`
+	PipelineCommands []PipelineCommand `yaml:"pipelineCommands"`
+	DuckCommands     []DuckCommand     `yaml:"duckCommands"`
 }
 
 type ObjectMetadata struct {
 	Name string `yaml:"name"`
 }
 
-// ResourceCommand defines a command that is dynamically defined as an annotation on a CRD
-type ResourceCommand struct {
+// PipelineCommand defines a command that is dynamically defined as an annotation on a CRD
+type PipelineCommand struct {
 	// Command is the Command description
 	Command Command `yaml:"command"`
 
@@ -144,4 +145,22 @@ type Command struct {
 	// will print content of the "Version" variable.
 	// +optional
 	Version string `yaml:"version"`
+
+	ExactArgs int `yaml:"exactArgs"`
+}
+
+type DuckCommand struct {
+	GetCommand Command `yaml:"getCommand"`
+	SetCommand Command `yaml:"setCommand"`
+	Duck       Duck    `yaml:"duck"`
+}
+
+type Duck struct {
+	ResourceName string `yaml:"resourceName"`
+
+	EnabledBy []string `yaml:"enabledBy"`
+
+	GetSetField []string `yaml:"getSetField"`
+
+	SetValue string `yaml:"setValue"`
 }

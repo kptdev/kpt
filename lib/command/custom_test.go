@@ -29,6 +29,7 @@ import (
 
 func TestCommandBuilder_Build(t *testing.T) {
 	dir := copyTestData(t, ".")
+	defer os.RemoveAll(dir)
 	root := &cobra.Command{
 		Use: "test-kpt",
 	}
@@ -99,11 +100,49 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: foo
+  labels:
+    app: foo
+  annotations:
+    name: foo
+spec:
+  serviceName: foo-service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foo
+        image: foo:v1.0.0
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo-service
+spec:
+  selector:
+    app: foo
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
 `, string(b))
 }
 
 func TestCommandBuilder_Build_noMatch(t *testing.T) {
 	dir := copyTestData(t, ".")
+	defer os.RemoveAll(dir)
 	root := &cobra.Command{
 		Use: "test-kpt",
 	}
@@ -173,6 +212,43 @@ metadata:
 spec:
   selector:
     app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: foo
+  labels:
+    app: foo
+  annotations:
+    name: foo
+spec:
+  serviceName: foo-service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foo
+        image: foo:v1.0.0
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo-service
+spec:
+  selector:
+    app: foo
   ports:
   - protocol: TCP
     port: 80

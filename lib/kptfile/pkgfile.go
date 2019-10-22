@@ -40,7 +40,9 @@ type KptFile struct {
 
 	DisableDuckCommands []string `yaml:"disableDuckCommands,omitempty"`
 
-	Commands []ResourceCommand `yaml:"commands,omitempty"`
+	PipelineCommands []PipelineCommand `yaml:"pipelineCommands,omitempty"`
+
+	DuckCommands []DuckCommand `yaml:"duckCommands,omitempty"`
 
 	// Reconcilers maps apiVersions to container images to use for reconciling them
 	Reconcilers map[string]string `yaml:"reconcilers,omitempty"`
