@@ -10,13 +10,15 @@ Args:
   REPO_URI:
     URI of a git repository containing 1 or more packages as subdirectories.
     In most cases the .git suffix should be specified to delimit the REPO_URI from the PKG_PATH,
-    but this is not required for widely recognized repo prefixes.
+    but this is not required for widely recognized repo prefixes.  If get cannot parse the repo
+    for the directory and version, then it will print an error asking for '.git' to be specified
+    as part of the argument.
     e.g. https://github.com/kubernetes/examples.git
     Specify - to read from stdin.
 
   PKG_PATH:
     Path to remote subdirectory containing Kubernetes Resource configuration files or directories.
-    Specify '/' to fetch the repo root directory.
+    Defaults to the root directory.
     Uses '/' as the path separator (regardless of OS).
     e.g. staging/cockroachdb
 

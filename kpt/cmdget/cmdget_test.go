@@ -153,7 +153,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, r.C.Execute())
 	assert.Equal(t, "file://foo", r.Repo)
 	assert.Equal(t, "master", r.Ref)
-	assert.Equal(t, "blueprints/java", r.Directory)
+	assert.Equal(t, "/blueprints/java", r.Directory)
 	assert.Equal(t, "java", r.Destination)
 
 	// current working dir -- should use package name
@@ -163,7 +163,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, r.C.Execute())
 	assert.Equal(t, "https://foo", r.Repo)
 	assert.Equal(t, "master", r.Ref)
-	assert.Equal(t, "blueprints/java", r.Directory)
+	assert.Equal(t, "/blueprints/java", r.Directory)
 	assert.Equal(t, "java", r.Destination)
 
 	// current working dir -- should use package name
@@ -173,7 +173,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, r.C.Execute())
 	assert.Equal(t, "https://foo", r.Repo)
 	assert.Equal(t, "master", r.Ref)
-	assert.Equal(t, "blueprints/java", r.Directory)
+	assert.Equal(t, "/blueprints/java", r.Directory)
 	assert.Equal(t, "java", r.Destination)
 
 	// clean relative path
@@ -183,7 +183,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, r.C.Execute())
 	assert.Equal(t, "https://foo", r.Repo)
 	assert.Equal(t, "master", r.Ref)
-	assert.Equal(t, "blueprints/java", r.Directory)
+	assert.Equal(t, "/blueprints/java", r.Directory)
 	assert.Equal(t, "baz", r.Destination)
 
 	// clean absolute path
@@ -193,7 +193,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, r.C.Execute())
 	assert.Equal(t, "https://foo", r.Repo)
 	assert.Equal(t, "master", r.Ref)
-	assert.Equal(t, "blueprints/java", r.Directory)
+	assert.Equal(t, "/blueprints/java", r.Directory)
 	assert.Equal(t, "/baz", r.Destination)
 
 	d, err := ioutil.TempDir("", "ktp")
@@ -212,6 +212,33 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 
 	r = cmdget.Cmd()
 	r.C.RunE = NoOpRunE
+	r.C.SetArgs([]string{"git@github.com:foo/bar.git/baz", filepath.Join(d, "package", "my-app")})
+	assert.NoError(t, r.C.Execute())
+	assert.Equal(t, "git@github.com:foo/bar", r.Repo)
+	assert.Equal(t, "/baz", r.Directory)
+	assert.Equal(t, "master", r.Ref)
+	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Destination)
+
+	r = cmdget.Cmd()
+	r.C.RunE = NoOpRunE
+	r.C.SetArgs([]string{"git@github.com:foo/bar/.git/baz", filepath.Join(d, "package", "my-app")})
+	assert.NoError(t, r.C.Execute())
+	assert.Equal(t, "git@github.com:foo/bar", r.Repo)
+	assert.Equal(t, "/baz", r.Directory)
+	assert.Equal(t, "master", r.Ref)
+	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Destination)
+
+	r = cmdget.Cmd()
+	r.C.RunE = NoOpRunE
+	r.C.SetArgs([]string{"git@github.com:foo/bar.git/baz@v1", filepath.Join(d, "package", "my-app")})
+	assert.NoError(t, r.C.Execute())
+	assert.Equal(t, "git@github.com:foo/bar", r.Repo)
+	assert.Equal(t, "/baz", r.Directory)
+	assert.Equal(t, "v1", r.Ref)
+	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Destination)
+
+	r = cmdget.Cmd()
+	r.C.RunE = NoOpRunE
 	r.C.SetArgs([]string{"https://foo.git", filepath.Join(d, "package")})
 	assert.NoError(t, r.C.Execute())
 	assert.Equal(t, "https://foo", r.Repo)
@@ -223,5 +250,5 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.C.SetArgs([]string{"/", filepath.Join(d, "package", "my-app")})
 	err = r.C.Execute()
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "must specify the repository schema ")
+	assert.Contains(t, err.Error(), "specify '.git'")
 }

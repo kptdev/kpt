@@ -21,7 +21,7 @@ container names, etc.
 kpt tree supports printing arbitrary fields using the '--field' flag.
 
 By default, kpt tree uses the package structure for the tree structure, however when printing
-from the cluster, the owners structure may be used instead.
+from the cluster, the Resource graph structure may be used instead.
 
 
 ```
@@ -47,11 +47,11 @@ kpt tree my-package/ --field "metadata.annotations.foo"
 kubectl get all -o yaml | kpt tree my-package/ --structure=graph \
   --field="status.conditions[type=Completed].status"
 
-# print live Resources from a cluster using owners for structure
+# print live Resources from a cluster using graph for structure
 kubectl get all -o yaml | kpt tree --replicas --name --image --structure=graph
 
 
-# print live Resources using owners for structure
+# print live Resources using graph for structure
 kubectl get all,applications,releasetracks -o yaml | kpt tree --structure=graph \
   --name --image --replicas \
   --field="status.conditions[type=Completed].status" \
