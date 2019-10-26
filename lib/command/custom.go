@@ -17,7 +17,6 @@ package command
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,7 +28,7 @@ import (
 	"lib.kpt.dev/yaml"
 )
 
-// CommandBuilder builds cobra.Commands from ResourceCommand declarations
+// CommandBuilder builds cobra.Commands from PipelineCommand declarations
 type CommandBuilder struct {
 	PkgPath string
 	CmdPath []string
@@ -38,20 +37,13 @@ type CommandBuilder struct {
 }
 
 func (c CommandBuilder) BuildCommands() error {
-	b, err := ioutil.ReadFile(filepath.Join(c.PkgPath, "Kptfile"))
-	if err != nil {
-		// ok if no Kptfile, just don't have any custom commands
+	cmds := getCommands(c.PkgPath)
+	if cmds == nil {
 		return nil
 	}
-
-	cmds := &kptfile.CommandList{}
-	d := yaml.NewDecoder(bytes.NewBuffer(b))
-	if err := d.Decode(cmds); err != nil {
-		return err
-	}
 	c.Name = cmds.Name
-	for i := range cmds.Commands {
-		rc := cmds.Commands[i]
+	for i := range cmds.PipelineCommands {
+		rc := cmds.PipelineCommands[i]
 		if err := c.BuildCommand(rc); err != nil {
 			return err
 		}
@@ -60,7 +52,7 @@ func (c CommandBuilder) BuildCommands() error {
 }
 
 // Build builds the new command and adds it to root under its path
-func (c CommandBuilder) BuildCommand(rc kptfile.ResourceCommand) error {
+func (c CommandBuilder) BuildCommand(rc kptfile.PipelineCommand) error {
 	cbra, inputs, err := parse(rc.Command)
 	if err != nil {
 		return err
@@ -231,6 +223,9 @@ func parse(cmd kptfile.Command) (*cobra.Command, Inputs, error) {
 // AddCommand adds the subcmd to root at the provided path.
 // An empty path will add subcmd as a sub-command of root.
 func AddCommand(root, subcmd *cobra.Command, path []string) {
+	if subcmd == nil {
+		return
+	}
 	next := root
 	// For each element on the Path
 	for i := range path {
@@ -254,6 +249,5 @@ func AddCommand(root, subcmd *cobra.Command, path []string) {
 			next = cbra
 		}
 	}
-
 	next.AddCommand(subcmd)
 }

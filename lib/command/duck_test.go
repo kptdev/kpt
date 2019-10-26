@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package command_test
 
 import (
 	"bytes"
@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	. "lib.kpt.dev/command"
 	"lib.kpt.dev/kio"
 	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/testutil"
@@ -176,8 +177,8 @@ func Test(t *testing.T) {
 
 	for _, test := range append(getTestCases, setTestCases...) {
 		func() {
-			g, _, _ := testutil.SetupDefaultRepoAndWorkspace(t)
-			//defer clean()
+			g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+			defer clean()
 			if !assert.NoError(t, os.Chdir(filepath.Dir(g.RepoDirectory)), test.name) {
 				return
 			}
@@ -248,7 +249,7 @@ func Test_stdin(t *testing.T) {
 			c := filepath.Base(g.RepoDirectory)
 
 			cmd := &cobra.Command{Use: "kpt"}
-			if !assert.NoError(t, AddCommands(duck, cmd), test.name) {
+			if !assert.NoError(t, AddCommands(Duck, cmd), test.name) {
 				return
 			}
 
@@ -267,7 +268,7 @@ func Test_stdin(t *testing.T) {
 			cmd.SetOut(bout)
 
 			// setup the command args
-			cmd.SetArgs(append([]string{duck}, test.command...))
+			cmd.SetArgs(append([]string{Duck}, test.command...))
 			err = cmd.Execute()
 
 			// check if there should be an error
@@ -331,4 +332,123 @@ func Test_stdin(t *testing.T) {
 			}
 		}()
 	}
+}
+
+func TestCommandDuckRegister(t *testing.T) {
+	dir := copyTestData(t, ".")
+	if !assert.NoError(t, os.Chdir(dir)) {
+		t.FailNow()
+	}
+	cmd := &cobra.Command{Use: "kpt"}
+	if !assert.NoError(t, AddCommands(dir, cmd)) {
+		return
+	}
+	b := &bytes.Buffer{}
+	cmd.SetOut(b)
+	cmd.SetArgs([]string{dir, "get", "service-name", "foo"})
+	err := cmd.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !assert.Equal(t, "foo-service\n", b.String()) {
+		return
+	}
+
+	cmd.SetArgs([]string{dir, "set", "service-name", "foo", "--value=foo2-service"})
+	err = cmd.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	result, err := ioutil.ReadFile(filepath.Join(dir, "resource.yaml"))
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, `# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+  annotations:
+    name: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: foo
+  labels:
+    app: foo
+  annotations:
+    name: foo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: foo
+  template:
+    metadata:
+      labels:
+        app: foo
+    spec:
+      containers:
+      - name: foo
+        image: foo:v1.0.0
+        ports:
+        - containerPort: 80
+  serviceName: foo2-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foo-service
+spec:
+  selector:
+    app: foo
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+`, string(result))
 }
