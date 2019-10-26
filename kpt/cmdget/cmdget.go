@@ -40,13 +40,15 @@ Args:
   REPO_URI:
     URI of a git repository containing 1 or more packages as subdirectories.
     In most cases the .git suffix should be specified to delimit the REPO_URI from the PKG_PATH,
-    but this is not required for widely recognized repo prefixes.
+    but this is not required for widely recognized repo prefixes.  If get cannot parse the repo
+    for the directory and version, then it will print an error asking for '.git' to be specified
+    as part of the argument.
     e.g. https://github.com/kubernetes/examples.git
     Specify - to read from stdin.
 
   PKG_PATH:
     Path to remote subdirectory containing Kubernetes Resource configuration files or directories.
-    Specify '/' to fetch the repo root directory.
+    Defaults to the root directory.
     Uses '/' as the path separator (regardless of OS).
     e.g. staging/cockroachdb
 
@@ -98,10 +100,10 @@ type Runner struct {
 // getURIAndVersion parses the repo+pkgURI and the version from v
 func getURIAndVersion(v string) (string, string, error) {
 	if strings.Count(v, "://") > 1 {
-		return "", "", fmt.Errorf("ambiguous repo schema version")
+		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
-	if strings.Count(v, "@") > 1 {
-		return "", "", fmt.Errorf("ambiguous package version")
+	if strings.Count(v, "@") > 2 {
+		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
 	pkgURI := strings.SplitN(v, "@", 2)
 	if len(pkgURI) == 1 {
@@ -114,13 +116,13 @@ func getURIAndVersion(v string) (string, string, error) {
 func getRepoAndPkg(v string) (string, string, error) {
 	parts := strings.SplitN(v, "://", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("must specify the repository schema %s e.g. 'https://' -- %v", v, parts)
+		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
 
 	if strings.HasPrefix(parts[1], "github.com") {
 		repoSubdir := append(strings.Split(parts[1], "/"), "/")
 		if len(repoSubdir) < 4 {
-			return "", "", fmt.Errorf("missing org or repo from REPO_URI")
+			return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 		}
 		repo := parts[0] + "://" + path.Join(repoSubdir[:3]...)
 		dir := path.Join(repoSubdir[3:]...)
@@ -128,7 +130,7 @@ func getRepoAndPkg(v string) (string, string, error) {
 	}
 
 	if strings.Count(v, ".git/") != 1 && !strings.HasSuffix(v, ".git") {
-		return "", "", fmt.Errorf("must specify .git as part of the REPO_URI")
+		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
 
 	if strings.HasSuffix(v, ".git") || strings.HasSuffix(v, ".git/") {
@@ -174,6 +176,37 @@ func getDest(v, repo, subdir string) (string, error) {
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	if args[0] == "-" {
+		return nil
+	}
+
+	// Simple parsing if contains .git
+	if strings.Contains(args[0], ".git") {
+		var repo, dir, version string
+		parts := strings.Split(args[0], ".git")
+		repo = strings.Trim(parts[0], "/")
+		if len(parts) == 1 {
+			// do nothing
+		} else if strings.Contains(parts[1], "@") {
+			parts := strings.Split(parts[1], "@")
+			version = strings.Trim(parts[1], "/")
+			dir = parts[0]
+		} else {
+			dir = parts[1]
+		}
+		if version == "" {
+			version = "master"
+		}
+		if dir == "" {
+			dir = "/"
+		}
+		destination, err := getDest(args[1], repo, dir)
+		if err != nil {
+			return err
+		}
+		r.Ref = version
+		r.Directory = path.Clean(dir)
+		r.Repo = repo
+		r.Destination = filepath.Clean(destination)
 		return nil
 	}
 
