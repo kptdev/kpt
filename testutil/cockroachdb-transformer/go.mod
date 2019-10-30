@@ -9,6 +9,6 @@ require (
 )
 
 replace (
-	kpt.dev => ../../cmd/
+	kpt.dev => ../../kpt/
 	lib.kpt.dev => ../../lib/
 )
