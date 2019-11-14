@@ -42,17 +42,19 @@ var cmd = &cobra.Command{
 
 func main() {
 	// sorted lexicographically
-	cmd.AddCommand(cmddesc.Cmd().C)
-	cmd.AddCommand(cmdget.Cmd().C)
-	cmd.AddCommand(cmdbless.Cmd().C)
-	cmd.AddCommand(cmdman.Cmd().C)
-	cmd.AddCommand(cmdupdate.Cmd().C)
+	cmd.AddCommand(cmddesc.NewCommand())
+	cmd.AddCommand(cmdget.NewCommand())
+	cmd.AddCommand(cmdbless.NewCommand())
+	cmd.AddCommand(cmdman.NewCommand())
+	cmd.AddCommand(cmdupdate.NewCommand())
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(cmdhelp.Apis)
+	cmd.AddCommand(cmdhelp.PackageStructure)
+	cmd.AddCommand(cmdhelp.Kptfile)
 	cmd.AddCommand(cmdtutorials.Tutorials)
 
+	// command for generating .md docs
 	cmd.AddCommand(cmdgendocs.Cmd(cmd))
 
 	if err := cmd.Execute(); err != nil {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package get contains libraries for describing packages.
+// Package desc contains libraries for printing package descriptions.
 package desc
 
 import (

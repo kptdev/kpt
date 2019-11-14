@@ -22,17 +22,17 @@ import (
 	"kpt.dev/kpt/util/desc"
 )
 
-// Cmd returns a command runner.
-func Cmd() *Runner {
+// NewRunner returns a command runner.
+func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:   "desc [DIR]...",
-		Short: "Display package description",
-		Long: `Display package description.
+		Short: "Display package descriptions",
+		Long: `Display package descriptions.
 
 Desc reads package information in given DIRs and displays it in tabular format.
 Input can be a list of package directories (defaults to the current directory if not specifed).
-Directory with a Kptfile is considered to be a valid package.
+Any directory with a Kptfile is considered to be a package.
 `,
 		Example: `	# display description for package in current directory
 	kpt desc
@@ -44,14 +44,18 @@ Directory with a Kptfile is considered to be a valid package.
 		RunE:         r.runE,
 		SilenceUsage: true,
 	}
-	r.C = c
+	r.Command = c
 	return r
+}
+
+func NewCommand() *cobra.Command {
+	return NewRunner().Command
 }
 
 // Runner contains the run function
 type Runner struct {
-	desc.Command
-	C *cobra.Command
+	Description desc.Command
+	Command     *cobra.Command
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -60,13 +64,13 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		r.PkgPaths = append(r.PkgPaths, dir)
+		r.Description.PkgPaths = append(r.Description.PkgPaths, dir)
 	}
-	r.Command.StdOut = c.OutOrStdout()
+	r.Description.StdOut = c.OutOrStdout()
 	return nil
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	r.PkgPaths = append(r.PkgPaths, args...)
-	return r.Run()
+	r.Description.PkgPaths = append(r.Description.PkgPaths, args...)
+	return r.Description.Run()
 }

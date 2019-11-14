@@ -9,8 +9,7 @@ Update a local package with changes from a remote source repo.
 Args:
 
   LOCAL_PKG_DIR:
-    Local package to update.  Directory must exist and contain a Kptfile.
-    Defaults to the current working directory.
+    Local package to update.  Directory must exist and contain a Kptfile to be updated.
 
   VERSION:
   	A git tag, branch, ref or commit.  Specified after the local_package with @ -- pkg@version.
@@ -70,7 +69,7 @@ kpt update LOCAL_PKG_DIR[@VERSION] [flags]
       --dry-run           print the git patch rather than merging it.
   -h, --help              help for update
   -r, --repo string       git repo url for updating contents.  defaults to the repo the package was fetched from.
-      --strategy string   update strategy for preserving changes to the local package. (default "resource-merge")
+      --strategy string   update strategy for preserving changes to the local package. (default "fast-forward")
       --verbose           print verbose logging information.
 ```
 

@@ -37,9 +37,9 @@ func TestCmd_execute(t *testing.T) {
 	dest := filepath.Join(dir, g.RepoName)
 
 	// clone the repo
-	getCmd := cmdget.Cmd()
-	getCmd.C.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
-	err := getCmd.C.Execute()
+	getCmd := cmdget.NewRunner()
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
+	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -63,12 +63,12 @@ func TestCmd_execute(t *testing.T) {
 	}
 
 	// update the cloned package
-	updateCmd := cmdupdate.Cmd()
+	updateCmd := cmdupdate.NewRunner()
 	if !assert.NoError(t, os.Chdir(dir)) {
 		return
 	}
-	updateCmd.C.SetArgs([]string{g.RepoName, "--strategy", "fast-forward"})
-	if !assert.NoError(t, updateCmd.C.Execute()) {
+	updateCmd.Command.SetArgs([]string{g.RepoName, "--strategy", "fast-forward"})
+	if !assert.NoError(t, updateCmd.Command.Execute()) {
 		return
 	}
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest) {
@@ -105,9 +105,9 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	dest := filepath.Join(dir, g.RepoName)
 
 	// clone the repo
-	getCmd := cmdget.Cmd()
-	getCmd.C.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
-	err := getCmd.C.Execute()
+	getCmd := cmdget.NewRunner()
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
+	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -125,12 +125,12 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	}
 
 	// update the cloned package
-	updateCmd := cmdupdate.Cmd()
+	updateCmd := cmdupdate.NewRunner()
 	if !assert.NoError(t, os.Chdir(dir)) {
 		return
 	}
-	updateCmd.C.SetArgs([]string{g.RepoName})
-	err = updateCmd.C.Execute()
+	updateCmd.Command.SetArgs([]string{g.RepoName})
+	err = updateCmd.Command.Execute()
 	if !assert.Error(t, err) {
 		return
 	}
@@ -160,61 +160,61 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	failRun := NoOpFailRunE{t: t}.runE
 
 	// verify the current working directory is used if no path is specified
-	r := cmdupdate.Cmd()
-	r.C.RunE = NoOpRunE
-	r.C.SetArgs([]string{})
-	err := r.C.Execute()
+	r := cmdupdate.NewRunner()
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{})
+	err := r.Command.Execute()
 	assert.EqualError(t, err, "accepts 1 arg(s), received 0")
-	assert.Equal(t, "", r.Command.Ref)
-	assert.Equal(t, update.Default, r.Command.Strategy)
+	assert.Equal(t, "", r.Update.Ref)
+	assert.Equal(t, update.Default, r.Update.Strategy)
 
 	// verify an error is thrown if multiple paths are specified
-	r = cmdupdate.Cmd()
-	r.C.SilenceErrors = true
-	r.C.RunE = failRun
-	r.C.SetArgs([]string{"foo", "bar"})
-	err = r.C.Execute()
+	r = cmdupdate.NewRunner()
+	r.Command.SilenceErrors = true
+	r.Command.RunE = failRun
+	r.Command.SetArgs([]string{"foo", "bar"})
+	err = r.Command.Execute()
 	assert.EqualError(t, err, "accepts 1 arg(s), received 2")
-	assert.Equal(t, "", r.Command.Ref)
-	assert.Equal(t, update.Default, r.Command.Strategy)
+	assert.Equal(t, "", r.Update.Ref)
+	assert.Equal(t, update.Default, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
-	r = cmdupdate.Cmd()
-	r.C.RunE = NoOpRunE
-	r.C.SetArgs([]string{"foo@refs/heads/foo"})
-	err = r.C.Execute()
+	r = cmdupdate.NewRunner()
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{"foo@refs/heads/foo"})
+	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, "foo", r.Command.Path)
-	assert.Equal(t, "refs/heads/foo", r.Command.Ref)
-	assert.Equal(t, update.KResourceMerge, r.Command.Strategy)
+	assert.Equal(t, "foo", r.Update.Path)
+	assert.Equal(t, "refs/heads/foo", r.Update.Ref)
+	assert.Equal(t, update.FastForward, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
-	r = cmdupdate.Cmd()
-	r.C.RunE = NoOpRunE
-	r.C.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
-	err = r.C.Execute()
+	r = cmdupdate.NewRunner()
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
+	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, "foo", r.Command.Path)
-	assert.Equal(t, update.ForceDeleteReplace, r.Command.Strategy)
-	assert.Equal(t, "", r.Command.Ref)
+	assert.Equal(t, "foo", r.Update.Path)
+	assert.Equal(t, update.ForceDeleteReplace, r.Update.Strategy)
+	assert.Equal(t, "", r.Update.Ref)
 
-	r = cmdupdate.Cmd()
-	r.C.RunE = NoOpRunE
-	r.C.SetArgs([]string{"foo", "--strategy", "resource-merge"})
-	err = r.C.Execute()
+	r = cmdupdate.NewRunner()
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{"foo", "--strategy", "resource-merge"})
+	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, "foo", r.Command.Path)
-	assert.Equal(t, update.KResourceMerge, r.Command.Strategy)
-	assert.Equal(t, "", r.Command.Ref)
+	assert.Equal(t, "foo", r.Update.Path)
+	assert.Equal(t, update.KResourceMerge, r.Update.Strategy)
+	assert.Equal(t, "", r.Update.Ref)
 }
 
 // TestCmd_fail verifies that that command returns an error when it fails rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdupdate.Cmd()
-	r.C.SilenceErrors = true
-	r.C.SilenceUsage = true
-	r.C.SetArgs([]string{filepath.Join("not", "real", "dir")})
-	err := r.C.Execute()
+	r := cmdupdate.NewRunner()
+	r.Command.SilenceErrors = true
+	r.Command.SilenceUsage = true
+	r.Command.SetArgs([]string{filepath.Join("not", "real", "dir")})
+	err := r.Command.Execute()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "no such file or directory")
 	}

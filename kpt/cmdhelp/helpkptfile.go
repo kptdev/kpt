@@ -17,7 +17,7 @@ package cmdhelp
 import "github.com/spf13/cobra"
 
 var Kptfile = &cobra.Command{
-	Use: "kptfile",
+	Use: "docs-kptfile",
 	Long: `Description:
   A Kptfile resides at the root of each package or subpackage and contains
   package metadata.  Any time a package is fetched using kpt the Kptfile is

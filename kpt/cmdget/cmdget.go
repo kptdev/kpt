@@ -28,8 +28,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
-// Cmd returns a command runner
-func Cmd() *Runner {
+// NewRunner returns a command runner
+func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:   "get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
@@ -81,7 +81,7 @@ Args:
 		PreRunE:      r.preRunE,
 		SuggestFor:   []string{"clone", "cp", "fetch"},
 	}
-	r.C = c
+	r.Command = c
 	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,
 		`Pattern to use for writing files.  
 May contain the following formatting verbs
@@ -90,10 +90,14 @@ May contain the following formatting verbs
 	return r
 }
 
+func NewCommand() *cobra.Command {
+	return NewRunner().Command
+}
+
 // Runner contains the run function
 type Runner struct {
-	get.Command
-	C               *cobra.Command
+	Get             get.Command
+	Command         *cobra.Command
 	FilenamePattern string
 }
 
@@ -203,10 +207,10 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		r.Ref = version
-		r.Directory = path.Clean(dir)
-		r.Repo = repo
-		r.Destination = filepath.Clean(destination)
+		r.Get.Ref = version
+		r.Get.Directory = path.Clean(dir)
+		r.Get.Repo = repo
+		r.Get.Destination = filepath.Clean(destination)
 		return nil
 	}
 
@@ -222,10 +226,10 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	r.Ref = version
-	r.Directory = path.Clean(remoteDir)
-	r.Repo = repo
-	r.Destination = filepath.Clean(destination)
+	r.Get.Ref = version
+	r.Get.Directory = path.Clean(remoteDir)
+	r.Get.Repo = repo
+	r.Get.Destination = filepath.Clean(destination)
 	return nil
 }
 
@@ -235,8 +239,9 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	fmt.Fprintf(c.OutOrStdout(),
-		"fetching package %s from %s to %s\n", r.Directory, r.Repo, r.Destination)
-	if err := r.Run(); err != nil {
+		"fetching package %s from %s to %s\n",
+		r.Get.Directory, r.Get.Repo, r.Get.Destination)
+	if err := r.Get.Run(); err != nil {
 		return err
 	}
 	return nil

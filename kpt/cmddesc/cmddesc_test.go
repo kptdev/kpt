@@ -55,10 +55,10 @@ upstream:
 	testutil.AssertNoError(t, err)
 
 	b := &bytes.Buffer{}
-	cmd := cmddesc.Cmd()
-	cmd.C.SetArgs([]string{d})
-	cmd.C.SetOut(b)
-	err = cmd.C.Execute()
+	cmd := cmddesc.NewRunner()
+	cmd.Command.SetArgs([]string{d})
+	cmd.Command.SetOut(b)
+	err = cmd.Command.Execute()
 	testutil.AssertNoError(t, err)
 
 	exp := fmt.Sprintf(`+------------------+------------------+------------------------------------------+------------------------------+---------+---------+
@@ -75,9 +75,9 @@ upstream:
 // specified.
 func TestCmd_defaultPkg(t *testing.T) {
 	b := &bytes.Buffer{}
-	cmd := cmddesc.Cmd()
-	cmd.C.SetOut(b)
-	err := cmd.C.Execute()
+	cmd := cmddesc.NewRunner()
+	cmd.Command.SetOut(b)
+	err := cmd.Command.Execute()
 	testutil.AssertNoError(t, err)
 
 	exp := `+-----------------+------+-------------------+---------+---------+--------+
