@@ -1,4 +1,4 @@
-## tutorials 4-update-a-local-package
+## tutorials 3-update-a-local-package
 
 Update a previously fetched package 
 
@@ -17,7 +17,7 @@ Local packages may be updated with upstream package changes.
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Diff a local package vs a new upstream version
@@ -26,23 +26,22 @@ Local packages may be updated with upstream package changes.
   'export KPT_EXTERNAL_DIFF=my-differ'.
   See 'kpt help diff' for more options.
 
-	kpt diff cockroachdb/@v1.4 --diff-type remote
+	kpt diff cockroachdb/@v1.1.0 --diff-type remote
 	diff ...
-	8a9
-	>     foo: bar
-	67c68
-	<   minAvailable: 67%
-	---
-	>   minAvailable: 70%
-	77c78
+	76c76
 	<   replicas: 3
 	---
-	>   replicas: 7
+	>   replicas: 5
+	118c118
+	<         image: cockroachdb/cockroach:v1.1.0
+	---
+	>         image: cockroachdb/cockroach:v1.1.1
+
 
   Update the package to the new version.  This requires that the package is unmodified from when
   it was fetched.
 
-	kpt update cockroachdb@v1.4
+	kpt update cockroachdb@v1.1.0
 	git diff cockroachdb/
 
   The updates are unstaged and must be committed.
@@ -51,7 +50,7 @@ Local packages may be updated with upstream package changes.
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package
@@ -108,7 +107,7 @@ Local packages may be updated with upstream package changes.
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package.  Edit a field that will be changed upstream.
@@ -150,7 +149,7 @@ Local packages may be updated with upstream package changes.
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Update the package to a new version.  Expect a merge conflict.
@@ -174,13 +173,13 @@ Local packages may be updated with upstream package changes.
 
 
 ```
-tutorials 4-update-a-local-package [flags]
+tutorials 3-update-a-local-package [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for 4-update-a-local-package
+  -h, --help   help for 3-update-a-local-package
 ```
 
 ### SEE ALSO

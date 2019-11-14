@@ -8,7 +8,7 @@ Packages are directories of Kubernetes Resource Configuration which
 may be fetched from sources such as git:
 
 - No additional package metadata or structure is required
-- Natively compatible with 'kubectl apply'
+- Natively compatible with 'kubectl apply' and 'kustomize'
 - May be fetched and updated to specific revisions (using git tags or branches).
 - May contain non-configuration files or metadata as part of the package
 
@@ -23,13 +23,13 @@ may be fetched from sources such as git:
   'kpt get' fetched the remote package from HEAD of the
   https://github.com/kubernetes/examples master branch.
 
-	$ kpt tree cassandra/
+	$ kyaml tree cassandra/
 	cassandra
 	├── [cassandra-service.yaml]  v1.Service cassandra
 	├── [cassandra-statefulset.yaml]  apps/v1.StatefulSet cassandra
 	└── [cassandra-statefulset.yaml]  storage.k8s.io/v1.StorageClass fast
 	
-  'kpt tree' printed the package structure -- displaying both the Resources as well as the
+  'kyaml tree' printed the package structure -- displaying both the Resources as well as the
   files the Resources are specified in.
 
 	$ kpt desc cassandra
@@ -49,7 +49,7 @@ may be fetched from sources such as git:
   The guestbook package contains multiple guest book instances in separate
   subdirectories.
 
-	$ kpt tree my-guestbook-copy/
+	$ kyaml tree my-guestbook-copy/
 	my-guestbook-copy
 	├── [frontend-deployment.yaml]  apps/v1.Deployment frontend
 	├── [frontend-service.yaml]  v1.Service frontend
@@ -80,7 +80,7 @@ may be fetched from sources such as git:
 
   'kpt get' only fetched the all-in-one subpackage.
 
-	$ kpt tree new-guestbook-copy
+	$ kyaml tree new-guestbook-copy
 	new-guestbook-copy
 	├── [frontend.yaml]  apps/v1.Deployment frontend
 	├── [frontend.yaml]  v1.Service frontend
@@ -95,7 +95,7 @@ may be fetched from sources such as git:
 
 ## Fetch a specific version of a package
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 
   Specifying '@version' after the package uri fetched the package at that revision.
   The version may be a git branch, tag or ref.
@@ -107,7 +107,7 @@ may be fetched from sources such as git:
 
   This imported the expanded package Resources from stdin and created a local kpt package.
 
-	$ kpt tree redis-9/
+	$ kyaml tree redis-9/
 	redis-9
 	├── [release-name-redis-headless_service.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health_configmap.yaml]  v1.ConfigMap release-name-redis-health
@@ -127,7 +127,7 @@ may be fetched from sources such as git:
   instead of RESOURCENAME_RESOURCETYPE.yaml
   Multiple Resources with the same name are put into the same file:
 
-	$ kpt tree redis-9/
+	$ kyaml tree redis-9/
 	redis-9
 	├── [release-name-redis-headless.resource.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health.resource.yaml]  v1.ConfigMap release-name-redis-health
@@ -150,7 +150,7 @@ may be fetched from sources such as git:
 
   This expanded the Kustomization into a new package
 
-	$ kpt tree wordpress-expanded/
+	$ kyaml tree wordpress-expanded/
 	wordpress-expanded
 	├── [demo-mysql-pass_secret.yaml]  v1.Secret demo-mysql-pass
 	├── [demo-mysql_deployment.yaml]  apps/v1beta2.Deployment demo-mysql

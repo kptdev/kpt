@@ -12,7 +12,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Viewing package structure
 
-	$ kpt tree wordpress
+	$ kyaml tree wordpress
 	wordpress
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-1
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-2
@@ -29,7 +29,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## View the package Resources
 
-	$ kpt cat wordpress/
+	$ kyaml cat wordpress/
 	apiVersion: v1
 	kind: PersistentVolume
 	metadata:
@@ -61,7 +61,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Search for local package Resources by field
 
-	$ kpt grep "metadata.name=wordpress" wordpress/
+	$ kyaml grep "metadata.name=wordpress" wordpress/
 	apiVersion: v1
 	kind: Service
 	metadata:
@@ -85,7 +85,7 @@ Kpt provides various tools for working with local packages once they are fetched
   grep prints Resources matching some field value.  The Resources are annotated with their
   file source so they can be piped to other commands without losing this information.
 
-	$ kpt grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
+	$ kyaml grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
 	apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 	kind: Deployment
 	metadata:
@@ -109,7 +109,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Combine grep and tree
 
-	$ kpt grep "metadata.name=wordpress" wordpress/ | kpt tree
+	$ kyaml grep "metadata.name=wordpress" wordpress/ | kyaml tree
 	.
 	├── [wordpress-deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress-deployment.yaml]  v1.Service wordpress
@@ -118,28 +118,28 @@ Kpt provides various tools for working with local packages once they are fetched
   tree to only print a subset of the package.
 
 	# display workloads less than 3 replicas
-	kpt grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kpt grep "spec.replicas<3" | kpt tree --replicas
+	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kyaml grep "spec.replicas<3" | kyaml tree --replicas
 
 	# display workloads without an image tag
-	kpt grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kpt grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kpt tree --image --name
+	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kyaml grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kyaml tree --image --name
 
 	# display workloads with greater than 1.0 cpu-limits
-	kpt grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kpt tree --name --resources
+	kyaml grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kyaml tree --name --resources
 
 ## Combing grep and get
 
-	$ kpt grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
+	$ kyaml grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
 
   get will create a new package from the Resource Config emitted by grep
 
-	$ kpt tree new-wordpress/
+	$ kyaml tree new-wordpress/
 	new-wordpress
 	├── [wordpress_deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress_service.yaml]  v1.Service wordpress
 
 ## Combine cat and get
 
-	$ kpt cat pkg/ | my-custom-transformer | kpt get - pkg/
+	$ kyaml cat pkg/ | my-custom-transformer | kpt get - pkg/
 
 'cat' may be used with 'get' to perform transformations with unit pipes
 
