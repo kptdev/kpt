@@ -1,11 +1,11 @@
-## tutorials 1-fetch-a-package
+## Fetch a Package
 
-Tutorial for fetching a package from a remote source
+Fetch a package from a remote git repository.
 
 ### Synopsis
 
 Packages are directories of Kubernetes Resource Configuration which
-may be fetched from sources such as git:
+may be fetched from git.
 
 - No additional package metadata or structure is required
 - Natively compatible with 'kubectl apply' and 'kustomize'
@@ -162,14 +162,3 @@ may be fetched from sources such as git:
 ```
 tutorials 1-fetch-a-package [flags]
 ```
-
-### Options
-
-```
-  -h, --help   help for 1-fetch-a-package
-```
-
-### SEE ALSO
-
-* [tutorials](tutorials.md)	 - Contains tutorials for using kpt
-

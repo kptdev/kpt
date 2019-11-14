@@ -6,12 +6,14 @@ Update a local package with changes from a remote source repo
 
 Update a local package with changes from a remote source repo.
 
-Args:
+    kpt update LOCAL_PKG_DIR[@VERSION] [flags]
 
   LOCAL_PKG_DIR:
+  
     Local package to update.  Directory must exist and contain a Kptfile to be updated.
 
   VERSION:
+
   	A git tag, branch, ref or commit.  Specified after the local_package with @ -- pkg@version.
     Defaults the local package version that was last fetched.
 
@@ -21,9 +23,8 @@ Args:
     * tag: update the local contents to the remote tag
     * commit: update the local contents to the remote commit
 
-Flags:
-
   --strategy:
+  
     Controls how changes to the local package are handled.  Defaults to fast-forward.
 
     * resource-merge: perform a structural comparison of the original / updated Resources, and merge
@@ -35,17 +36,21 @@ Flags:
     * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
       THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace it
       with the remote version.
+          
+  -r, --repo string
+  
+    Git repo url for updating contents.  Defaults to the repo the package was fetched from.
 
-Env Vars:
+  --dry-run
+  
+    Print the 'alpha-git-patch' strategy patch rather than merging it.
+
+#### Env Vars
 
   KPT_CACHE_DIR:
+  
     Controls where to cache remote packages when fetching them to update local packages.
     Defaults to ~/.kpt/repos/
-
-
-```
-kpt update LOCAL_PKG_DIR[@VERSION] [flags]
-```
 
 ### Examples
 
@@ -60,20 +65,4 @@ kpt update LOCAL_PKG_DIR[@VERSION] [flags]
   git add my-package-dir/
   git commit -m "package updates"
   kpt update my-package-dir/@master --strategy alpha-git-patch
-
 ```
-
-### Options
-
-```
-      --dry-run           print the git patch rather than merging it.
-  -h, --help              help for update
-  -r, --repo string       git repo url for updating contents.  defaults to the repo the package was fetched from.
-      --strategy string   update strategy for preserving changes to the local package. (default "fast-forward")
-      --verbose           print verbose logging information.
-```
-
-### SEE ALSO
-
-* [kpt](kpt.md)	 - Kpt Packaging Tool
-

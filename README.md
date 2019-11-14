@@ -64,12 +64,10 @@ go build .
 ## Documentation
 
 All documentation is built directly into the command binary and can be accessed from the cli through
-`kpt help COMMAND` or `kpt tutorials TUTORIAL_NAME`.
+`kpt help`.
 
 Built-in documentation has also been rendered as markdown files for friendly web viewing:
-
-- Tutorials: [tutorials](docs/tutorials.md)
-- Command Reference: [docs](docs/kpt.md)
+[docs](docs/README.md)
 
 ## Lead Developers
 

@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate go run ./ gen-docs ../docs/
+//go:generate go run ./mdtogo ../docs/tutorials ./cmdtutorials/generated --full=true
+//go:generate go run ./mdtogo ../docs/commands ./generated
 package main
 
 import (
@@ -21,9 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/cmdbless"
 	"kpt.dev/kpt/cmddesc"
-	"kpt.dev/kpt/cmdgendocs"
 	"kpt.dev/kpt/cmdget"
-	"kpt.dev/kpt/cmdhelp"
 	"kpt.dev/kpt/cmdman"
 	"kpt.dev/kpt/cmdtutorials"
 	"kpt.dev/kpt/cmdupdate"
@@ -50,12 +49,9 @@ func main() {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(cmdhelp.PackageStructure)
-	cmd.AddCommand(cmdhelp.Kptfile)
-	cmd.AddCommand(cmdtutorials.Tutorials)
-
-	// command for generating .md docs
-	cmd.AddCommand(cmdgendocs.Cmd(cmd))
+	for i := range cmdtutorials.Tutorials {
+		cmd.AddCommand(cmdtutorials.Tutorials[i])
+	}
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)

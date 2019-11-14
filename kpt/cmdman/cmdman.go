@@ -17,6 +17,7 @@ package cmdman
 
 import (
 	"github.com/spf13/cobra"
+	"kpt.dev/kpt/generated"
 	"kpt.dev/kpt/util/man"
 )
 
@@ -24,24 +25,13 @@ import (
 func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:   "man LOCAL_PKG_DIR",
-		Short: "Format and display package documentation if it exists",
-		Long: `Format and display package documentation if it exists.
-Args:
-
-  LOCAL_PKG_DIR:
-    path to locally fetched package.
-
-  If package documentation is missing or 'man' is not installed, the command will fail.`,
-		Example: `  # display package documentation
-  kpt man my-package/
-
-  # display subpackage documentation
-  kpt man my-package/sub-package/`, RunE: r.runE,
-		Args:         cobra.MaximumNArgs(1),
-		SilenceUsage: true,
-		PreRunE:      r.preRunE,
-		SuggestFor:   []string{"docs"},
+		Use:     "man LOCAL_PKG_DIR",
+		Args:    cobra.MaximumNArgs(1),
+		Short:   generated.ManShort,
+		Long:    generated.ManLong,
+		Example: generated.ManExamples,
+		RunE:    r.runE,
+		PreRunE: r.preRunE,
 	}
 
 	r.Command = c
