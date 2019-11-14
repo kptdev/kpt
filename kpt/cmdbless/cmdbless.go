@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cmdfmt contains the fmt command
+// Package cmdbless contains the bless command
 package cmdbless
 
 import (
@@ -28,8 +28,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Cmd returns a command runner.
-func Cmd() *Runner {
+// NewRunner returns a command runner.
+func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:   "bless DIR",
@@ -37,16 +37,16 @@ func Cmd() *Runner {
 		Long: `Initialize suggested package meta for a local config directory.
 
 Any directory containing Kubernetes Resource Configuration may be treated as
-remote package without any additional metadata.
+remote package without the existence of additional packaging metadata.
 
 * Resource Configuration may be placed anywhere under DIR as *.yaml files.
 * DIR may contain additional non-Resource Configuration files.
 * DIR must be pushed to a git repo or repo subdirectory.
 
-Bless will augment an existing local directory with metadata suggested
-for package documentation and discovery.
+Bless will augment an existing local directory with packaging metadata to help
+with discovery.
 
-Bless will perform:
+Bless will:
 
 * Create a Kptfile with package name and metadata if it doesn't exist
 * Create a Man.md for package documentation if it doesn't exist
@@ -55,7 +55,7 @@ Args:
 
   DIR:
     Defaults to '.'
-    Bless fails if Dir does not exist`,
+    Bless fails if DIR does not exist`,
 		Example: `
 	# writes suggested package meta if not found
 	kpt bless ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"`,
@@ -69,13 +69,17 @@ Args:
 	c.Flags().StringVar(&r.Name, "name", "", "package name.  defaults to the directory base name.")
 	c.Flags().StringSliceVar(&r.Tags, "tag", []string{}, "list of tags for the package.")
 	c.Flags().StringVar(&r.Url, "url", "", "link to page with information about the package.")
-	r.C = c
+	r.Command = c
 	return r
+}
+
+func NewCommand() *cobra.Command {
+	return NewRunner().Command
 }
 
 // Runner contains the run function
 type Runner struct {
-	C           *cobra.Command
+	Command     *cobra.Command
 	Tags        []string
 	Name        string
 	Description string

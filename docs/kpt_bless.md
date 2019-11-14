@@ -7,16 +7,16 @@ Initialize suggested package meta for a local config directory
 Initialize suggested package meta for a local config directory.
 
 Any directory containing Kubernetes Resource Configuration may be treated as
-remote package without any additional metadata.
+remote package without the existence of additional packaging metadata.
 
 * Resource Configuration may be placed anywhere under DIR as *.yaml files.
 * DIR may contain additional non-Resource Configuration files.
 * DIR must be pushed to a git repo or repo subdirectory.
 
-Bless will augment an existing local directory with metadata suggested
-for package documentation and discovery.
+Bless will augment an existing local directory with packaging metadata to help
+with discovery.
 
-Bless will perform:
+Bless will:
 
 * Create a Kptfile with package name and metadata if it doesn't exist
 * Create a Man.md for package documentation if it doesn't exist
@@ -25,7 +25,7 @@ Args:
 
   DIR:
     Defaults to '.'
-    Bless fails if Dir does not exist
+    Bless fails if DIR does not exist
 
 ```
 kpt bless DIR [flags]

@@ -25,7 +25,7 @@ Description:
 ### SEE ALSO
 
 * [kpt bless](kpt_bless.md)	 - Initialize suggested package meta for a local config directory
-* [kpt desc](kpt_desc.md)	 - Display package description
+* [kpt desc](kpt_desc.md)	 - Display package descriptions
 * [kpt get](kpt_get.md)	 - Fetch a package from a git repository
 * [kpt man](kpt_man.md)	 - Format and display package documentation if it exists
 * [kpt update](kpt_update.md)	 - Update a local package with changes from a remote source repo

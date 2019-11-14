@@ -1,14 +1,14 @@
 ## kpt desc
 
-Display package description
+Display package descriptions
 
 ### Synopsis
 
-Display package description.
+Display package descriptions.
 
 Desc reads package information in given DIRs and displays it in tabular format.
 Input can be a list of package directories (defaults to the current directory if not specifed).
-Directory with a Kptfile is considered to be a valid package.
+Any directory with a Kptfile is considered to be a package.
 
 
 ```

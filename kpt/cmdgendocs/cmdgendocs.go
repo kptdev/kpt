@@ -22,7 +22,15 @@ import (
 func Cmd(cmd *cobra.Command) *cobra.Command {
 	cmd.DisableAutoGenTag = true
 	return &cobra.Command{
-		Use: "gen-docs",
+		Use:   "gen-docs DIR",
+		Short: `Generate markdown documentation for kpt commands`,
+		Long: `Generate markdown documentation for kpt commands.
+Args:
+
+  DIR:
+    Output path for (generated) markdown command documentation.
+`,
+		Example: `kpt gen-docs ./docs/`,
 		RunE: func(_ *cobra.Command, args []string) error {
 			if err := doc.GenMarkdownTree(cmd, args[0]); err != nil {
 				return err

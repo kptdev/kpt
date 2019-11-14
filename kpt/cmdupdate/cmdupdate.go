@@ -23,8 +23,8 @@ import (
 	"kpt.dev/kpt/util/update"
 )
 
-// Cmd returns a command runner.
-func Cmd() *Runner {
+// NewRunner returns a command runner.
+func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:   "update LOCAL_PKG_DIR[@VERSION]",
@@ -34,8 +34,7 @@ func Cmd() *Runner {
 Args:
 
   LOCAL_PKG_DIR:
-    Local package to update.  Directory must exist and contain a Kptfile.
-    Defaults to the current working directory.
+    Local package to update.  Directory must exist and contain a Kptfile to be updated.
 
   VERSION:
   	A git tag, branch, ref or commit.  Specified after the local_package with @ -- pkg@version.
@@ -86,45 +85,51 @@ Env Vars:
 		SuggestFor:   []string{"rebase", "replace"},
 	}
 
-	c.Flags().StringVarP(&r.Repo, "repo", "r", "",
+	c.Flags().StringVarP(&r.Update.Repo, "repo", "r", "",
 		"git repo url for updating contents.  defaults to the repo the package was fetched from.")
-	c.Flags().StringVar(&r.strategy, "strategy", string(update.KResourceMerge),
+	c.Flags().StringVar(&r.strategy, "strategy", string(update.FastForward),
 		"update strategy for preserving changes to the local package.")
-	c.Flags().BoolVar(&r.DryRun, "dry-run", false,
+	c.Flags().BoolVar(&r.Update.DryRun, "dry-run", false,
 		"print the git patch rather than merging it.")
-	c.Flags().BoolVar(&r.Verbose, "verbose", false,
+	c.Flags().BoolVar(&r.Update.Verbose, "verbose", false,
 		"print verbose logging information.")
-	r.C = c
+	r.Command = c
 	return r
+}
+
+func NewCommand() *cobra.Command {
+	return NewRunner().Command
 }
 
 // Runner contains the run function.
 // TODO, support listing versions
 type Runner struct {
 	strategy string
-	update.Command
-	C *cobra.Command
+	Update   update.Command
+	Command  *cobra.Command
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	r.Command.Strategy = update.StrategyType(r.strategy)
+	r.Update.Strategy = update.StrategyType(r.strategy)
 	parts := strings.Split(args[0], "@")
 	if len(parts) > 2 {
 		return fmt.Errorf("at most 1 version permitted")
 	}
-	r.Command.Path = parts[0]
+	r.Update.Path = parts[0]
 	if len(parts) > 1 {
-		r.Command.Ref = parts[1]
+		r.Update.Ref = parts[1]
 	}
 
 	return nil
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if len(r.Ref) > 0 {
-		fmt.Fprintf(c.ErrOrStderr(), "updating package %s to %s\n", r.Command.Path, r.Ref)
+	if len(r.Update.Ref) > 0 {
+		fmt.Fprintf(c.ErrOrStderr(), "updating package %s to %s\n",
+			r.Update.Path, r.Update.Ref)
 	} else {
-		fmt.Fprintf(c.ErrOrStderr(), "updating package %s\n", r.Command.Path)
+		fmt.Fprintf(c.ErrOrStderr(), "updating package %s\n",
+			r.Update.Path)
 	}
-	return r.Run()
+	return r.Update.Run()
 }

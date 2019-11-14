@@ -87,11 +87,11 @@ Java server ConfigMap
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	c := cmdman.Cmd()
-	c.C.SetArgs([]string{d})
-	c.Command.ManExecCommand = "cat"
-	c.C.SetOut(b)
-	err = c.C.Execute()
+	c := cmdman.NewRunner()
+	c.Command.SetArgs([]string{d})
+	c.Man.ManExecCommand = "cat"
+	c.Command.SetOut(b)
+	err = c.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, `.TH java 1   "June 2019"  "Application"
 
@@ -221,11 +221,11 @@ Java server ConfigMap
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	c := cmdman.Cmd()
-	c.C.SetArgs([]string{"pkg"})
-	c.Command.ManExecCommand = "cat"
-	c.C.SetOut(b)
-	err = c.C.Execute()
+	c := cmdman.NewRunner()
+	c.Command.SetArgs([]string{"pkg"})
+	c.Man.ManExecCommand = "cat"
+	c.Command.SetOut(b)
+	err = c.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -297,12 +297,12 @@ metadata:
 // TestCmd_fail verifies that command returns an error if the directory is
 // not found.
 func TestCmd_fail(t *testing.T) {
-	r := cmdman.Cmd()
-	r.C.SilenceErrors = true
-	r.C.SilenceUsage = true
-	r.ManExecCommand = "cat"
-	r.C.SetArgs([]string{filepath.Join("not", "real", "dir")})
-	err := r.C.Execute()
+	r := cmdman.NewRunner()
+	r.Command.SilenceErrors = true
+	r.Command.SilenceUsage = true
+	r.Man.ManExecCommand = "cat"
+	r.Command.SetArgs([]string{filepath.Join("not", "real", "dir")})
+	err := r.Command.Execute()
 	if !assert.Error(t, err) {
 		return
 	}
@@ -312,11 +312,11 @@ func TestCmd_fail(t *testing.T) {
 // TestCmd_defaultDir verifies that '.' is used as the default dir if none
 // is provided as an argument.
 func TestCmd_defaultDir(t *testing.T) {
-	r := cmdman.Cmd()
-	r.C.SilenceErrors = true
-	r.C.SilenceUsage = true
-	r.ManExecCommand = "cat"
-	err := r.C.Execute()
+	r := cmdman.NewRunner()
+	r.Command.SilenceErrors = true
+	r.Command.SilenceUsage = true
+	r.Man.ManExecCommand = "cat"
+	err := r.Command.Execute()
 	assert.EqualError(t, err, fmt.Sprintf(
 		"unable to read %s: open %s: no such file or directory",
 		kptfile.KptFileName, kptfile.KptFileName))

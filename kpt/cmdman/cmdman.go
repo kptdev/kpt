@@ -20,8 +20,8 @@ import (
 	"kpt.dev/kpt/util/man"
 )
 
-// Cmd returns a command runner.
-func Cmd() *Runner {
+// NewRunner returns a command runner.
+func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:   "man LOCAL_PKG_DIR",
@@ -44,24 +44,28 @@ Args:
 		SuggestFor:   []string{"docs"},
 	}
 
-	r.C = c
+	r.Command = c
 	return r
 }
 
+func NewCommand() *cobra.Command {
+	return NewRunner().Command
+}
+
 type Runner struct {
-	man.Command
-	C *cobra.Command
+	Man     man.Command
+	Command *cobra.Command
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	r.Command.Path = "."
+	r.Man.Path = "."
 	if len(args) > 0 {
-		r.Command.Path = args[0]
+		r.Man.Path = args[0]
 	}
-	r.Command.StdOut = c.OutOrStdout()
+	r.Man.StdOut = c.OutOrStdout()
 	return nil
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	return r.Run()
+	return r.Man.Run()
 }

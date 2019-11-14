@@ -17,7 +17,7 @@ package cmdhelp
 import "github.com/spf13/cobra"
 
 var PackageStructure = &cobra.Command{
-	Use: "package-structure",
+	Use: "docs-package-structure",
 	Long: `Description:
   kpt packages may be published as:
 
