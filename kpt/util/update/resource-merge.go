@@ -21,9 +21,9 @@ import (
 	"strings"
 
 	"kpt.dev/kpt/util/get"
-	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
 

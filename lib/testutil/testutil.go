@@ -27,10 +27,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	assertnow "gotest.tools/assert"
-	"lib.kpt.dev/copyutil"
 	"lib.kpt.dev/gitutil"
 	"lib.kpt.dev/kptfile"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/sets"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const TmpDirPrefix = "test-kpt"
@@ -60,6 +61,12 @@ type TestGitRepo struct {
 
 var AssertNoError = assertnow.NilError
 
+var KptfileSet = func() sets.String {
+	s := sets.String{}
+	s.Insert(kptfile.KptFileName)
+	return s
+}()
+
 // AssertEqual verifies the contents of a source package matches the contents of the
 // destination package it was fetched to.
 // Excludes comparing the .git directory in the source package.
@@ -73,6 +80,7 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool 
 	if !assert.NoError(t, err) {
 		return false
 	}
+	diff = diff.Difference(KptfileSet)
 	return assert.Empty(t, diff.List(), g.Updater)
 }
 

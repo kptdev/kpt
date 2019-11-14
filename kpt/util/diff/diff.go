@@ -25,9 +25,9 @@ import (
 	"strings"
 
 	"kpt.dev/kpt/util/get"
-	"lib.kpt.dev/copyutil"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
 // DiffType represents type of comparison to be performed.

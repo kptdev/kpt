@@ -16,7 +16,7 @@
 package kptfile
 
 import (
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // KptFileName is the name of the KptFile

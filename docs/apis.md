@@ -19,8 +19,5 @@ apis [flags]
 ### SEE ALSO
 
 * [apis kptfile](apis_kptfile.md)	 - 
-* [apis merge](apis_merge.md)	 - 
-* [apis merge3](apis_merge3.md)	 - 
 * [apis package-structure](apis_package-structure.md)	 - 
-* [apis reconcilers](apis_reconcilers.md)	 - 
 

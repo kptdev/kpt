@@ -10,8 +10,8 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/stretchr/testify v1.4.0
 	gotest.tools v2.2.0+incompatible
-	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
 	lib.kpt.dev v0.0.0
+	sigs.k8s.io/kustomize/kyaml v0.0.0-20191113193121-24f3d7556f20
 	sigs.k8s.io/kustomize/v3 v3.2.0
 )
 

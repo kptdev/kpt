@@ -21,10 +21,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"lib.kpt.dev/kio"
-	"lib.kpt.dev/kio/filters"
 	"lib.kpt.dev/kptfile"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Get reads a package from input and applies a pattern for generating filesnames.

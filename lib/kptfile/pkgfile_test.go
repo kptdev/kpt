@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "lib.kpt.dev/kptfile"
 	"lib.kpt.dev/testutil"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestReadFile tests the ReadFile function.
@@ -49,7 +49,10 @@ upstream:
 	f, err := kptfileutil.ReadFile(dir)
 	assert.NoError(t, err)
 	assert.Equal(t, KptFile{
-		ResourceMeta: yaml.NewResourceMeta("cockroachdb", TypeMeta),
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: "cockroachdb"},
+			ApiVersion: TypeMeta.ApiVersion,
+			Kind:       TypeMeta.Kind},
 		Upstream: Upstream{
 			Type: "git",
 			Git: Git{

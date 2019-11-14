@@ -15,8 +15,8 @@
 package kptfile
 
 import (
-	"lib.kpt.dev/kio"
-	"lib.kpt.dev/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
 type CommandList struct {

@@ -25,7 +25,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"lib.kpt.dev/kptfile"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Cmd returns a command runner.

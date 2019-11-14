@@ -19,8 +19,9 @@ import (
 	"os"
 
 	"kpt.dev/kpt/util/get"
-	"lib.kpt.dev/copyutil"
 	"lib.kpt.dev/kptfile"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
 
@@ -29,6 +30,12 @@ import (
 // If the package at pkgPath differs from the upstream ref it was fetch from, then Update will
 // fail without making any changes.
 type FastForwardUpdater struct{}
+
+var kptfileSet = func() sets.String {
+	s := sets.String{}
+	s.Insert(kptfile.KptFileName)
+	return s
+}()
 
 func (u FastForwardUpdater) Update(options UpdateOptions) error {
 	g := options.KptFile.Upstream.Git
@@ -60,6 +67,7 @@ func errorIfChanged(g kptfile.Git, pkgPath string) error {
 		return fmt.Errorf("failed to compare local package to original source: %v", err)
 	}
 
+	diff = diff.Difference(kptfileSet)
 	if diff.Len() > 0 {
 		return DiffError(fmt.Sprintf(
 			"local package files have been modified: %v.\n  use a differnt update --strategy.",

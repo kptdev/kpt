@@ -28,9 +28,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "kpt.dev/kpt/util/diff"
 	"kpt.dev/kpt/util/get"
-	"lib.kpt.dev/copyutil"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/testutil"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
 // TestCommand_RunRemoteDiff verifies Command can show changes for remote diff

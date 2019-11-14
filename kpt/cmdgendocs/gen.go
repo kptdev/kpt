@@ -17,7 +17,6 @@ package cmdgendocs
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
-	"lib.kpt.dev/command"
 )
 
 var noop = func(cmd *cobra.Command, args []string) {}
@@ -57,26 +56,5 @@ func getHelpTopics(cmd *cobra.Command, dir string) error {
 			return err
 		}
 	}
-
-	// do duck-typed commands
-	cmd = command.HelpCommand
-	cmd.DisableAutoGenTag = true
-	if err := command.AddCommands("", cmd); err != nil {
-		return err
-	}
-	// move the commands up a level
-	for _, c := range cmd.Commands() {
-		if c.Name() == "get" || c.Name() == "set" {
-			cmd.RemoveCommand(c)
-			for _, s := range c.Commands() {
-				s.Use = c.Name() + "-" + s.Use
-			}
-			cmd.AddCommand(c.Commands()...)
-		}
-	}
-	if err := doc.GenMarkdownTree(cmd, dir); err != nil {
-		return err
-	}
-
 	return nil
 }

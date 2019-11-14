@@ -27,7 +27,7 @@ import (
 	"lib.kpt.dev/gitutil"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/testutil"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestCmd_execute verifies that update is correctly invoked.
@@ -80,8 +80,11 @@ func TestCmd_execute(t *testing.T) {
 		return
 	}
 	if !g.AssertKptfile(t, dest, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{

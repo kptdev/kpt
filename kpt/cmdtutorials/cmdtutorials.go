@@ -33,7 +33,7 @@ func init() {
 may be fetched from sources such as git:
 
 - No additional package metadata or structure is required
-- Natively compatible with 'kubectl apply'
+- Natively compatible with 'kubectl apply' and 'kustomize'
 - May be fetched and updated to specific revisions (using git tags or branches).
 - May contain non-configuration files or metadata as part of the package
 
@@ -48,13 +48,13 @@ may be fetched from sources such as git:
   'kpt get' fetched the remote package from HEAD of the
   https://github.com/kubernetes/examples master branch.
 
-	$ kpt tree cassandra/
+	$ kyaml tree cassandra/
 	cassandra
 	├── [cassandra-service.yaml]  v1.Service cassandra
 	├── [cassandra-statefulset.yaml]  apps/v1.StatefulSet cassandra
 	└── [cassandra-statefulset.yaml]  storage.k8s.io/v1.StorageClass fast
 	
-  'kpt tree' printed the package structure -- displaying both the Resources as well as the
+  'kyaml tree' printed the package structure -- displaying both the Resources as well as the
   files the Resources are specified in.
 
 	$ kpt desc cassandra
@@ -74,7 +74,7 @@ may be fetched from sources such as git:
   The guestbook package contains multiple guest book instances in separate
   subdirectories.
 
-	$ kpt tree my-guestbook-copy/
+	$ kyaml tree my-guestbook-copy/
 	my-guestbook-copy
 	├── [frontend-deployment.yaml]  apps/v1.Deployment frontend
 	├── [frontend-service.yaml]  v1.Service frontend
@@ -105,7 +105,7 @@ may be fetched from sources such as git:
 
   'kpt get' only fetched the all-in-one subpackage.
 
-	$ kpt tree new-guestbook-copy
+	$ kyaml tree new-guestbook-copy
 	new-guestbook-copy
 	├── [frontend.yaml]  apps/v1.Deployment frontend
 	├── [frontend.yaml]  v1.Service frontend
@@ -120,7 +120,7 @@ may be fetched from sources such as git:
 
 ## Fetch a specific version of a package
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 
   Specifying '@version' after the package uri fetched the package at that revision.
   The version may be a git branch, tag or ref.
@@ -132,7 +132,7 @@ may be fetched from sources such as git:
 
   This imported the expanded package Resources from stdin and created a local kpt package.
 
-	$ kpt tree redis-9/
+	$ kyaml tree redis-9/
 	redis-9
 	├── [release-name-redis-headless_service.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health_configmap.yaml]  v1.ConfigMap release-name-redis-health
@@ -152,7 +152,7 @@ may be fetched from sources such as git:
   instead of RESOURCENAME_RESOURCETYPE.yaml
   Multiple Resources with the same name are put into the same file:
 
-	$ kpt tree redis-9/
+	$ kyaml tree redis-9/
 	redis-9
 	├── [release-name-redis-headless.resource.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health.resource.yaml]  v1.ConfigMap release-name-redis-health
@@ -175,7 +175,7 @@ may be fetched from sources such as git:
 
   This expanded the Kustomization into a new package
 
-	$ kpt tree wordpress-expanded/
+	$ kyaml tree wordpress-expanded/
 	wordpress-expanded
 	├── [demo-mysql-pass_secret.yaml]  v1.Secret demo-mysql-pass
 	├── [demo-mysql_deployment.yaml]  apps/v1beta2.Deployment demo-mysql
@@ -197,7 +197,7 @@ may be fetched from sources such as git:
 
 ## Viewing package structure
 
-	$ kpt tree wordpress
+	$ kyaml tree wordpress
 	wordpress
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-1
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-2
@@ -214,7 +214,7 @@ may be fetched from sources such as git:
 
 ## View the package Resources
 
-	$ kpt cat wordpress/
+	$ kyaml cat wordpress/
 	apiVersion: v1
 	kind: PersistentVolume
 	metadata:
@@ -246,7 +246,7 @@ may be fetched from sources such as git:
 
 ## Search for local package Resources by field
 
-	$ kpt grep "metadata.name=wordpress" wordpress/
+	$ kyaml grep "metadata.name=wordpress" wordpress/
 	apiVersion: v1
 	kind: Service
 	metadata:
@@ -270,7 +270,7 @@ may be fetched from sources such as git:
   grep prints Resources matching some field value.  The Resources are annotated with their
   file source so they can be piped to other commands without losing this information.
 
-	$ kpt grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
+	$ kyaml grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
 	apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 	kind: Deployment
 	metadata:
@@ -294,7 +294,7 @@ may be fetched from sources such as git:
 
 ## Combine grep and tree
 
-	$ kpt grep "metadata.name=wordpress" wordpress/ | kpt tree
+	$ kyaml grep "metadata.name=wordpress" wordpress/ | kyaml tree
 	.
 	├── [wordpress-deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress-deployment.yaml]  v1.Service wordpress
@@ -303,126 +303,36 @@ may be fetched from sources such as git:
   tree to only print a subset of the package.
 
 	# display workloads less than 3 replicas
-	kpt grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kpt grep "spec.replicas<3" | kpt tree --replicas
+	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kyaml grep "spec.replicas<3" | kyaml tree --replicas
 
 	# display workloads without an image tag
-	kpt grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kpt grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kpt tree --image --name
+	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kyaml grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kyaml tree --image --name
 
 	# display workloads with greater than 1.0 cpu-limits
-	kpt grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kpt tree --name --resources
+	kyaml grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kyaml tree --name --resources
 
 ## Combing grep and get
 
-	$ kpt grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
+	$ kyaml grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
 
   get will create a new package from the Resource Config emitted by grep
 
-	$ kpt tree new-wordpress/
+	$ kyaml tree new-wordpress/
 	new-wordpress
 	├── [wordpress_deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress_service.yaml]  v1.Service wordpress
 
 ## Combine cat and get
 
-	$ kpt cat pkg/ | my-custom-transformer | kpt get - pkg/
+	$ kyaml cat pkg/ | my-custom-transformer | kpt get - pkg/
 
 'cat' may be used with 'get' to perform transformations with unit pipes
 `,
 		})
 
-	Tutorials.AddCommand(&cobra.Command{
-		Use:   "3-modifying-local-packages",
-		Short: "Use package-specific commands to modify package contents",
-		Long: `Resources in local packages may be modified using commands which are dynamically
-enabled based on the package content -- e.g. the 'set image' command is available if the 
-package contains a Resource with 'spec.template.spec.containers'.
-
-Stage the package:
-
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
-
-## Show the set of commands available for the package
-
-	$ kpt cockroachdb/ -h
-	...
-	Available Commands:
-	  get         
-	  set
-	...
-
-  2 subcommand groups are shown
-
-	$ kpt cockroachdb/ get -h
-	...
-	Available Commands:
-	  cpu-limits          Get cpu-limits for a container
-	  cpu-reservations    Get cpu-reservations for a container
-	  env                 Get an environment variable from a container
-	  image               Get image for a container
-	  memory-limits       Get memory-limits for a container
-	  memory-reservations Get memory-reservations for a container
-	  replicas            Get the replicas for a Resource
-
-  This is the set of get commands enabled for the cockroachdb package
-
-
-	$ kpt cockroachdb/ set -h
-	...
-	Available Commands:
-	  cpu-limits          Set cpu-limits for a container
-	  cpu-reservations    Set cpu-reservations for a container
-	  env                 Set an environment variable on a container
-	  image               Set the image on a container
-	  memory-limits       Set memory-limits for a container
-	  memory-reservations Set memory-reservations for a container
-	  replicas            Set the replicas for a Resource
-
-
-  This is the set of set commands enabled for the cockroachdb package
-
-
-## Get and Set the image
-
-	$ kpt tree cockroachdb/
-	cockroachdb
-	├── [cockroachdb-statefulset.yaml]  v1.Service cockroachdb
-	├── [cockroachdb-statefulset.yaml]  apps/v1.StatefulSet cockroachdb
-	├── [cockroachdb-statefulset.yaml]  policy/v1beta1.PodDisruptionBudget cockroachdb-budget
-	└── [cockroachdb-statefulset.yaml]  v1.Service cockroachdb-public
-
-  tree listed the Resources to operate against
-
-	$ kpt cockroachdb/ get image cockroachdb
-	cockroachdb/cockroach:v1.1.0
-
-  get image printed the container image for the Resource + Container matching the name "cockroachdb"
-
-	$ kpt cockroachdb/ set image cockroachdb --value cockroachdb/cockroach:v1.1.1
-	$ kpt cockroachdb/ get image cockroachdb
-	cockroachdb/cockroach:v1.1.1
-
-  set image set the container image to a new value
-
-## Get and Set the replicas
-
-	$ kpt cockroachdb/ get replicas cockroachdb
-	3
-
-  get replicas printed the current replica count
-
-	$ kpt cockroachdb/ set replicas cockroachdb --value 5
-	$ kpt cockroachdb/ get replicas cockroachdb
-	5
-
-## Other commands
-
-  Explore the rest of the commands listed by -h.
-`,
-	})
-
 	Tutorials.AddCommand(
 		&cobra.Command{
-			Use:   "4-update-a-local-package",
+			Use:   "3-update-a-local-package",
 			Short: "Update a previously fetched package ",
 			Long: `Local packages may be updated with upstream package changes.
 
@@ -437,7 +347,7 @@ Stage the package:
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Diff a local package vs a new upstream version
@@ -446,23 +356,22 @@ Stage the package:
   'export KPT_EXTERNAL_DIFF=my-differ'.
   See 'kpt help diff' for more options.
 
-	kpt diff cockroachdb/@v1.4 --diff-type remote
+	kpt diff cockroachdb/@v1.1.0 --diff-type remote
 	diff ...
-	8a9
-	>     foo: bar
-	67c68
-	<   minAvailable: 67%
-	---
-	>   minAvailable: 70%
-	77c78
+	76c76
 	<   replicas: 3
 	---
-	>   replicas: 7
+	>   replicas: 5
+	118c118
+	<         image: cockroachdb/cockroach:v1.1.0
+	---
+	>         image: cockroachdb/cockroach:v1.1.1
+
 
   Update the package to the new version.  This requires that the package is unmodified from when
   it was fetched.
 
-	kpt update cockroachdb@v1.4
+	kpt update cockroachdb@v1.1.0
 	git diff cockroachdb/
 
   The updates are unstaged and must be committed.
@@ -471,7 +380,7 @@ Stage the package:
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package
@@ -528,7 +437,7 @@ Stage the package:
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package.  Edit a field that will be changed upstream.
@@ -570,7 +479,7 @@ Stage the package:
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0 cockroachdb/
+	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Update the package to a new version.  Expect a merge conflict.

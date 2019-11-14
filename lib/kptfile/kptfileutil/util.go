@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 
 	"lib.kpt.dev/kptfile"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // ReadFile reads the KptFile in the given directory

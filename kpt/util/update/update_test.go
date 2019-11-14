@@ -24,12 +24,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"kpt.dev/kpt/util/get"
 	. "kpt.dev/kpt/util/update"
-	"lib.kpt.dev/copyutil"
 	"lib.kpt.dev/gitutil"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
 	"lib.kpt.dev/testutil"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestCommand_Run_noRefChanges updates a package without specifying a new ref.
@@ -814,8 +814,11 @@ func (g *TestSetupManager) AssertKptfile(commit, ref string) bool {
 		name = g.targetDir
 	}
 	expectedKptfile := kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(name, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: name},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{

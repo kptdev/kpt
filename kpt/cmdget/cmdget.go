@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/util/get"
 	"kpt.dev/kpt/util/get/getioreader"
-	"lib.kpt.dev/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
 // Cmd returns a command runner

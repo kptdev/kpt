@@ -23,7 +23,7 @@ import (
 	. "kpt.dev/kpt/util/get"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/testutil"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -62,8 +62,11 @@ func TestCommand_Run(t *testing.T) {
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -99,8 +102,11 @@ func TestCommand_Run_subdir(t *testing.T) {
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(subdir, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: subdir},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -131,8 +137,11 @@ func TestCommand_Run_destination(t *testing.T) {
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(dest, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: dest},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -169,8 +178,11 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(dest, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: dest},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -220,8 +232,11 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -276,8 +291,11 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -314,8 +332,11 @@ func TestCommand_Run_clean(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
 
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -346,8 +367,11 @@ func TestCommand_Run_clean(t *testing.T) {
 	// verify files are updated
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -384,8 +408,11 @@ func TestCommand_Run_failClean(t *testing.T) {
 	r := filepath.Join(dir, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -413,8 +440,11 @@ func TestCommand_Run_failClean(t *testing.T) {
 	// verify files weren't deleted
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -446,8 +476,11 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	r := filepath.Join(dir, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{
@@ -474,8 +507,11 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
 	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.NewResourceMeta(g.RepoName, kptfile.TypeMeta),
-		PackageMeta:  kptfile.PackageMeta{},
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
+			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			Kind:       kptfile.TypeMeta.Kind},
+		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",
 			Git: kptfile.Git{

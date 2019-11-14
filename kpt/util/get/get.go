@@ -26,10 +26,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"lib.kpt.dev/copyutil"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
-	"lib.kpt.dev/yaml"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
