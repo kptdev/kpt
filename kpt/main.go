@@ -28,29 +28,31 @@ import (
 	"kpt.dev/kpt/cmdupdate"
 )
 
+const name = "kpt"
+
 var cmd = &cobra.Command{
-	Use:   "kpt",
-	Short: "Kpt Packaging Tool",
+	Use:   name,
+	Short: "K Packaging Tool",
 	Long: `Description:
-  Build, compose and customize Kubernetes Resource packages.
+  Build, compose and customize packages of configuration.
 	
   For best results, use with tools such as kustomize and kubectl.`,
-	Example: ` 
-  kpt help tutorials`,
+	Example: name + ` help tutorials`,
 }
 
 func main() {
 	// sorted lexicographically
-	cmd.AddCommand(cmddesc.NewCommand())
-	cmd.AddCommand(cmdget.NewCommand())
-	cmd.AddCommand(cmdbless.NewCommand())
-	cmd.AddCommand(cmdman.NewCommand())
-	cmd.AddCommand(cmdupdate.NewCommand())
+	cmd.AddCommand(cmddesc.NewCommand(name))
+	cmd.AddCommand(cmdget.NewCommand(name))
+	cmd.AddCommand(cmdbless.NewCommand(name))
+	cmd.AddCommand(cmdman.NewCommand(name))
+	cmd.AddCommand(cmdupdate.NewCommand(name))
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	for i := range cmdtutorials.Tutorials {
-		cmd.AddCommand(cmdtutorials.Tutorials[i])
+	tutorials := cmdtutorials.Tutorials(name)
+	for i := range tutorials {
+		cmd.AddCommand(tutorials[i])
 	}
 
 	if err := cmd.Execute(); err != nil {

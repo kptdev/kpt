@@ -15,9 +15,9 @@ Any directory with a Kptfile is considered to be a package.
 ### Examples
 
 ```
-    # display description for package in current directory
-    kpt desc
-    
-    # display description for packages in directories with 'prod-' prefix
-    kpt desc prod-*
+# display description for package in current directory
+kpt desc
+
+# display description for packages in directories with 'prod-' prefix
+kpt desc prod-*
 ```

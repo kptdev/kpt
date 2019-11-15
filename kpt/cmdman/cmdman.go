@@ -18,11 +18,12 @@ package cmdman
 import (
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/generated"
+	"kpt.dev/kpt/util/cmdutil"
 	"kpt.dev/kpt/util/man"
 )
 
 // NewRunner returns a command runner.
-func NewRunner() *Runner {
+func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:     "man LOCAL_PKG_DIR",
@@ -33,13 +34,14 @@ func NewRunner() *Runner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	cmdutil.FixDocs("kpt", parent, c)
 
 	r.Command = c
 	return r
 }
 
-func NewCommand() *cobra.Command {
-	return NewRunner().Command
+func NewCommand(parent string) *cobra.Command {
+	return NewRunner(parent).Command
 }
 
 type Runner struct {

@@ -37,7 +37,7 @@ func TestCmd_execute(t *testing.T) {
 	dest := filepath.Join(dir, g.RepoName)
 
 	// clone the repo
-	getCmd := cmdget.NewRunner()
+	getCmd := cmdget.NewRunner("kpt")
 	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -63,7 +63,7 @@ func TestCmd_execute(t *testing.T) {
 	}
 
 	// update the cloned package
-	updateCmd := cmdupdate.NewRunner()
+	updateCmd := cmdupdate.NewRunner("kpt")
 	if !assert.NoError(t, os.Chdir(dir)) {
 		return
 	}
@@ -105,7 +105,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	dest := filepath.Join(dir, g.RepoName)
 
 	// clone the repo
-	getCmd := cmdget.NewRunner()
+	getCmd := cmdget.NewRunner("kpt")
 	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -125,7 +125,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	}
 
 	// update the cloned package
-	updateCmd := cmdupdate.NewRunner()
+	updateCmd := cmdupdate.NewRunner("kpt")
 	if !assert.NoError(t, os.Chdir(dir)) {
 		return
 	}
@@ -160,7 +160,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	failRun := NoOpFailRunE{t: t}.runE
 
 	// verify the current working directory is used if no path is specified
-	r := cmdupdate.NewRunner()
+	r := cmdupdate.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{})
 	err := r.Command.Execute()
@@ -169,7 +169,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, update.Default, r.Update.Strategy)
 
 	// verify an error is thrown if multiple paths are specified
-	r = cmdupdate.NewRunner()
+	r = cmdupdate.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.RunE = failRun
 	r.Command.SetArgs([]string{"foo", "bar"})
@@ -179,7 +179,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, update.Default, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
-	r = cmdupdate.NewRunner()
+	r = cmdupdate.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"foo@refs/heads/foo"})
 	err = r.Command.Execute()
@@ -189,7 +189,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, update.FastForward, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
-	r = cmdupdate.NewRunner()
+	r = cmdupdate.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
 	err = r.Command.Execute()
@@ -198,7 +198,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, update.ForceDeleteReplace, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 
-	r = cmdupdate.NewRunner()
+	r = cmdupdate.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"foo", "--strategy", "resource-merge"})
 	err = r.Command.Execute()
@@ -210,7 +210,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 
 // TestCmd_fail verifies that that command returns an error when it fails rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdupdate.NewRunner()
+	r := cmdupdate.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.SetArgs([]string{filepath.Join("not", "real", "dir")})

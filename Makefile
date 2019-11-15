@@ -41,14 +41,12 @@ tidy:
 
 license:
 	(which addlicense || go get github.com/google/addlicense)
-	(which addlicense || echo "must add `addlicense` to your PATH")
-	addlicense  -y 2019 -l apache .
+	$(GOPATH)/bin/addlicense  -y 2019 -l apache .
 
 lint:
 	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0)
-	(which golangci-lint || echo "must add `golangci-lint` to your PATH")
-	(cd kpt/ && golangci-lint run ./...)
-	(cd lib/ && golangci-lint run ./...)
+	(cd kpt/ && $(GOPATH)/bin/golangci-lint run ./...)
+	(cd lib/ && $(GOPATH)/bin/golangci-lint run ./...)
 
 test:
 	(cd kpt/ && go test -cover ./...)

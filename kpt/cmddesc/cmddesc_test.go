@@ -55,7 +55,7 @@ upstream:
 	testutil.AssertNoError(t, err)
 
 	b := &bytes.Buffer{}
-	cmd := cmddesc.NewRunner()
+	cmd := cmddesc.NewRunner("kpt")
 	cmd.Command.SetArgs([]string{d})
 	cmd.Command.SetOut(b)
 	err = cmd.Command.Execute()
@@ -75,7 +75,7 @@ upstream:
 // specified.
 func TestCmd_defaultPkg(t *testing.T) {
 	b := &bytes.Buffer{}
-	cmd := cmddesc.NewRunner()
+	cmd := cmddesc.NewRunner("kpt")
 	cmd.Command.SetOut(b)
 	err := cmd.Command.Execute()
 	testutil.AssertNoError(t, err)

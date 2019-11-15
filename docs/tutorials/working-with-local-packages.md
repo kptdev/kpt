@@ -1,6 +1,6 @@
 ## tutorials 2-working-with-local-packages
 
-View fetched package information
+kustomize config
 
 ### Synopsis
 
@@ -12,7 +12,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Viewing package structure
 
-	$ kyaml tree wordpress
+	$ kustomize config tree wordpress
 	wordpress
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-1
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-2
@@ -29,7 +29,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## View the package Resources
 
-	$ kyaml cat wordpress/
+	$ kustomize config cat wordpress/
 	apiVersion: v1
 	kind: PersistentVolume
 	metadata:
@@ -61,7 +61,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Search for local package Resources by field
 
-	$ kyaml grep "metadata.name=wordpress" wordpress/
+	$ kustomize config grep "metadata.name=wordpress" wordpress/
 	apiVersion: v1
 	kind: Service
 	metadata:
@@ -85,7 +85,7 @@ Kpt provides various tools for working with local packages once they are fetched
   grep prints Resources matching some field value.  The Resources are annotated with their
   file source so they can be piped to other commands without losing this information.
 
-	$ kyaml grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
+	$ kustomize config grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
 	apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 	kind: Deployment
 	metadata:
@@ -109,7 +109,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Combine grep and tree
 
-	$ kyaml grep "metadata.name=wordpress" wordpress/ | kyaml tree
+	$ kustomize config grep "metadata.name=wordpress" wordpress/ | kustomize config tree
 	.
 	├── [wordpress-deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress-deployment.yaml]  v1.Service wordpress
@@ -118,28 +118,28 @@ Kpt provides various tools for working with local packages once they are fetched
   tree to only print a subset of the package.
 
 	# display workloads less than 3 replicas
-	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kyaml grep "spec.replicas<3" | kyaml tree --replicas
+	kustomize config grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kustomize config grep "spec.replicas<3" | kustomize config tree --replicas
 
 	# display workloads without an image tag
-	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kyaml grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kyaml tree --image --name
+	kustomize config grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kustomize config grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kustomize config tree --image --name
 
 	# display workloads with greater than 1.0 cpu-limits
-	kyaml grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kyaml tree --name --resources
+	kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kustomize config tree --name --resources
 
 ## Combing grep and get
 
-	$ kyaml grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
+	$ kustomize config grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
 
   get will create a new package from the Resource Config emitted by grep
 
-	$ kyaml tree new-wordpress/
+	$ kustomize config tree new-wordpress/
 	new-wordpress
 	├── [wordpress_deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress_service.yaml]  v1.Service wordpress
 
 ## Combine cat and get
 
-	$ kyaml cat pkg/ | my-custom-transformer | kpt get - pkg/
+	$ kustomize config cat pkg/ | my-custom-transformer | kpt get - pkg/
 
 'cat' may be used with 'get' to perform transformations with unit pipes
 

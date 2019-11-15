@@ -20,11 +20,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/generated"
+	"kpt.dev/kpt/util/cmdutil"
 	"kpt.dev/kpt/util/desc"
 )
 
 // NewRunner returns a command runner.
-func NewRunner() *Runner {
+func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:     "desc [DIR]...",
@@ -35,11 +36,12 @@ func NewRunner() *Runner {
 		RunE:    r.runE,
 	}
 	r.Command = c
+	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
 
-func NewCommand() *cobra.Command {
-	return NewRunner().Command
+func NewCommand(parent string) *cobra.Command {
+	return NewRunner(parent).Command
 }
 
 // Runner contains the run function

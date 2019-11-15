@@ -72,11 +72,11 @@ Any directory with a Kptfile is considered to be a package.
     kpt desc [DIR]... [flags]
 `
 var DescExamples = `
-	    # display description for package in current directory
-	    kpt desc
-	    
-	    # display description for packages in directories with 'prod-' prefix
-	    kpt desc prod-*`
+	# display description for package in current directory
+	kpt desc
+	
+	# display description for packages in directories with 'prod-' prefix
+	kpt desc prod-*`
 
 var GetShort = `Fetch a package from a git repository`
 var GetLong = `
@@ -125,17 +125,17 @@ Fetch a package from a git repository.
     %n: metadata.name, %s: metadata.namespace, %k: kind (default "%n_%k.yaml")
 `
 var GetExamples = `
-	  # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
-	  # creates directory ./cockroachdb/ containing the package contents
-	  kpt get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
+	# fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
+	# creates directory ./cockroachdb/ containing the package contents
+	kpt get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
 	
-	  # fetch a cockroachdb
-	  # if ./my-package doesn't exist, creates directory ./my-package/ containing the package contents
-	  kpt get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
+	# fetch a cockroachdb
+	# if ./my-package doesn't exist, creates directory ./my-package/ containing the package contents
+	kpt get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
 	
-	  # fetch package examples from github.com/kubernetes/examples
-	  # creates directory ./examples fetched from the provided commit
-	  kpt get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./`
+	# fetch package examples from github.com/kubernetes/examples
+	# creates directory ./examples fetched from the provided commit
+	kpt get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./`
 
 var ManShort = `Format and display package documentation if it exists`
 var ManLong = `
@@ -149,11 +149,11 @@ from the package or 'man' is not installed, the command will fail.
     local path to a package.
 `
 var ManExamples = `
-	  # display package documentation
-	  kpt man my-package/
+	# display package documentation
+	kpt man my-package/
 	
-	  # display subpackage documentation
-	  kpt man my-package/sub-package/`
+	# display subpackage documentation
+	kpt man my-package/sub-package/`
 
 var UpdateShort = `Update a local package with changes from a remote source repo`
 var UpdateLong = `
@@ -206,13 +206,13 @@ Update a local package with changes from a remote source repo.
     Defaults to ~/.kpt/repos/
 `
 var UpdateExamples = `
-	  # update my-package-dir/
-	  kpt update my-package-dir/
+	# update my-package-dir/
+	kpt update my-package-dir/
 	
-	  # update my-package-dir/ to match the v1.3 branch or tag
-	  kpt update my-package-dir/@v1.3
+	# update my-package-dir/ to match the v1.3 branch or tag
+	kpt update my-package-dir/@v1.3
 	
-	  # update applying a git patch
-	  git add my-package-dir/
-	  git commit -m "package updates"
-	  kpt update my-package-dir/@master --strategy alpha-git-patch`
+	# update applying a git patch
+	git add my-package-dir/
+	git commit -m "package updates"
+	kpt update my-package-dir/@master --strategy alpha-git-patch`
