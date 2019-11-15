@@ -1,6 +1,6 @@
 ## tutorials 2-working-with-local-packages
 
-Tutorial for working with local packages
+View fetched package information
 
 ### Synopsis
 
@@ -147,14 +147,3 @@ Kpt provides various tools for working with local packages once they are fetched
 ```
 tutorials 2-working-with-local-packages [flags]
 ```
-
-### Options
-
-```
-  -h, --help   help for 2-working-with-local-packages
-```
-
-### SEE ALSO
-
-* [tutorials](tutorials.md)	 - Contains tutorials for using kpt
-

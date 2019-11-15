@@ -175,14 +175,3 @@ Local packages may be updated with upstream package changes.
 ```
 tutorials 3-update-a-local-package [flags]
 ```
-
-### Options
-
-```
-  -h, --help   help for 3-update-a-local-package
-```
-
-### SEE ALSO
-
-* [tutorials](tutorials.md)	 - Contains tutorials for using kpt
-

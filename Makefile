@@ -14,8 +14,10 @@
 
 .PHONY: generate license fix vet fmt lint test build tidy
 
+GOPATH := $(shell go env GOPATH)
+
 build:
-	(cd kpt/ && go build -o kpt -v .)
+	(cd kpt/ && go build -o $(GOPATH)/bin/kpt -v .)
 
 all: generate license fix vet fmt lint test build tidy
 
@@ -28,6 +30,8 @@ fmt:
 	(cd lib/ &&  go fmt ./... )
 
 generate:
+	rm -rf kpt/cmdtutorials/generated
+	rm -rf kpt/generated
 	(cd kpt/ && go generate ./...)
 	(cd lib/ && go generate ./...)
 

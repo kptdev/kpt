@@ -19,6 +19,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"kpt.dev/kpt/generated"
 	"kpt.dev/kpt/util/desc"
 )
 
@@ -26,23 +27,12 @@ import (
 func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:   "desc [DIR]...",
-		Short: "Display package descriptions",
-		Long: `Display package descriptions.
-
-Desc reads package information in given DIRs and displays it in tabular format.
-Input can be a list of package directories (defaults to the current directory if not specifed).
-Any directory with a Kptfile is considered to be a package.
-`,
-		Example: `	# display description for package in current directory
-	kpt desc
-
-	# display description for packages in directories with 'prod-' prefix
-	kpt desc prod-*
-`,
-		PreRunE:      r.preRunE,
-		RunE:         r.runE,
-		SilenceUsage: true,
+		Use:     "desc [DIR]...",
+		Short:   generated.DescShort,
+		Long:    generated.DescLong,
+		Example: generated.DescExamples,
+		PreRunE: r.preRunE,
+		RunE:    r.runE,
 	}
 	r.Command = c
 	return r

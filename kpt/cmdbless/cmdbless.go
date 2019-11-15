@@ -24,6 +24,7 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
+	"kpt.dev/kpt/generated"
 	"lib.kpt.dev/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -32,37 +33,13 @@ import (
 func NewRunner() *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:   "bless DIR",
-		Short: "Initialize suggested package meta for a local config directory",
-		Long: `Initialize suggested package meta for a local config directory.
-
-Any directory containing Kubernetes Resource Configuration may be treated as
-remote package without the existence of additional packaging metadata.
-
-* Resource Configuration may be placed anywhere under DIR as *.yaml files.
-* DIR may contain additional non-Resource Configuration files.
-* DIR must be pushed to a git repo or repo subdirectory.
-
-Bless will augment an existing local directory with packaging metadata to help
-with discovery.
-
-Bless will:
-
-* Create a Kptfile with package name and metadata if it doesn't exist
-* Create a Man.md for package documentation if it doesn't exist
-
-Args:
-
-  DIR:
-    Defaults to '.'
-    Bless fails if DIR does not exist`,
-		Example: `
-	# writes suggested package meta if not found
-	kpt bless ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"`,
-		RunE:         r.runE,
-		SilenceUsage: true,
-		PreRunE:      r.preRunE,
-		Args:         cobra.ExactArgs(1),
+		Use:     "bless DIR",
+		Args:    cobra.ExactArgs(1),
+		Short:   generated.BlessShort,
+		Long:    generated.BlessLong,
+		Example: generated.BlessExamples,
+		RunE:    r.runE,
+		PreRunE: r.preRunE,
 	}
 
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
