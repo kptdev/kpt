@@ -21,11 +21,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/generated"
+	"kpt.dev/kpt/util/cmdutil"
 	"kpt.dev/kpt/util/update"
 )
 
 // NewRunner returns a command runner.
-func NewRunner() *Runner {
+func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:        "update LOCAL_PKG_DIR[@VERSION]",
@@ -46,12 +47,13 @@ func NewRunner() *Runner {
 		"print the git patch rather than merging it.")
 	c.Flags().BoolVar(&r.Update.Verbose, "verbose", false,
 		"print verbose logging information.")
+	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
 }
 
-func NewCommand() *cobra.Command {
-	return NewRunner().Command
+func NewCommand(parent string) *cobra.Command {
+	return NewRunner(parent).Command
 }
 
 // Runner contains the run function.

@@ -30,7 +30,7 @@ func TestCmd(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 
-	r := cmdbless.NewRunner()
+	r := cmdbless.NewRunner("kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description", "--tag", "app.kpt.dev/cockroachdb"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
@@ -75,7 +75,7 @@ func TestCmd_failNotExists(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
 
-	r := cmdbless.NewRunner()
+	r := cmdbless.NewRunner("kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description", "--tag", "app.kpt.dev/cockroachdb"})
 	err = r.Command.Execute()
 	if assert.Error(t, err) {

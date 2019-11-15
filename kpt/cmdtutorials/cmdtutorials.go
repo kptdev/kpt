@@ -17,9 +17,10 @@ package cmdtutorials
 import (
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/cmdtutorials/generated"
+	"kpt.dev/kpt/util/cmdutil"
 )
 
-var Tutorials = []*cobra.Command{
+var tutorials = []*cobra.Command{
 	{
 		Use:   "tutorials-1-get",
 		Short: generated.FetchAPackageShort,
@@ -40,4 +41,11 @@ var Tutorials = []*cobra.Command{
 		Short: generated.PublishAPackageShort,
 		Long:  generated.PublishAPackageLong,
 	},
+}
+
+func Tutorials(parent string) []*cobra.Command {
+	for i := range tutorials {
+		cmdutil.FixDocs("kpt", parent, tutorials[i])
+	}
+	return tutorials
 }

@@ -24,13 +24,14 @@ import (
 
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/generated"
+	"kpt.dev/kpt/util/cmdutil"
 	"kpt.dev/kpt/util/get"
 	"kpt.dev/kpt/util/get/getioreader"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
 // NewRunner returns a command runner
-func NewRunner() *Runner {
+func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
@@ -42,6 +43,7 @@ func NewRunner() *Runner {
 		PreRunE:    r.preRunE,
 		SuggestFor: []string{"clone", "cp", "fetch"},
 	}
+	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	c.Flags().StringVar(&r.FilenamePattern, "pattern", filters.DefaultFilenamePattern,
 		`Pattern to use for writing files.  
@@ -51,8 +53,8 @@ May contain the following formatting verbs
 	return r
 }
 
-func NewCommand() *cobra.Command {
-	return NewRunner().Command
+func NewCommand(parent string) *cobra.Command {
+	return NewRunner(parent).Command
 }
 
 // Runner contains the run function

@@ -87,7 +87,7 @@ Java server ConfigMap
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	c := cmdman.NewRunner()
+	c := cmdman.NewRunner("kpt")
 	c.Command.SetArgs([]string{d})
 	c.Man.ManExecCommand = "cat"
 	c.Command.SetOut(b)
@@ -221,7 +221,7 @@ Java server ConfigMap
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	c := cmdman.NewRunner()
+	c := cmdman.NewRunner("kpt")
 	c.Command.SetArgs([]string{"pkg"})
 	c.Man.ManExecCommand = "cat"
 	c.Command.SetOut(b)
@@ -297,7 +297,7 @@ metadata:
 // TestCmd_fail verifies that command returns an error if the directory is
 // not found.
 func TestCmd_fail(t *testing.T) {
-	r := cmdman.NewRunner()
+	r := cmdman.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Man.ManExecCommand = "cat"
@@ -312,7 +312,7 @@ func TestCmd_fail(t *testing.T) {
 // TestCmd_defaultDir verifies that '.' is used as the default dir if none
 // is provided as an argument.
 func TestCmd_defaultDir(t *testing.T) {
-	r := cmdman.NewRunner()
+	r := cmdman.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Man.ManExecCommand = "cat"

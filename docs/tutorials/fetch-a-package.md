@@ -23,13 +23,13 @@ may be fetched from git.
   'kpt get' fetched the remote package from HEAD of the
   https://github.com/kubernetes/examples master branch.
 
-	$ kyaml tree cassandra/
+	$ kustomize config tree cassandra/
 	cassandra
 	├── [cassandra-service.yaml]  v1.Service cassandra
 	├── [cassandra-statefulset.yaml]  apps/v1.StatefulSet cassandra
 	└── [cassandra-statefulset.yaml]  storage.k8s.io/v1.StorageClass fast
 	
-  'kyaml tree' printed the package structure -- displaying both the Resources as well as the
+  'kustomize config tree' printed the package structure -- displaying both the Resources as well as the
   files the Resources are specified in.
 
 	$ kpt desc cassandra
@@ -49,7 +49,7 @@ may be fetched from git.
   The guestbook package contains multiple guest book instances in separate
   subdirectories.
 
-	$ kyaml tree my-guestbook-copy/
+	$ kustomize config tree my-guestbook-copy/
 	my-guestbook-copy
 	├── [frontend-deployment.yaml]  apps/v1.Deployment frontend
 	├── [frontend-service.yaml]  v1.Service frontend
@@ -80,7 +80,7 @@ may be fetched from git.
 
   'kpt get' only fetched the all-in-one subpackage.
 
-	$ kyaml tree new-guestbook-copy
+	$ kustomize config tree new-guestbook-copy
 	new-guestbook-copy
 	├── [frontend.yaml]  apps/v1.Deployment frontend
 	├── [frontend.yaml]  v1.Service frontend
@@ -107,7 +107,7 @@ may be fetched from git.
 
   This imported the expanded package Resources from stdin and created a local kpt package.
 
-	$ kyaml tree redis-9/
+	$ kustomize config tree redis-9/
 	redis-9
 	├── [release-name-redis-headless_service.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health_configmap.yaml]  v1.ConfigMap release-name-redis-health
@@ -127,7 +127,7 @@ may be fetched from git.
   instead of RESOURCENAME_RESOURCETYPE.yaml
   Multiple Resources with the same name are put into the same file:
 
-	$ kyaml tree redis-9/
+	$ kustomize config tree redis-9/
 	redis-9
 	├── [release-name-redis-headless.resource.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health.resource.yaml]  v1.ConfigMap release-name-redis-health
@@ -150,7 +150,7 @@ may be fetched from git.
 
   This expanded the Kustomization into a new package
 
-	$ kyaml tree wordpress-expanded/
+	$ kustomize config tree wordpress-expanded/
 	wordpress-expanded
 	├── [demo-mysql-pass_secret.yaml]  v1.Secret demo-mysql-pass
 	├── [demo-mysql_deployment.yaml]  apps/v1beta2.Deployment demo-mysql

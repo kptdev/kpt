@@ -35,7 +35,7 @@ func TestCmd_execute(t *testing.T) {
 	defer clean()
 	dest := filepath.Join(dir, g.RepoName)
 
-	r := cmdget.NewRunner()
+	r := cmdget.NewRunner("kpt")
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
 	err := r.Command.Execute()
 
@@ -76,7 +76,7 @@ metadata:
   namespace: bar
 `)
 
-	r := cmdget.NewRunner()
+	r := cmdget.NewRunner("kpt")
 	r.Command.SetIn(b)
 	r.Command.SetArgs([]string{"-", d, "--pattern", "%k.yaml"})
 	err = r.Command.Execute()
@@ -97,7 +97,7 @@ metadata:
 
 // TestCmd_fail verifies that that command returns an error rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdget.NewRunner()
+	r := cmdget.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "./"})
@@ -126,7 +126,7 @@ func (t NoOpFailRunE) runE(cmd *cobra.Command, args []string) error {
 func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	failRun := NoOpFailRunE{t: t}.runE
 
-	r := cmdget.NewRunner()
+	r := cmdget.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.RunE = failRun
@@ -134,7 +134,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err := r.Command.Execute()
 	assert.EqualError(t, err, "accepts 2 arg(s), received 0")
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.RunE = failRun
@@ -142,7 +142,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err = r.Command.Execute()
 	assert.EqualError(t, err, "accepts 2 arg(s), received 3")
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"something://foo.git/@master", "./"})
 	assert.NoError(t, r.Command.Execute())
@@ -150,7 +150,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "something://foo", r.Get.Repo)
 	assert.Equal(t, "foo", r.Get.Destination)
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"file://foo.git/blueprints/java", "."})
 	assert.NoError(t, r.Command.Execute())
@@ -160,7 +160,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "java", r.Get.Destination)
 
 	// current working dir -- should use package name
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "foo/../bar/../"})
 	assert.NoError(t, r.Command.Execute())
@@ -170,7 +170,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "java", r.Get.Destination)
 
 	// current working dir -- should use package name
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "./foo/../bar/../"})
 	assert.NoError(t, r.Command.Execute())
@@ -180,7 +180,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "java", r.Get.Destination)
 
 	// clean relative path
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "./foo/../bar/../baz"})
 	assert.NoError(t, r.Command.Execute())
@@ -190,7 +190,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "baz", r.Get.Destination)
 
 	// clean absolute path
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "/foo/../bar/../baz"})
 	assert.NoError(t, r.Command.Execute())
@@ -205,7 +205,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err = os.Mkdir(filepath.Join(d, "package"), 0700)
 	assert.NoError(t, err)
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"https://foo.git", filepath.Join(d, "package", "my-app")})
 	assert.NoError(t, r.Command.Execute())
@@ -213,7 +213,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"git@github.com:foo/bar.git/baz", filepath.Join(d, "package", "my-app")})
 	assert.NoError(t, r.Command.Execute())
@@ -222,7 +222,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"git@github.com:foo/bar/.git/baz", filepath.Join(d, "package", "my-app")})
 	assert.NoError(t, r.Command.Execute())
@@ -231,7 +231,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"git@github.com:foo/bar.git/baz@v1", filepath.Join(d, "package", "my-app")})
 	assert.NoError(t, r.Command.Execute())
@@ -240,7 +240,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "v1", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"https://foo.git", filepath.Join(d, "package")})
 	assert.NoError(t, r.Command.Execute())
@@ -248,7 +248,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "foo"), r.Get.Destination)
 
-	r = cmdget.NewRunner()
+	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"/", filepath.Join(d, "package", "my-app")})
 	err = r.Command.Execute()

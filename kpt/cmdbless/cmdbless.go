@@ -25,12 +25,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"kpt.dev/kpt/generated"
+	"kpt.dev/kpt/util/cmdutil"
 	"lib.kpt.dev/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // NewRunner returns a command runner.
-func NewRunner() *Runner {
+func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:     "bless DIR",
@@ -46,12 +47,13 @@ func NewRunner() *Runner {
 	c.Flags().StringVar(&r.Name, "name", "", "package name.  defaults to the directory base name.")
 	c.Flags().StringSliceVar(&r.Tags, "tag", []string{}, "list of tags for the package.")
 	c.Flags().StringVar(&r.Url, "url", "", "link to page with information about the package.")
+	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
 }
 
-func NewCommand() *cobra.Command {
-	return NewRunner().Command
+func NewCommand(parent string) *cobra.Command {
+	return NewRunner(parent).Command
 }
 
 // Runner contains the run function

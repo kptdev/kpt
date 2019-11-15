@@ -38,13 +38,13 @@ may be fetched from git.
   'kpt get' fetched the remote package from HEAD of the
   https://github.com/kubernetes/examples master branch.
 
-	$ kyaml tree cassandra/
+	$ kustomize config tree cassandra/
 	cassandra
 	├── [cassandra-service.yaml]  v1.Service cassandra
 	├── [cassandra-statefulset.yaml]  apps/v1.StatefulSet cassandra
 	└── [cassandra-statefulset.yaml]  storage.k8s.io/v1.StorageClass fast
 	
-  'kyaml tree' printed the package structure -- displaying both the Resources as well as the
+  'kustomize config tree' printed the package structure -- displaying both the Resources as well as the
   files the Resources are specified in.
 
 	$ kpt desc cassandra
@@ -64,7 +64,7 @@ may be fetched from git.
   The guestbook package contains multiple guest book instances in separate
   subdirectories.
 
-	$ kyaml tree my-guestbook-copy/
+	$ kustomize config tree my-guestbook-copy/
 	my-guestbook-copy
 	├── [frontend-deployment.yaml]  apps/v1.Deployment frontend
 	├── [frontend-service.yaml]  v1.Service frontend
@@ -95,7 +95,7 @@ may be fetched from git.
 
   'kpt get' only fetched the all-in-one subpackage.
 
-	$ kyaml tree new-guestbook-copy
+	$ kustomize config tree new-guestbook-copy
 	new-guestbook-copy
 	├── [frontend.yaml]  apps/v1.Deployment frontend
 	├── [frontend.yaml]  v1.Service frontend
@@ -122,7 +122,7 @@ may be fetched from git.
 
   This imported the expanded package Resources from stdin and created a local kpt package.
 
-	$ kyaml tree redis-9/
+	$ kustomize config tree redis-9/
 	redis-9
 	├── [release-name-redis-headless_service.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health_configmap.yaml]  v1.ConfigMap release-name-redis-health
@@ -142,7 +142,7 @@ may be fetched from git.
   instead of RESOURCENAME_RESOURCETYPE.yaml
   Multiple Resources with the same name are put into the same file:
 
-	$ kyaml tree redis-9/
+	$ kustomize config tree redis-9/
 	redis-9
 	├── [release-name-redis-headless.resource.yaml]  v1.Service release-name-redis-headless
 	├── [release-name-redis-health.resource.yaml]  v1.ConfigMap release-name-redis-health
@@ -165,7 +165,7 @@ may be fetched from git.
 
   This expanded the Kustomization into a new package
 
-	$ kyaml tree wordpress-expanded/
+	$ kustomize config tree wordpress-expanded/
 	wordpress-expanded
 	├── [demo-mysql-pass_secret.yaml]  v1.Secret demo-mysql-pass
 	├── [demo-mysql_deployment.yaml]  apps/v1beta2.Deployment demo-mysql
@@ -368,7 +368,7 @@ Local packages may be updated with upstream package changes.
 
 	tutorials 3-update-a-local-package [flags]`
 
-var WorkingWithLocalPackagesShort = `View fetched package information`
+var WorkingWithLocalPackagesShort = `kustomize config`
 var WorkingWithLocalPackagesLong = `
 ### Synopsis
 
@@ -380,7 +380,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Viewing package structure
 
-	$ kyaml tree wordpress
+	$ kustomize config tree wordpress
 	wordpress
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-1
 	├── [gce-volumes.yaml]  v1.PersistentVolume wordpress-pv-2
@@ -397,7 +397,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## View the package Resources
 
-	$ kyaml cat wordpress/
+	$ kustomize config cat wordpress/
 	apiVersion: v1
 	kind: PersistentVolume
 	metadata:
@@ -429,7 +429,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Search for local package Resources by field
 
-	$ kyaml grep "metadata.name=wordpress" wordpress/
+	$ kustomize config grep "metadata.name=wordpress" wordpress/
 	apiVersion: v1
 	kind: Service
 	metadata:
@@ -453,7 +453,7 @@ Kpt provides various tools for working with local packages once they are fetched
   grep prints Resources matching some field value.  The Resources are annotated with their
   file source so they can be piped to other commands without losing this information.
 
-	$ kyaml grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
+	$ kustomize config grep "spec.status.spec.containers[name=nginx].image=mysql:5\.6" wordpress/
 	apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
 	kind: Deployment
 	metadata:
@@ -477,7 +477,7 @@ Kpt provides various tools for working with local packages once they are fetched
 
 ## Combine grep and tree
 
-	$ kyaml grep "metadata.name=wordpress" wordpress/ | kyaml tree
+	$ kustomize config grep "metadata.name=wordpress" wordpress/ | kustomize config tree
 	.
 	├── [wordpress-deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress-deployment.yaml]  v1.Service wordpress
@@ -486,28 +486,28 @@ Kpt provides various tools for working with local packages once they are fetched
   tree to only print a subset of the package.
 
 	# display workloads less than 3 replicas
-	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kyaml grep "spec.replicas<3" | kyaml tree --replicas
+	kustomize config grep "spec.template.spec.containers[name=\.*].name=\.*" ./ | kustomize config grep "spec.replicas<3" | kustomize config tree --replicas
 
 	# display workloads without an image tag
-	kyaml grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kyaml grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kyaml tree --image --name
+	kustomize config grep "spec.template.spec.containers[name=\.*].name=\.*" ./ |  kustomize config grep "spec.template.spec.containers[name=\.*].image=\.*:\.*" -v | kustomize config tree --image --name
 
 	# display workloads with greater than 1.0 cpu-limits
-	kyaml grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kyaml tree --name --resources
+	kustomize config grep "spec.template.spec.containers[name=\.*].resources.limits.cpu>1.0" ./ | kustomize config tree --name --resources
 
 ## Combing grep and get
 
-	$ kyaml grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
+	$ kustomize config grep "metadata.name=wordpress" wordpress/ | kpt get - ./new-wordpress
 
   get will create a new package from the Resource Config emitted by grep
 
-	$ kyaml tree new-wordpress/
+	$ kustomize config tree new-wordpress/
 	new-wordpress
 	├── [wordpress_deployment.yaml]  apps/v1.Deployment wordpress
 	└── [wordpress_service.yaml]  v1.Service wordpress
 
 ## Combine cat and get
 
-	$ kyaml cat pkg/ | my-custom-transformer | kpt get - pkg/
+	$ kustomize config cat pkg/ | my-custom-transformer | kpt get - pkg/
 
 'cat' may be used with 'get' to perform transformations with unit pipes
 
