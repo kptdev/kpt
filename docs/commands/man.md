@@ -16,9 +16,9 @@ from the package or 'man' is not installed, the command will fail.
 ### Examples
 
 ```
-  # display package documentation
-  kpt man my-package/
+# display package documentation
+kpt man my-package/
 
-  # display subpackage documentation
-  kpt man my-package/sub-package/
+# display subpackage documentation
+kpt man my-package/sub-package/
 ```
