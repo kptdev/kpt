@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate go run ./mdtogo ../docs/tutorials ./cmdtutorials/generated --full=true
-//go:generate go run ./mdtogo ../docs/commands ./generated
+//go:generate $GOBIN/mdtogo ../docs/tutorials ./cmdtutorials/generated --full=true --license=none
+//go:generate $GOBIN/mdtogo ../docs/commands ./generated --license=none
 package main
 
 import (

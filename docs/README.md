@@ -1,5 +1,13 @@
 # kpt docs
 
+## Installation
+    
+    # install kpt
+    go get kpt.dev/kpt
+
+    # install kustomize
+    go get sigs.k8s.io/kustomize/kustomize
+    
 ## Commands
 
 - [bless](commands/bless.md): Initialize suggested package meta for a local config directory

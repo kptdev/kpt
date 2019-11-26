@@ -14,6 +14,7 @@
 
 .PHONY: generate license fix vet fmt lint test build tidy
 
+GOBIN := $(shell go env GOPATH)/bin
 GOPATH := $(shell go env GOPATH)
 
 build:
@@ -30,10 +31,11 @@ fmt:
 	(cd lib/ &&  go fmt ./... )
 
 generate:
+	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
 	rm -rf kpt/cmdtutorials/generated
 	rm -rf kpt/generated
-	(cd kpt/ && go generate ./...)
-	(cd lib/ && go generate ./...)
+	(cd kpt/ && GOBIN=$(GOBIN) go generate ./...)
+	(cd lib/ && GOBIN=$(GOBIN) go generate ./...)
 
 tidy:
 	(cd kpt/ && go mod tidy)
