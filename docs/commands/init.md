@@ -1,4 +1,4 @@
-## bless
+## init
 
 Initialize suggested package meta for a local config directory
 
@@ -13,20 +13,20 @@ remote package without the existence of additional packaging metadata.
 * DIR may contain additional non-Resource Configuration files.
 * DIR must be pushed to a git repo or repo subdirectory.
 
-Bless will augment an existing local directory with packaging metadata to help
+Init will augment an existing local directory with packaging metadata to help
 with discovery.
 
-Bless will:
+Init will:
 
 * Create a Kptfile with package name and metadata if it doesn't exist
 * Create a Man.md for package documentation if it doesn't exist.
 
 
-    kpt bless DIR [flags]
+    kpt init DIR [flags]
     
   DIR:
     
-    Defaults to '.'. Bless fails if DIR does not exist
+    Defaults to '.'. Init fails if DIR does not exist
 
   --description string
   
@@ -48,5 +48,5 @@ Bless will:
 
 ```sh
     # writes Kptfile package meta if not found
-    kpt bless ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
+    kpt init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
 ```
