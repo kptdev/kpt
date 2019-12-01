@@ -24,7 +24,7 @@ const KptFileName = "Kptfile"
 
 // TypeMeta is the TypeMeta for KptFile instances.
 var TypeMeta = yaml.ResourceMeta{
-	Kind:       "KptFile",
+	Kind:       KptFileName,
 	ApiVersion: "kpt.dev/v1alpha1",
 }
 
@@ -38,24 +38,15 @@ type KptFile struct {
 	// PackageMeta contains information about the package
 	PackageMeta PackageMeta `yaml:"packageMetadata,omitempty"`
 
-	DisableDuckCommands []string `yaml:"disableDuckCommands,omitempty"`
-
-	PipelineCommands []PipelineCommand `yaml:"pipelineCommands,omitempty"`
-
-	DuckCommands []DuckCommand `yaml:"duckCommands,omitempty"`
-
-	// Reconcilers maps apiVersions to container images to use for reconciling them
-	Reconcilers map[string]string `yaml:"reconcilers,omitempty"`
+	Dependencies []Dependency `yaml:"dependencies,omitempty"`
 }
 
-// IsDuckCommandEnabled returns true if the duck-command with id has NOT been disabled in k.
-func (k KptFile) IsDuckCommandEnabled(id string) bool {
-	for _, c := range k.DisableDuckCommands {
-		if c == id {
-			return false
-		}
-	}
-	return true
+type Dependency struct {
+	Name            string `yaml:"name,omitempty"`
+	Upstream        `yaml:",inline,omitempty"`
+	Path            string `yaml:"path,omitempty"`
+	EnsureNotExists bool   `yaml:"ensureNotExists,omitempty"`
+	Strategy        string `yaml:"updateStrategy,omitempty"`
 }
 
 type PackageMeta struct {
