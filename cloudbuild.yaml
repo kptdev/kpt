@@ -37,25 +37,25 @@ steps:
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_linux_amd64', '.']
-    dir: '/workspace/kpt'
+    dir: '/workspace/'
     volumes:
     - name: go-modules
       path: /go
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_darwin_amd64', '.']
-    dir: '/workspace/kpt'
+    dir: '/workspace/'
     volumes:
     - name: go-modules
       path: /go
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_windows_amd64', '.']
-    dir: '/workspace/kpt'
+    dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
 artifacts:
   objects:
     location: 'gs://kpt-dev/'
-    paths: ['kpt.${BRANCH_NAME}_darwin_amd64', 'kpt.${BRANCH_NAME}_linux_amd64']
+    paths: ['kpt.${BRANCH_NAME}_darwin_amd64', 'kpt.${BRANCH_NAME}_linux_amd64', 'kpt.${BRANCH_NAME}_windows_amd64']
