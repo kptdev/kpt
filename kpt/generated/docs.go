@@ -200,6 +200,9 @@ Dependencies have following schema:
       ref: <git reference -- e.g. tag, branch, commit, etc>
     updateStrategy: <strategy to use when updating the dependency -- see kpt help update for more details>
     ensureNotExists: <remove the dependency, mutually exclusive with git>
+
+Dependencies maybe be updated by updating their ` + "`" + `git.ref` + "`" + ` field and running ` + "`" + `kpt sync` + "`" + `
+against the directory.
 `
 var SyncExamples = `
   Example Kptfile to sync:
@@ -235,7 +238,10 @@ var SyncExamples = `
 
   Example invocation:
 
-    # sync my-package-dir/ which contains a Kptfile
+    # print the dependencies that would be modified
+    kpt sync my-package-dir/ --dry-run
+
+    # sync the dependencies
     kpt sync my-package-dir/`
 
 var UpdateShort = `Update a local package with changes from a remote source repo`
