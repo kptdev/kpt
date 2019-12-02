@@ -3,7 +3,7 @@
 ## Installation
     
     # install kpt
-    go get kpt.dev/kpt
+    go get github.com/GoogleContainerTools/kpt/internal/cmd
 
     # install kustomize
     go get sigs.k8s.io/kustomize/kustomize
