@@ -155,12 +155,16 @@ var ManExamples = `
 	# display subpackage documentation
 	kpt man my-package/sub-package/`
 
-var SyncShort = `Sync package dependencies locally *declared* in a package Kptfile.`
+var SyncShort = `Sync package dependencies using a manifest.`
 var SyncLong = `
-Sync package dependencies locally *declared* in a package Kptfile.
+Sync uses a manifest to manage a collection of dependencies.
 
-For each *dependency* in a Kptfile, ensure that it exists locally with the
-matching *repo* and *ref*.
+The manifest declares *all* direct dependencies of a package in a Kptfile.
+When ` + "`" + `sync` + "`" + ` is run, it will ensure each dependency has been fetched at the
+specified ref.
+
+This is an alternative to managing package dependencies individually using
+the ` + "`" + `get` + "`" + ` and ` + "`" + `update` + "`" + ` commands.
 
     kpt sync LOCAL_PKG_DIR [flags]
 
@@ -176,7 +180,10 @@ matching *repo* and *ref*.
     Defaults to ~/.kpt/repos/
     
 #### Dependencies
-    
+
+For each dependency in the Kptfile, ` + "`" + `sync` + "`" + ` will ensure that it exists locally with the
+matching repo and ref.
+
 Dependencies are specified in the ` + "`" + `Kptfile` + "`" + ` ` + "`" + `dependencies` + "`" + ` field.  e.g.
 
     apiVersion: kpt.dev/v1alpha1
