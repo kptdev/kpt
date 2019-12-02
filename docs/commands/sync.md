@@ -48,6 +48,9 @@ Dependencies have following schema:
     updateStrategy: <strategy to use when updating the dependency -- see kpt help update for more details>
     ensureNotExists: <remove the dependency, mutually exclusive with git>
 
+Dependencies maybe be updated by updating their `git.ref` field and running `kpt sync`
+against the directory.
+
 ### Examples
 
   Example Kptfile to sync:
@@ -83,5 +86,8 @@ Dependencies have following schema:
 
   Example invocation:
 
-    # sync my-package-dir/ which contains a Kptfile
+    # print the dependencies that would be modified
+    kpt sync my-package-dir/ --dry-run
+
+    # sync the dependencies
     kpt sync my-package-dir/
