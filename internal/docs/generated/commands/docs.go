@@ -156,7 +156,7 @@ var KptLong = `
 
 #### Env Vars
 
-  COBRA_SILENCE_ERRORS
+  COBRA_SILENCE_USAGE
   
     Set to true to silence printing the usage on error
     
