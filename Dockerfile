@@ -16,8 +16,10 @@ FROM golang:1.13-stretch
 ENV CGO_ENABLED=0
 
 WORKDIR /go/src/
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 COPY . .
-WORKDIR /go/src/kpt
 RUN go build -v -o /usr/local/bin/kpt ./
 
 FROM alpine:latest
