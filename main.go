@@ -20,27 +20,17 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/commands"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
 
 func main() {
 	cmd := &cobra.Command{
-		Use:   "kpt",
-		Short: "Manage configuration packages using git",
-		Long: `Manage configuration packages using git.
-
-get, update, and publish packages on Resource configuration as subdirectories of
-git repositories.
-
-  For best results, use with tools such as kustomize and kubectl.`,
-		Example: `kpt help tutorials
-
-# print the tutorial for fetching a package
-kpt help tutorials-1-get
-
-# read the documentation on the get command
-kpt help get`,
+		Use:     "kpt",
+		Short:   docs.KptShort,
+		Long:    docs.KptLong,
+		Example: docs.KptExamples,
 	}
 
 	// help and documentation

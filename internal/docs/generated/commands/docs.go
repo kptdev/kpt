@@ -137,6 +137,43 @@ var InitExamples = `
 	    # writes Kptfile package meta if not found
 	    kpt init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"`
 
+var KptShort = `  Manage configuration packages using git`
+var KptLong = `
+  Manage configuration packages using git.
+
+  get, update, and publish packages on Resource configuration as subdirectories of
+  git repositories.
+
+  For best results, use with tools such as kustomize and kubectl.
+
+    kpt SUB_CMD [flags]
+
+#### Flags
+
+  --stack-trace
+  
+    Print a stack trace on an error
+
+#### Env Vars
+
+  COBRA_SILENCE_ERRORS
+  
+    Set to true to silence printing the usage on error
+    
+  COBRA_STACK_TRACE_ON_ERRORS
+  
+    Set to true to print a stack trace on an error
+`
+var KptExamples = `
+    # view kpt subcommands
+    kpt help
+    
+    # print the tutorial for fetching a package
+    kpt help tutorials-1-get
+    
+    # read the documentation on the get command
+    kpt help get`
+
 var ManShort = `Format and display package documentation if it exists`
 var ManLong = `
 Format and display package documentation if it exists.    If package documentation is missing
@@ -155,7 +192,7 @@ var ManExamples = `
 	# display subpackage documentation
 	kpt man my-package/sub-package/`
 
-var SyncShort = `Sync package dependencies using a manifest.`
+var SyncShort = `Sync package dependencies using a manifest`
 var SyncLong = `
 Sync uses a manifest to manage a collection of dependencies.
 

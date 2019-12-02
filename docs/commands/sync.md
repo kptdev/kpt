@@ -1,6 +1,6 @@
 ## kpt sync
 
-Sync package dependencies using a manifest.
+Sync package dependencies using a manifest
 
 ### Synopsis
 
