@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GeCommands returns the set of kpt commands to be registered
+// GetCommands returns the set of kpt commands to be registered
 func GetCommands(name string) []*cobra.Command {
 	c := []*cobra.Command{
 		cmddesc.NewCommand(name),
@@ -45,6 +45,13 @@ func GetCommands(name string) []*cobra.Command {
 		cmdutil.SetSilenceErrors(cmd)
 
 		// check if stack printing is on
+		if cmd.PreRunE != nil {
+			fn := cmd.PreRunE
+			cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+				err := fn(cmd, args)
+				return cmdutil.HandlePreRunError(cmd, err)
+			}
+		}
 		if cmd.RunE != nil {
 			fn := cmd.RunE
 			cmd.RunE = func(cmd *cobra.Command, args []string) error {
