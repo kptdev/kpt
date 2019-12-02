@@ -20,13 +20,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/kpt/cmddesc"
-	"kpt.dev/kpt/cmdget"
-	"kpt.dev/kpt/cmdinit"
-	"kpt.dev/kpt/cmdman"
-	"kpt.dev/kpt/cmdsync"
-	"kpt.dev/kpt/cmdtutorials"
-	"kpt.dev/kpt/cmdupdate"
+	"kpt.dev/kpt/commands"
+	"kpt.dev/kpt/util/cmdutil"
 )
 
 const name = "kpt"
@@ -42,20 +37,16 @@ var cmd = &cobra.Command{
 }
 
 func main() {
-	// sorted lexicographically
-	cmd.AddCommand(cmddesc.NewCommand(name))
-	cmd.AddCommand(cmdget.NewCommand(name))
-	cmd.AddCommand(cmdinit.NewCommand(name))
-	cmd.AddCommand(cmdman.NewCommand(name))
-	cmd.AddCommand(cmdsync.NewCommand(name))
-	cmd.AddCommand(cmdupdate.NewCommand(name))
-
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	tutorials := cmdtutorials.Tutorials(name)
-	for i := range tutorials {
-		cmd.AddCommand(tutorials[i])
-	}
+	cmd.AddCommand(commands.GetCommands(name)...)
+
+	// enable stack traces
+	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
+		"print a stack-trace on failure")
+
+	// exit on an error
+	cmdutil.ExitOnError = true
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)

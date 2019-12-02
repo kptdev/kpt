@@ -21,6 +21,7 @@ import (
 	"kpt.dev/kpt/util/get"
 	"lib.kpt.dev/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
@@ -59,12 +60,12 @@ func errorIfChanged(g kptfile.Git, pkgPath string) error {
 	}
 	err := get.ClonerUsingGitExec(original)
 	if err != nil {
-		return fmt.Errorf("failed cloning git repo: %v", err)
+		return errors.Errorf("failed cloning git repo: %v", err)
 	}
 	defer os.RemoveAll(original.AbsPath())
 	diff, err := copyutil.Diff(original.AbsPath(), pkgPath)
 	if err != nil {
-		return fmt.Errorf("failed to compare local package to original source: %v", err)
+		return errors.Errorf("failed to compare local package to original source: %v", err)
 	}
 
 	diff = diff.Difference(kptfileSet)

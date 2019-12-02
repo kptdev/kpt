@@ -27,6 +27,7 @@ import (
 	"kpt.dev/kpt/util/cmdutil"
 	"kpt.dev/kpt/util/get"
 	"kpt.dev/kpt/util/get/getioreader"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
@@ -67,10 +68,10 @@ type Runner struct {
 // getURIAndVersion parses the repo+pkgURI and the version from v
 func getURIAndVersion(v string) (string, string, error) {
 	if strings.Count(v, "://") > 1 {
-		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
+		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
 	if strings.Count(v, "@") > 2 {
-		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
+		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
 	pkgURI := strings.SplitN(v, "@", 2)
 	if len(pkgURI) == 1 {
@@ -83,13 +84,13 @@ func getURIAndVersion(v string) (string, string, error) {
 func getRepoAndPkg(v string) (string, string, error) {
 	parts := strings.SplitN(v, "://", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
+		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
 
 	if strings.HasPrefix(parts[1], "github.com") {
 		repoSubdir := append(strings.Split(parts[1], "/"), "/")
 		if len(repoSubdir) < 4 {
-			return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
+			return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 		}
 		repo := parts[0] + "://" + path.Join(repoSubdir[:3]...)
 		dir := path.Join(repoSubdir[3:]...)
@@ -97,7 +98,7 @@ func getRepoAndPkg(v string) (string, string, error) {
 	}
 
 	if strings.Count(v, ".git/") != 1 && !strings.HasSuffix(v, ".git") {
-		return "", "", fmt.Errorf("ambiguous repo/dir@version specify '.git' in argument")
+		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
 	}
 
 	if strings.HasSuffix(v, ".git") || strings.HasSuffix(v, ".git/") {
@@ -118,14 +119,14 @@ func getDest(v, repo, subdir string) (string, error) {
 		parent := filepath.Dir(v)
 		if _, err := os.Stat(parent); os.IsNotExist(err) {
 			// error -- fetch to directory where parent does not exist
-			return "", fmt.Errorf("parent directory %s does not exist", parent)
+			return "", errors.Errorf("parent directory %s does not exist", parent)
 		}
 		// fetch to a specific directory -- don't default the name
 		return v, nil
 	}
 
 	if !f.IsDir() {
-		return "", fmt.Errorf("LOCAL_PKG_DEST must be a directory")
+		return "", errors.Errorf("LOCAL_PKG_DEST must be a directory")
 	}
 
 	// LOCATION EXISTS
@@ -136,7 +137,7 @@ func getDest(v, repo, subdir string) (string, error) {
 
 	// make sure the destination directory does not yet exist yet
 	if _, err := os.Stat(v); !os.IsNotExist(err) {
-		return "", fmt.Errorf("destination directory %s already exists", v)
+		return "", errors.Errorf("destination directory %s already exists", v)
 	}
 	return v, nil
 }

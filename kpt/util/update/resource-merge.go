@@ -15,7 +15,6 @@
 package update
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -23,6 +22,7 @@ import (
 	"kpt.dev/kpt/util/get"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
@@ -39,14 +39,14 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	// get the original repo
 	original := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Commit}
 	if err := get.ClonerUsingGitExec(original); err != nil {
-		return fmt.Errorf("failed to clone git repo: original source: %v", err)
+		return errors.Errorf("failed to clone git repo: original source: %v", err)
 	}
 	defer os.RemoveAll(original.AbsPath())
 
 	// get the updated repo
 	updated := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: options.ToRef}
 	if err := get.ClonerUsingGitExec(updated); err != nil {
-		return fmt.Errorf("failed to clone git repo: updated source: %v", err)
+		return errors.Errorf("failed to clone git repo: updated source: %v", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
 

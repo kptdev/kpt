@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // RepoCacheDirEnv is the name of the environment variable that controls the cache directory
@@ -80,7 +80,7 @@ type GitRunner struct {
 func (g *GitRunner) Run(args ...string) error {
 	p, err := exec.LookPath("git")
 	if err != nil {
-		return errors.Wrap(err, "no 'git' program on path")
+		return errors.WrapPrefixf(err, "no 'git' program on path")
 	}
 
 	cmd := exec.Command(p, args...)
@@ -120,7 +120,7 @@ func (g *GitRunner) getRepoCacheDir() (string, error) {
 	// cache location unspecified, use UserHomeDir/.kpt/repos
 	dir, err = os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf(
+		return "", errors.Errorf(
 			"failed to clone repo: trouble resolving cache directory: %v", err)
 	}
 	return filepath.Join(dir, ".kpt", "repos"), nil
@@ -133,7 +133,7 @@ func (g *GitRunner) cacheRepo(uri, dir string, refs []string) (string, error) {
 		return "", err
 	}
 	if err := os.MkdirAll(kptCacheDir, 0700); err != nil {
-		return "", fmt.Errorf(
+		return "", errors.Errorf(
 			"failed to clone repo: trouble creating cache directory: %v", err)
 	}
 
@@ -143,11 +143,11 @@ func (g *GitRunner) cacheRepo(uri, dir string, refs []string) (string, error) {
 	repoCacheDir := filepath.Join(kptCacheDir, uriSha)
 	if _, err := os.Stat(repoCacheDir); os.IsNotExist(err) {
 		if err := gitRunner.Run("init", uriSha); err != nil {
-			return "", fmt.Errorf("failed to clone repo: trouble running init: %v", err)
+			return "", errors.Errorf("failed to clone repo: trouble running init: %v", err)
 		}
 		gitRunner.Dir = repoCacheDir
 		if err = gitRunner.Run("remote", "add", "origin", uri); err != nil {
-			return "", fmt.Errorf("failed to clone repo: trouble adding origin: %v", err)
+			return "", errors.Errorf("failed to clone repo: trouble adding origin: %v", err)
 		}
 	} else {
 		gitRunner.Dir = repoCacheDir
@@ -156,22 +156,22 @@ func (g *GitRunner) cacheRepo(uri, dir string, refs []string) (string, error) {
 	// fetch the specified refs
 	for _, s := range refs {
 		if err = gitRunner.Run("fetch", "origin", s); err != nil {
-			return "", fmt.Errorf(
+			return "", errors.Errorf(
 				"failed to clone git repo: trouble fetching origin %s: %v", s, err)
 		}
 	}
 	if err = gitRunner.Run("fetch", "origin"); err != nil {
-		return "", fmt.Errorf("failed to clone git repo: trouble fetching origin: %v", err)
+		return "", errors.Errorf("failed to clone git repo: trouble fetching origin: %v", err)
 	}
 
 	// reset the repo state
 	if err = gitRunner.Run("checkout", "master"); err != nil {
-		return "", fmt.Errorf("failed to clone repo: trouble checking out master: %v", err)
+		return "", errors.Errorf("failed to clone repo: trouble checking out master: %v", err)
 	}
 
 	// TODO: make this safe for concurrent operations
 	if err = gitRunner.Run("reset", "--hard", "origin/master"); err != nil {
-		return "", fmt.Errorf("failed to clone repo: trouble reset to master: %v", err)
+		return "", errors.Errorf("failed to clone repo: trouble reset to master: %v", err)
 	}
 	gitRunner.Dir = filepath.Join(repoCacheDir, dir)
 	return repoCacheDir, nil

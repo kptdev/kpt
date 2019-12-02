@@ -25,10 +25,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/v3/pkg/fs"
 	"sigs.k8s.io/kustomize/v3/pkg/git"
@@ -57,7 +57,7 @@ func (c Command) Run() error {
 	}
 
 	if _, err := os.Stat(c.Destination); !c.Clean && !os.IsNotExist(err) {
-		return fmt.Errorf("destination directory %s already exists", c.Destination)
+		return errors.Errorf("destination directory %s already exists", c.Destination)
 	}
 
 	// normalize path to a filepath
@@ -76,7 +76,7 @@ func (c Command) Run() error {
 	// delete the tmp directory later.
 	err := ClonerUsingGitExec(r)
 	if err != nil {
-		return fmt.Errorf("failed to clone git repo: %v", err)
+		return errors.Errorf("failed to clone git repo: %v", err)
 	}
 	defer os.RemoveAll(r.AbsPath())
 
@@ -110,7 +110,7 @@ type Cloner func(repoSpec *git.RepoSpec) error
 func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
-		return errors.Wrap(err, "no 'git' program on path")
+		return errors.WrapPrefixf(err, "no 'git' program on path")
 	}
 	repoSpec.Dir, err = fs.NewTmpConfirmedDir()
 	if err != nil {
@@ -126,7 +126,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	err = cmd.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error initializing empty git repo: %s", out.String())
-		return errors.Wrapf(
+		return errors.WrapPrefixf(
 			err,
 			"trouble initializing empty git repo in %s",
 			repoSpec.Dir.String())
@@ -144,7 +144,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	err = cmd.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error setting git remote: %s", out.String())
-		return errors.Wrapf(
+		return errors.WrapPrefixf(
 			err,
 			"trouble adding remote %s",
 			repoSpec.CloneSpec())
@@ -165,7 +165,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		cmd.Dir = repoSpec.Dir.String()
 		err = cmd.Run()
 		if err != nil {
-			return errors.Wrapf(err, "trouble fetching %s", repoSpec.Ref)
+			return errors.WrapPrefixf(err, "trouble fetching %s", repoSpec.Ref)
 		}
 		cmd = exec.Command(
 			gitProgram,
@@ -176,7 +176,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		cmd.Dir = repoSpec.Dir.String()
 		err = cmd.Run()
 		if err != nil {
-			return errors.Wrapf(
+			return errors.WrapPrefixf(
 				err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
 		}
 		return nil
@@ -187,14 +187,14 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		cmd.Stderr = &out
 		cmd.Dir = repoSpec.Dir.String()
 		if err = cmd.Run(); err != nil {
-			return errors.Wrapf(err, "trouble fetching origin")
+			return errors.WrapPrefixf(err, "trouble fetching origin")
 		}
 		cmd = exec.Command(gitProgram, "reset", "--hard", repoSpec.Ref)
 		cmd.Stdout = &out
 		cmd.Stderr = &out
 		cmd.Dir = repoSpec.Dir.String()
 		if err = cmd.Run(); err != nil {
-			return errors.Wrapf(
+			return errors.WrapPrefixf(
 				err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
 		}
 	}
@@ -209,7 +209,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	cmd.Dir = repoSpec.Dir.String()
 	err = cmd.Run()
 	if err != nil {
-		return errors.Wrapf(err, "trouble fetching submodules for %s", repoSpec.Ref)
+		return errors.WrapPrefixf(err, "trouble fetching submodules for %s", repoSpec.Ref)
 	}
 
 	return nil
@@ -218,16 +218,16 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 // DefaultValues sets values to the default values if they were unspecified
 func (c *Command) DefaultValues() error {
 	if len(c.Repo) == 0 {
-		return fmt.Errorf("must specify repo")
+		return errors.Errorf("must specify repo")
 	}
 	if len(c.Ref) == 0 {
-		return fmt.Errorf("must specify ref")
+		return errors.Errorf("must specify ref")
 	}
 	if len(c.Destination) == 0 {
-		return fmt.Errorf("must specify destination")
+		return errors.Errorf("must specify destination")
 	}
 	if len(c.Directory) == 0 {
-		return fmt.Errorf("must specify remote subdirectory")
+		return errors.Errorf("must specify remote subdirectory")
 	}
 
 	// default the name to the destination name

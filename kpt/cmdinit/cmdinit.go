@@ -27,6 +27,7 @@ import (
 	"kpt.dev/kpt/generated"
 	"kpt.dev/kpt/util/cmdutil"
 	"lib.kpt.dev/kptfile"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -78,7 +79,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 func (r *Runner) runE(c *cobra.Command, args []string) error {
 	var err error
 	if _, err = os.Stat(args[0]); os.IsNotExist(err) {
-		return fmt.Errorf("%s does not exist", err)
+		return errors.Errorf("%s does not exist", err)
 	}
 
 	if _, err = os.Stat(filepath.Join(args[0], "Kptfile")); os.IsNotExist(err) {

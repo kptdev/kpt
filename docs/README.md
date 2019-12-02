@@ -14,6 +14,7 @@
 - [desc](commands/desc.md): Display package descriptions
 - [get](commands/get.md): Fetch a package from a git repository
 - [man](commands/man.md): Format and display package documentation if it exists
+- [sync](commands/sync.md): Fetch dependencies using a manifest rather than commands
 - [update](commands/update.md): Update a local package with changes from a remote source repo
 
 ## Tutorials

@@ -18,6 +18,8 @@ package argutil
 import (
 	"fmt"
 	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 var ErrMultiVersion = fmt.Errorf("at most 1 version permitted")
@@ -75,7 +77,7 @@ func ParseFieldPath(path string) ([]string, error) {
 		}
 		p := strings.Split(parts[i], "[")
 		if len(p) != 2 {
-			return nil, fmt.Errorf("unrecognized path element: %s.  "+
+			return nil, errors.Errorf("unrecognized path element: %s.  "+
 				"Should be of the form 'list[field=value]'", parts[i])
 		}
 		p[1] = "[" + p[1]

@@ -17,7 +17,6 @@
 package man
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/cpuguy83/go-md2man/md2man"
 	"lib.kpt.dev/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // Command displays local package documentation as man pages.
@@ -51,7 +51,7 @@ type Command struct {
 func (m Command) Run() error {
 	_, err := exec.LookPath(m.GetExecCmd())
 	if err != nil {
-		return fmt.Errorf(m.GetExecCmd() + " not installed")
+		return errors.Errorf(m.GetExecCmd() + " not installed")
 	}
 
 	// lookup the path to the man page
@@ -62,7 +62,7 @@ func (m Command) Run() error {
 	if k.PackageMeta.Man == "" {
 		_, err := os.Stat(filepath.Join(m.Path, "MAN.md"))
 		if err != nil {
-			return fmt.Errorf("no manual entry for %s", m.Path)
+			return errors.Errorf("no manual entry for %s", m.Path)
 		}
 		k.PackageMeta.Man = filepath.Join("MAN.md")
 	}
@@ -81,7 +81,7 @@ func (m Command) Run() error {
 		return err
 	}
 	if !strings.HasPrefix(apMan, apPkg) {
-		return fmt.Errorf("invalid manual location for %s", m.Path)
+		return errors.Errorf("invalid manual location for %s", m.Path)
 	}
 
 	// write the formatted manual to a tmp file so it can be displayed

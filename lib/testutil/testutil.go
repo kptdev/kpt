@@ -30,6 +30,7 @@ import (
 	"lib.kpt.dev/gitutil"
 	"lib.kpt.dev/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -202,7 +203,7 @@ func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 	// configure the path to the test dataset
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
-		return fmt.Errorf("failed to testutil package location")
+		return errors.Errorf("failed to testutil package location")
 	}
 	ds, err := filepath.Abs(filepath.Join(filepath.Dir(filename), "testdata"))
 	if err != nil {

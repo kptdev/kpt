@@ -16,7 +16,6 @@
 package update
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,6 +24,7 @@ import (
 	"lib.kpt.dev/gitutil"
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 type UpdateOptions struct {
@@ -127,16 +127,16 @@ func (u Command) Run() error {
 	}
 
 	if filepath.IsAbs(u.Path) {
-		return fmt.Errorf("package path must be relative")
+		return errors.Errorf("package path must be relative")
 	}
 	u.Path = filepath.Clean(u.Path)
 	if strings.HasPrefix(u.Path, "../") {
-		return fmt.Errorf("package path must be under current working directory")
+		return errors.Errorf("package path must be under current working directory")
 	}
 
 	kptfile, err := kptfileutil.ReadFileStrict(u.Path)
 	if err != nil {
-		return fmt.Errorf("unable to read package Kptfile: %v", err)
+		return errors.Errorf("unable to read package Kptfile: %v", err)
 	}
 
 	// default arguments
@@ -150,17 +150,17 @@ func (u Command) Run() error {
 	// require package is checked into git before trying to update it
 	g := gitutil.NewLocalGitRunner("./")
 	if err := g.Run("status", "-s", u.Path); err != nil {
-		return fmt.Errorf("unable to run `git status` on package: %v", err)
+		return errors.Errorf("unable to run `git status` on package: %v", err)
 	}
 	if strings.TrimSpace(g.Stdout.String()) != "" {
-		return fmt.Errorf("must commit package %s to git before attempting to update",
+		return errors.Errorf("must commit package %s to git before attempting to update",
 			u.Path)
 	}
 
 	// update
 	updater, found := strategies[u.Strategy]
 	if !found {
-		return fmt.Errorf("unrecognized update strategy %s", u.Strategy)
+		return errors.Errorf("unrecognized update strategy %s", u.Strategy)
 	}
 	return updater().Update(UpdateOptions{
 		KptFile:       kptfile,

@@ -28,6 +28,7 @@ import (
 	"lib.kpt.dev/kptfile"
 	"lib.kpt.dev/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // DiffType represents type of comparison to be performed.
@@ -97,13 +98,13 @@ func (c *Command) Run() error {
 
 	kptFile, err := kptfileutil.ReadFile(c.Path)
 	if err != nil {
-		return fmt.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
+		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
 
 	// Stage current package
 	currPkg, err := ioutil.TempDir("", "kpt-")
 	if err != nil {
-		return fmt.Errorf("failed to create stage dir for current package: %v", err)
+		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
 	defer func() {
 		if !c.Debug {
@@ -113,7 +114,7 @@ func (c *Command) Run() error {
 
 	err = copyutil.CopyDir(c.Path, currPkg)
 	if err != nil {
-		return fmt.Errorf("failed to stage current package: %v", err)
+		return errors.Errorf("failed to stage current package: %v", err)
 	}
 
 	// get the upstreamPkg at current version
@@ -163,7 +164,7 @@ func (c *Command) Run() error {
 	case DiffType3Way:
 		return c.PkgDiffer.Diff(currPkg, upstreamPkg, upstreamTargetPkg)
 	default:
-		return fmt.Errorf("unsupported diff type '%s'", c.DiffType)
+		return errors.Errorf("unsupported diff type '%s'", c.DiffType)
 	}
 }
 
@@ -171,13 +172,13 @@ func (c *Command) Validate() error {
 	switch c.DiffType {
 	case DiffTypeLocal, DiffTypeCombined, DiffTypeRemote, DiffType3Way:
 	default:
-		return fmt.Errorf("invalid diff-type '%s'. Supported diff-types are: %s",
+		return errors.Errorf("invalid diff-type '%s'. Supported diff-types are: %s",
 			c.DiffType, SupportedDiffTypesLabel())
 	}
 
 	path, err := exec.LookPath(c.DiffTool)
 	if err != nil {
-		return fmt.Errorf("diff-tool '%s' not found in the PATH.", c.DiffTool)
+		return errors.Errorf("diff-tool '%s' not found in the PATH.", c.DiffTool)
 	}
 	c.DiffTool = path
 	return nil

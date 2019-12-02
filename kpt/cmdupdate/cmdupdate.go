@@ -23,6 +23,7 @@ import (
 	"kpt.dev/kpt/generated"
 	"kpt.dev/kpt/util/cmdutil"
 	"kpt.dev/kpt/util/update"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // NewRunner returns a command runner.
@@ -68,7 +69,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	r.Update.Strategy = update.StrategyType(r.strategy)
 	parts := strings.Split(args[0], "@")
 	if len(parts) > 2 {
-		return fmt.Errorf("at most 1 version permitted")
+		return errors.Errorf("at most 1 version permitted")
 	}
 	r.Update.Path = parts[0]
 	if len(parts) > 1 {

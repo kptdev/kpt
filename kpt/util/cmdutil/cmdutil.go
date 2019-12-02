@@ -15,9 +15,17 @@
 package cmdutil
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
+	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
+)
+
+const (
+	SilenceErrorsEnv   = "COBRA_SILENCE_ERRORS"
+	StackTraceOnErrors = "COBRA_STACK_TRACE_ON_ERRORS"
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -27,3 +35,35 @@ func FixDocs(old, new string, c *cobra.Command) {
 	c.Long = strings.ReplaceAll(c.Long, old, new)
 	c.Example = strings.ReplaceAll(c.Example, old, new)
 }
+
+func SetSilenceErrors(c *cobra.Command) {
+	e := os.Getenv(SilenceErrorsEnv)
+	if e == "true" || e == "1" {
+		c.SilenceErrors = true
+	}
+}
+
+func HandleError(c *cobra.Command, err error) error {
+	if err == nil {
+		return nil
+	}
+	e := os.Getenv(StackTraceOnErrors)
+	if StackOnError || e == "true" || e == "1" {
+		if err, ok := err.(*errors.Error); ok {
+			fmt.Fprint(os.Stderr, fmt.Sprintf("%s", err.Stack()))
+		}
+	}
+
+	if ExitOnError {
+		fmt.Fprintf(c.ErrOrStderr(), "Error: %v\n", err)
+		os.Exit(1)
+	}
+	return err
+}
+
+// ExitOnError if true, will cause commands to call os.Exit instead of returning an error.
+// Used for skipping printing usage on failure.
+var ExitOnError bool
+
+// StackOnError if true, will print a stack trace on failure.
+var StackOnError bool
