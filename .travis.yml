@@ -15,8 +15,7 @@
 dist: xenial
 
 language: go
-go: "1.12.x"
-go_import_path: /skaffold
+go: "1.13.x"
 
 git:
   submodules: false
@@ -41,5 +40,5 @@ jobs:
         - GO111MODULE=on
         - GOFLAGS="-mod=vendor"
       script:
-	- make
+	- make all
 

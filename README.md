@@ -3,17 +3,11 @@
 Managed Kubernetes Configuration as *Data* using a GitOps workflow.
 
 - Publish and Consume Configuration Packages -- using both public and private repos
-- Customize local package copies
 - Merge upstream updates into local packages
-- Works with both raw configuration packages (e.g. kubectl apply-able packages) and packages
-  generated from DSLs (e.g. Helm charts)
+- Works with both raw configuration packages (e.g. things that work with `kubectl apply -f`)
+  and packages written in DSLs (e.g. Terraform)
 
 ## Community
-
-**Important:** KPT has not publicly launched, and is confidential to a group of whitelisted EAP
-users. Group membership at this time is invite only.
-
-<!-- TODO: add a kubernetes slack channel after we launch publicly -- could just be sig-cli -->
 
 **We'd love to hear from you!**
 
@@ -41,28 +35,20 @@ Containers:
 
 From Source:
 
-<!-- TODO: change this to `go get kpt.dev@0.1.0` when the domain is setup and the repo is public-->
-
-**Note: requires go 1.12 or higher**
+**Note: requires go 1.13 or higher**
 
 ```sh
-# must be go 1.12 or higher
+# must be go 1.13 or higher
 go version
 ```
 
 ```sh
-# clone the repo
-git clone git@github.com:GoogleContainerTools/kpt
+GO111MODULE=on go get  github.com/GoogleContainerTools/kpt
 ```
 
 ```sh
-# build the command
-export GO111MODULE=on
-cd kpt/kpt
-go build .
-
 # run the command
-./kpt help
+$(go env GOPATH)/bin/kpt help
 ```
 
 ## Documentation
@@ -73,7 +59,16 @@ All documentation is built directly into the command binary and can be accessed 
 Built-in documentation has also been rendered as markdown files for friendly web viewing:
 [docs](docs/README.md)
 
+## Build from Source
+
+```sh
+# build the binary
+make build
+
+# generate code, perform linting, etc
+make all
+```
+
 ## Lead Developers
 
 - Phillip Wittrock @pwittrock -- Kubernetes kubectl / sig-cli TL (Google)
-

@@ -15,45 +15,37 @@
 .PHONY: generate license fix vet fmt lint test build tidy
 
 GOBIN := $(shell go env GOPATH)/bin
-GOPATH := $(shell go env GOPATH)
 
 build:
-	(cd kpt/ && go build -o $(GOPATH)/bin/kpt -v .)
+	go build -o $(GOPATH)/bin/kpt -v .
 
 all: generate license fix vet fmt lint test build tidy
 
 fix:
-	(cd kpt/ && go fix ./...)
-	(cd lib/ &&  go fix ./... )
+	go fix ./...
 
 fmt:
-	(cd kpt/ && go fmt ./...)
-	(cd lib/ &&  go fmt ./... )
+	go fmt ./...
 
 generate:
 	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
 	rm -rf kpt/cmdtutorials/generated
 	rm -rf kpt/generated
-	(cd kpt/ && GOBIN=$(GOBIN) go generate ./...)
-	(cd lib/ && GOBIN=$(GOBIN) go generate ./...)
+	GOBIN=$(GOBIN) go generate ./...
 
 tidy:
-	(cd kpt/ && go mod tidy)
-	(cd lib/ && go mod tidy)
+	go mod tidy
 
 license:
 	(which addlicense || go get github.com/google/addlicense)
-	$(GOPATH)/bin/addlicense  -y 2019 -l apache .
+	$(GOBIN)/addlicense  -y 2019 -l apache .
 
 lint:
 	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0)
-	(cd kpt/ && $(GOPATH)/bin/golangci-lint run ./...)
-	(cd lib/ && $(GOPATH)/bin/golangci-lint run ./...)
+	$(GOBIN)/golangci-lint run ./...
 
 test:
-	(cd kpt/ && go test -cover ./...)
-	(cd lib/ && go test -cover ./...)
+	go test -cover ./...
 
 vet:
-	(cd kpt/ && go vet ./...)
-	(cd lib/ &&  go vet ./... )
+	go vet ./...
