@@ -35,7 +35,7 @@ func TestCmd_execute(t *testing.T) {
 	// write the KptFile
 	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
-kind: KptFile
+kind: Kptfile
 metadata:
   name: java
 packageMetadata:
@@ -172,7 +172,7 @@ func TestCmd_execute_manNotSpecified(t *testing.T) {
 	// write the KptFile
 	err = ioutil.WriteFile(filepath.Join(d, "pkg", kptfile.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
-kind: KptFile
+kind: Kptfile
 metadata:
   name: java
 `), 0600)

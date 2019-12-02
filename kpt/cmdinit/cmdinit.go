@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cmdbless contains the bless command
-package cmdbless
+// Package cmdinit contains the init command
+package cmdinit
 
 import (
 	"bytes"
@@ -34,11 +34,11 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:     "bless DIR",
+		Use:     "init DIR",
 		Args:    cobra.ExactArgs(1),
-		Short:   generated.BlessShort,
-		Long:    generated.BlessLong,
-		Example: generated.BlessExamples,
+		Short:   generated.InitShort,
+		Long:    generated.InitLong,
+		Example: generated.InitExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}

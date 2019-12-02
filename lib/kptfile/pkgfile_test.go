@@ -33,7 +33,7 @@ func TestReadFile(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", testutil.TmpDirPrefix))
 	assert.NoError(t, err)
 	err = ioutil.WriteFile(filepath.Join(dir, KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
-kind: KptFile
+kind: Kptfile
 metadata:
   name: cockroachdb
 upstream:
@@ -70,7 +70,7 @@ func TestReadFile_failRead(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", testutil.TmpDirPrefix))
 	assert.NoError(t, err)
 	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha1
-kind: KptFile
+kind: Kptfile
 metadata:
   name: cockroachdb
 upstream:
@@ -94,7 +94,7 @@ func TestReadFile_failUnmarshal(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", testutil.TmpDirPrefix))
 	assert.NoError(t, err)
 	err = ioutil.WriteFile(filepath.Join(dir, KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
-kind: KptFile
+kind: Kptfile
 metadata:
   name: cockroachdb
 upstreamBadField:

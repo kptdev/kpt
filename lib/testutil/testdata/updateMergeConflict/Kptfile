@@ -1,5 +1,5 @@
 apiVersion: kpt.dev/v1alpha1
-kind: KptFile
+kind: Kptfile
 metadata:
     name: test-kpt-upstream-307571298
 upstream:

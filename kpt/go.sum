@@ -159,4 +159,5 @@ sigs.k8s.io/kustomize/kyaml v0.0.0-20191113193121-24f3d7556f20/go.mod h1:rywm/rc
 sigs.k8s.io/kustomize/v3 v3.2.0 h1:EKcEubO29vCbigcMoNynfyZH+ANWkML2UHWibt1Do7o=
 sigs.k8s.io/kustomize/v3 v3.2.0/go.mod h1:ztX4zYc/QIww3gSripwF7TBOarBTm5BvyAMem0kCzOE=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
+sigs.k8s.io/yaml v1.1.0 h1:4A07+ZFc2wgJwo8YNlQpr1rVlgUDlxXHhPJciaPY5gs=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=

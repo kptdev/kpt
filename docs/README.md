@@ -10,7 +10,7 @@
     
 ## Commands
 
-- [bless](commands/bless.md): Initialize suggested package meta for a local config directory
+- [init](commands/init.md): Initialize suggested package meta for a local config directory
 - [desc](commands/desc.md): Display package descriptions
 - [get](commands/get.md): Fetch a package from a git repository
 - [man](commands/man.md): Format and display package documentation if it exists

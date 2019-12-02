@@ -20,10 +20,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"kpt.dev/kpt/cmdbless"
 	"kpt.dev/kpt/cmddesc"
 	"kpt.dev/kpt/cmdget"
+	"kpt.dev/kpt/cmdinit"
 	"kpt.dev/kpt/cmdman"
+	"kpt.dev/kpt/cmdsync"
 	"kpt.dev/kpt/cmdtutorials"
 	"kpt.dev/kpt/cmdupdate"
 )
@@ -44,8 +45,9 @@ func main() {
 	// sorted lexicographically
 	cmd.AddCommand(cmddesc.NewCommand(name))
 	cmd.AddCommand(cmdget.NewCommand(name))
-	cmd.AddCommand(cmdbless.NewCommand(name))
+	cmd.AddCommand(cmdinit.NewCommand(name))
 	cmd.AddCommand(cmdman.NewCommand(name))
+	cmd.AddCommand(cmdsync.NewCommand(name))
 	cmd.AddCommand(cmdupdate.NewCommand(name))
 
 	// help and documentation
