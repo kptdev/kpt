@@ -35,6 +35,10 @@ Binaries:
 - https://storage.cloud.google.com/kpt-dev/kpt.master_linux_amd64
 - https://storage.cloud.google.com/kpt-dev/kpt.master_windows_amd64
 
+Containers:
+
+- gcr.io/kpt-dev/kpt
+
 From Source:
 
 <!-- TODO: change this to `go get kpt.dev@0.1.0` when the domain is setup and the repo is public-->
