@@ -43,7 +43,8 @@ func NewRunner(parent string) *Runner {
 	c.Flags().StringVarP(&r.Update.Repo, "repo", "r", "",
 		"git repo url for updating contents.  defaults to the repo the package was fetched from.")
 	c.Flags().StringVar(&r.strategy, "strategy", string(update.FastForward),
-		"update strategy for preserving changes to the local package.")
+		"update strategy for preserving changes to the local package -- must be one of: "+
+			strings.Join(update.Strategies, ","))
 	c.Flags().BoolVar(&r.Update.DryRun, "dry-run", false,
 		"print the git patch rather than merging it.")
 	c.Flags().BoolVar(&r.Update.Verbose, "verbose", false,

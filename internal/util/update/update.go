@@ -92,6 +92,10 @@ const (
 	Default StrategyType = ""
 )
 
+var Strategies = []string{
+	string(FastForward), string(ForceDeleteReplace), string(AlphaGitPatch), string(KResourceMerge),
+}
+
 // Command updates the contents of a local package to a different version.
 type Command struct {
 	// Path is the filepath to the local package
