@@ -15,6 +15,7 @@
 package commands
 
 import (
+	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
@@ -29,6 +30,7 @@ import (
 // GetCommands returns the set of kpt commands to be registered
 func GetCommands(name string) []*cobra.Command {
 	c := []*cobra.Command{
+		cmdcomplete.NewCommand(name),
 		cmddesc.NewCommand(name),
 		cmdget.NewCommand(name),
 		cmdinit.NewCommand(name),

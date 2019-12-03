@@ -18,8 +18,10 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/commands"
+	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
@@ -43,6 +45,18 @@ func main() {
 
 	// exit on an error
 	cmdutil.ExitOnError = true
+
+	// bash shell completion passes the command name as the first argument
+	// do this after configuring cmd so it has all the subcommands
+	if len(os.Args) > 1 {
+		// use the base name in case kpt is called with an absolute path
+		name := filepath.Base(os.Args[1])
+		if name == "kpt" {
+			// complete calls kpt with itself as an argument
+			cmdcomplete.Complete(cmd).Complete("kpt")
+			os.Exit(0)
+		}
+	}
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
