@@ -17,7 +17,10 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/commands"
@@ -58,7 +61,48 @@ func main() {
 		}
 	}
 
+	if val, found := os.LookupEnv("KPT_NO_PAGER_HELP"); !found || val != "1" {
+		// use a pager for printing tutorials
+		e, found := os.LookupEnv("PAGER")
+		var err error
+		if !found {
+			e, err = exec.LookPath("pager")
+			if err != nil {
+				e, err = exec.LookPath("less")
+				if err != nil {
+					return
+				}
+			}
+		}
+		for i := range cmd.Commands() {
+			replace(cmd.Commands()[i], e)
+		}
+	}
+
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
+	}
+}
+
+func replace(c *cobra.Command, e string) {
+	for i := range c.Commands() {
+		replace(c.Commands()[i], e)
+	}
+	c.SetHelpFunc(newHelp(e, c))
+}
+
+func newHelp(e string, c *cobra.Command) func(command *cobra.Command, strings []string) {
+	fn := c.HelpFunc()
+	return func(command *cobra.Command, strings []string) {
+		b := &bytes.Buffer{}
+		pager := exec.Command(e)
+		pager.Stdin = b
+		pager.Stdout = c.OutOrStdout()
+		c.SetOut(b)
+		fn(command, strings)
+		if err := pager.Run(); err != nil {
+			fmt.Fprintf(c.ErrOrStderr(), "%v", err)
+			os.Exit(1)
+		}
 	}
 }
