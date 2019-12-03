@@ -1,6 +1,6 @@
 ## Publish a Package
 
-This tutorial covers how to publish a package to a remote source.
+How to publish a package to a remote source
 
 ### Synopsis
 

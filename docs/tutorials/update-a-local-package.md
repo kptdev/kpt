@@ -1,21 +1,21 @@
 ## tutorials 2-update-a-local-package
 
-This tutorial covers how to fetch a package from a remote source.
+How to update a package version from a remote source
 
 ### Synopsis
 
-Local packages may be updated with upstream package changes.
+  Local packages may be updated by rebasing them on top of upstream changes.
+  Multiple strategies are supported for merging in updates.
+  Run `kpt help update` for the list of supported update strategies
 
-- Updates may be merged using different strategies
-  - Run 'kpt help update' for the list of supported update strategies
-- If no new revision is specified in the update, and the source was a branch, then the package
-  will be updated to the tip of that branch.
-- The local package must be committed to git be updated 
-- Updates to packages generated from stdin are not yet supported
+  - If no new revision is specified in the update, and the source was a branch, then the package
+    will be updated to the tip of that branch.
+  - The local package must be committed to git be updated 
+  - Updates to packages generated from stdin are not yet supported
 
 ## Update an unchanged package
 
-  Stage the package to be updated
+  Prepare the package to be updated
 
 	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
@@ -24,7 +24,7 @@ Local packages may be updated with upstream package changes.
 
   NOTE: the diff viewer can be controlled by setting KPT_EXTERNAL_DIFF --
   'export KPT_EXTERNAL_DIFF=my-differ'.
-  See 'kpt help diff' for more options.
+  See `kpt help diff` for more options.
 
 	kpt diff cockroachdb/@v1.1.0 --diff-type remote
 	diff ...
@@ -44,7 +44,7 @@ Local packages may be updated with upstream package changes.
 	kpt update cockroachdb@v1.1.0
 	git diff cockroachdb/
 
-  The updates are unstaged and must be committed.
+  The updates have not been staged by kpt.
 
 ## Updating merging remote changes with local changes
 
