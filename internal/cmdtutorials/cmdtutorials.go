@@ -27,17 +27,12 @@ var tutorials = []*cobra.Command{
 		Long:  docs.FetchAPackageLong,
 	},
 	{
-		Use:   "tutorials-2-view",
-		Short: docs.WorkingWithLocalPackagesShort,
-		Long:  docs.WorkingWithLocalPackagesLong,
-	},
-	{
-		Use:   "tutorials-3-update",
+		Use:   "tutorials-2-update",
 		Short: docs.UpdateALocalPackageShort,
 		Long:  docs.UpdateALocalPackageLong,
 	},
 	{
-		Use:   "tutorials-4-publish",
+		Use:   "tutorials-3-publish",
 		Short: docs.PublishAPackageShort,
 		Long:  docs.PublishAPackageLong,
 	},
