@@ -184,15 +184,23 @@ var KptLong = `
   COBRA_STACK_TRACE_ON_ERRORS
   
     Set to true to print a stack trace on an error
+    
+  KPT_NO_PAGER_HELP
+
+    Set to true to print the help to the console directly instead of through
+    a pager (e.g. less)
 `
 var KptExamples = `
     # view kpt subcommands
     kpt help
+
+    # install tab completion
+    kpt install-completion
     
     # print the tutorial for fetching a package
     kpt help tutorials-1-get
     
-    # read the documentation on the get command
+    # read the get command documentation
     kpt help get`
 
 var ManShort = `Format and display package documentation if it exists`

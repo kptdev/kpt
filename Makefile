@@ -29,8 +29,8 @@ fmt:
 
 generate:
 	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
-	rm -rf kpt/cmdtutorials/generated
-	rm -rf kpt/generated
+	rm -rf internal/docs/generated
+	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) go generate ./...
 
 tidy:

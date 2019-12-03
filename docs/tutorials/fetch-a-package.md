@@ -1,6 +1,6 @@
 ## Fetch a Package
 
-This tutorial covers how to fetch a package from a remote source.
+How to fetch a package from a remote source
 
 ### Synopsis
 
