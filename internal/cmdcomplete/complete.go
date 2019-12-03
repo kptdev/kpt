@@ -21,6 +21,7 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/posener/complete/v2"
 	"github.com/posener/complete/v2/predict"
 	"github.com/spf13/cobra"
@@ -87,6 +88,14 @@ func Complete(cmd *cobra.Command) *complete.Command {
 		cc.Sub[name] = Complete(c)
 	}
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+		if flag.Name == "strategy" {
+			cc.Flags[flag.Name] = predict.Options(predict.OptValues(update.Strategies...))
+			return
+		}
+		if flag.Name == "pattern" {
+			cc.Flags[flag.Name] = predict.Options(predict.OptValues("%n_%k.yaml"))
+			return
+		}
 		cc.Flags[flag.Name] = predict.Nothing
 	})
 
