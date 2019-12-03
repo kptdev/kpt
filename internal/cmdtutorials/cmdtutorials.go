@@ -15,10 +15,49 @@
 package cmdtutorials
 
 import (
+	"bytes"
+	"fmt"
+	"os"
+	"os/exec"
+
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/tutorials"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
+
+func init() {
+	// use a pager for printing tutorials
+	cmd, found := os.LookupEnv("PAGER")
+	var err error
+	if !found {
+		cmd, err = exec.LookPath("pager")
+		if err != nil {
+			cmd, err = exec.LookPath("less")
+			if err != nil {
+				return
+			}
+		}
+	}
+	for i := range tutorials {
+		tutorials[i].SetHelpFunc(newHelp(cmd, tutorials[i]))
+	}
+}
+
+func newHelp(cmd string, c *cobra.Command) func(command *cobra.Command, strings []string) {
+	fn := c.HelpFunc()
+	return func(command *cobra.Command, strings []string) {
+		b := &bytes.Buffer{}
+		pager := exec.Command(cmd)
+		pager.Stdin = b
+		pager.Stdout = c.OutOrStdout()
+		c.SetOut(b)
+		fn(command, strings)
+		if err := pager.Run(); err != nil {
+			fmt.Fprintf(c.ErrOrStderr(), "%v", err)
+			os.Exit(1)
+		}
+	}
+}
 
 var tutorials = []*cobra.Command{
 	{
@@ -27,17 +66,12 @@ var tutorials = []*cobra.Command{
 		Long:  docs.FetchAPackageLong,
 	},
 	{
-		Use:   "tutorials-2-view",
-		Short: docs.WorkingWithLocalPackagesShort,
-		Long:  docs.WorkingWithLocalPackagesLong,
-	},
-	{
-		Use:   "tutorials-3-update",
+		Use:   "tutorials-2-update",
 		Short: docs.UpdateALocalPackageShort,
 		Long:  docs.UpdateALocalPackageLong,
 	},
 	{
-		Use:   "tutorials-4-publish",
+		Use:   "tutorials-3-publish",
 		Short: docs.PublishAPackageShort,
 		Long:  docs.PublishAPackageLong,
 	},

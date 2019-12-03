@@ -1,6 +1,6 @@
-## tutorials 3-update-a-local-package
+## tutorials 2-update-a-local-package
 
-Update a previously fetched package 
+This tutorial covers how to fetch a package from a remote source.
 
 ### Synopsis
 
