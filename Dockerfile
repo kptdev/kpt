@@ -23,5 +23,9 @@ COPY . .
 RUN go build -v -o /usr/local/bin/kpt ./
 
 FROM alpine:latest
+RUN apk update && apk upgrade && \
+        apk add --no-cache git less man diffutils bash openssh && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm /var/cache/apk/*
 COPY --from=0 /usr/local/bin/kpt /usr/local/bin/kpt
 CMD ["kpt"]
