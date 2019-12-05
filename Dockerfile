@@ -16,6 +16,7 @@ FROM golang:1.13-stretch
 ENV CGO_ENABLED=0
 
 WORKDIR /go/src/
+RUN go get sigs.k8s.io/kustomize/kustomize
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
@@ -28,4 +29,5 @@ RUN apk update && apk upgrade && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 COPY --from=0 /usr/local/bin/kpt /usr/local/bin/kpt
+COPY --from=0 /go/bin/kustomize /usr/local/bin/kustomize
 CMD ["kpt"]
