@@ -37,9 +37,19 @@ var tutorials = []*cobra.Command{
 		Long:  docs.PublishAPackageLong,
 	},
 	{
+		Use:   "tutorials-4-solutions",
+		Short: docs.BuildingSolutionsShort,
+		Long:  docs.BuildingSolutionsLong,
+	},
+	{
 		Use:   "faq",
 		Short: docs.FaqShort,
 		Long:  docs.FaqLong,
+	},
+	{
+		Use:   "future-development",
+		Short: docs.FutureDevelopmentShort,
+		Long:  docs.FutureDevelopmentLong,
 	},
 }
 
