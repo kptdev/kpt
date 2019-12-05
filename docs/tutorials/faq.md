@@ -9,24 +9,25 @@ A: kpt is intended to be composed with other tools from the Kubernetes ecosystem
    was developed to complement the OSS Kubernetes project tooling such as
    `kubectl` and `kustomize`.
 
-Q: **How do I use kpt with the Kubernetes project tooling**
+Q: **How do I use kpt with the Kubernetes project tooling?**
 A: kpt may be used to publish, fetch and update configuration packaging.
-   The project tooling may be used to manipulate the configuration.
+   The project tooling may be used to manipulate and apply the fetched configuration.
 
 Q: **How can I use kpt to create blueprint packages?**
 A: Blueprints may be published as kpt packages, using kpt for fetching and
    updating the packages from upstream.
    The local copy of the blueprint package may be directly edited, or other
-   customization techniques may be applied.
+   customization techniques may be applied (e.g. `kustomize build`).
 
 Q: **What are some examples of blueprint customization techniques?**
-A: - Configuration functions (i.e. `kustomize config run`)
-   - Kustomizations (i.e. `kustomize build`)
+A: - Using configuration functions (i.e. `kustomize config run`)
+   - Using Kustomizations (i.e. `kustomize build`)
    - Duck-typed setter commands (i.e. `kustomize duck CMD`)
 
 Q: **What are configuration functions?**
-A: Configuration functions container images containing logic to generate or
-   transform Resources.
+A: Configuration functions are programs applied to configuration which may generate, transform
+   or validate new or existing configuration.  Functions are typically published as container
+   images applied to a configuration package.
    See `kustomize help config run` for more information.
 
 Q: **What are duck-typed setter commands?**
