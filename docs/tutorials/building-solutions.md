@@ -6,23 +6,28 @@ How to build solutions using kpt with other tools from the ecosystem
 
 kpt was developed to solve the problem of **fetching and updating configuration packages**.
 Rather than solving all problems related to configuration, kpt was designed to be
-composed with other solutions developed within the Kubernetes ecosystem such as the
-Kubernetes project based tooling.
+composed with other solutions developed within the Kubernetes ecosystem --
+e.g. Kubernetes project based tools `kubectl` and `kustomize`.
 
-kpt focusses on a "configuration as data", rather than a "configuration as code".
-In this model configuration is packaged as data objects, rather than as imperative
-code containing branches and loops.  Configuration as data allows solutions to be
-written in different languages and composed together in ways that follow the
-unix philosophy.
+kpt focuses on a "configuration as data" model, rather than a "configuration as code"
+model.  With "configuration as data", the configuration is packaged as data objects,
+rather than as imperative code -- which is not easily parsed and validated by tools.
+
+Because things like templating, substitution, etc are decoupled from the package
+as functions which run on packaged configuration, they may be written in arbitrary
+languages, and composed with one another.  This follows the unix philosophy for building
+simple, short, modular and extensible systems.
 
 The following tutorial covers how to compose kpt with other tools in the ecosystem
 to build delivery solutions.
 
 ### Configuration Overview
 
-The configuration tooling space can be broken down into a number of categories:
+The configuration space can be broken down into a number of categories:
 
 1. **Packaging**
+
+   Packaging covers how to bundle configuration for reuse.
 
    - Fetch -- get a bundle of Resource configuration
    - Update -- pull in upstream changes to Resource configuration
@@ -30,11 +35,16 @@ The configuration tooling space can be broken down into a number of categories:
 
 2. **Development**
 
+   Development covers how to create and modify configuration, and includes
+   how to incorporate and unify opinions from an arbitrary number of sources.
+
    - Abstraction -- substitution, generation, injection, etc
    - Customization -- configuring blueprints, defining variants, etc
    - Validation -- policy enforcement, linting, etc
 
 3. **Actuation**
+
+   Actuation covers how to take configuration and apply it to a cluster.
 
    - Apply -- apply configuration to a cluster
    - Status -- waiting for changes to be fully rolled out
@@ -42,12 +52,17 @@ The configuration tooling space can be broken down into a number of categories:
 
 4. **Visibility** /  **Inspection**
 
+   Visibility / Inspection covers how to visualize and understand packaged
+   configuration.
+
    - Search for Resources within a Package matching a constraint
    - Visualize the relationship between Resources
    
 5. **Discovery**
 
-   - Discover new publicly published packages
+   Discovery includes how to locate new packages, and examples.
+
+   - Discover new publicly published packages from a market place or the web
 
 #### Tools
 
@@ -57,7 +72,7 @@ The configuration tooling space can be broken down into a number of categories:
 | Development   | `kustomize`            | `kustomize build`, `kustomize config run`         |
 | Actuation     | `kubectl`, `kustomize` | `kubectl apply`, `kustomize status`               |
 | Visibility    | `kustomize`            | `kustomize config grep`, `kustomize config tree`  |
-| Discovery     | *unsolved*             |                                                   |
+| Discovery     | GitHub                 |                                                   |
 
 ### Packaging: `kpt get`, `kpt update`
 
@@ -68,8 +83,8 @@ The configuration tooling space can be broken down into a number of categories:
   Example Use Cases:
 
   - Fetch a *Blueprint* or *Example* and fork or extend it
-  - Fetch a *Configuration Function* Resources
-  - Fetch a set of configuration to be applied directly to a cluster
+  - Fetch *Configuration Function* Resources
+  - Fetch configuration to be applied directly to a cluster
 
   - Update a forked *Blueprint* from upstream
   - Update a *Configuration Function* Resource from upstream
@@ -81,7 +96,8 @@ The configuration tooling space can be broken down into a number of categories:
 
     kpt get https://github.com/kubernetes/examples/cassandra cassandra/
     
-  Update a Blueprint to a specific git commit, merging Resources:
+  Update a Blueprint to a specific git commit, merging Resource updates with
+  local changes to the fork:
   
     kpt update cassandra@322d78b --strategy resource-merge 
 
@@ -93,6 +109,9 @@ The configuration tooling space can be broken down into a number of categories:
   It may involve a number of activities:
   
   1. Developing Abstractions
+  
+     Abstractions allow a higher-level or more specialized API to be defined
+     which may generate other Resources. 
      
      - Templating Resources -- Jinja, YTT, Helm
      - Generating Resources From DSLs --Cue,  Ksonnet, Jsonnet, Terraform
@@ -100,16 +119,27 @@ The configuration tooling space can be broken down into a number of categories:
   
   2. Developing Blueprint Customizations
   
+     Blueprints allow low-level Resource configuration to be published and
+     customized for a specialized case.
+  
      - Change replica counts
      - Change container image
      - Add environment variables
   
   3. Developing Variant Customizations
+     
+     Variants apply customizations for a specific environment.  They
+     are useful when the same package needs to be run in several environments,
+     but with different opinions. 
   
      - Dev, Test, Staging, Production
      - us-west, us-east, us-central, asia, europe
   
   4. Injecting Cross-Cutting elements into Resources
+  
+     Injection is useful for applying policies or cross-cutting logic to
+     a collection of Resources.  Notably, the injector may be loosely
+     coupled from the package being injected.
   
      - T-Shirt sizing containers based on annotations
      - Injecting side car containers
@@ -117,14 +147,20 @@ The configuration tooling space can be broken down into a number of categories:
   
   5. Validating Resources
   
+     Validating Resources is important for applying linting or organizational
+     opinions.
+  
      - Ensuring resource reservations are specified
      - Ensuring container images are tagged
 
-  The kpt architecture facilitates decoupling programs and tools from
-  the configuration itself by transforming configuration using configuration
-  functions.  That is the packages themselves contain Resource configuration
+  How does kpt facilitate these?
+
+  The kpt architecture enables decoupling programs and tools from
+  the packaged configuration itself by applying functions (encapsulated in containers)
+  to the local configuration.
+  That is the packages themselves contain Resource configuration
   rather than code (e.g. templates, DSLs, etc).  The packaged Resources may
-  be modified or expanded by external programs, such as kustomize.
+  be modified or expanded by external programs, such as `kustomize`.
   
   `kustomize` is a tool which can be used to develop configuration by:
    
@@ -251,4 +287,3 @@ The configuration tooling space can be broken down into a number of categories:
        kustomize build prod/ | kubectl apply -f -
        kustomize build prod/| kustomize status
        kustomize build prod/ | kustomize prune
-
