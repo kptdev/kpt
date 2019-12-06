@@ -50,6 +50,7 @@ A: Yes, kpt packages can contain non-Resource packaging artifacts.  These
    
 Q: **How can I apply kpt packages to a cluster?**
 A: kpt is designed to work with the OSS Kubernetes Kubernetes tools such
-   as `kubectl` and `kustomize`.  Both the `kubectl apply` and the `kustomize apply`
-   are supported.
+   as `kubectl` and `kustomize` -- e.g. `kustomize config cat PKG/ | kubectl apply -f -`.
+   Use `kustomize config cat` so that only non-config function Resources are applied.
+   
 
