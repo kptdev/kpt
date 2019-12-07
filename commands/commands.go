@@ -27,8 +27,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GetCommands returns the set of kpt commands to be registered
-func GetCommands(name string) []*cobra.Command {
+// GetAllCommands returns the set of kpt commands to be registered
+func GetAllCommands(name string) []*cobra.Command {
 	c := []*cobra.Command{
 		cmdcomplete.NewCommand(name),
 		cmddesc.NewCommand(name),
@@ -61,6 +61,23 @@ func GetCommands(name string) []*cobra.Command {
 				return cmdutil.HandleError(cmd, err)
 			}
 		}
+	}
+	return c
+}
+
+var allCommands = map[string]func(string) *cobra.Command{
+	"desc":   cmddesc.NewCommand,
+	"get":    cmdget.NewCommand,
+	"init":   cmdinit.NewCommand,
+	"man":    cmdman.NewCommand,
+	"sync":   cmdsync.NewCommand,
+	"update": cmdupdate.NewCommand,
+}
+
+func GetCommands(name string, commands ...string) []*cobra.Command {
+	var c []*cobra.Command
+	for i := range commands {
+		c = append(c, allCommands[commands[i]](name))
 	}
 	return c
 }

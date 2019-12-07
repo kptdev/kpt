@@ -40,7 +40,7 @@ func main() {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(commands.GetCommands("kpt")...)
+	cmd.AddCommand(commands.GetAllCommands("kpt")...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
