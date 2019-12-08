@@ -27,11 +27,10 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-	"sigs.k8s.io/kustomize/v3/pkg/fs"
-	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
 
 // Command fetches a package from a git repository and copies it to a local directory.
@@ -78,7 +77,7 @@ func (c Command) Run() error {
 	if err != nil {
 		return errors.Errorf("failed to clone git repo: %v", err)
 	}
-	defer os.RemoveAll(r.AbsPath())
+	defer os.RemoveAll(r.Dir)
 
 	// delete the existing package if it exists
 	if c.Clean {
@@ -112,14 +111,15 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	if err != nil {
 		return errors.WrapPrefixf(err, "no 'git' program on path")
 	}
-	repoSpec.Dir, err = fs.NewTmpConfirmedDir()
+
+	repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
 	if err != nil {
 		return err
 	}
 	cmd := exec.Command(
 		gitProgram,
 		"init",
-		repoSpec.Dir.String())
+		repoSpec.Dir)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
@@ -129,7 +129,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		return errors.WrapPrefixf(
 			err,
 			"trouble initializing empty git repo in %s",
-			repoSpec.Dir.String())
+			repoSpec.Dir)
 	}
 
 	cmd = exec.Command(
@@ -140,7 +140,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		repoSpec.CloneSpec())
 	cmd.Stdout = &out
 	cmd.Stderr = &out
-	cmd.Dir = repoSpec.Dir.String()
+	cmd.Dir = repoSpec.Dir
 	err = cmd.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error setting git remote: %s", out.String())
@@ -162,7 +162,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 			repoSpec.Ref)
 		cmd.Stdout = &out
 		cmd.Stderr = &out
-		cmd.Dir = repoSpec.Dir.String()
+		cmd.Dir = repoSpec.Dir
 		err = cmd.Run()
 		if err != nil {
 			return errors.WrapPrefixf(err, "trouble fetching %s", repoSpec.Ref)
@@ -173,7 +173,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 			"--hard", "FETCH_HEAD")
 		cmd.Stdout = &out
 		cmd.Stderr = &out
-		cmd.Dir = repoSpec.Dir.String()
+		cmd.Dir = repoSpec.Dir
 		err = cmd.Run()
 		if err != nil {
 			return errors.WrapPrefixf(
@@ -185,14 +185,14 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		cmd = exec.Command(gitProgram, "fetch", "origin")
 		cmd.Stdout = &out
 		cmd.Stderr = &out
-		cmd.Dir = repoSpec.Dir.String()
+		cmd.Dir = repoSpec.Dir
 		if err = cmd.Run(); err != nil {
 			return errors.WrapPrefixf(err, "trouble fetching origin")
 		}
 		cmd = exec.Command(gitProgram, "reset", "--hard", repoSpec.Ref)
 		cmd.Stdout = &out
 		cmd.Stderr = &out
-		cmd.Dir = repoSpec.Dir.String()
+		cmd.Dir = repoSpec.Dir
 		if err = cmd.Run(); err != nil {
 			return errors.WrapPrefixf(
 				err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
@@ -206,7 +206,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		"--init",
 		"--recursive")
 	cmd.Stdout = &out
-	cmd.Dir = repoSpec.Dir.String()
+	cmd.Dir = repoSpec.Dir
 	err = cmd.Run()
 	if err != nil {
 		return errors.WrapPrefixf(err, "trouble fetching submodules for %s", repoSpec.Ref)

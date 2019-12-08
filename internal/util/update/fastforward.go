@@ -20,10 +20,10 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"
-	"sigs.k8s.io/kustomize/v3/pkg/git"
 )
 
 // Updater updates a package to a new upstream version.
@@ -62,7 +62,7 @@ func errorIfChanged(g kptfile.Git, pkgPath string) error {
 	if err != nil {
 		return errors.Errorf("failed cloning git repo: %v", err)
 	}
-	defer os.RemoveAll(original.AbsPath())
+	defer os.RemoveAll(original.Dir)
 	diff, err := copyutil.Diff(original.AbsPath(), pkgPath)
 	if err != nil {
 		return errors.Errorf("failed to compare local package to original source: %v", err)
