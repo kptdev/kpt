@@ -85,6 +85,6 @@ func GetCommands(name string, commands ...string) []*cobra.Command {
 }
 
 // Complete returns a completion command
-func Complete(cmd *cobra.Command) *complete.Command {
-	return cmdcomplete.Complete(cmd, nil)
+func Complete(cmd *cobra.Command, fn cmdcomplete.VisitFlags) *complete.Command {
+	return cmdcomplete.Complete(cmd, fn)
 }
