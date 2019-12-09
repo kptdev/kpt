@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdman"
+	"github.com/GoogleContainerTools/kpt/internal/cmdsub"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/cmdtutorials"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
@@ -38,6 +39,7 @@ func GetAllCommands(name string) []*cobra.Command {
 		cmdinit.NewCommand(name),
 		cmdman.NewCommand(name),
 		cmdsync.NewCommand(name),
+		cmdsub.NewCommand(name),
 		cmdupdate.NewCommand(name),
 		cmddiff.NewCommand(name),
 	}
@@ -74,6 +76,7 @@ var allCommands = map[string]func(string) *cobra.Command{
 	"get":                cmdget.NewCommand,
 	"init":               cmdinit.NewCommand,
 	"man":                cmdman.NewCommand,
+	"sub":                cmdsub.NewCommand,
 	"sync":               cmdsync.NewCommand,
 	"update":             cmdupdate.NewCommand,
 	"install-completion": cmdcomplete.NewCommand,
