@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdtutorials"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/posener/complete/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -66,12 +67,13 @@ func GetAllCommands(name string) []*cobra.Command {
 }
 
 var allCommands = map[string]func(string) *cobra.Command{
-	"desc":   cmddesc.NewCommand,
-	"get":    cmdget.NewCommand,
-	"init":   cmdinit.NewCommand,
-	"man":    cmdman.NewCommand,
-	"sync":   cmdsync.NewCommand,
-	"update": cmdupdate.NewCommand,
+	"desc":               cmddesc.NewCommand,
+	"get":                cmdget.NewCommand,
+	"init":               cmdinit.NewCommand,
+	"man":                cmdman.NewCommand,
+	"sync":               cmdsync.NewCommand,
+	"update":             cmdupdate.NewCommand,
+	"install-completion": cmdcomplete.NewCommand,
 }
 
 func GetCommands(name string, commands ...string) []*cobra.Command {
@@ -80,4 +82,9 @@ func GetCommands(name string, commands ...string) []*cobra.Command {
 		c = append(c, allCommands[commands[i]](name))
 	}
 	return c
+}
+
+// Complete returns a completion command
+func Complete(cmd *cobra.Command) *complete.Command {
+	return cmdcomplete.Complete(cmd, nil)
 }

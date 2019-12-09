@@ -69,13 +69,15 @@ func (Runner) runE(cmd *cobra.Command, args []string) error {
 	for cmd.Parent() != nil {
 		cmd = cmd.Parent()
 	}
-	c := Complete(cmd)
+	c := Complete(cmd, nil)
 	c.Complete("kpt")
 	return nil
 }
 
+type VisitFlags func(cmd *cobra.Command, flag *pflag.Flag, cc *complete.Command)
+
 // Complete returns a completion command for a cobra command
-func Complete(cmd *cobra.Command) *complete.Command {
+func Complete(cmd *cobra.Command, visitFlags VisitFlags) *complete.Command {
 	cc := &complete.Command{
 		Flags: map[string]complete.Predictor{},
 		Sub:   map[string]*complete.Command{},
@@ -85,9 +87,15 @@ func Complete(cmd *cobra.Command) *complete.Command {
 	for i := range cmd.Commands() {
 		c := cmd.Commands()[i]
 		name := strings.Split(c.Use, " ")[0]
-		cc.Sub[name] = Complete(c)
+		cc.Sub[name] = Complete(c, visitFlags)
 	}
+
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+		if visitFlags != nil {
+			// extension support for other commands that embed this one
+			visitFlags(cmd, flag, cc)
+		}
+
 		if flag.Name == "strategy" {
 			cc.Flags[flag.Name] = predict.Options(predict.OptValues(update.Strategies...))
 			return

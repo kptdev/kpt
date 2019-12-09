@@ -56,7 +56,7 @@ func main() {
 		name := filepath.Base(os.Args[1])
 		if name == "kpt" {
 			// complete calls kpt with itself as an argument
-			cmdcomplete.Complete(cmd).Complete("kpt")
+			cmdcomplete.Complete(cmd, nil).Complete("kpt")
 			os.Exit(0)
 		}
 	}
