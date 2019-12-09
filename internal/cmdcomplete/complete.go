@@ -69,8 +69,9 @@ func (Runner) runE(cmd *cobra.Command, args []string) error {
 	for cmd.Parent() != nil {
 		cmd = cmd.Parent()
 	}
+	name := strings.Split(cmd.Use, " ")[0]
 	c := Complete(cmd, nil)
-	c.Complete("kpt")
+	c.Complete(name)
 	return nil
 }
 
