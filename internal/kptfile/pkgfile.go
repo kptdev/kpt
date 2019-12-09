@@ -39,6 +39,79 @@ type KptFile struct {
 	PackageMeta PackageMeta `yaml:"packageMetadata,omitempty"`
 
 	Dependencies []Dependency `yaml:"dependencies,omitempty"`
+
+	// Substitutions are substitutions that may be performed against the package
+	Substitutions []Substitution `yaml:"substitutions,omitempty"`
+}
+
+// Substitution defines how to substitute a value into a package
+type Substitution struct {
+	// Marker is the string Marker to be substituted
+	Marker string `yaml:"marker,omitempty"`
+
+	// Paths are the search paths to look for the Marker in each Resource
+	Paths []Path `yaml:"paths,omitempty"`
+
+	// InputParameter defines the input value to substitute
+	InputParameter `yaml:",inline,omitempty"`
+
+	// Short is the short description of this substitution
+	Short string `yaml:"short,omitempty"`
+
+	// Long is the long description of this substitution
+	Long string `yaml:"long,omitempty"`
+
+	// Example is an example of using this substitution
+	Example string `yaml:"example,omitempty"`
+}
+
+// Path defines a path to a field
+type Path struct {
+	Path []string `yaml:"path,omitempty"`
+}
+
+// InputType defines the type of input to register
+type InputType string
+
+const (
+	// String defines a string flag
+	String InputType = "string"
+	// Bool defines a bool flag
+	Bool = "bool"
+	// Float defines a float flag
+	Float = "float"
+	// Int defines an int flag
+	Int = "int"
+)
+
+func (it InputType) Tag() string {
+	switch it {
+	case String:
+		return "!!str"
+	case Bool:
+		return "!!bool"
+	case Int:
+		return "!!int"
+	case Float:
+		return "!!float"
+	}
+	return ""
+}
+
+// InputParameter defines an input parameter that should be registered with the templates.
+type InputParameter struct {
+	// Type is the type of the input
+	Type InputType `yaml:"type"`
+
+	// Description is the description of the input value
+	Description string `yaml:"description"`
+
+	// Name is the name of the input
+	Name string `yaml:"name"`
+
+	// StringValue is the value to substitute in
+	// +optional
+	StringValue string `yaml:"stringValue"`
 }
 
 type Dependency struct {
