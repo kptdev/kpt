@@ -17,6 +17,7 @@ package commands
 import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
+	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdman"
@@ -38,6 +39,7 @@ func GetAllCommands(name string) []*cobra.Command {
 		cmdman.NewCommand(name),
 		cmdsync.NewCommand(name),
 		cmdupdate.NewCommand(name),
+		cmddiff.NewCommand(name),
 	}
 	c = append(c, cmdtutorials.Tutorials(name)...)
 
@@ -68,6 +70,7 @@ func GetAllCommands(name string) []*cobra.Command {
 
 var allCommands = map[string]func(string) *cobra.Command{
 	"desc":               cmddesc.NewCommand,
+	"diff":               cmddiff.NewCommand,
 	"get":                cmdget.NewCommand,
 	"init":               cmdinit.NewCommand,
 	"man":                cmdman.NewCommand,
