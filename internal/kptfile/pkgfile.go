@@ -54,15 +54,6 @@ type Substitution struct {
 
 	// InputParameter defines the input value to substitute
 	InputParameter `yaml:",inline,omitempty"`
-
-	// Short is the short description of this substitution
-	Short string `yaml:"short,omitempty"`
-
-	// Long is the long description of this substitution
-	Long string `yaml:"long,omitempty"`
-
-	// Example is an example of using this substitution
-	Example string `yaml:"example,omitempty"`
 }
 
 // Path defines a path to a field
