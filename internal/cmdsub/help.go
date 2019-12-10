@@ -76,7 +76,7 @@ func (r *Help) runE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	found := false
+	remaining := false
 	table := tablewriter.NewWriter(c.OutOrStdout())
 	table.SetRowLine(false)
 	table.SetBorder(false)
@@ -84,26 +84,25 @@ func (r *Help) runE(c *cobra.Command, args []string) error {
 	table.SetColumnSeparator(" ")
 	table.SetCenterSeparator(" ")
 	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetHeader([]string{"NAME", "REMAINING", "PERFORMED", "DESCRIPTION", "TYPE", "MARKER"})
+	table.SetHeader([]string{
+		"NAME", "DESCRIPTION", "TYPE", "MARKER", "REMAINING", "PERFORMED", "PERFORMED VALUE",
+	})
 	for i := range subs {
 		s := subs[i]
-		if s.Count == 0 {
-			continue
-		}
-		found = true
+		remaining = remaining || s.Count > 0
 		table.Append([]string{
 			s.Name,
-			fmt.Sprintf("%d", s.Count),
-			"0",
 			"'" + s.Description + "'",
 			string(s.Type),
 			s.Marker,
+			fmt.Sprintf("%d", s.Count),
+			fmt.Sprintf("%d", s.Performed),
+			s.PerformedValue,
 		})
 	}
-	table.SetCaption(!found, "no remaining substitutions")
 	table.Render()
 
-	if found {
+	if remaining {
 		os.Exit(1)
 	}
 	return nil

@@ -16,6 +16,7 @@
 package sub
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
@@ -29,6 +30,10 @@ var _ kio.Filter = &Sub{}
 type Sub struct {
 	// Count is the number of substitutions that have been performed
 	Count int
+
+	Performed int
+
+	PerformedValue string
 
 	// Substitution defines the substitution to perform
 	kptfile.Substitution
@@ -50,6 +55,10 @@ func (s *Sub) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 				// increment the count if the value was substituted
 				s.Count++
 			}
+			if fs.Performed {
+				s.Performed++
+				s.PerformedValue = fs.PerformedValue
+			}
 		}
 	}
 
@@ -62,6 +71,10 @@ var _ yaml.Filter = &FieldSub{}
 type FieldSub struct {
 	// Found will be true if a value was substituted
 	Found bool
+
+	Performed bool
+
+	PerformedValue string
 
 	// Path is the path to the field to substitute
 	Path kptfile.Path
@@ -81,6 +94,25 @@ func (fs *FieldSub) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return object, nil
 	}
 
+	// check if we have performed this substitution in the past
+	var save substitutions
+	if field.YNode().LineComment != "" {
+		v := strings.TrimLeft(field.YNode().LineComment, "#")
+		err := yaml.Unmarshal([]byte(v), &save)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for i := range save.Substitutions {
+		s := save.Substitutions[i]
+		if s.Marker == fs.Marker {
+			fs.Performed = true
+			fs.PerformedValue = s.Value
+			break
+		}
+	}
+
 	if !strings.Contains(field.YNode().Value, fs.Marker) {
 		// field doesn't have the marker -- no-op
 		return object, nil
@@ -93,5 +125,26 @@ func (fs *FieldSub) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	field.YNode().Tag = fs.Type.Tag()
 	field.YNode().Style = 0
 
+	// add this to the list if it hasn't been substituted before
+	if !fs.Performed {
+		save.Substitutions = append(save.Substitutions, savedMarker{
+			Marker: fs.Marker,
+			Value:  fs.StringValue,
+		})
+	}
+	b, err := json.Marshal(save)
+	if err != nil {
+		return nil, err
+	}
+	field.YNode().LineComment = string(b)
 	return object, nil
+}
+
+type substitutions struct {
+	Substitutions []savedMarker `yaml:"substitutions,omitempty" json:"substitutions"`
+}
+
+type savedMarker struct {
+	Marker string `yaml:"marker,omitempty" json:"marker"`
+	Value  string `yaml:"value,omitempty" json:"value"`
 }
