@@ -56,16 +56,14 @@ upstream:
 
 	b := &bytes.Buffer{}
 	cmd := cmddesc.NewRunner("kpt")
+	cmd.Description.PrintBasePath = true
 	cmd.Command.SetArgs([]string{d})
 	cmd.Command.SetOut(b)
 	err = cmd.Command.Execute()
 	testutil.AssertNoError(t, err)
 
-	exp := fmt.Sprintf(`+------------------+------------------+------------------------------------------+------------------------------+---------+---------+
-| LOCAL DIRECTORY  |       NAME       |            SOURCE REPOSITORY             |           SUBPATH            | VERSION | COMMIT  |
-+------------------+------------------+------------------------------------------+------------------------------+---------+---------+
-| %s | cockroachdb_perf | https://github.com/cockroachdb/cockroach | cloud/kubernetes/performance | master  | 9b6aeba |
-+------------------+------------------+------------------------------------------+------------------------------+---------+---------+
+	exp := fmt.Sprintf(`    PACKAGE NAME           DIR                           REMOTE                            REMOTE PATH            REMOTE REF   REMOTE COMMIT  
+  cockroachdb_perf   %s   https://github.com/cockroachdb/cockroach   cloud/kubernetes/performance   master       9b6aeba        
 `, filepath.Base(d))
 	assert.Equal(t, exp, b.String())
 
@@ -80,10 +78,7 @@ func TestCmd_defaultPkg(t *testing.T) {
 	err := cmd.Command.Execute()
 	testutil.AssertNoError(t, err)
 
-	exp := `+-----------------+------+-------------------+---------+---------+--------+
-| LOCAL DIRECTORY | NAME | SOURCE REPOSITORY | SUBPATH | VERSION | COMMIT |
-+-----------------+------+-------------------+---------+---------+--------+
-+-----------------+------+-------------------+---------+---------+--------+
+	exp := `  PACKAGE NAME   DIR   REMOTE   REMOTE PATH   REMOTE REF   REMOTE COMMIT  
 `
 	assert.Equal(t, exp, b.String())
 }
