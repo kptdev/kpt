@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdman"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,14 +40,14 @@ kind: Kptfile
 metadata:
   name: java
 packageMetadata:
-  man: "man/MAN.md"
+  man: "man/README.md"
 `), 0600)
 	assert.NoError(t, err)
 
 	// write the man md file
 	err = os.Mkdir(filepath.Join(d, "man"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(d, "man", "MAN.md"), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, "man", man.ManFilename), []byte(`
 java 1   "June 2019"  "Application"
 ==================================================
 
@@ -181,7 +182,7 @@ metadata:
 
 	// write the man md file
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(d, "pkg", "MAN.md"), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, "pkg", man.ManFilename), []byte(`
 java 1   "June 2019"  "Application"
 ==================================================
 

@@ -47,6 +47,8 @@ type Command struct {
 	StdOut io.Writer
 }
 
+const ManFilename = "README.md"
+
 // Run runs the command.
 func (m Command) Run() error {
 	_, err := exec.LookPath(m.GetExecCmd())
@@ -60,11 +62,11 @@ func (m Command) Run() error {
 		return err
 	}
 	if k.PackageMeta.Man == "" {
-		_, err := os.Stat(filepath.Join(m.Path, "MAN.md"))
+		_, err := os.Stat(filepath.Join(m.Path, ManFilename))
 		if err != nil {
 			return errors.Errorf("no manual entry for %s", m.Path)
 		}
-		k.PackageMeta.Man = filepath.Join("MAN.md")
+		k.PackageMeta.Man = filepath.Join(ManFilename)
 	}
 
 	// the path separator needs to converted to the OS path.

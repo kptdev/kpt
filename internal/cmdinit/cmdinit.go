@@ -26,6 +26,7 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -113,8 +114,8 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	if _, err = os.Stat(filepath.Join(args[0], "MAN.md")); os.IsNotExist(err) {
-		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], "MAN.md"))
+	if _, err = os.Stat(filepath.Join(args[0], man.ManFilename)); os.IsNotExist(err) {
+		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], man.ManFilename))
 		buff := &bytes.Buffer{}
 		t, err := template.New("man").Parse(manTemplate)
 		if err != nil {
@@ -126,7 +127,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 
-		err = ioutil.WriteFile(filepath.Join(args[0], "MAN.md"), buff.Bytes(), 0600)
+		err = ioutil.WriteFile(filepath.Join(args[0], man.ManFilename), buff.Bytes(), 0600)
 		if err != nil {
 			return err
 		}
