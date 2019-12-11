@@ -33,6 +33,10 @@ func NewRunner(parent string) *Runner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	c.Flags().BoolVar(&r.Substitute.Override, "override", false,
+		"override previously substituted values")
+	c.Flags().BoolVar(&r.Substitute.Revert, "revert", false,
+		"override previously substituted values")
 	cmdutil.FixDocs("kpt", parent, c)
 
 	r.Command = c
@@ -45,21 +49,19 @@ func NewCommand(parent string) *cobra.Command {
 
 type Runner struct {
 	Command    *cobra.Command
-	Help       *Help
-	Substitute *Substitute
+	Help       Help
+	Substitute Substitute
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	if len(args) < 3 {
-		r.Help = &Help{}
+	if len(args) < 3 && !(r.Substitute.Revert && len(args) == 2) {
 		return cmdutil.HandleError(c, r.Help.preRunE(c, args))
 	}
-	r.Substitute = &Substitute{}
 	return cmdutil.HandleError(c, r.Substitute.preRunE(c, args))
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if r.Help != nil {
+	if len(args) < 3 && !(r.Substitute.Revert && len(args) == 2) {
 		return cmdutil.HandleError(c, r.Help.runE(c, args))
 	}
 	return cmdutil.HandleError(c, r.Substitute.runE(c, args))

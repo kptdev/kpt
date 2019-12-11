@@ -28,8 +28,10 @@ import (
 )
 
 type Substitute struct {
-	Sub     sub.Sub
-	Kptfile kptfile.KptFile
+	Override bool
+	Revert   bool
+	Sub      sub.Sub
+	Kptfile  kptfile.KptFile
 }
 
 func (r *Substitute) preRunE(_ *cobra.Command, args []string) error {
@@ -39,11 +41,6 @@ func (r *Substitute) preRunE(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.WrapPrefixf(err, "failed reading %s",
 			filepath.Join(args[0], kptfile.KptFileName))
-	}
-
-	// if args < 3, then we won't do an substitutions and will just print help
-	if len(args) != 3 {
-		return nil
 	}
 
 	// find the substitution matching the one specified by the user
@@ -63,27 +60,32 @@ func (r *Substitute) preRunE(_ *cobra.Command, args []string) error {
 
 	// init the substitution
 	r.Sub.Substitution = *found
-	r.Sub.Substitution.StringValue = args[2]
+	r.Sub.Override = r.Override
+	r.Sub.Revert = r.Revert
 
-	// validate the input
-	if r.Sub.Substitution.Type == kptfile.Int {
-		_, err := strconv.Atoi(args[2])
-		if err != nil {
-			return errors.WrapPrefixf(err, "NEW_VALUE must be an int")
+	if !r.Sub.Revert {
+		r.Sub.Substitution.StringValue = args[2]
+		// validate the input
+		if r.Sub.Substitution.Type == kptfile.Int {
+			_, err := strconv.Atoi(args[2])
+			if err != nil {
+				return errors.WrapPrefixf(err, "NEW_VALUE must be an int")
+			}
+		}
+		if r.Sub.Substitution.Type == kptfile.Bool {
+			_, err := strconv.ParseBool(args[2])
+			if err != nil {
+				return errors.WrapPrefixf(err, "NEW_VALUE must be a bool")
+			}
+		}
+		if r.Sub.Substitution.Type == kptfile.Float {
+			_, err := strconv.ParseFloat(args[2], 64)
+			if err != nil {
+				return errors.WrapPrefixf(err, "NEW_VALUE must be a float")
+			}
 		}
 	}
-	if r.Sub.Substitution.Type == kptfile.Bool {
-		_, err := strconv.ParseBool(args[2])
-		if err != nil {
-			return errors.WrapPrefixf(err, "NEW_VALUE must be a bool")
-		}
-	}
-	if r.Sub.Substitution.Type == kptfile.Float {
-		_, err := strconv.ParseFloat(args[2], 64)
-		if err != nil {
-			return errors.WrapPrefixf(err, "NEW_VALUE must be a float")
-		}
-	}
+
 	return nil
 }
 
