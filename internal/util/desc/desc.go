@@ -16,6 +16,7 @@
 package desc
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,6 +33,8 @@ type Command struct {
 
 	// PkgPaths refers to the pkg directories to be described.
 	PkgPaths []string
+
+	PrintBasePath bool
 }
 
 // Run prints information about given packages in a tabular format.
@@ -39,23 +42,29 @@ type Command struct {
 // Invalid packages are ignored.
 func (c Command) Run() error {
 	var pkgs []pkgInfo
-
-	for _, path := range c.PkgPaths {
-		info, err := os.Stat(path)
+	for _, p := range c.PkgPaths {
+		err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.Name() != kptfile.KptFileName {
+				return nil
+			}
+			kptFile, err := kptfileutil.ReadFile(filepath.Dir(path))
+			if err != nil {
+				return nil
+			}
+			path = filepath.Clean(path)
+			fmt.Println(path)
+			pkgs = append(pkgs, pkgInfo{localDir: path, KptFile: kptFile})
+			return nil
+		})
 		if err != nil {
-			continue
+			return err
 		}
-		if !info.IsDir() {
-			continue
-		}
-		kptFile, err := kptfileutil.ReadFile(path)
-		if err != nil {
-			continue
-		}
-		pkgs = append(pkgs, pkgInfo{localDir: path, KptFile: kptFile})
 	}
 
-	printPkgs(c.GetStdOut(), pkgs)
+	c.printPkgs(c.GetStdOut(), pkgs)
 	return nil
 }
 
@@ -67,15 +76,25 @@ func (c Command) GetStdOut() io.Writer {
 	return c.StdOut
 }
 
-func printPkgs(w io.Writer, pkgs []pkgInfo) {
+func (c Command) printPkgs(w io.Writer, pkgs []pkgInfo) {
 	table := tablewriter.NewWriter(w)
 	table.SetRowLine(false)
+	table.SetBorder(false)
+	table.SetHeaderLine(false)
+	table.SetColumnSeparator(" ")
+	table.SetCenterSeparator(" ")
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
 	table.SetHeader([]string{
-		"Local Directory", "Name", "Source Repository", "Subpath", "Version", "Commit"})
+		"Package Name", "Dir", "Remote",
+		"Remote Path", "Remote Ref", "Remote Commit"})
 	for _, pkg := range pkgs {
+		p := filepath.Dir(pkg.localDir)
+		if c.PrintBasePath {
+			p = filepath.Base(p)
+		}
 		table.Append([]string{
-			filepath.Base(pkg.localDir),
 			pkg.Name,
+			p,
 			pkg.Upstream.Git.Repo,
 			pkg.Upstream.Git.Directory,
 			pkg.Upstream.Git.Ref,

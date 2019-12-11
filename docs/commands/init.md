@@ -19,7 +19,7 @@ with discovery.
 Init will:
 
 * Create a Kptfile with package name and metadata if it doesn't exist
-* Create a Man.md for package documentation if it doesn't exist.
+* Create a README.md for package documentation if it doesn't exist.
 
 
     kpt init DIR [flags]

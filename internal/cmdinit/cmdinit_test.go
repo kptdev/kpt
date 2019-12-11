@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
+	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,7 +49,7 @@ packageMetadata:
   shortDescription: my description
 `, string(b))
 
-	b, err = ioutil.ReadFile(filepath.Join(d, "my-pkg", "MAN.md"))
+	b, err = ioutil.ReadFile(filepath.Join(d, "my-pkg", man.ManFilename))
 	assert.NoError(t, err)
 	assert.Equal(t, `my-pkg
 ==================================================

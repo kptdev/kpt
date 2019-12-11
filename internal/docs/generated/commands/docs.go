@@ -200,7 +200,7 @@ with discovery.
 Init will:
 
 * Create a Kptfile with package name and metadata if it doesn't exist
-* Create a Man.md for package documentation if it doesn't exist.
+* Create a README.md for package documentation if it doesn't exist.
 
 
     kpt init DIR [flags]
@@ -292,29 +292,87 @@ var ManExamples = `
 	# display subpackage documentation
 	kpt man my-package/sub-package/`
 
-var SubShort = `Perform package value substitutions`
-var SubLong = `
-Perform package value substitutions.
+var SubCheckShort = `Check for unfulfilled package substitutions`
+var SubCheckLong = `
+Check for unfulfilled package substitutions.  Unfulfilled substitutions are substitutions
+where the substitution has not yet been performed, and the *marker* is still in place.
 
-` + "`" + `sub` + "`" + ` looks for possible value substitutions in the package by reading the Kptfile.
-To see the available substitutions for a package, run ` + "`" + `sub` + "`" + ` on the package directory
+` + "`" + `sub-check` + "`" + ` looks for possible value substitutions in a package by reading the Kptfile
+and exists non-0 if any of the substitutions have not been performed.
+
+By default, ` + "`" + `sub-check` + "`" + ` will look for any substitutions that have not be fulfilled, but
+may accept specific substitutions to check.
+
+To print the available substitutions for a package, run ` + "`" + `sub` + "`" + ` on the package directory
 and they will be listed as sub commands.
 
   PKG_DIR
-  
+
     A directory containing a Kptfile with substitutions specified.
-    
+
   SUBSTITUTION_NAME
-  
-    The name of the substitution to perform.  Available substitutions names will
+
+    Optional name of the substitution to check.  Available substitutions names will
     be listed when running ` + "`" + `sub` + "`" + ` against the PKG_DIR with no other arguments.
 
+See: ` + "`" + `kpt sub` + "`" + ` for more details
+`
+var SubCheckExamples = `
+    # print the unfulfilled substitutions (exits non-0)
+    $ kpt sub-check my-package/
+    SubstitutionName         Count D
+    port                     4
+    name-prefix              1
+ 
+    # print the unfulfilled port substitutions (exits non-0)
+    $ kpt sub-check my-package/ port
+    NAME         COUNT
+    port          4
+    name-prefix   1
+
+    # perform substitutions and then print the unfulfilled
+    # port substitutions (exits 0)
+    $ kpt sub my-package/ port 8080
+    $ kpt sub my-package/ name-prefix prefix-
+    $ kpt sub-check my-package/
+    NAME         COUNT
+`
+
+var SubShort = `Substitute values into Resources fields`
+var SubLong = `
+Substitute values into Resources fields by replacing substitution markers with
+user supplied values.
+
+` + "`" + `sub` + "`" + ` looks for substitutions specified in a Kptfile, and replaces the substitution markers
+with user provided values.
+
+To print the available substitutions for a package, run ` + "`" + `sub PKG_DIR/` + "`" + ` without additional
+arguments.
+
+  PKG_DIR
+
+    A directory containing a Kptfile.
+
+  SUBSTITUTION_NAME
+
+    Optional.  The name of the substitution to perform or show.
+
   NEW_VALUE
-    
-    The new value to substitute for the marker.
-    
-The following is an example Kptfile containing a substitution, substituting an
-int specified as a commandline arg for the string [PORT] in the provided field paths.
+
+    Optional.  The new value to replace the marker with.  If no value is
+    specified, substitutions will be printed only.
+
+The following is an example Kptfile containing a substitution definition.  The substitution
+has the following pieces:
+
+- ` + "`" + `name` + "`" + ` of the substitution
+- ` + "`" + `type` + "`" + ` of the value that will be substituted
+- ` + "`" + `marker` + "`" + ` that will be replaced with the value
+- ` + "`" + `paths` + "`" + ` to fields that may contain the marker
+- ` + "`" + `description` + "`" + ` of the substitution
+
+It substitutes and integer value for the marker ` + "`" + `$[PORT]` + "`" + ` at the provided field
+paths.
 
     # my-package/Kptfile
     apiVersion: kpt.dev/v1alpha1
@@ -322,25 +380,47 @@ int specified as a commandline arg for the string [PORT] in the provided field p
     substitutions:
     - name: 'port'
       type: int
-      marker: '[PORT]'
+      marker: '$[PORT]'
       paths: # paths to fields to substitute
       - path: ['spec', 'ports', '[name=http]', 'port']
       - path: ['spec', 'ports', '[name=http]', 'targetPort']
-      long: 'long description of this substitution command'
-      example: 'example of this substitution command'
-      description: 'short description of this substitution command'
-      
+      description: 'short description of substitution'
+
 The preceding would enable the command: ` + "`" + `kpt sub my-package/ port PORT_NUM` + "`" + `
+
+Substitutions may have the following types and are checked before substitution is 
+performed: [int, bool, string, float]
+
+**Note**: run ` + "`" + `kpt sub PKG_DIR/` + "`" + ` on package after you fetch them to determine if
+any substitutions are required before the package is used.  The command will exit
+non-0 if any substitutions are unfulfilled.
+
+Substitutions once performed maybe overridden or reverted with the ` + "`" + `--override` + "`" + ` and
+` + "`" + `--revert` + "`" + ` flags (respectively).
 `
 var SubExamples = `
     # print the substitution commands for a package
-    kpt sub my-package/
-    
+    $ kpt sub my-package/
+         NAME       REMAINING   PERFORMED         DESCRIPTION          TYPE        MARKER      
+      port          4           0           'service port number'     int      $[PORT]         
+      name-prefix   4           0           'Resources name prefix'   string   $[NAME_PREFIX]  
+
     # print help for the port substitution
-    kpt sub my-package/ port
-    
+    $ kpt sub my-package/ port
+      NAME   REMAINING   PERFORMED        DESCRIPTION        TYPE   MARKER   
+      port   4           0           'service port number'   int    $[PORT]  
+
     # perform the port substitution in my-package
-    kpt sub my-package/ port 8080`
+    $ kpt sub my-package/ port 8080
+    performed 4 substitutions
+    
+    # override a previous substitution with a new value
+    $ kpt sub my-package/ port 8081 --override
+    performed 4 substitutions
+    
+    # revert a previous substitution
+    $ kpt sub my-package/ port --revert
+    performed 4 substitutions`
 
 var SyncShort = `Sync package dependencies using a manifest`
 var SyncLong = `

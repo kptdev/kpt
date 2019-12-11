@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"github.com/GoogleContainerTools/kpt/internal/util/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -29,6 +30,14 @@ var _ kio.Filter = &Sub{}
 type Sub struct {
 	// Count is the number of substitutions that have been performed
 	Count int
+
+	Performed int
+
+	PerformedValue string
+
+	Override bool
+
+	Revert bool
 
 	// Substitution defines the substitution to perform
 	kptfile.Substitution
@@ -42,6 +51,8 @@ func (s *Sub) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 			fs := &FieldSub{
 				Path:         s.Substitution.Paths[j],
 				Substitution: s.Substitution,
+				Override:     s.Override,
+				Revert:       s.Revert,
 			}
 			if err := input[i].PipeE(fs); err != nil {
 				return nil, err
@@ -49,6 +60,10 @@ func (s *Sub) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 			if fs.Found {
 				// increment the count if the value was substituted
 				s.Count++
+			}
+			if fs.Performed {
+				s.Performed++
+				s.PerformedValue = fs.PerformedValue
 			}
 		}
 	}
@@ -62,6 +77,14 @@ var _ yaml.Filter = &FieldSub{}
 type FieldSub struct {
 	// Found will be true if a value was substituted
 	Found bool
+
+	Performed bool
+
+	PerformedValue string
+
+	Override bool
+
+	Revert bool
 
 	// Path is the path to the field to substitute
 	Path kptfile.Path
@@ -81,8 +104,46 @@ func (fs *FieldSub) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return object, nil
 	}
 
+	// check if we have performed this substitution in the past
+	var fm = &fieldmeta.FieldMeta{}
+	if err := fm.Read(field); err != nil {
+		return nil, err
+	}
+	for i := range fm.Substitutions {
+		s := fm.Substitutions[i]
+		if s.Marker == fs.Marker {
+			fs.Performed = true
+			fs.PerformedValue = s.Value
+			break
+		}
+	}
+
+	var prunedSub []fieldmeta.Substitution
 	if !strings.Contains(field.YNode().Value, fs.Marker) {
-		// field doesn't have the marker -- no-op
+		if !fs.Override && !fs.Revert {
+			// field doesn't have the marker -- no-op
+			return object, nil
+		}
+		// if overriding or reverting, check if we have already performed the substitution
+		for i := range fm.Substitutions {
+			s := fm.Substitutions[i]
+			if s.Name == fs.Name {
+				field.YNode().Value = strings.ReplaceAll(field.YNode().Value, s.Value, s.Marker)
+				fm.Substitutions[i].Value = fs.StringValue
+				fs.Found = true
+			} else {
+				prunedSub = append(prunedSub, s)
+			}
+		}
+	}
+
+	if fs.Revert {
+		// don't perform any changes
+		field.YNode().Tag = ""
+		fm.Substitutions = prunedSub
+		if err := fm.Write(field); err != nil {
+			return nil, err
+		}
 		return object, nil
 	}
 
@@ -93,5 +154,16 @@ func (fs *FieldSub) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	field.YNode().Tag = fs.Type.Tag()
 	field.YNode().Style = 0
 
+	// add this to the list if it hasn't been substituted before
+	if !fs.Performed {
+		fm.Substitutions = append(fm.Substitutions, fieldmeta.Substitution{
+			Name:   fs.Name,
+			Marker: fs.Marker,
+			Value:  fs.StringValue,
+		})
+	}
+	if err := fm.Write(field); err != nil {
+		return nil, err
+	}
 	return object, nil
 }
