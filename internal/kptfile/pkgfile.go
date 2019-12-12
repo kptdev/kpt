@@ -49,6 +49,9 @@ type Substitution struct {
 	// Marker is the string Marker to be substituted
 	Marker string `yaml:"marker,omitempty"`
 
+	// Marker is the string Marker to be substituted
+	Required *bool `yaml:"required,omitempty"`
+
 	// Paths are the search paths to look for the Marker in each Resource
 	Paths []Path `yaml:"paths,omitempty"`
 

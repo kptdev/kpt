@@ -102,6 +102,6 @@ func (r *Substitute) runE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(c.OutOrStdout(), "performed %d substitutions\n", r.Sub.Count)
+	fmt.Fprintf(c.OutOrStdout(), "performed %d substitutions\n", r.Sub.Modified)
 	return nil
 }

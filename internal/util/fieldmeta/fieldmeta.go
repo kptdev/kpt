@@ -15,24 +15,19 @@
 package fieldmeta
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// Copied from kpt
 type FieldMeta struct {
 	Substitutions []Substitution `yaml:"substitutions,omitempty" json:"substitutions,omitempty"`
-	SetBy         *SetBy         `yaml:"setBy,omitempty" json:"setBy,omitempty"`
-	DefaultedBy   *DefaultedBy   `yaml:"defaultedBy,omitempty" json:"defaultedBy,omitempty"`
-}
-
-type SetBy struct {
-	Kind string `yaml:"kind,omitempty" json:"kind,omitempty"`
-}
-
-type DefaultedBy struct {
-	Kind string `yaml:"kind,omitempty" json:"kind,omitempty"`
+	SetBy         string         `yaml:"ownedBy,omitempty" json:"ownedBy,omitempty"`
+	DefaultedBy   string         `yaml:"defaultedBy,omitempty" json:"defaultedBy,omitempty"`
+	Description   string         `yaml:"description,omitempty" json:"description,omitempty"`
 }
 
 type Substitution struct {
@@ -44,10 +39,10 @@ type Substitution struct {
 func (fm *FieldMeta) Read(n *yaml.RNode) error {
 	if n.YNode().LineComment != "" {
 		v := strings.TrimLeft(n.YNode().LineComment, "#")
-		err := yaml.Unmarshal([]byte(v), fm)
-		if err != nil {
-			return err
-		}
+		// if it doesn't Unmarshal that is fine
+		d := yaml.NewDecoder(bytes.NewBuffer([]byte(v)))
+		d.KnownFields(false)
+		_ = d.Decode(fm)
 	}
 	return nil
 }

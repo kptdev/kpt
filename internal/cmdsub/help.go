@@ -89,15 +89,15 @@ func (r *Help) runE(c *cobra.Command, args []string) error {
 	})
 	for i := range subs {
 		s := subs[i]
-		remaining = remaining || s.Count > 0
+		remaining = remaining || false
 		table.Append([]string{
 			s.Name,
 			"'" + s.Description + "'",
 			string(s.Type),
 			s.Marker,
-			fmt.Sprintf("%d", s.Count),
-			fmt.Sprintf("%d", s.Performed),
-			s.PerformedValue,
+			fmt.Sprintf("%d", s.Remaining),
+			fmt.Sprintf("%d", s.Done),
+			s.Value,
 		})
 	}
 	table.Render()

@@ -28,12 +28,13 @@ var _ kio.Filter = &Sub{}
 
 // Sub performs substitutions
 type Sub struct {
-	// Count is the number of substitutions that have been performed
-	Count int
+	Modified int
 
-	Performed int
+	Remaining int
 
-	PerformedValue string
+	Done int
+
+	Value string
 
 	Override bool
 
@@ -57,13 +58,16 @@ func (s *Sub) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 			if err := input[i].PipeE(fs); err != nil {
 				return nil, err
 			}
-			if fs.Found {
+			if fs.Modified {
 				// increment the count if the value was substituted
-				s.Count++
+				s.Modified++
 			}
-			if fs.Performed {
-				s.Performed++
-				s.PerformedValue = fs.PerformedValue
+			if fs.ContainsMarker {
+				s.Remaining++
+			}
+			if fs.ContainsValue {
+				s.Value = fs.Value
+				s.Done++
 			}
 		}
 	}
@@ -75,15 +79,20 @@ var _ yaml.Filter = &FieldSub{}
 
 // FieldSub substitutes a Marker value on a field
 type FieldSub struct {
-	// Found will be true if a value was substituted
-	Found bool
+	// Modified will be true if a value was substituted
+	Modified bool
 
-	Performed bool
+	ContainsMarker bool
 
-	PerformedValue string
+	ContainsValue bool
 
+	// Value is the current substituted value
+	Value string
+
+	// Override if set to true will replace previously substituted values
 	Override bool
 
+	// Revert if set to true will undo previously substituted values
 	Revert bool
 
 	// Path is the path to the field to substitute
@@ -104,64 +113,62 @@ func (fs *FieldSub) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 		return object, nil
 	}
 
-	// check if we have performed this substitution in the past
+	// check for a substitution for this field
 	var fm = &fieldmeta.FieldMeta{}
 	if err := fm.Read(field); err != nil {
 		return nil, err
 	}
+	var s *fieldmeta.Substitution
 	for i := range fm.Substitutions {
-		s := fm.Substitutions[i]
-		if s.Marker == fs.Marker {
-			fs.Performed = true
-			fs.PerformedValue = s.Value
+		if fm.Substitutions[i].Name == fs.Name {
+			s = &fm.Substitutions[i]
 			break
 		}
 	}
-
-	var prunedSub []fieldmeta.Substitution
-	if !strings.Contains(field.YNode().Value, fs.Marker) {
-		if !fs.Override && !fs.Revert {
-			// field doesn't have the marker -- no-op
-			return object, nil
-		}
-		// if overriding or reverting, check if we have already performed the substitution
-		for i := range fm.Substitutions {
-			s := fm.Substitutions[i]
-			if s.Name == fs.Name {
-				field.YNode().Value = strings.ReplaceAll(field.YNode().Value, s.Value, s.Marker)
-				fm.Substitutions[i].Value = fs.StringValue
-				fs.Found = true
-			} else {
-				prunedSub = append(prunedSub, s)
-			}
-		}
+	if s == nil {
+		// no substitutions for this field
+		return object, nil
 	}
 
+	// record stats
+	if strings.Contains(field.YNode().Value, s.Marker) {
+		fs.ContainsMarker = true
+	}
+	if s.Value != "" {
+		fs.Value = s.Value
+		fs.ContainsValue = true
+	}
+
+	// undo or override previous substitutions
+	if fs.Revert || fs.Override {
+		// revert to the marker value
+		if strings.Contains(field.YNode().Value, s.Value) {
+			fs.Modified = true // modified the config
+			field.YNode().Value = strings.ReplaceAll(field.YNode().Value, s.Value, s.Marker)
+		}
+	}
 	if fs.Revert {
-		// don't perform any changes
-		field.YNode().Tag = ""
-		fm.Substitutions = prunedSub
+		s.Value = "" // value has been cleared and replaced with marker
 		if err := fm.Write(field); err != nil {
 			return nil, err
 		}
 		return object, nil
 	}
 
+	if !strings.Contains(field.YNode().Value, s.Marker) {
+		// no substitutions necessary
+		return object, nil
+	}
+
 	// replace the marker with the new value
-	fs.Found = true
+	// be sure to set the tag so the yaml doesn't incorrectly quote ints, bools or floats
+	fs.Modified = true // modified the config
 	field.YNode().Value = strings.ReplaceAll(field.YNode().Value, fs.Marker, fs.StringValue)
-	// be sure to set the tag so the yaml doesn't quote ints or bools
 	field.YNode().Tag = fs.Type.Tag()
 	field.YNode().Style = 0
 
-	// add this to the list if it hasn't been substituted before
-	if !fs.Performed {
-		fm.Substitutions = append(fm.Substitutions, fieldmeta.Substitution{
-			Name:   fs.Name,
-			Marker: fs.Marker,
-			Value:  fs.StringValue,
-		})
-	}
+	// update the comment
+	s.Value = fs.StringValue
 	if err := fm.Write(field); err != nil {
 		return nil, err
 	}
