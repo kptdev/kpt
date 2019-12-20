@@ -9,7 +9,7 @@ Update a local package with changes from a remote source repo.
     kpt update LOCAL_PKG_DIR[@VERSION] [flags]
 
   LOCAL_PKG_DIR:
-  
+
     Local package to update.  Directory must exist and contain a Kptfile to be updated.
 
   VERSION:
@@ -24,7 +24,7 @@ Update a local package with changes from a remote source repo.
     * commit: update the local contents to the remote commit
 
   --strategy:
-  
+
     Controls how changes to the local package are handled.  Defaults to fast-forward.
 
     * resource-merge: perform a structural comparison of the original / updated Resources, and merge
@@ -36,19 +36,19 @@ Update a local package with changes from a remote source repo.
     * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
       THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace it
       with the remote version.
-          
+
   -r, --repo string
-  
+
     Git repo url for updating contents.  Defaults to the repo the package was fetched from.
 
   --dry-run
-  
+
     Print the 'alpha-git-patch' strategy patch rather than merging it.
 
 #### Env Vars
 
   KPT_CACHE_DIR:
-  
+
     Controls where to cache remote packages when fetching them to update local packages.
     Defaults to ~/.kpt/repos/
 
