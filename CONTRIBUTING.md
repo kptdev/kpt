@@ -26,3 +26,24 @@ information on using pull requests.
 
 This project follows
 [Google's Open Source Community Guidelines](https://opensource.google.com/conduct/).
+
+## Building the Source
+
+1. Clone the project
+
+    ```sh
+   git clone https://github.com/GoogleContainerTools/kpt
+   cd kpt
+   ```
+
+2. Build `kpt` to `$(go env GOPATH)/bin/kpt`
+
+    ```sh
+    make
+    ```
+
+3. Run test
+
+    ```sh
+    make all
+    ```
