@@ -27,15 +27,13 @@ or
 The [gcr.io/kpt-dev/kpt](Dockerfile) container image contains the latest `kpt` and `kustomize` 
 binaries.
 
-## Quick Start
+## Quick Start: First 5 minutes
 
-First 5 minutes:
-
-  Fetch a collection of configuration from github:
+  Fetch a package from *any git repo* containing Kubernetes Resource configuration:
 
     $ kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
 
-  Print the package contents using kustomize:
+  Print the fetched package contents using kustomize:
 
     export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true # enable kustomize alpha commands
     kustomize config tree my-cockroachdb --name --image
@@ -57,7 +55,11 @@ First 5 minutes:
 
     kustomize apply my-cockroachdb/
 
-## Why Resource configuration?
+## Whats next
+
+See the full `kpt` [documentation](docs/README.md) or run `kpt help`
+
+## FAQ
 
 **Why Resource configuration rather than Templates or DSLs?**  Using Resource configuration
 provides a number of desirable properties:
@@ -73,12 +75,8 @@ provides a number of desirable properties:
   4. it **supports static analysis**
       * develop tools and processes to perform validation and linting
 
-  5. it can be **modified programatically**
+  5. it can be **modified programmatically**
       * develop CLIs and UIs for working with configuration rather than using `vim`
-
-## Whats next
-
-See the full [documentation](docs/README.md) or run `kpt help`
 
 ## Community
 

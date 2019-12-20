@@ -1,171 +1,162 @@
 ## kpt
 
-  Git based configuration package manager
+  Git based configuration package manager.
 
 ### Synopsis
 
   Git based configuration package manager.
 
-**Packages are composed of Resource configuration** (rather than DSLs, templates, etc), but may
-also contain supplemental non-Resource artifacts (e.g. README.md, arbitrary other files).
+#### Installation
 
-  Resource configuration is a collection of Kubernetes style objects (yaml or json)
-  stored in files:
+    go install -v sigs.k8s.io/kustomize/kustomize/v3
+    go install -v github.com/GoogleContainerTools/kpt
 
-        # dir/deployment.yaml
-        apiVersion: apps/v1
-        kind: Deployment
-        metadata:
-          name: petclinic-frontend
-        ...
+#### Commands
 
-  Packaging configuration rather than Templates or DSLs provides a number of desirable properties
-  such as:
+- [get](commands/get.md) -- fetch a package from git and write it to a local directory
 
-  - it clearly **represents the intended state** of the infrastructure -- no for loops, http calls,
-    etc
+      kpt help get # in-command help
 
-  - it **works with Kubernetes project based tools**
+      kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
+      kustomize config tree my-cockroachdb --name --replicas --image
 
-  - it lends itself to the **development of new / custom tools**
-    - new tools can be developed read and modify the package contents based on the Resource schema.
-    - validation and linting tools (e.g. `kubeval`)
-    - parsing and modifying via the cli (e.g. `kustomize config set`)
-    - parsing and modifying declaratively through meta Resources
-      (e.g. `kustomize`, `kustomize config run`)
+      my-cockroachdb
+      ├── [cockroachdb-statefulset.yaml]  Service cockroachdb
+      ├── [cockroachdb-statefulset.yaml]  StatefulSet cockroachdb
+      │   ├── spec.replicas: 3
+      │   └── spec.template.spec.containers
+      │       └── 0
+      │           ├── name: cockroachdb
+      │           └── image: cockroachdb/cockroach:v1.1.0
+      ├── [cockroachdb-statefulset.yaml]  PodDisruptionBudget cockroachdb-budget
+      └── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
 
-  - tools may be written in **any language or framework**
-    - tools just manipulate yaml / json directly, rather than manipulating Templates or DSLs
-    - can use Kubernetes language libraries and openapi schema
+- [diff](commands/diff.md) -- display a diff between the local package copy and the upstream version
 
-**Every existing git subdirectory containing Resource configuration** may be used as a `kpt`
-package.
+      kpt help diff # in-command help
 
-  Requirement for packages: -- they are **stored in a git and are directories containing Resource
-  configuration**.
-  Notably, the upstream [https://github.com/kubernetes/examples/staging/cockroachdb] qualifies
-  as a package:
+      sed -i -e 's/replicas: 3/replicas: 5/g' my-cockroachdb/cockroachdb-statefulset.yaml
+      kpt diff my-cockroachdb
 
-    # fetch the examples cockroachdb directory as a package
-    kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
+      diff ...
+      <   replicas: 5
+      ---
+      >   replicas: 3
 
-**Packages use git references for versioning**.
+- [update](commands/update.md) -- pull upstream package changes
 
-  Package consumers may target a version using git tags, branches, commits etc.  Package
-  publishers are encouraged to adopt semantic versioning.
+      kpt help update # in-command help
 
-    # fetch the examples cockroachdb directory as a package
-    kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
+      # commiting to git is required before update
+      git add . && git commit -m 'updates'
+      kpt update my-cockroachdb@v0.2.0
 
-**Packages may be customized through either in place modifications or through expansion**.
+- [sync](commands/sync.md) -- declaratively manage a collection of packages
 
-  It is possible to directly modify a fetched package.  Updates from upstream may be merged
-  into the local package.  Some packages may expose *field setters* used by kustomize to change
-  specific fields.
+      kpt help sync # in-command help
 
-    export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true # enable alpha kustomize commands
+          # dir/Kptfile
+          apiVersion: kpt.dev/v1alpha1
+          kind: Kptfile
+          dependencies:
+          - name: my-cockroachdb
+            git:
+              repo: "https://github.com/GoogleContainerTools/kpt"
+              directory: "examples/cockroachdb"
+              ref: "v0.1.0"
 
-    kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
-    kustomize config set my-cockroachdb/ replicas 5
+      kpt sync dir/
 
-  It is also possible to indirectly customize the packages by applying modifications to expanded
-  Resources -- e.g. via Kustomize:
+- [desc](commands/desc.md) -- show the upstream metadata for one or more packages
 
-    kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
-    # create kustomizations
-    ...
-    kustomize build my-cockroachdb/
+      kpt help desc # in-command help
 
-**The same kpt package may be fetched multiple times** to separate locations in order to **create
-separate instances**.
+      kpt desc my-cockroachdb
 
-  Each instance may be modified and updated independently of the others.
+       PACKAGE NAME         DIR                         REMOTE                       REMOTE PATH        REMOTE REF   REMOTE COMMIT  
+      my-cockroachdb   my-cockroachdb   https://github.com/kubernetes/examples   /staging/cockroachdb   master       a32bf5c        
 
-    export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true # enable alpha kustomize commands
+- [man](commands/man.md) -- render the README.md from a package if possible (requires man2md README format)
 
-    # fetch an instance of a java package
-    kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-1
-    kustomize config set my-java-1/ image gcr.io/example/my-java-1:v3.0.0
+      kpt help man # in-command help
 
-    # fetch a second instance of a java package
-    kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-2
-    kustomize config set my-java-2/ image gcr.io/example/my-java-2:v2.0.0
+      kpt man my-cockroachdb
 
-**Packages may pull in updates** from the upstream package in git.
+- [init](commands/init.md) -- initialize a new package with a README.md (man2md format) and empty Kptfile
+  (optional)
 
- Specify the target version to update to, and an (optional) update strategy for how to apply the
- upstream changes -- strategies may merge Resources by field, merge files by line number,
- replace files, or fail on local changes.
+      mkdir my-new-package
+      kpt init my-new-package/
 
-    export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true # enable alpha kustomize commands
+      tree my-new-package/
+      my-new-package/
+      ├── Kptfile
+      └── README.md
 
-    kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
-    kustomize config set my-cockroachdb/ replicas 5
-    kpt update my-cockroachdb@v1.0.1 --strategy=resource-merge
+#### Design
 
-#### Layering and Composition
+1. **Packages are composed of Resource configuration** (rather than DSLs, templates, etc)
+    * May also contain supplemental non-Resource artifacts (e.g. README.md, arbitrary other files).
 
-Each Kubernetes Resource has a number of different fields.  In many cases **different field
-values may be defined by different teams** -- e.g. a platform team may want to add a sidecar,
-an SRE team may want to set replicas, cpu, memory, a dev team may set environment variables
-or images.
+2.  **Any existing git subdirectory containing Resource configuration** may be used as a package.
+    * Nothing besides a git directory containing Resource configuration is required.
+    * e.g. the [examples repo](https://github.com/kubernetes/examples/staging/cockroachdb) may
+      be used as a package:
 
-Using a Resource-centric approach to packaging is more amenable to unifying opinions of multiple
-teams by merging Resources.  When stored in `yaml`, Resource fields may be annotated with
-the last setter of the field.
+          # fetch the examples cockroachdb directory as a package
+          kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
 
-Example of a Resource annotated with field origins.
+3. **Packages should use git references for versioning**.
+    * Package authors should use semantic versioning when publishing packages.
 
-    # Deployment unifying the opinions of platform, petclinic-dev and app-sre teams
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: petclinic-frontend
-      namespace: petclinic-prod # {"setBy":"app-sre"}
-      labels:
-        app: petclinic-frontend # {"setBy":"petclinic-dev"}
-        env: prod # {"setBy":"app-sre"}
-    spec:
-      replicas: 3 # {"setBy":"app-sre"}
-      selector:
-        matchLabels:
-          app: petclinic-frontend # {"setBy":"petclinic-dev"}
-          env: prod # {"setBy":"app-sre"}
-      template:
-        metadata:
-          labels:
-            app: petclinic-frontend # {"setBy":"petclinic-dev"}
-            env: prod # {"setBy":"app-sre"}
-      spec:
-          containers:
-          - name: petclinic-frontend
-            image: gcr.io/petclinic/frontend:1.7.9 # {"setBy":"app-sre"}
-            args:
-            - java # {"setBy":"platform"}
-            - -XX:+UnlockExperimentalVMOptions # {"setBy":"platform"}
-            - -XX:+UseCGroupMemoryLimitForHeap # {"setBy":"platform","description":"dynamically determine heap size"}
-            ports:
-            - name: http
-              containerPort: 80 # {"setBy":"platform"}
+          # fetch the examples cockroachdb directory as a package
+          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
+
+4. **Packages may be modified or customized in place**.
+    * It is possible to directly modify the fetched package.
+    * Tools may set or change fields.
+    * [Kustomize functions](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/commands/run-fns.md)
+      may also be applied to the local copy of the package.
+
+          export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
+
+          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
+          kustomize config set my-cockroachdb/ replicas 5
+
+5. **The same package may be fetched multiple times** to separate locations.
+    * Each instance may be modified and updated independently of the others.
+
+          export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
+
+          # fetch an instance of a java package
+          kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-1
+          kustomize config set my-java-1/ image gcr.io/example/my-java-1:v3.0.0
+
+          # fetch a second instance of a java package
+          kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-2
+          kustomize config set my-java-2/ image gcr.io/example/my-java-2:v2.0.0
+
+6. **Packages may pull upstream updates after they have been fetched and modified**.
+    * Specify the target version to update to, and an (optional) update strategy for how to apply the
+      upstream changes.
+
+          export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
+
+          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
+          kustomize config set my-cockroachdb/ replicas 5
+          kpt update my-cockroachdb@v1.0.1 --strategy=resource-merge
+
 
 #### Templates and DSLs
 
-Note: If the use of Templates or DSLs is strongly desired, they may be used to produce
-`kpt` packages by fully expanding them into Resource configuration.
-
-The artifacts used to generated Resource configuration may be included in the package as
-supplements.
-
-#### Flags
-
-  --stack-trace
-
-    Print a stack trace on an error.  For debugging code.
+Note: If the use of Templates or DSLs is strongly desired, they may be fully expanded into Resource
+configuration to be used as a kpt package.  These artifacts used to generated Resource configuration
+may be included in the package as supplements.
 
 #### Env Vars
 
   COBRA_SILENCE_USAGE
-
+  
     Set to true to silence printing the usage on error
 
   COBRA_STACK_TRACE_ON_ERRORS

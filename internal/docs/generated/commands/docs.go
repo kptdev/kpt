@@ -20,9 +20,9 @@ var CompleteLong = `
 Install shell completion for kpt commands and flags.
 
     kpt install-completion
-    
+
 Uninstall shell completion.
-    
+
     COMP_UNINSTALL=1 kpt complete
 `
 var CompleteExamples = `
@@ -30,7 +30,7 @@ var CompleteExamples = `
     $ kpt install-completion
     install completion for kpt? y
     $ source ~/.bash_profile
-    
+
     # uninstall
     $ COMP_UNINSTALL=1 kpt install-completion
     uninstall completion for kpt? y 
@@ -229,171 +229,6 @@ var InitExamples = `
 	    # writes Kptfile package meta if not found
 	    kpt init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"`
 
-var KptShort = `  Git based configuration package manager.`
-var KptLong = `
-  Git based configuration package manager.
-
-#### Installation
-
-    go install -v sigs.k8s.io/kustomize/kustomize/v3
-    go install -v github.com/GoogleContainerTools/kpt
-
-#### Commands
-
-- [get](get.md) -- fetch a package from git and write it to a local directory
-
-      kpt help get # in-command help
-
-      kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
-      kustomize config tree my-cockroachdb --name --replicas --image
-
-      my-cockroachdb
-      ├── [cockroachdb-statefulset.yaml]  Service cockroachdb
-      ├── [cockroachdb-statefulset.yaml]  StatefulSet cockroachdb
-      │   ├── spec.replicas: 3
-      │   └── spec.template.spec.containers
-      │       └── 0
-      │           ├── name: cockroachdb
-      │           └── image: cockroachdb/cockroach:v1.1.0
-      ├── [cockroachdb-statefulset.yaml]  PodDisruptionBudget cockroachdb-budget
-      └── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
-
-- [diff](diff.md) -- display a diff between the local package copy and the upstream version
-
-      kpt help diff # in-command help
-
-      sed -i -e 's/replicas: 3/replicas: 5/g' my-cockroachdb/cockroachdb-statefulset.yaml
-      kpt diff my-cockroachdb
-
-      diff ...
-      <   replicas: 5
-      ---
-      >   replicas: 3
-
-- [update](update.md) -- pull upstream package changes
-
-      kpt help update # in-command help
-
-      # commiting to git is required before update
-      git add . && git commit -m 'updates'
-      kpt update my-cockroachdb@v0.2.0
-
-- [sync](sync.md) -- declaratively manage a collection of packages
-
-      kpt help sync # in-command help
-
-          # dir/Kptfile
-          apiVersion: kpt.dev/v1alpha1
-          kind: Kptfile
-          dependencies:
-          - name: my-cockroachdb
-            git:
-              repo: "https://github.com/GoogleContainerTools/kpt"
-              directory: "examples/cockroachdb"
-              ref: "v0.1.0"
-
-      kpt sync dir/
-
-- [desc](desc.md) -- show the upstream metadata for one or more packages
-
-      kpt help desc # in-command help
-
-      kpt desc my-cockroachdb
-
-       PACKAGE NAME         DIR                         REMOTE                       REMOTE PATH        REMOTE REF   REMOTE COMMIT  
-      my-cockroachdb   my-cockroachdb   https://github.com/kubernetes/examples   /staging/cockroachdb   master       a32bf5c        
-
-- [man](man.md) -- render the README.md from a package if possible (requires man2md README format)
-
-      kpt help man # in-command help
-
-      kpt man my-cockroachdb
-
-- [init](init.md) -- initialize a new package with a README.md (man2md format) and empty Kptfile
-  (optional)
-
-      mkdir my-new-package
-      kpt init my-new-package/
-
-      tree my-new-package/
-      my-new-package/
-      ├── Kptfile
-      └── README.md
-
-#### Design
-
-1. **Packages are composed of Resource configuration** (rather than DSLs, templates, etc)
-    * May also contain supplemental non-Resource artifacts (e.g. README.md, arbitrary other files).
-
-2.  **Any existing git subdirectory containing Resource configuration** may be used as a package.
-    * Nothing besides a git directory containing Resource configuration is required.
-    * e.g. the upstream [https://github.com/kubernetes/examples/staging/cockroachdb] may
-      be used as a package:
-
-          # fetch the examples cockroachdb directory as a package
-          kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
-
-3. **Packages should use git references for versioning**.
-    * Package authors should use semantic versioning when publishing packages.
-
-          # fetch the examples cockroachdb directory as a package
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
-
-4. **Packages may be modified or customized in place**.
-    * It is possible to directly modify the fetched package.
-    * Some packages may expose *field setters* used by kustomize to change fields.
-    * Kustomize functions may also be applied to the local copy of the package.
-
-          export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
-
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
-          kustomize config set my-cockroachdb/ replicas 5
-
-5. **The same package may be fetched multiple times** to separate locations.
-    * Each instance may be modified and updated independently of the others.
-
-          export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
-
-          # fetch an instance of a java package
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-1
-          kustomize config set my-java-1/ image gcr.io/example/my-java-1:v3.0.0
-
-          # fetch a second instance of a java package
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-2
-          kustomize config set my-java-2/ image gcr.io/example/my-java-2:v2.0.0
-
-6. **Packages may pull in upstream updates** from the package origin in git.
-    * Specify the target version to update to, and an (optional) update strategy for how to apply the
-      upstream changes.
-
-          export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
-
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
-          kustomize config set my-cockroachdb/ replicas 5
-          kpt update my-cockroachdb@v1.0.1 --strategy=resource-merge
-
-
-#### Templates and DSLs
-
-Note: If the use of Templates or DSLs is strongly desired, they may be fully expanded into Resource
-configuration to be used as a kpt package.  These artifacts used to generated Resource configuration
-may be included in the package as supplements.
-
-#### Env Vars
-
-  COBRA_SILENCE_USAGE
-  
-    Set to true to silence printing the usage on error
-
-  COBRA_STACK_TRACE_ON_ERRORS
-
-    Set to true to print a stack trace on an error
-
-  KPT_NO_PAGER_HELP
-
-    Set to true to print the help to the console directly instead of through
-    a pager (e.g. less)`
-
 var ManShort = `Format and display package documentation if it exists`
 var ManLong = `
 Format and display package documentation if it exists.    If package documentation is missing
@@ -515,7 +350,7 @@ Update a local package with changes from a remote source repo.
     kpt update LOCAL_PKG_DIR[@VERSION] [flags]
 
   LOCAL_PKG_DIR:
-  
+
     Local package to update.  Directory must exist and contain a Kptfile to be updated.
 
   VERSION:
@@ -530,7 +365,7 @@ Update a local package with changes from a remote source repo.
     * commit: update the local contents to the remote commit
 
   --strategy:
-  
+
     Controls how changes to the local package are handled.  Defaults to fast-forward.
 
     * resource-merge: perform a structural comparison of the original / updated Resources, and merge
@@ -542,19 +377,19 @@ Update a local package with changes from a remote source repo.
     * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
       THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace it
       with the remote version.
-          
+
   -r, --repo string
-  
+
     Git repo url for updating contents.  Defaults to the repo the package was fetched from.
 
   --dry-run
-  
+
     Print the 'alpha-git-patch' strategy patch rather than merging it.
 
 #### Env Vars
 
   KPT_CACHE_DIR:
-  
+
     Controls where to cache remote packages when fetching them to update local packages.
     Defaults to ~/.kpt/repos/
 `
