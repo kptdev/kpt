@@ -2,10 +2,6 @@
 
   Git based configuration package manager.
 
-### Synopsis
-
-  Git based configuration package manager.
-
 #### Installation
 
     go install -v sigs.k8s.io/kustomize/kustomize/v3
