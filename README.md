@@ -12,20 +12,17 @@ Publish, Consume and Update packages of raw Kubernetes Resource configuration.
 
 ## Installation
 
+build using go:
+
     export GO111MODULE=on
     go install -v github.com/GoogleContainerTools/kpt
     go install -v sigs.k8s.io/kustomize/kustomize/v3
 
-or
+or download prebuilt binaries:
 
 - [darwin](https://storage.cloud.google.com/kpt-dev/kpt.master_darwin_amd64)
 - [linux](https://storage.cloud.google.com/kpt-dev/kpt.master_linux_amd64)
 - [windows](https://storage.cloud.google.com/kpt-dev/kpt.master_windows_amd64)
-
-## Containers Image
-
-The [gcr.io/kpt-dev/kpt](Dockerfile) container image contains the latest `kpt` and `kustomize` 
-binaries.
 
 ## Quick Start: First 5 minutes
 
@@ -77,6 +74,10 @@ provides a number of desirable properties:
 
   5. it can be **modified programmatically**
       * develop CLIs and UIs for working with configuration rather than using `vim`
+
+**Is there a container image that contains kpt?**
+
+  Yes. [gcr.io/kpt-dev/kpt](Dockerfile) contains the `kpt` and `kustomize` binaries.
 
 ## Community
 

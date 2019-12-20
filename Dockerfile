@@ -14,9 +14,10 @@
 
 FROM golang:1.13-stretch
 ENV CGO_ENABLED=0
+ENV GO111MODULE=on
 
 WORKDIR /go/src/
-RUN go get sigs.k8s.io/kustomize/kustomize
+RUN go install -v sigs.k8s.io/kustomize/kustomize/v3
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
