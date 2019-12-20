@@ -82,7 +82,7 @@ func TestCmd_execute(t *testing.T) {
 	if !g.AssertKptfile(t, dest, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{

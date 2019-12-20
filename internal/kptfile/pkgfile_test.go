@@ -51,7 +51,7 @@ upstream:
 	assert.Equal(t, KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: "cockroachdb"},
-			ApiVersion: TypeMeta.ApiVersion,
+			APIVersion: TypeMeta.APIVersion,
 			Kind:       TypeMeta.Kind},
 		Upstream: Upstream{
 			Type: "git",

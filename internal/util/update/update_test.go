@@ -816,7 +816,7 @@ func (g *TestSetupManager) AssertKptfile(commit, ref string) bool {
 	expectedKptfile := kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: name},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{

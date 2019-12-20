@@ -96,7 +96,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 		// serialize the gvk when writing the Kptfile
 		k.Kind = kptfile.TypeMeta.Kind
-		k.ApiVersion = kptfile.TypeMeta.ApiVersion
+		k.APIVersion = kptfile.TypeMeta.APIVersion
 
 		err = func() error {
 			f, err := os.Create(filepath.Join(args[0], "Kptfile"))
