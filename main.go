@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/commands"
@@ -35,24 +36,30 @@ import (
 var pgr []string
 
 func main() {
-	if val, found := os.LookupEnv("KPT_NO_PAGER_HELP"); !found || val != "1" {
-		// use a pager for printing tutorials
-		e, found := os.LookupEnv("PAGER")
-		var err error
-		if !found {
+	// find the pager if one exists
+	func() {
+		if val, found := os.LookupEnv("KPT_NO_PAGER_HELP"); !found || val != "1" {
+			// use a pager for printing tutorials
+			e, found := os.LookupEnv("PAGER")
+			var err error
+			if found {
+				pgr = []string{e}
+				return
+			}
 			e, err = exec.LookPath("pager")
-			if err != nil {
-				e, err = exec.LookPath("less")
-				if err == nil {
-					pgr = []string{e, "-R"}
-				}
+			if err == nil {
+				pgr = []string{e}
+				return
+			}
+			e, err = exec.LookPath("less")
+			if err == nil {
+				pgr = []string{e, "-R"}
+				return
 			}
 		}
-		pgr = strings.Split(e, " ")
-	}
+	}()
 
 	cmd := &cobra.Command{Use: "kpt", Short: docs.READMEShort, Long: docs.READMELong}
-	cmd.SetHelpFunc(newHelp(pgr, cmd))
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
@@ -77,9 +84,7 @@ func main() {
 		}
 	}
 
-	for i := range cmd.Commands() {
-		replace(cmd.Commands()[i])
-	}
+	replace(cmd)
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
@@ -94,8 +99,27 @@ func replace(c *cobra.Command) {
 }
 
 func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings []string) {
+	if len(pgr) == 0 {
+		return c.HelpFunc()
+	}
+
 	fn := c.HelpFunc()
-	return func(command *cobra.Command, strings []string) {
+	return func(command *cobra.Command, args []string) {
+
+		stty := exec.Command("stty", "size")
+		stty.Stdin = os.Stdin
+		out, err := stty.Output()
+		if err == nil {
+			terminalHeight, err := strconv.Atoi(strings.Split(string(out), " ")[0])
+			helpHeight := strings.Count(command.Long, "\n") +
+				strings.Count(command.UsageString(), "\n")
+			if err == nil && terminalHeight > helpHeight {
+				// don't use a pager if the help is shorter than the console
+				fn(command, args)
+				return
+			}
+		}
+
 		b := &bytes.Buffer{}
 		pager := exec.Command(e[0])
 		if len(e) > 1 {
@@ -104,7 +128,7 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 		pager.Stdin = b
 		pager.Stdout = c.OutOrStdout()
 		c.SetOut(b)
-		fn(command, strings)
+		fn(command, args)
 		if err := pager.Run(); err != nil {
 			fmt.Fprintf(c.ErrOrStderr(), "%v", err)
 			os.Exit(1)

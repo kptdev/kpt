@@ -10,62 +10,75 @@ Git based configuration package manager.
 
 Publish, Consume and Update packages of raw Kubernetes Resource configuration.
 
-## Latest Binaries
+## Installation
 
-Binaries:
+    export GO111MODULE=on
+    go install -v github.com/GoogleContainerTools/kpt
+    go install -v sigs.k8s.io/kustomize/kustomize/v3
 
-- [https://storage.cloud.google.com/kpt-dev/kpt.master_darwin_amd64]
-- [https://storage.cloud.google.com/kpt-dev/kpt.master_linux_amd64]
-- [https://storage.cloud.google.com/kpt-dev/kpt.master_windows_amd64]
+or
 
-Containers:
+- [darwin](https://storage.cloud.google.com/kpt-dev/kpt.master_darwin_amd64)
+- [linux](https://storage.cloud.google.com/kpt-dev/kpt.master_linux_amd64)
+- [windows](https://storage.cloud.google.com/kpt-dev/kpt.master_windows_amd64)
 
-- `gcr.io/kpt-dev/kpt`
+## Containers Image
+
+The [gcr.io/kpt-dev/kpt](Dockerfile) container image contains the latest `kpt` and `kustomize` 
+binaries.
 
 ## Quick Start
 
-Instructions for the first 5 minutes...
+First 5 minutes:
 
-    # download binaries or install using go (1.13 or later)
-    GO111MODULE=on go get github.com/GoogleContainerTools/kpt
-    GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
+  Fetch a collection of configuration from github:
+
+    $ kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
+
+  Print the package contents using kustomize:
+
     export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true # enable kustomize alpha commands
-
-    # fetch a package from github
-    kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
-
-    # print the package contents
     kustomize config tree my-cockroachdb --name --image
 
-    # apply the package to a cluster
-    kubectl apply --recursive -f my-cockroachdb/
+  Output:
 
-## Why Resource configuration for packages?
+    my-cockroachdb
+    ├── [cockroachdb-statefulset.yaml]  Service cockroachdb
+    ├── [cockroachdb-statefulset.yaml]  StatefulSet cockroachdb
+    │   ├── spec.replicas: 3
+    │   └── spec.template.spec.containers
+    │       └── 0
+    │           ├── name: cockroachdb
+    │           └── image: cockroachdb/cockroach:v1.1.0
+    ├── [cockroachdb-statefulset.yaml]  PodDisruptionBudget cockroachdb-budget
+    └── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
+
+  Apply the package to a cluster:
+
+    kustomize apply my-cockroachdb/
+
+## Why Resource configuration?
 
 **Why Resource configuration rather than Templates or DSLs?**  Using Resource configuration
-directly provides a number of desirable properties such as:
+provides a number of desirable properties:
 
-  - it clearly **represents the intended state** of the infrastructure -- no for loops, http calls,
-    etc
+  1. it clearly **represents the intended state** of the infrastructure -- no for loops, http calls,
+    etc to interpret
 
-  - it **works with Kubernetes project based tools**
+  2. it **works directly with Kubernetes project based tools** -- `kubectl`, `kustomize`, etc
 
-  - it lends itself to the **development of new / custom tools**
-    - new tools can be developed read and modify the package contents based on the Resource schema.
-    - validation and linting tools (e.g. `kubeval`)
-    - parsing and modifying via the cli (e.g. `kustomize config set`)
-    - parsing and modifying declaratively through meta Resources
-      (e.g. `kustomize`, `kustomize config run`)
+  3. it enables **composition of a variety of tools written in different languages**
+      * any modern language can manipulate yaml / json structures, no need to adopt `go`
 
-  - tools may be written in **any language or framework**
-    - tools just manipulate yaml / json directly, rather than manipulating Templates or DSLs
-    - can use Kubernetes language libraries and openapi schema
+  4. it **supports static analysis**
+      * develop tools and processes to perform validation and linting
+
+  5. it can be **modified programatically**
+      * develop CLIs and UIs for working with configuration rather than using `vim`
 
 ## Whats next
 
-See the full [documentation](docs/README.md)
-
-Documentation also available in the `kpt` command by running `$ kpt help`
+See the full [documentation](docs/README.md) or run `kpt help`
 
 ## Community
 
@@ -74,6 +87,3 @@ Documentation also available in the `kpt` command by running `$ kpt help`
 * [kpt-users mailing list](https://groups.google.com/forum/#!forum/kpt-users)
 
 ---------------------
-
-
-
