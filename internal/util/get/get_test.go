@@ -64,7 +64,7 @@ func TestCommand_Run(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -104,7 +104,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: subdir},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -139,7 +139,7 @@ func TestCommand_Run_destination(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: dest},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -180,7 +180,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: dest},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -234,7 +234,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -293,7 +293,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -334,7 +334,7 @@ func TestCommand_Run_clean(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -369,7 +369,7 @@ func TestCommand_Run_clean(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -410,7 +410,7 @@ func TestCommand_Run_failClean(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -442,7 +442,7 @@ func TestCommand_Run_failClean(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -478,7 +478,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
@@ -509,7 +509,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	g.AssertKptfile(t, r, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			ApiVersion: kptfile.TypeMeta.ApiVersion,
+			APIVersion: kptfile.TypeMeta.APIVersion,
 			Kind:       kptfile.TypeMeta.Kind},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
