@@ -42,10 +42,15 @@ type GitPatchUpdater struct {
 
 	// gitRunner is used to run git commands
 	gitRunner *gitutil.GitRunner
+
+	// packageRef is the RemoteDirectory/ToRef -- for sub directory versioning
+	packageRef string
 }
 
 func (u GitPatchUpdater) Update(options UpdateOptions) error {
 	u.UpdateOptions = options
+	u.packageRef = path.Join(strings.TrimLeft(u.KptFile.Upstream.Git.Directory, "/"),
+		u.ToRef)
 	if err := u.calculatePatch(); err != nil {
 		return err
 	}
@@ -69,9 +74,16 @@ func (u GitPatchUpdater) Update(options UpdateOptions) error {
 // to update the local package
 func (u *GitPatchUpdater) calculatePatch() error {
 	var err error
+
+	optional := []string{u.ToRef}
+	if u.packageRef != u.ToRef {
+		optional = append(optional, u.ToRef)
+	}
 	if u.gitRunner, err = gitutil.NewUpstreamGitRunner(
 		u.KptFile.Upstream.Git.Repo, u.KptFile.Upstream.Git.Directory,
-		u.ToRef, u.UpdateOptions.KptFile.Upstream.Git.Commit); err != nil {
+		[]string{u.UpdateOptions.KptFile.Upstream.Git.Commit},
+		optional,
+	); err != nil {
 		return err
 	}
 	u.gitRunner.Verbose = u.Verbose
@@ -250,13 +262,8 @@ func (u *GitPatchUpdater) formatPatch() error {
 func (u *GitPatchUpdater) destinationRefToCommitSha() error {
 	var err error
 
-	originalRef := u.ToRef
-	if u.PackagePath != "" && !strings.Contains(originalRef, "refs") {
-		u.ToRef = path.Join(u.PackagePath, u.ToRef)
-	}
 	// first check if there is a tag for the specific subdirectory for per-dir versioning
-	if err = u.gitRunner.Run("reset", "--hard", u.ToRef); err != nil {
-		u.ToRef = originalRef
+	if err = u.gitRunner.Run("reset", "--hard", u.packageRef); err != nil {
 		// this works for tags
 		if err = u.gitRunner.Run("reset", "--hard", u.ToRef); err != nil {
 			// this works for branches

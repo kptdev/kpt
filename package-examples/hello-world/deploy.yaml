@@ -20,7 +20,7 @@ metadata:
   labels:
     app: hello
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: hello
@@ -35,7 +35,7 @@ spec:
         # This app listens on port 8080 for web traffic by default.
         ports:
         - name: http
-          containerPort: 8081
+          containerPort: 8080
         env:
         - name: PORT
-          value: "80801"
+          value: "80800"
