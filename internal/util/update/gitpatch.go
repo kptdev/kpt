@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
@@ -248,12 +249,21 @@ func (u *GitPatchUpdater) formatPatch() error {
 // on p.toCommit
 func (u *GitPatchUpdater) destinationRefToCommitSha() error {
 	var err error
-	// this works for tags
+
+	originalRef := u.ToRef
+	if u.PackagePath != "" && !strings.Contains(originalRef, "refs") {
+		u.ToRef = path.Join(u.PackagePath, u.ToRef)
+	}
+	// first check if there is a tag for the specific subdirectory for per-dir versioning
 	if err = u.gitRunner.Run("reset", "--hard", u.ToRef); err != nil {
-		// this works for branches
-		if err = u.gitRunner.Run("reset", "--hard", "origin/"+u.ToRef); err != nil {
-			return errors.Errorf("update failed: unable to reset to update target: %v: %s %s",
-				err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
+		u.ToRef = originalRef
+		// this works for tags
+		if err = u.gitRunner.Run("reset", "--hard", u.ToRef); err != nil {
+			// this works for branches
+			if err = u.gitRunner.Run("reset", "--hard", "origin/"+u.ToRef); err != nil {
+				return errors.Errorf("update failed: unable to reset to update target: %v: %s %s",
+					err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
+			}
 		}
 	}
 	if err := u.gitRunner.Run("rev-parse", "--verify", "HEAD"); err != nil {
