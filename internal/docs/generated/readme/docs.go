@@ -17,10 +17,6 @@ package readme
 
 var READMEShort = `  Git based configuration package manager.`
 var READMELong = `
-### Synopsis
-
-  Git based configuration package manager.
-
 #### Installation
 
     go install -v sigs.k8s.io/kustomize/kustomize/v3

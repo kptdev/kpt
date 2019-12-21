@@ -83,19 +83,21 @@ func (c Command) Run() error {
 	if c.Clean {
 		err = os.RemoveAll(c.Destination)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
 	// copy the git sub directory to the destination
 	err = copyutil.CopyDir(r.AbsPath(), c.Destination)
 	if err != nil {
-		return err
+		return errors.WrapPrefixf(err,
+			"missing subdirectory %s in repo %s at ref %s\n",
+			r.Path, r.OrgRepo, r.Ref)
 	}
 
 	// create or update the KptFile with the values from git
 	if err = (&c).upsertKptfile(r); err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 	return nil
 }
@@ -107,6 +109,34 @@ type Cloner func(repoSpec *git.RepoSpec) error
 // to say, some remote API, to obtain a local clone of
 // a remote repo.
 func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
+	// look for a tag with the directory as a prefix for versioning
+	// subdirectories independently
+	originalRef := repoSpec.Ref
+	if repoSpec.Path != "" && !strings.Contains(repoSpec.Ref, "refs") {
+		// join the directory with the Ref (stripping the preceding '/' if it exists)
+		repoSpec.Ref = path.Join(strings.TrimLeft(repoSpec.Path, "/"), repoSpec.Ref)
+	}
+
+	// clone the repo to a tmp directory.
+	// delete the tmp directory later.
+	err := clonerUsingGitExec(repoSpec)
+	if err != nil && originalRef != repoSpec.Ref {
+		repoSpec.Ref = originalRef
+		err = clonerUsingGitExec(repoSpec)
+	}
+
+	if err != nil {
+		if strings.HasPrefix(repoSpec.Path, "blob/") {
+			return errors.Errorf("failed to clone git repo containing /blob/, "+
+				"you may need to remove /blob/master from the url:\n%v", err)
+		}
+		return errors.Errorf("failed to clone git repo: %v", err)
+	}
+
+	return nil
+}
+
+func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
 		return errors.WrapPrefixf(err, "no 'git' program on path")
