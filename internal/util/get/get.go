@@ -83,19 +83,21 @@ func (c Command) Run() error {
 	if c.Clean {
 		err = os.RemoveAll(c.Destination)
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 	}
 
 	// copy the git sub directory to the destination
 	err = copyutil.CopyDir(r.AbsPath(), c.Destination)
 	if err != nil {
-		return err
+		return errors.WrapPrefixf(err,
+			"missing subdirectory %s in repo %s at ref %s\n",
+			r.Path, r.OrgRepo, r.Ref)
 	}
 
 	// create or update the KptFile with the values from git
 	if err = (&c).upsertKptfile(r); err != nil {
-		return err
+		return errors.Wrap(err)
 	}
 	return nil
 }
