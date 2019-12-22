@@ -47,21 +47,27 @@
       git add . && git commit -m 'updates'
       kpt update my-cockroachdb@v0.2.0
 
-- [sync](commands/sync.md) -- declaratively manage a collection of packages
+- [sync](commands/sync.md) -- manage a collection of packages using a manifest
 
       kpt help sync # in-command help
 
-          # dir/Kptfile
-          apiVersion: kpt.dev/v1alpha1
-          kind: Kptfile
-          dependencies:
-          - name: my-cockroachdb
-            git:
-              repo: "https://github.com/GoogleContainerTools/kpt"
-              directory: "examples/cockroachdb"
-              ref: "v0.1.0"
+      kpt init . # init a new package
+      kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world@v0.1.0 \
+         hello-world # add a dependency
+      kpt sync ./ # sync the dependencies 
 
-      kpt sync dir/
+      # print the package file
+      cat Kptfile
+
+      apiVersion: kpt.dev/v1alpha1
+      kind: Kptfile
+      dependencies:
+      - name: hello-world
+        git:
+          repo: "https://github.com/GoogleContainerTools/kpt"
+          directory: "package-examples/hello-world"
+          ref: "v0.1.0"
+
 
 - [desc](commands/desc.md) -- show the upstream metadata for one or more packages
 
@@ -88,6 +94,12 @@
       my-new-package/
       ├── Kptfile
       └── README.md
+
+#### Tutorials
+
+- [fetch-a-package](tutorials/fetch-a-package.md)
+- [update-a-local-package](tutorials/update-a-local-package.md)
+- [publish-a-package](tutorials/publish-a-package.md)
 
 #### Design
 
@@ -142,6 +154,72 @@
           kustomize config set my-cockroachdb/ replicas 5
           kpt update my-cockroachdb@v1.0.1 --strategy=resource-merge
 
+#### Building Platforms, Solutions and High-Level Systems with kpt
+
+kpt was developed to solve **configuration packaging** only -- and was designed to be composed
+with other tools from the ecosystem in order to build higher-level systems and platforms.
+
+As such, **kpt has a minimal feature set by design to maximize its utility as a building block
+for platforms** and ability to be composed with other tools.
+
+This sections provides a high-level overview of some of the ways in which kpt may be composed
+with tools from the upstream Kubernetes project to build configuration and delivery solutions.
+
+See [building-solutions](tutorials/building-solutions.md) for a more information on this topic.
+
+1. **Packaging**
+
+   Packaging covers how to bundle configuration for reuse.
+
+   - Fetch -- get a bundle of Resource configuration
+   - Update -- pull in upstream changes to Resource configuration
+   - Publish -- publish a bundle of Resource configuration
+
+2. **Development**
+
+   Development covers how to create and modify configuration, and includes
+   how to incorporate and unify opinions from an arbitrary number of sources.
+
+   - Abstraction -- substitution, generation, injection, etc
+   - Customization -- configuring blueprints, defining variants, etc
+   - Validation -- policy enforcement, linting, etc
+
+3. **Actuation**
+
+   Actuation covers how to take configuration and actuate it by applying it.
+
+   - Apply -- apply configuration to a cluster
+   - Status -- waiting for changes to be fully rolled out
+   - Prune -- deletion of Resources no longer appearing in the config
+
+4. **Visibility** /  **Inspection**
+
+   Visibility / Inspection covers how to visualize and understand packaged
+   configuration, as well as applied Resources.
+
+   - Search for Resources within a Package, Cluster or set of Clusters.
+   - Visualize the relationship between Resources
+   - Debug Resources
+
+5. **Discovery**
+
+   Discovery includes how to locate new packages, and examples.
+
+   - Discover new publicly published packages from a market place or the web
+
+#### Tools
+
+| Category      | Example Tool           | Example Commands                                  |
+|---------------|------------------------|---------------------------------------------------|
+| Packaging     | `kpt`                  | `kpt get`, `kpt update`                           |
+| Development   | `kustomize`            | `kustomize build`, `kustomize config run`         |
+| Actuation     | `kubectl`, `kustomize` | `kubectl apply`, `kustomize status`               |
+| Visibility    | `kustomize`, `kubectl` | `kustomize config grep`, `kustomize config tree`  |
+| Discovery     | GitHub                 |                                                   |
+
+#### FAQ
+
+See [faq](tutorials/faq.md)
 
 #### Templates and DSLs
 
