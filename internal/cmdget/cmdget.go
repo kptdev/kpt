@@ -17,17 +17,14 @@ package cmdget
 
 import (
 	"fmt"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/get/getioreader"
+	"github.com/GoogleContainerTools/kpt/internal/util/parse"
+	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
@@ -65,135 +62,13 @@ type Runner struct {
 	FilenamePattern string
 }
 
-// getURIAndVersion parses the repo+pkgURI and the version from v
-func getURIAndVersion(v string) (string, string, error) {
-	if strings.Count(v, "://") > 1 {
-		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
-	}
-	if strings.Count(v, "@") > 2 {
-		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
-	}
-	pkgURI := strings.SplitN(v, "@", 2)
-	if len(pkgURI) == 1 {
-		return pkgURI[0], "master", nil
-	}
-	return pkgURI[0], pkgURI[1], nil
-}
-
-// getRepoAndPkg parses the repository uri and the package subdirectory from v
-func getRepoAndPkg(v string) (string, string, error) {
-	parts := strings.SplitN(v, "://", 2)
-	if len(parts) != 2 {
-		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
-	}
-
-	if strings.HasPrefix(parts[1], "github.com") {
-		repoSubdir := append(strings.Split(parts[1], "/"), "/")
-		if len(repoSubdir) < 4 {
-			return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
-		}
-		repo := parts[0] + "://" + path.Join(repoSubdir[:3]...)
-		dir := path.Join(repoSubdir[3:]...)
-		return repo, dir, nil
-	}
-
-	if strings.Count(v, ".git/") != 1 && !strings.HasSuffix(v, ".git") {
-		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
-	}
-
-	if strings.HasSuffix(v, ".git") || strings.HasSuffix(v, ".git/") {
-		v = strings.TrimSuffix(v, "/")
-		v = strings.TrimSuffix(v, ".git")
-		return v, "/", nil
-	}
-
-	repoAndPkg := strings.SplitN(v, ".git/", 2)
-	return repoAndPkg[0], repoAndPkg[1], nil
-}
-
-func getDest(v, repo, subdir string) (string, error) {
-	v = filepath.Clean(v)
-
-	f, err := os.Stat(v)
-	if os.IsNotExist(err) {
-		parent := filepath.Dir(v)
-		if _, err := os.Stat(parent); os.IsNotExist(err) {
-			// error -- fetch to directory where parent does not exist
-			return "", errors.Errorf("parent directory %s does not exist", parent)
-		}
-		// fetch to a specific directory -- don't default the name
-		return v, nil
-	}
-
-	if !f.IsDir() {
-		return "", errors.Errorf("LOCAL_PKG_DEST must be a directory")
-	}
-
-	// LOCATION EXISTS
-	// default the location to a new subdirectory matching the pkg URI base
-	repo = strings.TrimSuffix(repo, "/")
-	repo = strings.TrimSuffix(repo, ".git")
-	v = filepath.Join(v, path.Base(path.Join(path.Clean(repo), path.Clean(subdir))))
-
-	// make sure the destination directory does not yet exist yet
-	if _, err := os.Stat(v); !os.IsNotExist(err) {
-		return "", errors.Errorf("destination directory %s already exists", v)
-	}
-	return v, nil
-}
-
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	if args[0] == "-" {
-		return nil
-	}
-
-	// Simple parsing if contains .git
-	if strings.Contains(args[0], ".git") {
-		var repo, dir, version string
-		parts := strings.Split(args[0], ".git")
-		repo = strings.Trim(parts[0], "/")
-		if len(parts) == 1 {
-			// do nothing
-		} else if strings.Contains(parts[1], "@") {
-			parts := strings.Split(parts[1], "@")
-			version = strings.Trim(parts[1], "/")
-			dir = parts[0]
-		} else {
-			dir = parts[1]
-		}
-		if version == "" {
-			version = "master"
-		}
-		if dir == "" {
-			dir = "/"
-		}
-		destination, err := getDest(args[1], repo, dir)
-		if err != nil {
-			return err
-		}
-		r.Get.Ref = version
-		r.Get.Directory = path.Clean(dir)
-		r.Get.Repo = repo
-		r.Get.Destination = filepath.Clean(destination)
-		return nil
-	}
-
-	uri, version, err := getURIAndVersion(args[0])
+	t, err := parse.GitParseArgs(args)
 	if err != nil {
 		return err
 	}
-	repo, remoteDir, err := getRepoAndPkg(uri)
-	if err != nil {
-		return err
-	}
-	destination, err := getDest(args[1], repo, remoteDir)
-	if err != nil {
-		return err
-	}
-	r.Get.Ref = version
-	r.Get.Directory = path.Clean(remoteDir)
-	r.Get.Repo = repo
-	r.Get.Destination = filepath.Clean(destination)
+	r.Get.Git = t.Git
+	r.Get.Destination = t.Destination
 	return nil
 }
 
@@ -206,6 +81,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		"fetching package %s from %s to %s\n",
 		r.Get.Directory, r.Get.Repo, r.Get.Destination)
 	if err := r.Get.Run(); err != nil {
+		return err
+	}
+
+	if err := setters.PerformSetters(r.Get.Destination); err != nil {
 		return err
 	}
 

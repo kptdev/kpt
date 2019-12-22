@@ -13,3 +13,29 @@
 // limitations under the License.
 
 package functions
+
+import (
+	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+)
+
+func RunFunctions(path string, functions []kptfile.Function) error {
+	rw := &kio.LocalPackageReadWriter{
+		KeepReaderAnnotations: false,
+		IncludeSubpackages:    true,
+	}
+
+	var fltrs []kio.Filter
+	for i := range functions {
+		f := functions[i]
+		ps := &filters.ContainerFilter{Image: f.Image, Config: f.Config}
+		fltrs = append(fltrs, ps)
+	}
+	if len(fltrs) == 0 {
+		return nil
+	}
+
+	return kio.Pipeline{Inputs: []kio.Reader{rw}, Filters: fltrs, Outputs: []kio.Writer{rw}}.
+		Execute()
+}

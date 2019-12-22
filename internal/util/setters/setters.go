@@ -13,3 +13,41 @@
 // limitations under the License.
 
 package setters
+
+import (
+	"os"
+	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/set"
+)
+
+func PerformSetters(path string) error {
+	rw := &kio.LocalPackageReadWriter{
+		PackagePath:           path,
+		KeepReaderAnnotations: false,
+		IncludeSubpackages:    true,
+	}
+
+	var fltrs []kio.Filter
+	for i := range os.Environ() {
+		e := os.Environ()[i]
+		if !strings.HasPrefix(e, "KPT_SET_") {
+			continue
+		}
+		parts := strings.SplitN(e, "=", 2)
+		if len(parts) < 2 {
+			continue
+		}
+		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
+		k = strings.ToLower(k)
+		fltrs = append(fltrs,
+			&set.PerformSubstitutions{Name: k, NewValue: v, OwnedBy: "kpt-defaulted"})
+	}
+	if len(fltrs) == 0 {
+		return nil
+	}
+
+	return kio.Pipeline{Inputs: []kio.Reader{rw}, Filters: fltrs, Outputs: []kio.Writer{rw}}.
+		Execute()
+}
