@@ -178,4 +178,6 @@ type Git struct {
 
 	// Ref is the git ref the package was cloned from
 	Ref string `yaml:"ref,omitempty"`
+
+	Functions []*yaml.Node `yaml:"functions,omitempty"`
 }

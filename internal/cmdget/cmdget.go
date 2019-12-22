@@ -208,5 +208,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err := r.Get.Run(); err != nil {
 		return err
 	}
+
 	return nil
 }
