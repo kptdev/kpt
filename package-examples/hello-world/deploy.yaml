@@ -20,7 +20,7 @@ metadata:
   labels:
     app: hello
 spec:
-  replicas: 3
+  replicas: 000000 # {"substitutions":[{"name":"replicas","marker":"000000"}],"description":"hello-world replica count","type":"int"}
   selector:
     matchLabels:
       app: hello
@@ -35,7 +35,7 @@ spec:
         # This app listens on port 8080 for web traffic by default.
         ports:
         - name: http
-          containerPort: 8081
+          containerPort: 000000 # {"substitutions":[{"name":"http-port","marker":"000000"}],"description":"container http port","type":"int"}
         env:
         - name: PORT
-          value: "80801"
+          value: "000000" # {"substitutions":[{"name":"http-port","marker":"000000"}],"description":"container http port","type":"int"}

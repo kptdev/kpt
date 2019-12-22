@@ -36,6 +36,11 @@ import (
 var pgr []string
 
 func main() {
+	if _, err := exec.LookPath("git"); err != nil {
+		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")
+		os.Exit(1)
+	}
+
 	// find the pager if one exists
 	func() {
 		if val, found := os.LookupEnv("KPT_NO_PAGER_HELP"); !found || val != "1" {

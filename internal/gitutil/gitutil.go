@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -36,11 +37,11 @@ const RepoCacheDirEnv = "KPT_CACHE_DIR"
 // The upstream package repo will be fetched to a local cache directory under $HOME/.kpt
 // and hard reset to origin/master.
 // The refs will also be fetched so they are available locally.
-func NewUpstreamGitRunner(uri, dir string, refs ...string) (*GitRunner, error) {
+func NewUpstreamGitRunner(uri, dir string, required []string, optional []string) (*GitRunner, error) {
 	g := &GitRunner{}
 
 	// make sure the repo is fetched
-	cacheDir, err := g.cacheRepo(uri, dir, refs)
+	cacheDir, err := g.cacheRepo(uri, dir, required, optional)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +128,8 @@ func (g *GitRunner) getRepoCacheDir() (string, error) {
 }
 
 // cacheRepo fetches a remote repo to a cache location, and fetches the provided refs.
-func (g *GitRunner) cacheRepo(uri, dir string, refs []string) (string, error) {
+func (g *GitRunner) cacheRepo(uri, dir string,
+	requiredRefs []string, optionalRefs []string) (string, error) {
 	kptCacheDir, err := g.getRepoCacheDir()
 	if err != nil {
 		return "", err
@@ -154,12 +156,24 @@ func (g *GitRunner) cacheRepo(uri, dir string, refs []string) (string, error) {
 	}
 
 	// fetch the specified refs
-	for _, s := range refs {
+	for _, s := range requiredRefs {
 		if err = gitRunner.Run("fetch", "origin", s); err != nil {
 			return "", errors.Errorf(
 				"failed to clone git repo: trouble fetching origin %s: %v", s, err)
 		}
 	}
+
+	var found bool
+	for _, s := range optionalRefs {
+		if err := gitRunner.Run("fetch", "origin", s); err == nil {
+			found = true
+		}
+	}
+	if !found {
+		return "", errors.Errorf("failed to clone git repo: unable to find any matching refs: %s",
+			strings.Join(optionalRefs, ","))
+	}
+
 	if err = gitRunner.Run("fetch", "origin"); err != nil {
 		return "", errors.Errorf("failed to clone git repo: trouble fetching origin: %v", err)
 	}

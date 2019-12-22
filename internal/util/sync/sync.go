@@ -23,7 +23,9 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -60,9 +62,6 @@ func (c Command) Run() error {
 		if k.Dependencies[i].Name == "" {
 			return errors.Errorf("One or more dependencies missing 'name'")
 		}
-		if k.Dependencies[i].Path == "" {
-			return errors.Errorf("One or more dependencies missing 'path'")
-		}
 		if !k.Dependencies[i].EnsureNotExists {
 			if k.Dependencies[i].Git.Directory == "" {
 				return errors.Errorf("One or more dependencies missing 'git.directory'")
@@ -85,15 +84,24 @@ func (c Command) Run() error {
 	}
 
 	for i := range k.Dependencies {
-		if err := c.sync(k.Dependencies[i]); err != nil {
+		dep := k.Dependencies[i]
+		if err := c.sync(dep); err != nil {
+			return err
+		}
+		path := filepath.Join(c.Dir, dep.Name)
+		if err := setters.PerformSetters(path); err != nil {
+			return err
+		}
+		if err := functions.RunFunctions(path, dep.Functions); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 func (c Command) sync(dependency kptfile.Dependency) error {
-	path := filepath.Join(c.Dir, dependency.Path)
+	path := filepath.Join(c.Dir, dependency.Name)
 	f, err := os.Stat(path)
 
 	// dep missing
@@ -143,7 +151,7 @@ func (c Command) sync(dependency kptfile.Dependency) error {
 
 // get fetches the dependency
 func (c Command) get(dependency kptfile.Dependency) error {
-	path := filepath.Join(c.Dir, dependency.Path)
+	path := filepath.Join(c.Dir, dependency.Name)
 	fmt.Fprintf(c.StdOut, "fetching %s (%s)\n", dependency.Name, path)
 	if c.DryRun {
 		return nil
@@ -158,7 +166,7 @@ func (c Command) get(dependency kptfile.Dependency) error {
 
 // update updates the version of the fetched dependency to match
 func (c Command) update(dependency kptfile.Dependency, k *kptfile.KptFile) error {
-	path := filepath.Join(c.Dir, dependency.Path)
+	path := filepath.Join(c.Dir, dependency.Name)
 	fmt.Fprintf(c.StdOut, "updating %s (%s) from %s to %s\n",
 		dependency.Name, path, k.Upstream.Git.Ref, dependency.Git.Ref)
 	if c.DryRun {
@@ -180,7 +188,7 @@ func (c Command) update(dependency kptfile.Dependency, k *kptfile.KptFile) error
 
 // delete removes the dependency if it exists
 func (c Command) delete(dependency kptfile.Dependency) error {
-	path := filepath.Join(c.Dir, dependency.Path)
+	path := filepath.Join(c.Dir, dependency.Name)
 	fmt.Fprintf(c.StdOut, "deleting %s (%s)\n", dependency.Name, path)
 	if c.DryRun {
 		return nil

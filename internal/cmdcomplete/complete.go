@@ -83,6 +83,10 @@ func Complete(cmd *cobra.Command, visitFlags VisitFlags) *complete.Command {
 		Flags: map[string]complete.Predictor{},
 		Sub:   map[string]*complete.Command{},
 	}
+	if strings.Contains(cmd.Use, "DIR") {
+		// if usage contains directory, then use a file predictor
+		cc.Args = predict.Dirs("*")
+	}
 
 	// add each command
 	for i := range cmd.Commands() {

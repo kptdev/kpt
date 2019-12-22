@@ -111,9 +111,9 @@ type InputParameter struct {
 type Dependency struct {
 	Name            string `yaml:"name,omitempty"`
 	Upstream        `yaml:",inline,omitempty"`
-	Path            string `yaml:"path,omitempty"`
-	EnsureNotExists bool   `yaml:"ensureNotExists,omitempty"`
-	Strategy        string `yaml:"updateStrategy,omitempty"`
+	EnsureNotExists bool       `yaml:"ensureNotExists,omitempty"`
+	Strategy        string     `yaml:"updateStrategy,omitempty"`
+	Functions       []Function `yaml:"functions,omitempty"`
 }
 
 type PackageMeta struct {
@@ -178,4 +178,9 @@ type Git struct {
 
 	// Ref is the git ref the package was cloned from
 	Ref string `yaml:"ref,omitempty"`
+}
+
+type Function struct {
+	Config *yaml.RNode `yaml:"config,omitempty"`
+	Image  string      `yaml:"image,omitempty"`
 }

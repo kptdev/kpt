@@ -69,7 +69,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	return kptfileutil.WriteFile(options.PackagePath, kf)
 }
 
-// updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the udpate
+// updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the update
 func (u ResourceMergeUpdater) updatedKptfile(updatedPath string, options UpdateOptions) (
 	kptfile.KptFile, error) {
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")

@@ -17,51 +17,54 @@ package cmdsync
 
 import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
+	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/sync"
 	"github.com/spf13/cobra"
 )
 
 // NewRunner returns a command runner.
-func NewRunner(parent string) *Runner {
-	r := &Runner{}
+func NewSetRunner(parent string) *SetRunner {
+	r := &SetRunner{}
 	c := &cobra.Command{
-		Use:     "sync LOCAL_PKG_DIR",
-		Short:   docs.SyncShort,
-		Long:    docs.SyncLong,
-		Example: docs.SyncExamples,
+		Use:     "set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
 		RunE:    r.runE,
-		Args:    cobra.ExactArgs(1),
+		Long:    docs.SyncSetLong,
+		Short:   docs.SyncSetShort,
+		Example: docs.SyncSetExamples,
+		Args:    cobra.ExactArgs(2),
 		PreRunE: r.preRunE,
 	}
 
-	c.Flags().BoolVar(&r.Sync.Verbose, "verbose", false,
-		"print verbose logging information.")
-	c.Flags().BoolVar(&r.Sync.DryRun, "dry-run", false,
-		"print sync actions without performing them.")
+	c.Flags().StringVar(&r.Strategy, "strategy", "", "update strategy to use.")
+	c.Flags().BoolVar(&r.Dependency.EnsureNotExists, "prune", false,
+		"prune the dependency when it is synced.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
-
-	c.AddCommand(NewSetCommand(parent))
 	return r
 }
 
-func NewCommand(parent string) *cobra.Command {
-	return NewRunner(parent).Command
+func NewSetCommand(parent string) *cobra.Command {
+	return NewSetRunner(parent).Command
 }
 
-type Runner struct {
-	Sync    sync.Command
-	Command *cobra.Command
+type SetRunner struct {
+	Dependency kptfile.Dependency
+	Command    *cobra.Command
+	Strategy   string
 }
 
-func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	r.Sync.Dir = args[0]
-	r.Sync.StdOut = c.OutOrStdout()
-	r.Sync.StdErr = c.ErrOrStderr()
+func (r *SetRunner) preRunE(_ *cobra.Command, args []string) error {
+	t, err := parse.GitParseArgs(args)
+	if err != nil {
+		return err
+	}
+	r.Dependency.Git = t.Git
+	r.Dependency.Name = args[1]
 	return nil
 }
 
-func (r *Runner) runE(c *cobra.Command, args []string) error {
-	return r.Sync.Run()
+func (r *SetRunner) runE(_ *cobra.Command, args []string) error {
+	return sync.SetDependency(r.Dependency)
 }

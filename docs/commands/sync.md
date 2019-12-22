@@ -31,23 +31,26 @@ the `get` and `update` commands.
 For each dependency in the Kptfile, `sync` will ensure that it exists locally with the
 matching repo and ref.
 
-Dependencies are specified in the `Kptfile` `dependencies` field.  e.g.
+Dependencies are specified in the `Kptfile` `dependencies` field and can be added or updated
+with `kpt sync set`.  e.g.
+
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world \
+        hello-world
+
+Or edit the Kptfile directly:
 
     apiVersion: kpt.dev/v1alpha1
     kind: Kptfile
     dependencies:
-    - name: cockroachdb-storage
-      path: local/destination/dir
+    - name: hello-world
       git:
-        repo: "https://github.com/pwittrock/examples"
-        directory: "staging/cockroachdb"
-        ref: "v1.0.0"
-
+        repo: "https://github.com/GoogleContainerTools/kpt.git"
+        directory: "/package-examples/hello-world"
+        ref: "master"
 
 Dependencies have following schema:
 
-    name: <user specified name>
-    path: <local path (relative to the Kptfile) to fetch the dependency to>
+    name: <local path (relative to the Kptfile) to fetch the dependency to>
     git:
       repo: <git repository>
       directory: <sub-directory under the git repository>
@@ -68,9 +71,7 @@ against the directory.
     kind: Kptfile
     # list of dependencies to sync
     dependencies:
-    - name: cockroachdb-storage
-      # fetch the remote dependency to this local dir
-      path: local/destination/dir
+    - name: local/destination/dir
       git:
         # repo is the git respository
         repo: "https://github.com/pwittrock/examples"
@@ -78,8 +79,7 @@ against the directory.
         directory: "staging/cockroachdb"
         # ref is the ref to fetch
         ref: "v1.0.0"
-    - name: app1
-      path: local/destination/dir1
+    - name: local/destination/dir1
       git:
         repo: "https://github.com/pwittrock/examples"
         directory: "staging/javaee"
