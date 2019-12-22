@@ -247,6 +247,83 @@ var ManExamples = `
 	# display subpackage documentation
 	kpt man my-package/sub-package/`
 
+var SyncSetShort = `Add a sync dependency to a Kptfile`
+var SyncSetLong = `
+Add a sync dependency to a Kptfile.
+
+While is it possible to directly edit the Kptfile, ` + "`" + `set` + "`" + ` can be used to add or update
+Kptfile dependencies.
+
+    kpt get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+
+  REPO_URI:
+
+    URI of a git repository containing 1 or more packages as subdirectories.
+    In most cases the .git suffix should be specified to delimit the REPO_URI from the PKG_PATH,
+    but this is not required for widely recognized repo prefixes.  If get cannot parse the repo
+    for the directory and version, then it will print an error asking for '.git' to be specified
+    as part of the argument.
+    e.g. https://github.com/kubernetes/examples.git
+    Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY.
+
+  PKG_PATH:
+
+    Path to remote subdirectory containing Kubernetes Resource configuration files or directories.
+    Defaults to the root directory.
+    Uses '/' as the path separator (regardless of OS).
+    e.g. staging/cockroachdb
+
+  VERSION:
+
+    A git tag, branch, ref or commit for the remote version of the package to fetch.
+    Defaults to the repository master branch.
+    e.g. @master
+
+  LOCAL_DEST_DIRECTORY:
+
+    The local directory to write the package to.
+    e.g. ./my-cockroachdb-copy
+
+    * If the directory does NOT exist: create the specified directory and write
+      the package contents to it
+    * If the directory DOES exist: create a NEW directory under the specified one,
+      defaulting the name to the Base of REPO/PKG_PATH
+    * If the directory DOES exist and already contains a directory with the same name
+      of the one that would be created: fail
+
+  --strategy:
+
+    Controls how changes to the local package are handled.  Defaults to fast-forward.
+
+    * resource-merge: perform a structural comparison of the original / updated Resources, and merge
+	  the changes into the local package.  See ` + "`" + `kpt help apis merge3` + "`" + ` for details on merge.
+    * fast-forward: fail without updating if the local package was modified since it was fetched.
+    * alpha-git-patch: use 'git format-patch' and 'git am' to apply a patch of the
+      changes between the source version and destination version.
+      **REQUIRES THE LOCAL PACKAGE TO HAVE BEEN COMMITTED TO A LOCAL GIT REPO.**
+    * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
+      THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace it
+      with the remote version.
+`
+var SyncSetExamples = `
+  Create a new package and add a dependency to it
+
+    # init a package so it can be synced
+    kpt init
+
+    # add a dependency to the package
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world \
+        hello-world
+
+    # sync the dependencies
+    kpt sync .
+
+  Update an existing package dependency
+
+    # add a dependency to an existing package
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world@v0.2.0 \
+        hello-world --strategy=resource-merge`
+
 var SyncShort = `Sync package dependencies using a manifest`
 var SyncLong = `
 Sync uses a manifest to manage a collection of dependencies.
@@ -276,23 +353,26 @@ the ` + "`" + `get` + "`" + ` and ` + "`" + `update` + "`" + ` commands.
 For each dependency in the Kptfile, ` + "`" + `sync` + "`" + ` will ensure that it exists locally with the
 matching repo and ref.
 
-Dependencies are specified in the ` + "`" + `Kptfile` + "`" + ` ` + "`" + `dependencies` + "`" + ` field.  e.g.
+Dependencies are specified in the ` + "`" + `Kptfile` + "`" + ` ` + "`" + `dependencies` + "`" + ` field and can be added or updated
+with ` + "`" + `kpt sync set` + "`" + `.  e.g.
+
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world \
+        hello-world
+
+Or edit the Kptfile directly:
 
     apiVersion: kpt.dev/v1alpha1
     kind: Kptfile
     dependencies:
-    - name: cockroachdb-storage
-      path: local/destination/dir
+    - name: hello-world
       git:
-        repo: "https://github.com/pwittrock/examples"
-        directory: "staging/cockroachdb"
-        ref: "v1.0.0"
-
+        repo: "https://github.com/GoogleContainerTools/kpt.git"
+        directory: "/package-examples/hello-world"
+        ref: "master"
 
 Dependencies have following schema:
 
-    name: <user specified name>
-    path: <local path (relative to the Kptfile) to fetch the dependency to>
+    name: <local path (relative to the Kptfile) to fetch the dependency to>
     git:
       repo: <git repository>
       directory: <sub-directory under the git repository>
@@ -312,9 +392,7 @@ var SyncExamples = `
     kind: Kptfile
     # list of dependencies to sync
     dependencies:
-    - name: cockroachdb-storage
-      # fetch the remote dependency to this local dir
-      path: local/destination/dir
+    - name: local/destination/dir
       git:
         # repo is the git respository
         repo: "https://github.com/pwittrock/examples"
@@ -322,8 +400,7 @@ var SyncExamples = `
         directory: "staging/cockroachdb"
         # ref is the ref to fetch
         ref: "v1.0.0"
-    - name: app1
-      path: local/destination/dir1
+    - name: local/destination/dir1
       git:
         repo: "https://github.com/pwittrock/examples"
         directory: "staging/javaee"

@@ -16,6 +16,7 @@
 package cmdsync
 
 import (
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
@@ -29,11 +30,16 @@ func NewSetRunner(parent string) *SetRunner {
 	c := &cobra.Command{
 		Use:     "set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
 		RunE:    r.runE,
+		Long:    docs.SyncSetLong,
+		Short:   docs.SyncSetShort,
+		Example: docs.SyncSetExamples,
 		Args:    cobra.ExactArgs(2),
 		PreRunE: r.preRunE,
 	}
 
 	c.Flags().StringVar(&r.Strategy, "strategy", "", "update strategy to use.")
+	c.Flags().BoolVar(&r.Dependency.EnsureNotExists, "prune", false,
+		"prune the dependency when it is synced.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -55,7 +61,7 @@ func (r *SetRunner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 	r.Dependency.Git = t.Git
-	r.Dependency.Name = t.Destination
+	r.Dependency.Name = args[1]
 	return nil
 }
 
