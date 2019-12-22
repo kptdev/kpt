@@ -17,8 +17,8 @@ How to update a package version from a remote source
 
   Prepare the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
-	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
+	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/hello-world@v0.1.0 hello-world/
+	git add hello-world/ && git commit -m 'fetch hello-world'
 
   Diff a local package vs a new upstream version
 
@@ -26,23 +26,19 @@ How to update a package version from a remote source
   'export KPT_EXTERNAL_DIFF=my-differ'.
   See `kpt help diff` for more options.
 
-	kpt diff cockroachdb/@v1.1.0 --diff-type remote
+	kpt diff cockroachdb/@v0.2.0 --diff-type remote
 	diff ...
-	76c76
-	<   replicas: 3
-	---
-	>   replicas: 5
 	118c118
-	<         image: cockroachdb/cockroach:v1.1.0
+	<         image: gcr.io/kpt-dev/hello-world:v0.1.0
 	---
-	>         image: cockroachdb/cockroach:v1.1.1
+	>         image: gcr.io/kpt-dev/hello-world:v0.2.0
 
 
   Update the package to the new version.  This requires that the package is unmodified from when
   it was fetched.
 
-	kpt update cockroachdb@v1.1.0
-	git diff cockroachdb/
+	kpt update hello-world@v0.2.0
+	git diff hello-world/
 
   The updates have not been staged by kpt.
 

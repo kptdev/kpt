@@ -87,7 +87,7 @@ Packages are directories of Configuration published as subdirectories to git rep
   Since packages are stored in git, git references may be used to fetch a specific version
   of a package.
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
+	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/hello-world@v0.1.0 hello-world/
 
   Specifying '@version' after the package uri fetched the package at that revision.
   The version may be a git branch, tag or ref.
@@ -95,7 +95,27 @@ Packages are directories of Configuration published as subdirectories to git rep
   Note: git references may also be used with `kpt update` to rollout new configuration versions.
   See `kpt help update` for more information.
 
-### With Helm
+### New Package From Kustomize Output
+
+  `kpt get` may also be used to convert `kustomize` output into a package
+
+    # fetch a kustomize example
+	kpt get https://github.com/kubernetes-sigs/kustomize/examples/wordpress wordpress/
+	
+	# build the kustomize package and use `kpt get` to write the output to a directory
+	kustomize build wordpress/ | kpt get - wordpress-expanded/
+
+  This expanded the Kustomization into a new package
+
+	$ kustomize config tree wordpress-expanded/
+	wordpress-expanded
+	├── [demo-mysql-pass_secret.yaml]  v1.Secret demo-mysql-pass
+	├── [demo-mysql_deployment.yaml]  apps/v1beta2.Deployment demo-mysql
+	├── [demo-mysql_service.yaml]  v1.Service demo-mysql
+	├── [demo-wordpress_deployment.yaml]  apps/v1beta2.Deployment demo-wordpress
+	└── [demo-wordpress_service.yaml]  v1.Service demo-wordpress
+
+### New Package From Helm Output
 
   `kpt get` may be used to write expanded `helm` templates to packages.
 
@@ -136,37 +156,3 @@ Packages are directories of Configuration published as subdirectories to git rep
 	└── [release-name-redis.resource.yaml]  v1.Secret release-name-redis
 	
  Run `kpt help get` for more information on --pattern options
-
-### With Kustomize
-
-  `kpt get` may also be used to convert `kustomize` output into a package
-
-    # fetch a kustomize example
-	kpt get https://github.com/kubernetes-sigs/kustomize/examples/wordpress wordpress/
-	
-	# build the kustomize package and use `kpt get` to write the output to a directory
-	kustomize build wordpress/ | kpt get - wordpress-expanded/
-
-  This expanded the Kustomization into a new package
-
-	$ kustomize config tree wordpress-expanded/
-	wordpress-expanded
-	├── [demo-mysql-pass_secret.yaml]  v1.Secret demo-mysql-pass
-	├── [demo-mysql_deployment.yaml]  apps/v1beta2.Deployment demo-mysql
-	├── [demo-mysql_service.yaml]  v1.Service demo-mysql
-	├── [demo-wordpress_deployment.yaml]  apps/v1beta2.Deployment demo-wordpress
-	└── [demo-wordpress_service.yaml]  v1.Service demo-wordpress
-
-### With Grep
-
-  `kpt get` can also be combine with `kustomize config grep` to filter Resources from
-  one package and create another.
-
-	$ kustomize config grep "metadata.name=wordpress$" wordpress/ | kpt get - ./new-wordpress
-
-  This will create a new package from the Resource Config emitted by grep
-
-	$ kustomize config tree new-wordpress/
-	new-wordpress
-	├── [wordpress_deployment.yaml]  apps/v1.Deployment wordpress
-	└── [wordpress_service.yaml]  v1.Service wordpress
