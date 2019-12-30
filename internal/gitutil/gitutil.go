@@ -156,10 +156,23 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 	}
 
 	// fetch the specified refs
+	triedFallback := false
 	for _, s := range requiredRefs {
 		if err = gitRunner.Run("fetch", "origin", s); err != nil {
-			return "", errors.Errorf(
-				"failed to clone git repo: trouble fetching origin %s: %v", s, err)
+			if !triedFallback { // only fallback to fetch origin once
+				// fallback on fetching the origin -- some versions of git have an issue
+				// with fetching the first commit by sha.
+				if err = gitRunner.Run("fetch", "origin"); err != nil {
+					return "", errors.Errorf(
+						"failed to clone git repo: trouble fetching origin %v", err)
+				}
+				triedFallback = true
+			}
+			// verify we got the commit
+			if err = gitRunner.Run("show", s); err != nil {
+				return "", errors.Errorf(
+					"failed to clone git repo: trouble fetching origin %s: %v", s, err)
+			}
 		}
 	}
 
