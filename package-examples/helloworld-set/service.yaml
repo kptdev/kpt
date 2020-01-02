@@ -25,5 +25,5 @@ spec:
     app: hello
   ports:
   - protocol: TCP
-    port: 80 # {"description":"hello-world port","type":"integer","x-kustomize":{"setter":{"name":"http-port","value":"80"}}}
+    port: 80 # {"description":"helloworld port","type":"integer","x-kustomize":{"setter":{"name":"http-port","value":"80"}}}
     targetPort: http
