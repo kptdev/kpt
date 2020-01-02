@@ -48,6 +48,8 @@ func NewRunner(parent string) *Runner {
 May contain the following formatting verbs
 %n: metadata.name, %s: metadata.namespace, %k: kind
 `)
+	c.Flags().BoolVar(&r.AutoSet, "auto-set", true,
+		`Automatically perform setters based off the environment`)
 	return r
 }
 
@@ -60,6 +62,7 @@ type Runner struct {
 	Get             get.Command
 	Command         *cobra.Command
 	FilenamePattern string
+	AutoSet         bool
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -77,15 +80,16 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return getioreader.Get(args[1], r.FilenamePattern, c.InOrStdin())
 	}
 
-	fmt.Fprintf(c.OutOrStdout(),
-		"fetching package %s from %s to %s\n",
+	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
 		r.Get.Directory, r.Get.Repo, r.Get.Destination)
 	if err := r.Get.Run(); err != nil {
 		return err
 	}
 
-	if err := setters.PerformSetters(r.Get.Destination); err != nil {
-		return err
+	if r.AutoSet {
+		if err := setters.PerformSetters(r.Get.Destination); err != nil {
+			return err
+		}
 	}
 
 	return nil

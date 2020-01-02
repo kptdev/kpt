@@ -89,8 +89,10 @@ func (c Command) Run() error {
 			return err
 		}
 		path := filepath.Join(c.Dir, dep.Name)
-		if err := setters.PerformSetters(path); err != nil {
-			return err
+		if dep.AutoSet {
+			if err := setters.PerformSetters(path); err != nil {
+				return err
+			}
 		}
 		if err := functions.RunFunctions(path, dep.Functions); err != nil {
 			return err
