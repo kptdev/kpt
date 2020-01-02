@@ -58,7 +58,7 @@ func PerformSetters(path string) error {
 			continue
 		}
 		v := strings.TrimSpace(string(b))
-		fltrs = append(fltrs, &setters.PerformSetters{Name: c, Value: v, SetBy: "kpt"})
+		fltrs = append(fltrs, &setters.PerformSetters{Name: fmt.Sprintf("gcloud.%s", c), Value: v, SetBy: "kpt"})
 	}
 
 	if len(fltrs) == 0 {
