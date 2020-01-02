@@ -20,7 +20,7 @@ metadata:
   labels:
     app: hello
 spec:
-  replicas: 000000 # {"substitutions":[{"name":"replicas","marker":"000000"}],"description":"hello-world replica count","type":"int"}
+  replicas: 1 # {"description":"hello-world replicas","type":"string","x-kustomize":{"partialFieldSetters":[{"name":"replicas","value":"1"}]}}
   selector:
     matchLabels:
       app: hello
@@ -31,11 +31,10 @@ spec:
     spec:
       containers:
       - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:0.1.0
-        # This app listens on port 8080 for web traffic by default.
+        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 # {"description":"hello-world image tag","type":"string","x-kustomize":{"partialFieldSetters":[{"name":"image-tag","value":"0.1.0"}]}}
         ports:
         - name: http
-          containerPort: 000000 # {"substitutions":[{"name":"http-port","marker":"000000"}],"description":"container http port","type":"int"}
+          containerPort: 80 # {"description":"hello-world port","type":"integer","x-kustomize":{"partialFieldSetters":[{"name":"http-port","value":"80"}]}}
         env:
         - name: PORT
-          value: "000000" # {"substitutions":[{"name":"http-port","marker":"000000"}],"description":"container http port","type":"int"}
+          value: "80" # {"description":"hello-world port","type":"string","x-kustomize":{"partialFieldSetters":[{"name":"http-port","value":"80"}]}}

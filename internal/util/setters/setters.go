@@ -15,11 +15,13 @@
 package setters
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/set"
+	"sigs.k8s.io/kustomize/kyaml/setters"
 )
 
 func PerformSetters(path string) error {
@@ -29,6 +31,7 @@ func PerformSetters(path string) error {
 		IncludeSubpackages:    true,
 	}
 
+	// auto-fill setters from the environment
 	var fltrs []kio.Filter
 	for i := range os.Environ() {
 		e := os.Environ()[i]
@@ -41,9 +44,23 @@ func PerformSetters(path string) error {
 		}
 		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
 		k = strings.ToLower(k)
-		fltrs = append(fltrs,
-			&set.PerformSubstitutions{Name: k, NewValue: v, OwnedBy: "kpt-defaulted"})
+		fltrs = append(fltrs, &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"})
 	}
+
+	// auto-fill setters from gcloud
+	gcloudConfig := []string{"compute.region", "compute.zone", "core.project"}
+	for _, c := range gcloudConfig {
+		gcloudCmd := exec.Command("gcloud",
+			"config", "list", "--format", fmt.Sprintf("value(%s)", c))
+		b, err := gcloudCmd.Output()
+		if err != nil {
+			// don't fail if gcloud fails -- it may not be installed or have this config property
+			continue
+		}
+		v := strings.TrimSpace(string(b))
+		fltrs = append(fltrs, &setters.PerformSetters{Name: c, Value: v, SetBy: "kpt"})
+	}
+
 	if len(fltrs) == 0 {
 		return nil
 	}
