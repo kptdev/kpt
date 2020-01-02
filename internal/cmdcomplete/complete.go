@@ -70,7 +70,7 @@ func (Runner) runE(cmd *cobra.Command, args []string) error {
 		cmd = cmd.Parent()
 	}
 	name := strings.Split(cmd.Use, " ")[0]
-	c := Complete(cmd, nil)
+	c := Complete(cmd, false, nil)
 	c.Complete(name)
 	return nil
 }
@@ -78,7 +78,7 @@ func (Runner) runE(cmd *cobra.Command, args []string) error {
 type VisitFlags func(cmd *cobra.Command, flag *pflag.Flag, cc *complete.Command)
 
 // Complete returns a completion command for a cobra command
-func Complete(cmd *cobra.Command, visitFlags VisitFlags) *complete.Command {
+func Complete(cmd *cobra.Command, skipHelp bool, visitFlags VisitFlags) *complete.Command {
 	cc := &complete.Command{
 		Flags: map[string]complete.Predictor{},
 		Sub:   map[string]*complete.Command{},
@@ -89,10 +89,16 @@ func Complete(cmd *cobra.Command, visitFlags VisitFlags) *complete.Command {
 	}
 
 	// add each command
+	if !skipHelp {
+		cc.Sub["help"] = &complete.Command{Sub: map[string]*complete.Command{}}
+	}
 	for i := range cmd.Commands() {
 		c := cmd.Commands()[i]
 		name := strings.Split(c.Use, " ")[0]
-		cc.Sub[name] = Complete(c, visitFlags)
+		cc.Sub[name] = Complete(c, true, visitFlags)
+		if !skipHelp {
+			cc.Sub["help"].Sub[name] = cc.Sub[name]
+		}
 	}
 
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {

@@ -20,7 +20,7 @@ metadata:
   labels:
     app: hello
 spec:
-  replicas: 1 # {"description":"hello-world replicas","type":"string","x-kustomize":{"partialFieldSetters":[{"name":"replicas","value":"1"}]}}
+  replicas: 5 # {"description":"helloworld replicas","type":"integer","x-kustomize":{"setter":{"name":"replicas","value":"5"}}}
   selector:
     matchLabels:
       app: hello
@@ -31,10 +31,10 @@ spec:
     spec:
       containers:
       - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 # {"description":"hello-world image tag","type":"string","x-kustomize":{"partialFieldSetters":[{"name":"image-tag","value":"0.1.0"}]}}
+        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 # {"description":"hello-world image tag","type":"string","x-kustomize":{"partialSetters":[{"name":"image-tag","value":"0.1.0"}]}}
         ports:
         - name: http
-          containerPort: 80 # {"description":"hello-world port","type":"integer","x-kustomize":{"partialFieldSetters":[{"name":"http-port","value":"80"}]}}
+          containerPort: 80 # {"description":"helloworld port","type":"integer","x-kustomize":{"setter":{"name":"http-port","value":"80"}}}
         env:
         - name: PORT
-          value: "80" # {"description":"hello-world port","type":"string","x-kustomize":{"partialFieldSetters":[{"name":"http-port","value":"80"}]}}
+          value: "80" # {"description":"helloworld port","type":"string","x-kustomize":{"setter":{"name":"http-port","value":"80"}}}

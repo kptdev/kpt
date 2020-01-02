@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -36,10 +35,7 @@ import (
 var pgr []string
 
 func main() {
-	if _, err := exec.LookPath("git"); err != nil {
-		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")
-		os.Exit(1)
-	}
+	cmd := &cobra.Command{Use: "kpt", Short: docs.READMEShort, Long: docs.READMELong}
 
 	// find the pager if one exists
 	func() {
@@ -64,8 +60,6 @@ func main() {
 		}
 	}()
 
-	cmd := &cobra.Command{Use: "kpt", Short: docs.READMEShort, Long: docs.READMELong}
-
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
 	cmd.AddCommand(commands.GetAllCommands("kpt")...)
@@ -74,20 +68,16 @@ func main() {
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
 		"print a stack-trace on failure")
 
+	// Complete exits if it is called in completion mode, otherwise it is a no-op
+	cmdcomplete.Complete(cmd, false, nil).Complete("kpt")
+
+	if _, err := exec.LookPath("git"); err != nil {
+		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")
+		os.Exit(1)
+	}
+
 	// exit on an error
 	cmdutil.ExitOnError = true
-
-	// bash shell completion passes the command name as the first argument
-	// do this after configuring cmd so it has all the subcommands
-	if len(os.Args) > 1 {
-		// use the base name in case kpt is called with an absolute path
-		name := filepath.Base(os.Args[1])
-		if name == "kpt" {
-			// complete calls kpt with itself as an argument
-			cmdcomplete.Complete(cmd, nil).Complete("kpt")
-			os.Exit(0)
-		}
-	}
 
 	replace(cmd)
 

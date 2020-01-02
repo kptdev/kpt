@@ -1,0 +1,6 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: hello-world-set
+packageMetadata:
+  shortDescription: example package using setters
