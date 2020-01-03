@@ -38,13 +38,10 @@ echo ""
 echo "  ${bold}fetch the package, automatically setting field values...${normal}"
 pe "KPT_SET_REPLICAS=3 kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld2"
 
+pe "config tree helloworld1 --replicas"
+pe "config tree helloworld2 --replicas"
 
-echo ""
-echo "  ${bold}print helloworld1 contents...${normal}"
-pe "config tree helloworld1 --image --ports --name --replicas"
 pe "config set helloworld1"
-
-echo ""
-echo "  ${bold}print helloworld2 contents...${normal}"
-pe "config tree helloworld2 --image --ports --name --replicas"
 pe "config set helloworld2"
+
+pe "diff helloworld1 helloworld2"
