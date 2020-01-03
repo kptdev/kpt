@@ -1,0 +1,16 @@
+apiVersion: examples.kpt.dev/v1alpha1
+kind: HelloWorld
+metadata:
+  name: helloworld-gke
+  labels:
+    app: hello
+  annotations:
+    config.k8s.io/function: |-
+      container:
+        image: gcr.io/kpt-dev/example-functions:v0.1.0
+    config.kubernetes.io/local-config: "true"
+spec:
+  replicas: 3
+  selector:
+    app: hello
+  port: 80
