@@ -17,7 +17,7 @@
 ########################
 # include the magic
 ########################
-. ../demo-magic/demo-magic.sh
+. demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 
@@ -25,4 +25,16 @@ cd $(mktemp -d)
 clear
 
 # Put your stuff here
-pwd
+bold=$(tput bold)
+normal=$(tput sgr0)
+stty rows 50 cols 180
+
+# start demo
+echo ""
+echo "  ${bold}fetch the package...${normal}"
+pe "kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@v0.1.0 helloworld"
+
+echo ""
+echo "  ${bold}fetch the package...${normal}"
+pe "config tree helloworld --resources --field 'metadata.annotations'"
+
