@@ -68,7 +68,7 @@ Kptfile dependencies.
     kpt init
 
     # add a dependency to the package
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world \
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
 
     # sync the dependencies
@@ -77,5 +77,5 @@ Kptfile dependencies.
   Update an existing package dependency
 
     # add a dependency to an existing package
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world@v0.2.0 \
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
         hello-world --strategy=resource-merge

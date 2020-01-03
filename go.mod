@@ -14,5 +14,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d
 	gotest.tools v2.2.0+incompatible
-	sigs.k8s.io/kustomize/kyaml v0.0.4
+	sigs.k8s.io/kustomize/kyaml v0.0.5-0.20200103003341-2880c2ae5de3
 )

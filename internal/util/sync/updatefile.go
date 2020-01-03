@@ -37,7 +37,7 @@ func SetDependency(dependency kptfile.Dependency) error {
 	// validate dependencies are well formed
 	found := false
 	for i := range k.Dependencies {
-		d := k.Dependencies[i]
+		d := &k.Dependencies[i]
 		if d.Name != dependency.Name {
 			continue
 		}

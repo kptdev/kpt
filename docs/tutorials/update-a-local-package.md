@@ -17,7 +17,7 @@ How to update a package version from a remote source
 
   Prepare the package to be updated
 
-	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/hello-world@v0.1.0 hello-world/
+	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
 	git add hello-world/ && git commit -m 'fetch hello-world'
 
   Diff a local package vs a new upstream version

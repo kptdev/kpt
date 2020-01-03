@@ -87,7 +87,7 @@ Packages are directories of Configuration published as subdirectories to git rep
   Since packages are stored in git, git references may be used to fetch a specific version
   of a package.
 
-	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/hello-world@v0.1.0 hello-world/
+	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
 
   Specifying '@version' after the package uri fetched the package at that revision.
   The version may be a git branch, tag or ref.
