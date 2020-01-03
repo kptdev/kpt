@@ -16,8 +16,6 @@ package helloworld
 
 import (
 	"fmt"
-	"os"
-	"text/template"
 
 	"github.com/GoogleContainerTools/kpt/functions/examples/util"
 	"sigs.k8s.io/kustomize/kyaml/kio"

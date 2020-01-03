@@ -25,32 +25,34 @@ cd $(mktemp -d)
 git init
 clear
 
-# Put your stuff here
-bold=$(tput bold)
-normal=$(tput sgr0)
-stty rows 50 cols 180
-
 # start demo
 echo ""
 echo "  ${bold}fetch the package...${normal}"
-pe "kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@v0.1.0 helloworld"
+pe "kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-generate@v0.2.0 helloworld"
 
 echo ""
 echo "  ${bold}print the package resources...${normal}"
-pe "config tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
-
-echo ""
-echo "  ${bold}print the sizer...${normal}"
+pe "config tree helloworld"
 pe "cat helloworld/helloworld.yaml"
 
 echo ""
-echo "  ${bold}change the tshirt-size...${normal}"
-pe "config set helloworld"
-pe "config set helloworld tshirt-size large --description 'need lots of resources' --set-by phil"
-pe "config set helloworld"
-pe "config tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
+echo "  ${bold}run the generator...${normal}"
 pe "config run helloworld"
 
 echo ""
-echo "  ${bold}print the updated package resources...${normal}"
-pe "config tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
+echo "  ${bold}print the generated resources...${normal}"
+pe "config tree helloworld --all"
+
+echo ""
+echo "  ${bold}update the config...${normal}"
+pe "config set helloworld"
+pe "config set helloworld replicas 5"
+pe "config set helloworld"
+
+echo ""
+echo "  ${bold}run the generator...${normal}"
+pe "config run helloworld"
+
+echo ""
+echo "  ${bold}print the updated resources...${normal}"
+pe "config tree helloworld --all"
