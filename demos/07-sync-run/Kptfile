@@ -1,17 +1,11 @@
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
-    name: .
+    name: helloworld-gke
 packageMetadata:
     shortDescription: sample package
 dependencies:
   - name: helloworld-prod
-    git:
-        repo: git@github.com:GoogleContainerTools/kpt
-        directory: /package-examples/helloworld-set
-        ref: v0.2.0
-    updateStrategy: fast-forward
-  - name: helloworld-staging
     git:
         repo: git@github.com:GoogleContainerTools/kpt
         directory: /package-examples/helloworld-set
@@ -23,14 +17,8 @@ dependencies:
       metadata:
         name: prod
         configFn:
-        container:
-          image: gcr.io/kustomize-functions/apis:v0.0.1
+          container:
+            image: gcr.io/kustomize-functions/apis:v0.0.1
       spec:
-        patches:
-          targets:
-          - kind: Deployment
-            apiVersion: apps/v1
-            name: helloworld-gke
-          patch:
-            spec:
-              replicas: 6
+        commonNamespace: helloworld-prod
+        commonNamePrefix: prod-
