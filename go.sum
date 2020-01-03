@@ -106,5 +106,8 @@ gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d h1:LCPbGQ34PMrwad11aMZ+dbz5S
 gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gotest.tools v2.2.0+incompatible h1:VsBPFP1AI068pPrMxtb/S8Zkgf9xEmTLJjfM+P5UIEo=
 gotest.tools v2.2.0+incompatible/go.mod h1:DsYFclhRJ6vuDpmuTbkuFWG+y2sxOXAzmJt81HFBacw=
+sigs.k8s.io/kustomize v3.3.2-0.20200103003341-2880c2ae5de3+incompatible h1:QyBv7xx6ioUQzsIDjBbUsu5hLitrEgM85vnYDWL+W+0=
 sigs.k8s.io/kustomize/kyaml v0.0.4 h1:kN8+jANVkVVdMCfgIcG42Yd4uy4Jd3wZaGx5DpF6MUE=
 sigs.k8s.io/kustomize/kyaml v0.0.4/go.mod h1:waxTrzQRK9i6/5fR5HNo8xa4YwvWn8t85vMnOGFEZik=
+sigs.k8s.io/kustomize/kyaml v0.0.5-0.20200103003341-2880c2ae5de3 h1:PBww3/8E8pLEZARuNy8nVsEyXlbEOIpCh6XMkGp0VyQ=
+sigs.k8s.io/kustomize/kyaml v0.0.5-0.20200103003341-2880c2ae5de3/go.mod h1:waxTrzQRK9i6/5fR5HNo8xa4YwvWn8t85vMnOGFEZik=
