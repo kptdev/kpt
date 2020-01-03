@@ -52,7 +52,7 @@
       kpt help sync # in-command help
 
       kpt init . # init a new package
-      kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world@v0.1.0 \
+      kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 \
          hello-world # add a dependency
       kpt sync ./ # sync the dependencies 
 
@@ -65,7 +65,7 @@
       - name: hello-world
         git:
           repo: "https://github.com/GoogleContainerTools/kpt"
-          directory: "package-examples/hello-world"
+          directory: "package-examples/helloworld-set"
           ref: "v0.1.0"
 
 

@@ -312,7 +312,7 @@ var SyncSetExamples = `
     kpt init
 
     # add a dependency to the package
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world \
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
 
     # sync the dependencies
@@ -321,7 +321,7 @@ var SyncSetExamples = `
   Update an existing package dependency
 
     # add a dependency to an existing package
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world@v0.2.0 \
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
         hello-world --strategy=resource-merge`
 
 var SyncShort = `Sync package dependencies using a manifest`
@@ -356,7 +356,7 @@ matching repo and ref.
 Dependencies are specified in the ` + "`" + `Kptfile` + "`" + ` ` + "`" + `dependencies` + "`" + ` field and can be added or updated
 with ` + "`" + `kpt sync set` + "`" + `.  e.g.
 
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-world \
+    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
 
 Or edit the Kptfile directly:
@@ -367,7 +367,7 @@ Or edit the Kptfile directly:
     - name: hello-world
       git:
         repo: "https://github.com/GoogleContainerTools/kpt.git"
-        directory: "/package-examples/hello-world"
+        directory: "/package-examples/helloworld-set"
         ref: "master"
 
 Dependencies have following schema:
