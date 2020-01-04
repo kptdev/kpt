@@ -12,13 +12,28 @@ dependencies:
         ref: v0.2.0
     updateStrategy: fast-forward
     functions:
-    - apiVersion: config.kubernetes.io/v1alpha1
-      kind: InlineKustomization
-      metadata:
-        name: prod
-        configFn:
-          container:
-            image: gcr.io/kustomize-functions/apis:v0.0.1
-      spec:
-        commonNamespace: helloworld-prod
-        commonNamePrefix: prod-
+    - image: gcr.io/kustomize-functions/apis:v0.0.1
+      config:
+        apiVersion: config.kubernetes.io/v1alpha1
+        kind: InlineKustomization
+        metadata:
+          name: prod
+        spec:
+          commonNamespace: helloworld-prod
+          commonNamePrefix: prod-
+  - name: helloworld-staging
+    git:
+        repo: git@github.com:GoogleContainerTools/kpt
+        directory: /package-examples/helloworld-set
+        ref: v0.2.0
+    updateStrategy: fast-forward
+    functions:
+    - image: gcr.io/kustomize-functions/apis:v0.0.1
+      config:
+        apiVersion: config.kubernetes.io/v1alpha1
+        kind: InlineKustomization
+        metadata:
+          name: staging
+        spec:
+          commonNamespace: helloworld-staging
+          commonNamePrefix: staging-

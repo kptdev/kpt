@@ -115,6 +115,6 @@ type Git struct {
 }
 
 type Function struct {
-	Config *yaml.RNode `yaml:"config,omitempty"`
-	Image  string      `yaml:"image,omitempty"`
+	Config yaml.Node `yaml:"config,omitempty"`
+	Image  string    `yaml:"image,omitempty"`
 }
