@@ -44,7 +44,7 @@ echo "  ${bold}sync the package...${normal}"
 pe "kpt sync ."
 pe "git status"
 pe "config tree helloworld-prod"
-pe "git add . && git commit -m 'add hellworld package for production'"
+pe "git add . && git commit -m 'add helloworld package for production'"
 
 
 pe "kpt sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-staging"
@@ -52,7 +52,7 @@ pe "git diff"
 pe "kpt sync ."
 pe "git status"
 pe "config tree helloworld-staging"
-pe "git add . && git commit -m 'add hellworld package for staging'"
+pe "git add . && git commit -m 'add helloworld package for staging'"
 
 pe "diff helloworld-prod helloworld-staging"
 

@@ -18,18 +18,19 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func RunFunctions(path string, functions []kptfile.Function) error {
 	rw := &kio.LocalPackageReadWriter{
-		KeepReaderAnnotations: false,
-		IncludeSubpackages:    true,
+		PackagePath:        path,
+		IncludeSubpackages: true,
 	}
 
 	var fltrs []kio.Filter
 	for i := range functions {
 		f := functions[i]
-		ps := &filters.ContainerFilter{Image: f.Image, Config: f.Config}
+		ps := &filters.ContainerFilter{Image: f.Image, Config: yaml.NewRNode(&f.Config)}
 		fltrs = append(fltrs, ps)
 	}
 	if len(fltrs) == 0 {
