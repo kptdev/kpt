@@ -48,7 +48,7 @@ func NewRunner(parent string) *Runner {
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
 	c.Flags().StringVar(&r.Name, "name", "", "package name.  defaults to the directory base name.")
 	c.Flags().StringSliceVar(&r.Tags, "tag", []string{}, "list of tags for the package.")
-	c.Flags().StringVar(&r.Url, "url", "", "link to page with information about the package.")
+	c.Flags().StringVar(&r.URL, "url", "", "link to page with information about the package.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -64,7 +64,7 @@ type Runner struct {
 	Tags        []string
 	Name        string
 	Description string
-	Url         string
+	URL         string
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -89,7 +89,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			ResourceMeta: yaml.ResourceMeta{ObjectMeta: yaml.ObjectMeta{Name: r.Name}},
 			PackageMeta: kptfile.PackageMeta{
 				ShortDescription: r.Description,
-				Url:              r.Url,
+				URL:              r.URL,
 				Tags:             r.Tags,
 			},
 		}

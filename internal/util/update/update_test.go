@@ -544,11 +544,9 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 			err := Command{Path: g.RepoName, Ref: "exp", Strategy: u.updater}.Run()
 			if !assert.Error(t, err) {
 				return
-			} else {
-				assert.Contains(t, err.Error(),
-					"failed to clone git repo",
-					u.updater)
 			}
+			assert.Contains(t, err.Error(), "failed to clone git repo", u.updater)
+
 			if !g.AssertLocalDataEquals(testutil.Dataset1) {
 				return
 			}
@@ -584,10 +582,9 @@ func TestCommand_Run_absolutePath(t *testing.T) {
 				Strategy: u.updater}.Run()
 			if !assert.Error(t, err) {
 				return
-			} else {
-				assert.Contains(t, err.Error(),
-					"package path must be relative", u.updater)
 			}
+			assert.Contains(t, err.Error(),
+				"package path must be relative", u.updater)
 			if !g.AssertLocalDataEquals(testutil.Dataset1) {
 				return
 			}
@@ -623,10 +620,9 @@ func TestCommand_Run_relativePath(t *testing.T) {
 				Strategy: u.updater}.Run()
 			if !assert.Error(t, err) {
 				return
-			} else {
-				assert.Contains(t, err.Error(),
-					"must be under current working directory", u.updater)
 			}
+			assert.Contains(t, err.Error(),
+				"must be under current working directory", u.updater)
 			if !g.AssertLocalDataEquals(testutil.Dataset1) {
 				return
 			}
@@ -657,9 +653,8 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 			err := Command{Path: g.RepoName, Strategy: u.updater}.Run()
 			if !assert.Error(t, err, u.updater) {
 				return
-			} else {
-				assert.Contains(t, err.Error(), "unrecognized update strategy")
 			}
+			assert.Contains(t, err.Error(), "unrecognized update strategy")
 		}()
 	}
 }

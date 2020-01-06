@@ -72,14 +72,12 @@ func (c Command) Run() error {
 			if k.Dependencies[i].Git.Repo == "" {
 				return errors.Errorf("One or more dependencies missing 'git.repo'")
 			}
-		} else {
-			if k.Dependencies[i].Git.Directory != "" ||
-				k.Dependencies[i].Git.Ref != "" ||
-				k.Dependencies[i].Git.Repo == "" {
-				return errors.Errorf(
-					"One or more dependencies specify mutually exclusive fields " +
-						"'ensureNotExists' and 'git'")
-			}
+		} else if k.Dependencies[i].Git.Directory != "" ||
+			k.Dependencies[i].Git.Ref != "" ||
+			k.Dependencies[i].Git.Repo == "" {
+			return errors.Errorf(
+				"One or more dependencies specify mutually exclusive fields " +
+					"'ensureNotExists' and 'git'")
 		}
 	}
 
@@ -122,7 +120,7 @@ func (c Command) sync(dependency kptfile.Dependency) error {
 	// verify the dep is well formed
 	if !f.IsDir() {
 		// place where dep should be fetched exists and is not a directory
-		return errors.Errorf("cannot sync to %s, non-direcotry file exists", path)
+		return errors.Errorf("cannot sync to %s, non-directory file exists", path)
 	}
 	_, err = os.Stat(filepath.Join(path, kptfile.KptFileName))
 	if os.IsNotExist(err) {
