@@ -71,7 +71,7 @@ func errorIfChanged(g kptfile.Git, pkgPath string) error {
 	diff = diff.Difference(kptfileSet)
 	if diff.Len() > 0 {
 		return DiffError(fmt.Sprintf(
-			"local package files have been modified: %v.\n  use a differnt update --strategy.",
+			"local package files have been modified: %v.\n  use a different update --strategy.",
 			diff.List()))
 	}
 	return nil

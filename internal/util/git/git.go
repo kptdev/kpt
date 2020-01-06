@@ -49,11 +49,11 @@ func (rs RepoSpec) AbsPath() string {
 }
 
 // CloneSpec returns the string to pass to git to clone
-func (x *RepoSpec) CloneSpec() string {
-	if isAzureHost(x.Host) || isAWSHost(x.Host) {
-		return x.Host + x.OrgRepo
+func (rs *RepoSpec) CloneSpec() string {
+	if isAzureHost(rs.Host) || isAWSHost(rs.Host) {
+		return rs.Host + rs.OrgRepo
 	}
-	return x.Host + x.OrgRepo + x.GitSuffix
+	return rs.Host + rs.OrgRepo + rs.GitSuffix
 }
 
 // isAzureHost returns true if the repo is an Azure repo

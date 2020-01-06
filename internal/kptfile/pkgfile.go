@@ -51,8 +51,8 @@ type Dependency struct {
 }
 
 type PackageMeta struct {
-	// Repo is the location of the package.  e.g. https://github.com/example/com
-	Url string `yaml:"url,omitempty"`
+	// URL is the location of the package.  e.g. https://github.com/example/com
+	URL string `yaml:"url,omitempty"`
 
 	// Email is the email of the package maintainer
 	Email string `yaml:"email,omitempty"`

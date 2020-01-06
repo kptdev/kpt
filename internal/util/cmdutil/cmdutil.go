@@ -26,6 +26,7 @@ import (
 const (
 	SilenceErrorsEnv   = "COBRA_SILENCE_USAGE"
 	StackTraceOnErrors = "COBRA_STACK_TRACE_ON_ERRORS"
+	trueString         = "true"
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -38,14 +39,14 @@ func FixDocs(old, new string, c *cobra.Command) {
 
 func SetSilenceErrors(c *cobra.Command) {
 	e := os.Getenv(SilenceErrorsEnv)
-	if e == "true" || e == "1" {
+	if e == trueString || e == "1" {
 		c.SilenceUsage = true
 	}
 }
 
 func HandlePreRunError(c *cobra.Command, err error) error {
 	e := os.Getenv(StackTraceOnErrors)
-	if StackOnError || e == "true" || e == "1" {
+	if StackOnError || e == trueString || e == "1" {
 		if err, ok := err.(*errors.Error); ok {
 			fmt.Fprint(os.Stderr, fmt.Sprintf("%s", err.Stack()))
 		}
@@ -58,7 +59,7 @@ func HandleError(c *cobra.Command, err error) error {
 		return nil
 	}
 	e := os.Getenv(StackTraceOnErrors)
-	if StackOnError || e == "true" || e == "1" {
+	if StackOnError || e == trueString || e == "1" {
 		if err, ok := err.(*errors.Error); ok {
 			fmt.Fprint(os.Stderr, fmt.Sprintf("%s", err.Stack()))
 		}

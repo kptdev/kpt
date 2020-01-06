@@ -66,7 +66,6 @@ upstream:
   cockroachdb_perf   %s   https://github.com/cockroachdb/cockroach   cloud/kubernetes/performance   master       9b6aeba        
 `, filepath.Base(d))
 	assert.Equal(t, exp, b.String())
-
 }
 
 // TestCmd_defaultPkg tests describe command execution with no directory

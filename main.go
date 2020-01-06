@@ -100,7 +100,6 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 
 	fn := c.HelpFunc()
 	return func(command *cobra.Command, args []string) {
-
 		stty := exec.Command("stty", "size")
 		stty.Stdin = os.Stdin
 		out, err := stty.Output()

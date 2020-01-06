@@ -65,11 +65,7 @@ func (c Command) Run() error {
 	}
 
 	// define where we are going to clone the package from
-	r := &git.RepoSpec{
-		OrgRepo: c.Repo,
-		Path:    c.Directory,
-		Ref:     c.Ref,
-	}
+	r := &git.RepoSpec{OrgRepo: c.Repo, Path: c.Directory, Ref: c.Ref}
 
 	// clone the repo to a tmp directory.
 	// delete the tmp directory later.
@@ -90,8 +86,7 @@ func (c Command) Run() error {
 	// copy the git sub directory to the destination
 	err = copyutil.CopyDir(r.AbsPath(), c.Destination)
 	if err != nil {
-		return errors.WrapPrefixf(err,
-			"missing subdirectory %s in repo %s at ref %s\n",
+		return errors.WrapPrefixf(err, "missing subdirectory %s in repo %s at ref %s\n",
 			r.Path, r.OrgRepo, r.Ref)
 	}
 
@@ -146,28 +141,18 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command(
-		gitProgram,
-		"init",
-		repoSpec.Dir)
+	cmd := exec.Command(gitProgram, "init", repoSpec.Dir)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	err = cmd.Run()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error initializing empty git repo: %s", out.String())
-		return errors.WrapPrefixf(
-			err,
-			"trouble initializing empty git repo in %s",
+		return errors.WrapPrefixf(err, "trouble initializing empty git repo in %s",
 			repoSpec.Dir)
 	}
 
-	cmd = exec.Command(
-		gitProgram,
-		"remote",
-		"add",
-		"origin",
-		repoSpec.CloneSpec())
+	cmd = exec.Command(gitProgram, "remote", "add", "origin", repoSpec.CloneSpec())
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	cmd.Dir = repoSpec.Dir
@@ -184,12 +169,7 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	}
 
 	err = func() error {
-		cmd = exec.Command(
-			gitProgram,
-			"fetch",
-			"origin",
-			"--depth=1",
-			repoSpec.Ref)
+		cmd = exec.Command(gitProgram, "fetch", "origin", "--depth=1", repoSpec.Ref)
 		cmd.Stdout = &out
 		cmd.Stderr = &out
 		cmd.Dir = repoSpec.Dir
@@ -197,10 +177,7 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		if err != nil {
 			return errors.WrapPrefixf(err, "trouble fetching %s", repoSpec.Ref)
 		}
-		cmd = exec.Command(
-			gitProgram,
-			"reset",
-			"--hard", "FETCH_HEAD")
+		cmd = exec.Command(gitProgram, "reset", "--hard", "FETCH_HEAD")
 		cmd.Stdout = &out
 		cmd.Stderr = &out
 		cmd.Dir = repoSpec.Dir
@@ -229,12 +206,7 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		}
 	}
 
-	cmd = exec.Command(
-		gitProgram,
-		"submodule",
-		"update",
-		"--init",
-		"--recursive")
+	cmd = exec.Command(gitProgram, "submodule", "update", "--init", "--recursive")
 	cmd.Stdout = &out
 	cmd.Dir = repoSpec.Dir
 	err = cmd.Run()

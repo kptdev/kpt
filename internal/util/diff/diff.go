@@ -61,7 +61,7 @@ func SupportedDiffTypesLabel() string {
 }
 
 // Command shows changes in local package relative to upstream source pkg, changes in
-// upstream source packge between orginal and target version etc.
+// upstream source package between original and target version etc.
 type Command struct {
 	// Path to the local package directory
 	Path string

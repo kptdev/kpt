@@ -28,6 +28,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const cat = "cat"
+
 // TestCmd_execute tests that the command displays package documentation.
 func TestCmd_execute(t *testing.T) {
 	d, err := ioutil.TempDir("", "kptman")
@@ -90,7 +92,7 @@ Java server ConfigMap
 	b := &bytes.Buffer{}
 	c := cmdman.NewRunner("kpt")
 	c.Command.SetArgs([]string{d})
-	c.Man.ManExecCommand = "cat"
+	c.Man.ManExecCommand = cat
 	c.Command.SetOut(b)
 	err = c.Command.Execute()
 	assert.NoError(t, err)
@@ -225,7 +227,7 @@ Java server ConfigMap
 	b := &bytes.Buffer{}
 	c := cmdman.NewRunner("kpt")
 	c.Command.SetArgs([]string{"pkg"})
-	c.Man.ManExecCommand = "cat"
+	c.Man.ManExecCommand = cat
 	c.Command.SetOut(b)
 	err = c.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -303,7 +305,7 @@ func TestCmd_fail(t *testing.T) {
 	r := cmdman.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
-	r.Man.ManExecCommand = "cat"
+	r.Man.ManExecCommand = cat
 	r.Command.SetArgs([]string{filepath.Join("not", "real", "dir")})
 	err := r.Command.Execute()
 	if !assert.Error(t, err) {
@@ -318,7 +320,7 @@ func TestCmd_defaultDir(t *testing.T) {
 	r := cmdman.NewRunner("kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
-	r.Man.ManExecCommand = "cat"
+	r.Man.ManExecCommand = cat
 	err := r.Command.Execute()
 	assert.EqualError(t, err, fmt.Sprintf(
 		"unable to read %s: open %s: no such file or directory",
