@@ -17,7 +17,7 @@
 GOBIN := $(shell go env GOPATH)/bin
 
 build:
-	go build -o $(GOPATH)/bin/kpt -v .
+	go build -o $(GOBIN)/kpt -v .
 
 all: generate license fix vet fmt lint test build tidy
 
