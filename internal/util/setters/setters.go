@@ -58,6 +58,10 @@ func PerformSetters(path string) error {
 			continue
 		}
 		v := strings.TrimSpace(string(b))
+		if v == "" {
+			// don't replace values that aren't set - stick with the defaults as defined in the manifest
+			continue
+		}
 		fltrs = append(fltrs, &setters.PerformSetters{Name: fmt.Sprintf("gcloud.%s", c), Value: v, SetBy: "kpt"})
 	}
 
