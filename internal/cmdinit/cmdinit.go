@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"

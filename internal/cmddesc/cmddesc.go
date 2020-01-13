@@ -18,7 +18,7 @@ package cmddesc
 import (
 	"os"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/desc"
 	"github.com/spf13/cobra"

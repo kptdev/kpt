@@ -13,8 +13,9 @@
 // limitations under the License.
 
 //go:generate $GOBIN/mdtogo docs/tutorials internal/docs/generated/tutorials --full=true --license=none
-//go:generate $GOBIN/mdtogo docs/commands internal/docs/generated/commands --license=none
-//go:generate $GOBIN/mdtogo docs internal/docs/generated/readme --full=true --license=none
+//go:generate $GOBIN/mdtogo docs/pkg internal/docs/generated/pkg --license=none
+//go:generate $GOBIN/mdtogo docs/config internal/docs/generated/config --license=none
+//go:generate $GOBIN/mdtogo docs internal/docs/generated/overview --license=none
 package main
 
 import (
@@ -27,15 +28,54 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/commands"
 	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/readme"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/commandutil"
+
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 var pgr []string
 
 func main() {
-	cmd := &cobra.Command{Use: "kpt", Short: docs.READMEShort, Long: docs.READMELong}
+	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
+	cmd := &cobra.Command{
+		Use:   "kpt",
+		Short: overview.READMEShort,
+		Long:  overview.READMELong,
+		Example: `  #
+  # get a package
+  #
+  $ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+  $ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld
+  fetching package /package-examples/helloworld-set from \
+    git@github.com:GoogleContainerTools/kpt to helloworld
+
+  #
+  # list setters
+  #
+  $ kpt config list-setters helloworld
+  NAME            DESCRIPTION         VALUE    TYPE     COUNT   SETBY
+  http-port   'helloworld port'         80      integer   3
+  image-tag   'hello-world image tag'   0.1.0   string    1
+  replicas    'helloworld replicas'     5       integer   1
+
+  #
+  # set a value
+  #
+  $ kpt config set helloworld replicas 3 --set-by pwittrock \
+    --description '3 is good enough'
+  set 1 fields
+
+  #
+  # apply
+  #
+  $ kpt http apply -f helloworld
+  deployment.apps/helloworld-gke created
+  service/helloworld-gke created
+`,
+	}
 
 	// find the pager if one exists
 	func() {
@@ -62,7 +102,7 @@ func main() {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(commands.GetAllCommands("kpt")...)
+	cmd.AddCommand(commands.GetKptCommands("kpt")...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
