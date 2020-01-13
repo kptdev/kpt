@@ -46,26 +46,31 @@ func GetAllCommands(name string) []*cobra.Command {
 	// apply cross-cutting issues to commands
 	for i := range c {
 		cmd := c[i]
-		// check if silencing errors is off
-		cmdutil.SetSilenceErrors(cmd)
-
-		// check if stack printing is on
-		if cmd.PreRunE != nil {
-			fn := cmd.PreRunE
-			cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-				err := fn(cmd, args)
-				return cmdutil.HandlePreRunError(cmd, err)
-			}
-		}
-		if cmd.RunE != nil {
-			fn := cmd.RunE
-			cmd.RunE = func(cmd *cobra.Command, args []string) error {
-				err := fn(cmd, args)
-				return cmdutil.HandleError(cmd, err)
-			}
-		}
+		NormalizeCommand(cmd)
 	}
 	return c
+}
+
+// NormalizeCommand will modify commands to be consistent, e.g. silencing errors
+func NormalizeCommand(cmd *cobra.Command) {
+	// check if silencing errors is off
+	cmdutil.SetSilenceErrors(cmd)
+
+	// check if stack printing is on
+	if cmd.PreRunE != nil {
+		fn := cmd.PreRunE
+		cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+			err := fn(cmd, args)
+			return cmdutil.HandlePreRunError(cmd, err)
+		}
+	}
+	if cmd.RunE != nil {
+		fn := cmd.RunE
+		cmd.RunE = func(cmd *cobra.Command, args []string) error {
+			err := fn(cmd, args)
+			return cmdutil.HandleError(cmd, err)
+		}
+	}
 }
 
 var allCommands = map[string]func(string) *cobra.Command{
