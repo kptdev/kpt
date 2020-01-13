@@ -86,8 +86,10 @@ var allCommands = map[string]func(string) *cobra.Command{
 
 func GetCommands(name string, commands ...string) []*cobra.Command {
 	var c []*cobra.Command
-	for i := range commands {
-		c = append(c, allCommands[commands[i]](name))
+	for _, k := range commands {
+		cmd := allCommands[k](name)
+		NormalizeCommand(cmd)
+		c = append(c, cmd)
 	}
 	return c
 }
