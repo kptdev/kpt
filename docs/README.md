@@ -4,7 +4,7 @@
 
 ### Synopsis
 
-kpt is a Kubernetes platform toolkit targeted at developing and configuring Resource packages.
+kpt is a Kubernetes platform toolkit for configuring Resources through configuration.
 
 It includes tools developed as part of the Kubernetes project as well as additional commands
 specific to `kpt`.
@@ -15,23 +15,37 @@ The `kpt` command structure is as follows:
 
 **Package Management: [pkg]**
 
-- updating and syncing packages of Resource configuration from remote sources
-- `get`, `update` and `diff` packages
+Publish and share configuration as packages of yaml or json.
+
+- Publish blueprints and scaffolding for others to fetch and customize.
+- Publish and version releases
+- Fetch the blessed scaffolding for your new service
+- Update your customized package by merging changes from upstream
 
 **Resource Configuration: [config]**
 
-- viewing and modifying Resource configuration
-- `set` fields, print `tree` structure
+Examine and craft your package.
+
+- Display structured and condensed views of your Resources
+- Filter and display Resources by constraints
+- Set high-level knobs published by the package
+- Define and expose new knobs to simplify routine modifications
 
 **Configuration Functions: [functions]**
 
-- generating, transforming and validating Resource configuration
-- `run` functional-images locally against packages
+Mixin public and custom programs which dynamically configure Resources on the client-side.
+
+- Generate Resources from code, DSLs, templates, etc
+- Apply cross-cutting changes to Resources
+- Validate Resources
 
 **Cluster Requests: [http]**
 
-- making requests to the Kubernetes control-plane
-- `apply` and `diff` packages against clusters
+Push Resources to a cluster.
+
+- Apply a package
+- Wait until a package has been rolled out
+- Diff local and remote state
 
 ------
 

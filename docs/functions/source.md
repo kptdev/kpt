@@ -6,7 +6,7 @@ Implement a Source by reading a local directory.
 
 Implement a Source by reading a local directory.
 
-    kpt config source DIR
+    kpt functions source DIR
 
   DIR:
     Path to local directory.
@@ -16,6 +16,6 @@ Implement a Source by reading a local directory.
 ### Examples
 
     # emity configuration directory as input source to a function
-    kpt config source DIR/
+    kpt functions source DIR/
 
-    kpt config source DIR/ | your-function | kpt config sink DIR/
+    kpt functions source DIR/ | your-function | kpt functions sink DIR/
