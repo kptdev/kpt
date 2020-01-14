@@ -157,8 +157,6 @@ var DiffExamples = `
 
 var GetShort = `Fetch a package from a git repository`
 var GetLong = `
-Fetch a package from a git repository.
-
     kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
   REPO_URI:
@@ -456,8 +454,6 @@ var SyncExamples = `
 
 var UpdateShort = `Update a local package with changes from a remote source repo`
 var UpdateLong = `
-Update a local package with changes from a remote source repo.
-
     kpt update LOCAL_PKG_DIR[@VERSION] [flags]
 
   LOCAL_PKG_DIR:

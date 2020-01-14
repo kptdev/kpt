@@ -6,8 +6,6 @@ Fetch a package from a git repository
 
 ### Synopsis
 
-Fetch a package from a git repository.
-
     kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
   REPO_URI:
@@ -66,4 +64,4 @@ Fetch a package from a git repository.
 
 ### 
 
-[demo]: ../gifs/config-get.gif "kpt config get demo"
+[demo]: https://storage.cloud.google.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"

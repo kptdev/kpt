@@ -91,4 +91,4 @@ A: Yes. [gcr.io/kpt-dev/kpt](Dockerfile) contains the `kpt` and `kustomize` bina
 
 ---------------------
 
-[demo]: docs/gifs/overview-readme.gif "kpt demo"
+[demo]: https://storage.cloud.google.com/kpt-dev/docs/overview-readme.gif "kpt"

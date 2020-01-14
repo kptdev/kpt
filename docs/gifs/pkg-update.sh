@@ -34,10 +34,9 @@ pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "git add . && git commit -m 'fetched helloworld'"
 
 echo "#"
-echo "# print the package contents"
+echo "# update the package from upstream"
 echo "#"
-pe "kpt config count helloworld # Resource counts"
-pe "kpt config tree helloworld --name --image --replicas # Structured output"
-pe "kpt config cat helloworld | less # Raw configuration"
+pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge # merge changes from v0.2.0"
+pe "git diff"
 
 pe "clear"

@@ -35,7 +35,7 @@ func NewRunner(parent string) *Runner {
 		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
 		Args:       cobra.ExactArgs(2),
 		Short:      docs.GetShort,
-		Long:       docs.GetLong,
+		Long:       docs.GetShort + "\n" + docs.GetLong,
 		Example:    docs.GetExamples,
 		RunE:       r.runE,
 		PreRunE:    r.preRunE,

@@ -2,9 +2,9 @@
 
 Update a local package with changes from a remote source repo
 
-### Synopsis
+![alt text][demo]
 
-Update a local package with changes from a remote source repo.
+### Synopsis
 
     kpt update LOCAL_PKG_DIR[@VERSION] [flags]
 
@@ -65,3 +65,6 @@ Update a local package with changes from a remote source repo.
     git commit -m "package updates"
     kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 
+### 
+
+[demo]: https://storage.cloud.google.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"
