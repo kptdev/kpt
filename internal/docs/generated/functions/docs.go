@@ -60,13 +60,13 @@ order they appear in the file).
   file contents.
 `
 var RunExamples = `
-kpt config run example/`
+kpt functions run example/`
 
 var SinkShort = `Implement a Sink by writing input to a local directory.`
 var SinkLong = `
 Implement a Sink by writing input to a local directory.
 
-    kpt config sink DIR
+    kpt functions sink DIR
 
   DIR:
     Path to local directory.
@@ -74,13 +74,13 @@ Implement a Sink by writing input to a local directory.
 ` + "`" + `sink` + "`" + ` writes its input to a directory
 `
 var SinkExamples = `
-    kpt config source DIR/ | your-function | kpt config sink DIR/`
+    kpt functions source DIR/ | your-function | kpt functions sink DIR/`
 
 var SourceShort = `Implement a Source by reading a local directory.`
 var SourceLong = `
 Implement a Source by reading a local directory.
 
-    kpt config source DIR
+    kpt functions source DIR
 
   DIR:
     Path to local directory.
@@ -89,6 +89,6 @@ Implement a Source by reading a local directory.
 `
 var SourceExamples = `
     # emity configuration directory as input source to a function
-    kpt config source DIR/
+    kpt functions source DIR/
 
-    kpt config source DIR/ | your-function | kpt config sink DIR/`
+    kpt functions source DIR/ | your-function | kpt functions sink DIR/`

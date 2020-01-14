@@ -5,11 +5,14 @@ go 1.13
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
+	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/posener/complete/v2 v2.0.1-alpha.12
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
+	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392 // indirect
+	gopkg.in/yaml.v2 v2.2.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d
 	gotest.tools v2.2.0+incompatible
 	k8s.io/client-go v0.17.0

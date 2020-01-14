@@ -22,7 +22,7 @@ linters:
     - gofmt
     - goimports
     - golint
-    - gosec
+#    - gosec
     - gosimple
     - govet
     - ineffassign
@@ -40,7 +40,6 @@ linters:
     - unused
     - varcheck
 #    - whitespace
-
 
 linters-settings:
   dupl:
