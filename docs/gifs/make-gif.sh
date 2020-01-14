@@ -15,9 +15,9 @@
 
 rm -f ./$1.cast ./$1.gif
 asciinema rec -i 1 -c ./$1.sh $1.cast
-asciicast2gif -w 80 -h 30 -S 1 ./$1.cast $1.gif
+asciicast2gif -S 4 ./$1.cast $1.gif
 
 # copy to gs
-gsutil cp $1.gif gs://kpt-dev/docs/$1.gif
-gsutil cp $1.cast gs://kpt-dev/docs/$1.cast
+gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $1.gif gs://kpt-dev/docs/$1.gif
+gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $1.cast gs://kpt-dev/docs/$1.cast
 rm ./$1.cast ./$1.gif

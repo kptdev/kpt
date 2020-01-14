@@ -1,10 +1,8 @@
 ## merge3
 
-[Alpha] Merge diff of Resource configuration files into a destination (3-way)
+Merge diff of Resource configuration files into a destination (3-way)
 
 ### Synopsis
-
-[Alpha] Merge diff of Resource configuration files into a destination (3-way)
 
 Merge3 performs a 3-way merge by applying the diff between 2 sets of Resources to a 3rd set.
 

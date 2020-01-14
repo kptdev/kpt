@@ -31,7 +31,7 @@ func NewRunner(parent string) *Runner {
 	c := &cobra.Command{
 		Use:          "diff LOCAL_PKG_DIR[@VERSION]",
 		Short:        docs.DiffShort,
-		Long:         docs.DiffLong,
+		Long:         docs.DiffShort + "\n" + docs.DiffLong,
 		Example:      docs.DiffExamples,
 		PreRunE:      r.preRunE,
 		RunE:         r.runE,

@@ -30,7 +30,7 @@ func NewRunner(parent string) *Runner {
 	c := &cobra.Command{
 		Use:     "desc [DIR]...",
 		Short:   docs.DescShort,
-		Long:    docs.DescLong,
+		Long:    docs.DescShort + "\n" + docs.DescLong,
 		Example: docs.DescExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,

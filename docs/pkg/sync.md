@@ -2,6 +2,8 @@
 
 Sync package dependencies using a manifest
 
+![alt text][demo]
+
 ### Synopsis
 
 Sync uses a manifest to manage a collection of dependencies.
@@ -98,3 +100,5 @@ against the directory.
 
     # sync the dependencies
     kpt pkg sync my-package-dir/
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"

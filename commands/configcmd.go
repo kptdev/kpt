@@ -30,52 +30,52 @@ func GetConfigCommand(name string) *cobra.Command {
 
 	cat := configcobra.Cat(name)
 	cat.Short = configdocs.CatShort
-	cat.Long = configdocs.CatLong
+	cat.Long = configdocs.CatShort + "\n" + configdocs.CatLong
 	cat.Example = configdocs.CatExamples
 
 	count := configcobra.Count(name)
 	count.Short = configdocs.CountShort
-	count.Long = configdocs.CountLong
+	count.Long = configdocs.CountShort + "\n" + configdocs.CountLong
 	count.Example = configdocs.CountExamples
 
 	createSetter := configcobra.CreateSetter(name)
 	createSetter.Short = configdocs.CreateSetterShort
-	createSetter.Long = configdocs.CreateSetterLong
+	createSetter.Long = configdocs.CreateSetterShort + "\n" + configdocs.CreateSetterLong
 	createSetter.Example = configdocs.CreateSetterExamples
 
 	fmt := configcobra.Fmt(name)
 	fmt.Short = configdocs.FmtShort
-	fmt.Long = configdocs.FmtLong
+	fmt.Long = configdocs.FmtShort + "\n" + configdocs.FmtLong
 	fmt.Example = configdocs.FmtExamples
 
 	grep := configcobra.Grep(name)
 	grep.Short = configdocs.GrepShort
-	grep.Long = configdocs.GrepLong
+	grep.Long = configdocs.GrepShort + "\n" + configdocs.GrepLong
 	grep.Example = configdocs.GrepExamples
 
 	listSetters := configcobra.ListSetters(name)
 	listSetters.Short = configdocs.ListSettersShort
-	listSetters.Long = configdocs.ListSettersLong
+	listSetters.Long = configdocs.ListSettersShort + "\n" + configdocs.ListSettersLong
 	listSetters.Example = configdocs.ListSettersExamples
 
 	merge := configcobra.Merge(name)
 	merge.Short = configdocs.MergeShort
-	merge.Long = configdocs.MergeLong
+	merge.Long = configdocs.MergeShort + "\n" + configdocs.MergeLong
 	merge.Example = configdocs.MergeExamples
 
 	merge3 := configcobra.Merge3(name)
 	merge3.Short = configdocs.Merge3Short
-	merge3.Long = configdocs.Merge3Long
+	merge3.Long = configdocs.Merge3Short + "\n" + configdocs.Merge3Long
 	merge3.Example = configdocs.Merge3Examples
 
 	set := configcobra.Set(name)
 	set.Short = configdocs.SetShort
-	set.Long = configdocs.SetLong
+	set.Long = configdocs.SetShort + "\n" + configdocs.SetLong
 	set.Example = configdocs.SetExamples
 
 	tree := configcobra.Tree(name)
 	tree.Short = configdocs.TreeShort
-	tree.Long = configdocs.TreeLong
+	tree.Long = configdocs.TreeShort + "\n" + configdocs.TreeLong
 	tree.Example = configdocs.TreeExamples
 
 	cfgCmd.AddCommand(cat, count, createSetter, fmt, grep, listSetters, merge, merge3, set, tree)

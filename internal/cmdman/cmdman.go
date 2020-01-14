@@ -29,7 +29,7 @@ func NewRunner(parent string) *Runner {
 		Use:     "man LOCAL_PKG_DIR",
 		Args:    cobra.MaximumNArgs(1),
 		Short:   docs.ManShort,
-		Long:    docs.ManLong,
+		Long:    docs.ManShort + "\n" + docs.ManLong,
 		Example: docs.ManExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,

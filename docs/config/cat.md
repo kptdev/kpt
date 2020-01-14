@@ -4,7 +4,7 @@ Print Resource Config from a local directory.
 
 ### Synopsis
 
-Print Resource Config from a local directory.
+    kpt config cat DIR
 
   DIR:
     Path to local directory.
@@ -13,9 +13,3 @@ Print Resource Config from a local directory.
 
     # print Resource config from a directory
     kpt config cat my-dir/
-
-    # wrap Resource config from a directory in an ResourceList
-    kpt config cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
-
-    # unwrap Resource config from a directory in an ResourceList
-    ... | kpt config cat

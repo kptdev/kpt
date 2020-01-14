@@ -21,22 +21,21 @@
 cd $(mktemp -d)
 git init
 
-stty rows 80 cols 30
+stty rows 80 cols 15
 
 # start demo
 clear
-echo "#"
-echo "# get the package"
-echo "#"
+
+echo " "
+echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
+p "# fetch the package"
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-echo "export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
 pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "git add . && git commit -m 'fetched helloworld'"
 
-echo "#"
-echo "# update the package from upstream"
-echo "#"
-pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge # merge changes from v0.2.0"
+echo " "
+p "# pull in upstream updates from v0.2.0"
+pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
 pe "git diff"
 
 pe "clear"

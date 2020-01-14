@@ -64,8 +64,6 @@ var READMEExamples = `
 
 var DescShort = `Display package descriptions`
 var DescLong = `
-Display package descriptions.
-
     kpt pkg desc [DIR...]
 
 ` + "`" + `desc` + "`" + ` reads package information in given DIRs and displays it in tabular format.
@@ -84,8 +82,6 @@ var DescExamples = `
 
 var DiffShort = `Show changes between local and upstream source package`
 var DiffLong = `
-Show changes between local and upstream source package.
-
     kpt pkg diff [LOCAL_PKG_DIR@VERSION]
 
 Diff commands lets you answer the following questions:
@@ -215,8 +211,6 @@ var GetExamples = `
 
 var InitShort = `Initialize suggested package meta for a local config directory`
 var InitLong = `
-Initialize suggested package meta for a local config directory.
-
 Any directory containing Kubernetes Resource Configuration may be treated as
 remote package without the existence of additional packaging metadata.
 
@@ -261,17 +255,16 @@ var InitExamples = `
 
 var ManShort = `Format and display package documentation if it exists`
 var ManLong = `
-Format and display package documentation if it exists.    If package documentation is missing
-from the package or 'man' is not installed, the command will fail.
-
     kpt pkg man LOCAL_PKG_DIR [flags]
 
   LOCAL_PKG_DIR:
 
     local path to a package.
+
+If package documentation is missing from the package or 'man' is not installed,
+the command will fail.
 `
 var ManExamples = `
-
     # display package documentation
     kpt pkg man my-package/
 
@@ -354,7 +347,9 @@ var SyncSetExamples = `
 
     # add a dependency to an existing package
     kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
-        hello-world --strategy=resource-merge`
+        hello-world --strategy=resource-merge
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"`
 
 var SyncShort = `Sync package dependencies using a manifest`
 var SyncLong = `
@@ -450,7 +445,9 @@ var SyncExamples = `
     kpt pkg sync my-package-dir/ --dry-run
 
     # sync the dependencies
-    kpt pkg sync my-package-dir/`
+    kpt pkg sync my-package-dir/
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"`
 
 var UpdateShort = `Update a local package with changes from a remote source repo`
 var UpdateLong = `

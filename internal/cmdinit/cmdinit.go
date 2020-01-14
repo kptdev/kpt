@@ -39,7 +39,7 @@ func NewRunner(parent string) *Runner {
 		Use:     "init DIR",
 		Args:    cobra.ExactArgs(1),
 		Short:   docs.InitShort,
-		Long:    docs.InitLong,
+		Long:    docs.InitShort + "\n" + docs.InitLong,
 		Example: docs.InitExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,

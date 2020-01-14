@@ -21,14 +21,6 @@
 cd $(mktemp -d)
 git init
 
-stty rows 80 cols 30
+sstty rows 80 cols 15
 
 # start demo
-clear
-echo "#"
-echo "# get the package"
-echo "#"
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-echo "export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"

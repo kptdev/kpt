@@ -4,7 +4,7 @@ List setters for Resources.
 
 ### Synopsis
 
-List setters for Resources.
+    kpt config list-setters DIR [NAME]
 
   DIR
 
@@ -18,6 +18,6 @@ List setters for Resources.
 
   Show setters:
 
-    $ kpt config set DIR/
+    $ kpt config list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2

@@ -21,36 +21,41 @@
 cd $(mktemp -d)
 git init
 
-#stty rows 50 cols 180
+stty rows 80 cols 15
 
 # start demo
 clear
-echo "#"
-echo "# get the package"
-echo "#"
+echo " "
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld # fetch a package"
+p "# get the package"
+pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "git add . && git commit -m 'fetched helloworld'"
 
-echo "#"
-echo "# customize the package"
-echo "#"
-pe "kpt config list-setters helloworld # list the knobs"
-pe "kpt config set helloworld replicas 3 # set the replicas knob"
-pe "kpt config list-setters helloworld replicas # display the updates"
+echo " "
+p "# list setters published by the packages"
+pe "kpt config list-setters helloworld"
+
+echo " "
+p "# set the replicas on the cli"
+pe "kpt config set helloworld replicas 3"
+
+echo " "
+p "# set view the updated values"
+pe "kpt config list-setters helloworld replicas"
 pe "git add . && git commit -m 'change replicas to 3'"
 
-echo "#"
-echo "# pull in upstream updates by merging Resources"
-echo "#"
-pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge # pull in upstream changes"
-pe "git diff helloworld # show the changes to the raw configuration"
+echo " "
+p "# pull in upstream updates"
+pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
+
+echo " "
+p "# show the changes to the raw configuration"
+pe "git diff helloworld"
 pe "git add . && git commit -m 'update helloworld to 0.2.0'"
 
-echo "#"
-echo "# apply the package to a cluster"
-echo "#"
+echo " "
+p "# apply the package to a cluster"
 pe "kpt http apply -f helloworld"
 
 pe "clear"
