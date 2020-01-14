@@ -79,7 +79,7 @@ A collection of packages to fetch and update may also be specified declaratively
 
 ### 
 
-[demo]: https://storage.cloud.google.com/kpt-dev/docs/pkg.gif "kpt pkg"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg.gif "kpt pkg"
 [setters]: ../config/setters.md
 [functions]: ../functions
 [apply]: ../http/apply.md

@@ -61,4 +61,4 @@ View and Modify Resource Configuration.
 
 ### 
 
-[demo]: https://storage.cloud.google.com/kpt-dev/docs/config.gif "kpt config"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/config.gif "kpt config"

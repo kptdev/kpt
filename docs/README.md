@@ -66,7 +66,7 @@ To uninstall shell completion for kpt run:
 
 ### 
 
-[demo]: https://storage.cloud.google.com/kpt-dev/docs/overview-readme.gif "kpt"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/overview-readme.gif "kpt"
 [pkg]: pkg
 [config]: config
 [functions]: functions
