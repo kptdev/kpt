@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/spf13/cobra"
@@ -32,7 +32,7 @@ func NewRunner(parent string) *Runner {
 	c := &cobra.Command{
 		Use:        "update LOCAL_PKG_DIR[@VERSION]",
 		Short:      docs.UpdateShort,
-		Long:       docs.UpdateLong,
+		Long:       docs.UpdateShort + "\n" + docs.UpdateLong,
 		Example:    docs.UpdateExamples,
 		RunE:       r.runE,
 		Args:       cobra.ExactArgs(1),

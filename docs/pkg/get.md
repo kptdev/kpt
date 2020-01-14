@@ -2,11 +2,11 @@
 
 Fetch a package from a git repository
 
+![alt text][demo]
+
 ### Synopsis
 
-Fetch a package from a git repository.
-
-    kpt get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+    kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
   REPO_URI:
 
@@ -50,16 +50,18 @@ Fetch a package from a git repository.
 
 ### Examples
 
-```
-# fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
-# creates directory ./cockroachdb/ containing the package contents
-kpt get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
+    # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
+    # creates directory ./cockroachdb/ containing the package contents
+    kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
 
-# fetch a cockroachdb
-# if ./my-package doesn't exist, creates directory ./my-package/ containing the package contents
-kpt get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
+    # fetch a cockroachdb
+    # if ./my-package doesn't exist, creates directory ./my-package/ containing the package contents
+    kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
 
-# fetch package examples from github.com/kubernetes/examples
-# creates directory ./examples fetched from the provided commit
-kpt get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
-```
+    # fetch package examples from github.com/kubernetes/examples
+    # creates directory ./examples fetched from the provided commit
+    kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
+
+### 
+
+[demo]: https://storage.cloud.google.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"

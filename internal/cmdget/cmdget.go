@@ -18,7 +18,7 @@ package cmdget
 import (
 	"fmt"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/get/getioreader"
@@ -35,7 +35,7 @@ func NewRunner(parent string) *Runner {
 		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
 		Args:       cobra.ExactArgs(2),
 		Short:      docs.GetShort,
-		Long:       docs.GetLong,
+		Long:       docs.GetShort + "\n" + docs.GetLong,
 		Example:    docs.GetExamples,
 		RunE:       r.runE,
 		PreRunE:    r.preRunE,

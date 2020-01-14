@@ -18,7 +18,7 @@ package cmddiff
 import (
 	"os"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/commands"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/diff"

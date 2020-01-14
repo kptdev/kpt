@@ -30,54 +30,44 @@ normal=$(tput sgr0)
 stty rows 50 cols 180
 
 # start demo
-echo ""
-echo "  ${bold}fetch the package...${normal}"
-pe "kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+clear
+echo "# fetch the package..."
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 
-echo ""
-echo "  ${bold}print its contents...${normal}"
-pe "config tree helloworld --image --ports --name --replicas  --field 'metadata.labels'"
+echo "# print its contents..."
+pe "kpt config tree helloworld --image --ports --name --replicas  --field 'metadata.labels'"
 
-echo ""
-echo "  ${bold}add to git...${normal}"
+echo "# add to git..."
 pe "git add helloworld && git commit -m 'fetch helloworld package at v0.1.0'"
 
-echo ""
-echo "  ${bold}print setters...${normal}"
-pe "config set helloworld"
+pe "clear"
+echo "# print setters..."
+pe "kpt config set helloworld"
 
-echo ""
-echo "  ${bold}change a value...${normal}"
-pe "config set helloworld replicas 3 --set-by phil --description 'minimal HA mode'"
+echo "# change a value..."
+pe "kpt config set helloworld replicas 3 --set-by phil --description 'minimal HA mode'"
 
-echo ""
-echo "  ${bold}print setters again...${normal}"
-pe "config set helloworld"
+echo "# print setters again..."
+pe "kpt config set helloworld"
 
-echo ""
-echo "  ${bold}print its contents...${normal}"
-pe "config tree helloworld --name --replicas"
+echo "# print its contents..."
+pe "kpt config tree helloworld --name --replicas"
 
-echo ""
-echo "  ${bold}view the diff...${normal}"
+echo "# view the diff..."
 pe "git diff"
 
-echo ""
-echo "  ${bold}commit changes...${normal}"
+echo "# commit changes..."
 pe "git add helloworld && git commit -m 'set replicas to 3'"
 
-echo ""
-echo "  ${bold}update the package to a new version...${normal}"
-pe "kpt update helloworld@v0.2.0 --strategy=resource-merge"
+pe "clear"
+echo "# update the package to a new version..."
+pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
 
-echo ""
-echo "  ${bold}view the diff...${normal}"
+echo "# view the diff..."
 pe "git diff"
 
-echo ""
-echo "  ${bold}print its contents...${normal}"
-pe "config tree helloworld --name --replicas --field 'metadata.labels'"
+echo "# print its contents..."
+pe "kpt config tree helloworld --name --replicas --field 'metadata.labels'"
 
-echo ""
-echo "  ${bold}update git...${normal}"
+echo "# update git..."
 pe "git add helloworld && git commit -m 'update helloworld package to v0.2.0'"

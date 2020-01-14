@@ -41,7 +41,7 @@ license:
 	$(GOBIN)/addlicense  -y 2019 -l apache .
 
 lint:
-	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0)
+	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.22.2)
 	$(GOBIN)/golangci-lint run ./...
 
 test:

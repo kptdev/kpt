@@ -15,7 +15,8 @@
 package commands
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
+	"strings"
+
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
@@ -25,76 +26,65 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdtutorials"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/posener/complete/v2"
 	"github.com/spf13/cobra"
 )
 
-// GetAllCommands returns the set of kpt commands to be registered
-func GetAllCommands(name string) []*cobra.Command {
-	c := []*cobra.Command{
-		cmdcomplete.NewCommand(name),
-		cmddesc.NewCommand(name),
-		cmdget.NewCommand(name),
-		cmdinit.NewCommand(name),
-		cmdman.NewCommand(name),
-		cmdsync.NewCommand(name),
-		cmdupdate.NewCommand(name),
-		cmddiff.NewCommand(name),
-	}
-	c = append(c, cmdtutorials.Tutorials(name)...)
+func GetAnthosCommands(name string) []*cobra.Command {
+	c := append([]*cobra.Command{cmddesc.NewCommand(name),
+		cmdget.NewCommand(name), cmdinit.NewCommand(name),
+		cmdman.NewCommand(name), cmdsync.NewCommand(name),
+		cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
+	}, cmdtutorials.Tutorials(name)...)
 
 	// apply cross-cutting issues to commands
-	for i := range c {
-		cmd := c[i]
-		NormalizeCommand(cmd)
-	}
+	NormalizeCommand(c...)
 	return c
 }
 
 // NormalizeCommand will modify commands to be consistent, e.g. silencing errors
-func NormalizeCommand(cmd *cobra.Command) {
-	// check if silencing errors is off
-	cmdutil.SetSilenceErrors(cmd)
+func NormalizeCommand(c ...*cobra.Command) {
+	for i := range c {
+		cmd := c[i]
+		// check if silencing errors is off
+		cmdutil.SetSilenceErrors(cmd)
+		cmd.Short = strings.TrimPrefix(cmd.Short, "[Alpha] ")
 
-	// check if stack printing is on
-	if cmd.PreRunE != nil {
-		fn := cmd.PreRunE
-		cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-			err := fn(cmd, args)
-			return cmdutil.HandlePreRunError(cmd, err)
+		// check if stack printing is on
+		if cmd.PreRunE != nil {
+			fn := cmd.PreRunE
+			cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+				err := fn(cmd, args)
+				return cmdutil.HandlePreRunError(cmd, err)
+			}
 		}
-	}
-	if cmd.RunE != nil {
-		fn := cmd.RunE
-		cmd.RunE = func(cmd *cobra.Command, args []string) error {
-			err := fn(cmd, args)
-			return cmdutil.HandleError(cmd, err)
+		if cmd.RunE != nil {
+			fn := cmd.RunE
+			cmd.RunE = func(cmd *cobra.Command, args []string) error {
+				err := fn(cmd, args)
+				return cmdutil.HandleError(cmd, err)
+			}
 		}
+		NormalizeCommand(cmd.Commands()...)
 	}
 }
 
-var allCommands = map[string]func(string) *cobra.Command{
-	"desc":               cmddesc.NewCommand,
-	"diff":               cmddiff.NewCommand,
-	"get":                cmdget.NewCommand,
-	"init":               cmdinit.NewCommand,
-	"man":                cmdman.NewCommand,
-	"sync":               cmdsync.NewCommand,
-	"update":             cmdupdate.NewCommand,
-	"install-completion": cmdcomplete.NewCommand,
-}
-
-func GetCommands(name string, commands ...string) []*cobra.Command {
+// GetKptCommands returns the set of kpt commands to be registered
+func GetKptCommands(name string) []*cobra.Command {
 	var c []*cobra.Command
-	for _, k := range commands {
-		cmd := allCommands[k](name)
-		NormalizeCommand(cmd)
-		c = append(c, cmd)
-	}
-	return c
-}
+	cfgCmd := GetConfigCommand(name)
+	httpCmd := GetHTTPCommand(name)
+	fnCmd := GetFnCommand(name)
+	pkgCmd := GetPkgCommand(name)
 
-// Complete returns a completion command
-func Complete(cmd *cobra.Command, fn cmdcomplete.VisitFlags) *complete.Command {
-	return cmdcomplete.Complete(cmd, false, fn)
+	tutorials := &cobra.Command{
+		Use:   "tutorials",
+		Short: "Tutorials for using kpt",
+	}
+
+	tutorials.AddCommand(cmdtutorials.Tutorials(name)...)
+	c = append(c, httpCmd, cfgCmd, pkgCmd, tutorials, fnCmd)
+
+	// apply cross-cutting issues to commands
+	NormalizeCommand(c...)
+	return c
 }

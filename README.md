@@ -1,83 +1,87 @@
-[![Build Status](https://travis-ci.org/GoogleContainerTools/kpt.svg?branch=master)](https://travis-ci.org/GoogleContainerTools/kpt)
-[![Code Coverage](https://codecov.io/gh/GoogleContainerTools/kpt/branch/master/graph/badge.svg)](https://codecov.io/gh/GoogleContainerTools/kpt)
-[![Go Report Card](https://goreportcard.com/badge/GoogleContainerTools/kpt)](https://goreportcard.com/report/GoogleContainerTools/kpt)
-[![LICENSE](https://img.shields.io/github/license/GoogleContainerTools/kpt.svg)](https://github.com/GoogleContainerTools/kpt/blob/master/LICENSE)
-[![Releases](https://img.shields.io/github/release-pre/GoogleContainerTools/kpt.svg)](https://github.com/GoogleContainerTools/kpt/releases)
+# KPT
 
-# KPT Packaging Tool
+Git based package management and toolchain for Kubernetes Resource Configuration.
 
-Git based configuration package manager.
+![alt text][demo]
 
-Publish, Consume and Update packages of raw Kubernetes Resource configuration.
+- Publish, Consume and Update packages of Kubernetes Resource Configuration.
+- Develop and Update Configuration programmatically.
+- Filter and Display Configuration packages.
+- Apply Configuration to clusters.
+
+`kpt` combines package management commands with upstream Kubernetes tools to provide a complete
+toolchain for building platforms for Kubernetes Resources.
 
 ## Installation
 
-build using go:
-
-    export GO111MODULE=on
-    go install -v github.com/GoogleContainerTools/kpt
-    go install -v sigs.k8s.io/kustomize/kustomize/v3
-
-or download prebuilt binaries:
+Binaries:
 
 - [darwin](https://storage.cloud.google.com/kpt-dev/kpt.master_darwin_amd64)
 - [linux](https://storage.cloud.google.com/kpt-dev/kpt.master_linux_amd64)
 - [windows](https://storage.cloud.google.com/kpt-dev/kpt.master_windows_amd64)
 
-## Quick Start: First 5 minutes
+Source:
 
-  Fetch a package from *any git repo* containing Kubernetes Resource configuration:
+    GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
-    $ kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
+or
 
-  Print the fetched package contents using kustomize:
+    git clone https://github.com/GoogleContainerTools/kpt && cd kpt && make
 
-    export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true # enable kustomize alpha commands
-    kustomize config tree my-cockroachdb --name --image
+### [Documentation](docs/README.md)
 
-  Output:
-
-    my-cockroachdb
-    ├── [cockroachdb-statefulset.yaml]  Service cockroachdb
-    ├── [cockroachdb-statefulset.yaml]  StatefulSet cockroachdb
-    │   ├── spec.replicas: 3
-    │   └── spec.template.spec.containers
-    │       └── 0
-    │           ├── name: cockroachdb
-    │           └── image: cockroachdb/cockroach:v1.1.0
-    ├── [cockroachdb-statefulset.yaml]  PodDisruptionBudget cockroachdb-budget
-    └── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
-
-  Apply the package to a cluster:
-
-    kustomize apply my-cockroachdb/
-
-## Whats next
-
-See the full `kpt` [documentation](docs/README.md) or run `kpt help`
+See the [docs](docs/README.md) for more information on how to use `kpt`.
 
 ## FAQ
 
-**Why Resource configuration rather than Templates or DSLs?**  Using Resource configuration
-provides a number of desirable properties:
+### **Q: How is `kpt` different from other solutions?**
+
+A: Rather than developing configuration by expressing it as code, `kpt` develops packages
+   using the API native format -- i.e. as json or yaml objects adhering to the API schema.
+
+### **Q: Why Resource configuration rather than Templates or DSLs?**  
+
+A: Using Resource configuration provides a number of desirable properties:
 
   1. it clearly **represents the intended state** of the infrastructure -- no for loops, http calls,
     etc to interpret
 
-  2. it **works directly with Kubernetes project based tools** -- `kubectl`, `kustomize`, etc
+  2. it **aligns with how tools developed by the Kubernetes project are written** --
+     `kubectl`, `kustomize`, etc
 
-  3. it enables **composition of a variety of tools written in different languages**
+  3. it enables **composition of different types of tools written in different languages**
       * any modern language can manipulate yaml / json structures, no need to adopt `go`
 
   4. it **supports static analysis**
       * develop tools and processes to perform validation and linting
 
-  5. it can be **modified programmatically**
+  5. it **supports programatic modification**
       * develop CLIs and UIs for working with configuration rather than using `vim`
 
-**Is there a container image that contains kpt?**
+### **Q: Isn't writing yaml hard?**
 
-  Yes. [gcr.io/kpt-dev/kpt](Dockerfile) contains the `kpt` and `kustomize` binaries.
+A: `kpt` offers a collection of utilities which enable working with configuration
+   programmatically to simplify the experience.
+
+### **Q: I really like DSL / Templating solution X.  Can I use it with `kpt`?**
+
+A: `kpt` supports plugging in solutions which generate or manipulate configuration, e.g. from
+   DSLs and Templates.  This is done with [functions](docs/functions).
+
+### **Q: I need to be able to write custom logic and develop high-level abstractions.  How can I do this with `kpt`?**
+
+A: `kpt`'s architecture facilitates the development of customization techniques and abstractions
+   using a variety of approaches including [setters](docs/config/set.md) and
+   [functions](docs/functions).
+
+### **Q: How do I roll out changes throughout my organization using `kpt`?**
+
+A: This can be done one of several ways, including: 1) using semantic versioning or release
+   channels with [functions](docs/functions), or 2) [updating](docs/pkg/update.md) packages.
+
+### **Q: Is there a container image that contains kpt?**
+
+A: Yes. [gcr.io/kpt-dev/kpt](Dockerfile) contains the `kpt` and `kustomize` binaries.
 
 ## Community
 
@@ -86,3 +90,5 @@ provides a number of desirable properties:
 * [kpt-users mailing list](https://groups.google.com/forum/#!forum/kpt-users)
 
 ---------------------
+
+[demo]: https://storage.cloud.google.com/kpt-dev/docs/overview-readme.gif "kpt"
