@@ -15,6 +15,7 @@
 //go:generate $GOBIN/mdtogo docs/tutorials internal/docs/generated/tutorials --full=true --license=none
 //go:generate $GOBIN/mdtogo docs/pkg internal/docs/generated/pkg --license=none
 //go:generate $GOBIN/mdtogo docs/config internal/docs/generated/config --license=none
+//go:generate $GOBIN/mdtogo docs/functions internal/docs/generated/functions --license=none
 //go:generate $GOBIN/mdtogo docs internal/docs/generated/overview --license=none
 package main
 

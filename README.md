@@ -2,6 +2,8 @@
 
 Git based package management and toolchain for Kubernetes Resource Configuration.
 
+![alt text][demo]
+
 - Publish, Consume and Update packages of Kubernetes Resource Configuration.
 - Develop and Update Configuration programmatically.
 - Filter and Display Configuration packages.
@@ -9,8 +11,6 @@ Git based package management and toolchain for Kubernetes Resource Configuration
 
 `kpt` combines package management commands with upstream Kubernetes tools to provide a complete
 toolchain for building platforms for Kubernetes Resources.
-
-![alt text][demo]
 
 ## Installation
 
@@ -42,31 +42,33 @@ A: Using Resource configuration provides a number of desirable properties:
   1. it clearly **represents the intended state** of the infrastructure -- no for loops, http calls,
     etc to interpret
 
-  2. it **works directly tools developed by the Kubernetes project** -- `kubectl`, `kustomize`, etc
+  2. it **aligns with how tools developed by the Kubernetes project are written** --
+     `kubectl`, `kustomize`, etc
 
-  3. it enables **composition of a variety of tools written in different languages**
+  3. it enables **composition of different types of tools written in different languages**
       * any modern language can manipulate yaml / json structures, no need to adopt `go`
 
   4. it **supports static analysis**
       * develop tools and processes to perform validation and linting
 
-  5. it enables package to be **modified programmatically**
+  5. it **supports programatic modification**
       * develop CLIs and UIs for working with configuration rather than using `vim`
 
 ### **Q: Isn't writing yaml hard?**
 
 A: `kpt` offers a collection of utilities which enable working with configuration
-   programmatically to simply the experience.
+   programmatically to simplify the experience.
 
 ### **Q: I really like DSL / Templating solution X.  Can I use it with `kpt`?**
 
-A: `kpt` supports plugging in solutions which generate or manipulate configuration such
-   as DSLs and Templates as [functions](docs/functions).
+A: `kpt` supports plugging in solutions which generate or manipulate configuration, e.g. from
+   DSLs and Templates.  This is done with [functions](docs/functions).
 
 ### **Q: I need to be able to write custom logic and develop high-level abstractions.  How can I do this with `kpt`?**
 
-A: `kpt`'s architecture facilitates the development of customization and abstractions using
-   a variety of techniques including [setters](docs/config/set.md) and [functions](docs/functions).
+A: `kpt`'s architecture facilitates the development of customization techniques and abstractions
+   using a variety of approaches including [setters](docs/config/set.md) and
+   [functions](docs/functions).
 
 ### **Q: How do I roll out changes throughout my organization using `kpt`?**
 
@@ -85,4 +87,4 @@ A: Yes. [gcr.io/kpt-dev/kpt](Dockerfile) contains the `kpt` and `kustomize` bina
 
 ---------------------
 
-[demo]: docs/gifs/overview-readme.gif "Five Minute Demo"
+[demo]: docs/gifs/overview-readme.gif "kpt demo"

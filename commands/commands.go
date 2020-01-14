@@ -25,13 +25,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/cmdtutorials"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
-	configdocs "github.com/GoogleContainerTools/kpt/internal/docs/generated/config"
-	pkgdocs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/configcobra"
-	"sigs.k8s.io/kustomize/cmd/kubectl/kubectlcobra"
-	"sigs.k8s.io/kustomize/cmd/resource/status"
 )
 
 func GetAnthosCommands(name string) []*cobra.Command {
@@ -76,68 +71,10 @@ func NormalizeCommand(c ...*cobra.Command) {
 // GetKptCommands returns the set of kpt commands to be registered
 func GetKptCommands(name string) []*cobra.Command {
 	var c []*cobra.Command
-	cfgCmd := &cobra.Command{
-		Use:     "config",
-		Short:   configdocs.READMEShort,
-		Long:    configdocs.READMEShort + "\n" + configdocs.READMELong,
-		Example: configdocs.READMEExamples,
-	}
-
-	cat := configcobra.Cat(name)
-	count := configcobra.Count(name)
-	createSetter := configcobra.CreateSetter(name)
-	fmt := configcobra.Fmt(name)
-	grep := configcobra.Grep(name)
-	listSetters := configcobra.ListSetters(name)
-	merge := configcobra.Merge(name)
-	merge3 := configcobra.Merge3(name)
-	set := configcobra.Set(name)
-	tree := configcobra.Tree(name)
-	cfgCmd.AddCommand(cat, count, createSetter, fmt, grep, listSetters, merge, merge3, set, tree)
-
-	request := &cobra.Command{
-		Use:   "http",
-		Short: "Apply and make Resource requests to clusters",
-	}
-	request.AddCommand(status.StatusCommand())
-	request.AddCommand(kubectlcobra.GetCommand(nil).Commands()...)
-
-	pkg := &cobra.Command{
-		Use:     "pkg",
-		Short:   pkgdocs.READMEShort,
-		Long:    pkgdocs.READMELong,
-		Example: pkgdocs.READMEExamples,
-	}
-	pkg.AddCommand(cmddesc.NewCommand(name), cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdman.NewCommand(name), cmdsync.NewCommand(name), cmdupdate.NewCommand(name),
-		cmddiff.NewCommand(name))
-
-	functions := &cobra.Command{
-		Use:   "functions",
-		Short: "Generate and mutate local configuration by running functional images",
-	}
-	var remove []*cobra.Command
-	for i := range cfgCmd.Commands() {
-		c := cfgCmd.Commands()[i]
-		if strings.HasPrefix(cfgCmd.Commands()[i].Use, "run") {
-			functions.AddCommand(c)
-			remove = append(remove, c)
-			continue
-		}
-		if strings.HasPrefix(cfgCmd.Commands()[i].Use, "source") {
-			functions.AddCommand(c)
-			remove = append(remove, c)
-			continue
-		}
-		if strings.HasPrefix(cfgCmd.Commands()[i].Use, "sink") {
-			functions.AddCommand(c)
-			remove = append(remove, c)
-			continue
-		}
-	}
-	for i := range remove {
-		cfgCmd.RemoveCommand(remove[i])
-	}
+	cfgCmd := GetConfigCommand(name)
+	httpCmd := GetHTTPCommand(name)
+	fnCmd := GetFnCommand(name)
+	pkgCmd := GetPkgCommand(name)
 
 	tutorials := &cobra.Command{
 		Use:   "tutorials",
@@ -145,7 +82,7 @@ func GetKptCommands(name string) []*cobra.Command {
 	}
 
 	tutorials.AddCommand(cmdtutorials.Tutorials(name)...)
-	c = append(c, request, cfgCmd, pkg, tutorials, functions)
+	c = append(c, httpCmd, cfgCmd, pkgCmd, tutorials, fnCmd)
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)
