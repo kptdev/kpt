@@ -54,15 +54,14 @@ Update a local package with changes from a remote source repo.
 
 ### Examples
 
-```
-# update my-package-dir/
-kpt update my-package-dir/
+    # update my-package-dir/
+    kpt pkg update my-package-dir/
 
-# update my-package-dir/ to match the v1.3 branch or tag
-kpt update my-package-dir/@v1.3
+    # update my-package-dir/ to match the v1.3 branch or tag
+    kpt pkg update my-package-dir/@v1.3
 
-# update applying a git patch
-git add my-package-dir/
-git commit -m "package updates"
-kpt update my-package-dir/@master --strategy alpha-git-patch
-```
+    # update applying a git patch
+    git add my-package-dir/
+    git commit -m "package updates"
+    kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
+

@@ -22,34 +22,19 @@ import (
 
 var tutorials = []*cobra.Command{
 	{
-		Use:   "tutorials-1-get",
+		Use:   "01-get",
 		Short: docs.FetchAPackageShort,
 		Long:  docs.FetchAPackageLong,
 	},
 	{
-		Use:   "tutorials-2-update",
+		Use:   "02-update",
 		Short: docs.UpdateALocalPackageShort,
 		Long:  docs.UpdateALocalPackageLong,
 	},
 	{
-		Use:   "tutorials-3-publish",
+		Use:   "03-publish",
 		Short: docs.PublishAPackageShort,
 		Long:  docs.PublishAPackageLong,
-	},
-	{
-		Use:   "tutorials-4-solutions",
-		Short: docs.BuildingSolutionsShort,
-		Long:  docs.BuildingSolutionsLong,
-	},
-	{
-		Use:   "faq",
-		Short: docs.FaqShort,
-		Long:  docs.FaqLong,
-	},
-	{
-		Use:   "future-development",
-		Short: docs.FutureDevelopmentShort,
-		Long:  docs.FutureDevelopmentLong,
 	},
 }
 

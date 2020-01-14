@@ -7,7 +7,7 @@ Format and display package documentation if it exists
 Format and display package documentation if it exists.    If package documentation is missing
 from the package or 'man' is not installed, the command will fail.
 
-    kpt man LOCAL_PKG_DIR [flags]
+    kpt pkg man LOCAL_PKG_DIR [flags]
 
   LOCAL_PKG_DIR:
 
@@ -15,10 +15,10 @@ from the package or 'man' is not installed, the command will fail.
 
 ### Examples
 
-```
-# display package documentation
-kpt man my-package/
 
-# display subpackage documentation
-kpt man my-package/sub-package/
-```
+    # display package documentation
+    kpt pkg man my-package/
+
+    # display subpackage documentation
+    kpt pkg man my-package/sub-package/
+

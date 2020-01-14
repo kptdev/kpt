@@ -22,31 +22,29 @@ Init will:
 * Create a README.md for package documentation if it doesn't exist.
 
 
-    kpt init DIR [flags]
-    
+    kpt pkg init DIR [flags]
+
   DIR:
-    
+
     Defaults to '.'. Init fails if DIR does not exist
 
   --description string
-  
+
     short description of the package. (default "sample description")
-  
+
   --name string
-  
+
     package name.  defaults to the directory base name.
-  
+
   --tag strings
-  
+
     list of tags for the package.
-  
+
   --url string
-  
+
     link to page with information about the package.
 
 ### Examples
 
-```sh
     # writes Kptfile package meta if not found
-    kpt init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
-```
+    kpt pkg init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"

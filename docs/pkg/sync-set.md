@@ -9,7 +9,7 @@ Add a sync dependency to a Kptfile.
 While is it possible to directly edit the Kptfile, `set` can be used to add or update
 Kptfile dependencies.
 
-    kpt get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+    kpt pkg  get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
   REPO_URI:
 
@@ -65,17 +65,17 @@ Kptfile dependencies.
   Create a new package and add a dependency to it
 
     # init a package so it can be synced
-    kpt init
+    kpt pkg init
 
     # add a dependency to the package
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
+    kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
 
     # sync the dependencies
-    kpt sync .
+    kpt pkg sync .
 
   Update an existing package dependency
 
     # add a dependency to an existing package
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
+    kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
         hello-world --strategy=resource-merge

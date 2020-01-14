@@ -13,7 +13,7 @@ specified ref.
 This is an alternative to managing package dependencies individually using
 the `get` and `update` commands.
 
-    kpt sync LOCAL_PKG_DIR [flags]
+    kpt pkg sync LOCAL_PKG_DIR [flags]
 
   LOCAL_PKG_DIR:
   
@@ -34,7 +34,7 @@ matching repo and ref.
 Dependencies are specified in the `Kptfile` `dependencies` field and can be added or updated
 with `kpt sync set`.  e.g.
 
-    kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
+    kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
 
 Or edit the Kptfile directly:
@@ -94,7 +94,7 @@ against the directory.
   Example invocation:
 
     # print the dependencies that would be modified
-    kpt sync my-package-dir/ --dry-run
+    kpt pkg sync my-package-dir/ --dry-run
 
     # sync the dependencies
-    kpt sync my-package-dir/
+    kpt pkg sync my-package-dir/

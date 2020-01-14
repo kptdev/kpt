@@ -41,7 +41,7 @@ C_NUM=0
 # prompt and command color which can be overriden
 DEMO_PROMPT="$ "
 DEMO_CMD_COLOR=$WHITE
-DEMO_COMMENT_COLOR=$GREY
+DEMO_COMMENT_COLOR=$RED
 
 ##
 # prints the script usage
@@ -87,7 +87,7 @@ function p() {
 
   # render the prompt
   x=$(PS1="$DEMO_PROMPT" "$BASH" --norc -i </dev/null 2>&1 | sed -n '${s/^\(.*\)exit$/\1/p;}')
-  
+
   # show command number is selected
   if $SHOW_CMD_NUMS; then
    printf "[$((++C_NUM))] $x"
