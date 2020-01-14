@@ -67,4 +67,4 @@ Update a local package with changes from a remote source repo
 
 ### 
 
-[demo]: https://storage.cloud.google.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"

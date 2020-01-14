@@ -64,4 +64,4 @@ Fetch a package from a git repository
 
 ### 
 
-[demo]: https://storage.cloud.google.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"
