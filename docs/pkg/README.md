@@ -9,24 +9,24 @@ Fetch, update and sync packages using git.
 `pkg` manages Resource configuration packages.
 
 Packages are collections of Resource configuration stored in git repositories.
-They may be either the entire repo, or only a subdirectory of the repo.
+They may be an entire repo, or a subdirectory within a repo.
 
 **Any git repository containing Resource configuration may be used as a package**,
-no additional structure or formatting is necessary for kpt to be able to fetch or
-pull updates from the package.
+no additional structure or formatting is necessary.
 
-Packages may be customized using various techniques such as [setters] and [functions].
-Packages may be applied to a cluster using [apply].
+Fetched packages may be customized using various techniques such as [setters] and [functions].
+Fetched packages may be applied to a cluster using [apply].
 
-A typical package workflow:
+Example package workflow:
 
 1. `kpt pkg get` to get a package
 2. `kpt config set`, `kpt config run` or `vi` to modify configuration
 3. `git add && git commit` to save package
 4. `kpt http apply` to a cluster
 5. `kpt pkg update` to pull in new changes
+6. `kpt http apply` to apply the upstream changes
 
-A collection of packages to fetch and update may be specified declaratively using `kpt sync`.
+A collection of packages to fetch and update may also be specified declaratively using `kpt sync`.
 
 ### Primary Commands
 

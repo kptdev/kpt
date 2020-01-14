@@ -4,14 +4,16 @@
 
 ### Synopsis
 
-kpt is a Kubernetes platform toolkit for configuring Resources through configuration.
+kpt is a Kubernetes platform toolkit.
 
-It includes tools developed as part of the Kubernetes project as well as additional commands
+It includes tools to package, customize and apply json or yaml configuration data.
+This includes tools developed as part of the Kubernetes project as well as additional commands
 specific to `kpt`.
 
-kpt packages are composed of Resource configuration, rather than code or templates.
+kpt package artifacts are composed of Resource configuration, rather than code or templates,
+but code or templates may be plugged into kpt to generate configuration.
 
-The `kpt` command structure is as follows:
+#### Major `kpt` subcomponents
 
 **Package Management: [pkg]**
 
@@ -47,7 +49,7 @@ Push Resources to a cluster.
 - Wait until a package has been rolled out
 - Diff local and remote state
 
-------
+#### `kpt` tips and tricks
 
 To install shell completion for `kpt` commands and flags (bash, fish and zsh), run:
 

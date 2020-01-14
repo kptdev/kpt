@@ -24,6 +24,10 @@ Source:
 
     GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
+or
+
+    git clone https://github.com/GoogleContainerTools/kpt && cd kpt && make
+
 ### [Documentation](docs/README.md)
 
 See the [docs](docs/README.md) for more information on how to use `kpt`.
