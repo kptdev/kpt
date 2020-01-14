@@ -4,7 +4,7 @@ Set values on Resources fields values.
 
 ### Synopsis
 
-Set values on Resources fields.  May set either the complete or partial field value.
+May set either the complete or partial field value.
 
 `set` identifies setters using field metadata published as OpenAPI extensions.
 `set` parses both the Kubernetes OpenAPI, as well OpenAPI published inline in

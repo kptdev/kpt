@@ -2,6 +2,8 @@
 
 Add a sync dependency to a Kptfile
 
+![alt text][demo]
+
 ### Synopsis
 
 Add a sync dependency to a Kptfile.
@@ -79,3 +81,5 @@ Kptfile dependencies.
     # add a dependency to an existing package
     kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
         hello-world --strategy=resource-merge
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"

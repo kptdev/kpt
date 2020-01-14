@@ -21,23 +21,27 @@
 cd $(mktemp -d)
 git init
 
-stty rows 80 cols 30
+stty rows 80 cols 15
 
 # start demo
 clear
-echo "#"
-echo "# get the package"
-echo "#"
+echo " "
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
+p "# get the package"
 pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "git add . && git commit -m 'fetched helloworld'"
 
-echo "#"
-echo "# print the package contents"
-echo "#"
-pe "kpt config count helloworld # Resource counts"
-pe "kpt config tree helloworld --name --image --replicas # Structured output"
-pe "kpt config cat helloworld | less # Raw configuration"
+echo " "
+p "# print the package Resource counts"
+pe "kpt config count helloworld"
+
+echo " "
+p "# print the package Resource structure"
+pe "kpt config tree helloworld --name --image --replicas"
+
+echo " "
+p "# print the package Resource configuration"
+pe "kpt config cat helloworld | less"
 
 pe "clear"

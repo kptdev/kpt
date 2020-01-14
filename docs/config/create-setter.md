@@ -4,7 +4,7 @@ Create a custom setter for a Resource field
 
 ### Synopsis
 
-Create a custom setter for a Resource field by inlining OpenAPI as comments.
+    kpt config create-setter DIR NAME VALUE
 
   DIR
 

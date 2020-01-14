@@ -76,13 +76,13 @@ func GetKptCommands(name string) []*cobra.Command {
 	fnCmd := GetFnCommand(name)
 	pkgCmd := GetPkgCommand(name)
 
-	tutorials := &cobra.Command{
-		Use:   "tutorials",
-		Short: "Tutorials for using kpt",
-	}
-
-	tutorials.AddCommand(cmdtutorials.Tutorials(name)...)
-	c = append(c, httpCmd, cfgCmd, pkgCmd, tutorials, fnCmd)
+	//tutorials := &cobra.Command{
+	//	Use:   "tutorials",
+	//	Short: "Tutorials for using kpt",
+	//}
+	//
+	//tutorials.AddCommand(cmdtutorials.Tutorials(name)...)
+	c = append(c, httpCmd, cfgCmd, pkgCmd, fnCmd)
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)

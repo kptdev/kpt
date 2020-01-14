@@ -4,8 +4,6 @@ Show changes between local and upstream source package
 
 ### Synopsis
 
-Show changes between local and upstream source package.
-
     kpt pkg diff [LOCAL_PKG_DIR@VERSION]
 
 Diff commands lets you answer the following questions:

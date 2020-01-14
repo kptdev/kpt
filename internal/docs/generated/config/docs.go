@@ -51,24 +51,18 @@ var READMEExamples = `
 
 var CatShort = `Print Resource Config from a local directory.`
 var CatLong = `
-Print Resource Config from a local directory.
+    kpt config cat DIR
 
   DIR:
     Path to local directory.
 `
 var CatExamples = `
     # print Resource config from a directory
-    kpt config cat my-dir/
-
-    # wrap Resource config from a directory in an ResourceList
-    kpt config cat my-dir/ --wrap-kind ResourceList --wrap-version config.kubernetes.io/v1alpha1 --function-config fn.yaml
-
-    # unwrap Resource config from a directory in an ResourceList
-    ... | kpt config cat`
+    kpt config cat my-dir/`
 
 var CountShort = `Count Resources Config from a local directory.`
 var CountLong = `
-Count Resources Config from a local directory.
+    kpt config count DIR
 
   DIR:
     Path to local directory.
@@ -79,7 +73,7 @@ var CountExamples = `
 
 var CreateSetterShort = `Create a custom setter for a Resource field`
 var CreateSetterLong = `
-Create a custom setter for a Resource field by inlining OpenAPI as comments.
+    kpt config create-setter DIR NAME VALUE
 
   DIR
 
@@ -105,8 +99,6 @@ var CreateSetterExamples = `
 
 var FmtShort = `Format yaml configuration files.`
 var FmtLong = `
-Format yaml configuration files.
-
 Fmt will format input by ordering fields and unordered list items in Kubernetes
 objects.  Inputs may be directories, files or stdin, and their contents must
 include both apiVersion and kind fields.
@@ -145,7 +137,7 @@ var FmtExamples = `
 
 var GrepShort = `Search for matching Resources in a directory or from stdin`
 var GrepLong = `
-Search for matching Resources in a directory or from stdin.
+    kpt config grep QUERY DIR
 
   QUERY:
     Query to match expressed as 'path.to.field=value'.
@@ -172,7 +164,7 @@ var GrepExamples = `
 
 var ListSettersShort = `List setters for Resources.`
 var ListSettersLong = `
-List setters for Resources.
+    kpt config list-setters DIR [NAME]
 
   DIR
 
@@ -185,14 +177,12 @@ List setters for Resources.
 var ListSettersExamples = `
   Show setters:
 
-    $ kpt config set DIR/
+    $ kpt config list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2`
 
 var MergeShort = `Merge Resource configuration files`
 var MergeLong = `
-Merge Resource configuration files
-
 Merge reads Kubernetes Resource yaml configuration files from stdin or sources packages and write
 the result to stdout or a destination package.
 
@@ -209,10 +199,8 @@ For information on merge rules, run:
 var MergeExamples = `
     cat resources_and_patches.yaml | kpt config merge > merged_resources.yaml`
 
-var Merge3Short = `[Alpha] Merge diff of Resource configuration files into a destination (3-way)`
+var Merge3Short = `Merge diff of Resource configuration files into a destination (3-way)`
 var Merge3Long = `
-[Alpha] Merge diff of Resource configuration files into a destination (3-way)
-
 Merge3 performs a 3-way merge by applying the diff between 2 sets of Resources to a 3rd set.
 
 Merge3 may be for rebasing changes to a forked set of configuration -- e.g. compute the difference between the original
@@ -230,7 +218,7 @@ var Merge3Examples = `
 
 var SetShort = `Set values on Resources fields values.`
 var SetLong = `
-Set values on Resources fields.  May set either the complete or partial field value.
+May set either the complete or partial field value.
 
 ` + "`" + `set` + "`" + ` identifies setters using field metadata published as OpenAPI extensions.
 ` + "`" + `set` + "`" + ` parses both the Kubernetes OpenAPI, as well OpenAPI published inline in
@@ -313,8 +301,6 @@ var SetExamples = `
 
 var TreeShort = `Display Resource structure from a directory or stdin.`
 var TreeLong = `
-Display Resource structure from a directory or stdin.
-
 kpt config tree may be used to print Resources in a directory or cluster, preserving structure
 
 Args:

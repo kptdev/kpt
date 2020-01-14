@@ -21,24 +21,43 @@
 cd $(mktemp -d)
 git init
 
-stty rows 80 cols 30
+stty rows 80 cols 15
 
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 
 # start demo
 clear
-echo "#"
-echo "# init a package"
-echo "#"
+echo " "
+p "# init a package"
 pe "kpt pkg init . --description 'my package'"
-echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world --strategy=resource-merge"
 
-echo "#"
-echo "# print the package contents"
-echo "#"
-pe "kpt config count helloworld # Resource counts"
-pe "kpt config tree helloworld --name --image --replicas # Structured output"
-pe "kpt config cat helloworld | less # Raw configuration"
+echo " "
+echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
+p "# add a dependency"
+pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.1.0 hello-world-1"
+
+echo " "
+p "# sync the dependency"
+pe "kpt pkg sync ."
+pe "ls"
+pe "kpt config count ."
+
+echo " "
+p "# add a second dependency at a different version"
+pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world-2"
+pe "kpt pkg sync ."
+pe "ls"
+pe "kpt config count ."
+
+echo " "
+p "# compare the packages"
+pe "diff hello-world-1 hello-world-2"
+pe "git add . && git commit -m 'synced packaged'"
+
+echo " "
+p "# update the first a dependency"
+pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world-1"
+pe "kpt pkg sync ."
+pe "diff hello-world-1 hello-world-2"
 
 pe "clear"

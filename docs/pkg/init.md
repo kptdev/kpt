@@ -4,8 +4,6 @@ Initialize suggested package meta for a local config directory
 
 ### Synopsis
 
-Initialize suggested package meta for a local config directory.
-
 Any directory containing Kubernetes Resource Configuration may be treated as
 remote package without the existence of additional packaging metadata.
 

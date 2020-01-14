@@ -18,7 +18,7 @@ TYPE_SPEED=20
 NO_WAIT=false
 
 # if > 0, will pause for this amount of seconds before automatically proceeding with any p or pe
-PROMPT_TIMEOUT=0
+PROMPT_TIMEOUT=1
 
 # don't show command number unless user specifies it
 SHOW_CMD_NUMS=false
@@ -41,7 +41,7 @@ C_NUM=0
 # prompt and command color which can be overriden
 DEMO_PROMPT="$ "
 DEMO_CMD_COLOR=$WHITE
-DEMO_COMMENT_COLOR=$RED
+DEMO_COMMENT_COLOR=$CYAN
 
 ##
 # prints the script usage

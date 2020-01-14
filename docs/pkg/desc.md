@@ -4,8 +4,6 @@ Display package descriptions
 
 ### Synopsis
 
-Display package descriptions.
-
     kpt pkg desc [DIR...]
 
 `desc` reads package information in given DIRs and displays it in tabular format.

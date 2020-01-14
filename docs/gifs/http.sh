@@ -21,35 +21,6 @@
 cd $(mktemp -d)
 git init
 
-#stty rows 50 cols 180
+stty rows 80 cols 15
 
 # start demo
-clear
-echo "#"
-echo "# get the package"
-echo "#"
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-echo "export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"
-
-echo "#"
-echo "# customize the package"
-echo "#"
-pe "kpt config set helloworld replicas 3"
-pe "kpt config list-setters helloworld replicas"
-pe "git add . && git commit -m 'change replicas to 3'"
-
-echo "#"
-echo "# pull in upstream updates by merging Resources"
-echo "#"
-pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
-pe "git diff helloworld"
-pe "git add . && git commit -m 'update helloworld to 0.2.0'"
-
-echo "#"
-echo "# apply the package to a cluster"
-echo "#"
-pe "kpt http apply -f helloworld"
-
-pe "clear"
