@@ -34,3 +34,20 @@ Functions may be run at different times depending on the function and the organi
 - as PR checks
 - as pre-release checks
 - as pre-rollout checks
+
+### Commands
+
+**[run](run.md)**:
+- run local functions against Resource configuration
+
+**[source](source.md)**:
+- explicitly specify `run` input source
+
+**[source](sink.md)**:
+- explicitly specify `run` output sink
+
+### Examples
+
+    kpt fn run DIR/ --image gcr.io/example.com/my-fn
+
+    kpt fn run DIR/ --fn-path FUNCTIONS_DIR/

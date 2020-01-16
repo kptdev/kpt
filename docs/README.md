@@ -4,14 +4,15 @@
 
 ### Synopsis
 
-kpt is a Kubernetes platform toolkit.
+`kpt` is a Kubernetes platform toolkit.
 
-It includes tools to package, customize and apply json or yaml configuration data.
-This includes tools developed as part of the Kubernetes project as well as additional commands
-specific to `kpt`.
+- It includes tools to package, customize and apply json or yaml configuration data.
+- It includes tools developed as part of the Kubernetes project as well as additional commands
+  specific to `kpt`.
 
-kpt package artifacts are composed of Resource configuration, rather than code or templates,
-but code or templates may be plugged into kpt to generate configuration.
+`kpt` package artifacts are composed of Resource configuration, rather than code or templates,
+however `kpt` supports using code or templates as solutions to generate `kpt` package artifacts,
+which may then be consumed by other tools as Resource configuration.
 
 #### Major `kpt` subcomponents
 
@@ -60,14 +61,13 @@ Push Resources to a cluster.
     fetching package /package-examples/helloworld-set from \
       git@github.com:GoogleContainerTools/kpt to helloworld
 
-    # list setters
+    # list setters and set a value
     $ kpt cfg list-setters helloworld
     NAME            DESCRIPTION         VALUE    TYPE     COUNT   SETBY
     http-port   'helloworld port'         80      integer   3
     image-tag   'hello-world image tag'   0.1.0   string    1
     replicas    'helloworld replicas'     5       integer   1
 
-    # set a value
     $ kpt cfg set helloworld replicas 3 --set-by pwittrock \
       --description '3 is good enough'
     set 1 fields
@@ -80,7 +80,7 @@ Push Resources to a cluster.
 ### 
 
 [demo]: https://storage.googleapis.com/kpt-dev/docs/overview-readme.gif "kpt"
-[pkg]: pkg
-[cfg]: cfg
-[fn]: fn
-[svr]: svr
+[pkg]: pkg/README.md
+[cfg]: cfg/README.md
+[fn]: fn/README.md
+[svr]: svr/README.md

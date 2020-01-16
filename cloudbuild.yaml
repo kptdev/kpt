@@ -52,10 +52,9 @@ steps:
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_windows_amd64', '.']
     dir: '/workspace/'
-# disable this to try to fix issues with windows only
-#    volumes:
-#      - name: go-modules
-#        path: /go
+    volumes:
+      - name: go-modules
+        path: /go
 artifacts:
   objects:
     location: 'gs://kpt-dev/'

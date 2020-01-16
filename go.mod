@@ -8,10 +8,10 @@ require (
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/posener/complete/v2 v2.0.1-alpha.12
+	github.com/prometheus/client_golang v1.3.0 // indirect; https://github.com/golang/go/issues/34461
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
-	golang.org/x/crypto v0.0.0-20200109152110-61a87790db17 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d
 	gotest.tools v2.2.0+incompatible
