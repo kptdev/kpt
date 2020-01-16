@@ -39,7 +39,7 @@ See the [docs](docs/README.md) for more information on how to use `kpt`.
 A: Rather than developing configuration by expressing it as code, `kpt` develops packages
    using the API native format -- i.e. as json or yaml objects adhering to the API schema.
 
-### **Q: Why Resource configuration rather than Templates or DSLs?**  
+### **Q: Why Resource configuration as the artifact rather than Templates or DSLs?**  
 
 A: Using Resource configuration provides a number of desirable properties:
 
@@ -52,32 +52,40 @@ A: Using Resource configuration provides a number of desirable properties:
   3. it enables **composition of different types of tools written in different languages**
       * any modern language can manipulate yaml / json structures, no need to adopt `go`
 
-  4. it **supports static analysis**
+  4. it **supports static analysis and validation**
       * develop tools and processes to perform validation and linting
 
-  5. it **supports programatic modification**
+  5. it **supports programmatic modification**
       * develop CLIs and UIs for working with configuration rather than using `vim`
+
+  6. it **supports customizing generated Resources** so the Templates don't need to be modified
+      * artifacts generated from Templates or DSLs may be modified directly, and then merged
+        when they are regenerated to keep the modifications.
+
+  7. it **supports display in UI and tools** which use either OpenAPI or the yaml/json directly.
 
 ### **Q: Isn't writing yaml hard?**
 
 A: `kpt` offers a collection of utilities which enable working with configuration
-   programmatically to simplify the experience.
+   programmatically to simplify the experience.  Using `vi` to edit yaml should be
+   necessary only for bootstrapping, and the common cases should use [setters](docs/cfg/set.md)
+   or [functions](docs/fn/run.md) to generate or modify yaml configuration.
 
 ### **Q: I really like DSL / Templating solution X.  Can I use it with `kpt`?**
 
-A: `kpt` supports plugging in solutions which generate or manipulate configuration, e.g. from
-   DSLs and Templates.  This is done with [functions](docs/functions).
+A: Yes. `kpt` supports plugging in solutions which generate or manipulate configuration, e.g. from
+   DSLs and Templates.  This may be performed using [functions](docs/fn/run.md).  The generated
+   output may be modified directly, and merged when regenerated.
 
-### **Q: I need to be able to write custom logic and develop high-level abstractions.  How can I do this with `kpt`?**
+### **Q: I want to write high-level abstractions like CRDs, but on the client-side.  Can I do this with `kpt`?**
 
-A: `kpt`'s architecture facilitates the development of customization techniques and abstractions
-   using a variety of approaches including [setters](docs/config/set.md) and
-   [functions](docs/functions).
+A: Yes.  `kpt`'s architecture facilitates the developing programs which may generate or modify
+   configuration.  Multiple programs may be composed together.  See [functions](docs/fn/run.md).
 
 ### **Q: How do I roll out changes throughout my organization using `kpt`?**
 
 A: This can be done one of several ways, including: 1) using semantic versioning or release
-   channels with [functions](docs/functions), or 2) [updating](docs/pkg/update.md) packages.
+   channels with [functions](docs/fn/run.md), or 2) [updating](docs/pkg/update.md) packages.
 
 ### **Q: Is there a container image that contains kpt?**
 
