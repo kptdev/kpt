@@ -241,7 +241,7 @@ Implement a Sink by writing input to a local directory.
 ` + "`" + `sink` + "`" + ` writes its input to a directory
 `
 var SinkExamples = `
-    kpt fn source DIR/ | your-function | kpt fn sink DIR/`
+    kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/`
 
 var SourceShort = `Implement a Source by reading a local directory.`
 var SourceLong = `
@@ -258,4 +258,4 @@ var SourceExamples = `
     # emity configuration directory as input source to a function
     kpt fn source DIR/
 
-    kpt fn source DIR/ | your-function | kpt fn sink DIR/`
+    kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/`
