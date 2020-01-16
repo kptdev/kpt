@@ -1,4 +1,4 @@
-## kpt sync
+## kpt pkg sync
 
 Sync package dependencies using a manifest
 
@@ -34,7 +34,7 @@ For each dependency in the Kptfile, `sync` will ensure that it exists locally wi
 matching repo and ref.
 
 Dependencies are specified in the `Kptfile` `dependencies` field and can be added or updated
-with `kpt sync set`.  e.g.
+with `kpt pkg sync set`.  e.g.
 
     kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
@@ -60,7 +60,7 @@ Dependencies have following schema:
     updateStrategy: <strategy to use when updating the dependency -- see kpt help update for more details>
     ensureNotExists: <remove the dependency, mutually exclusive with git>
 
-Dependencies maybe be updated by updating their `git.ref` field and running `kpt sync`
+Dependencies maybe be updated by updating their `git.ref` field and running `kpt pkg sync`
 against the directory.
 
 ### Examples

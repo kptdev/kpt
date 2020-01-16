@@ -35,23 +35,23 @@ echo "# fetch the package..."
 pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 
 echo "# print its contents..."
-pe "kpt config tree helloworld --image --ports --name --replicas  --field 'metadata.labels'"
+pe "kpt cfg tree helloworld --image --ports --name --replicas  --field 'metadata.labels'"
 
 echo "# add to git..."
 pe "git add helloworld && git commit -m 'fetch helloworld package at v0.1.0'"
 
 pe "clear"
 echo "# print setters..."
-pe "kpt config set helloworld"
+pe "kpt cfg set helloworld"
 
 echo "# change a value..."
-pe "kpt config set helloworld replicas 3 --set-by phil --description 'minimal HA mode'"
+pe "kpt cfg set helloworld replicas 3 --set-by phil --description 'minimal HA mode'"
 
 echo "# print setters again..."
-pe "kpt config set helloworld"
+pe "kpt cfg set helloworld"
 
 echo "# print its contents..."
-pe "kpt config tree helloworld --name --replicas"
+pe "kpt cfg tree helloworld --name --replicas"
 
 echo "# view the diff..."
 pe "git diff"
@@ -67,7 +67,7 @@ echo "# view the diff..."
 pe "git diff"
 
 echo "# print its contents..."
-pe "kpt config tree helloworld --name --replicas --field 'metadata.labels'"
+pe "kpt cfg tree helloworld --name --replicas --field 'metadata.labels'"
 
 echo "# update git..."
 pe "git add helloworld && git commit -m 'update helloworld package to v0.2.0'"

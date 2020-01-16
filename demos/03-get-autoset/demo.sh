@@ -32,11 +32,11 @@ stty rows 50 cols 180
 # start demo
 echo ""
 echo "  ${bold}fetch the package...${normal}"
-pe "kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld1"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld1"
 
 echo ""
 echo "  ${bold}fetch the package, automatically setting field values...${normal}"
-pe "KPT_SET_REPLICAS=3 kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld2"
+pe "KPT_SET_REPLICAS=3 kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld2"
 
 pe "config tree helloworld1 --replicas"
 pe "config tree helloworld2 --replicas"

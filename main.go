@@ -14,8 +14,8 @@
 
 //go:generate $GOBIN/mdtogo docs/tutorials internal/docs/generated/tutorials --full=true --license=none
 //go:generate $GOBIN/mdtogo docs/pkg internal/docs/generated/pkg --license=none
-//go:generate $GOBIN/mdtogo docs/config internal/docs/generated/config --license=none
-//go:generate $GOBIN/mdtogo docs/functions internal/docs/generated/functions --license=none
+//go:generate $GOBIN/mdtogo docs/cfg internal/docs/generated/config --license=none
+//go:generate $GOBIN/mdtogo docs/fn internal/docs/generated/fn --license=none
 //go:generate $GOBIN/mdtogo docs internal/docs/generated/overview --license=none
 package main
 
@@ -41,42 +41,48 @@ var pgr []string
 
 func main() {
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
+	installComp := false
 	cmd := &cobra.Command{
-		Use:   "kpt",
-		Short: overview.READMEShort,
-		Long:  overview.READMELong,
-		Example: `  #
-  # get a package
-  #
-  $ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-  $ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld
-  fetching package /package-examples/helloworld-set from \
-    git@github.com:GoogleContainerTools/kpt to helloworld
+		Use:     "kpt",
+		Short:   overview.READMEShort,
+		Long:    overview.READMELong,
+		Example: overview.READMEExamples,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if installComp {
+				os.Setenv("COMP_INSTALL", "1")
+				os.Setenv("COMP_YES", "1")
+				fmt.Fprint(cmd.OutOrStdout(), "Installing shell completion...\n")
+				fmt.Fprint(cmd.OutOrStdout(),
+					"This will add 'complete -C /Users/$USER/go/bin/kpt kpt' to "+
+						".bashrc, .bash_profile, etc\n")
+				fmt.Fprint(cmd.OutOrStdout(), "Run `COMP_INSTALL=0 kpt` to uninstall.\n")
+			}
+			// Complete exits if it is called in completion mode, otherwise it is a no-op
+			cmdcomplete.Complete(cmd, false, nil).Complete("kpt")
 
-  #
-  # list setters
-  #
-  $ kpt config list-setters helloworld
-  NAME            DESCRIPTION         VALUE    TYPE     COUNT   SETBY
-  http-port   'helloworld port'         80      integer   3
-  image-tag   'hello-world image tag'   0.1.0   string    1
-  replicas    'helloworld replicas'     5       integer   1
-
-  #
-  # set a value
-  #
-  $ kpt config set helloworld replicas 3 --set-by pwittrock \
-    --description '3 is good enough'
-  set 1 fields
-
-  #
-  # apply
-  #
-  $ kpt http apply -f helloworld
-  deployment.apps/helloworld-gke created
-  service/helloworld-gke created
-`,
+			h, err := cmd.Flags().GetBool("help")
+			if err != nil {
+				return err
+			}
+			if h {
+				return cmd.Help()
+			}
+			return cmd.Usage()
+		},
 	}
+	cmd.Flags().BoolVar(&installComp, "install-completion", false,
+		"install shell completion")
+	// this command will be invoked by the shell-completion code
+	cmd.AddCommand(&cobra.Command{
+		Use:           "kpt",
+		Hidden:        true,
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		Run: func(cmd *cobra.Command, args []string) {
+			// Complete exits if it is called in completion mode, otherwise it is a no-op
+			cmdcomplete.Complete(cmd.Parent(), false, nil).Complete("kpt")
+		},
+	})
 
 	// find the pager if one exists
 	func() {
@@ -108,9 +114,6 @@ func main() {
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
 		"print a stack-trace on failure")
-
-	// Complete exits if it is called in completion mode, otherwise it is a no-op
-	cmdcomplete.Complete(cmd, false, nil).Complete("kpt")
 
 	if _, err := exec.LookPath("git"); err != nil {
 		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")

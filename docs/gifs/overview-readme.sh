@@ -33,18 +33,18 @@ pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 
 echo " "
 pe "# list package setters"
-pe "kpt config list-setters helloworld"
+pe "kpt cfg list-setters helloworld"
 
 echo " "
 pe "# set a value"
-pe "kpt config set helloworld replicas 3 --set-by pwittrock --description '3 is good enough'"
+pe "kpt cfg set helloworld replicas 3 --set-by pwittrock --description '3 is good enough'"
 
 echo " "
 pe "# view updated value"
-pe "kpt config list-setters helloworld replicas"
+pe "kpt cfg list-setters helloworld replicas"
 
 echo " "
 pe "# apply the configuration to a cluster"
-pe "kpt http apply -f helloworld"
+pe "kpt svr apply -f helloworld"
 
 pe "clear"

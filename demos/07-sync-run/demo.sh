@@ -39,7 +39,7 @@ pe "cat Kptfile"
 
 echo ""
 echo "  ${bold}sync the package...${normal}"
-pe "kpt sync ."
+pe "kpt pkg sync ."
 pe "git status"
 pe "config tree helloworld-prod --all"
 pe "config tree helloworld-staging --all"

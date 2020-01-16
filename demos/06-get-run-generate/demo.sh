@@ -28,7 +28,7 @@ clear
 # start demo
 echo ""
 echo "  ${bold}fetch the package...${normal}"
-pe "kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-generate@v0.2.0 helloworld"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-generate@v0.2.0 helloworld"
 
 echo ""
 echo "  ${bold}print the package resources...${normal}"

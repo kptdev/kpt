@@ -14,8 +14,8 @@ to the Resource in the DEST_DIR.
 
 For information on merge rules, run:
 
-	kpt config docs-merge3
+	kpt cfg docs-merge3
 
 ### Examples
 
-    kpt config merge3 --ancestor a/ --from b/ --to c/
+    kpt cfg merge3 --ancestor a/ --from b/ --to c/

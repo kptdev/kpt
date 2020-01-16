@@ -7,7 +7,7 @@
 
 # SYNOPSIS
 
-    kpt get 
+    kpt pkg get 
 
 # Description
 

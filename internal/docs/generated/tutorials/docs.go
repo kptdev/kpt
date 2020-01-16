@@ -303,9 +303,9 @@ Packages are directories of Configuration published as subdirectories to git rep
 
   Fetch a "raw" package (e.g. config only -- no kpt metadata) from the kubernetes examples repo.
 
-	kpt get  https://github.com/kubernetes/examples/cassandra cassandra/
+	kpt pkg get  https://github.com/kubernetes/examples/cassandra cassandra/
 
-  ` + "`" + `kpt get` + "`" + ` fetched the remote package from HEAD of the
+  ` + "`" + `kpt pkg get` + "`" + ` fetched the remote package from HEAD of the
   https://github.com/kubernetes/examples master branch.
 
 	$ kustomize config tree cassandra/
@@ -317,19 +317,19 @@ Packages are directories of Configuration published as subdirectories to git rep
   ` + "`" + `kustomize config tree` + "`" + ` printed the package structure -- displaying both the Resources as well as the
   files the Resources are specified in.
 
-	$ kpt desc cassandra
+	$ kpt pkg desc cassandra
 	+-----------------+-----------+----------------------------------------+-----------+---------+---------+
 	| LOCAL DIRECTORY |   NAME    |           SOURCE REPOSITORY            |  SUBPATH  | VERSION | COMMIT  |
 	+-----------------+-----------+----------------------------------------+-----------+---------+---------+
 	| cassandra       | cassandra | https://github.com/kubernetes/examples | cassandra | master  | 1543966 |
 	+-----------------+-----------+----------------------------------------+-----------+---------+---------+
 
-  ` + "`" + `kpt desc LOCAL_PACKAGE` + "`" + ` prints information about the source of the package -- e.g. 
+  ` + "`" + `kpt pkg desc LOCAL_PACKAGE` + "`" + ` prints information about the source of the package -- e.g. 
   the repo, subdirectory, etc.
 
 ### Fetch the Guestbook package
 
-	$ kpt get https://github.com/kubernetes/examples/guestbook ./my-guestbook-copy
+	$ kpt pkg get https://github.com/kubernetes/examples/guestbook ./my-guestbook-copy
 
   The guestbook package contains multiple guest book instances in separate
   subdirectories.
@@ -353,9 +353,9 @@ Packages are directories of Configuration published as subdirectories to git rep
   To fetch only the all-in-one instance, specify the instance subdirectory as
   part of the package.
 
-	$ kpt get https://github.com/kubernetes/examples/guestbook/all-in-one ./new-guestbook-copy
+	$ kpt pkg get https://github.com/kubernetes/examples/guestbook/all-in-one ./new-guestbook-copy
 
-  ` + "`" + `kpt get` + "`" + ` only fetched the all-in-one subpackage.
+  ` + "`" + `kpt pkg get` + "`" + ` only fetched the all-in-one subpackage.
 
 	$ kustomize config tree new-guestbook-copy
 	new-guestbook-copy
@@ -375,23 +375,23 @@ Packages are directories of Configuration published as subdirectories to git rep
   Since packages are stored in git, git references may be used to fetch a specific version
   of a package.
 
-	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
+	kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
 
   Specifying '@version' after the package uri fetched the package at that revision.
   The version may be a git branch, tag or ref.
   
-  Note: git references may also be used with ` + "`" + `kpt update` + "`" + ` to rollout new configuration versions.
+  Note: git references may also be used with ` + "`" + `kpt pkg update` + "`" + ` to rollout new configuration versions.
   See ` + "`" + `kpt help update` + "`" + ` for more information.
 
 ### New Package From Kustomize Output
 
-  ` + "`" + `kpt get` + "`" + ` may also be used to convert ` + "`" + `kustomize` + "`" + ` output into a package
+  ` + "`" + `kpt pkg get` + "`" + ` may also be used to convert ` + "`" + `kustomize` + "`" + ` output into a package
 
     # fetch a kustomize example
-	kpt get https://github.com/kubernetes-sigs/kustomize/examples/wordpress wordpress/
+	kpt pkg get https://github.com/kubernetes-sigs/kustomize/examples/wordpress wordpress/
 	
-	# build the kustomize package and use ` + "`" + `kpt get` + "`" + ` to write the output to a directory
-	kustomize build wordpress/ | kpt get - wordpress-expanded/
+	# build the kustomize package and use ` + "`" + `kpt pkg get` + "`" + ` to write the output to a directory
+	kustomize build wordpress/ | kpt pkg get - wordpress-expanded/
 
   This expanded the Kustomization into a new package
 
@@ -405,10 +405,10 @@ Packages are directories of Configuration published as subdirectories to git rep
 
 ### New Package From Helm Output
 
-  ` + "`" + `kpt get` + "`" + ` may be used to write expanded ` + "`" + `helm` + "`" + ` templates to packages.
+  ` + "`" + `kpt pkg get` + "`" + ` may be used to write expanded ` + "`" + `helm` + "`" + ` templates to packages.
 
 	helm fetch stable/redis
-	helm template redis-9.* | kpt get - ./redis-9/
+	helm template redis-9.* | kpt pkg get - ./redis-9/
 
   This imported the expanded package Resources from stdin and created a local kpt package.
 
@@ -426,7 +426,7 @@ Packages are directories of Configuration published as subdirectories to git rep
   The names of the Resource files may be configured using the --pattern flag.
 
 	helm fetch stable/redis
-	helm template redis-9.* | kpt get - ./redis-9/ --pattern '%n.resource.yaml'
+	helm template redis-9.* | kpt pkg get - ./redis-9/ --pattern '%n.resource.yaml'
 	
   This configured the generated resource file names to be RESOURCENAME.resource.yaml
   instead of RESOURCENAME_RESOURCETYPE.yaml
@@ -633,12 +633,12 @@ var PublishAPackageLong = `
 
 Any bundle of Resource configuration may be published as a package using ` + "`" + `git` + "`" + `.
 
-` + "`" + `kpt init` + "`" + ` initializes a directory with optional package metadata such as a
+` + "`" + `kpt pkg init` + "`" + ` initializes a directory with optional package metadata such as a
 package documentation file.
 
 ### Examples
 
-    kpt init my-package/ --name my-package --description 'fun new package'
+    kpt pkg init my-package/ --name my-package --description 'fun new package'
     git add my-package && git commit -m 'new kpt package'
     git push origin master`
 
@@ -659,7 +659,7 @@ var UpdateALocalPackageLong = `
 
   Prepare the package to be updated
 
-	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
+	kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
 	git add hello-world/ && git commit -m 'fetch hello-world'
 
   Diff a local package vs a new upstream version
@@ -668,7 +668,7 @@ var UpdateALocalPackageLong = `
   'export KPT_EXTERNAL_DIFF=my-differ'.
   See ` + "`" + `kpt help diff` + "`" + ` for more options.
 
-	kpt diff cockroachdb/@v0.2.0 --diff-type remote
+	kpt pkg diff cockroachdb/@v0.2.0 --diff-type remote
 	diff ...
 	118c118
 	<         image: gcr.io/kpt-dev/hello-world:v0.1.0
@@ -679,7 +679,7 @@ var UpdateALocalPackageLong = `
   Update the package to the new version.  This requires that the package is unmodified from when
   it was fetched.
 
-	kpt update hello-world@v0.2.0
+	kpt pkg update hello-world@v0.2.0
 	git diff hello-world/
 
   The updates have not been staged by kpt.
@@ -688,7 +688,7 @@ var UpdateALocalPackageLong = `
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
+	kpt pkg get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package
@@ -698,7 +698,7 @@ var UpdateALocalPackageLong = `
 
   Diff the local package vs the original source upstream package -- see what you've changed
 
-	$ kpt diff cockroachdb/
+	$ kpt pkg diff cockroachdb/
 	diff ...
 	17c17
 	<   - port: 8081
@@ -711,7 +711,7 @@ var UpdateALocalPackageLong = `
 
   Diff the local package vs a new upstream version -- see what you will be updating to
 
-	$ kpt diff cockroachdb/@v1.4 --diff-type combined
+	$ kpt pkg diff cockroachdb/@v1.4 --diff-type combined
 	diff ...
 	>     foo: bar
 	17c18
@@ -736,7 +736,7 @@ var UpdateALocalPackageLong = `
   **NOTE:** --strategy is required when the local package has been changed from its source.
   In this case we have changed the local port field, so we must specify a strategy.
 
-	kpt update cockroachdb@v1.4 --strategy alpha-git-patch
+	kpt pkg update cockroachdb@v1.4 --strategy alpha-git-patch
 	git diff HEAD^ HEAD
 
   This merged the upstream changes into the local package, and created a new git commit.
@@ -745,7 +745,7 @@ var UpdateALocalPackageLong = `
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
+	kpt pkg get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package.  Edit a field that will be changed upstream.
@@ -755,14 +755,14 @@ var UpdateALocalPackageLong = `
 
   View the 3way diff -- requires a diff viewer capable of 3way diffs (e.g. meld)
 
-	kpt diff cockroachdb/@v1.4 --diff-type 3way
+	kpt pkg diff cockroachdb/@v1.4 --diff-type 3way
 
   This will show that the replicas field cannot be merged without a conflict -- it has
   been changed both in the upstream new package version, and in the local package.
 
   Go ahead and update the package to a new version anyway.  Expect a merge conflict.
 
-	kpt update cockroachdb@v1.4 --strategy alpha-git-patch
+	kpt pkg update cockroachdb@v1.4 --strategy alpha-git-patch
 
   View the conflict
 
@@ -787,25 +787,25 @@ var UpdateALocalPackageLong = `
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
+	kpt pkg get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Update the package to a new version.  Expect a merge conflict.
 
-	kpt update cockroachdb@v1.4 --strategy alpha-git-patch --dry-run > patch
+	kpt pkg update cockroachdb@v1.4 --strategy alpha-git-patch --dry-run > patch
 	git am -3 --directory cockroachdb < patch
 
 ## Update to HEAD of the branch the package was fetched from
 
   Fetch the package
 
-	kpt get https://github.com/your/repo/here@master here/
+	kpt pkg get https://github.com/your/repo/here@master here/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make upstream changes to the package at https://github.com/your/repo/here on
   the master branch.  Then update it.
 
-	kpt update here/
+	kpt pkg update here/
 
   This fetched the updates from the upstream master branch.
 

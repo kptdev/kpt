@@ -22,10 +22,21 @@ import (
 
 func GetConfigCommand(name string) *cobra.Command {
 	cfgCmd := &cobra.Command{
-		Use:     "config",
+		Use:     "cfg",
 		Short:   configdocs.READMEShort,
 		Long:    configdocs.READMEShort + "\n" + configdocs.READMELong,
 		Example: configdocs.READMEExamples,
+		Aliases: []string{"config"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			h, err := cmd.Flags().GetBool("help")
+			if err != nil {
+				return err
+			}
+			if h {
+				return cmd.Help()
+			}
+			return cmd.Usage()
+		},
 	}
 
 	cat := configcobra.Cat(name)

@@ -4,7 +4,7 @@ How to build solutions using kpt with other tools from the ecosystem.
 
 Also see [Building Solutions with kpt](../README.md#building-solutions-with-kpt)
 
-### Packaging: `kpt get`, `kpt update`
+### Packaging: `kpt pkg get`, `kpt pkg update`
 
   Packaging enables fully or partially specified Resource configuration
   + related artifacts to be published and consumed, as well as facilitates
@@ -24,12 +24,12 @@ Also see [Building Solutions with kpt](../README.md#building-solutions-with-kpt)
 
   Fetch a Blueprint:
 
-    kpt get https://github.com/kubernetes/examples/cassandra cassandra/
+    kpt pkg get https://github.com/kubernetes/examples/cassandra cassandra/
 
   Update a Blueprint to a specific git commit, merging Resource updates with
   local changes to the fork:
   
-    kpt update cassandra@322d78b --strategy resource-merge 
+    kpt pkg update cassandra@322d78b --strategy resource-merge 
 
 ### Development: `kustomize build`, `kustomize config run`
 
@@ -191,7 +191,7 @@ Also see [Building Solutions with kpt](../README.md#building-solutions-with-kpt)
 
 1. Fetch a package of configuration
 
-       kpt get https://github.com/kubernetes/examples/cassandra cassandra/
+       kpt pkg get https://github.com/kubernetes/examples/cassandra cassandra/
 
 2. View the package Resources
 

@@ -34,14 +34,14 @@ pe "git add . && git commit -m 'fetched helloworld'"
 
 echo " "
 p "# print the package Resource counts"
-pe "kpt config count helloworld"
+pe "kpt cfg count helloworld"
 
 echo " "
 p "# print the package Resource structure"
-pe "kpt config tree helloworld --name --image --replicas"
+pe "kpt cfg tree helloworld --name --image --replicas"
 
 echo " "
 p "# print the package Resource configuration"
-pe "kpt config cat helloworld | less"
+pe "kpt cfg cat helloworld | less"
 
 pe "clear"

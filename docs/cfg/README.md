@@ -1,4 +1,4 @@
-## config
+## cfg
 
 View and Modify Resource Configuration.
 
@@ -6,7 +6,8 @@ View and Modify Resource Configuration.
 
 ### Synopsis
 
-`config` contains commands for building and understanding Resource configuration packages.
+Programatically modify raw json or yaml Resource Configuration -- e.g. `fmt`, `set`, `merge`.
+Display Resource Configuration -- e.g. `tree`, `count`, `cat`, `grep`
 
 ### Primary Commands
 
@@ -32,10 +33,10 @@ View and Modify Resource Configuration.
 ### Examples
 
     # print the raw package contents
-    $ kpt config cat helloworld
+    $ kpt cfg cat helloworld
 
     # print the package using tree based structure
-    $ kpt config tree helloworld --name --image --replicas
+    $ kpt cfg tree helloworld --name --image --replicas
     helloworld
     ├── [deploy.yaml]  Deployment helloworld-gke
     │   ├── spec.replicas: 5
@@ -46,19 +47,19 @@ View and Modify Resource Configuration.
     └── [service.yaml]  Service helloworld-gke
 
     # only print Services
-    $ kpt config grep "kind=Service" helloworld | kpt config tree --name --image --replicas
+    $ kpt cfg grep "kind=Service" helloworld | kpt cfg tree --name --image --replicas
     .
     └── [service.yaml]  Service helloworld-gke
 
     #  list available setters
-    $ kpt config list-setters helloworld replicas
+    $ kpt cfg list-setters helloworld replicas
         NAME          DESCRIPTION        VALUE    TYPE     COUNT   SETBY
       replicas   'helloworld replicas'   5       integer   1
 
     # set a high-level knob
-    $ kpt config set helloworld replicas 3
+    $ kpt cfg set helloworld replicas 3
     set 1 fields
 
 ### 
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/config.gif "kpt config"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/config.gif "kpt cfg"

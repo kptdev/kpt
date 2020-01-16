@@ -35,31 +35,31 @@ pe "git add . && git commit -m 'fetched helloworld'"
 # start demo
 echo " "
 p "# print the Resource counts"
-pe "kpt config count helloworld"
+pe "kpt cfg count helloworld"
 
 echo " "
 p "# print the structured package"
-pe "kpt config tree helloworld --name --image --replicas"
+pe "kpt cfg tree helloworld --name --image --replicas"
 
 echo " "
 p "# filter to only print Services"
-pe "kpt config grep \"kind=Service\" helloworld | kpt config tree --name --image --replicas"
+pe "kpt cfg grep \"kind=Service\" helloworld | kpt cfg tree --name --image --replicas"
 
 echo " "
 p "# print the raw Resource configuration"
-pe "kpt config cat helloworld | less"
+pe "kpt cfg cat helloworld | less"
 
 echo " "
 p "# list settable options"
-pe "kpt config list-setters helloworld replicas"
+pe "kpt cfg list-setters helloworld replicas"
 
 echo " "
 p "# set the replicas using the cli"
-pe "kpt config set helloworld replicas 3"
+pe "kpt cfg set helloworld replicas 3"
 
 echo " "
 p "# view the updated values"
-pe "kpt config list-setters helloworld replicas"
+pe "kpt cfg list-setters helloworld replicas"
 
 echo " "
 p "# view the updated configuration"

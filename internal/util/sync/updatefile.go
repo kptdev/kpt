@@ -26,7 +26,7 @@ import (
 func SetDependency(dependency kptfile.Dependency) error {
 	b, err := ioutil.ReadFile(kptfile.KptFileName)
 	if err != nil {
-		return errors.WrapPrefixf(err, "failed to read Kptfile -- create one with `kpt init .`")
+		return errors.WrapPrefixf(err, "failed to read Kptfile -- create one with `kpt pkg init .`")
 	}
 	k := &kptfile.KptFile{}
 
