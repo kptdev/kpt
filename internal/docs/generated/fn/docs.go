@@ -49,24 +49,30 @@ Functions may be run at different times depending on the function and the organi
 - as pre-rollout checks
 `
 var READMEExamples = `
+    # run the function defined by gcr.io/example.com/my-fn as a local container
+    # against the configuration in DIR
     kpt fn run DIR/ --image gcr.io/example.com/my-fn
 
-    kpt fn run DIR/ --fn-path FUNCTIONS_DIR/`
+    # run the functions declared in files under FUNCTIONS_DIR/
+    kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 
-var RunShort = `Execute functional programs from container images to generate, modify or validate configuration.`
+    # run the functions declared in files under DIR/
+    kpt fn run DIR/`
+
+var RunShort = `Run a function locally against Resource configuration.`
 var RunLong = `
 ` + "`" + `run` + "`" + ` sequentially locally executes one or more programs which may modify Resource configuration.
 
 **Architecture:**
 
 - Programs are packaged as container images which are pulled and run locally
-- Input Resource configuration is read from some source and written to container STDIN
-- Output Resource configuration is read from container STDOUT and written to some sink
-- If the container exits non-0, fail with an error message
+- Input Resource configuration is read from some *source* and written to container ` + "`" + `STDIN` + "`" + `
+- Output Resource configuration is read from container ` + "`" + `STDOUT` + "`" + ` and written to some *sink*
+- If the container exits non-0, run will fail and print the container ` + "`" + `STDERR` + "`" + `
 
 **Caveats:**
 
-- If ` + "`" + `DIR` + "`" + ` is provided, it is used as both the *source* and *sink*.
+- If ` + "`" + `DIR` + "`" + ` is provided as an argument, it is used as both the *source* and *sink*.
 - A function may be explicitly specified with ` + "`" + `--image` + "`" + `
 
   Example: Locally run the container image gcr.io/example.com/my-fn against the Resources

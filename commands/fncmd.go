@@ -24,7 +24,8 @@ func GetFnCommand(name string) *cobra.Command {
 	functions := &cobra.Command{
 		Use:     "fn",
 		Short:   fndocs.READMEShort,
-		Long:    fndocs.RunLong,
+		Long:    fndocs.READMELong,
+		Example: fndocs.READMEExamples,
 		Aliases: []string{"functions"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")

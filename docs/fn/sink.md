@@ -15,4 +15,4 @@ Implement a Sink by writing input to a local directory.
 
 ### Examples
 
-    kpt fn source DIR/ | your-function | kpt fn sink DIR/
+    kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/

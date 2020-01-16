@@ -1,6 +1,6 @@
 ## run
 
-Execute functional programs from container images to generate, modify or validate configuration.
+Run a function locally against Resource configuration.
 
 ### Synopsis
 
@@ -9,13 +9,13 @@ Execute functional programs from container images to generate, modify or validat
 **Architecture:**
 
 - Programs are packaged as container images which are pulled and run locally
-- Input Resource configuration is read from some source and written to container STDIN
-- Output Resource configuration is read from container STDOUT and written to some sink
-- If the container exits non-0, fail with an error message
+- Input Resource configuration is read from some *source* and written to container `STDIN`
+- Output Resource configuration is read from container `STDOUT` and written to some *sink*
+- If the container exits non-0, run will fail and print the container `STDERR`
 
 **Caveats:**
 
-- If `DIR` is provided, it is used as both the *source* and *sink*.
+- If `DIR` is provided as an argument, it is used as both the *source* and *sink*.
 - A function may be explicitly specified with `--image`
 
   Example: Locally run the container image gcr.io/example.com/my-fn against the Resources

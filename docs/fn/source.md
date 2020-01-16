@@ -18,4 +18,4 @@ Implement a Source by reading a local directory.
     # emity configuration directory as input source to a function
     kpt fn source DIR/
 
-    kpt fn source DIR/ | your-function | kpt fn sink DIR/
+    kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
