@@ -32,7 +32,7 @@ stty rows 50 cols 180
 # start demo
 echo ""
 echo "  ${bold}fetch the package and add to git...${normal}"
-pe "kpt get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "git add . && git commit -m 'helloworld'"
 
 echo ""

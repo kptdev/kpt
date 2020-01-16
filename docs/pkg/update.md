@@ -1,4 +1,4 @@
-## kpt update
+## kpt pkg update
 
 Update a local package with changes from a remote source repo
 
@@ -6,7 +6,7 @@ Update a local package with changes from a remote source repo
 
 ### Synopsis
 
-    kpt update LOCAL_PKG_DIR[@VERSION] [flags]
+    kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 
   LOCAL_PKG_DIR:
 

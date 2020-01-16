@@ -6,7 +6,7 @@ Implement a Sink by writing input to a local directory.
 
 Implement a Sink by writing input to a local directory.
 
-    kpt functions sink DIR
+    kpt fn sink DIR
 
   DIR:
     Path to local directory.
@@ -15,4 +15,4 @@ Implement a Sink by writing input to a local directory.
 
 ### Examples
 
-    kpt functions source DIR/ | your-function | kpt functions sink DIR/
+    kpt fn source DIR/ | your-function | kpt fn sink DIR/

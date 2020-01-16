@@ -44,6 +44,9 @@ func Complete(cmd *cobra.Command, skipHelp bool, visitFlags VisitFlags) *complet
 	}
 	for i := range cmd.Commands() {
 		c := cmd.Commands()[i]
+		if c.Hidden || c.Deprecated != "" {
+			continue
+		}
 		name := strings.Split(c.Use, " ")[0]
 		cc.Sub[name] = Complete(c, true, visitFlags)
 		if !skipHelp {

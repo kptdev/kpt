@@ -15,9 +15,9 @@ Packages are directories of Configuration published as subdirectories to git rep
 
   Fetch a "raw" package (e.g. config only -- no kpt metadata) from the kubernetes examples repo.
 
-	kpt get  https://github.com/kubernetes/examples/cassandra cassandra/
+	kpt pkg get  https://github.com/kubernetes/examples/cassandra cassandra/
 
-  `kpt get` fetched the remote package from HEAD of the
+  `kpt pkg get` fetched the remote package from HEAD of the
   https://github.com/kubernetes/examples master branch.
 
 	$ kustomize config tree cassandra/
@@ -29,19 +29,19 @@ Packages are directories of Configuration published as subdirectories to git rep
   `kustomize config tree` printed the package structure -- displaying both the Resources as well as the
   files the Resources are specified in.
 
-	$ kpt desc cassandra
+	$ kpt pkg desc cassandra
 	+-----------------+-----------+----------------------------------------+-----------+---------+---------+
 	| LOCAL DIRECTORY |   NAME    |           SOURCE REPOSITORY            |  SUBPATH  | VERSION | COMMIT  |
 	+-----------------+-----------+----------------------------------------+-----------+---------+---------+
 	| cassandra       | cassandra | https://github.com/kubernetes/examples | cassandra | master  | 1543966 |
 	+-----------------+-----------+----------------------------------------+-----------+---------+---------+
 
-  `kpt desc LOCAL_PACKAGE` prints information about the source of the package -- e.g. 
+  `kpt pkg desc LOCAL_PACKAGE` prints information about the source of the package -- e.g. 
   the repo, subdirectory, etc.
 
 ### Fetch the Guestbook package
 
-	$ kpt get https://github.com/kubernetes/examples/guestbook ./my-guestbook-copy
+	$ kpt pkg get https://github.com/kubernetes/examples/guestbook ./my-guestbook-copy
 
   The guestbook package contains multiple guest book instances in separate
   subdirectories.
@@ -65,9 +65,9 @@ Packages are directories of Configuration published as subdirectories to git rep
   To fetch only the all-in-one instance, specify the instance subdirectory as
   part of the package.
 
-	$ kpt get https://github.com/kubernetes/examples/guestbook/all-in-one ./new-guestbook-copy
+	$ kpt pkg get https://github.com/kubernetes/examples/guestbook/all-in-one ./new-guestbook-copy
 
-  `kpt get` only fetched the all-in-one subpackage.
+  `kpt pkg get` only fetched the all-in-one subpackage.
 
 	$ kustomize config tree new-guestbook-copy
 	new-guestbook-copy
@@ -87,23 +87,23 @@ Packages are directories of Configuration published as subdirectories to git rep
   Since packages are stored in git, git references may be used to fetch a specific version
   of a package.
 
-	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
+	kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
 
   Specifying '@version' after the package uri fetched the package at that revision.
   The version may be a git branch, tag or ref.
   
-  Note: git references may also be used with `kpt update` to rollout new configuration versions.
+  Note: git references may also be used with `kpt pkg update` to rollout new configuration versions.
   See `kpt help update` for more information.
 
 ### New Package From Kustomize Output
 
-  `kpt get` may also be used to convert `kustomize` output into a package
+  `kpt pkg get` may also be used to convert `kustomize` output into a package
 
     # fetch a kustomize example
-	kpt get https://github.com/kubernetes-sigs/kustomize/examples/wordpress wordpress/
+	kpt pkg get https://github.com/kubernetes-sigs/kustomize/examples/wordpress wordpress/
 	
-	# build the kustomize package and use `kpt get` to write the output to a directory
-	kustomize build wordpress/ | kpt get - wordpress-expanded/
+	# build the kustomize package and use `kpt pkg get` to write the output to a directory
+	kustomize build wordpress/ | kpt pkg get - wordpress-expanded/
 
   This expanded the Kustomization into a new package
 
@@ -117,10 +117,10 @@ Packages are directories of Configuration published as subdirectories to git rep
 
 ### New Package From Helm Output
 
-  `kpt get` may be used to write expanded `helm` templates to packages.
+  `kpt pkg get` may be used to write expanded `helm` templates to packages.
 
 	helm fetch stable/redis
-	helm template redis-9.* | kpt get - ./redis-9/
+	helm template redis-9.* | kpt pkg get - ./redis-9/
 
   This imported the expanded package Resources from stdin and created a local kpt package.
 
@@ -138,7 +138,7 @@ Packages are directories of Configuration published as subdirectories to git rep
   The names of the Resource files may be configured using the --pattern flag.
 
 	helm fetch stable/redis
-	helm template redis-9.* | kpt get - ./redis-9/ --pattern '%n.resource.yaml'
+	helm template redis-9.* | kpt pkg get - ./redis-9/ --pattern '%n.resource.yaml'
 	
   This configured the generated resource file names to be RESOURCENAME.resource.yaml
   instead of RESOURCENAME_RESOURCETYPE.yaml

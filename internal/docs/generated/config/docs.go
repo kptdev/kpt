@@ -17,14 +17,15 @@ package config
 
 var READMEShort = `View and Modify Resource Configuration.`
 var READMELong = `
-` + "`" + `config` + "`" + ` contains commands for building and understanding Resource configuration packages.
+Programatically modify raw json or yaml Resource Configuration -- e.g. ` + "`" + `fmt` + "`" + `, ` + "`" + `set` + "`" + `, ` + "`" + `merge` + "`" + `.
+Display Resource Configuration -- e.g. ` + "`" + `tree` + "`" + `, ` + "`" + `count` + "`" + `, ` + "`" + `cat` + "`" + `, ` + "`" + `grep` + "`" + `
 `
 var READMEExamples = `
     # print the raw package contents
-    $ kpt config cat helloworld
+    $ kpt cfg cat helloworld
 
     # print the package using tree based structure
-    $ kpt config tree helloworld --name --image --replicas
+    $ kpt cfg tree helloworld --name --image --replicas
     helloworld
     ├── [deploy.yaml]  Deployment helloworld-gke
     │   ├── spec.replicas: 5
@@ -35,45 +36,45 @@ var READMEExamples = `
     └── [service.yaml]  Service helloworld-gke
 
     # only print Services
-    $ kpt config grep "kind=Service" helloworld | kpt config tree --name --image --replicas
+    $ kpt cfg grep "kind=Service" helloworld | kpt cfg tree --name --image --replicas
     .
     └── [service.yaml]  Service helloworld-gke
 
     #  list available setters
-    $ kpt config list-setters helloworld replicas
+    $ kpt cfg list-setters helloworld replicas
         NAME          DESCRIPTION        VALUE    TYPE     COUNT   SETBY
       replicas   'helloworld replicas'   5       integer   1
 
     # set a high-level knob
-    $ kpt config set helloworld replicas 3
+    $ kpt cfg set helloworld replicas 3
     set 1 fields
 `
 
 var CatShort = `Print Resource Config from a local directory.`
 var CatLong = `
-    kpt config cat DIR
+    kpt cfg cat DIR
 
   DIR:
     Path to local directory.
 `
 var CatExamples = `
     # print Resource config from a directory
-    kpt config cat my-dir/`
+    kpt cfg cat my-dir/`
 
 var CountShort = `Count Resources Config from a local directory.`
 var CountLong = `
-    kpt config count DIR
+    kpt cfg count DIR
 
   DIR:
     Path to local directory.
 `
 var CountExamples = `
     # print Resource counts from a directory
-    kpt config count my-dir/`
+    kpt cfg count my-dir/`
 
 var CreateSetterShort = `Create a custom setter for a Resource field`
 var CreateSetterLong = `
-    kpt config create-setter DIR NAME VALUE
+    kpt cfg create-setter DIR NAME VALUE
 
   DIR
 
@@ -89,12 +90,12 @@ var CreateSetterLong = `
 `
 var CreateSetterExamples = `
     # create a setter for port fields matching "8080"
-    kpt config create-setter DIR/ port 8080 --type "integer" --field port \
+    kpt cfg create-setter DIR/ port 8080 --type "integer" --field port \
          --description "default port used by the app"
 
     # create a setter for a substring of a field rather than the full field -- e.g. only the
     # image tag, not the full image
-    kpt config create-setter DIR/ image-tag v1.0.1 --type "string" \
+    kpt cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
         --field image --description "current stable release"`
 
 var FmtShort = `Format yaml configuration files.`
@@ -124,20 +125,20 @@ field paths.
 `
 var FmtExamples = `
 	# format file1.yaml and file2.yml
-	kpt config fmt file1.yaml file2.yml
+	kpt cfg fmt file1.yaml file2.yml
 
 	# format all *.yaml and *.yml recursively traversing directories
-	kpt config fmt my-dir/
+	kpt cfg fmt my-dir/
 
 	# format kubectl output
-	kubectl get -o yaml deployments | kpt config fmt
+	kubectl get -o yaml deployments | kpt cfg fmt
 
 	# format kustomize output
-	kustomize build | kpt config fmt`
+	kustomize build | kpt cfg fmt`
 
 var GrepShort = `Search for matching Resources in a directory or from stdin`
 var GrepLong = `
-    kpt config grep QUERY DIR
+    kpt cfg grep QUERY DIR
 
   QUERY:
     Query to match expressed as 'path.to.field=value'.
@@ -151,20 +152,20 @@ var GrepLong = `
 `
 var GrepExamples = `
     # find Deployment Resources
-    kpt config grep "kind=Deployment" my-dir/
+    kpt cfg grep "kind=Deployment" my-dir/
 
     # find Resources named nginx
-    kpt config grep "metadata.name=nginx" my-dir/
+    kpt cfg grep "metadata.name=nginx" my-dir/
 
     # use tree to display matching Resources
-    kpt config grep "metadata.name=nginx" my-dir/ | kpt config tree
+    kpt cfg grep "metadata.name=nginx" my-dir/ | kpt cfg tree
 
     # look for Resources matching a specific container image
-    kpt config grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kpt config tree`
+    kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kpt cfg tree`
 
 var ListSettersShort = `List setters for Resources.`
 var ListSettersLong = `
-    kpt config list-setters DIR [NAME]
+    kpt cfg list-setters DIR [NAME]
 
   DIR
 
@@ -177,7 +178,7 @@ var ListSettersLong = `
 var ListSettersExamples = `
   Show setters:
 
-    $ kpt config list-setters DIR/
+    $ kpt cfg list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
     name-prefix   ''            PREFIX    string   2`
 
@@ -194,10 +195,10 @@ earlier are lower-precedence (the destination).
 
 For information on merge rules, run:
 
-	kpt config docs merge
+	kpt cfg docs merge
 `
 var MergeExamples = `
-    cat resources_and_patches.yaml | kpt config merge > merged_resources.yaml`
+    cat resources_and_patches.yaml | kpt cfg merge > merged_resources.yaml`
 
 var Merge3Short = `Merge diff of Resource configuration files into a destination (3-way)`
 var Merge3Long = `
@@ -211,10 +212,10 @@ to the Resource in the DEST_DIR.
 
 For information on merge rules, run:
 
-	kpt config docs-merge3
+	kpt cfg docs-merge3
 `
 var Merge3Examples = `
-    kpt config merge3 --ancestor a/ --from b/ --to c/`
+    kpt cfg merge3 --ancestor a/ --from b/ --to c/`
 
 var SetShort = `Set values on Resources fields values.`
 var SetLong = `
@@ -243,7 +244,7 @@ the configuration as comments.
 
 
 To print the possible setters for the Resources in a directory, run ` + "`" + `set` + "`" + ` on
-a directory -- e.g. ` + "`" + `kpt config set DIR/` + "`" + `.
+a directory -- e.g. ` + "`" + `kpt cfg set DIR/` + "`" + `.
 
 #### Tips
 
@@ -277,7 +278,7 @@ var SetExamples = `
 
   Perform set: set a new value, owner and description
 
-    $ kpt config set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
+    $ kpt cfg set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
     set 2 values
 
   List setters: Show the new values
@@ -301,7 +302,7 @@ var SetExamples = `
 
 var TreeShort = `Display Resource structure from a directory or stdin.`
 var TreeLong = `
-kpt config tree may be used to print Resources in a directory or cluster, preserving structure
+kpt cfg tree may be used to print Resources in a directory or cluster, preserving structure
 
 Args:
 
@@ -310,37 +311,37 @@ Args:
 
 Resource fields may be printed as part of the Resources by specifying the fields as flags.
 
-kpt config tree has build-in support for printing common fields, such as replicas, container images,
+kpt cfg tree has build-in support for printing common fields, such as replicas, container images,
 container names, etc.
 
-kpt config tree supports printing arbitrary fields using the '--field' flag.
+kpt cfg tree supports printing arbitrary fields using the '--field' flag.
 
-By default, kpt config tree uses Resource graph structure if any relationships between resources (ownerReferences)
+By default, kpt cfg tree uses Resource graph structure if any relationships between resources (ownerReferences)
 are detected, as is typically the case when printing from a cluster. Otherwise, directory graph structure is used. The
 graph structure can also be selected explicitly using the '--graph-structure' flag.
 `
 var TreeExamples = `
     # print Resources using directory structure
-    kpt config tree my-dir/
+    kpt cfg tree my-dir/
 
     # print replicas, container name, and container image and fields for Resources
-    kpt config tree my-dir --replicas --image --name
+    kpt cfg tree my-dir --replicas --image --name
 
     # print all common Resource fields
-    kpt config tree my-dir/ --all
+    kpt cfg tree my-dir/ --all
 
     # print the "foo"" annotation
-    kpt config tree my-dir/ --field "metadata.annotations.foo"
+    kpt cfg tree my-dir/ --field "metadata.annotations.foo"
 
     # print the "foo"" annotation
-    kubectl get all -o yaml | kpt config tree \
+    kubectl get all -o yaml | kpt cfg tree \
       --field="status.conditions[type=Completed].status"
 
     # print live Resources from a cluster using owners for graph structure
-    kubectl get all -o yaml | kpt config tree --replicas --name --image
+    kubectl get all -o yaml | kpt cfg tree --replicas --name --image
 
     # print live Resources with status condition fields
-    kubectl get all -o yaml | kpt config tree \
+    kubectl get all -o yaml | kpt cfg tree \
       --name --image --replicas \
       --field="status.conditions[type=Completed].status" \
       --field="status.conditions[type=Complete].status" \

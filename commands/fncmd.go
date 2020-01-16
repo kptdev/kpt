@@ -15,30 +15,42 @@
 package commands
 
 import (
-	fndocs "github.com/GoogleContainerTools/kpt/internal/docs/generated/functions"
+	fndocs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fn"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 )
 
 func GetFnCommand(name string) *cobra.Command {
 	functions := &cobra.Command{
-		Use:   "functions",
-		Short: "Generate and mutate local configuration by running functional images",
+		Use:     "fn",
+		Short:   fndocs.READMEShort,
+		Long:    fndocs.RunLong,
+		Aliases: []string{"functions"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			h, err := cmd.Flags().GetBool("help")
+			if err != nil {
+				return err
+			}
+			if h {
+				return cmd.Help()
+			}
+			return cmd.Usage()
+		},
 	}
 
 	run := configcobra.RunFn(name)
 	run.Short = fndocs.RunShort
-	run.Long = fndocs.RunLong
+	run.Long = fndocs.RunShort + "\n" + fndocs.RunLong
 	run.Example = fndocs.RunExamples
 
 	source := configcobra.Source(name)
 	source.Short = fndocs.SourceShort
-	source.Long = fndocs.SourceLong
+	source.Long = fndocs.SourceShort + "\n" + fndocs.SourceLong
 	source.Example = fndocs.SourceExamples
 
 	sink := configcobra.Sink(name)
 	sink.Short = fndocs.SinkShort
-	sink.Long = fndocs.SinkLong
+	sink.Long = fndocs.SinkShort + "\n" + fndocs.SinkLong
 	sink.Example = fndocs.SinkExamples
 
 	functions.AddCommand(run, source, sink)

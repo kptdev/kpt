@@ -15,8 +15,8 @@ earlier are lower-precedence (the destination).
 
 For information on merge rules, run:
 
-	kpt config docs merge
+	kpt cfg docs merge
 
 ### Examples
 
-    cat resources_and_patches.yaml | kpt config merge > merged_resources.yaml
+    cat resources_and_patches.yaml | kpt cfg merge > merged_resources.yaml

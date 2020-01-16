@@ -17,7 +17,7 @@ How to update a package version from a remote source
 
   Prepare the package to be updated
 
-	kpt get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
+	kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/helloworld-set@v0.1.0 hello-world/
 	git add hello-world/ && git commit -m 'fetch hello-world'
 
   Diff a local package vs a new upstream version
@@ -26,7 +26,7 @@ How to update a package version from a remote source
   'export KPT_EXTERNAL_DIFF=my-differ'.
   See `kpt help diff` for more options.
 
-	kpt diff cockroachdb/@v0.2.0 --diff-type remote
+	kpt pkg diff cockroachdb/@v0.2.0 --diff-type remote
 	diff ...
 	118c118
 	<         image: gcr.io/kpt-dev/hello-world:v0.1.0
@@ -37,7 +37,7 @@ How to update a package version from a remote source
   Update the package to the new version.  This requires that the package is unmodified from when
   it was fetched.
 
-	kpt update hello-world@v0.2.0
+	kpt pkg update hello-world@v0.2.0
 	git diff hello-world/
 
   The updates have not been staged by kpt.
@@ -46,7 +46,7 @@ How to update a package version from a remote source
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
+	kpt pkg get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package
@@ -56,7 +56,7 @@ How to update a package version from a remote source
 
   Diff the local package vs the original source upstream package -- see what you've changed
 
-	$ kpt diff cockroachdb/
+	$ kpt pkg diff cockroachdb/
 	diff ...
 	17c17
 	<   - port: 8081
@@ -69,7 +69,7 @@ How to update a package version from a remote source
 
   Diff the local package vs a new upstream version -- see what you will be updating to
 
-	$ kpt diff cockroachdb/@v1.4 --diff-type combined
+	$ kpt pkg diff cockroachdb/@v1.4 --diff-type combined
 	diff ...
 	>     foo: bar
 	17c18
@@ -94,7 +94,7 @@ How to update a package version from a remote source
   **NOTE:** --strategy is required when the local package has been changed from its source.
   In this case we have changed the local port field, so we must specify a strategy.
 
-	kpt update cockroachdb@v1.4 --strategy alpha-git-patch
+	kpt pkg update cockroachdb@v1.4 --strategy alpha-git-patch
 	git diff HEAD^ HEAD
 
   This merged the upstream changes into the local package, and created a new git commit.
@@ -103,7 +103,7 @@ How to update a package version from a remote source
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
+	kpt pkg get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make local edits to the package.  Edit a field that will be changed upstream.
@@ -113,14 +113,14 @@ How to update a package version from a remote source
 
   View the 3way diff -- requires a diff viewer capable of 3way diffs (e.g. meld)
 
-	kpt diff cockroachdb/@v1.4 --diff-type 3way
+	kpt pkg diff cockroachdb/@v1.4 --diff-type 3way
 
   This will show that the replicas field cannot be merged without a conflict -- it has
   been changed both in the upstream new package version, and in the local package.
 
   Go ahead and update the package to a new version anyway.  Expect a merge conflict.
 
-	kpt update cockroachdb@v1.4 --strategy alpha-git-patch
+	kpt pkg update cockroachdb@v1.4 --strategy alpha-git-patch
 
   View the conflict
 
@@ -145,25 +145,25 @@ How to update a package version from a remote source
 
   Stage the package to be updated
 
-	kpt get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
+	kpt pkg get https://github.com/pwittrock/examples/staging/cockroachdb@v1.0.0 cockroachdb/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Update the package to a new version.  Expect a merge conflict.
 
-	kpt update cockroachdb@v1.4 --strategy alpha-git-patch --dry-run > patch
+	kpt pkg update cockroachdb@v1.4 --strategy alpha-git-patch --dry-run > patch
 	git am -3 --directory cockroachdb < patch
 
 ## Update to HEAD of the branch the package was fetched from
 
   Fetch the package
 
-	kpt get https://github.com/your/repo/here@master here/
+	kpt pkg get https://github.com/your/repo/here@master here/
 	git add cockroachdb/ && git commit -m 'fetch cockroachdb'
 
   Make upstream changes to the package at https://github.com/your/repo/here on
   the master branch.  Then update it.
 
-	kpt update here/
+	kpt pkg update here/
 
   This fetched the updates from the upstream master branch.
 

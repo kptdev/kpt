@@ -31,25 +31,25 @@ stty rows 50 cols 180
 
 # start demo
 echo "  ${bold}init the local package...${normal}"
-pe "kpt init .  --description 'sample package'"
+pe "kpt pkg init .  --description 'sample package'"
 pe "git add ."
 
 echo ""
 echo "  ${bold}add the dependency...${normal}"
-pe "kpt sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld-prod"
+pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld-prod"
 pe "git diff"
 
 echo ""
 echo "  ${bold}sync the package...${normal}"
-pe "kpt sync ."
+pe "kpt pkg sync ."
 pe "git status"
 pe "config tree helloworld-prod"
 pe "git add . && git commit -m 'add helloworld package for production'"
 
 
-pe "kpt sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-staging"
+pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-staging"
 pe "git diff"
-pe "kpt sync ."
+pe "kpt pkg sync ."
 pe "git status"
 pe "config tree helloworld-staging"
 pe "git add . && git commit -m 'add helloworld package for staging'"
@@ -58,8 +58,8 @@ pe "diff helloworld-prod helloworld-staging"
 
 echo ""
 echo "  ${bold}update prod...${normal}"
-pe "kpt sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-prod"
+pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-prod"
 pe "git diff"
-pe "kpt sync ."
+pe "kpt pkg sync ."
 pe "git diff"
 pe "git add . && git commit -m 'add hellworld package for staging'"

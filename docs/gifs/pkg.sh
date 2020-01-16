@@ -34,15 +34,15 @@ pe "git add . && git commit -m 'fetched helloworld'"
 
 echo " "
 p "# list setters published by the packages"
-pe "kpt config list-setters helloworld"
+pe "kpt cfg list-setters helloworld"
 
 echo " "
 p "# set the replicas on the cli"
-pe "kpt config set helloworld replicas 3"
+pe "kpt cfg set helloworld replicas 3"
 
 echo " "
 p "# set view the updated values"
-pe "kpt config list-setters helloworld replicas"
+pe "kpt cfg list-setters helloworld replicas"
 pe "git add . && git commit -m 'change replicas to 3'"
 
 echo " "
@@ -56,6 +56,6 @@ pe "git add . && git commit -m 'update helloworld to 0.2.0'"
 
 echo " "
 p "# apply the package to a cluster"
-pe "kpt http apply -f helloworld"
+pe "kpt svr apply -f helloworld"
 
 pe "clear"

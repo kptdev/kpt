@@ -20,12 +20,23 @@ import (
 	"sigs.k8s.io/kustomize/cmd/resource/status"
 )
 
-func GetHTTPCommand(name string) *cobra.Command {
-	http := &cobra.Command{
-		Use:   "http",
-		Short: "Apply and make Resource requests to clusters",
+func GetSvrCommand(name string) *cobra.Command {
+	cluster := &cobra.Command{
+		Use:     "svr",
+		Short:   "Make Resource requests to api-servers",
+		Aliases: []string{"server"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			h, err := cmd.Flags().GetBool("help")
+			if err != nil {
+				return err
+			}
+			if h {
+				return cmd.Help()
+			}
+			return cmd.Usage()
+		},
 	}
-	http.AddCommand(status.StatusCommand())
-	http.AddCommand(kubectlcobra.GetCommand(nil).Commands()...)
-	return http
+	cluster.AddCommand(status.StatusCommand())
+	cluster.AddCommand(kubectlcobra.GetCommand(nil).Commands()...)
+	return cluster
 }

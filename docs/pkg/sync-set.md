@@ -1,4 +1,4 @@
-## kpt sync set
+## kpt pkg sync set
 
 Add a sync dependency to a Kptfile
 

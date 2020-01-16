@@ -4,7 +4,7 @@ Count Resources Config from a local directory.
 
 ### Synopsis
 
-    kpt config count DIR
+    kpt cfg count DIR
 
   DIR:
     Path to local directory.
@@ -12,4 +12,4 @@ Count Resources Config from a local directory.
 ### Examples
 
     # print Resource counts from a directory
-    kpt config count my-dir/
+    kpt cfg count my-dir/

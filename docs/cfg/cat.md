@@ -4,7 +4,7 @@ Print Resource Config from a local directory.
 
 ### Synopsis
 
-    kpt config cat DIR
+    kpt cfg cat DIR
 
   DIR:
     Path to local directory.
@@ -12,4 +12,4 @@ Print Resource Config from a local directory.
 ### Examples
 
     # print Resource config from a directory
-    kpt config cat my-dir/
+    kpt cfg cat my-dir/

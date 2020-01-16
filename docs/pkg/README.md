@@ -1,6 +1,6 @@
 ## pkg
 
-Fetch, update and sync packages using git.
+Fetch, update and sync packages using git
 
 ![alt text][demo]
 
@@ -20,13 +20,13 @@ Fetched packages may be applied to a cluster using [apply].
 Example package workflow:
 
 1. `kpt pkg get` to get a package
-2. `kpt config set`, `kpt config run` or `vi` to modify configuration
+2. `kpt cfg set`, `kpt cfg run` or `vi` to modify configuration
 3. `git add && git commit` to save package
-4. `kpt http apply` to a cluster
+4. `kpt svr apply` to a cluster
 5. `kpt pkg update` to pull in new changes
-6. `kpt http apply` to apply the upstream changes
+6. `kpt svr apply` to apply the upstream changes
 
-A collection of packages to fetch and update may also be specified declaratively using `kpt sync`.
+A collection of packages to fetch and update may also be specified declaratively using `kpt pkg sync`.
 
 ### Primary Commands
 
@@ -80,6 +80,6 @@ A collection of packages to fetch and update may also be specified declaratively
 ### 
 
 [demo]: https://storage.googleapis.com/kpt-dev/docs/pkg.gif "kpt pkg"
-[setters]: ../config/setters.md
-[functions]: ../functions
-[apply]: ../http/apply.md
+[setters]: ../cfg/set.md
+[functions]: ../fn
+[apply]: ../svr/apply.md

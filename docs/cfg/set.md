@@ -29,7 +29,7 @@ the configuration as comments.
 
 
 To print the possible setters for the Resources in a directory, run `set` on
-a directory -- e.g. `kpt config set DIR/`.
+a directory -- e.g. `kpt cfg set DIR/`.
 
 #### Tips
 
@@ -64,7 +64,7 @@ To create a custom setter for a field see: `kustomize help config create-setter`
 
   Perform set: set a new value, owner and description
 
-    $ kpt config set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
+    $ kpt cfg set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
     set 2 values
 
   List setters: Show the new values

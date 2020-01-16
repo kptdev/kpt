@@ -4,8 +4,8 @@
 
 - [get](commands/get.md) -- fetch a package from git and write it to a local directory
 
-      kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
-      kpt tree my-cockroachdb --name --replicas --image
+      kpt pkg get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
+      kpt cfg tree my-cockroachdb --name --replicas --image
 
       my-cockroachdb
       ├── [cockroachdb-statefulset.yaml]  Service cockroachdb
@@ -21,7 +21,7 @@
 - [diff](commands/diff.md) -- display a diff between the local package copy and the upstream version
 
       sed -i -e 's/replicas: 3/replicas: 5/g' my-cockroachdb/cockroachdb-statefulset.yaml
-      kpt diff my-cockroachdb
+      kpt pkg diff my-cockroachdb
 
       diff ...
       <   replicas: 5
@@ -34,16 +34,16 @@
 
       # commiting to git is required before update
       git add . && git commit -m 'updates'
-      kpt update my-cockroachdb@v0.2.0
+      kpt pkg update my-cockroachdb@v0.2.0
 
 - [sync](commands/sync.md) -- manage a collection of packages using a manifest
 
       kpt help sync # in-command help
 
-      kpt init . # init a new package
-      kpt sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 \
+      kpt pkg init . # init a new package
+      kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 \
          hello-world # add a dependency
-      kpt sync ./ # sync the dependencies 
+      kpt pkg sync ./ # sync the dependencies 
 
       # print the package file
       cat Kptfile
@@ -62,7 +62,7 @@
 
       kpt help desc # in-command help
 
-      kpt desc my-cockroachdb
+      kpt pkg desc my-cockroachdb
 
        PACKAGE NAME         DIR                         REMOTE                       REMOTE PATH        REMOTE REF   REMOTE COMMIT  
       my-cockroachdb   my-cockroachdb   https://github.com/kubernetes/examples   /staging/cockroachdb   master       a32bf5c        
@@ -71,13 +71,13 @@
 
       kpt help man # in-command help
 
-      kpt man my-cockroachdb
+      kpt pkg man my-cockroachdb
 
 - [init](commands/init.md) -- initialize a new package with a README.md (man2md format) and empty Kptfile
   (optional)
 
       mkdir my-new-package
-      kpt init my-new-package/
+      kpt pkg init my-new-package/
 
       tree my-new-package/
       my-new-package/
@@ -101,13 +101,13 @@
       be used as a package:
 
           # fetch the examples cockroachdb directory as a package
-          kpt get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
+          kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb my-cockroachdb
 
 3. **Packages should use git references for versioning**.
     * Package authors should use semantic versioning when publishing packages.
 
           # fetch the examples cockroachdb directory as a package
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
+          kpt pkg get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb@v0.1.0 my-cockroachdb
 
 4. **Packages may be modified or customized in place**.
     * It is possible to directly modify the fetched package.
@@ -117,7 +117,7 @@
 
           export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
 
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
+          kpt pkg get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
           kpt set my-cockroachdb/ replicas 5
 
 5. **The same package may be fetched multiple times** to separate locations.
@@ -126,11 +126,11 @@
           export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
 
           # fetch an instance of a java package
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-1
+          kpt pkg get https://github.com/GoogleContainerTools/kpt/examples/java my-java-1
           kpt set my-java-1/ image gcr.io/example/my-java-1:v3.0.0
 
           # fetch a second instance of a java package
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/java my-java-2
+          kpt pkg get https://github.com/GoogleContainerTools/kpt/examples/java my-java-2
           kpt set my-java-2/ image gcr.io/example/my-java-2:v2.0.0
 
 6. **Packages may pull upstream updates after they have been fetched and modified**.
@@ -139,9 +139,9 @@
 
           export KUSTOMIZE_ENABLE_ALPHA_COMMANDS=true
 
-          kpt get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
+          kpt pkg get https://github.com/GoogleContainerTools/kpt/examples/cockroachdb my-cockroachdb
           kpt set my-cockroachdb/ replicas 5
-          kpt update my-cockroachdb@v1.0.1 --strategy=resource-merge
+          kpt pkg update my-cockroachdb@v1.0.1 --strategy=resource-merge
 
 #### Building Platforms, Solutions and High-Level Systems with kpt
 

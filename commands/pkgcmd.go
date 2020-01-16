@@ -32,6 +32,17 @@ func GetPkgCommand(name string) *cobra.Command {
 		Short:   pkgdocs.READMEShort,
 		Long:    pkgdocs.READMELong,
 		Example: pkgdocs.READMEExamples,
+		Aliases: []string{"package"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			h, err := cmd.Flags().GetBool("help")
+			if err != nil {
+				return err
+			}
+			if h {
+				return cmd.Help()
+			}
+			return cmd.Usage()
+		},
 	}
 	pkg.AddCommand(cmddesc.NewCommand(name), cmdget.NewCommand(name), cmdinit.NewCommand(name),
 		cmdman.NewCommand(name), cmdsync.NewCommand(name), cmdupdate.NewCommand(name),

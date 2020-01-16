@@ -72,7 +72,7 @@ func NormalizeCommand(c ...*cobra.Command) {
 func GetKptCommands(name string) []*cobra.Command {
 	var c []*cobra.Command
 	cfgCmd := GetConfigCommand(name)
-	httpCmd := GetHTTPCommand(name)
+	httpCmd := GetSvrCommand(name)
 	fnCmd := GetFnCommand(name)
 	pkgCmd := GetPkgCommand(name)
 
