@@ -13,20 +13,28 @@
 # limitations under the License.
 
 steps:
+  # FYI: If cross-platform build issues happen, then stop caching the modules in the volume.
   - name: 'mirror.gcr.io/library/golang:1.13'
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_windows_amd64', '.']
     dir: '/workspace/'
-    waitFor: ['-']
+    volumes:
+      - name: go-modules
+        path: /go
   - name: 'mirror.gcr.io/library/golang:1.13'
     env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_linux_amd64', '.']
     dir: '/workspace/'
-    waitFor: ['-']
+    volumes:
+      - name: go-modules
+        path: /go
   - name: 'mirror.gcr.io/library/golang:1.13'
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_darwin_amd64', '.']
     dir: '/workspace/'
+    volumes:
+      - name: go-modules
+        path: /go
   - name: 'mirror.gcr.io/library/golang:1.13'
     args: ['git', 'config', '--global', 'user.email', 'you@example.com']
     dir: '/workspace'
@@ -44,6 +52,8 @@ steps:
     env: ['GO111MODULE=on']
     dir: '/workspace'
     volumes:
+      - name: go-modules
+        path: /go
       - name: home
         path: /root
 artifacts:
