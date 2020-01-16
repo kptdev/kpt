@@ -42,6 +42,7 @@ Execute functional programs from container images to generate, modify or validat
 
 - Alternatively functions and their input configuration may be declared in
   files rather than directly on the command line
+- `FUNCTIONS_DIR` may optionally be under the Resource `DIR`
 
   Example: This is equivalent to the preceding example.
   Rather than specifying `gcr.io/example.com/my-fn` as a flag, specify it in a file using the

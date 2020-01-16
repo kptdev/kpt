@@ -46,7 +46,12 @@ Functions may be run at different times depending on the function and the organi
 - as pre-commit checks
 - as PR checks
 - as pre-release checks
-- as pre-rollout checks`
+- as pre-rollout checks
+`
+var READMEExamples = `
+    kpt fn run DIR/ --image gcr.io/example.com/my-fn
+
+    kpt fn run DIR/ --fn-path FUNCTIONS_DIR/`
 
 var RunShort = `Execute functional programs from container images to generate, modify or validate configuration.`
 var RunLong = `
@@ -88,6 +93,7 @@ var RunLong = `
 
 - Alternatively functions and their input configuration may be declared in
   files rather than directly on the command line
+- ` + "`" + `FUNCTIONS_DIR` + "`" + ` may optionally be under the Resource ` + "`" + `DIR` + "`" + `
 
   Example: This is equivalent to the preceding example.
   Rather than specifying ` + "`" + `gcr.io/example.com/my-fn` + "`" + ` as a flag, specify it in a file using the
