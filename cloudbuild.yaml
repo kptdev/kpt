@@ -27,23 +27,18 @@ steps:
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_darwin_amd64', '.']
     dir: '/workspace/'
-    waitFor: ['-']
   - name: 'mirror.gcr.io/library/golang:1.13'
     args: ['git', 'config', '--global', 'user.email', 'you@example.com']
     dir: '/workspace'
     volumes:
       - name: home
         path: /root
-    id: 'email'
-    waitFor: ['-']
   - name: 'mirror.gcr.io/library/golang:1.13'
     args: ['git', 'config', '--global', 'user.name', 'Your Name']
     dir: '/workspace'
     volumes:
       - name: home
         path: /root
-    waitFor: ['email']
-    id: name
   - name: 'mirror.gcr.io/library/golang:1.13'
     args: ['make', 'all']
     env: ['GO111MODULE=on']
@@ -51,7 +46,6 @@ steps:
     volumes:
       - name: home
         path: /root
-    waitFor: ['name']
 artifacts:
   objects:
     location: 'gs://kpt-dev/'
