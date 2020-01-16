@@ -48,6 +48,12 @@ Functions may be run at different times depending on the function and the organi
 
 ### Examples
 
+    # run the function defined by gcr.io/example.com/my-fn as a local container
+    # against the configuration in DIR
     kpt fn run DIR/ --image gcr.io/example.com/my-fn
 
+    # run the functions declared in files under FUNCTIONS_DIR/
     kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
+
+    # run the functions declared in files under DIR/
+    kpt fn run DIR/

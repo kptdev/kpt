@@ -22,4 +22,6 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.0.8
 )
 
+replace golang.org/x/sys v0.0.0-20191008105621-543471e840be => golang.org/x/sys v0.0.0-20190922100055-0a153f010e69
+
 exclude sigs.k8s.io/kustomize/pseudo/k8s v0.1.0
