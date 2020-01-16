@@ -42,6 +42,8 @@ steps:
     volumes:
       - name: home
         path: /root
+    waitFor: ['email']
+    id: name
   - name: 'mirror.gcr.io/library/golang:1.13'
     args: ['make', 'all']
     env: ['GO111MODULE=on']
@@ -49,6 +51,7 @@ steps:
     volumes:
       - name: home
         path: /root
+    waitFor: ['name']
 artifacts:
   objects:
     location: 'gs://kpt-dev/'
