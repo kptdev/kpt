@@ -15,7 +15,7 @@
 package commands
 
 import (
-	fndocs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fn"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 )

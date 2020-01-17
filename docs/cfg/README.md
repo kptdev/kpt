@@ -6,7 +6,7 @@ View and Modify Resource Configuration.
 
 ### Synopsis
 
-Programatically modify raw json or yaml Resource Configuration -- e.g. `fmt`, `set`, `merge`.
+Programmatically modify raw json or yaml Resource Configuration -- e.g. `fmt`, `set`, `merge`.
 Display Resource Configuration -- e.g. `tree`, `count`, `cat`, `grep`
 
 ### Primary Commands

@@ -27,9 +27,17 @@ var READMELong = `
 however ` + "`" + `kpt` + "`" + ` supports using code or templates as solutions to generate ` + "`" + `kpt` + "`" + ` package artifacts,
 which may then be consumed by other tools as Resource configuration.
 
-#### Major ` + "`" + `kpt` + "`" + ` subcomponents
+#### ` + "`" + `kpt` + "`" + ` subcomponents
 
-**Package Management: [pkg]**
+#### Package Management
+
+[pkg]
+
+    git repo | kpt pkg | local configuration or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| ` + "`" + `git` + "`" + `                   | local files              |
 
 Publish and share configuration as yaml or json stored in git.
 
@@ -38,7 +46,16 @@ Publish and share configuration as yaml or json stored in git.
 - Fetch the blessed scaffolding for your new service
 - Update your customized package by merging changes from upstream
 
-**Configuration Management: [cfg]**
+#### Configuration Management
+
+[cfg]
+
+    local configuration or stdin | kpt cfg | local configuration or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
+
 
 Examine and craft your Resources using the commandline.
 
@@ -47,7 +64,16 @@ Examine and craft your Resources using the commandline.
 - Set high-level knobs published by the package
 - Define and expose new knobs to simplify routine modifications
 
-**Configuration Functions: [fn]**
+#### Configuration Functions
+
+[fn]
+
+    local configuration or stdin | kpt fn (runs a docker container) | local configuration or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
+
 
 Run functional programs against Configuration to generate and modify Resources locally.
 
@@ -55,7 +81,18 @@ Run functional programs against Configuration to generate and modify Resources l
 - Apply cross-cutting changes to Resources
 - Validate Resources
 
-**ApiServer Requests: [svr]**
+**` + "`" + `fn` + "`" + ` is different from ` + "`" + `cfg` + "`" + ` in that it executes programs published as docker images, rather
+than statically compiled into ` + "`" + `kpt` + "`" + `.**
+
+#### ApiServer Requests
+
+[svr]
+
+    local configuration or stdin | kpt svr | apiserver (kubernetes cluster)
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | apiserver                |
 
 Push Resources to a cluster.
 

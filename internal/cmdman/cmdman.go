@@ -16,7 +16,7 @@
 package cmdman
 
 import (
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/spf13/cobra"

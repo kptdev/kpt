@@ -18,7 +18,7 @@ package cmddiff
 import (
 	"os"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/diff"
@@ -30,9 +30,9 @@ func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:          "diff LOCAL_PKG_DIR[@VERSION]",
-		Short:        docs.DiffShort,
-		Long:         docs.DiffShort + "\n" + docs.DiffLong,
-		Example:      docs.DiffExamples,
+		Short:        pkgdocs.DiffShort,
+		Long:         pkgdocs.DiffShort + "\n" + pkgdocs.DiffLong,
+		Example:      pkgdocs.DiffExamples,
 		PreRunE:      r.preRunE,
 		RunE:         r.runE,
 		SilenceUsage: true,

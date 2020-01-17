@@ -18,7 +18,7 @@ package cmdget
 import (
 	"fmt"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/get/getioreader"

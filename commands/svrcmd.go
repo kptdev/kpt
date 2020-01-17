@@ -15,6 +15,7 @@
 package commands
 
 import (
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/svrdocs"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/kubectl/kubectlcobra"
 	"sigs.k8s.io/kustomize/cmd/resource/status"
@@ -23,7 +24,9 @@ import (
 func GetSvrCommand(name string) *cobra.Command {
 	cluster := &cobra.Command{
 		Use:     "svr",
-		Short:   "Make Resource requests to api-servers",
+		Short:   svrdocs.READMEShort,
+		Long:    svrdocs.READMEShort + "\n" + svrdocs.READMELong,
+		Example: svrdocs.READMEExamples,
 		Aliases: []string{"server"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
