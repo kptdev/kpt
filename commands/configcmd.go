@@ -39,6 +39,11 @@ func GetConfigCommand(name string) *cobra.Command {
 		},
 	}
 
+	an := configcobra.Annotate(name)
+	an.Short = cfgdocs.AnnotateShort
+	an.Long = cfgdocs.AnnotateShort + "\n" + cfgdocs.AnnotateLong
+	an.Example = cfgdocs.AnnotateExamples
+
 	cat := configcobra.Cat(name)
 	cat.Short = cfgdocs.CatShort
 	cat.Long = cfgdocs.CatShort + "\n" + cfgdocs.CatLong

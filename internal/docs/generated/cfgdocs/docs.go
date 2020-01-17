@@ -17,8 +17,11 @@ package cfgdocs
 
 var READMEShort = `View and Modify Resource Configuration.`
 var READMELong = `
-Programmatically modify raw json or yaml Resource Configuration -- e.g. ` + "`" + `fmt` + "`" + `, ` + "`" + `set` + "`" + `, ` + "`" + `merge` + "`" + `.
-Display Resource Configuration -- e.g. ` + "`" + `tree` + "`" + `, ` + "`" + `count` + "`" + `, ` + "`" + `cat` + "`" + `, ` + "`" + `grep` + "`" + `
+Programmatically modify raw json or yaml Resource Configuration -- e.g. 
+` + "`" + `fmt` + "`" + `, ` + "`" + `set` + "`" + `, ` + "`" + `annotate` + "`" + `, ` + "`" + `merge` + "`" + `.
+
+Display Resource Configuration -- e.g.
+` + "`" + `tree` + "`" + `, ` + "`" + `count` + "`" + `, ` + "`" + `cat` + "`" + `, ` + "`" + `grep` + "`" + `
 `
 var READMEExamples = `
     # print the raw package contents
@@ -49,6 +52,24 @@ var READMEExamples = `
     $ kpt cfg set helloworld replicas 3
     set 1 fields
 `
+
+var AnnotateShort = `Set an annotation on one or more Resources`
+var AnnotateLong = `
+  DIR:
+    Path to local directory.
+`
+var AnnotateExamples = `
+    # set an annotation on all Resources: 'key: value'
+    kpt cfg annotate DIR --kv key=value
+
+    # set an annotation on all Service Resource
+    kpt cfg annotate DIR --kv key=value --kind Service
+
+    # set an annotation on the foo Service Resource
+    kpt cfg annotate DIR --kv key=value --kind Service --name foo
+
+    # set multiple annotations
+    kpt cfg annotate DIR --kv key1=value1 --kv key2=value2`
 
 var CatShort = `Print Resource Config from a local directory.`
 var CatLong = `
