@@ -22,7 +22,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdman"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
-	pkgdocs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/spf13/cobra"
 )
 

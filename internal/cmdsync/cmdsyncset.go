@@ -16,7 +16,7 @@
 package cmdsync
 
 import (
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"

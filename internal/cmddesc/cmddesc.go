@@ -18,7 +18,7 @@ package cmddesc
 import (
 	"os"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/desc"
 	"github.com/spf13/cobra"
@@ -29,9 +29,9 @@ func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:     "desc [DIR]...",
-		Short:   docs.DescShort,
-		Long:    docs.DescShort + "\n" + docs.DescLong,
-		Example: docs.DescExamples,
+		Short:   pkgdocs.DescShort,
+		Long:    pkgdocs.DescShort + "\n" + pkgdocs.DescLong,
+		Example: pkgdocs.DescExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
