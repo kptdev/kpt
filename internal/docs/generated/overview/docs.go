@@ -17,15 +17,17 @@ package overview
 
 var READMEShort = `![alt text][demo]`
 var READMELong = `
-` + "`" + `kpt` + "`" + ` is a Kubernetes platform toolkit.
+*kpt* is a Kubernetes platform toolkit.
 
 - It includes tools to package, customize and apply json or yaml configuration data.
 - It includes tools developed as part of the Kubernetes project as well as additional commands
-  specific to ` + "`" + `kpt` + "`" + `.
+  specific to *kpt*.
 
-` + "`" + `kpt` + "`" + ` package artifacts are composed of Resource configuration, rather than code or templates,
-however ` + "`" + `kpt` + "`" + ` supports using code or templates as solutions to generate ` + "`" + `kpt` + "`" + ` package artifacts,
+*kpt* package artifacts are composed of Resource configuration, rather than code or templates,
+however *kpt* supports using code or templates as solutions to generate *kpt* package artifacts,
 which may then be consumed by other tools as Resource configuration.
+
+---
 
 #### Package Management
 
@@ -42,6 +44,8 @@ Publish and share configuration as yaml or json stored in git.
 - Fetch the blessed scaffolding for your new service
 - Update your customized package by merging changes from upstream
 
+---
+
 #### Configuration Management
 
 | Configuration Read From | Configuration Written To |
@@ -50,13 +54,14 @@ Publish and share configuration as yaml or json stored in git.
 
 Flow: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
 
-
 Examine and craft your Resources using the commandline.
 
 - Display structured and condensed views of your Resources
 - Filter and display Resources by constraints
 - Set high-level knobs published by the package
 - Define and expose new knobs to simplify routine modifications
+
+---
 
 #### Configuration Functions
 
@@ -73,7 +78,9 @@ Run functional programs against Configuration to generate and modify Resources l
 - Validate Resources
 
 *` + "`" + `fn` + "`" + ` is different from ` + "`" + `cfg` + "`" + ` in that it executes programs published as docker images, rather
-than statically compiled into ` + "`" + `kpt` + "`" + `.*
+than statically compiled into kpt.*
+
+---
 
 #### ApiServer Requests
 
