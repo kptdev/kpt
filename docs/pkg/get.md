@@ -4,6 +4,8 @@ Fetch a package from a git repository
 
 ![alt text][demo]
 
+[image-script](../../gifs/pkg-get.sh)
+
 ### Synopsis
 
     kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]

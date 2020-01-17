@@ -25,25 +25,33 @@ stty rows 80 cols 15
 
 # start demo
 clear
-echo " "
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-p "# get the package"
-pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"
+p "# 'kpt pkg get' fetches a directory of configuration from a remote git repository subdirectory"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+pe "tree ."
+pe "cat helloworld/deploy.yaml"
+pe "cat helloworld/service.yaml"
 
 echo " "
-p "# print the package Resource counts"
-pe "kpt cfg count helloworld"
+p "# the same remote package may be fetched to multiple different local copies"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld2"
+pe "tree ."
 
 echo " "
-p "# print the package Resource structure"
-pe "kpt cfg tree helloworld --name --image --replicas"
+pe "kpt pkg desc *"
 
 echo " "
-p "# print the package Resource configuration"
-pe "kpt cfg cat helloworld"
+echo "rm -rf helloworld helloworld2"
+rm -rf helloworld helloworld2
+p "# 'kpt pkg get' can fetch arbitrary nested subdirectories from a repo as packages"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples examples"
+pe "tree examples"
 
 echo " "
-p "# apply the package using kubetl apply or kpt svr apply"
-pe "kubectl apply -R -f helloworld"
+p "# subdirectories may be versioned independently from one another by including the subdirectory as part of the tag"
+pe "git ls-remote git@github.com:GoogleContainerTools/kpt | grep /package-examples/"
+pe "# when resolving a version, first a tag matching the 'subdirectory/version'"
+pe "# is matched, and if it is not found a tag matching 'version' is matched"
+
+echo " "
+p "# for more information see 'kpt help pkg get'"
+p "kpt help pkg get"

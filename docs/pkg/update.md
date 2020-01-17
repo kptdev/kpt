@@ -4,6 +4,8 @@ Update a local package with changes from a remote source repo
 
 ![alt text][demo]
 
+[image-script](../../gifs/pkg-update.sh)
+
 ### Synopsis
 
     kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]

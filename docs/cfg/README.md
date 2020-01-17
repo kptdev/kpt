@@ -4,6 +4,8 @@ View and Modify Resource Configuration.
 
 ![alt text][demo]
 
+[image-script](../../gifs/config.sh)
+
 ### Synopsis
 
 Programmatically modify raw json or yaml Resource Configuration -- e.g. 

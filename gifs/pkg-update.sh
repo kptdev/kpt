@@ -26,24 +26,42 @@ stty rows 80 cols 15
 # start demo
 clear
 
-echo " "
-echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-p "# fetch the package"
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"
+kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld
+git add . > /dev/null
+git commit -m 'fetched helloworld' > /dev/null
 
-p "# make local changes to the package"
-pe "kpt cfg annotate helloworld --kv example.com/demo=update"
-pe "git diff"
-pe "git add . && git commit -m 'fetched helloworld'"
+echo "$ # start with a package fetched at version v0.1.0"
+echo "$ kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+echo "$ git add . && git commit -m 'fetched helloworld'"
 
 echo " "
-p "# pull in upstream updates from v0.2.0 which adds a label"
+p "# 'kpt pkg update' will pull in upstream changes to a package"
+pe "kpt pkg desc helloworld"
 pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
-pe "git status"
+pe "git diff"
 
 echo " "
-p "# package contains both locally added annotation and upstream label update"
+p "# reset back to version v0.1.0"
+pe "git checkout helloworld"
+
+echo " "
+p "# update will merge remote changes rather than replacing the package"
+p "# to keep local modifications"
+p "# create a local change to the package by adding an annotation"
+pe "kpt cfg annotate helloworld --kv demo=update"
 pe "git diff"
-pe "kpt cfg tree helloworld --field=metadata.annotations --field=metadata.labels"
+pe "git add . && git commit -m 'updated annotations'"
+git add . > /dev/null
+git commit -m 'updated annotations' > /dev/null
+
+echo " "
+p "# update the package to v0.2.0 to add the labels"
+pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
+
+echo " "
+p "# the package has both the locally added annotations and the remotely added labels"
+pe "git diff"
+pe "kpt cfg tree helloworld --field=metadata.annotations.demo --field=metadata.labels.app"
+
+p "# for more information see 'kpt help pkg update'"
+p "kpt help pkg update"

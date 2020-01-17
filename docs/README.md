@@ -2,6 +2,8 @@
 
 ![alt text][demo]
 
+[image-script](../gifs/kpt.sh)
+
 ### Synopsis
 
 *kpt* is a Kubernetes platform toolkit.
@@ -16,7 +18,7 @@ which may then be consumed by other tools as Resource configuration.
 
 ---
 
-#### Package Management
+#### [pkg] Package Management
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
@@ -33,7 +35,7 @@ Publish and share configuration as yaml or json stored in git.
 
 ---
 
-#### Configuration Management
+#### [cfg] Configuration Management
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
@@ -50,7 +52,7 @@ Examine and craft your Resources using the commandline.
 
 ---
 
-#### Configuration Functions
+#### [fn] Configuration Functions
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
@@ -69,7 +71,7 @@ than statically compiled into kpt.*
 
 ---
 
-#### ApiServer Requests
+#### [svr] ApiServer Requests
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
@@ -86,9 +88,6 @@ Push Resources to a cluster.
 
 ### Examples
 
-    # learn about kpt
-    $ kpt help
-
     # get a package
     $ kpt pkg get https://github.com/GoogleContainerTools/\
       kpt.git/package-examples/helloworld-set@v0.1.0 helloworld
@@ -102,18 +101,20 @@ Push Resources to a cluster.
     image-tag   'hello-world image tag'   0.1.0   string    1
     replicas    'helloworld replicas'     5       integer   1
 
-    $ kpt cfg set helloworld replicas 3 --set-by pwittrock \
-      --description '3 is good enough'
+    $ kpt cfg set helloworld replicas 3 --set-by pwittrock  --description 'reason'
     set 1 fields
 
     # apply
-    $ kpt svr apply -f helloworld
+    $ kpt svr apply -R -f helloworld
     deployment.apps/helloworld-gke created
     service/helloworld-gke created
 
+    # learn about kpt
+    $ kpt help
+
 ### 
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/overview-readme.gif "kpt"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/kpt.gif "kpt"
 [pkg]: pkg/README.md
 [cfg]: cfg/README.md
 [fn]: fn/README.md
