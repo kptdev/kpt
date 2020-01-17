@@ -4,17 +4,17 @@
 
 ### Synopsis
 
-`kpt` is a Kubernetes platform toolkit.
+*kpt* is a Kubernetes platform toolkit.
 
 - It includes tools to package, customize and apply json or yaml configuration data.
 - It includes tools developed as part of the Kubernetes project as well as additional commands
-  specific to `kpt`.
+  specific to *kpt*.
 
-`kpt` package artifacts are composed of Resource configuration, rather than code or templates,
-however `kpt` supports using code or templates as solutions to generate `kpt` package artifacts,
+*kpt* package artifacts are composed of Resource configuration, rather than code or templates,
+however *kpt* supports using code or templates as solutions to generate *kpt* package artifacts,
 which may then be consumed by other tools as Resource configuration.
 
-#### `kpt` subcomponents
+---
 
 #### Package Management
 
@@ -22,7 +22,7 @@ which may then be consumed by other tools as Resource configuration.
 |-------------------------|--------------------------|
 | git repository          | local files              |
 
-**git repo -> kpt [pkg] -> local configuration or stdout**
+Flow: git repo -> kpt [pkg] -> local configuration or stdout
 
 Publish and share configuration as yaml or json stored in git.
 
@@ -31,14 +31,15 @@ Publish and share configuration as yaml or json stored in git.
 - Fetch the blessed scaffolding for your new service
 - Update your customized package by merging changes from upstream
 
-#### Configuration Management
+---
 
-**local configuration or stdin -> kpt [cfg] -> local configuration or stdout**
+#### Configuration Management
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
 
+Flow: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
 
 Examine and craft your Resources using the commandline.
 
@@ -47,14 +48,15 @@ Examine and craft your Resources using the commandline.
 - Set high-level knobs published by the package
 - Define and expose new knobs to simplify routine modifications
 
-#### Configuration Functions
+---
 
-**local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout**
+#### Configuration Functions
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
 
+Flow:  local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout
 
 Run functional programs against Configuration to generate and modify Resources locally.
 
@@ -62,17 +64,19 @@ Run functional programs against Configuration to generate and modify Resources l
 - Apply cross-cutting changes to Resources
 - Validate Resources
 
-**`fn` is different from `cfg` in that it executes programs published as docker images, rather
-than statically compiled into `kpt`.**
+*`fn` is different from `cfg` in that it executes programs published as docker images, rather
+than statically compiled into kpt.*
+
+---
 
 #### ApiServer Requests
-
-**local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)**
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | apiserver                |
 | apiserver               | stdout                   |
+
+Flow: local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)
 
 Push Resources to a cluster.
 

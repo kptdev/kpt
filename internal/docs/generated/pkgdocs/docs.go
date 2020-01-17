@@ -22,22 +22,27 @@ They may be an entire repo, or a subdirectory within a repo.
 
 - **Any git repository containing Resource configuration may be used as a package**,
   no additional structure or formatting is necessary.
-- **Any ` + "`" + `kpt` + "`" + ` package may be applied with ` + "`" + `kubectl apply -R -f` + "`" + `** or managed with
-  any tools that operate against Resource configuration.
-- Fetched packages **may be customized in place either manually with (e.g. ` + "`" + `vi` + "`" + `) or
+- **Any package may be applied with ` + "`" + `kubectl apply -R -f` + "`" + `** or ` + "`" + `kpt svr apply -R -f` + "`" + `.
+- Packages **may be customized in place either manually with (e.g. ` + "`" + `vi` + "`" + `) or
   programmatically** (e.g. [setters], [functions]).
 
-Example package workflow:
+Example imperative package workflow:
 
-1. ` + "`" + `kpt pkg get` + "`" + ` to get a package
-2. ` + "`" + `kpt cfg set` + "`" + `, ` + "`" + `kpt cfg run` + "`" + ` or ` + "`" + `vi` + "`" + ` to modify configuration
+1. [kpt pkg get](get.md) to get a package
+2. [kpt cfg set](../cfg/set.md), [kpt fn run](../fn/run.md) or ` + "`" + `vi` + "`" + ` to modify configuration
 3. ` + "`" + `git add` + "`" + ` && ` + "`" + `git commit` + "`" + `
-4. ` + "`" + `kubectl apply -R -f` + "`" + ` or ` + "`" + `kpt svr apply` + "`" + ` to a cluster
-5. ` + "`" + `kpt pkg update` + "`" + ` to pull in new changes
-6. ` + "`" + `kubectl apply -R -f` + "`" + ` or ` + "`" + `kpt svr apply` + "`" + ` to a cluster
+4. ` + "`" + `kubectl apply` + "`" + ` or [kpt svr apply](../svr/apply.md) to a cluster: 
+5. [kpt pkg update](update.md) to pull in new changes
+6. ` + "`" + `kubectl apply` + "`" + ` or [kpt svr apply](../svr/apply.md) to a cluster
 
-An alternative workflow is to use ` + "`" + `kpt pkg sync` + "`" + ` to specify packages to fetch and update in
-declarative files.
+Example declarative package workflow:
+
+1. [kpt pkg init](init.md)
+2. [kpt pkg sync set](sync-set.md) dev version of a package
+3. [kpt pkg sync set](sync-set.md) prod version of a package
+4. ` + "`" + `git add` + "`" + ` && ` + "`" + `git commit` + "`" + `
+5. [kpt svr apply --context=dev](../svr/apply.md) or ` + "`" + `kubectl apply --context dev` + "`" + ` apply to dev
+6. [kpt svr apply --context=prod](../svr/apply.md) or or ` + "`" + `kubectl apply --context prod` + "`" + ` apply to prod
 
 #### Architecture
 
