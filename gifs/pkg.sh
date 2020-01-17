@@ -16,7 +16,7 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. ../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 git init
@@ -28,7 +28,7 @@ clear
 echo " "
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-p "# get the package"
+p "# pull down a package"
 pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "git add . && git commit -m 'fetched helloworld'"
 
@@ -39,9 +39,6 @@ pe "kpt cfg list-setters helloworld"
 echo " "
 p "# set the replicas on the cli"
 pe "kpt cfg set helloworld replicas 3"
-
-echo " "
-p "# set view the updated values"
 pe "kpt cfg list-setters helloworld replicas"
 pe "git add . && git commit -m 'change replicas to 3'"
 
@@ -55,7 +52,7 @@ pe "git diff helloworld"
 pe "git add . && git commit -m 'update helloworld to 0.2.0'"
 
 echo " "
-p "# apply the package to a cluster"
-pe "kpt svr apply -f helloworld"
+p "# apply the package to a cluster with kubectl apply or kpt svr apply"
+pe "kubectl apply -R -f helloworld"
 
 pe "clear"
