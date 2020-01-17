@@ -22,4 +22,7 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
     - name: Build, Test, Lint
-      run: make all
+      run: |
+        git config --global user.email you@example.com
+        git config --global user.name Your Name
+        make all
