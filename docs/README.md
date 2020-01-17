@@ -18,13 +18,11 @@ which may then be consumed by other tools as Resource configuration.
 
 #### Package Management
 
-[pkg]
-
-    git repo | kpt pkg | local configuration or stdout
-
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
-| `git`                   | local files              |
+| git repository          | local files              |
+
+**git repo -> kpt [pkg] -> local configuration or stdout**
 
 Publish and share configuration as yaml or json stored in git.
 
@@ -35,9 +33,7 @@ Publish and share configuration as yaml or json stored in git.
 
 #### Configuration Management
 
-[cfg]
-
-    local configuration or stdin | kpt cfg | local configuration or stdout
+**local configuration or stdin -> kpt [cfg] -> local configuration or stdout**
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
@@ -53,9 +49,7 @@ Examine and craft your Resources using the commandline.
 
 #### Configuration Functions
 
-[fn]
-
-    local configuration or stdin | kpt fn (runs a docker container) | local configuration or stdout
+**local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout**
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
@@ -73,13 +67,12 @@ than statically compiled into `kpt`.**
 
 #### ApiServer Requests
 
-[svr]
-
-    local configuration or stdin | kpt svr | apiserver (kubernetes cluster)
+**local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)**
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | apiserver                |
+| apiserver               | stdout                   |
 
 Push Resources to a cluster.
 

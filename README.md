@@ -2,8 +2,6 @@
 
 Git based package management and toolchain for Kubernetes Resource Configuration.
 
-![alt text][demo]
-
 - Publish, Consume and Update packages of Kubernetes Resource Configuration.
 - Develop and Update Configuration programmatically.
 - Filter and Display Configuration packages.
