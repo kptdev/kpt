@@ -47,6 +47,13 @@ Functions may be run at different times depending on the function and the organi
 - as PR checks
 - as pre-release checks
 - as pre-rollout checks
+
+#### Writing functions
+
+There are several projects that may be used to quickly develop kpt functions:
+
+- Typescript: [kpt functions sdk](https://github.com/GoogleContainerTools/kpt-functions-sdk)
+- Golang: [kyaml](https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml)
 `
 var READMEExamples = `
     # run the function defined by gcr.io/example.com/my-fn as a local container
@@ -213,6 +220,11 @@ var RunLong = `
   a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
   would then write the container stdout back to example/, replacing the directory
   file contents.
+
+There are several projects that may be used to quickly develop kpt functions:
+
+- Typescript: [kpt functions sdk](https://github.com/GoogleContainerTools/kpt-functions-sdk)
+- Golang: [kyaml](https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml)
 `
 var RunExamples = `
     # read the Resources from DIR, provide them to a container my-fun as input,

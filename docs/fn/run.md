@@ -157,6 +157,11 @@ Run a function locally against Resource configuration.
   would then write the container stdout back to example/, replacing the directory
   file contents.
 
+There are several projects that may be used to quickly develop kpt functions:
+
+- Typescript: [kpt functions sdk](https://github.com/GoogleContainerTools/kpt-functions-sdk)
+- Golang: [kyaml](https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml)
+
 ### Examples
 
     # read the Resources from DIR, provide them to a container my-fun as input,

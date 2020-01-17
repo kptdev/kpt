@@ -16,7 +16,7 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. ../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 git init
@@ -42,6 +42,8 @@ pe "kpt cfg tree helloworld --name --image --replicas"
 
 echo " "
 p "# print the package Resource configuration"
-pe "kpt cfg cat helloworld | less"
+pe "kpt cfg cat helloworld"
 
-pe "clear"
+echo " "
+p "# apply the package using kubetl apply or kpt svr apply"
+pe "kubectl apply -R -f helloworld"

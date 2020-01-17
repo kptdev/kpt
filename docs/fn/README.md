@@ -35,6 +35,13 @@ Functions may be run at different times depending on the function and the organi
 - as pre-release checks
 - as pre-rollout checks
 
+#### Writing functions
+
+There are several projects that may be used to quickly develop kpt functions:
+
+- Typescript: [kpt functions sdk](https://github.com/GoogleContainerTools/kpt-functions-sdk)
+- Golang: [kyaml](https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml)
+
 ### Commands
 
 **[run](run.md)**:

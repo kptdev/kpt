@@ -8,7 +8,7 @@ Diff local configuration against the applied cluster state.
 
  Output is always YAML.
 
-Env Vars:
+#### Arguments
 
   KUBECTL_EXTERNAL_DIFF:
     Environment variable can be used to select your own diff command.
