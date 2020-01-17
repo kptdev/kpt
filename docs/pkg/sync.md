@@ -4,6 +4,8 @@ Sync package dependencies using a manifest
 
 ![alt text][demo]
 
+[image-script](../../gifs/pkg-sync.sh)
+
 ### Synopsis
 
 Sync uses a manifest to manage a collection of dependencies.

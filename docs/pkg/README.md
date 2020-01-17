@@ -4,6 +4,8 @@ Fetch, update and sync packages using git
 
 ![alt text][demo]
 
+[image-script](../../gifs/pkg.sh)
+
 ### Synopsis
 
 Packages are collections of Resource configuration stored in git repositories.

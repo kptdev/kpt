@@ -4,6 +4,8 @@ Add a sync dependency to a Kptfile
 
 ![alt text][demo]
 
+[image-script](../../gifs/pkg-sync.sh)
+
 ### Synopsis
 
 Add a sync dependency to a Kptfile.

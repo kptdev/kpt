@@ -27,37 +27,42 @@ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 
 # start demo
 clear
-echo " "
-p "# init a package"
-pe "kpt pkg init . --description 'my package'"
+echo "# start with a package"
+echo "kpt pkg init . --description 'my package'"
+kpt pkg init . --description 'my package'
+pe "tree ."
 
 echo " "
 echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-p "# add a dependency"
-pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.1.0 hello-world-1"
+p "# 'kpt pkg sync set' adds a package dependency to the Kptfile"
+pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.1.0 hello-world-prod"
 
 echo " "
-p "# sync the dependency"
+p "# 'kpt sync' syncs all package dependencies "
+p "# at the versions specified in the Kptfile"
 pe "kpt pkg sync ."
-pe "ls"
+pe "tree ."
 pe "kpt cfg count ."
 
 echo " "
-p "# add a second dependency at a different version"
-pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world-2"
+p "# the same package may be added multiple times"
+p "# each copy may have a different version"
+pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world-dev"
 pe "kpt pkg sync ."
-pe "ls"
-pe "kpt cfg count ."
+pe "tree ."
 
 echo " "
-p "# compare the packages"
-pe "diff hello-world-1 hello-world-2"
-pe "git add . && git commit -m 'synced packaged'"
+p "# view the package differences"
+pe "diff hello-world-dev hello-world-prod"
+echo "$ git add . && git commit -m 'synced packaged'"
+git add . > /dev/null
+git commit -m 'synced packaged' > /dev/null
 
 echo " "
-p "# update the first a dependency"
+p "# 'kpt pkg sync set' may also be used to update the version of a dependency"
 pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world-1"
 pe "kpt pkg sync ."
-pe "diff hello-world-1 hello-world-2"
+pe "diff hello-world-dev hello-world-prod"
 
-pe "clear"
+p "# for more information see 'kpt help pkg sync'"
+p "kpt help pkg sync"

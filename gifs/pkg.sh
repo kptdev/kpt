@@ -28,29 +28,36 @@ clear
 echo " "
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-p "# pull down a package"
+p "# 'kpt pkg get' fetches a package from a git repository"
 pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"
+git add . > /dev/null
+git commit -m 'fetched helloworld' > /dev/null
+echo "$ git add . && git commit -a -m 'helloworld package'"
 
 echo " "
-p "# list setters published by the packages"
+p "# 'kpt pkg desc' lists information about the source of the package"
+pe "kpt pkg desc helloworld"
+
+echo " "
+p "# packages may publish metadata for how to set specific fields"
 pe "kpt cfg list-setters helloworld"
-
-echo " "
-p "# set the replicas on the cli"
 pe "kpt cfg set helloworld replicas 3"
 pe "kpt cfg list-setters helloworld replicas"
-pe "git add . && git commit -m 'change replicas to 3'"
-
-echo " "
-p "# pull in upstream updates"
-pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
-
-echo " "
-p "# show the changes to the raw configuration"
 pe "git diff helloworld"
-pe "git add . && git commit -m 'update helloworld to 0.2.0'"
+git commit -a -m 'helloworld package' > /dev/null
+echo "$ git commit -a -m 'helloworld package'"
 
 echo " "
-p "# apply the package to a cluster with kubectl apply or kpt svr apply"
-pe "kubectl apply -R -f helloworld"
+p "# 'kpt pkg diff' displays a diff of the local package"
+p "# against an upstream version"
+pe "kpt pkg diff helloworld@v0.1.0"
+
+echo " "
+p "# 'kpt pkg update' pulls upstream updates and merges them, "
+p "# keeping local changes to the package"
+pe "git diff helloworld"
+pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
+pe "git diff helloworld"
+
+p "# for more information see 'kpt help pkg'"
+p "kpt help pkg"
