@@ -94,6 +94,7 @@ func GetConfigCommand(name string) *cobra.Command {
 	tree.Long = cfgdocs.TreeShort + "\n" + cfgdocs.TreeLong
 	tree.Example = cfgdocs.TreeExamples
 
-	cfgCmd.AddCommand(cat, count, createSetter, fmt, grep, listSetters, merge, merge3, set, tree)
+	cfgCmd.AddCommand(an, cat, count, createSetter, fmt,
+		grep, listSetters, merge, merge3, set, tree)
 	return cfgCmd
 }

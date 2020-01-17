@@ -54,5 +54,3 @@ pe "git add . && git commit -m 'update helloworld to 0.2.0'"
 echo " "
 p "# apply the package to a cluster with kubectl apply or kpt svr apply"
 pe "kubectl apply -R -f helloworld"
-
-pe "clear"

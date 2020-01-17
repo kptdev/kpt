@@ -33,9 +33,17 @@ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "git add . && git commit -m 'fetched helloworld'"
 
-echo " "
-p "# pull in upstream updates from v0.2.0"
-pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
+p "# make local changes to the package"
+pe "kpt cfg annotate helloworld --kv example.com/demo=update"
 pe "git diff"
+pe "git add . && git commit -m 'fetched helloworld'"
 
-pe "clear"
+echo " "
+p "# pull in upstream updates from v0.2.0 which adds a label"
+pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
+pe "git status"
+
+echo " "
+p "# package contains both locally added annotation and upstream label update"
+pe "git diff"
+pe "kpt cfg tree helloworld --field=metadata.annotations --field=metadata.labels"
