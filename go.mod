@@ -16,8 +16,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20191026110619-0b21df46bc1d
 	gotest.tools v2.2.0+incompatible
 	k8s.io/client-go v0.17.0
-	sigs.k8s.io/kustomize/cmd/config v0.0.9
+	sigs.k8s.io/kustomize/cmd/config v0.0.10
 	sigs.k8s.io/kustomize/cmd/kubectl v0.0.3
 	sigs.k8s.io/kustomize/cmd/resource v0.0.2
-	sigs.k8s.io/kustomize/kyaml v0.0.8
+	sigs.k8s.io/kustomize/kyaml v0.0.9
 )

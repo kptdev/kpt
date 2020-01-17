@@ -6,8 +6,11 @@ View and Modify Resource Configuration.
 
 ### Synopsis
 
-Programmatically modify raw json or yaml Resource Configuration -- e.g. `fmt`, `set`, `merge`.
-Display Resource Configuration -- e.g. `tree`, `count`, `cat`, `grep`
+Programmatically modify raw json or yaml Resource Configuration -- e.g. 
+`fmt`, `set`, `annotate`, `merge`.
+
+Display Resource Configuration -- e.g.
+`tree`, `count`, `cat`, `grep`
 
 ### Primary Commands
 
@@ -18,6 +21,9 @@ Display Resource Configuration -- e.g. `tree`, `count`, `cat`, `grep`
 - modify Resources using high-level knobs with `set`
 - list high-level knobs
 - create new high-level knobs
+
+**[annotate](annotate.md)**:
+- set `metadata.annotation`s on Resources
 
 ### Additional Commands
 
