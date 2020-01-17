@@ -14,15 +14,13 @@
 however `kpt` supports using code or templates as solutions to generate `kpt` package artifacts,
 which may then be consumed by other tools as Resource configuration.
 
-#### `kpt` subcomponents
-
 #### Package Management
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | git repository          | local files              |
 
-**git repo -> kpt [pkg] -> local configuration or stdout**
+Flow: git repo -> kpt [pkg] -> local configuration or stdout
 
 Publish and share configuration as yaml or json stored in git.
 
@@ -33,11 +31,11 @@ Publish and share configuration as yaml or json stored in git.
 
 #### Configuration Management
 
-**local configuration or stdin -> kpt [cfg] -> local configuration or stdout**
-
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
+
+Flow: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
 
 
 Examine and craft your Resources using the commandline.
@@ -49,12 +47,11 @@ Examine and craft your Resources using the commandline.
 
 #### Configuration Functions
 
-**local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout**
-
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
 
+Flow:  local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout
 
 Run functional programs against Configuration to generate and modify Resources locally.
 
@@ -62,17 +59,17 @@ Run functional programs against Configuration to generate and modify Resources l
 - Apply cross-cutting changes to Resources
 - Validate Resources
 
-**`fn` is different from `cfg` in that it executes programs published as docker images, rather
-than statically compiled into `kpt`.**
+*`fn` is different from `cfg` in that it executes programs published as docker images, rather
+than statically compiled into `kpt`.*
 
 #### ApiServer Requests
-
-**local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)**
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | apiserver                |
 | apiserver               | stdout                   |
+
+Flow: local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)
 
 Push Resources to a cluster.
 
