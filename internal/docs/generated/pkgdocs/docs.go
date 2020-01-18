@@ -26,7 +26,34 @@ They may be an entire repo, or a subdirectory within a repo.
 - Packages **may be customized in place either manually with (e.g. ` + "`" + `vi` + "`" + `) or
   programmatically** (e.g. [setters], [functions]).
 
-Example imperative package workflow:
+#### Primary Commands
+
+**[get](get.md)**:
+- fetching packages from subdirectories stored in git to local copies
+
+**[update](update.md)**:
+- applying upstream package updates to a local copy
+
+**[init](init.md)**:
+- initialize an empty package
+
+**[sync](sync.md)**:
+- defining packages to sync from remote sources using a declarative file which
+  maps remote packages (repo + path + version) to local directories
+
+#### Additional Commands
+
+**[diff](diff.md)**:
+- diff a locally modified package against upstream
+
+**[desc](desc.md)**:
+- print package origin
+
+**[man](man.md)**:
+- print package documentation
+
+
+#### Example imperative package workflow
 
 1. [kpt pkg get](get.md) to get a package
 2. [kpt cfg set](../cfg/set.md), [kpt fn run](../fn/run.md) or ` + "`" + `vi` + "`" + ` to modify configuration
@@ -35,7 +62,7 @@ Example imperative package workflow:
 5. [kpt pkg update](update.md) to pull in new changes
 6. ` + "`" + `kubectl apply` + "`" + ` or [kpt svr apply](../svr/apply.md) to a cluster
 
-Example declarative package workflow:
+#### Example declarative package workflow
 
 1. [kpt pkg init](init.md)
 2. [kpt pkg sync set](sync-set.md) dev version of a package
