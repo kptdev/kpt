@@ -19,51 +19,42 @@
 . ../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
-git init
+git init > /dev/null
 
-stty rows 80 cols 15
+stty rows 90 cols 20
 
 export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
+kpt pkg get $PKG helloworld > /dev/null
+git add . > /dev/null
+git commit -m 'fetched helloworld' > /dev/null
+kpt svr apply -R -f helloworld > /dev/null
+
 
 # start demo
 clear
 
-echo "$ export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0"
-pe "kpt pkg get \$PKG helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"
+echo "# start with helloworld package"
+echo "$ kpt pkg desc helloworld"
+kpt pkg desc helloworld
 
 # start demo
 echo " "
-p "# print the Resource counts"
-pe "kpt cfg count helloworld"
+p "# 'kpt cfg tree' summarizes Resources in a package"
+pe "kpt cfg tree helloworld"
 
 echo " "
-p "# print the structured package"
-pe "kpt cfg tree helloworld --name --image --replicas"
+p "# it can also read from stdin"
+p "# if the input Resources have owners references, then"
+p "# the tree structure will reflect the Resource relationships"
+pe "kubectl get all -o yaml | kpt cfg tree"
 
 echo " "
-p "# filter to only print Services"
-pe "kpt cfg grep \"kind=Service\" helloworld | kpt cfg tree --name --image --replicas"
+p "# tree supports printing fields from objects"
+pe "kpt cfg tree helloworld --replicas --name --image --ports"
 
 echo " "
-p "# print the raw Resource configuration"
-pe "kpt cfg cat helloworld | less"
+p "# in addition to the built-ins, arbitrary fields may be printed"
+pe "kpt cfg tree helloworld --field 'spec.selector' --field 'spec.selector' --field 'spec.template.metadata.labels'"
 
-echo " "
-p "# list settable options"
-pe "kpt cfg list-setters helloworld replicas"
-
-echo " "
-p "# set the replicas using the cli"
-pe "kpt cfg set helloworld replicas 3"
-
-echo " "
-p "# view the updated values"
-pe "kpt cfg list-setters helloworld replicas"
-
-echo " "
-p "# view the updated configuration"
-pe "git diff"
-pe "git add . && git commit -m 'change replicas to 3'"
-
-pe "clear"
+p "# for more information see 'kpt help cfg tree'"
+p "kpt help cfg tree"

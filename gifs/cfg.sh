@@ -21,7 +21,7 @@
 cd $(mktemp -d)
 git init
 
-stty rows 80 cols 15
+stty rows 90 cols 20
 
 export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
 

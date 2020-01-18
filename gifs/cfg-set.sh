@@ -21,49 +21,40 @@
 cd $(mktemp -d)
 git init
 
-stty rows 80 cols 15
+stty rows 90 cols 20
 
 export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
+kpt pkg get $PKG helloworld > /dev/null
+git add . > /dev/null
+git commit -m 'fetched helloworld' > /dev/null
+kpt svr apply -R -f helloworld > /dev/null
 
 # start demo
 clear
 
-echo "$ export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0"
-pe "kpt pkg get \$PKG helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"
+echo "# start with helloworld package"
+echo "$ kpt pkg desc helloworld"
+kpt pkg desc helloworld
 
 # start demo
 echo " "
-p "# print the Resource counts"
-pe "kpt cfg count helloworld"
+p "# 'kpt cfg list-setters' lists settable values for a collection of Resources"
+pe "kpt cfg list-setters helloworld"
+p "# setters may set full or partial field values in one or more Resources"
 
 echo " "
-p "# print the structured package"
-pe "kpt cfg tree helloworld --name --image --replicas"
+p "# 'kpt cfg set' invokes a setter, replacing current partial or full field values with"
+p "# the user provided value"
+pe "kpt cfg set helloworld replicas 7"
+p "# listing the setters after they are set will show the upated values"
+pe "kpt cfg list-setters helloworld"
 
 echo " "
-p "# filter to only print Services"
-pe "kpt cfg grep \"kind=Service\" helloworld | kpt cfg tree --name --image --replicas"
+p "# setters may annotate field values with metadata about who set the value and"
+p "# with a description of why the value was chosen"
+pe "kpt cfg set helloworld replicas 3 --description 'good value for a demo' --set-by 'pwittrock' "
+p "# listing the setters will display the field metadata"
+pe "kpt cfg list-setters helloworld"
 
-echo " "
-p "# print the raw Resource configuration"
-pe "kpt cfg cat helloworld | less"
-
-echo " "
-p "# list settable options"
-pe "kpt cfg list-setters helloworld replicas"
-
-echo " "
-p "# set the replicas using the cli"
-pe "kpt cfg set helloworld replicas 3"
-
-echo " "
-p "# view the updated values"
-pe "kpt cfg list-setters helloworld replicas"
-
-echo " "
-p "# view the updated configuration"
-pe "git diff"
-pe "git add . && git commit -m 'change replicas to 3'"
-
-pe "clear"
+p "# for more information see 'kpt help cfg tree'"
+p "kpt help cfg set"
