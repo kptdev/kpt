@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-########################
-# include the magic
-########################
-. ../demos/demo-magic/demo-magic.sh
-
-cd $(mktemp -d)
-git init
-
-sstty rows 80 cols 15
-
-# start demo
+# The hello service provides a load-balancing proxy over the hello-app
+# pods. By specifying the type as a 'LoadBalancer', Kubernetes Engine will
+# create an external HTTP load balancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld-gke
+  labels:
+    app: hello
+    version: '0.1.0'
+spec:
+  type: LoadBalancer
+  selector:
+    app: hello
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: http

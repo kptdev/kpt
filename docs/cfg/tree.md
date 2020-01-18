@@ -2,6 +2,10 @@
 
 Display Resource structure from a directory or stdin.
 
+![alt text][demo]
+
+[demo-script](../../gifs/cfg-tree.sh)
+
 ### Synopsis
 
 kpt cfg tree may be used to print Resources in a directory or cluster, preserving structure
@@ -50,3 +54,7 @@ graph structure can also be selected explicitly using the '--graph-structure' fl
       --field="status.conditions[type=Complete].status" \
       --field="status.conditions[type=Ready].status" \
       --field="status.conditions[type=ContainersReady].status"
+
+###
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/config-tree.gif "kpt cfg tree"

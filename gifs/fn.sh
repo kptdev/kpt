@@ -21,30 +21,6 @@
 cd $(mktemp -d)
 git init
 
-stty rows 80 cols 15
+sstty rows 90 cols 20
 
 # start demo
-clear
-echo " "
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
-p "# get a package from a remote source"
-pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
-
-echo " "
-pe "# list package setters"
-pe "kpt cfg list-setters helloworld"
-
-echo " "
-pe "# set a value"
-pe "kpt cfg set helloworld replicas 3 --set-by pwittrock --description '3 is good enough'"
-
-echo " "
-pe "# view updated value"
-pe "kpt cfg list-setters helloworld replicas"
-
-echo " "
-pe "# apply the configuration to a cluster"
-pe "kpt svr apply -f helloworld"
-
-pe "clear"

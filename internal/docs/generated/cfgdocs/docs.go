@@ -367,4 +367,8 @@ var TreeExamples = `
       --field="status.conditions[type=Completed].status" \
       --field="status.conditions[type=Complete].status" \
       --field="status.conditions[type=Ready].status" \
-      --field="status.conditions[type=ContainersReady].status"`
+      --field="status.conditions[type=ContainersReady].status"
+
+###
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/config-tree.gif "kpt cfg tree"`

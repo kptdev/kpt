@@ -13,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rm -f ./$1.cast ./$1.gif
-asciinema rec -i 1 -c ./$1.sh $1.cast
-asciicast2gif -s 2 -S 2 ./$1.cast $1.gif
+########################
+# include the magic
+########################
+. ../demos/demo-magic/demo-magic.sh
 
-# copy to gs
-gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $1.gif gs://kpt-dev/docs/$1.gif
-gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $1.cast gs://kpt-dev/docs/$1.cast
-rm ./$1.cast ./$1.gif
+cd $(mktemp -d)
+git init
+
+stty rows 90 cols 20
+
+# start demo

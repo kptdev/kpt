@@ -1,6 +1,6 @@
 # KPT
 
-Git based package management and toolchain for Kubernetes Resource Configuration.
+Kubernetes Platform Toolchain
 
 - Publish, Consume and Update packages of Kubernetes Resource Configuration.
 - Develop and Update Configuration programmatically.

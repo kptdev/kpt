@@ -44,6 +44,12 @@ lint:
 	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.22.2)
 	$(GOBIN)/golangci-lint run ./...
 
+# TODO: enable this as part of `all` target when it works for go-errors
+# https://github.com/google/go-licenses/issues/15
+license-check:
+	(which go-licenses || go get https://github.com/google/go-licenses)
+	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
+
 test:
 	go test -cover ./...
 

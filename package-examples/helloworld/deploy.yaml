@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-########################
-# include the magic
-########################
-. ../demos/demo-magic/demo-magic.sh
-
-cd $(mktemp -d)
-git init
-
-stty rows 80 cols 15
-
-# start demo
+# This file configures the hello-world app which serves public web traffic.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-gke
+  labels:
+    app: hello
+    version: '0.1.0'
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: helloworld-gke
+        image: gcr.io/kpt-dev/helloworld-gke:0.1.0
+        ports:
+        - name: http
+          containerPort: 80
+        env:
+        - name: PORT
+          value: '80'
