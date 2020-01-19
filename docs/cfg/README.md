@@ -6,8 +6,10 @@ View and Modify Resource Configuration.
 
 [image-script]
 
-Commands: [annotate], [cat], [count], [create-setter], [fmt], [grep], [list-setters],
-[merge], [merge3], [set], [tree]
+### Commands
+
+[annotate], [cat], [count], [create-setter], [fmt], [grep],
+[list-setters], [merge], [merge3], [set], [tree]
 
 ### Synopsis
 

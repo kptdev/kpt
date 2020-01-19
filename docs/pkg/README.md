@@ -6,7 +6,9 @@ Fetch, update and sync packages using git
 
 [image-script]
 
-Commands: [desc], [diff], [get], [init], [man], [sync], [update]
+### Commands
+ 
+[desc], [diff], [get], [init], [man], [sync], [update]
 
 ### Synopsis
 
