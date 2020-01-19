@@ -2,6 +2,10 @@
 
 Create a custom setter for a Resource field
 
+![alt text][demo]
+
+[demo-script](../../gifs/cfg-create-setter.sh)
+
 ### Synopsis
 
     kpt cfg create-setter DIR NAME VALUE
@@ -91,3 +95,5 @@ A single field value may have multiple setters applied to it for different parts
     # image tag, not the full image
     kpt cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
         --field image --description "current stable release"
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-create-setter.gif "kpt cfg create-setter"

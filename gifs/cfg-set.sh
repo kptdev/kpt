@@ -56,5 +56,5 @@ pe "kpt cfg set helloworld replicas 3 --description 'good value for a demo' --se
 p "# listing the setters will display the field metadata"
 pe "kpt cfg list-setters helloworld"
 
-p "# for more information see 'kpt help cfg tree'"
+p "# for more information see 'kpt help cfg set'"
 p "kpt help cfg set"

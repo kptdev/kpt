@@ -2,6 +2,10 @@
 
 Set values on Resources fields values.
 
+![alt text][demo]
+
+[image-script](../../gifs/cfg-set.sh)
+
 ### Synopsis
 
 May set either the complete or partial field value.
@@ -85,3 +89,5 @@ To create a custom setter for a field see: `kustomize help config create-setter`
     metadata:
         name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
     ...
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
