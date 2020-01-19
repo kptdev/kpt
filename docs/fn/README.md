@@ -7,7 +7,15 @@ Run local containers against Resource configuration
 Functions are executables packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
 
-They may be used to:
+Commands: [run], [sink], [source]
+
+| Command   | Description                                             |
+|-----------|---------------------------------------------------------|
+| [run]     | run containers locally to generate and transform config |
+| [source]  | explicitly specify an input source to pipe to `run`     |
+| [sink]    | explicitly specify an output sink to pipe to `run`      |
+
+Functions may be used to:
 
 - Generate configuration from Templates, DSLs, CRD-style abstractions, key-value pairs, etc. -- e.g.
   expand Helm charts, JSonnet, etc.
@@ -39,19 +47,10 @@ Functions may be run at different times depending on the function and the organi
 
 There are several projects that may be used to quickly develop kpt functions:
 
-- Typescript: [kpt functions sdk](https://github.com/GoogleContainerTools/kpt-functions-sdk)
-- Golang: [kyaml](https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml)
-
-### Commands
-
-**[run](run.md)**:
-- run local functions against Resource configuration
-
-**[source](source.md)**:
-- explicitly specify `run` input source
-
-**[source](sink.md)**:
-- explicitly specify `run` output sink
+| Name                | Language     | Examples        |
+|---------------------|--------------|-----------------|
+| [kpt-functions-sdk] | Typescript   |                 |
+| [kustomize/kyaml]   | Golang       | [kyaml-example] |
 
 ### Examples
 
@@ -64,3 +63,13 @@ There are several projects that may be used to quickly develop kpt functions:
 
     # run the functions declared in files under DIR/
     kpt fn run DIR/
+
+### 
+
+[run]: run.md
+[source]: source.md
+[source]: sink.md
+
+[kpt functions sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
+[kyaml]: https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml
+[kyaml-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go

@@ -20,38 +20,24 @@ var READMELong = `
 Packages are collections of Resource configuration stored in git repositories.
 They may be an entire repo, or a subdirectory within a repo.
 
-- **Any git repository containing Resource configuration may be used as a package**,
-  no additional structure or formatting is necessary.
-- **Any package may be applied with ` + "`" + `kubectl apply -R -f` + "`" + `** or ` + "`" + `kpt svr apply -R -f` + "`" + `.
-- Packages **may be customized in place either manually with (e.g. ` + "`" + `vi` + "`" + `) or
-  programmatically** (e.g. [setters], [functions]).
+Commands: [desc], [diff], [get], [init], [man], [sync], [update]
 
-#### Primary Commands
+| Command  | Description                             |
+|----------|-----------------------------------------|
+| [desc]   | print package origin                    |
+| [diff]   | diff a local package against upstream   |
+| [get]    | fetching packages from git repos        |
+| [init]   | initialize an empty package             |
+| [man]    | print package documentation             |
+| [sync]   | fetch and update packages declaratively |
+| [update] | applying upstream package updates       |
 
-**[get](get.md)**:
-- fetching packages from subdirectories stored in git to local copies
+#### Package Format
 
-**[update](update.md)**:
-- applying upstream package updates to a local copy
-
-**[init](init.md)**:
-- initialize an empty package
-
-**[sync](sync.md)**:
-- defining packages to sync from remote sources using a declarative file which
-  maps remote packages (repo + path + version) to local directories
-
-#### Additional Commands
-
-**[diff](diff.md)**:
-- diff a locally modified package against upstream
-
-**[desc](desc.md)**:
-- print package origin
-
-**[man](man.md)**:
-- print package documentation
-
+1. **Any git repository containing Resource configuration may be used as a package**, no
+   additional structure or formatting is necessary.
+2. **Any package may be applied with ` + "`" + `kubectl apply -R -f` + "`" + `** or ` + "`" + `kpt svr apply -R -f` + "`" + `.
+3. Packages **may be customized in place either manually with (e.g. ` + "`" + `vi` + "`" + `) or programmatically**.
 
 #### Example imperative package workflow
 

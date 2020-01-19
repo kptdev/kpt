@@ -17,7 +17,6 @@ ENV CGO_ENABLED=0
 ENV GO111MODULE=on
 
 WORKDIR /go/src/
-RUN go install -v sigs.k8s.io/kustomize/kustomize/v3
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
@@ -30,5 +29,4 @@ RUN apk update && apk upgrade && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 COPY --from=0 /usr/local/bin/kpt /usr/local/bin/kpt
-COPY --from=0 /go/bin/kustomize /usr/local/bin/kustomize
 CMD ["kpt"]

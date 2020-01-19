@@ -2,7 +2,7 @@
 
 ![alt text][demo]
 
-[image-script](../gifs/kpt.sh)
+[image-script]
 
 ### Synopsis
 
@@ -15,6 +15,8 @@
 *kpt* package artifacts are composed of Resource configuration, rather than code or templates,
 however *kpt* supports using code or templates as solutions to generate *kpt* package artifacts,
 which may then be consumed by other tools as Resource configuration.
+
+Command groups: [cfg], [fn], [pkg]
 
 ---
 
@@ -122,4 +124,5 @@ Push Resources to a cluster.
 [pkg]: pkg/README.md
 [cfg]: cfg/README.md
 [fn]: fn/README.md
+[image-script]: ../gifs/kpt.sh
 [svr]: svr/README.md
