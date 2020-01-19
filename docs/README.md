@@ -4,7 +4,9 @@
 
 [image-script]
 
-Command groups: [cfg], [fn], [pkg]
+### Command Groups
+
+[cfg], [fn], [pkg]
 
 ### Synopsis
 

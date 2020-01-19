@@ -2,7 +2,9 @@
 
 Run local containers against Resource configuration
 
-Commands: [run], [sink], [source]
+### Commands
+
+[run], [sink], [source]
 
 ### Synopsis
 
