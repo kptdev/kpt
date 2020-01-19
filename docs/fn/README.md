@@ -74,7 +74,7 @@ There are several projects that may be used to quickly develop kpt functions:
 
 [run]: run.md
 [source]: source.md
-[source]: sink.md
+[sink]: sink.md
 
 [cfg]: ../cfg/README.md
 [pkg]: ../pkg/README.md
