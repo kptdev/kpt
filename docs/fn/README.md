@@ -2,12 +2,12 @@
 
 Run local containers against Resource configuration
 
+Commands: [run], [sink], [source]
+
 ### Synopsis
 
 Functions are executables packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
-
-Commands: [run], [sink], [source]
 
 | Command   | Description                                             |
 |-----------|---------------------------------------------------------|
