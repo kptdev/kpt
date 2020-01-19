@@ -27,6 +27,8 @@ var READMELong = `
 however *kpt* supports using code or templates as solutions to generate *kpt* package artifacts,
 which may then be consumed by other tools as Resource configuration.
 
+Command groups: [cfg], [fn], [pkg]
+
 ---
 
 #### [pkg] Package Management
@@ -82,6 +84,8 @@ than statically compiled into kpt.*
 
 ---
 
+<!--
+
 #### [svr] ApiServer Requests
 
 | Configuration Read From | Configuration Written To |
@@ -96,6 +100,8 @@ Push Resources to a cluster.
 - Apply a package
 - Wait until a package has been rolled out
 - Diff local and remote state
+
+-->
 `
 var READMEExamples = `
     # get a package
@@ -115,7 +121,7 @@ var READMEExamples = `
     set 1 fields
 
     # apply
-    $ kpt svr apply -R -f helloworld
+    $ kubectl apply -R -f helloworld
     deployment.apps/helloworld-gke created
     service/helloworld-gke created
 

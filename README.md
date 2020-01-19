@@ -1,6 +1,6 @@
 # KPT
 
-Kubernetes Platform Toolchain
+Kubernetes Platform Toolkit
 
 - Publish, Consume and Update packages of Kubernetes Resource Configuration.
 - Develop and Update Configuration programmatically.

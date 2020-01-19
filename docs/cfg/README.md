@@ -4,39 +4,28 @@ View and Modify Resource Configuration.
 
 ![alt text][demo]
 
-[image-script](../../gifs/config.sh)
+[image-script]
 
 ### Synopsis
 
-Programmatically modify raw json or yaml Resource Configuration -- e.g. 
-`fmt`, `set`, `annotate`, `merge`.
+Programmatically print and modify raw json or yaml Resource Configuration
 
-Display Resource Configuration -- e.g.
-`tree`, `count`, `cat`, `grep`
+Commands: [annotate], [cat], [count], [create-setter], [fmt], [grep], [list-setters],
+[merge], [merge3], [set], [tree]
 
-### Primary Commands
-
-**[tree](tree.md), [count](count.md), [cat](cat.md)**:
-- print package contents as a tree, aggregate counts, or raw configuration
-
-**[set](set.md), [list-setters](list-setters.md), [create-setter](create-setter.md)**:
-- modify Resources using high-level knobs with `set`
-- list high-level knobs
-- create new high-level knobs
-
-**[annotate](annotate.md)**:
-- set `metadata.annotation`s on Resources
-
-### Additional Commands
-
-**[fmt](fmt.md)**:
-- format configuration by sorting fields 
-
-**[grep](grep.md)**:
-- search for Resource matching filters
-
-**[merge](merge.md), [merge3](merge3.md)**:
-- merge one collection of Resources into another by GVK + namespace + name
+| Command        | Description                                   |
+|----------------|-----------------------------------------------|
+| [annotate]     | set `metadata.annotation`s on Resources       |
+| [cat]          | print Resources in a package                  |
+| [count]        | print Resource counts by type                 |
+| [create-setter]| create or modify a custom field-setter        |
+| [fmt]          | format Resource yaml                          |
+| [grep]         | filter Resources configuration                |
+| [list-setters] | list setters                                  |
+| [merge]        | merge Resources in one directory into another |
+| [merge3]       | perform 3-way merge between directories       |
+| [set]          | set one or more fields programmatically       |
+| [tree]         | print Resources using a tree structure        |
 
 ### Examples
 
@@ -70,4 +59,17 @@ Display Resource Configuration -- e.g.
 
 ### 
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/config.gif "kpt cfg"
+[annotate]: annotate.md
+[cat]: cat.md
+[count]: count.md
+[create-setter]: create-setter.md
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg.gif "kpt cfg"
+[fmt]: fmt.md
+[grep]: grep.md
+[image-script]: ../../gifs/cfg.sh
+[list-setters]: list-setters.md
+[merge]: merge.md
+[merge3]: merge3.md
+[set]: set.md
+[tree]: tree.md
+

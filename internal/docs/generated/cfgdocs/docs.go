@@ -17,11 +17,24 @@ package cfgdocs
 
 var READMEShort = `View and Modify Resource Configuration.`
 var READMELong = `
-Programmatically modify raw json or yaml Resource Configuration -- e.g. 
-` + "`" + `fmt` + "`" + `, ` + "`" + `set` + "`" + `, ` + "`" + `annotate` + "`" + `, ` + "`" + `merge` + "`" + `.
+Programmatically print and modify raw json or yaml Resource Configuration
 
-Display Resource Configuration -- e.g.
-` + "`" + `tree` + "`" + `, ` + "`" + `count` + "`" + `, ` + "`" + `cat` + "`" + `, ` + "`" + `grep` + "`" + `
+Commands: [annotate], [cat], [count], [create-setter], [fmt], [grep], [list-setters],
+[merge], [merge3], [set], [tree]
+
+| Command        | Description                                   |
+|----------------|-----------------------------------------------|
+| [annotate]     | set ` + "`" + `metadata.annotation` + "`" + `s on Resources       |
+| [cat]          | print Resources in a package                  |
+| [count]        | print Resource counts by type                 |
+| [create-setter]| create or modify a custom field-setter        |
+| [fmt]          | format Resource yaml                          |
+| [grep]         | filter Resources configuration                |
+| [list-setters] | list setters                                  |
+| [merge]        | merge Resources in one directory into another |
+| [merge3]       | perform 3-way merge between directories       |
+| [set]          | set one or more fields programmatically       |
+| [tree]         | print Resources using a tree structure        |
 `
 var READMEExamples = `
     # print the raw package contents
@@ -117,7 +130,9 @@ var CreateSetterExamples = `
     # create a setter for a substring of a field rather than the full field -- e.g. only the
     # image tag, not the full image
     kpt cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
-        --field image --description "current stable release"`
+        --field image --description "current stable release"
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-create-setter.gif "kpt cfg create-setter"`
 
 var FmtShort = `Format yaml configuration files.`
 var FmtLong = `
@@ -201,7 +216,9 @@ var ListSettersExamples = `
 
     $ kpt cfg list-setters DIR/
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
-    name-prefix   ''            PREFIX    string   2`
+    name-prefix   ''            PREFIX    string   2
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"`
 
 var MergeShort = `Merge Resource configuration files`
 var MergeLong = `
@@ -319,7 +336,9 @@ var SetExamples = `
     ...
     metadata:
         name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
-    ...`
+    ...
+
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"`
 
 var TreeShort = `Display Resource structure from a directory or stdin.`
 var TreeLong = `
@@ -371,4 +390,4 @@ var TreeExamples = `
 
 ###
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/config-tree.gif "kpt cfg tree"`
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"`
