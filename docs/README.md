@@ -4,9 +4,17 @@
 
 [image-script]
 
+Command groups: [cfg], [fn], [pkg]
+
 ### Synopsis
 
 *kpt* is a Kubernetes platform toolkit.
+
+| Command Group | Description                                       |
+|---------------|---------------------------------------------------|
+| [cfg]         | print and modify configuration files              |
+| [pkg]         | fetch and update configuration packages           |
+| [fn]          | generate, transform, validate configuration files |
 
 - It includes tools to package, customize and apply json or yaml configuration data.
 - It includes tools developed as part of the Kubernetes project as well as additional commands
@@ -15,8 +23,6 @@
 *kpt* package artifacts are composed of Resource configuration, rather than code or templates,
 however *kpt* supports using code or templates as solutions to generate *kpt* package artifacts,
 which may then be consumed by other tools as Resource configuration.
-
-Command groups: [cfg], [fn], [pkg]
 
 ---
 

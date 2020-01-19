@@ -6,12 +6,12 @@ View and Modify Resource Configuration.
 
 [image-script]
 
+Commands: [annotate], [cat], [count], [create-setter], [fmt], [grep], [list-setters],
+[merge], [merge3], [set], [tree]
+
 ### Synopsis
 
 Programmatically print and modify raw json or yaml Resource Configuration
-
-Commands: [annotate], [cat], [count], [create-setter], [fmt], [grep], [list-setters],
-[merge], [merge3], [set], [tree]
 
 | Command        | Description                                   |
 |----------------|-----------------------------------------------|
