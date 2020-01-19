@@ -112,12 +112,18 @@ They may be an entire repo, or a subdirectory within a repo.
         hello-world --strategy=resource-merge
     $ kpt pkg sync ./
 
+### Also See Command Groups
+
+[cfg], [fn]
+
 ### 
 
 [apply]: ../svr/apply.md
+[cfg]: ../cfg/README.md
 [demo]: https://storage.googleapis.com/kpt-dev/docs/pkg.gif "kpt pkg"
 [desc]: desc.md
 [diff]: diff.md
+[fn]: ../fn/README.md
 [functions]: ../fn/README.md
 [get]: get.md
 [image-script]: ../../gifs/pkg.sh

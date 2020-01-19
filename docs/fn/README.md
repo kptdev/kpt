@@ -64,12 +64,18 @@ There are several projects that may be used to quickly develop kpt functions:
     # run the functions declared in files under DIR/
     kpt fn run DIR/
 
+### Also See Command Groups
+
+[cfg], [pkg]
+
 ### 
 
 [run]: run.md
 [source]: source.md
 [source]: sink.md
 
+[cfg]: ../cfg/README.md
+[pkg]: ../pkg/README.md
 [kpt functions sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
 [kyaml]: https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml
 [kyaml-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go
