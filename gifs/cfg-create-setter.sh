@@ -23,7 +23,7 @@ git init
 
 stty rows 90 cols 20
 
-export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
+export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
 kpt pkg get $PKG helloworld > /dev/null
 git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null
@@ -39,25 +39,34 @@ kpt pkg desc helloworld
 # start demo
 echo " "
 p "# 'kpt cfg create-setter' creates a new field setter by annotating Resource fields"
-p "# create-setter takes as arguments the package dir, name of the setter to create and"
-p "# current field value, and takes as a flag the field name"
-pe "kpt cfg list-setters helloworld"
-pe "kpt cfg create-setter helloworld service-type LoadBalancer --field type"
+pe "kpt cfg tree helloworld --replicas"
+pe "kpt cfg create-setter helloworld replicas 5 --field replicas --type integer"
 pe "kpt cfg list-setters helloworld"
 
 echo " "
-p "# 'kpt cfg set' invokes a setter, replacing current partial or full field values with"
-p "# the user provided value"
-pe "kpt cfg set helloworld replicas 7"
-p "# listing the setters after they are set will show the upated values"
+p "# setters can be created for a partial field value as a form of substitution"
+p "# partial setter values must be unique strings within the field"
+pe "kpt cfg tree helloworld --image"
+pe "kpt cfg create-setter helloworld version 0.1.0 --field image --partial --type string"
 pe "kpt cfg list-setters helloworld"
 
 echo " "
-p "# setters may annotate field values with metadata about who set the value and"
-p "# with a description of why the value was chosen"
-pe "kpt cfg set helloworld replicas 3 --description 'good value for a demo' --set-by 'pwittrock' "
-p "# listing the setters will display the field metadata"
+p "# multiple full and partial fields on multiple objects may be set using a single setter"
+pe "kpt cfg tree helloworld --field metadata.labels.version"
+pe "kpt cfg create-setter helloworld version 0.1.0 --field version --type string"
 pe "kpt cfg list-setters helloworld"
 
-p "# for more information see 'kpt help cfg tree'"
-p "kpt help cfg set"
+echo " "
+p "# demo using the setters"
+pe "kpt cfg tree helloworld --field metadata.labels.version --replicas --image"
+pe "kpt cfg set helloworld version 0.2.0"
+pe "kpt cfg set helloworld replicas 11"
+pe "kpt cfg tree helloworld --field metadata.labels.version --replicas --image"
+
+echo " "
+p "# setter values include a description and set-by for consumers"
+pe "kpt cfg create-setter helloworld service-type LoadBalancer --field type  --type string --description 'external traffic' --set-by 'package-default'"
+pe "kpt cfg list-setters helloworld"
+
+p "# for more information see 'kpt help cfg create-setters'"
+p "kpt help cfg create-setters"

@@ -23,22 +23,29 @@ git init
 
 stty rows 90 cols 20
 
-export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
+export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
+kpt pkg get $PKG helloworld > /dev/null
+git add . > /dev/null
+git commit -m 'fetched helloworld' > /dev/null
+kpt svr apply -R -f helloworld > /dev/null
 
 # start demo
 clear
 
-echo "$ export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0"
-pe "kpt pkg get \$PKG helloworld"
-pe "git add . && git commit -m 'fetched helloworld'"
+echo "# start with helloworld package"
+echo "$ kpt pkg desc helloworld"
+kpt pkg desc helloworld
 
 # start demo
+echo " "
+p "# 'kpt cfg' contains commands for printing and modifying local packages of configuration"
+
 echo " "
 p "# print the Resource counts"
 pe "kpt cfg count helloworld"
 
 echo " "
-p "# print the structured package"
+p "# print the package using a tree structure"
 pe "kpt cfg tree helloworld --name --image --replicas"
 
 echo " "
@@ -46,24 +53,13 @@ p "# filter to only print Services"
 pe "kpt cfg grep \"kind=Service\" helloworld | kpt cfg tree --name --image --replicas"
 
 echo " "
-p "# print the raw Resource configuration"
-pe "kpt cfg cat helloworld | less"
-
-echo " "
-p "# list settable options"
+p "# list setters and set fields"
 pe "kpt cfg list-setters helloworld replicas"
-
-echo " "
-p "# set the replicas using the cli"
 pe "kpt cfg set helloworld replicas 3"
 
 echo " "
-p "# view the updated values"
-pe "kpt cfg list-setters helloworld replicas"
+p "# format configuration"
+pe "kpt cfg fmt helloworld"
 
-echo " "
-p "# view the updated configuration"
-pe "git diff"
-pe "git add . && git commit -m 'change replicas to 3'"
-
-pe "clear"
+p "# for more information see 'kpt help cfg'"
+p "kpt help cfg"

@@ -1,2 +1,0 @@
-{"version": 2, "width": 192, "height": 28, "timestamp": 1578979772, "idle_time_limit": 1.0, "env": {"SHELL": "/bin/bash", "TERM": "xterm-256color"}}
-[0.007887, "o", "sh: ./config.sh.sh: No such file or directory\r\n"]

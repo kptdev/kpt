@@ -57,4 +57,4 @@ graph structure can also be selected explicitly using the '--graph-structure' fl
 
 ###
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/config-tree.gif "kpt cfg tree"
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
