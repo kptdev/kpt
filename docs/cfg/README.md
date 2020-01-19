@@ -57,6 +57,10 @@ Programmatically print and modify raw json or yaml Resource Configuration
     $ kpt cfg set helloworld replicas 3
     set 1 fields
 
+### Also See Command Groups
+
+[fn], [pkg]
+
 ### 
 
 [annotate]: annotate.md
@@ -73,3 +77,5 @@ Programmatically print and modify raw json or yaml Resource Configuration
 [set]: set.md
 [tree]: tree.md
 
+[fn]: ../fn/README.md
+[pkg]: ../pkg/README.md
