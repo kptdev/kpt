@@ -28,5 +28,7 @@ List setters for Resources.
         NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
     name-prefix   ''            PREFIX    string   2
 
+###
+
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
 [tutorial-script]: ../../gifs/cfg-set.sh
