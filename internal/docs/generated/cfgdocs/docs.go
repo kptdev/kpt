@@ -200,7 +200,12 @@ var GrepExamples = `
     kpt cfg grep "metadata.name=nginx" my-dir/ | kpt cfg tree
 
     # look for Resources matching a specific container image
-    kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kpt cfg tree`
+    kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" my-dir/ | kpt cfg tree
+
+###
+
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-grep.gif "kpt cfg grep"
+[tutorial-script]: ../../gifs/cfg-grep.sh`
 
 var ListSettersShort = `List setters for Resources.`
 var ListSettersLong = `
@@ -218,10 +223,13 @@ var ListSettersExamples = `
   Show setters:
 
     $ kpt cfg list-setters DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
+        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
     name-prefix   ''            PREFIX    string   2
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"`
+###
+
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
+[tutorial-script]: ../../gifs/cfg-set.sh`
 
 var MergeShort = `Merge Resource configuration files`
 var MergeLong = `
@@ -314,7 +322,7 @@ var SetExamples = `
   List setters: Show the possible setters
 
     $ config set DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
+        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
     name-prefix   ''            PREFIX    string   2
 
   Perform set: set a new value, owner and description
@@ -325,7 +333,7 @@ var SetExamples = `
   List setters: Show the new values
 
     $ config set DIR/
-        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY 
+        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY
     name-prefix   'test environment'   test     string   2          dev
 
   New Resource YAML:
@@ -341,7 +349,10 @@ var SetExamples = `
         name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
     ...
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"`
+###
+
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
+[tutorial-script]: ../../gifs/cfg-set.sh`
 
 var TreeShort = `Display Resource structure from a directory or stdin.`
 var TreeLong = `
@@ -393,5 +404,5 @@ var TreeExamples = `
 
 ###
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
-[demo-script]: ../../gifs/cfg-tree.sh`
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
+[tutorial-script]: ../../gifs/cfg-tree.sh`

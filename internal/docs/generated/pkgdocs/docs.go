@@ -406,7 +406,8 @@ var SyncSetExamples = `
     kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
         hello-world --strategy=resource-merge
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"`
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
+[tutorial-script]: ../../gifs/pkg-sync.sh`
 
 var SyncShort = `Sync package dependencies using a manifest`
 var SyncLong = `
@@ -422,16 +423,16 @@ the ` + "`" + `get` + "`" + ` and ` + "`" + `update` + "`" + ` commands.
     kpt pkg sync LOCAL_PKG_DIR [flags]
 
   LOCAL_PKG_DIR:
-  
+
     Local package with dependencies to sync.  Directory must exist and contain a Kptfile.
 
 #### Env Vars
 
   KPT_CACHE_DIR:
-  
+
     Controls where to cache remote packages during updates.
     Defaults to ~/.kpt/repos/
-    
+
 #### Dependencies
 
 For each dependency in the Kptfile, ` + "`" + `sync` + "`" + ` will ensure that it exists locally with the
@@ -504,7 +505,8 @@ var SyncExamples = `
     # sync the dependencies
     kpt pkg sync my-package-dir/
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"`
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
+[tutorial-script]: ../../gifs/pkg-sync.sh`
 
 var UpdateShort = `Update a local package with changes from a remote source repo`
 var UpdateLong = `

@@ -92,5 +92,7 @@ To create a custom setter for a field see: `kustomize help config create-setter`
         name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
     ...
 
+###
+
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
 [tutorial-script]: ../../gifs/cfg-set.sh

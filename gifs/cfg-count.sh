@@ -46,8 +46,13 @@ p "# count can summarize Resource counts from other sources using stdin"
 pe "kubectl get all -o yaml | kpt cfg count"
 
 echo " "
+p "# count can be useful for understanding larger repos"
+pe "kpt pkg get https://github.com/kubernetes/examples/staging examples"
+pe "kpt pkg count examples"
+
+echo " "
 p "# count can also print the total Resource count without grouping by kind"
-pe "kpt cfg count helloworld --kind=false"
+pe "kpt cfg count examples --kind=false"
 
 p "# for more information see 'kpt help cfg count'"
 p "kpt help cfg count"
