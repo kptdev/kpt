@@ -2,9 +2,12 @@
 
 Sync package dependencies using a manifest
 
-![alt text][demo]
+![alt text][tutorial]
 
-[image-script](../../gifs/pkg-sync.sh)
+    # run the tutorial from the cli
+    kpt tutorial pkg sync
+
+[tutorial-script]
 
 ### Synopsis
 
@@ -20,16 +23,16 @@ the `get` and `update` commands.
     kpt pkg sync LOCAL_PKG_DIR [flags]
 
   LOCAL_PKG_DIR:
-  
+
     Local package with dependencies to sync.  Directory must exist and contain a Kptfile.
 
 #### Env Vars
 
   KPT_CACHE_DIR:
-  
+
     Controls where to cache remote packages during updates.
     Defaults to ~/.kpt/repos/
-    
+
 #### Dependencies
 
 For each dependency in the Kptfile, `sync` will ensure that it exists locally with the
@@ -103,4 +106,5 @@ against the directory.
     # sync the dependencies
     kpt pkg sync my-package-dir/
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
+[tutorial-script]: ../../gifs/pkg-sync.sh
