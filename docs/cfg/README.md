@@ -2,9 +2,11 @@
 
 View and Modify Resource Configuration.
 
-![alt text][demo]
+![alt text][tutorial]
 
-[image-script]
+    kpt tutorial cfg
+
+[tutorial-script]
 
 ### Commands
 
@@ -63,16 +65,14 @@ Programmatically print and modify raw json or yaml Resource Configuration
 
 [fn], [pkg]
 
-### 
+###
 
 [annotate]: annotate.md
 [cat]: cat.md
 [count]: count.md
 [create-setter]: create-setter.md
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg.gif "kpt cfg"
 [fmt]: fmt.md
 [grep]: grep.md
-[image-script]: ../../gifs/cfg.sh
 [list-setters]: list-setters.md
 [merge]: merge.md
 [merge3]: merge3.md
@@ -81,3 +81,6 @@ Programmatically print and modify raw json or yaml Resource Configuration
 
 [fn]: ../fn/README.md
 [pkg]: ../pkg/README.md
+
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg.gif "kpt cfg"
+[tutorial-script]: ../../gifs/cfg.sh
