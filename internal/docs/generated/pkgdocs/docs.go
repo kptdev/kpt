@@ -20,8 +20,6 @@ var READMELong = `
 Packages are collections of Resource configuration stored in git repositories.
 They may be an entire repo, or a subdirectory within a repo.
 
-Commands: [desc], [diff], [get], [init], [man], [sync], [update]
-
 | Command  | Description                             |
 |----------|-----------------------------------------|
 | [desc]   | print package origin                    |

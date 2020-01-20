@@ -2,7 +2,10 @@
 
 ![alt text][demo]
 
-[image-script]
+[tutorial-script]
+
+    # run the tutorial from the cli
+    kpt tutorial
 
 ### Command Groups
 
@@ -132,5 +135,5 @@ Push Resources to a cluster.
 [pkg]: pkg/README.md
 [cfg]: cfg/README.md
 [fn]: fn/README.md
-[image-script]: ../gifs/kpt.sh
+[tutorial-script]: ../gifs/kpt.sh
 [svr]: svr/README.md

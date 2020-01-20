@@ -19,11 +19,41 @@
 . ../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
-git init
+git init > /dev/null
 
 stty rows 90 cols 20
 
-export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
+export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
+kpt pkg get $PKG helloworld > /dev/null
+git add . > /dev/null
+git commit -m 'fetched helloworld' > /dev/null
+kpt svr apply -R -f helloworld > /dev/null
+
 
 # start demo
 clear
+
+echo "# start with helloworld package"
+echo "$ kpt pkg desc helloworld"
+kpt pkg desc helloworld
+
+echo " "
+p "# 'kpt cfg annotate' sets annotations on Resource configuration"
+pe "kpt cfg tree helloworld --field 'metadata.annotations.foo'"
+pe "kpt cfg annotate helloworld --kv foo=bar"
+pe "kpt cfg tree helloworld --field 'metadata.annotations.foo'"
+
+echo " "
+p "# which Resources are annotated may be filtered by apiVersion, kind, name and namespace"
+pe "kpt cfg tree helloworld --field 'metadata.annotations.baz'"
+pe "kpt cfg annotate helloworld --kv baz=qux --kind Service"
+pe "kpt cfg tree helloworld --field 'metadata.annotations.baz'"
+
+echo " "
+p "# multiple annotations may be specified at once"
+pe "kpt cfg tree helloworld --field metadata.annotations.a --field metadata.annotations.b"
+pe "kpt cfg annotate helloworld --kv a=c --kv b=d"
+pe "kpt cfg tree helloworld --field metadata.annotations.a --field metadata.annotations.b"
+
+p "# for more information see 'kpt help cfg annotate'"
+p "kpt help cfg annotate"

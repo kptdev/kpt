@@ -19,9 +19,6 @@ var READMEShort = `View and Modify Resource Configuration.`
 var READMELong = `
 Programmatically print and modify raw json or yaml Resource Configuration
 
-Commands: [annotate], [cat], [count], [create-setter], [fmt], [grep], [list-setters],
-[merge], [merge3], [set], [tree]
-
 | Command        | Description                                   |
 |----------------|-----------------------------------------------|
 | [annotate]     | set ` + "`" + `metadata.annotation` + "`" + `s on Resources       |
@@ -75,14 +72,15 @@ var AnnotateExamples = `
     # set an annotation on all Resources: 'key: value'
     kpt cfg annotate DIR --kv key=value
 
-    # set an annotation on all Service Resource
+    # set an annotation on all Service Resources
     kpt cfg annotate DIR --kv key=value --kind Service
 
-    # set an annotation on the foo Service Resource
+    # set an annotation on the foo Service Resource only
     kpt cfg annotate DIR --kv key=value --kind Service --name foo
 
     # set multiple annotations
-    kpt cfg annotate DIR --kv key1=value1 --kv key2=value2`
+    kpt cfg annotate DIR --kv key1=value1 --kv key2=value2
+`
 
 var CatShort = `Print Resource Config from a local directory.`
 var CatLong = `
@@ -390,4 +388,5 @@ var TreeExamples = `
 
 ###
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"`
+[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
+[demo-script]: ../../gifs/cfg-tree.sh`

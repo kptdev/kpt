@@ -20,8 +20,6 @@ var READMELong = `
 Functions are executables packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
 
-Commands: [run], [sink], [source]
-
 | Command   | Description                                             |
 |-----------|---------------------------------------------------------|
 | [run]     | run containers locally to generate and transform config |
