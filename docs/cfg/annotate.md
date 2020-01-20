@@ -2,9 +2,11 @@
 
 Set an annotation on one or more Resources
 
-![alt text][demo]
+![alt text][tutorial]
 
-[demo-script](../../gifs/cfg-tree.sh)
+    kpt tutorial cfg annotate
+
+[tutorial-script]
 
 ### Synopsis
 
@@ -27,6 +29,6 @@ Set an annotation on one or more Resources
 
 ### 
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-annotate.gif "kpt cfg annotate"
-[demo-script]: ../../gifs/cfg-annotate.sh
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-annotate.gif "kpt cfg annotate"
+[tutorial-script]: ../../gifs/cfg-annotate.sh
 

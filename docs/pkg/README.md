@@ -2,9 +2,12 @@
 
 Fetch, update and sync packages using git
 
-![alt text][demo]
+![alt text][tutorial]
 
-[image-script]
+    # run the tutorial from the cli
+    kpt tutorial pkg
+
+[tutorial-script]
 
 ### Commands
  
@@ -122,13 +125,13 @@ They may be an entire repo, or a subdirectory within a repo.
 
 [apply]: ../svr/apply.md
 [cfg]: ../cfg/README.md
-[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg.gif "kpt pkg"
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg.gif "kpt pkg"
 [desc]: desc.md
 [diff]: diff.md
 [fn]: ../fn/README.md
 [functions]: ../fn/README.md
 [get]: get.md
-[image-script]: ../../gifs/pkg.sh
+[tutorial-script]: ../../gifs/pkg.sh
 [init]: init.md
 [man]: man.md
 [setters]: ../cfg/set.md

@@ -565,4 +565,8 @@ var UpdateExamples = `
     git add my-package-dir/
     git commit -m "package updates"
     kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
-`
+
+###
+
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"
+[tutorial-script]: ../../gifs/pkg-update.sh`

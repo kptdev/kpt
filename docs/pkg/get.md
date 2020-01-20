@@ -2,9 +2,12 @@
 
 Fetch a package from a git repository
 
-![alt text][demo]
+![alt text][tutorial]
 
-[image-script](../../gifs/pkg-get.sh)
+    # run the tutorial from the cli
+    kpt tutorial pkg get
+
+[tutorial-script]
 
 ### Synopsis
 
@@ -66,4 +69,5 @@ Fetch a package from a git repository
 
 ### 
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"
+[tutorial-script]: ../../gifs/pkg-get.sh

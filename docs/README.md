@@ -1,11 +1,11 @@
 ## kpt
 
-![alt text][demo]
-
-[tutorial-script]
+![alt text][tutorial]
 
     # run the tutorial from the cli
     kpt tutorial
+
+[tutorial-script]
 
 ### Command Groups
 
@@ -131,7 +131,7 @@ Push Resources to a cluster.
 
 ### 
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/kpt.gif "kpt"
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/kpt.gif "kpt"
 [pkg]: pkg/README.md
 [cfg]: cfg/README.md
 [fn]: fn/README.md
