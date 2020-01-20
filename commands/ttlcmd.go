@@ -15,21 +15,31 @@
 package commands
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/svrdocs"
+	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/ttldocs"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/kubectl/kubectlcobra"
 	"sigs.k8s.io/kustomize/cmd/resource/status"
 )
 
-func GetSvrCommand(name string) *cobra.Command {
+func GetTTLCommand(name string) *cobra.Command {
 	cluster := &cobra.Command{
-		Use:     "svr",
-		Short:   svrdocs.READMEShort,
-		Long:    svrdocs.READMEShort + "\n" + svrdocs.READMELong,
-		Example: svrdocs.READMEExamples,
-		Aliases: []string{"server"},
+		Use:     "ttl",
+		Short:   ttldocs.READMEShort,
+		Long:    ttldocs.READMEShort + "\n" + ttldocs.READMELong,
+		Example: ttldocs.READMEExamples,
+		Aliases: []string{"tutorials"},
 		Hidden:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			p, err := exec.LookPath("asciinema")
+			if err != nil {
+				fmt.Fprint(os.Stderr, "must install asciinema to run tutorials: https://asciinema.org")
+				os.Exit(1)
+			}
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err
@@ -37,7 +47,16 @@ func GetSvrCommand(name string) *cobra.Command {
 			if h {
 				return cmd.Help()
 			}
-			return cmd.Usage()
+			if len(args) == 0 {
+				args = []string{"kpt"}
+			}
+			c := exec.Command(p, "play",
+				fmt.Sprintf("https://storage.googleapis.com/kpt-dev/docs/%s.cast",
+					strings.Join(args, "-")))
+			c.Stdin = cmd.InOrStdin()
+			c.Stdout = cmd.OutOrStdout()
+			c.Stderr = cmd.ErrOrStderr()
+			return c.Run()
 		},
 	}
 	cluster.AddCommand(status.StatusCommand())

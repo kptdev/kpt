@@ -13,6 +13,7 @@
 // limitations under the License.
 
 //go:generate $GOBIN/mdtogo docs/tutorials internal/docs/generated/tutorials --full=true --license=none
+//go:generate $GOBIN/mdtogo docs/ttl internal/docs/generated/ttldocs --license=none
 //go:generate $GOBIN/mdtogo docs/pkg internal/docs/generated/pkgdocs --license=none
 //go:generate $GOBIN/mdtogo docs/cfg internal/docs/generated/cfgdocs --license=none
 //go:generate $GOBIN/mdtogo docs/svr internal/docs/generated/svrdocs --license=none

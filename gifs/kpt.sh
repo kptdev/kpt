@@ -34,9 +34,8 @@ git add . && git commit -m 'helloworld package' > /dev/null
 
 echo " "
 p "# 'kpt cfg' commands display and modify local configuration files"
-pe "kpt cfg tree helloworld --image --resources"
-pe "kpt cfg annotate helloworld --kv tshirt-size=small --kind Deployment"
-pe "kpt cfg tree helloworld --image --resources --field metadata.annotations.tshirt-size"
+pe "kpt cfg tree helloworld --replicas --image"
+pe "kpt cfg set helloworld replicas 3"
 pe "git diff -c"
 git commit -a -m 'helloworld package' > /dev/null
 echo "$ git commit -a -m 'helloworld package'"
@@ -45,18 +44,18 @@ echo " "
 p "# 'kpt fn' commands generate, transform and validate configuration"
 p "# using functions packaged in containers (run locally)"
 pe "kpt cfg tree helloworld --resources"
+pe "kpt cfg annotate helloworld --kv tshirt-size=small --kind Deployment"
 pe "kpt fn run helloworld --image gcr.io/kustomize-functions/example-tshirt:v0.1.0"
 pe "kpt cfg tree helloworld --resources"
 
-git commit -a -m 'helloworld package' > /dev/null
-echo "$ git commit -a -m 'helloworld package'"
-
 echo " "
-p "# 'kpt svr' commands fetch and modify remote Resource state in the cluster"
-pe "kpt svr apply -R -f helloworld"
-pe "kubectl get deploy,service helloworld-gke"
-p "# or"
+p "# kpt is designed to integrate with tools developed by the Kubernetes project"
+p "# such as kubectl and kustomize"
 pe "kubectl apply -R -f helloworld"
+pe "kubectl get all helloworld-gke -o yaml | kpt cfg tree -image --ports"
+
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize helloworld-kustomize"
+pe "kustomize build package-examples/helloworld-kustomize/ | kpt cfg fmt"
 
 p "# for more information see 'kpt help'"
 p "kpt help"
