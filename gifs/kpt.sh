@@ -52,10 +52,11 @@ echo " "
 p "# kpt is designed to integrate with tools developed by the Kubernetes project"
 p "# such as kubectl and kustomize"
 pe "kubectl apply -R -f helloworld"
-pe "kubectl get all helloworld-gke -o yaml | kpt cfg tree -image --ports"
+pe "kubectl get all -o yaml | kpt cfg tree --image --ports"
 
 pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize helloworld-kustomize"
-pe "kustomize build package-examples/helloworld-kustomize/ | kpt cfg fmt"
+pe "kustomize build helloworld-kustomize/ | kpt cfg fmt"
+pe "kubectl apply -k helloworld-kustomize"
 
 p "# for more information see 'kpt help'"
 p "kpt help"
