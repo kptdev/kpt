@@ -2,9 +2,11 @@
 
 List setters for Resources.
 
-![alt text][demo]
+![alt text][tutorial]
 
-[demo-script](../../gifs/cfg-set.sh)
+    kpt tutorial cfg set
+
+[tutorial-script]
 
 ### Synopsis
 
@@ -23,7 +25,8 @@ List setters for Resources.
   Show setters:
 
     $ kpt cfg list-setters DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
+        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
     name-prefix   ''            PREFIX    string   2
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
+[tutorial-script]: ../../gifs/cfg-set.sh

@@ -2,9 +2,11 @@
 
 Display Resource structure from a directory or stdin.
 
-![alt text][demo]
+![alt text][tutorial]
 
-[demo-script](../../gifs/cfg-tree.sh)
+    kpt tutorial cfg tree
+
+[tutorial-script]
 
 ### Synopsis
 
@@ -57,5 +59,5 @@ graph structure can also be selected explicitly using the '--graph-structure' fl
 
 ###
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
-[demo-script]: ../../gifs/cfg-tree.sh
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
+[tutorial-script]: ../../gifs/cfg-tree.sh

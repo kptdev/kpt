@@ -2,9 +2,11 @@
 
 Set values on Resources fields values.
 
-![alt text][demo]
+![alt text][tutorial]
 
-[image-script](../../gifs/cfg-set.sh)
+    kpt tutorial cfg set
+
+[tutorial-script]
 
 ### Synopsis
 
@@ -63,7 +65,7 @@ To create a custom setter for a field see: `kustomize help config create-setter`
   List setters: Show the possible setters
 
     $ config set DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY  
+        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
     name-prefix   ''            PREFIX    string   2
 
   Perform set: set a new value, owner and description
@@ -74,7 +76,7 @@ To create a custom setter for a field see: `kustomize help config create-setter`
   List setters: Show the new values
 
     $ config set DIR/
-        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY 
+        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY
     name-prefix   'test environment'   test     string   2          dev
 
   New Resource YAML:
@@ -90,4 +92,5 @@ To create a custom setter for a field see: `kustomize help config create-setter`
         name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
     ...
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
+[tutorial-script]: ../../gifs/cfg-set.sh
