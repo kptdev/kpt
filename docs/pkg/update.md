@@ -2,9 +2,12 @@
 
 Update a local package with changes from a remote source repo
 
-![alt text][demo]
+![alt text][tutorial]
 
-[image-script](../../gifs/pkg-update.sh)
+    # run the tutorial from the cli
+    kpt tutorial pkg update
+
+[tutorial-script]
 
 ### Synopsis
 
@@ -67,6 +70,7 @@ Update a local package with changes from a remote source repo
     git commit -m "package updates"
     kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 
-### 
+###
 
-[demo]: https://storage.googleapis.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"
+[tutorial-script]: ../../gifs/pkg-update.sh

@@ -2,6 +2,12 @@
 
 Format yaml configuration files.
 
+![alt text][tutorial]
+
+    kpt tutorial cfg fmt
+
+[tutorial-script]
+
 ### Synopsis
 
 Fmt will format input by ordering fields and unordered list items in Kubernetes
@@ -40,3 +46,8 @@ field paths.
 
 	# format kustomize output
 	kustomize build | kpt cfg fmt
+
+### 
+
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-fmt.gif "kpt cfg fmt"
+[tutorial-script]: ../../gifs/cfg-fmt.sh

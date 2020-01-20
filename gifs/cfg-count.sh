@@ -19,11 +19,35 @@
 . ../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
-git init
+git init > /dev/null
 
 stty rows 90 cols 20
 
-export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
+export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
+kpt pkg get $PKG helloworld > /dev/null
+git add . > /dev/null
+git commit -m 'fetched helloworld' > /dev/null
+kpt svr apply -R -f helloworld > /dev/null
+
 
 # start demo
 clear
+
+echo "# start with helloworld package"
+echo "$ kpt pkg desc helloworld"
+kpt pkg desc helloworld
+
+echo " "
+p "# 'kpt cfg count' prints Resource counts grouped by kind"
+pe "kpt cfg count helloworld"
+
+echo " "
+p "# count can summarize Resource counts from other sources using stdin"
+pe "kubectl get all -o yaml | kpt cfg count"
+
+echo " "
+p "# count can also print the total Resource count without grouping by kind"
+pe "kpt cfg count helloworld --kind=false"
+
+p "# for more information see 'kpt help cfg count'"
+p "kpt help cfg count"

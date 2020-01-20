@@ -91,18 +91,23 @@ var CatLong = `
 `
 var CatExamples = `
     # print Resource config from a directory
-    kpt cfg cat my-dir/`
+    kpt cfg cat my-dir/
+`
 
 var CountShort = `Count Resources Config from a local directory.`
 var CountLong = `
-    kpt cfg count DIR
+    kpt cfg count [DIR]
 
   DIR:
     Path to local directory.
 `
 var CountExamples = `
     # print Resource counts from a directory
-    kpt cfg count my-dir/`
+    kpt cfg count my-dir/
+
+    # print Resource counts from a cluster
+    kubectl get all -o yaml | kpt cfg count
+`
 
 var CreateSetterShort = `Create a custom setter for a Resource field`
 var CreateSetterLong = `
@@ -129,8 +134,7 @@ var CreateSetterExamples = `
     # image tag, not the full image
     kpt cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
         --field image --description "current stable release"
-
-[demo]: https://storage.googleapis.com/kpt-dev/docs/cfg-create-setter.gif "kpt cfg create-setter"`
+`
 
 var FmtShort = `Format yaml configuration files.`
 var FmtLong = `
@@ -168,7 +172,8 @@ var FmtExamples = `
 	kubectl get -o yaml deployments | kpt cfg fmt
 
 	# format kustomize output
-	kustomize build | kpt cfg fmt`
+	kustomize build | kpt cfg fmt
+`
 
 var GrepShort = `Search for matching Resources in a directory or from stdin`
 var GrepLong = `
