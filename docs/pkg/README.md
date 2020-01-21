@@ -9,10 +9,6 @@ Fetch, update and sync packages using git
 
 [tutorial-script]
 
-### Commands
- 
-[desc], [diff], [get], [init], [man], [sync], [update]
-
 ### Synopsis
 
 Packages are collections of Resource configuration stored in git repositories.
@@ -24,7 +20,6 @@ They may be an entire repo, or a subdirectory within a repo.
 | [diff]   | diff a local package against upstream   |
 | [get]    | fetching packages from git repos        |
 | [init]   | initialize an empty package             |
-| [man]    | print package documentation             |
 | [sync]   | fetch and update packages declaratively |
 | [update] | applying upstream package updates       |
 
@@ -40,9 +35,9 @@ They may be an entire repo, or a subdirectory within a repo.
 1. [kpt pkg get](get.md) to get a package
 2. [kpt cfg set](../cfg/set.md), [kpt fn run](../fn/run.md) or `vi` to modify configuration
 3. `git add` && `git commit`
-4. `kubectl apply` or [kpt svr apply](../svr/apply.md) to a cluster: 
+4. `kubectl apply` to a cluster:
 5. [kpt pkg update](update.md) to pull in new changes
-6. `kubectl apply` or [kpt svr apply](../svr/apply.md) to a cluster
+6. `kubectl apply` to a cluster
 
 #### Example declarative package workflow
 
@@ -50,8 +45,8 @@ They may be an entire repo, or a subdirectory within a repo.
 2. [kpt pkg sync set](sync-set.md) dev version of a package
 3. [kpt pkg sync set](sync-set.md) prod version of a package
 4. `git add` && `git commit`
-5. [kpt svr apply --context=dev](../svr/apply.md) or `kubectl apply --context dev` apply to dev
-6. [kpt svr apply --context=prod](../svr/apply.md) or or `kubectl apply --context prod` apply to prod
+5. `kubectl apply --context dev` apply to dev
+6. `kubectl apply --context prod` apply to prod
 
 #### Architecture
 
@@ -121,7 +116,7 @@ They may be an entire repo, or a subdirectory within a repo.
 
 [cfg], [fn]
 
-### 
+###
 
 [apply]: ../svr/apply.md
 [cfg]: ../cfg/README.md
@@ -133,7 +128,6 @@ They may be an entire repo, or a subdirectory within a repo.
 [get]: get.md
 [tutorial-script]: ../../gifs/pkg.sh
 [init]: init.md
-[man]: man.md
 [setters]: ../cfg/set.md
 [sync]: sync.md
 [update]: update.md

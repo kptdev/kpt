@@ -26,7 +26,6 @@ They may be an entire repo, or a subdirectory within a repo.
 | [diff]   | diff a local package against upstream   |
 | [get]    | fetching packages from git repos        |
 | [init]   | initialize an empty package             |
-| [man]    | print package documentation             |
 | [sync]   | fetch and update packages declaratively |
 | [update] | applying upstream package updates       |
 
@@ -42,9 +41,9 @@ They may be an entire repo, or a subdirectory within a repo.
 1. [kpt pkg get](get.md) to get a package
 2. [kpt cfg set](../cfg/set.md), [kpt fn run](../fn/run.md) or ` + "`" + `vi` + "`" + ` to modify configuration
 3. ` + "`" + `git add` + "`" + ` && ` + "`" + `git commit` + "`" + `
-4. ` + "`" + `kubectl apply` + "`" + ` or [kpt svr apply](../svr/apply.md) to a cluster: 
+4. ` + "`" + `kubectl apply` + "`" + ` to a cluster:
 5. [kpt pkg update](update.md) to pull in new changes
-6. ` + "`" + `kubectl apply` + "`" + ` or [kpt svr apply](../svr/apply.md) to a cluster
+6. ` + "`" + `kubectl apply` + "`" + ` to a cluster
 
 #### Example declarative package workflow
 
@@ -52,8 +51,8 @@ They may be an entire repo, or a subdirectory within a repo.
 2. [kpt pkg sync set](sync-set.md) dev version of a package
 3. [kpt pkg sync set](sync-set.md) prod version of a package
 4. ` + "`" + `git add` + "`" + ` && ` + "`" + `git commit` + "`" + `
-5. [kpt svr apply --context=dev](../svr/apply.md) or ` + "`" + `kubectl apply --context dev` + "`" + ` apply to dev
-6. [kpt svr apply --context=prod](../svr/apply.md) or or ` + "`" + `kubectl apply --context prod` + "`" + ` apply to prod
+5. ` + "`" + `kubectl apply --context dev` + "`" + ` apply to dev
+6. ` + "`" + `kubectl apply --context prod` + "`" + ` apply to prod
 
 #### Architecture
 
@@ -308,26 +307,12 @@ Init will:
 `
 var InitExamples = `
     # writes Kptfile package meta if not found
-    kpt pkg init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"`
+    kpt pkg init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
 
-var ManShort = `Format and display package documentation if it exists`
-var ManLong = `
-    kpt pkg man LOCAL_PKG_DIR [flags]
+###
 
-  LOCAL_PKG_DIR:
-
-    local path to a package.
-
-If package documentation is missing from the package or 'man' is not installed,
-the command will fail.
-`
-var ManExamples = `
-    # display package documentation
-    kpt pkg man my-package/
-
-    # display subpackage documentation
-    kpt pkg man my-package/sub-package/
-`
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-init.gif "kpt pkg init"
+[tutorial-script]: ../../gifs/pkg-init.sh`
 
 var SyncSetShort = `Add a sync dependency to a Kptfile`
 var SyncSetLong = `

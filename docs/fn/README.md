@@ -2,10 +2,6 @@
 
 Run local containers against Resource configuration
 
-### Commands
-
-[run], [sink], [source]
-
 ### Synopsis
 
 Functions are executables packaged in container images which accept a collection of
@@ -70,7 +66,7 @@ There are several projects that may be used to quickly develop kpt functions:
 
 [cfg], [pkg]
 
-### 
+###
 
 [run]: run.md
 [source]: source.md

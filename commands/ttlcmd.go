@@ -33,7 +33,6 @@ func GetTTLCommand(name string) *cobra.Command {
 		Long:    ttldocs.READMEShort + "\n" + ttldocs.READMELong,
 		Example: ttldocs.READMEExamples,
 		Aliases: []string{"tutorials", "tutorial"},
-		Hidden:  true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, err := exec.LookPath("asciinema")
 			if err != nil {

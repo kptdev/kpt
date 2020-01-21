@@ -1,17 +1,12 @@
 ## cfg
 
-View and Modify Resource Configuration.
+Programmatically modify and view Resource configuration
 
 ![alt text][tutorial]
 
     kpt tutorial cfg
 
 [tutorial-script]
-
-### Commands
-
-[annotate], [cat], [count], [create-setter], [fmt], [grep],
-[list-setters], [set], [tree]
 
 ### Synopsis
 

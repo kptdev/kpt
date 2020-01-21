@@ -2,6 +2,13 @@
 
 Initialize suggested package meta for a local config directory
 
+![alt text][tutorial]
+
+    # run the tutorial from the cli
+    kpt tutorial pkg init
+
+[tutorial-script]
+
 ### Synopsis
 
 Any directory containing Kubernetes Resource Configuration may be treated as
@@ -46,3 +53,8 @@ Init will:
 
     # writes Kptfile package meta if not found
     kpt pkg init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
+
+###
+
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-init.gif "kpt pkg init"
+[tutorial-script]: ../../gifs/pkg-init.sh

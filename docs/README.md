@@ -7,6 +7,12 @@
 
 [tutorial-script]
 
+[tutorial]: https://storage.googleapis.com/kpt-dev/docs/kpt.gif "kpt"
+[pkg]: pkg/README.md
+[cfg]: cfg/README.md
+[fn]: fn/README.md
+[tutorial-script]: ../gifs/kpt.sh
+
 ### Synopsis
 
 *kpt* is a Kubernetes platform toolkit for packaging, customizing and applying Resource
@@ -121,12 +127,3 @@ Push Resources to a cluster.
 
     # learn about kpt
     $ kpt help
-
-###
-
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/kpt.gif "kpt"
-[pkg]: pkg/README.md
-[cfg]: cfg/README.md
-[fn]: fn/README.md
-[tutorial-script]: ../gifs/kpt.sh
-[svr]: svr/README.md
