@@ -22,12 +22,11 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/ttldocs"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/kubectl/kubectlcobra"
-	"sigs.k8s.io/kustomize/cmd/resource/status"
 )
 
 func GetTTLCommand(name string) *cobra.Command {
-	cluster := &cobra.Command{
+	var speed int
+	ttl := &cobra.Command{
 		Use:     "ttl",
 		Short:   ttldocs.READMEShort,
 		Long:    ttldocs.READMEShort + "\n" + ttldocs.READMELong,
@@ -49,7 +48,7 @@ func GetTTLCommand(name string) *cobra.Command {
 			if len(args) == 0 {
 				args = []string{"kpt"}
 			}
-			c := exec.Command(p, "play",
+			c := exec.Command(p, "play", "--speed", fmt.Sprintf("%d", speed),
 				fmt.Sprintf("https://storage.googleapis.com/kpt-dev/docs/%s.cast",
 					strings.Join(args, "-")))
 			c.Stdin = cmd.InOrStdin()
@@ -58,7 +57,7 @@ func GetTTLCommand(name string) *cobra.Command {
 			return c.Run()
 		},
 	}
-	cluster.AddCommand(status.StatusCommand())
-	cluster.AddCommand(kubectlcobra.GetCommand(nil).Commands()...)
-	return cluster
+	ttl.Flags().IntVarP(
+		&speed, "speed", "s", 2, " playback speedup (can be fractional)")
+	return ttl
 }
