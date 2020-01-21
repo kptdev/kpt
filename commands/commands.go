@@ -21,20 +21,18 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
-	"github.com/GoogleContainerTools/kpt/internal/cmdman"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
-	"github.com/GoogleContainerTools/kpt/internal/cmdtutorials"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
 
 func GetAnthosCommands(name string) []*cobra.Command {
-	c := append([]*cobra.Command{cmddesc.NewCommand(name),
+	c := []*cobra.Command{cmddesc.NewCommand(name),
 		cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdman.NewCommand(name), cmdsync.NewCommand(name),
+		cmdsync.NewCommand(name),
 		cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
-	}, cmdtutorials.Tutorials(name)...)
+	}
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)
@@ -72,18 +70,11 @@ func NormalizeCommand(c ...*cobra.Command) {
 func GetKptCommands(name string) []*cobra.Command {
 	var c []*cobra.Command
 	cfgCmd := GetConfigCommand(name)
-	httpCmd := GetSvrCommand(name)
 	fnCmd := GetFnCommand(name)
 	pkgCmd := GetPkgCommand(name)
 	ttlCmd := GetTTLCommand(name)
 
-	//tutorials := &cobra.Command{
-	//	Use:   "tutorials",
-	//	Short: "Tutorials for using kpt",
-	//}
-	//
-	//tutorials.AddCommand(cmdtutorials.Tutorials(name)...)
-	c = append(c, httpCmd, cfgCmd, pkgCmd, fnCmd, ttlCmd)
+	c = append(c, cfgCmd, pkgCmd, fnCmd, ttlCmd)
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)

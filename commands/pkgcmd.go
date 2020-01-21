@@ -19,7 +19,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
-	"github.com/GoogleContainerTools/kpt/internal/cmdman"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -44,8 +43,9 @@ func GetPkgCommand(name string) *cobra.Command {
 			return cmd.Usage()
 		},
 	}
-	pkg.AddCommand(cmddesc.NewCommand(name), cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdman.NewCommand(name), cmdsync.NewCommand(name), cmdupdate.NewCommand(name),
-		cmddiff.NewCommand(name))
+	pkg.AddCommand(
+		cmddesc.NewCommand(name), cmdget.NewCommand(name), cmdinit.NewCommand(name),
+		cmdsync.NewCommand(name), cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
+	)
 	return pkg
 }

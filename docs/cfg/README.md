@@ -1,17 +1,12 @@
 ## cfg
 
-View and Modify Resource Configuration.
+Programmatically modify and view Resource configuration
 
 ![alt text][tutorial]
 
     kpt tutorial cfg
 
 [tutorial-script]
-
-### Commands
-
-[annotate], [cat], [count], [create-setter], [fmt], [grep],
-[list-setters], [merge], [merge3], [set], [tree]
 
 ### Synopsis
 
@@ -26,8 +21,6 @@ Programmatically print and modify raw json or yaml Resource Configuration
 | [fmt]          | format Resource yaml                          |
 | [grep]         | filter Resources configuration                |
 | [list-setters] | list setters                                  |
-| [merge]        | merge Resources in one directory into another |
-| [merge3]       | perform 3-way merge between directories       |
 | [set]          | set one or more fields programmatically       |
 | [tree]         | print Resources using a tree structure        |
 
@@ -74,8 +67,6 @@ Programmatically print and modify raw json or yaml Resource Configuration
 [fmt]: fmt.md
 [grep]: grep.md
 [list-setters]: list-setters.md
-[merge]: merge.md
-[merge3]: merge3.md
 [set]: set.md
 [tree]: tree.md
 

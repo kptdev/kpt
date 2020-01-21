@@ -17,21 +17,18 @@ package overview
 
 var READMEShort = `![alt text][tutorial]`
 var READMELong = `
-*kpt* is a Kubernetes platform toolkit.
+*kpt* is a Kubernetes platform toolkit for packaging, customizing and applying Resource
+configuration.
+
+kpt **package artifacts are composed of Resource configuration**, rather than code or templates.
+However kpt does support **generating Resource configuration packages from arbitrary templates,
+DSLs, programs,** etc.
 
 | Command Group | Description                                       |
 |---------------|---------------------------------------------------|
 | [cfg]         | print and modify configuration files              |
 | [pkg]         | fetch and update configuration packages           |
 | [fn]          | generate, transform, validate configuration files |
-
-- It includes tools to package, customize and apply json or yaml configuration data.
-- It includes tools developed as part of the Kubernetes project as well as additional commands
-  specific to *kpt*.
-
-*kpt* package artifacts are composed of Resource configuration, rather than code or templates,
-however *kpt* supports using code or templates as solutions to generate *kpt* package artifacts,
-which may then be consumed by other tools as Resource configuration.
 
 ---
 
@@ -41,7 +38,7 @@ which may then be consumed by other tools as Resource configuration.
 |-------------------------|--------------------------|
 | git repository          | local files              |
 
-Flow: git repo -> kpt [pkg] -> local configuration or stdout
+**Data Flow**: git repo -> kpt [pkg] -> local files or stdout
 
 Publish and share configuration as yaml or json stored in git.
 
@@ -58,7 +55,7 @@ Publish and share configuration as yaml or json stored in git.
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
 
-Flow: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
+**Data Flow**: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
 
 Examine and craft your Resources using the commandline.
 
@@ -75,7 +72,7 @@ Examine and craft your Resources using the commandline.
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
 
-Flow:  local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout
+**Data Flow**:  local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout
 
 Run functional programs against Configuration to generate and modify Resources locally.
 
@@ -97,7 +94,7 @@ than statically compiled into kpt.*
 | local files or stdin    | apiserver                |
 | apiserver               | stdout                   |
 
-Flow: local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)
+**Data Flow**: local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)
 
 Push Resources to a cluster.
 
@@ -130,5 +127,4 @@ var READMEExamples = `
     service/helloworld-gke created
 
     # learn about kpt
-    $ kpt help
-`
+    $ kpt help`

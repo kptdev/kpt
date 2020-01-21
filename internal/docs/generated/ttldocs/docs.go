@@ -17,11 +17,15 @@ package ttldocs
 
 var READMEShort = `Run command tutorials`
 var READMELong = `
-Tutorials simulate running a sequence of commands and their output.
+Tutorials simulates running a sequence of commands and their output by playing
+an asciinema cast.
 
 Requires [asciinema].
 `
 var READMEExamples = `
-    # run the tutorial for ` + "`" + `kpt cfg annotate1
+    # run the tutorial for ` + "`" + `kpt cfg annotate` + "`" + `
     kpt ttl cfg annotate
-`
+
+###
+
+[asciinema]: https://asciinema.org/docs/usage`

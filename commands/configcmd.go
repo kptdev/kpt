@@ -74,16 +74,6 @@ func GetConfigCommand(name string) *cobra.Command {
 	listSetters.Long = cfgdocs.ListSettersShort + "\n" + cfgdocs.ListSettersLong
 	listSetters.Example = cfgdocs.ListSettersExamples
 
-	merge := configcobra.Merge(name)
-	merge.Short = cfgdocs.MergeShort
-	merge.Long = cfgdocs.MergeShort + "\n" + cfgdocs.MergeLong
-	merge.Example = cfgdocs.MergeExamples
-
-	merge3 := configcobra.Merge3(name)
-	merge3.Short = cfgdocs.Merge3Short
-	merge3.Long = cfgdocs.Merge3Short + "\n" + cfgdocs.Merge3Long
-	merge3.Example = cfgdocs.Merge3Examples
-
 	set := configcobra.Set(name)
 	set.Short = cfgdocs.SetShort
 	set.Long = cfgdocs.SetShort + "\n" + cfgdocs.SetLong
@@ -95,6 +85,6 @@ func GetConfigCommand(name string) *cobra.Command {
 	tree.Example = cfgdocs.TreeExamples
 
 	cfgCmd.AddCommand(an, cat, count, createSetter, fmt,
-		grep, listSetters, merge, merge3, set, tree)
+		grep, listSetters, set, tree)
 	return cfgCmd
 }
