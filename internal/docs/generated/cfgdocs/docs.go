@@ -28,8 +28,6 @@ Programmatically print and modify raw json or yaml Resource Configuration
 | [fmt]          | format Resource yaml                          |
 | [grep]         | filter Resources configuration                |
 | [list-setters] | list setters                                  |
-| [merge]        | merge Resources in one directory into another |
-| [merge3]       | perform 3-way merge between directories       |
 | [set]          | set one or more fields programmatically       |
 | [tree]         | print Resources using a tree structure        |
 `
@@ -230,41 +228,6 @@ var ListSettersExamples = `
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
 [tutorial-script]: ../../gifs/cfg-set.sh`
-
-var MergeShort = `Merge Resource configuration files`
-var MergeLong = `
-Merge reads Kubernetes Resource yaml configuration files from stdin or sources packages and write
-the result to stdout or a destination package.
-
-Resources are merged using the Resource [apiVersion, kind, name, namespace] as the key.  If any of
-these are missing, merge will default the missing values to empty.
-
-Resources specified later are high-precedence (the source) and Resources specified
-earlier are lower-precedence (the destination).
-
-For information on merge rules, run:
-
-	kpt cfg docs merge
-`
-var MergeExamples = `
-    cat resources_and_patches.yaml | kpt cfg merge > merged_resources.yaml`
-
-var Merge3Short = `Merge diff of Resource configuration files into a destination (3-way)`
-var Merge3Long = `
-Merge3 performs a 3-way merge by applying the diff between 2 sets of Resources to a 3rd set.
-
-Merge3 may be for rebasing changes to a forked set of configuration -- e.g. compute the difference between the original
-set of Resources that was forked and an updated set of those Resources, then apply that difference to the fork.
-
-If a field value differs between the ORIGINAL_DIR and UPDATED_DIR, the value from the UPDATED_DIR is taken and applied
-to the Resource in the DEST_DIR.
-
-For information on merge rules, run:
-
-	kpt cfg docs-merge3
-`
-var Merge3Examples = `
-    kpt cfg merge3 --ancestor a/ --from b/ --to c/`
 
 var SetShort = `Set values on Resources fields values.`
 var SetLong = `
