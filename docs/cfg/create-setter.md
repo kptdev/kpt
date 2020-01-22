@@ -101,4 +101,4 @@ A single field value may have multiple setters applied to it for different parts
 ### 
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-create-setter.gif "kpt cfg create-setter"
-[tutorial-script]: ../../gifs/cfg-create-setter.sh
+[tutorial-script]: ../gifs/cfg-create-setter.sh

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export PROMPT_TIMEOUT=3600
 
 ########################
 # include the magic
@@ -51,7 +52,7 @@ pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-example
 pe "git diff"
 pe "kpt pkg sync ."
 pe "git status"
-pe "config tree helloworld-staging"
+pe "kpt cfg tree helloworld-staging"
 pe "git add . && git commit -m 'add helloworld package for staging'"
 
 pe "diff helloworld-prod helloworld-staging"

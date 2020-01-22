@@ -73,4 +73,4 @@ Update a local package with changes from a remote source repo
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"
-[tutorial-script]: ../../gifs/pkg-update.sh
+[tutorial-script]: ../gifs/pkg-update.sh

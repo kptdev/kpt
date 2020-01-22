@@ -50,4 +50,4 @@ field paths.
 ### 
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-fmt.gif "kpt cfg fmt"
-[tutorial-script]: ../../gifs/cfg-fmt.sh
+[tutorial-script]: ../gifs/cfg-fmt.sh

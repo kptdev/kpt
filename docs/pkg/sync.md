@@ -107,4 +107,4 @@ against the directory.
     kpt pkg sync my-package-dir/
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
-[tutorial-script]: ../../gifs/pkg-sync.sh
+[tutorial-script]: ../gifs/pkg-sync.sh

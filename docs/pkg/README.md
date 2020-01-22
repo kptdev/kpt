@@ -116,7 +116,7 @@ They may be an entire repo, or a subdirectory within a repo.
 
 [cfg], [fn]
 
-###
+### 
 
 [apply]: ../svr/apply.md
 [cfg]: ../cfg/README.md
@@ -126,7 +126,7 @@ They may be an entire repo, or a subdirectory within a repo.
 [fn]: ../fn/README.md
 [functions]: ../fn/README.md
 [get]: get.md
-[tutorial-script]: ../../gifs/pkg.sh
+[tutorial-script]: ../gifs/pkg.sh
 [init]: init.md
 [setters]: ../cfg/set.md
 [sync]: sync.md

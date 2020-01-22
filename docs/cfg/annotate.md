@@ -30,5 +30,5 @@ Set an annotation on one or more Resources
 ### 
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-annotate.gif "kpt cfg annotate"
-[tutorial-script]: ../../gifs/cfg-annotate.sh
+[tutorial-script]: ../gifs/cfg-annotate.sh
 

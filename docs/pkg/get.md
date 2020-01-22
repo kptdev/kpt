@@ -70,4 +70,4 @@ Fetch a package from a git repository
 ### 
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"
-[tutorial-script]: ../../gifs/pkg-get.sh
+[tutorial-script]: ../gifs/pkg-get.sh

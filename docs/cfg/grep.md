@@ -39,4 +39,4 @@ Search for matching Resources in a directory or from stdin
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-grep.gif "kpt cfg grep"
-[tutorial-script]: ../../gifs/cfg-grep.sh
+[tutorial-script]: ../gifs/cfg-grep.sh

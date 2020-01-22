@@ -60,4 +60,4 @@ graph structure can also be selected explicitly using the '--graph-structure' fl
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
-[tutorial-script]: ../../gifs/cfg-tree.sh
+[tutorial-script]: ../gifs/cfg-tree.sh

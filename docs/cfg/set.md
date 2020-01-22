@@ -95,4 +95,4 @@ To create a custom setter for a field see: `kustomize help config create-setter`
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
-[tutorial-script]: ../../gifs/cfg-set.sh
+[tutorial-script]: ../gifs/cfg-set.sh

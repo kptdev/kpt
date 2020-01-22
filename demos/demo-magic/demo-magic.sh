@@ -18,7 +18,7 @@ TYPE_SPEED=20
 NO_WAIT=false
 
 # if > 0, will pause for this amount of seconds before automatically proceeding with any p or pe
-PROMPT_TIMEOUT=1
+PROMPT_TIMEOUT=${PROMPT_TIMEOUT:-1}
 
 # don't show command number unless user specifies it
 SHOW_CMD_NUMS=false

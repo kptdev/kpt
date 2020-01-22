@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export PROMPT_TIMEOUT=3600
 
 ########################
 # include the magic
@@ -42,13 +43,13 @@ pe "git add helloworld && git commit -m 'fetch helloworld package at v0.1.0'"
 
 pe "clear"
 echo "# print setters..."
-pe "kpt cfg set helloworld"
+pe "kpt cfg list-setters helloworld"
 
 echo "# change a value..."
 pe "kpt cfg set helloworld replicas 3 --set-by phil --description 'minimal HA mode'"
 
 echo "# print setters again..."
-pe "kpt cfg set helloworld"
+pe "kpt cfg list-setters helloworld"
 
 echo "# print its contents..."
 pe "kpt cfg tree helloworld --name --replicas"

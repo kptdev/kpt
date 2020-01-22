@@ -57,4 +57,4 @@ Init will:
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-init.gif "kpt pkg init"
-[tutorial-script]: ../../gifs/pkg-init.sh
+[tutorial-script]: ../gifs/pkg-init.sh
