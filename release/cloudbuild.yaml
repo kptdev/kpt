@@ -81,7 +81,7 @@ steps:
         path: /root
 artifacts:
   objects:
-    location: 'gs://kpt-dev/'
+    location: 'gs://kpt-dev/releases'
     paths: ['/workspace/darwin/kpt_darwin_amd64-${TAG_NAME}.tar.gz',
             '/workspace/linux/kpt_linux_amd64-${TAG_NAME}.tar.gz',
             '/workspace/windows/kpt_windows_amd64-${TAG_NAME}.tar.gz']
