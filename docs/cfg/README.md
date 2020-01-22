@@ -58,7 +58,7 @@ Programmatically print and modify raw json or yaml Resource Configuration
 
 [fn], [pkg]
 
-###
+### 
 
 [annotate]: annotate.md
 [cat]: cat.md
@@ -74,4 +74,4 @@ Programmatically print and modify raw json or yaml Resource Configuration
 [pkg]: ../pkg/README.md
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg.gif "kpt cfg"
-[tutorial-script]: ../../gifs/cfg.sh
+[tutorial-script]: ../gifs/cfg.sh

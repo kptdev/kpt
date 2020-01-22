@@ -23,4 +23,4 @@ Print Resource Config from a local directory.
 ### 
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-cat.gif "kpt cfg cat"
-[tutorial-script]: ../../gifs/cfg-cat.sh
+[tutorial-script]: ../gifs/cfg-cat.sh

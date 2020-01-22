@@ -203,7 +203,7 @@ var GrepExamples = `
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-grep.gif "kpt cfg grep"
-[tutorial-script]: ../../gifs/cfg-grep.sh`
+[tutorial-script]: ../gifs/cfg-grep.sh`
 
 var ListSettersShort = `List setters for Resources.`
 var ListSettersLong = `
@@ -227,7 +227,7 @@ var ListSettersExamples = `
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
-[tutorial-script]: ../../gifs/cfg-set.sh`
+[tutorial-script]: ../gifs/cfg-set.sh`
 
 var SetShort = `Set values on Resources fields values.`
 var SetLong = `
@@ -315,7 +315,7 @@ var SetExamples = `
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
-[tutorial-script]: ../../gifs/cfg-set.sh`
+[tutorial-script]: ../gifs/cfg-set.sh`
 
 var TreeShort = `Display Resource structure from a directory or stdin.`
 var TreeLong = `
@@ -368,4 +368,4 @@ var TreeExamples = `
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
-[tutorial-script]: ../../gifs/cfg-tree.sh`
+[tutorial-script]: ../gifs/cfg-tree.sh`

@@ -11,7 +11,7 @@
 [pkg]: pkg/README.md
 [cfg]: cfg/README.md
 [fn]: fn/README.md
-[tutorial-script]: ../gifs/kpt.sh
+[tutorial-script]: gifs/kpt.sh
 
 ### Synopsis
 

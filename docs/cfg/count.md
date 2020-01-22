@@ -26,4 +26,4 @@ Count Resources Config from a local directory.
 ### 
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-count.gif "kpt cfg count"
-[tutorial-script]: ../../gifs/cfg-count.sh
+[tutorial-script]: ../gifs/cfg-count.sh

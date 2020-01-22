@@ -312,7 +312,7 @@ var InitExamples = `
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-init.gif "kpt pkg init"
-[tutorial-script]: ../../gifs/pkg-init.sh`
+[tutorial-script]: ../gifs/pkg-init.sh`
 
 var SyncSetShort = `Add a sync dependency to a Kptfile`
 var SyncSetLong = `
@@ -392,7 +392,7 @@ var SyncSetExamples = `
         hello-world --strategy=resource-merge
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
-[tutorial-script]: ../../gifs/pkg-sync.sh`
+[tutorial-script]: ../gifs/pkg-sync.sh`
 
 var SyncShort = `Sync package dependencies using a manifest`
 var SyncLong = `
@@ -491,7 +491,7 @@ var SyncExamples = `
     kpt pkg sync my-package-dir/
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
-[tutorial-script]: ../../gifs/pkg-sync.sh`
+[tutorial-script]: ../gifs/pkg-sync.sh`
 
 var UpdateShort = `Update a local package with changes from a remote source repo`
 var UpdateLong = `
@@ -556,4 +556,4 @@ var UpdateExamples = `
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-update.gif "kpt pkg update"
-[tutorial-script]: ../../gifs/pkg-update.sh`
+[tutorial-script]: ../gifs/pkg-update.sh`

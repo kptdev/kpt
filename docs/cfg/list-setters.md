@@ -31,4 +31,4 @@ List setters for Resources.
 ###
 
 [tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
-[tutorial-script]: ../../gifs/cfg-set.sh
+[tutorial-script]: ../gifs/cfg-set.sh
