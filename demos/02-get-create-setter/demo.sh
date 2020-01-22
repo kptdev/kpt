@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export PROMPT_TIMEOUT=3600
 
 ########################
 # include the magic
@@ -37,26 +38,26 @@ pe "git add . && git commit -m 'helloworld'"
 
 echo ""
 echo "  ${bold}print the package contents...${normal}"
-pe "config tree helloworld --all"
+pe "kpt cfg tree helloworld --all"
 
 echo ""
 echo "  ${bold}list the setters...${normal}"
-pe "config set helloworld"
+pe "kpt cfg list-setters helloworld"
 
 echo ""
 echo "  ${bold}create a setter for the Service port protocol...${normal}"
-pe "config create-setter helloworld http-protocol TCP --field protocol --type string --kind Service"
+pe "kpt cfg create-setter helloworld http-protocol TCP --field protocol --type string --kind Service"
 
 echo ""
 echo "  ${bold}list the setters again -- the new one should show up...${normal}"
-pe "config set helloworld"
+pe "kpt cfg list-setters helloworld"
 
 echo ""
 echo "  ${bold}change the Service port protocol using the setter...${normal}"
-pe "config set helloworld http-protocol UDP --description 'justification for UDP' --set-by 'phil'"
+pe "kpt cfg set helloworld http-protocol UDP --description 'justification for UDP' --set-by 'phil'"
 
 echo ""
 echo "  ${bold}observe the updated configuration...${normal}"
-pe "config set helloworld"
-pe "config tree helloworld --ports"
+pe "kpt cfg list-setters helloworld"
+pe "kpt cfg tree helloworld --ports"
 pe "git diff"

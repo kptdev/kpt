@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export PROMPT_TIMEOUT=3600
 
 ########################
 # include the magic
@@ -41,5 +42,5 @@ echo ""
 echo "  ${bold}sync the package...${normal}"
 pe "kpt pkg sync ."
 pe "git status"
-pe "config tree helloworld-prod --all"
-pe "config tree helloworld-staging --all"
+pe "kpt cfg tree helloworld-prod --all"
+pe "kpt cfg tree helloworld-staging --all"

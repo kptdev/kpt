@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export PROMPT_TIMEOUT=3600
 
 ########################
 # include the magic
@@ -38,10 +39,10 @@ echo ""
 echo "  ${bold}fetch the package, automatically setting field values...${normal}"
 pe "KPT_SET_REPLICAS=3 kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld2"
 
-pe "config tree helloworld1 --replicas"
-pe "config tree helloworld2 --replicas"
+pe "kpt cfg tree helloworld1 --replicas"
+pe "kpt cfg tree helloworld2 --replicas"
 
-pe "config set helloworld1"
-pe "config set helloworld2"
+pe "kpt cfg list-setters helloworld1"
+pe "kpt cfg list-setters helloworld2"
 
 pe "diff helloworld1 helloworld2"

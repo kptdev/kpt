@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export PROMPT_TIMEOUT=3600
 
 ########################
 # include the magic
@@ -37,7 +38,7 @@ pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/hel
 
 echo ""
 echo "  ${bold}print the package resources...${normal}"
-pe "config tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
+pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
 
 echo ""
 echo "  ${bold}print the sizer...${normal}"
@@ -45,12 +46,12 @@ pe "cat helloworld/helloworld.yaml"
 
 echo ""
 echo "  ${bold}change the tshirt-size...${normal}"
-pe "config set helloworld"
-pe "config set helloworld tshirt-size large --description 'need lots of resources' --set-by phil"
-pe "config set helloworld"
-pe "config tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
-pe "config run helloworld"
+pe "kpt cfg list-setters helloworld"
+pe "kpt cfg set helloworld tshirt-size large --description 'need lots of resources' --set-by phil"
+pe "kpt cfg list-setters helloworld"
+pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
+pe "kpt fn run helloworld"
 
 echo ""
 echo "  ${bold}print the updated package resources...${normal}"
-pe "config tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
+pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"

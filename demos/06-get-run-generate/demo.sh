@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export PROMPT_TIMEOUT=3600
 
 ########################
 # include the magic
@@ -37,22 +38,22 @@ pe "cat helloworld/helloworld.yaml"
 
 echo ""
 echo "  ${bold}run the generator...${normal}"
-pe "config run helloworld"
+pe "kpt cfg run helloworld"
 
 echo ""
 echo "  ${bold}print the generated resources...${normal}"
-pe "config tree helloworld --all"
+pe "kpt cfg tree helloworld --all"
 
 echo ""
 echo "  ${bold}update the config...${normal}"
-pe "config set helloworld"
-pe "config set helloworld replicas 5"
-pe "config set helloworld"
+pe "kpt cfg list-setters helloworld"
+pe "kpt cfg set helloworld replicas 5"
+pe "kpt cfg list-setters helloworld"
 
 echo ""
 echo "  ${bold}run the generator...${normal}"
-pe "config run helloworld"
+pe "kpt cfg run helloworld"
 
 echo ""
 echo "  ${bold}print the updated resources...${normal}"
-pe "config tree helloworld --all"
+pe "kpt cfg tree helloworld --all"
