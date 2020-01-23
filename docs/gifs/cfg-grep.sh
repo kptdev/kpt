@@ -21,8 +21,6 @@
 cd $(mktemp -d)
 git init > /dev/null
 
-stty rows 90 cols 20
-
 kpt pkg get https://github.com/kubernetes/examples/staging examples > /dev/null
 git add . > /dev/null
 git commit -m 'fetched examples' > /dev/null

@@ -26,49 +26,57 @@ git init
 # hide the evidence
 clear
 
+pwd
+
 bold=$(tput bold)
 normal=$(tput sgr0)
-stty rows 50 cols 180
 
 # start demo
 clear
-echo "# fetch the package..."
+p "# fetch the package..."
 pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 
-echo "# print its contents..."
+echo " "
+p "# print its contents..."
 pe "kpt cfg tree helloworld --image --ports --name --replicas  --field 'metadata.labels'"
 
-echo "# add to git..."
+echo " "
+p "# add to git..."
 pe "git add helloworld && git commit -m 'fetch helloworld package at v0.1.0'"
 
-pe "clear"
-echo "# print setters..."
+echo " "
+p "# print setters..."
 pe "kpt cfg list-setters helloworld"
 
-echo "# change a value..."
+echo " "
+p "# change a value..."
 pe "kpt cfg set helloworld replicas 3 --set-by phil --description 'minimal HA mode'"
 
-echo "# print setters again..."
+echo " "
+p "# print setters again..."
 pe "kpt cfg list-setters helloworld"
 
-echo "# print its contents..."
+echo " "
+p "# print its contents..."
 pe "kpt cfg tree helloworld --name --replicas"
 
-echo "# view the diff..."
+echo " "
+p "# view the diff..."
 pe "git diff"
 
-echo "# commit changes..."
+echo " "
+p "# commit changes..."
 pe "git add helloworld && git commit -m 'set replicas to 3'"
 
-pe "clear"
-echo "# update the package to a new version..."
+echo " "
+p "# update the package to a new version..."
 pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
 
-echo "# view the diff..."
+echo " "
+p "# view the diff..."
 pe "git diff"
 
-echo "# print its contents..."
+echo " "
+p "# print its contents..."
 pe "kpt cfg tree helloworld --name --replicas --field 'metadata.labels'"
 
-echo "# update git..."
-pe "git add helloworld && git commit -m 'update helloworld package to v0.2.0'"

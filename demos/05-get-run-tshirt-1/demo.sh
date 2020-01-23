@@ -21,29 +21,38 @@ export PROMPT_TIMEOUT=3600
 . demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
-git init
 
 # hide the evidence
+git init
 clear
 
 pwd
 
+# Put your stuff here
 bold=$(tput bold)
 normal=$(tput sgr0)
 
 # start demo
 echo ""
 echo "  ${bold}fetch the package...${normal}"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld1"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@v0.1.0 helloworld"
 
 echo ""
-echo "  ${bold}fetch the package, automatically setting field values...${normal}"
-pe "KPT_SET_REPLICAS=3 kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld2"
+echo "  ${bold}print the package resources...${normal}"
+pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
 
-pe "kpt cfg tree helloworld1 --replicas"
-pe "kpt cfg tree helloworld2 --replicas"
+echo ""
+echo "  ${bold}print the sizer...${normal}"
+pe "cat helloworld/helloworld.yaml"
 
-pe "kpt cfg list-setters helloworld1"
-pe "kpt cfg list-setters helloworld2"
+echo ""
+echo "  ${bold}change the tshirt-size...${normal}"
+pe "kpt cfg list-setters helloworld"
+pe "kpt cfg set helloworld tshirt-size large --description 'need lots of resources' --set-by phil"
+pe "kpt cfg list-setters helloworld"
+pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
+pe "kpt fn run helloworld"
 
-pe "diff helloworld1 helloworld2"
+echo ""
+echo "  ${bold}print the updated package resources...${normal}"
+pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"

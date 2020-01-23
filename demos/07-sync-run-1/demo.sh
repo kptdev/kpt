@@ -20,6 +20,8 @@ export PROMPT_TIMEOUT=3600
 ########################
 . demo-magic/demo-magic.sh
 
+d=$(pwd)
+
 cd $(mktemp -d)
 git init
 
@@ -32,18 +34,15 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 # start demo
-echo ""
-echo "  ${bold}fetch the package...${normal}"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld1"
+cp ${d}/07-sync-run-1/Kptfile .
+echo "  ${bold}setup the local package...${normal}"
+pe "git add . && git commit -m 'package'"
+pe "cat Kptfile"
 
 echo ""
-echo "  ${bold}fetch the package, automatically setting field values...${normal}"
-pe "KPT_SET_REPLICAS=3 kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld2"
-
-pe "kpt cfg tree helloworld1 --replicas"
-pe "kpt cfg tree helloworld2 --replicas"
-
-pe "kpt cfg list-setters helloworld1"
-pe "kpt cfg list-setters helloworld2"
-
-pe "diff helloworld1 helloworld2"
+echo "  ${bold}sync the package...${normal}"
+pe "kpt pkg sync ."
+pe "git status"
+pe "kpt cfg tree helloworld-prod --all"
+pe "kpt cfg tree helloworld-staging --all"
+pe "diff helloworld-prod helloworld-staging"

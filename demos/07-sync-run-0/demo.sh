@@ -28,19 +28,29 @@ git init
 # hide the evidence
 clear
 
+pwd
+
 bold=$(tput bold)
 normal=$(tput sgr0)
-stty rows 50 cols 180
 
 # start demo
-cp ${d}/07-sync-run/Kptfile .
-echo "  ${bold}setup the local package...${normal}"
-pe "git add . && git commit -m 'package'"
+p "#  ${bold}setup the local package...${normal}"
+pe "kpt pkg init ."
+pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld-prod"
+pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-canary"
 pe "cat Kptfile"
 
 echo ""
-echo "  ${bold}sync the package...${normal}"
+p "#  ${bold}sync the packages...${normal}"
 pe "kpt pkg sync ."
 pe "git status"
-pe "kpt cfg tree helloworld-prod --all"
-pe "kpt cfg tree helloworld-staging --all"
+pe "git add . && git commit -m 'sync packages'"
+pe "kpt cfg tree . --field=metadata.labels"
+pe "diff helloworld-prod helloworld-canary"
+
+echo ""
+p "#  ${bold}promote from canary to prod...${normal}"
+pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-prod"
+pe "kpt pkg sync ."
+pe "kpt cfg tree . --field=metadata.labels"
+pe "diff helloworld-prod helloworld-canary"

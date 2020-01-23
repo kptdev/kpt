@@ -21,8 +21,6 @@
 cd $(mktemp -d)
 git init
 
-stty rows 90 cols 20
-
 # start demo
 clear
 echo " "

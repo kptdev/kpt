@@ -19,6 +19,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/functions/examples/util"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -119,8 +120,7 @@ func (f *HelloWorldFunction) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error)
 		util.Template{Input: f, Name: "helloworld-deployment", Template: helloWorldDeployment},
 		util.Template{Input: f, Name: "helloworld-service", Template: helloWorldService},
 	)
-	inputs = append(inputs, r...)
-	return inputs, nil
+	return filters.MergeFilter{}.Filter(append(inputs, r...))
 }
 
 const helloWorldDeployment = `

@@ -26,32 +26,34 @@ cd $(mktemp -d)
 git init
 clear
 
+pwd
+
 # Put your stuff here
 bold=$(tput bold)
 normal=$(tput sgr0)
-stty rows 50 cols 180
 
 # start demo
 echo ""
-echo "  ${bold}fetch the package...${normal}"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@v0.1.0 helloworld"
+p "#  ${bold}fetch the package...${normal}"
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0 helloworld"
 
 echo ""
-echo "  ${bold}print the package resources...${normal}"
+p "#  ${bold}print the package resources...${normal}"
+pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
+pe "cat helloworld/deploy.yaml"
+
+echo ""
+p "#  ${bold}annotate the Deployment with a tshirt-size...${normal}"
+pe "kpt cfg annotate helloworld --kv tshirt-size=small --kind Deployment"
 pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
 
 echo ""
-echo "  ${bold}print the sizer...${normal}"
-pe "cat helloworld/helloworld.yaml"
-
-echo ""
-echo "  ${bold}change the tshirt-size...${normal}"
-pe "kpt cfg list-setters helloworld"
-pe "kpt cfg set helloworld tshirt-size large --description 'need lots of resources' --set-by phil"
-pe "kpt cfg list-setters helloworld"
+p "#  ${bold}locally run the tshirt-size function against the package...${normal}"
+pe "kpt fn run helloworld --image gcr.io/kustomize-functions/example-tshirt:v0.1.0"
 pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
-pe "kpt fn run helloworld"
 
 echo ""
-echo "  ${bold}print the updated package resources...${normal}"
+p "#  ${bold}change the size from small to large...${normal}"
+pe "kpt cfg annotate helloworld --kv tshirt-size=large --kind Deployment"
+pe "kpt fn run helloworld --image gcr.io/kustomize-functions/example-tshirt:v0.1.0"
 pe "kpt cfg tree helloworld --resources --field 'metadata.annotations.tshirt-size'"
