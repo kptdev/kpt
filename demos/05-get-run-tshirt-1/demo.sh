@@ -26,10 +26,11 @@ cd $(mktemp -d)
 git init
 clear
 
+pwd
+
 # Put your stuff here
 bold=$(tput bold)
 normal=$(tput sgr0)
-stty rows 50 cols 180
 
 # start demo
 echo ""

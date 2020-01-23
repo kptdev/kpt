@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+stty rows 90 cols 20
+
 rm -f ./$1.cast ./$1.gif
 asciinema rec -i 1 -c ./$1.sh $1.cast
 asciicast2gif -s 2 -S 2 ./$1.cast $1.gif

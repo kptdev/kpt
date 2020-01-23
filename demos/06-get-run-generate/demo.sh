@@ -26,34 +26,41 @@ cd $(mktemp -d)
 git init
 clear
 
+pwd
+
 # start demo
 echo ""
-echo "  ${bold}fetch the package...${normal}"
+p "#  ${bold}fetch the package...${normal}"
 pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-generate@v0.2.0 helloworld"
 
 echo ""
-echo "  ${bold}print the package resources...${normal}"
+p "#  ${bold}print the package resources (only-generators)...${normal}"
 pe "config tree helloworld"
 pe "cat helloworld/helloworld.yaml"
 
 echo ""
-echo "  ${bold}run the generator...${normal}"
-pe "kpt cfg run helloworld"
+p "#  ${bold}run the generator...${normal}"
+pe "kpt fn run helloworld"
 
 echo ""
-echo "  ${bold}print the generated resources...${normal}"
-pe "kpt cfg tree helloworld --all"
+p "#  ${bold}print the generated resources...${normal}"
+pe "kpt cfg tree helloworld --name --image --replicas --ports"
 
 echo ""
-echo "  ${bold}update the config...${normal}"
+p "#  ${bold}update the generator using a setter...${normal}"
 pe "kpt cfg list-setters helloworld"
 pe "kpt cfg set helloworld replicas 5"
-pe "kpt cfg list-setters helloworld"
+pe "kpt cfg tree helloworld --name --replicas --field=metadata.annotations.foo"
 
 echo ""
-echo "  ${bold}run the generator...${normal}"
-pe "kpt cfg run helloworld"
+p "#  ${bold}update the generated (output) config with an annotation...${normal}"
+pe "kpt cfg annotate helloworld --kv foo=bar --kind Deployment"
+pe "kpt cfg tree helloworld --name --replicas --field=metadata.annotations.foo"
 
 echo ""
-echo "  ${bold}print the updated resources...${normal}"
-pe "kpt cfg tree helloworld --all"
+p "#  ${bold}run the generator again -- this time manually...${normal}"
+pe "kpt fn source . --function-config helloworld/helloworld.yaml | ~/go/bin/examples | kpt fn sink ."
+
+echo ""
+p "#  ${bold}see that the changes have been merged...${normal}"
+pe "kpt cfg tree helloworld --name --replicas --field=metadata.annotations.foo"

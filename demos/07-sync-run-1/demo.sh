@@ -34,7 +34,7 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 # start demo
-cp ${d}/07-sync-run/Kptfile .
+cp ${d}/07-sync-run-1/Kptfile .
 echo "  ${bold}setup the local package...${normal}"
 pe "git add . && git commit -m 'package'"
 pe "cat Kptfile"
@@ -45,3 +45,4 @@ pe "kpt pkg sync ."
 pe "git status"
 pe "kpt cfg tree helloworld-prod --all"
 pe "kpt cfg tree helloworld-staging --all"
+pe "diff helloworld-prod helloworld-staging"

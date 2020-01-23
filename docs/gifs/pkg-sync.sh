@@ -21,8 +21,6 @@
 cd $(mktemp -d)
 git init
 
-stty rows 90 cols 20
-
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
 
 # start demo

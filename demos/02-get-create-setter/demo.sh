@@ -26,9 +26,10 @@ git init
 # hide the evidence
 clear
 
+pwd
+
 bold=$(tput bold)
 normal=$(tput sgr0)
-stty rows 50 cols 180
 
 # start demo
 echo ""
