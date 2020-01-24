@@ -1,8 +1,0 @@
-{
-	"badges": {
-		"travis_ci": true,
-		"code_cov": true,
-		"go_doc": true,
-		"goreadme": true
-	}
-}
