@@ -1,6 +1,6 @@
 ## fn
 
-Run local containers against Resource configuration
+Generate, transform, validate configuration files using containerized functions
 
 ### Synopsis
 
@@ -13,14 +13,20 @@ Resource configuration as input, and emit a collection of Resource configuration
 | [source]  | explicitly specify an input source to pipe to `run`     |
 | [sink]    | explicitly specify an output sink to pipe to `run`      |
 
+**Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
+
 Functions may be used to:
 
-- Generate configuration from Templates, DSLs, CRD-style abstractions, key-value pairs, etc. -- e.g.
-  expand Helm charts, JSonnet, etc.
-- Inject fields or otherwise modifying configuration -- e.g. add init-containers, side-cars, etc
+- Generate configuration from templates, DSLs, CRD-style abstractions, key-value pairs, etc. -- e.g.
+  expand Helm charts, JSonnet, Jinja, etc.
+- Inject fields or otherwise modify configuration -- e.g. add init-containers, side-cars, etc
 - Rollout configuration changes across an organization -- e.g. similar to
   https://github.com/reactjs/react-codemod
-- Validate configuration -- e.g. ensure Organizational policies are enforced
+- Validate configuration -- e.g. ensure organizational policies are enforced
 
 Functions may be run either imperatively with `kpt run DIR/ --image` or declaratively with
 `kpt run DIR/` and specifying them in files.
