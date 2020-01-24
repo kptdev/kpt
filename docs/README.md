@@ -16,90 +16,96 @@
 
 ### Synopsis
 
-kpt is a tool to help you manage, manipulate, customize, and apply Kubernetes resource
-configuration files.  (And has a name short enough that you don't have to alias it to `k`).
+kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes resource
+configuration files, both manually and programmatically.  (And has a name short enough that you don't have to alias it to `k`).
 
-kpt **package artifacts are composed of Resource configuration**, rather than code or templates.
-However kpt does support **generating Resource configuration packages from arbitrary templates,
-DSLs, programs,** etc.
+In order to facilitate programmatic operations, kpt:
+1. Relies upon git as the source of truth
+2. Represents configuration as data, specifically Kubernetes resources serialized as YAML or JSON.
+
+For compability with other arbitrary formats, kpt supports generating resource configuration data from templates,
+configuration DSLs, and programs.
+
+kpt functionality is subdivided into command groups, each of which operates on a particular set of entities, with a consistent command syntax and pattern of inputs and outputs.
 
 | Command Group | Description                                                                     |
 |---------------|---------------------------------------------------------------------------------|
-| [pkg]         | fetch and update configuration packages                                         |
-| [cfg]         | fetch, update, and sync configuration files using git                           |
+| [pkg]         | fetch, update, and sync configuration files using git                           |
+| [cfg]         | examine and modify configuration files                                          |
 | [fn]          | generate, transform, validate configuration files using containerized functions |
 
 ---
 
 #### [pkg] Package Management
 
-| Configuration Read From | Configuration Written To |
-|-------------------------|--------------------------|
-| git repository          | local files              |
-
-**Data Flow**: git repo -> kpt [pkg] -> local files or stdout
-
-Fetch, update, and sync configuration files using git
+Fetch, update, and sync configuration files using git.
 
 - Publish blueprints and scaffolding for others to fetch and customize.
 - Publish and version releases
 - Fetch the blessed scaffolding for your new service
 - Update your customized package by merging changes from upstream
 
+**Data Flow**: git repo -> kpt [pkg] -> local files or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| git repository          | local files              |
+
 ---
 
 #### [cfg] Configuration Management
 
-| Configuration Read From | Configuration Written To |
-|-------------------------|--------------------------|
-| local files or stdin    | local files or stdout    |
+Examine and modify configuration files.
+
+- Display structured and condensed views of your resources
+- Filter and display resources by constraints
+- Set high-level knobs published by the package
+- Define and expose new knobs to simplify routine modifications
 
 **Data Flow**: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
 
-Examine and craft your Resources using the commandline.
-
-- Display structured and condensed views of your Resources
-- Filter and display Resources by constraints
-- Set high-level knobs published by the package
-- Define and expose new knobs to simplify routine modifications
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
 
 ---
 
 #### [fn] Configuration Functions
 
-| Configuration Read From | Configuration Written To |
-|-------------------------|--------------------------|
-| local files or stdin    | local files or stdout    |
+Generate, transform, validate configuration files using containerized functions.
+
+- Generate resources from code, DSLs, templates, etc.
+- Apply cross-cutting transformations to resources
+- Validate resources
+
+*`fn` is different from `cfg` in that it executes programs published as container images, rather
+than statically compiled into kpt.*
 
 **Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
 
-Run functional programs against Configuration to generate and modify Resources locally.
-
-- Generate Resources from code, DSLs, templates, etc
-- Apply cross-cutting changes to Resources
-- Validate Resources
-
-*`fn` is different from `cfg` in that it executes programs published as images, rather
-than statically compiled into kpt.*
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
 
 ---
 
 <!--
 
-#### [svr] ApiServer Requests
+#### Coming soon: [TODO] ApiServer Requests
+
+Push resources to a cluster.
+
+- Apply a package
+- Preview changes before applying them
+- Wait until a package has been rolled out
+- Diff local and remote state
+
+**Data Flow**: local configuration or stdin -> kpt [TODO] -> apiserver (kubernetes cluster)
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | apiserver                |
 | apiserver               | stdout                   |
-
-**Data Flow**: local configuration or stdin -> kpt [svr] -> apiserver (kubernetes cluster)
-
-Push Resources to a cluster.
-
-- Apply a package
-- Wait until a package has been rolled out
-- Diff local and remote state
 
 -->
 
@@ -135,15 +141,18 @@ Push Resources to a cluster.
 
 A: `kpt` was inspired by `apt`, but with a Kubernetes focus.  We wanted to uphold the tradition
    of naming tools to start with `k`, and also be short enough that you don't have to alias it.
+   It is pronounced "kept".
 
 #### **Q: How is `kpt` different from other solutions?**
 
-A: Rather than developing configuration by expressing it as code, `kpt` develops packages
-   using the API native format -- i.e. as json or yaml objects adhering to the API schema.
+A: Rather than expressing configuration as code, `kpt` represents configuration packages as data, 
+   in particular as YAML or JSON objects adhering to the 
+   [Kubernetes resource model](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md).
 
-#### **Q: Why Resource configuration as the artifact rather than Templates or DSLs?**  
+#### **Q: Why resource configuration as the artifact rather than templates or configuration DSLs?**  
 
-A: Using Resource configuration provides a number of desirable properties:
+A: As explained in [Declarative application management in Kubernetes](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md),
+   using resource configuration provides a number of desirable properties:
 
   1. it clearly **represents the intended state** of the infrastructure -- no for loops, http calls,
     etc to interpret
@@ -152,7 +161,7 @@ A: Using Resource configuration provides a number of desirable properties:
      `kubectl`, `kustomize`, etc
 
   3. it enables **composition of different types of tools written in different languages**
-      * any modern language can manipulate yaml / json structures, no need to adopt `go`
+      * any modern language can manipulate YAML / JSON structures, no need to adopt `go`
 
   4. it **supports static analysis and validation**
       * develop tools and processes to perform validation and linting
@@ -160,23 +169,23 @@ A: Using Resource configuration provides a number of desirable properties:
   5. it **supports programmatic modification**
       * develop CLIs and UIs for working with configuration rather than using `vim`
 
-  6. it **supports customizing generated Resources** so the Templates don't need to be modified
-      * artifacts generated from Templates or DSLs may be modified directly, and then merged
+  6. it **supports customizing generated resources** so the templates don't need to be modified
+      * artifacts generated from templates or DSLs may be modified directly, and then merged
         when they are regenerated to keep the modifications.
 
-  7. it **supports display in UI and tools** which use either OpenAPI or the yaml/json directly.
+  7. it **supports display in UI and tools** which use either OpenAPI or the YAML/JSON directly.
 
-#### **Q: Isn't writing yaml hard?**
+#### **Q: Isn't writing YAML hard?**
 
 A: `kpt` offers a collection of utilities which enable working with configuration
-   programmatically to simplify the experience.  Using `vi` to edit yaml should be
+   programmatically to simplify the experience.  Using `vi` to edit YAML should be
    necessary only for bootstrapping, and the common cases should use [setters]
-   or [functions] to generate or modify yaml configuration.
+   or [functions] to generate or modify YAML configuration.
 
-#### **Q: I really like DSL / Templating solution X.  Can I use it with `kpt`?**
+#### **Q: I really like DSL / templating solution X.  Can I use it with `kpt`?**
 
 A: Yes. `kpt` supports plugging in solutions which generate or manipulate configuration, e.g. from
-   DSLs and Templates.  This may be performed using [functions].  The generated
+   DSLs and templates.  This may be performed using [functions].  The generated
    output may be modified directly, and merged when regenerated.
 
 #### **Q: I want to write high-level abstractions like CRDs, but on the client-side.  Can I do this with `kpt`?**
