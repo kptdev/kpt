@@ -14,9 +14,9 @@ toolchain for building platforms for Kubernetes Resources.
 
 Binaries:
 
-- [darwin](https://storage.cloud.google.com/kpt-dev/kpt.master_darwin_amd64)
-- [linux](https://storage.cloud.google.com/kpt-dev/kpt.master_linux_amd64)
-- [windows](https://storage.cloud.google.com/kpt-dev/kpt.master_windows_amd64)
+- [darwin](https://storage.google.com/kpt-dev/latest/darwin_amd64/kpt)
+- [linux](https://storage.google.com/kpt-dev/latest/linux_amd64/kpt)
+- [windows](https://storage.google.com/kpt-dev/latest/windows_amd64/kpt.exe)
 
 Source:
 
