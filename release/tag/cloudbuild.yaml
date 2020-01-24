@@ -80,4 +80,8 @@ steps:
   - name: 'gcr.io/cloud-builders/gsutil'
     args: ['cp', '-r', '-a', 'public-read', '/workspace/releases/', 'gs://kpt-dev/']
 
+  # update the latest binaries
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['cp', '-r', '-a', 'public-read', '/workspace/releases/${TAG_NAME}/', 'gs://kpt-dev/latest']
+
 timeout: '60m'
