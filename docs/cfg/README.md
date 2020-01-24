@@ -1,6 +1,6 @@
 ## cfg
 
-Programmatically modify and view Resource configuration
+Examine and modify configuration files
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/cfg.cast" speed="1" theme="solarized-dark" cols="70" rows="36" font-size="medium" idle-time-limit="1"></asciinema-player>
@@ -25,6 +25,12 @@ Programmatically print and modify raw json or yaml Resource Configuration
 | [list-setters] | list setters                                  |
 | [set]          | set one or more fields programmatically       |
 | [tree]         | print Resources using a tree structure        |
+
+**Data Flow**: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
 
 ### Examples
 
