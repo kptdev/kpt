@@ -2,7 +2,9 @@
 
 Programmatically modify and view Resource configuration
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg.cast" speed="1" theme="solarized-dark" cols="70" rows="36" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     kpt tutorial cfg
 
@@ -69,9 +71,7 @@ Programmatically print and modify raw json or yaml Resource Configuration
 [list-setters]: list-setters.md
 [set]: set.md
 [tree]: tree.md
-
 [fn]: ../fn/README.md
 [pkg]: ../pkg/README.md
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg.gif "kpt cfg"
 [tutorial-script]: ../gifs/cfg.sh

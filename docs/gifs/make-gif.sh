@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-stty rows 90 cols 20
+export d=$(pwd)
+cd $(mktemp -d)
+git init > /dev/null
 
-rm -f ./$1.cast ./$1.gif
-asciinema rec -i 1 -c ./$1.sh $1.cast
-asciicast2gif -s 2 -S 2 ./$1.cast $1.gif
+export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
+
+asciinema rec --overwrite -i 1 -c $d/$1.sh $d/$1.cast
 
 # copy to gs
-gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $1.gif gs://kpt-dev/docs/$1.gif
-gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $1.cast gs://kpt-dev/docs/$1.cast
-rm ./$1.cast ./$1.gif
+gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $d/$1.cast gs://kpt-dev/docs/$1.cast

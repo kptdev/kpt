@@ -2,7 +2,9 @@
 
 Search for matching Resources in a directory or from stdin
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg-grep.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     kpt tutorial cfg grep
 
@@ -38,5 +40,4 @@ Search for matching Resources in a directory or from stdin
 
 ###
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-grep.gif "kpt cfg grep"
 [tutorial-script]: ../gifs/cfg-grep.sh

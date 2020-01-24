@@ -2,7 +2,9 @@
 
 Fetch, update and sync packages using git
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/pkg.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     # run the tutorial from the cli
     kpt tutorial pkg
@@ -120,7 +122,6 @@ They may be an entire repo, or a subdirectory within a repo.
 
 [apply]: ../svr/apply.md
 [cfg]: ../cfg/README.md
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg.gif "kpt pkg"
 [desc]: desc.md
 [diff]: diff.md
 [fn]: ../fn/README.md

@@ -2,7 +2,9 @@
 
 List setters for Resources.
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg-set.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     kpt tutorial cfg set
 
@@ -30,5 +32,4 @@ List setters for Resources.
 
 ###
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-set.gif "kpt cfg set"
 [tutorial-script]: ../gifs/cfg-set.sh

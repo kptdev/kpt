@@ -16,7 +16,7 @@
 ########################
 # include the magic
 ########################
-. ../demos/demo-magic/demo-magic.sh
+. ../../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 git init > /dev/null

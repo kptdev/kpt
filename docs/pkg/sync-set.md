@@ -2,7 +2,9 @@
 
 Add a sync dependency to a Kptfile
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/pkg-sync.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     # run the tutorial from the cli
     kpt tutorial pkg sync
@@ -87,5 +89,4 @@ Kptfile dependencies.
     kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
         hello-world --strategy=resource-merge
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-sync.gif "kpt pkg sync"
 [tutorial-script]: ../gifs/pkg-sync.sh
