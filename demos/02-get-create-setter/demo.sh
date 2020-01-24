@@ -28,37 +28,30 @@ clear
 
 pwd
 
-bold=$(tput bold)
-normal=$(tput sgr0)
-
 # start demo
 echo ""
-echo "  ${bold}fetch the package and add to git...${normal}"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+p "# fetch the package and add to git..."
+pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0 helloworld"
 pe "git add . && git commit -m 'helloworld'"
 
 echo ""
-echo "  ${bold}print the package contents...${normal}"
+p "#  print the package contents..."
 pe "kpt cfg tree helloworld --all"
 
 echo ""
-echo "  ${bold}list the setters...${normal}"
-pe "kpt cfg list-setters helloworld"
-
-echo ""
-echo "  ${bold}create a setter for the Service port protocol...${normal}"
+p "#  create a setter for the Service port protocol..."
 pe "kpt cfg create-setter helloworld http-protocol TCP --field protocol --type string --kind Service"
 
 echo ""
-echo "  ${bold}list the setters again -- the new one should show up...${normal}"
+p "#  list the setters -- the one we just created should be listed..."
 pe "kpt cfg list-setters helloworld"
 
 echo ""
-echo "  ${bold}change the Service port protocol using the setter...${normal}"
+p "#  change the Service port protocol using the setter..."
 pe "kpt cfg set helloworld http-protocol UDP --description 'justification for UDP' --set-by 'phil'"
 
 echo ""
-echo "  ${bold}observe the updated configuration...${normal}"
+p "#  observe the updated configuration..."
 pe "kpt cfg list-setters helloworld"
 pe "kpt cfg tree helloworld --ports"
 pe "git diff"
