@@ -1,14 +1,11 @@
 # KPT
 
-Kubernetes Platform Toolkit
+kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes Resource configuration data files.
 
-- Publish, Consume and Update packages of Kubernetes Resource Configuration.
-- Develop and Update Configuration programmatically.
-- Filter and Display Configuration packages.
-- Apply Configuration to clusters.
-
-`kpt` combines package management commands with upstream Kubernetes tools to provide a complete
-toolchain for building platforms for Kubernetes Resources.
+- Fetch, update, and sync configuration files using git.
+- Examine and modify configuration files.
+- Generate, transform, validate configuration files using containerized functions.
+- Apply configuration files to clusters.
 
 ## Installation
 
