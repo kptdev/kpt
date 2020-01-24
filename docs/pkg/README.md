@@ -25,6 +25,12 @@ They may be an entire repo, or a subdirectory within a repo.
 | [sync]   | fetch and update packages declaratively |
 | [update] | apply upstream package updates          |
 
+**Data Flow**: git repo -> kpt [pkg] -> local files or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| git repository          | local files              |
+
 #### Package Format
 
 1. **Any git repository containing resource configuration files may be used as a package**, no
