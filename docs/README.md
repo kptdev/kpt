@@ -206,7 +206,7 @@ A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` and `kustomize` binaries.
 
 **We'd love to hear from you!**
 
-* [gcr.io/kpt-dev/kpt]: Dockerfile)
+* [gcr.io/kpt-dev/kpt](Dockerfile)
 * [kpt-users mailing list](https://groups.google.com/forum/#!forum/kpt-users)
 
 ### 
