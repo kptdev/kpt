@@ -17,7 +17,7 @@ steps:
   # build windows
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-o', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '.']
+    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
@@ -26,7 +26,7 @@ steps:
   # build linux
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-o', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '.']
+    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
@@ -35,7 +35,7 @@ steps:
   # build darwin
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-o', '/workspace/bin/releases{TAG_NAME}/darwin_amd64/kpt', '.']
+    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/bin/releases{TAG_NAME}/darwin_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules

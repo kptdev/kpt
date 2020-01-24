@@ -125,6 +125,7 @@ func main() {
 
 	replace(cmd)
 
+	cmd.AddCommand(versionCmd)
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
@@ -172,4 +173,18 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 			os.Exit(1)
 		}
 	}
+}
+
+var version string
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number of kpt",
+	Run: func(cmd *cobra.Command, args []string) {
+		if version == "" {
+			fmt.Println("unknown (built from source)")
+			return
+		}
+		fmt.Printf("%s\n", version)
+	},
 }
