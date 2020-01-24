@@ -1,6 +1,6 @@
 ## pkg
 
-Fetch, update and sync packages using git
+Fetch, update, and sync configuration files using git
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/pkg.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
@@ -29,8 +29,8 @@ They may be an entire repo, or a subdirectory within a repo.
 
 1. **Any git repository containing Resource configuration may be used as a package**, no
    additional structure or formatting is necessary.
-2. **Any package may be applied with `kubectl apply -R -f`** or `kpt svr apply -R -f`.
-3. Packages **may be customized in place either manually with (e.g. `vi`) or programmatically**.
+2. **Any package may be applied with `kubectl apply -R -f`**.
+3. Packages **may be customized in place either manually (e.g. with `vi`) or programmatically**.
 
 #### Example imperative package workflow
 

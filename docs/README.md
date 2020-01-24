@@ -23,11 +23,11 @@ kpt **package artifacts are composed of Resource configuration**, rather than co
 However kpt does support **generating Resource configuration packages from arbitrary templates,
 DSLs, programs,** etc.
 
-| Command Group | Description                                       |
-|---------------|---------------------------------------------------|
-| [cfg]         | print and modify configuration files              |
-| [pkg]         | fetch and update configuration packages           |
-| [fn]          | generate, transform, validate configuration files |
+| Command Group | Description                                                                     |
+|---------------|---------------------------------------------------------------------------------|
+| [pkg]         | fetch and update configuration packages                                         |
+| [cfg]         | fetch, update, and sync configuration files using git                           |
+| [fn]          | generate, transform, validate configuration files using containerized functions |
 
 ---
 
@@ -39,7 +39,7 @@ DSLs, programs,** etc.
 
 **Data Flow**: git repo -> kpt [pkg] -> local files or stdout
 
-Publish and share configuration as yaml or json stored in git.
+Fetch, update, and sync configuration files using git
 
 - Publish blueprints and scaffolding for others to fetch and customize.
 - Publish and version releases
@@ -71,7 +71,7 @@ Examine and craft your Resources using the commandline.
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
 
-**Data Flow**:  local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout
+**Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
 
 Run functional programs against Configuration to generate and modify Resources locally.
 
@@ -79,7 +79,7 @@ Run functional programs against Configuration to generate and modify Resources l
 - Apply cross-cutting changes to Resources
 - Validate Resources
 
-*`fn` is different from `cfg` in that it executes programs published as docker images, rather
+*`fn` is different from `cfg` in that it executes programs published as images, rather
 than statically compiled into kpt.*
 
 ---
