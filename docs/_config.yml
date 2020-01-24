@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-theme: jekyll-theme-slate
+theme: jekyll-theme-cayman
 
 toc:
   - title: cfg
