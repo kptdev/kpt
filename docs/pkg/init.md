@@ -2,7 +2,9 @@
 
 Initialize suggested package meta for a local config directory
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/pkg-init.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     # run the tutorial from the cli
     kpt tutorial pkg init
@@ -56,5 +58,4 @@ Init will:
 
 ###
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-init.gif "kpt pkg init"
 [tutorial-script]: ../gifs/pkg-init.sh

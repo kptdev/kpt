@@ -2,7 +2,9 @@
 
 Display Resource structure from a directory or stdin.
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg-tree.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     kpt tutorial cfg tree
 
@@ -59,5 +61,4 @@ graph structure can also be selected explicitly using the '--graph-structure' fl
 
 ###
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-tree.gif "kpt cfg tree"
 [tutorial-script]: ../gifs/cfg-tree.sh

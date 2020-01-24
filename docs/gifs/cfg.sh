@@ -16,48 +16,45 @@
 ########################
 # include the magic
 ########################
-. ../demos/demo-magic/demo-magic.sh
-
-cd $(mktemp -d)
-git init
+. $d/../../demos/demo-magic/demo-magic.sh
 
 export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
 kpt pkg get $PKG helloworld > /dev/null
 git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null
-kpt svr apply -R -f helloworld > /dev/null
 
 # start demo
 clear
 
-echo "# start with helloworld package"
-echo "$ kpt pkg desc helloworld"
-kpt pkg desc helloworld
-
 # start demo
-echo " "
-p "# 'kpt cfg' contains commands for printing and modifying local packages of configuration"
+echo "# 'kpt cfg' contains commands for printing and modifying local"
+echo "# packages of configuration"
+echo "# (tutorial uses package-examples/helloworld-set@v0.1.0)"
 
 echo " "
-p "# print the Resource counts"
-pe "kpt cfg count helloworld"
+p "# kpt cfg cat -- print the raw package contents"
+pe "kpt cfg cat helloworld"
 
 echo " "
-p "# print the package using a tree structure"
-pe "kpt cfg tree helloworld --name --image --replicas"
-
-echo " "
-p "# filter to only print Services"
-pe "kpt cfg grep \"kind=Service\" helloworld | kpt cfg tree --name --image --replicas"
-
-echo " "
-p "# list setters and set fields"
-pe "kpt cfg list-setters helloworld replicas"
+p "# kpt cfg set -- list and set fields"
+pe "kpt cfg list-setters helloworld"
 pe "kpt cfg set helloworld replicas 3"
 
 echo " "
-p "# format configuration"
+p "# kpt cfg tree -- print the package with a tree structure"
+pe "kpt cfg tree helloworld --name --image --replicas"
+
+echo " "
+p "# kpt cfg grep -- filter Resources"
+pe "kpt cfg grep \"kind=Service\" helloworld | kpt cfg tree"
+
+echo " "
+p "# kpt cfg fmt -- order fields in yaml files"
 pe "kpt cfg fmt helloworld"
+
+echo " "
+p "# kpt cfg count -- print the Resource counts"
+pe "kpt cfg count helloworld"
 
 p "# for more information see 'kpt help cfg'"
 p "kpt help cfg"

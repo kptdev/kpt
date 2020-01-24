@@ -2,7 +2,9 @@
 
 Fetch a package from a git repository
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/pkg-get.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     # run the tutorial from the cli
     kpt tutorial pkg get
@@ -69,5 +71,4 @@ Fetch a package from a git repository
 
 ### 
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/pkg-get.gif "kpt pkg get"
 [tutorial-script]: ../gifs/pkg-get.sh

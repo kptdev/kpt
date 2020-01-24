@@ -2,7 +2,9 @@
 
 Count Resources Config from a local directory.
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg-count.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     kpt tutorial cfg count
 
@@ -25,5 +27,4 @@ Count Resources Config from a local directory.
 
 ### 
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/cfg-count.gif "kpt cfg count"
 [tutorial-script]: ../gifs/cfg-count.sh

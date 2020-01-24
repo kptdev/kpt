@@ -1,13 +1,14 @@
 ## kpt
 
-![alt text][tutorial]
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/kpt.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
 
     # run the tutorial from the cli
     kpt tutorial
 
 [tutorial-script]
 
-[tutorial]: https://storage.googleapis.com/kpt-dev/docs/kpt.gif "kpt"
 [pkg]: pkg/README.md
 [cfg]: cfg/README.md
 [fn]: fn/README.md
@@ -15,18 +16,18 @@
 
 ### Synopsis
 
-*kpt* is a Kubernetes platform toolkit for packaging, customizing and applying Resource
-configuration.
+kpt is a tool to help you manage, manipulate, customize, and apply Kubernetes resource
+configuration files.  (And has a name short enough that you don't have to alias it to `k`).
 
 kpt **package artifacts are composed of Resource configuration**, rather than code or templates.
 However kpt does support **generating Resource configuration packages from arbitrary templates,
 DSLs, programs,** etc.
 
-| Command Group | Description                                       |
-|---------------|---------------------------------------------------|
-| [cfg]         | print and modify configuration files              |
-| [pkg]         | fetch and update configuration packages           |
-| [fn]          | generate, transform, validate configuration files |
+| Command Group | Description                                                                     |
+|---------------|---------------------------------------------------------------------------------|
+| [pkg]         | fetch and update configuration packages                                         |
+| [cfg]         | fetch, update, and sync configuration files using git                           |
+| [fn]          | generate, transform, validate configuration files using containerized functions |
 
 ---
 
@@ -38,7 +39,7 @@ DSLs, programs,** etc.
 
 **Data Flow**: git repo -> kpt [pkg] -> local files or stdout
 
-Publish and share configuration as yaml or json stored in git.
+Fetch, update, and sync configuration files using git
 
 - Publish blueprints and scaffolding for others to fetch and customize.
 - Publish and version releases
@@ -70,7 +71,7 @@ Examine and craft your Resources using the commandline.
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
 
-**Data Flow**:  local configuration or stdin -> kpt [fn] (runs a docker container) -> local configuration or stdout
+**Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
 
 Run functional programs against Configuration to generate and modify Resources locally.
 
@@ -78,7 +79,7 @@ Run functional programs against Configuration to generate and modify Resources l
 - Apply cross-cutting changes to Resources
 - Validate Resources
 
-*`fn` is different from `cfg` in that it executes programs published as docker images, rather
+*`fn` is different from `cfg` in that it executes programs published as images, rather
 than statically compiled into kpt.*
 
 ---
@@ -127,3 +128,80 @@ Push Resources to a cluster.
 
     # learn about kpt
     $ kpt help
+
+### FAQ
+
+#### **Q: What's with the name?**
+
+A: `kpt` was inspired by `apt`, but with a Kubernetes focus.  We wanted to uphold the tradition
+   of naming tools to start with `k`, and also be short enough that you don't have to alias it.
+
+#### **Q: How is `kpt` different from other solutions?**
+
+A: Rather than developing configuration by expressing it as code, `kpt` develops packages
+   using the API native format -- i.e. as json or yaml objects adhering to the API schema.
+
+#### **Q: Why Resource configuration as the artifact rather than Templates or DSLs?**  
+
+A: Using Resource configuration provides a number of desirable properties:
+
+  1. it clearly **represents the intended state** of the infrastructure -- no for loops, http calls,
+    etc to interpret
+
+  2. it **aligns with how tools developed by the Kubernetes project are written** --
+     `kubectl`, `kustomize`, etc
+
+  3. it enables **composition of different types of tools written in different languages**
+      * any modern language can manipulate yaml / json structures, no need to adopt `go`
+
+  4. it **supports static analysis and validation**
+      * develop tools and processes to perform validation and linting
+
+  5. it **supports programmatic modification**
+      * develop CLIs and UIs for working with configuration rather than using `vim`
+
+  6. it **supports customizing generated Resources** so the Templates don't need to be modified
+      * artifacts generated from Templates or DSLs may be modified directly, and then merged
+        when they are regenerated to keep the modifications.
+
+  7. it **supports display in UI and tools** which use either OpenAPI or the yaml/json directly.
+
+#### **Q: Isn't writing yaml hard?**
+
+A: `kpt` offers a collection of utilities which enable working with configuration
+   programmatically to simplify the experience.  Using `vi` to edit yaml should be
+   necessary only for bootstrapping, and the common cases should use [setters]
+   or [functions] to generate or modify yaml configuration.
+
+#### **Q: I really like DSL / Templating solution X.  Can I use it with `kpt`?**
+
+A: Yes. `kpt` supports plugging in solutions which generate or manipulate configuration, e.g. from
+   DSLs and Templates.  This may be performed using [functions].  The generated
+   output may be modified directly, and merged when regenerated.
+
+#### **Q: I want to write high-level abstractions like CRDs, but on the client-side.  Can I do this with `kpt`?**
+
+A: Yes.  `kpt`'s architecture facilitates the developing programs which may generate or modify
+   configuration.  Multiple programs may be composed together.  See [functions].
+
+#### **Q: How do I roll out changes throughout my organization using `kpt`?**
+
+A: This can be done one of several ways, including: 1) using semantic versioning or release
+   channels with [functions], or 2) [updating](docs/pkg/update.md) packages.
+
+#### **Q: Is there a container image that contains kpt?**
+
+A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` and `kustomize` binaries.
+
+### Community
+
+**We'd love to hear from you!**
+
+* [gcr.io/kpt-dev/kpt]: Dockerfile)
+* [kpt-users mailing list](https://groups.google.com/forum/#!forum/kpt-users)
+
+### 
+
+[updating]: docs/pkg/update.md
+[functions]: docs/fn/run.md
+[setters]: docs/cfg/set.md

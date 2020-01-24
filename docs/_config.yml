@@ -13,3 +13,12 @@
 # limitations under the License.
 
 theme: jekyll-theme-cayman
+
+toc:
+  - title: cfg
+    url: /kpt/cfg/
+    children:
+      - title: "annotate"
+        url: /kpt/cfg/annotate
+      - title: "cat"
+        url: /kpt/cfg/cat
