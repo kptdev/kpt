@@ -14,27 +14,38 @@
 
 steps:
   # FYI: If cross-platform build issues happen, then stop caching the modules in the volume.
+  # build windows
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_windows_amd64', '.']
+    args: ['go', 'build', '-o', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
+
+  # build linux
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_linux_amd64', '.']
+    args: ['go', 'build', '-o', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
+
+  # build darwin
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-o', '/workspace/kpt.${BRANCH_NAME}_darwin_amd64', '.']
+    args: ['go', 'build', '-o', '/workspace/bin/releases{TAG_NAME}/darwin_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
+
+  # build docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}', '.' ]
+
+  # run e2e tests and linting
   - name: 'mirror.gcr.io/library/golang'
     args: ['git', 'config', '--global', 'user.email', 'you@example.com']
     dir: '/workspace'
@@ -56,8 +67,17 @@ steps:
         path: /go
       - name: home
         path: /root
-artifacts:
-  objects:
-    location: 'gs://kpt-dev/'
-    paths: ['kpt.${BRANCH_NAME}_darwin_amd64', 'kpt.${BRANCH_NAME}_linux_amd64', 'kpt.${BRANCH_NAME}_windows_amd64']
-timeout: '30m'
+
+  # push the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}']
+
+  # update latest tag on release
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/kpt:latest']
+
+  # push the binaries
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: ['cp', '-r', '-a', 'public-read', '/workspace/releases/', 'gs://kpt-dev/']
+
+timeout: '60m'
