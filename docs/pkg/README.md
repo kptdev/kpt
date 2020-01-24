@@ -13,21 +13,21 @@ Fetch, update, and sync configuration files using git
 
 ### Synopsis
 
-Packages are collections of Resource configuration stored in git repositories.
+Packages are collections of resource configuration files stored in git repositories.
 They may be an entire repo, or a subdirectory within a repo.
 
 | Command  | Description                             |
 |----------|-----------------------------------------|
 | [desc]   | print package origin                    |
 | [diff]   | diff a local package against upstream   |
-| [get]    | fetching packages from git repos        |
+| [get]    | fetch a package from a git repo         |
 | [init]   | initialize an empty package             |
 | [sync]   | fetch and update packages declaratively |
-| [update] | applying upstream package updates       |
+| [update] | apply upstream package updates          |
 
 #### Package Format
 
-1. **Any git repository containing Resource configuration may be used as a package**, no
+1. **Any git repository containing resource configuration files may be used as a package**, no
    additional structure or formatting is necessary.
 2. **Any package may be applied with `kubectl apply -R -f`**.
 3. Packages **may be customized in place either manually (e.g. with `vi`) or programmatically**.
@@ -50,14 +50,16 @@ They may be an entire repo, or a subdirectory within a repo.
 5. `kubectl apply --context dev` apply to dev
 6. `kubectl apply --context prod` apply to prod
 
-#### Architecture
+#### Model
 
-1. **Packages artifacts are Resource configuration** (rather than DSLs, templates, etc)
-    * They may also contain supplemental non-Resource artifacts (e.g. README.md, Templates, etc).
+1. **Packages are simply subdirectories of resource configuration files in git**
+    * They may also contain supplemental non-resource artifacts, such as markdown files, templates, etc.
+    * The ability to fetch a subdirectory of a git repo is a key difference compared to 
+      [git subtree](https://github.com/git/git/blob/master/contrib/subtree/git-subtree.txt).
 
-2.  **Any existing git subdirectory containing Resource configuration** may be used as a package.
-    * Nothing besides a git directory containing Resource configuration is required.
-    * e.g. the [examples repo](https://github.com/kubernetes/examples/staging/cockroachdb) may
+2.  **Any existing git subdirectory containing resource configuration files may be used as a package**
+    * Nothing besides a git directory containing resource configuration is required.
+    * e.g. any [example in the examples repo](https://github.com/kubernetes/examples/staging/cockroachdb) may
       be used as a package:
 
           kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb \
@@ -65,7 +67,7 @@ They may be an entire repo, or a subdirectory within a repo.
           kubectl apply -R -f my-cockroachdb
 
 3. **Packages should use git references for versioning**.
-    * Package authors should use semantic versioning when publishing packages.
+    * We recommend package authors use semantic versioning when publishing packages for others to consume.
 
           kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb@VERSION \
             my-cockroachdb
