@@ -14,17 +14,25 @@ toolchain for building platforms for Kubernetes Resources.
 
 Binaries:
 
-- [darwin](https://storage.google.com/kpt-dev/latest/darwin_amd64/kpt)
-- [linux](https://storage.google.com/kpt-dev/latest/linux_amd64/kpt)
-- [windows](https://storage.google.com/kpt-dev/latest/windows_amd64/kpt.exe)
+darwin:
+
+    wget https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
+    chmod +x kpt
+    ./kpt version
+
+linux:
+
+    wget https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
+    chmod +x kpt
+    ./kpt version
+
+windows:
+
+    https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
 
 Source:
 
     GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
-
-or
-
-    git clone https://github.com/GoogleContainerTools/kpt && cd kpt && make
 
 ### [Documentation](docs/README.md)
 

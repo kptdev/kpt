@@ -13,6 +13,9 @@
 # limitations under the License.
 
 steps:
+  - name: 'mirror.gcr.io/library/golang'
+    args: ['mkdir', '/workspace/latest']
+
   # FYI: If cross-platform build issues happen, then stop caching the modules in the volume.
   # build windows
   - name: 'mirror.gcr.io/library/golang'
@@ -22,6 +25,8 @@ steps:
     volumes:
       - name: go-modules
         path: /go
+  - name: 'mirror.gcr.io/library/golang'
+    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/windows_amd64', '/workspace/latest']
 
   # build linux
   - name: 'mirror.gcr.io/library/golang'
@@ -31,15 +36,20 @@ steps:
     volumes:
       - name: go-modules
         path: /go
+  - name: 'mirror.gcr.io/library/golang'
+    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/linux_amd64', '/workspace/latest']
 
   # build darwin
   - name: 'mirror.gcr.io/library/golang'
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/bin/releases/${TAG_NAME}/darwin_amd64/kpt', '.']
+    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
+  - name: 'mirror.gcr.io/library/golang'
+    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/darwin_amd64', '/workspace/latest']
+  
 
   # build docker image
   - name: 'gcr.io/cloud-builders/docker'
@@ -85,6 +95,6 @@ steps:
 
   # update the latest binaries
   - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', '-r', '-a', 'public-read', '/workspace/releases/${TAG_NAME}/', 'gs://kpt-dev/latest']
+    args: ['cp', '-r', '-h', 'Cache-Control:no-cache,max-age=0', '-a', 'public-read', '/workspace/latest', 'gs://kpt-dev/']
 
 timeout: '60m'
