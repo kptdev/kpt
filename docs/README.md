@@ -16,7 +16,7 @@
 
 ### Synopsis
 
-kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes resource
+kpt is a toolkit to help you manage, examine, manipulate, customize, validate, and apply Kubernetes resource
 configuration files, both manually and programmatically.  (And has a name short enough that you don't have to alias it to `k`).
 
 A primary goal of kpt is to facilitate configuration reuse. The two primary sets of capabilities that are required to enable reuse are:
