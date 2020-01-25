@@ -53,8 +53,12 @@ There are several projects that may be used to quickly develop kpt functions:
 
 | Name                | Language     | Examples        |
 |---------------------|--------------|-----------------|
-| [kpt-functions-sdk] | Typescript   |                 |
-| [kustomize/kyaml]   | Golang       | [kyaml-example] |
+| [KPT Functions SDK][sdk] | Typescript   |  [Examples][sdk-example]               |
+| [kustomize/kyaml][kyaml]   | Golang       | [Example][kyaml-example] |
+
+#### Functions Catalog
+
+[KPT Functions Catalog][catalog] repo documents a catalog of KPT functions.
 
 ### Examples
 
@@ -80,6 +84,8 @@ There are several projects that may be used to quickly develop kpt functions:
 
 [cfg]: ../cfg/README.md
 [pkg]: ../pkg/README.md
-[kpt functions sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
+[sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
+[sdk-example]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
 [kyaml]: https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml
 [kyaml-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go
+[catalog]: https://github.com/GoogleContainerTools/kpt-functions-catalog/
