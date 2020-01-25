@@ -44,10 +44,9 @@ kpt functionality is subdivided into command groups, each of which operates on a
 
 Fetch, update, and sync configuration files using git.
 
-- Publish blueprints and scaffolding for others to fetch and customize.
-- Publish and version releases
-- Fetch the blessed scaffolding for your new service
-- Update your customized package by merging changes from upstream
+- Fetch and customize blueprints published by others.
+- Fetch the standard scaffolding for your new service.
+- Update your customized package by merging changes from upstream.
 
 **Data Flow**: git repo -> kpt [pkg] -> local files or stdout
 
