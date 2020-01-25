@@ -19,6 +19,10 @@
 kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes resource
 configuration files, both manually and programmatically.  (And has a name short enough that you don't have to alias it to `k`).
 
+A primary goal of kpt is to facilitate configuration reuse. The two primary sets of capabilities that are required to enable reuse are:
+1. The ability to distribute/publish/share, compose, and update groups of configuration artifacts, commonly known as packages.
+2. The ability to adapt them to your use cases, which we call customization.
+
 In order to facilitate programmatic operations, kpt:
 1. Relies upon git as the source of truth
 2. Represents configuration as data, specifically Kubernetes resources serialized as YAML or JSON.
