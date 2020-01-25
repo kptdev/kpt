@@ -37,6 +37,7 @@ kpt functionality is subdivided into command groups, each of which operates on a
 | [pkg]         | fetch, update, and sync configuration files using git                           |
 | [cfg]         | examine and modify configuration files                                          |
 | [fn]          | generate, transform, validate configuration files using containerized functions |
+| TODO          | reconcile configuration files with the live state                               |
 
 ---
 
@@ -92,25 +93,23 @@ than statically compiled into kpt.*
 
 ---
 
-<!--
+#### Coming soon: Live-state Management
 
-#### Coming soon: [TODO] ApiServer Requests
-
-Push resources to a cluster.
+Reconcile configuration files with the live state.
 
 - Apply a package
 - Preview changes before applying them
-- Wait until a package has been rolled out
-- Diff local and remote state
+- Wait until a package has been fully reconciled with the live state
+- Diff local configuration files and the live state
 
-**Data Flow**: local configuration or stdin -> kpt [TODO] -> apiserver (kubernetes cluster)
+**Data Flow**: local configuration or stdin -> kpt TODO -> apiserver (Kubernetes cluster)
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | apiserver                |
 | apiserver               | stdout                   |
 
--->
+---
 
 ### Examples
 
