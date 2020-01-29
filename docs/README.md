@@ -198,21 +198,23 @@ A: Yes.  `kpt`'s architecture facilitates the developing programs which may gene
 #### **Q: How do I roll out changes throughout my organization using `kpt`?**
 
 A: This can be done one of several ways, including: 1) using semantic versioning or release
-   channels with [functions], or 2) [updating](docs/pkg/update.md) packages.
+   channels with [functions], or 2) [updating] packages.
 
 #### **Q: Is there a container image that contains kpt?**
 
-A: Yes. [gcr.io/kpt-dev/kpt](gcr.io/kpt-dev/kpt) contains the `kpt` and `kustomize` binaries.
+A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` and `kustomize` binaries.
 
 ### Community
 
 **We'd love to hear from you!**
 
-* [gcr.io/kpt-dev/kpt](Dockerfile)
+* [gcr.io/kpt-dev/kpt]
 * [kpt-users mailing list](https://groups.google.com/forum/#!forum/kpt-users)
 
 ### 
 
-[updating]: docs/pkg/update.md
-[functions]: docs/fn/run.md
-[setters]: docs/cfg/set.md
+[updating]: pkg/update.md
+[functions]: fn/run.md
+[setters]: cfg/set.md
+[gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
+
