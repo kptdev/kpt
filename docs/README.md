@@ -202,7 +202,7 @@ A: This can be done one of several ways, including: 1) using semantic versioning
 
 #### **Q: Is there a container image that contains kpt?**
 
-A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` and `kustomize` binaries.
+A: Yes. [gcr.io/kpt-dev/kpt](gcr.io/kpt-dev/kpt) contains the `kpt` and `kustomize` binaries.
 
 ### Community
 
