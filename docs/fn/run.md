@@ -40,7 +40,7 @@ Run a function locally against Resource configuration.
         # run the my-fn image, configured with foo=bar
         kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 
-- Alternatively functions and their input configuration may be declared in
+- Alternatively `functions` and their input configuration may be declared in
   files rather than directly on the command line
 - `FUNCTIONS_DIR` may optionally be under the Resource `DIR`
 
@@ -63,7 +63,7 @@ Run a function locally against Resource configuration.
         data:
           foo: bar
 
-- Additionally, functions may be discovered implicitly by putting them in `run` *source*.
+- Additionally, `functions` may be discovered implicitly by putting them in `run` *source*.
 
 
         # run the my-fn, configured with foo=bar -- fn is declared in the input
@@ -80,8 +80,8 @@ Run a function locally against Resource configuration.
         data:
           foo: bar
 
-- Functions which are nested under some sub directory are scoped only to Resources under that
-  same sub directory.  This allows fine grain control over how functions are executed.
+- `functions` which are nested under some sub directory are scoped only to Resources under that
+  same sub directory.  This allows fine grain control over how `functions` are executed.
 
 
          Example: gcr.io/example.com/my-fn is scoped to Resources in stuff/ and
@@ -97,9 +97,9 @@ Run a function locally against Resource configuration.
                  ├── not-inscope-deployment.yaml
                  └── not-inscope-service.yaml
 
-- Multiple functions may be specified.  If they are specified in the same file they will
+- Multiple `functions` may be specified.  If they are specified in the same file they will
   be run in the same order that they are specified.
-- Functions may define their own API input types - these may be client-side equivalents of CRDs.
+- `functions` may define their own API input types - these may be client-side equivalents of CRDs.
 
 
         kpt fn run DIR/
@@ -131,12 +131,12 @@ Run a function locally against Resource configuration.
   DIR:
     Path to local directory.
 
-#### Config Functions:
+#### KPT Functions:
 
-  Config functions are specified as Kubernetes types containing a metadata.annotations.[config.kubernetes.io/function]
+  `kpt functions` are specified as Kubernetes types containing a `metadata.annotations.[config.kubernetes.io/function]`
   field specifying an image for the container to run.  This image tells run how to invoke the container.
 
-  Example config function:
+  Example kpt function:
 
 	# in file example/fn.yaml
 	apiVersion: fn.example.com/v1beta1
@@ -152,12 +152,12 @@ Run a function locally against Resource configuration.
 	  configField: configValue
 
   In the preceding example, 'kpt cfg run example/' would identify the function by
-  the metadata.annotations.[config.kubernetes.io/function] field.  It would then write all Resources in the directory to
-  a container stdin (running the gcr.io/example/examplefunction:v1.0.1 image).  It
+  the `metadata.annotations.[config.kubernetes.io/function]` field.  It would then write all Resources in the directory to
+  a container stdin (running the `gcr.io/example/examplefunction:v1.0.1` image).  It
   would then write the container stdout back to example/, replacing the directory
   file contents.
 
-There are several projects that may be used to quickly develop kpt functions:
+There are several projects that may be used to quickly develop `kpt functions`:
 
 - Typescript: [kpt functions sdk](https://github.com/GoogleContainerTools/kpt-functions-sdk)
 - Golang: [kyaml](https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml)
