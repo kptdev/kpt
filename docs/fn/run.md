@@ -6,48 +6,90 @@ Run a function locally against Resource configuration.
 
 `run` sequentially locally executes one or more programs which may modify Resource configuration.
 
-**Architecture:**
+#### Architecture
 
 - Programs are packaged as container images which are pulled and run locally
-- Input Resource configuration is read from some *source* and written to container `STDIN`
-- Output Resource configuration is read from container `STDOUT` and written to some *sink*
+- Input Resource configuration is read from some _source_ and written to container `STDIN`
+- Output Resource configuration is read from container `STDOUT` and written to some _sink_
 - If the container exits non-0, run will fail and print the container `STDERR`
 
-**Caveats:**
+#### Invocations Patterns
 
-- If `DIR` is provided as an argument, it is used as both the *source* and *sink*.
-- A function may be explicitly specified with `--image`
+1. Run an individual function explicitly
 
-  Example: Locally run the container image gcr.io/example.com/my-fn against the Resources
-  in DIR/.
+    A function may be explicitly specified with `--image`
 
+    Example: Locally run the container image gcr.io/example.com/my-fn against the Resources
+    in DIR/:
 
-        kpt fn run DIR/ --image gcr.io/example.com/my-fn
+         kpt fn run DIR/ --image gcr.io/example.com/my-fn
 
-- If not `DIR` is specified, the source will default to STDIN and sink will default to STDOUT
+    If not `DIR` is specified, the source will default to STDIN and sink will default to STDOUT. For Example, this is equivalent to the preceding example.
 
-  Example: This is equivalent to the preceding example.
+         kpt source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt sink DIR/
 
+    Arguments specified after `--` will be provided to the function as a ConfigMap input
 
-        kpt source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt sink DIR/
+    Example: In addition to the input Resources, provide to the container image a ConfigMap
+    containing `data: {foo: bar}`. This is used to set the behavior of the function.
 
-- Arguments specified after `--` will be provided to the function as a ConfigMap input 
+           # run the my-fn image, configured with foo=bar
+           kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 
-  Example: In addition to the input Resources, provide to the container image a ConfigMap
-  containing `data: {foo: bar}`.  This is used to set the behavior of the function.
+2. Declare one or more functions to be run
 
+    Functions and their input configuration may be declared in files rather than directly on the command line.
 
-        # run the my-fn image, configured with foo=bar
-        kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+    For example, this is equivalent to the preceding example.
+    Rather than specifying `gcr.io/example.com/my-fn` as a flag, specify it in a file using the
+    `config.kubernetes.io/function` annotation.
 
-- Alternatively `functions` and their input configuration may be declared in
-  files rather than directly on the command line
-- `FUNCTIONS_DIR` may optionally be under the Resource `DIR`
+        # run the my-fn, configured with foo=bar -- fn is declared in the input
+        kpt fn run DIR/
 
-  Example: This is equivalent to the preceding example.
-  Rather than specifying `gcr.io/example.com/my-fn` as a flag, specify it in a file using the
-  `config.kubernetes.io/function` annotation, and discover it with `--fn-path`.
+        # DIR/some.yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metdata:
+          annotations:
+            config.kubernetes.io/function: |
+              container:
+                image: gcr.io/example.com/my-fn
+        data:
+          foo: bar
 
+    Functions which are nested under some sub directory are scoped only to Resources under that
+    same sub directory. This allows fine grain control over how functions are executed:
+
+        Example: gcr.io/example.com/my-fn is scoped to Resources in stuff/ and
+        is NOT scoped to Resources in apps/
+             .
+             ├── stuff
+             │   ├── inscope-deployment.yaml
+             │   ├── stuff2
+             │   │     └── inscope-deployment.yaml
+             │   └── my-function.yaml # functions is scoped to stuff/...
+             └── apps
+                 ├── not-inscope-deployment.yaml
+                 └── not-inscope-service.yaml
+
+    Alternatively, you can also place function configurations in a special directory named `functions`. For example:
+    this is equivalent to previous example:
+
+        Example: gcr.io/example.com/my-fn is scoped to Resources in stuff/ and
+        is NOT scoped to Resources in apps/
+             .
+             ├── stuff
+             │   ├── inscope-deployment.yaml
+             │   ├── stuff2
+             │   │     └── inscope-deployment.yaml
+             │   └── functions
+             │         └── my-function.yaml
+             └── apps
+                 ├── not-inscope-deployment.yaml
+                 └── not-inscope-service.yaml
+
+    Alternatively, you can also use `--fn-path` to explicitly provide the directory containing function configurations:
 
         # run the my-fn, configured with foo=bar -- fn is declared in a file
         kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
@@ -63,99 +105,36 @@ Run a function locally against Resource configuration.
         data:
           foo: bar
 
-- Additionally, `functions` may be discovered implicitly by putting them in `run` *source*.
+    You may declare multiple functions. If they are specified in the same file they will
+    be run in the same order that they are specified.
 
+    Functions may define their own API input types - these may be client-side equivalents of CRDs.
 
-        # run the my-fn, configured with foo=bar -- fn is declared in the input
-        kpt fn run DIR/
+          kpt fn run DIR/
 
-        # DIR/functions/some.yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metdata:
-          annotations:
-            config.kubernetes.io/function: |
-              container:
-                image: gcr.io/example.com/my-fn
-        data:
-          foo: bar
+          # DIR/functions/some.yaml
+          apiVersion: v1
+          kind: ConfigMap
+          metdata:
+            annotations:
+              config.kubernetes.io/function: |
+                container:
+                  image: gcr.io/example.com/my-fn
+          data:
+            foo: bar
+          ---
+          apiVersion: v1
+          kind: MyType
+          metdata:
+            annotations:
+              config.kubernetes.io/function: |
+                container:
+                  image: gcr.io/example.com/other-fn
+          spec:
+            field:
+              nestedField: value
 
-- `functions` which are nested under some sub directory are scoped only to Resources under that
-  same sub directory.  This allows fine grain control over how `functions` are executed.
-
-
-         Example: gcr.io/example.com/my-fn is scoped to Resources in stuff/ and
-         is NOT scoped to Resources in apps/
-             .
-             ├── stuff
-             │   ├── inscope-deployment.yaml
-             │   ├── stuff2
-             │   │     └── inscope-deployment.yaml
-             │   └── functions # functions in this dir are scoped to stuff/...
-             │       └── some.yaml
-             └── apps
-                 ├── not-inscope-deployment.yaml
-                 └── not-inscope-service.yaml
-
-- Multiple `functions` may be specified.  If they are specified in the same file they will
-  be run in the same order that they are specified.
-- `functions` may define their own API input types - these may be client-side equivalents of CRDs.
-
-
-        kpt fn run DIR/
-
-        # DIR/functions/some.yaml
-        apiVersion: v1
-        kind: ConfigMap
-        metdata:
-          annotations:
-            config.kubernetes.io/function: |
-              container:
-                image: gcr.io/example.com/my-fn
-        data:
-          foo: bar
-        ---
-        apiVersion: v1
-        kind: MyType
-        metdata:
-          annotations:
-            config.kubernetes.io/function: |
-              container:
-                image: gcr.io/example.com/other-fn
-        spec:
-          field:
-            nestedField: value
-
-#### Arguments:
-
-  DIR:
-    Path to local directory.
-
-#### KPT Functions:
-
-  `kpt functions` are specified as Kubernetes types containing a `metadata.annotations.[config.kubernetes.io/function]`
-  field specifying an image for the container to run.  This image tells run how to invoke the container.
-
-  Example kpt function:
-
-	# in file example/fn.yaml
-	apiVersion: fn.example.com/v1beta1
-	kind: ExampleFunctionKind
-	metadata:
-	  annotations:
-	    config.kubernetes.io/function: |
-	      container:
-	        # function is invoked as a container running this image
-	        image: gcr.io/example/examplefunction:v1.0.1
-	    config.kubernetes.io/local-config: "true" # tools should ignore this
-	spec:
-	  configField: configValue
-
-  In the preceding example, 'kpt cfg run example/' would identify the function by
-  the `metadata.annotations.[config.kubernetes.io/function]` field.  It would then write all Resources in the directory to
-  a container stdin (running the `gcr.io/example/examplefunction:v1.0.1` image).  It
-  would then write the container stdout back to example/, replacing the directory
-  file contents.
+#### Developing functions
 
 There are several projects that may be used to quickly develop `kpt functions`:
 
