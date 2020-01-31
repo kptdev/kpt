@@ -28,10 +28,9 @@ Source:
 
     GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
+### [Documentation](https://googlecontainertools.github.io/kpt)
 
-### [Documentation](googlecontainertools.github.io/kpt)
-
-See the [docs](docs/README.md) for more information on how to use `kpt`.
+See the [docs](https://googlecontainertools.github.io/kpt) for more information on how to use `kpt`.
 
 ---
 
