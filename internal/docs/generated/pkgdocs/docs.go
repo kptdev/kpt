@@ -321,7 +321,7 @@ Add a sync dependency to a Kptfile.
 While is it possible to directly edit the Kptfile, ` + "`" + `set` + "`" + ` can be used to add or update
 Kptfile dependencies.
 
-    kpt pkg  get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+    kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
   REPO_URI:
 
