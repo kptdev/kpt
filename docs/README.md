@@ -41,6 +41,16 @@ kpt functionality is subdivided into command groups, each of which operates on a
 
 ---
 
+### Quickstart Guides
+
+kpt is intended to be used by both consumer and producers of packages. We've
+provided two quickstart guides to help with both.
+
+- [Consumer](docs/quick-start-guides/consumer-quick-start-guide.md)
+- [Producer](docs/quick-start-guides/producer-quick-start-guide.md)
+
+---
+
 #### [pkg] Package Management
 
 Fetch, update, and sync configuration files using git.

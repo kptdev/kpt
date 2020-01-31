@@ -28,14 +28,6 @@ Source:
 
     GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
-### Quickstart Guides
-
-kpt is intended to be used by both consumer and producers of packages. We've
-provided two quickstart guides to help with both.
-
-- [Consumer](docs/quick-start-guides/consumer-quick-start-guide.md)
-- [Producer](docs/quick-start-guides/producer-quick-start-guide.md)
-
 ### [Documentation](https://googlecontainertools.github.io/kpt)
 
 See the [docs](https://googlecontainertools.github.io/kpt) for more information on how to use `kpt`.
