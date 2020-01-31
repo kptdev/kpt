@@ -40,5 +40,5 @@ jobs:
         - GO111MODULE=on
         - GOFLAGS="-mod=vendor"
       script:
-	- make all
+        - make all
 
