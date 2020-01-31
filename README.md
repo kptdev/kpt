@@ -9,31 +9,32 @@ kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes
 
 ## Installation
 
-Binaries:
+Download Binaries:
 
-darwin:
+| Platform                 
+| ------------------------ 
+| [Linux (x64)][linux]     
+| [macOS (x64)][darwin]    
+| [Windows (x64)][windows] 
 
-    wget https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
+Installation:
+
+    // For linux/mac
     chmod +x kpt
+
     ./kpt version
-
-linux:
-
-    wget https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
-    chmod +x kpt
-    ./kpt version
-
-windows:
-
-    https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
 
 Source:
 
     GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
+
 ### [Documentation](googlecontainertools.github.io/kpt)
 
 See the [docs](docs/README.md) for more information on how to use `kpt`.
 
+---
 
----------------------
+[linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
+[darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
+[windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
