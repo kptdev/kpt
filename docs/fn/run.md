@@ -24,7 +24,7 @@ Run a function locally against Resource configuration.
 
          kpt fn run DIR/ --image gcr.io/example.com/my-fn
 
-    If not `DIR` is specified, the source will default to STDIN and sink will default to STDOUT. For Example, this is equivalent to the preceding example.
+    If `DIR` is not specified, the source will default to STDIN and sink will default to STDOUT. For Example, this is equivalent to the preceding example.
 
          kpt source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt sink DIR/
 
