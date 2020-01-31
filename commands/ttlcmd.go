@@ -35,7 +35,7 @@ func GetTTLCommand(name string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, err := exec.LookPath("asciinema")
 			if err != nil {
-				fmt.Fprint(os.Stderr, "must install asciinema to run tutorials: https://asciinema.org")
+				fmt.Fprintln(os.Stderr, "must install asciinema to run tutorials: https://asciinema.org")
 				os.Exit(1)
 			}
 			h, err := cmd.Flags().GetBool("help")
