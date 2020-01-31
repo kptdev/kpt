@@ -37,6 +37,7 @@ They may be an entire repo, or a subdirectory within a repo.
    additional structure or formatting is necessary.
 2. **Any package may be applied with `kubectl apply -R -f`**.
 3. Packages **may be customized in place either manually (e.g. with `vi`) or programmatically**.
+4. Packages **must** be worked on within a local git repo.
 
 #### Example imperative package workflow
 
@@ -63,7 +64,7 @@ They may be an entire repo, or a subdirectory within a repo.
     * The ability to fetch a subdirectory of a git repo is a key difference compared to 
       [git subtree](https://github.com/git/git/blob/master/contrib/subtree/git-subtree.txt).
 
-2.  **Any existing git subdirectory containing resource configuration files may be used as a package**
+2. **Any existing git subdirectory containing resource configuration files may be used as a package**
     * Nothing besides a git directory containing resource configuration is required.
     * e.g. any [example in the examples repo](https://github.com/kubernetes/examples/staging/cockroachdb) may
       be used as a package:
@@ -102,14 +103,34 @@ They may be an entire repo, or a subdirectory within a repo.
           # make changes...
           kpt pkg update my-cockroachdb@NEW_VERSION --strategy=resource-merge
 
+7. **Packages must be changed within a git repo**.
+    * kpt facilitates configuration reuse. Key to that reuse is git. Git is used
+      both as a unit to define the boundary of a git repo, but also as the
+      boundary of a local workspace. In this way, any workspace is in itself a
+      package. Local customizations of packages (or use of specific versions)
+      can be re-published as the new canonical package for other users. kpt
+      requires any customization to be committed to git before package updates
+      can be reconciled.
+
 ### Examples
 
+    # create your workspace
+    $ mkdir hello-world-workspace
+    $ cd hello-world-workspace
+    $ git init
+
     # get the package
-    export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
+    $ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
     $ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld
+
+    # add helloworld to your workspace
+    $ git add .
+    $ git commit -am "Add helloworld to my workspace."
 
     # pull in upstream updates by merging Resources
     $ kpt pkg update helloworld@v0.2.0 --strategy=resource-merge
+
+    # you can review the update and then commit your changes with git here
 
     # manage a collection of packages declaratively
     $ kpt pkg init ./ --description "my package"
@@ -117,16 +138,22 @@ They may be an entire repo, or a subdirectory within a repo.
         hello-world --strategy=resource-merge
     $ kpt pkg sync ./
 
+    # commit your packages
+    git add .
+    git commit -am "Synced hello-world v1 via set."
+
     # update the package with sync
     $ kpt pkg sync set $SRC_REPO/package-examples/helloworld-set@v0.2.0 \
         hello-world --strategy=resource-merge
     $ kpt pkg sync ./
 
+    # Commit again.
+
 ### Also See Command Groups
 
 [cfg], [fn]
 
-### 
+###
 
 [apply]: ../svr/apply.md
 [cfg]: ../cfg/README.md
