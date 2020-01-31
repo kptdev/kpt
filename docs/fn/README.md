@@ -4,7 +4,7 @@ Generate, transform, validate configuration files using containerized functions
 
 ### Synopsis
 
-Functions are executables packaged in container images which accept a collection of
+Functions are executables ([that you can write](#authoring)) packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
 
 | Command   | Description                                             |
@@ -47,18 +47,14 @@ Functions may be run at different times depending on the function and the organi
 - as pre-release checks
 - as pre-rollout checks
 
-#### Writing functions
+#### Authoring
 
-There are several projects that may be used to quickly develop kpt functions:
+Two projects that aid kpt function development:
 
-| Name                | Language     | Examples        |
-|---------------------|--------------|-----------------|
-| [KPT Functions SDK][sdk] | Typescript   |  [Examples][sdk-example]               |
-| [kustomize/kyaml][kyaml]   | Golang       | [Example][kyaml-example] |
-
-#### Functions Catalog
-
-[KPT Functions Catalog][catalog] repo documents a catalog of KPT functions.
+| Language   | Quick start                      | Repo                        | Examples                    | Catalog |
+|------------|----------------------------------|-----------------------------|-----------------------------|---|
+| Typescript | [quick start][sdk-ts-quickstart] | [kpt functions SDK][sdk-ts] | [examples][sdk-ts-examples] | [kpt functions catalog][catalog-ts] |
+| Go         | TBD                              | [kustomize/kyaml][kyaml]    | [example][kyaml-example]    | TBD |
 
 ### Examples
 
@@ -84,8 +80,9 @@ There are several projects that may be used to quickly develop kpt functions:
 
 [cfg]: ../cfg/README.md
 [pkg]: ../pkg/README.md
-[sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
-[sdk-example]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
+[sdk-ts]: https://github.com/GoogleContainerTools/kpt-functions-sdk
+[sdk-ts-quickstart]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/docs/develop-quickstart.md
+[sdk-ts-examples]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
+[catalog-ts]: https://github.com/GoogleContainerTools/kpt-functions-catalog/
 [kyaml]: https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml
 [kyaml-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go
-[catalog]: https://github.com/GoogleContainerTools/kpt-functions-catalog/
