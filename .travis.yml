@@ -34,11 +34,11 @@ jobs:
       name: "OSX"
       script:
         - make
-    - os: windows
-      name: "Windows"
-      env:
-        - GO111MODULE=on
-        - GOFLAGS="-mod=vendor"
-      script:
-        - make all
+    # - os: windows
+    #   name: "Windows"
+    #   env:
+    #     - GO111MODULE=on
+    #     - GOFLAGS="-mod=vendor"
+    #   script:
+    #     - make all
 
