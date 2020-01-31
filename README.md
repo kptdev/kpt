@@ -9,7 +9,7 @@ kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes
 
 ## Installation
 
-Download Binaries:
+Grab prebuilt Binaries:
 
 | Platform                 
 | ------------------------ 
@@ -17,16 +17,16 @@ Download Binaries:
 | [macOS (x64)][darwin]    
 | [Windows (x64)][windows] 
 
-Installation:
+or build from source:
 
-    // For linux/mac
+    GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
+
+then:
+
+    # For linux/mac
     chmod +x kpt
 
     ./kpt version
-
-Source:
-
-    GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
 ### [Documentation](https://googlecontainertools.github.io/kpt)
 
