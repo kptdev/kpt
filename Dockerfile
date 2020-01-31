@@ -29,4 +29,4 @@ RUN apk update && apk upgrade && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
 COPY --from=0 /usr/local/bin/kpt /usr/local/bin/kpt
-CMD ["kpt"]
+ENTRYPOINT ["kpt"]
