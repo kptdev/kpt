@@ -39,6 +39,9 @@ They may be an entire repo, or a subdirectory within a repo.
 3. Packages **may be customized in place either manually (e.g. with `vi`) or programmatically**.
 4. Packages **must** be worked on within a local git repo.
 
+![day1 workflow][day1workflow]
+![dayN workflow][dayNworkflow]
+
 #### Example imperative package workflow
 
 1. [kpt pkg get](get.md) to get a package
@@ -154,7 +157,8 @@ They may be an entire repo, or a subdirectory within a repo.
 [cfg], [fn]
 
 ###
-
+[day1workflow]: ../images/day1workflow.jpg
+[dayNworkflow]: ../images/dayNworkflow.jpg
 [apply]: ../svr/apply.md
 [cfg]: ../cfg/README.md
 [desc]: desc.md
