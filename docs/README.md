@@ -124,8 +124,7 @@ Reconcile configuration files with the live state.
 ### Examples
 
     # get a package
-    $ kpt pkg get https://github.com/GoogleContainerTools/\
-    kpt.git/package-examples/helloworld-set@v0.1.0 helloworld
+    $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld
     fetching package /package-examples/helloworld-set from \
       git@github.com:GoogleContainerTools/kpt to helloworld
 
