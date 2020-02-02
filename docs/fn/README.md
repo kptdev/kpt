@@ -35,17 +35,29 @@ Functions may be run at different times depending on the function and the organi
 * as pre-release checks
 * as pre-rollout checks
 
-#### Functions Catalog
+### Functions Catalog
 
 [KPT Functions Catalog][catalog] repository documents a catalog of kpt functions implemented using different toolchains.
 
-#### Developing Functions
+### Developing Functions
 
 
 | Language   | Documentation               | Examples                    |
 |------------|-----------------------------|-----------------------------|
 | Typescript | [KPT Functions SDK][sdk-ts] | [examples][sdk-ts-examples] |
 | Go         | [kustomize/kyaml][kyaml]    | [example][kyaml-example]    |
+
+### Examples
+
+    # run the function defined by gcr.io/example.com/my-fn as a local container
+    # against the configuration in DIR
+    kpt fn run DIR/ --image gcr.io/example.com/my-fn
+
+    # run the functions declared in files under FUNCTIONS_DIR/
+    kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
+
+    # run the functions declared in files under DIR/
+    kpt fn run DIR/
 
 ### Also See Command Groups
 
