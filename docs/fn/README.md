@@ -35,11 +35,11 @@ Functions may be run at different times depending on the function and the organi
 * as pre-release checks
 * as pre-rollout checks
 
-### Functions Catalog
+#### Functions Catalog
 
 [KPT Functions Catalog][catalog] repository documents a catalog of kpt functions implemented using different toolchains.
 
-### Developing Functions
+#### Developing Functions
 
 
 | Language   | Documentation               | Examples                    |
