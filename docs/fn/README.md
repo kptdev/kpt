@@ -1,17 +1,17 @@
 ## fn
 
-Generate, transform, validate configuration files using containerized functions
+Generate, transform, or validate configuration files using containerized functions.
 
 ### Synopsis
 
 Functions are executables ([that you can write](#developing-functions)) packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
 
-| Command  | Description                                             |
-|----------|---------------------------------------------------------|
-| [run]    | run containers locally to generate and transform config |
-| [source] | explicitly specify an input source to pipe to `run`     |
-| [sink]   | explicitly specify an output sink to pipe to `run`      |
+| Command  | Description                                                                                           |
+|----------|-------------------------------------------------------------------------------------------------------|
+| [run]    | Locally executes one or more programs which may generate, transform, or validate configuration files. |
+| [source] | Explicitly specify an input source to pipe to `run`                                                   |
+| [sink]   | Explicitly specify an output sink to pipe to `run`                                                    |
 
 **Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
 
@@ -21,27 +21,11 @@ Resource configuration as input, and emit a collection of Resource configuration
 
 Functions may be used to:
 
-* Generate configuration from templates, DSLs, CRD-style abstractions, key-value pairs, etc.-- e.g.
-
-  expand Helm charts, JSonnet, Jinja, etc.
-
+* Generate configuration from templates, DSLs, CRD-style abstractions, key-value pairs, etc.-- e.g. expand Helm charts, JSonnet, Jinja, etc.
 * Inject fields or otherwise modify configuration -- e.g.add init-containers, side-cars, etc
 * Rollout configuration changes across an organization -- e.g.similar to
-
   https://github.com/reactjs/react-codemod
-
 * Validate configuration -- e.g.ensure organizational policies are enforced
-
-Functions may be run either imperatively with `kpt run DIR/ --image` or declaratively with
-`kpt run DIR/` and specifying them in files.
-
-Functions specified in files must contain an annotation to mark them as function declarations:
-
-      annotations:
-        config.kubernetes.io/function: |
-          container:
-            image: gcr.io/example.com/image:version
-        config.kubernetes.io/local-config: "true"
 
 Functions may be run at different times depending on the function and the organizational needs:
 
@@ -53,28 +37,15 @@ Functions may be run at different times depending on the function and the organi
 
 #### Functions Catalog
 
-[KPT Functions Catalog][catalog] repository documents a catalog of KPT functions implemented using different toolchains.
+[KPT Functions Catalog][catalog] repository documents a catalog of kpt functions implemented using different toolchains.
 
 #### Developing Functions
 
-Two projects that aid kpt function development:
 
 | Language   | Documentation               | Examples                    |
 |------------|-----------------------------|-----------------------------|
 | Typescript | [kpt functions SDK][sdk-ts] | [examples][sdk-ts-examples] |
 | Go         | [kustomize/kyaml][kyaml]    | [example][kyaml-example]    |
-
-### Examples
-
-    # run the function defined by gcr.io/example.com/my-fn as a local container
-    # against the configuration in DIR
-    kpt fn run DIR/ --image gcr.io/example.com/my-fn
-
-    # run the functions declared in files under FUNCTIONS_DIR/
-    kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
-
-    # run the functions declared in files under DIR/
-    kpt fn run DIR/
 
 ### Also See Command Groups
 
@@ -85,7 +56,6 @@ Two projects that aid kpt function development:
 [run]: run.md
 [source]: source.md
 [sink]: sink.md
-
 [cfg]: ../cfg/README.md
 [pkg]: ../pkg/README.md
 [sdk-ts]: https://googlecontainertools.github.io/kpt-functions-sdk/

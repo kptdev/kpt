@@ -1,7 +1,6 @@
 ## run
 
-Locally executes one or more programs which may validate, transform, or generate i
-Resource configurations.
+Locally executes one or more programs which may generate, transform, or validate configuration files.
 
 Programs are packaged as container images which are pulled and run locally.
 If the container exits with non-zero status code, run will fail and print the
@@ -11,14 +10,14 @@ container `STDERR`.
 
 A function may be explicitly specified using the `--image` flag.
 
-__Example:__ Locally run the container image gcr.io/example.com/my-fn against
+__Example:__ Locally run the container image `gcr.io/example.com/my-fn` against
 the Resources in `DIR/`:
 
 ```sh
 kpt fn run DIR/ --image gcr.io/example.com/my-fn
 ```
 
-If `DIR` is not specified, the source will default to STDIN and sink will default
+If `DIR/` is not specified, the source will default to STDIN and sink will default
 to STDOUT.
 
 __Example:__ this is equivalent to the preceding example:
@@ -36,7 +35,6 @@ __Example:__ In addition to the input Resources, provide to the container image 
 of the function:
 
 ```sh
-# run the my-fn image, configured with foo=bar
 kpt fn run DIR/ --image gcr.io/example.com/my-fn -- foo=bar
 ```
 
