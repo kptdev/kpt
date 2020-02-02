@@ -6,7 +6,7 @@ Programs are packaged as container images which are pulled and run locally.
 If the container exits with non-zero status code, run will fail and print the
 container `STDERR`.
 
-#### Imperatively run an single function
+### Imperatively run an single function
 
 A function may be explicitly specified using the `--image` flag.
 
@@ -38,7 +38,7 @@ of the function:
 kpt fn run DIR/ --image gcr.io/example.com/my-fn -- foo=bar
 ```
 
-#### Declaratively run one or more functions
+### Declaratively run one or more functions
 
 Functions and their input configuration may be declared in files rather than directly
 on the command line.
@@ -68,7 +68,7 @@ kpt fn run DIR/
 Here, rather than specifying `gcr.io/example.com/my-fn` as a flag, we specify it in a
 file using the `config.kubernetes.io/function` annotation.
 
-##### Scoping Rules
+#### Scoping Rules
 
 Functions which are nested under some sub directory are scoped only to Resources under 
 that same sub directory. This allows fine grain control over how functions are 
@@ -116,13 +116,13 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 
 Alternatively, scoping can be disabled using `--global-scope` flag.
 
-##### Declaring Multiple Functions
+#### Declaring Multiple Functions
 
 You may declare multiple functions. If they are specified in the same file 
 (multi-object YAML file separated by `---`), they will
 be run sequentially in the order that they are specified.
 
-##### Custom `functionConfig`
+#### Custom `functionConfig`
 
 Functions may define their own API input types - these may be client-side equivalents 
 of CRDs:

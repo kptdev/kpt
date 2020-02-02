@@ -7,11 +7,11 @@ Generate, transform, or validate configuration files using containerized functio
 Functions are executables ([that you can write](#developing-functions)) packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
 
-| Command  | Description                                                                                           |
-|----------|-------------------------------------------------------------------------------------------------------|
-| [run]    | Locally executes one or more programs which may generate, transform, or validate configuration files. |
-| [source] | Explicitly specify an input source to pipe to `run`                                                   |
-| [sink]   | Explicitly specify an output sink to pipe to `run`                                                    |
+| Command  | Description                                         |
+|----------|-----------------------------------------------------|
+| [run]    | Locally executes one or more functions              |
+| [source] | Explicitly specify an input source to pipe to `run` |
+| [sink]   | Explicitly specify an output sink to pipe to `run`  |
 
 **Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
 
@@ -44,7 +44,7 @@ Functions may be run at different times depending on the function and the organi
 
 | Language   | Documentation               | Examples                    |
 |------------|-----------------------------|-----------------------------|
-| Typescript | [kpt functions SDK][sdk-ts] | [examples][sdk-ts-examples] |
+| Typescript | [KPT Functions SDK][sdk-ts] | [examples][sdk-ts-examples] |
 | Go         | [kustomize/kyaml][kyaml]    | [example][kyaml-example]    |
 
 ### Also See Command Groups
