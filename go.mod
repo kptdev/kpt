@@ -22,5 +22,5 @@ require (
 	gotest.tools v2.2.0+incompatible
 	k8s.io/client-go v0.17.0
 	sigs.k8s.io/kustomize/cmd/config v0.0.10
-	sigs.k8s.io/kustomize/kyaml v0.0.9
+	sigs.k8s.io/kustomize/kyaml v0.0.10
 )
