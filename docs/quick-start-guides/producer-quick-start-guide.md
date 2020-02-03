@@ -10,11 +10,11 @@ packages.
 ```
 $ git clone <repo url> # or create a new repo
 $ cd repository
-$ mkdir wordpress
-$ kpt pkg init wordpress --tag kpt.dev/app=wordpress --description "kpt wordpress package"
-# add wordpress manifests to the folder
+$ mkdir nginx
+$ kpt pkg init nginx --tag kpt.dev/app=nginx --description "kpt nginx package"
+$ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
 $ git add .
-$ git commit -m "Add wordpress package"
+$ git commit -m "Add nginx package"
 $ git tag v0.1.0
 $ git push
 ```
@@ -24,13 +24,13 @@ $ git push
 kpt provides several commands that can be helpful during the process of creating
 and updating kpt packages.
 
-To list all the resources in your package, use `kpt cfg tree wordpress`.\
-To show the manifests for all the resources in the package, use `kpt cfg cat wordpress`
+To list all the resources in your package, use `kpt cfg tree nginx`.\
+To show the manifests for all the resources in the package, use `kpt cfg cat nginx`
 
 To make it easy for consumers to customize the package, it is possible to
 add setters:\
-`$ kpt cfg create-setter wordpress image 5.3.2-php7.2-apache --type "string" --field "image"`\
+`$ kpt cfg create-setter nginx image nginx:1.7.9 --type "string" --field "image"`\
 This makes it possible for consumers to easily customize a package. 
 
 It is also possible to list all the available setters in a package:\
-`$ kpt cfg list-setters wordpress`
+`$ kpt cfg list-setters nginx`
