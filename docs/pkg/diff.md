@@ -1,6 +1,6 @@
 ## diff
 
-Show changes between local and upstream source package
+Diff a local package against upstream
 
 ### Synopsis
 

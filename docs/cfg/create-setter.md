@@ -1,6 +1,6 @@
 ## create-setter
 
-Create a custom setter for a Resource field
+Create or modify a field setter
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/cfg-create-setter.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>

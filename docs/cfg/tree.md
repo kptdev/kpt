@@ -1,6 +1,6 @@
 ## tree
 
-Display Resource structure from a directory or stdin.
+Print resources as a tree
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/cfg-tree.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>

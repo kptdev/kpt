@@ -1,6 +1,6 @@
 ## cat
 
-Print Resource Config from a local directory.
+Print resources
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/cfg-cat.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>

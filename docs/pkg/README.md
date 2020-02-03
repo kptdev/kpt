@@ -18,7 +18,7 @@ They may be an entire repo, or a subdirectory within a repo.
 
 | Command  | Description                             |
 |----------|-----------------------------------------|
-| [desc]   | print package origin                    |
+| [desc]   | print the package origin                |
 | [diff]   | diff a local package against upstream   |
 | [get]    | fetch a package from a git repo         |
 | [init]   | initialize an empty package             |

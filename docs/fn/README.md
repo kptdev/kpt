@@ -7,11 +7,11 @@ Generate, transform, or validate configuration files using containerized functio
 Functions are executables ([that you can write](#developing-functions)) packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
 
-| Command  | Description                                         |
-|----------|-----------------------------------------------------|
-| [run]    | Locally executes one or more functions              |
-| [source] | Explicitly specify an input source to pipe to `run` |
-| [sink]   | Explicitly specify an output sink to pipe to `run`  |
+| Command  | Description                            |
+|----------|----------------------------------------|
+| [run]    | locally execute one or more functions  |
+| [sink]   | explicitly specify an output sink      |
+| [source] | explicitly specify an input source     |
 
 **Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
 

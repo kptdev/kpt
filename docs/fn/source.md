@@ -1,10 +1,10 @@
 ## source
 
-Implement a Source by reading a local directory.
+Explicitly specify an input source
 
 ### Synopsis
 
-Implement a Source by reading a local directory.
+Implements a Source by reading configuration and writing to command stdout.
 
     kpt fn source DIR
 
@@ -15,7 +15,8 @@ Implement a Source by reading a local directory.
 
 ### Examples
 
-    # emity configuration directory as input source to a function
+    # print to stdout configuration formatted as an input source
     kpt fn source DIR/
 
+    # run a function using explicit sources and sinks
     kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/

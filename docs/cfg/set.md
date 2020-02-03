@@ -1,6 +1,6 @@
 ## set
 
-Set values on Resources fields values.
+Set one or more field values
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/cfg-set.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>

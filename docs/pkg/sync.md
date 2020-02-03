@@ -1,6 +1,6 @@
 ## kpt pkg sync
 
-Sync package dependencies using a manifest
+Fetch and update packages declaratively
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/pkg-sync.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>

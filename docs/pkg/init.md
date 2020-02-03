@@ -1,6 +1,6 @@
 ## init
 
-Initialize suggested package meta for a local config directory
+Initialize an empty package
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/pkg-init.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
@@ -13,7 +13,7 @@ Initialize suggested package meta for a local config directory
 
 ### Synopsis
 
-Any directory containing Kubernetes Resource Configuration may be treated as
+**init is optional**; any directory containing Kubernetes Resource Configuration may be treated as
 remote package without the existence of additional packaging metadata.
 
 * Resource Configuration may be placed anywhere under DIR as *.yaml files.
@@ -33,7 +33,7 @@ Init will:
 
   DIR:
 
-    Defaults to '.'. Init fails if DIR does not exist
+    Init fails if DIR does not exist
 
   --description string
 
@@ -54,7 +54,8 @@ Init will:
 ### Examples
 
     # writes Kptfile package meta if not found
-    kpt pkg init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
+    mkdir my-pkg
+    kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
 
 ###
 
