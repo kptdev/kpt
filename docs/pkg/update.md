@@ -15,6 +15,9 @@ Apply upstream package updates
 
     kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 
+
+  **Note:** all changes must be committed to git before running update
+
   LOCAL_PKG_DIR:
 
     Local package to update.  Directory must exist and contain a Kptfile to be updated.
@@ -62,14 +65,15 @@ Apply upstream package updates
 ### Examples
 
     # update my-package-dir/
+    git add . && git commit -m 'some message'
     kpt pkg update my-package-dir/
 
     # update my-package-dir/ to match the v1.3 branch or tag
+    git add . && git commit -m 'some message'
     kpt pkg update my-package-dir/@v1.3
 
     # update applying a git patch
-    git add my-package-dir/
-    git commit -m "package updates"
+    git add . && git commit -m "package updates"
     kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 
 ###
