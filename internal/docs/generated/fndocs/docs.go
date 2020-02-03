@@ -20,11 +20,11 @@ var READMELong = `
 Functions are executables ([that you can write](#developing-functions)) packaged in container images which accept a collection of
 Resource configuration as input, and emit a collection of Resource configuration as output.
 
-| Command  | Description                                         |
-|----------|-----------------------------------------------------|
-| [run]    | Locally executes one or more functions              |
-| [source] | Explicitly specify an input source to pipe to ` + "`" + `run` + "`" + ` |
-| [sink]   | Explicitly specify an output sink to pipe to ` + "`" + `run` + "`" + `  |
+| Command  | Description                            |
+|----------|----------------------------------------|
+| [run]    | locally execute one or more functions  |
+| [sink]   | explicitly specify an output sink      |
+| [source] | explicitly specify an input source     |
 
 **Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
 
@@ -72,8 +72,10 @@ var READMEExamples = `
     kpt fn run DIR/
 `
 
-var RunShort = `Locally executes one or more programs which may generate, transform, or validate configuration files.`
+var RunShort = `Locally execute one or more functions`
 var RunLong = `
+Generate, transform, or validate configuration files using locally run containerized functions.
+
 Programs are packaged as container images which are pulled and run locally.
 If the container exits with non-zero status code, run will fail and print the
 container ` + "`" + `STDERR` + "`" + `.
@@ -222,9 +224,9 @@ var RunExamples = `
 	kpt fn run DIR/
 `
 
-var SinkShort = `Implement a Sink by writing input to a local directory.`
+var SinkShort = `Explicitly specify an output sink`
 var SinkLong = `
-Implement a Sink by writing input to a local directory.
+Implements a Sink by reading command stdin and writing to a local directory.
 
     kpt fn sink DIR
 
@@ -234,11 +236,12 @@ Implement a Sink by writing input to a local directory.
 ` + "`" + `sink` + "`" + ` writes its input to a directory
 `
 var SinkExamples = `
+    # run a function using explicit sources and sinks
     kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/`
 
-var SourceShort = `Implement a Source by reading a local directory.`
+var SourceShort = `Explicitly specify an input source`
 var SourceLong = `
-Implement a Source by reading a local directory.
+Implements a Source by reading configuration and writing to command stdout.
 
     kpt fn source DIR
 
@@ -248,7 +251,8 @@ Implement a Source by reading a local directory.
 ` + "`" + `source` + "`" + ` emits configuration to act as input to a function
 `
 var SourceExamples = `
-    # emity configuration directory as input source to a function
+    # print to stdout configuration formatted as an input source
     kpt fn source DIR/
 
+    # run a function using explicit sources and sinks
     kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/`

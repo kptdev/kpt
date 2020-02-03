@@ -1,8 +1,10 @@
 ## run
 
-Locally executes one or more programs which may generate, transform, or validate configuration files.
+Locally execute one or more functions
 
 ### Synopsis
+
+Generate, transform, or validate configuration files using locally run containerized functions.
 
 Programs are packaged as container images which are pulled and run locally.
 If the container exits with non-zero status code, run will fail and print the

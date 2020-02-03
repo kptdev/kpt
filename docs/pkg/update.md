@@ -1,6 +1,6 @@
 ## kpt pkg update
 
-Update a local package with changes from a remote source repo
+Apply upstream package updates
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/pkg-update.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
@@ -14,6 +14,9 @@ Update a local package with changes from a remote source repo
 ### Synopsis
 
     kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+
+
+  **Note:** all changes must be committed to git before running update
 
   LOCAL_PKG_DIR:
 
@@ -62,14 +65,15 @@ Update a local package with changes from a remote source repo
 ### Examples
 
     # update my-package-dir/
+    git add . && git commit -m 'some message'
     kpt pkg update my-package-dir/
 
     # update my-package-dir/ to match the v1.3 branch or tag
+    git add . && git commit -m 'some message'
     kpt pkg update my-package-dir/@v1.3
 
     # update applying a git patch
-    git add my-package-dir/
-    git commit -m "package updates"
+    git add . && git commit -m "package updates"
     kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 
 ###

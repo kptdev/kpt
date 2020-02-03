@@ -22,7 +22,7 @@ They may be an entire repo, or a subdirectory within a repo.
 
 | Command  | Description                             |
 |----------|-----------------------------------------|
-| [desc]   | print package origin                    |
+| [desc]   | print the package origin                |
 | [diff]   | diff a local package against upstream   |
 | [get]    | fetch a package from a git repo         |
 | [init]   | initialize an empty package             |
@@ -156,7 +156,7 @@ var READMEExamples = `
     # Commit again.
 `
 
-var DescShort = `Display package descriptions`
+var DescShort = `Print the package origin`
 var DescLong = `
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/pkg-desc.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
@@ -176,7 +176,7 @@ var DescExamples = `
     kpt pkg desc prod-*
 `
 
-var DiffShort = `Show changes between local and upstream source package`
+var DiffShort = `Diff a local package against upstream`
 var DiffLong = `
     kpt pkg diff [LOCAL_PKG_DIR@VERSION]
 
@@ -247,7 +247,7 @@ var DiffExamples = `
     # Show 3way changes between the local package, upstream package at original version and upstream package at target version using meld
     kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"`
 
-var GetShort = `Fetch a package from a git repository`
+var GetShort = `Fetch a package from a git repo`
 var GetLong = `
     kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
@@ -305,9 +305,9 @@ var GetExamples = `
     kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
 `
 
-var InitShort = `Initialize suggested package meta for a local config directory`
+var InitShort = `Initialize an empty package`
 var InitLong = `
-Any directory containing Kubernetes Resource Configuration may be treated as
+**init is optional**; any directory containing Kubernetes Resource Configuration may be treated as
 remote package without the existence of additional packaging metadata.
 
 * Resource Configuration may be placed anywhere under DIR as *.yaml files.
@@ -327,7 +327,7 @@ Init will:
 
   DIR:
 
-    Defaults to '.'. Init fails if DIR does not exist
+    Init fails if DIR does not exist
 
   --description string
 
@@ -347,7 +347,8 @@ Init will:
 `
 var InitExamples = `
     # writes Kptfile package meta if not found
-    kpt pkg init ./ --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
+    mkdir my-pkg
+    kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb --description "my cockroachdb implementation"
 
 ###
 
@@ -432,7 +433,7 @@ var SyncSetExamples = `
 
 [tutorial-script]: ../gifs/pkg-sync.sh`
 
-var SyncShort = `Sync package dependencies using a manifest`
+var SyncShort = `Fetch and update packages declaratively`
 var SyncLong = `
 Sync uses a manifest to manage a collection of dependencies.
 
@@ -530,9 +531,12 @@ var SyncExamples = `
 
 [tutorial-script]: ../gifs/pkg-sync.sh`
 
-var UpdateShort = `Update a local package with changes from a remote source repo`
+var UpdateShort = `Apply upstream package updates`
 var UpdateLong = `
     kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+
+
+  **Note:** all changes must be committed to git before running update
 
   LOCAL_PKG_DIR:
 
@@ -580,14 +584,15 @@ var UpdateLong = `
 `
 var UpdateExamples = `
     # update my-package-dir/
+    git add . && git commit -m 'some message'
     kpt pkg update my-package-dir/
 
     # update my-package-dir/ to match the v1.3 branch or tag
+    git add . && git commit -m 'some message'
     kpt pkg update my-package-dir/@v1.3
 
     # update applying a git patch
-    git add my-package-dir/
-    git commit -m "package updates"
+    git add . && git commit -m "package updates"
     kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 
 ###

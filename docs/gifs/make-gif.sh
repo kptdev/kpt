@@ -22,4 +22,4 @@ export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/hellowor
 asciinema rec --overwrite -i 1 -c $d/$1.sh $d/$1.cast
 
 # copy to gs
-gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $d/$1.cast gs://kpt-dev/docs/$1.cast
+#gsutil -h "Cache-Control:no-cache,max-age=0" cp -a public-read $d/$1.cast gs://kpt-dev/docs/$1.cast

@@ -16,7 +16,7 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. $d/../../demos/demo-magic/demo-magic.sh
 
 kpt pkg get $PKG helloworld > /dev/null
 git add . > /dev/null
@@ -27,12 +27,8 @@ kpt svr apply -R -f helloworld > /dev/null
 # start demo
 clear
 
-echo "# start with helloworld package"
-echo "$ kpt pkg desc helloworld"
-kpt pkg desc helloworld
-
 echo " "
-p "# 'kpt cfg annotate' sets annotations on Resource configuration"
+p "# 'kpt cfg annotate' -- set an annotation on one or more Resources"
 pe "kpt cfg tree helloworld --field 'metadata.annotations.foo'"
 pe "kpt cfg annotate helloworld --kv foo=bar"
 pe "kpt cfg tree helloworld --field 'metadata.annotations.foo'"

@@ -3,7 +3,7 @@
 Fetch, update, and sync configuration files using git
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
-<asciinema-player src="/kpt/gifs/pkg.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<asciinema-player src="/kpt/gifs/pkg.cast" speed="1" theme="solarized-dark" cols="60" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
 <script src="/kpt/gifs/asciinema-player.js"></script>
 
     # run the tutorial from the cli
@@ -18,7 +18,7 @@ They may be an entire repo, or a subdirectory within a repo.
 
 | Command  | Description                             |
 |----------|-----------------------------------------|
-| [desc]   | print package origin                    |
+| [desc]   | print the package origin                |
 | [diff]   | diff a local package against upstream   |
 | [get]    | fetch a package from a git repo         |
 | [init]   | initialize an empty package             |

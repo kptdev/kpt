@@ -21,15 +21,15 @@ Programmatically print and modify raw json or yaml Resource Configuration
 
 | Command        | Description                                   |
 |----------------|-----------------------------------------------|
-| [annotate]     | set ` + "`" + `metadata.annotation` + "`" + `s on Resources       |
-| [cat]          | print Resources in a package                  |
-| [count]        | print Resource counts by type                 |
-| [create-setter]| create or modify a custom field-setter        |
-| [fmt]          | format Resource yaml                          |
-| [grep]         | filter Resources configuration                |
-| [list-setters] | list setters                                  |
-| [set]          | set one or more fields programmatically       |
-| [tree]         | print Resources using a tree structure        |
+| [annotate]     | set an annotation on one or more Resources    |
+| [cat]          | print resources                               |
+| [count]        | print resource counts                         |
+| [create-setter]| create or modify a field setter               |
+| [fmt]          | format configuration files                    |
+| [grep]         | find resources by field value                 |
+| [list-setters] | print available field setters                 |
+| [set]          | set one or more field values                  |
+| [tree]         | print resources as a tree                     |
 
 **Data Flow**: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
 
@@ -86,7 +86,7 @@ var AnnotateExamples = `
     kpt cfg annotate DIR --kv key1=value1 --kv key2=value2
 `
 
-var CatShort = `Print Resource Config from a local directory.`
+var CatShort = `Print resources`
 var CatLong = `
     kpt cfg cat DIR
 
@@ -98,7 +98,7 @@ var CatExamples = `
     kpt cfg cat my-dir/
 `
 
-var CountShort = `Count Resources Config from a local directory.`
+var CountShort = `Print resource counts`
 var CountLong = `
     kpt cfg count [DIR]
 
@@ -113,7 +113,7 @@ var CountExamples = `
     kubectl get all -o yaml | kpt cfg count
 `
 
-var CreateSetterShort = `Create a custom setter for a Resource field`
+var CreateSetterShort = `Create or modify a field setter`
 var CreateSetterLong = `
     kpt cfg create-setter DIR NAME VALUE
 
@@ -140,7 +140,7 @@ var CreateSetterExamples = `
         --field image --description "current stable release"
 `
 
-var FmtShort = `Format yaml configuration files.`
+var FmtShort = `Format configuration files`
 var FmtLong = `
 Fmt will format input by ordering fields and unordered list items in Kubernetes
 objects.  Inputs may be directories, files or stdin, and their contents must
@@ -179,7 +179,7 @@ var FmtExamples = `
 	kustomize build | kpt cfg fmt
 `
 
-var GrepShort = `Search for matching Resources in a directory or from stdin`
+var GrepShort = `Find resources by field value`
 var GrepLong = `
     kpt cfg grep QUERY DIR
 
@@ -210,7 +210,7 @@ var GrepExamples = `
 
 [tutorial-script]: ../gifs/cfg-grep.sh`
 
-var ListSettersShort = `List setters for Resources.`
+var ListSettersShort = `Print available field setters`
 var ListSettersLong = `
     kpt cfg list-setters DIR [NAME]
 
@@ -233,7 +233,7 @@ var ListSettersExamples = `
 
 [tutorial-script]: ../gifs/cfg-set.sh`
 
-var SetShort = `Set values on Resources fields values.`
+var SetShort = `Set one or more field values`
 var SetLong = `
 May set either the complete or partial field value.
 
@@ -320,7 +320,7 @@ var SetExamples = `
 
 [tutorial-script]: ../gifs/cfg-set.sh`
 
-var TreeShort = `Display Resource structure from a directory or stdin.`
+var TreeShort = `Print resources as a tree`
 var TreeLong = `
 kpt cfg tree may be used to print Resources in a directory or cluster, preserving structure
 

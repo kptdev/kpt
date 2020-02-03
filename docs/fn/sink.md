@@ -1,10 +1,10 @@
 ## sink
 
-Implement a Sink by writing input to a local directory.
+Explicitly specify an output sink
 
 ### Synopsis
 
-Implement a Sink by writing input to a local directory.
+Implements a Sink by reading command stdin and writing to a local directory.
 
     kpt fn sink DIR
 
@@ -15,4 +15,5 @@ Implement a Sink by writing input to a local directory.
 
 ### Examples
 
+    # run a function using explicit sources and sinks
     kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/

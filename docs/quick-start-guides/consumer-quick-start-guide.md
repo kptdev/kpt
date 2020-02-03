@@ -89,7 +89,7 @@ $ kpt cfg list-setters helloworld
   http-port       'helloworld port'         8080             integer   3              
   image-tag       'hello-world image tag'   0.1.1            string    1              
   replicas        'helloworld replicas'     3                integer   1              
-  servicei-name   'the service name'        helloworld-gke   string    1  
+  service-name   'the service name'        helloworld-gke   string    1  
 ```
 
 ## Apply a package

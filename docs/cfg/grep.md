@@ -1,6 +1,6 @@
 ## grep
 
-Search for matching Resources in a directory or from stdin
+Find resources by field value
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="/kpt/gifs/cfg-grep.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>

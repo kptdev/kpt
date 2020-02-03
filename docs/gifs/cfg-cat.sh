@@ -16,10 +16,9 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. $d/../../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
-git init > /dev/null
 
 export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
 kpt pkg get $PKG helloworld > /dev/null
@@ -27,22 +26,16 @@ git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null
 kpt svr apply -R -f helloworld > /dev/null
 
-
 # start demo
 clear
-
-echo "# start with helloworld package"
-echo "$ kpt pkg desc helloworld"
-kpt pkg desc helloworld
 
 echo " "
 p "# 'kpt cfg cat' prints raw Resources from a package"
 pe "kpt cfg cat helloworld"
 
 echo " "
-p "# by default, cat does not print Resources annotated with config.kubernetes.io/local-config"
-p "# because these should not be applied to a cluster.  To only show local-config use the flags"
-p "# --exclude-non-local and --include-local.  (will show no Resources for helloworld)"
+p "# by default, cat does not print Resources annotated with config.kubernetes.io/local-config."
+p "# To show local-config use the flags --exclude-non-local and --include-local."
 pe "kpt cfg cat helloworld --exclude-non-local --include-local"
 
 p "# for more information see 'kpt help cfg cat'"

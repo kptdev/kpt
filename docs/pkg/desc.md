@@ -1,6 +1,6 @@
 ## desc
 
-Display package descriptions
+Print the package origin
 
 ### Synopsis
 

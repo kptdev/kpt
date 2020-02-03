@@ -27,8 +27,7 @@ git commit -m 'fetched helloworld' > /dev/null
 clear
 
 # start demo
-echo "# 'kpt cfg' contains commands for printing and modifying local"
-echo "# packages of configuration"
+echo "# 'kpt cfg' -- programmatically modify and view Resource configuration"
 echo "# (tutorial uses package-examples/helloworld-set@v0.1.0)"
 
 echo " "
@@ -39,6 +38,7 @@ echo " "
 p "# kpt cfg set -- list and set fields"
 pe "kpt cfg list-setters helloworld"
 pe "kpt cfg set helloworld replicas 3"
+pe "git diff"
 
 echo " "
 p "# kpt cfg tree -- print the package with a tree structure"

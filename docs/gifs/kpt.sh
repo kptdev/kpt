@@ -16,7 +16,7 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. $d/../../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 git init
@@ -25,33 +25,38 @@ git init
 clear
 echo " "
 export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-p "# 'kpt pkg' commands fetch and update configuration packages from git repos"
+p "# 'kpt pkg' -- fetch, update, and sync configuration files using git"
 pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
-echo "$ git add . && git commit -m 'helloworld package'"
+pe "tree helloworld"
+p "# the package is composed of YAML or JSON files which may be directly applied to a cluster"
+pe "less helloworld/deploy.yaml"
 git add . && git commit -m 'helloworld package' > /dev/null
 
-echo " "
-p "# 'kpt cfg' commands display and modify local configuration files"
-pe "kpt cfg tree helloworld --replicas --image"
+pe "clear"
+p "# 'kpt cfg' -- examine and modify configuration files"
+pe "kpt cfg list-setters helloworld"
+pe "kpt cfg tree helloworld --replicas"
 pe "kpt cfg set helloworld replicas 3"
-pe "git diff -c"
+pe "kpt cfg tree helloworld --replicas"
+p "# the raw YAML or JSON files have been modified by kpt"
+pe "git diff"
 git commit -a -m 'helloworld package' > /dev/null
-echo "$ git commit -a -m 'helloworld package'"
 
-echo " "
-p "# 'kpt fn' commands generate, transform and validate configuration"
-p "# using functions packaged in containers (run locally)"
+pe "clear"
+p "# 'kpt fn' --  generate, transform, validate configuration files using containerized functions (run locally)"
 pe "kpt cfg tree helloworld --resources"
 pe "kpt cfg annotate helloworld --kv tshirt-size=small --kind Deployment"
 pe "kpt fn run helloworld --image gcr.io/kustomize-functions/example-tshirt:v0.1.0"
+p "# the function set resources on the Deployment using the annotation to determine the size"
 pe "kpt cfg tree helloworld --resources"
 
-echo " "
-p "# kpt is designed to integrate with tools developed by the Kubernetes project"
-p "# such as kubectl and kustomize"
+pe "clear"
+p "# kpt is designed to work in collaboration with tools developed by the Kubernetes project itself"
 pe "kubectl apply -R -f helloworld"
 pe "kubectl get all -o yaml | kpt cfg tree --image --ports"
 
+pe "clear"
+p "# kpt works just as well with kustomize as raw config"
 pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize helloworld-kustomize"
 pe "kustomize build helloworld-kustomize/ | kpt cfg fmt"
 pe "kubectl apply -k helloworld-kustomize"

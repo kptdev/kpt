@@ -1,7 +1,7 @@
 ## kpt
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
-<asciinema-player src="/kpt/gifs/kpt.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<asciinema-player src="/kpt/gifs/kpt.cast" speed="1" theme="solarized-dark" cols="60" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
 <script src="/kpt/gifs/asciinema-player.js"></script>
 
     # run the tutorial from the cli
