@@ -25,7 +25,8 @@ import (
 )
 
 func GetTTLCommand(name string) *cobra.Command {
-	var speed int
+	var speed float32
+	var print bool
 	ttl := &cobra.Command{
 		Use:     "ttl",
 		Short:   ttldocs.READMEShort,
@@ -48,16 +49,27 @@ func GetTTLCommand(name string) *cobra.Command {
 			if len(args) == 0 {
 				args = []string{"kpt"}
 			}
-			c := exec.Command(p, "play", "--speed", fmt.Sprintf("%d", speed),
-				fmt.Sprintf("https://storage.googleapis.com/kpt-dev/docs/%s.cast",
-					strings.Join(args, "-")))
+
+			var c *exec.Cmd
+			if print {
+				c = exec.Command(p, "cat",
+					fmt.Sprintf("https://storage.googleapis.com/kpt-dev/docs/%s.cast",
+						strings.Join(args, "-")))
+			} else {
+				c = exec.Command(p, "play", "--speed", fmt.Sprintf("%f", speed),
+					fmt.Sprintf("https://storage.googleapis.com/kpt-dev/docs/%s.cast",
+						strings.Join(args, "-")))
+			}
 			c.Stdin = cmd.InOrStdin()
 			c.Stdout = cmd.OutOrStdout()
 			c.Stderr = cmd.ErrOrStderr()
 			return c.Run()
 		},
 	}
-	ttl.Flags().IntVarP(
-		&speed, "speed", "s", 2, " playback speedup (can be fractional)")
+	ttl.Flags().Float32VarP(
+		&speed, "speed", "s", 1, "playback speedup (can be fractional)")
+	ttl.Flags().BoolVar(
+		&print, "print", false, "print the tutorial instead of playing it")
+
 	return ttl
 }
