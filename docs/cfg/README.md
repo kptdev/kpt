@@ -3,7 +3,7 @@
 Examine and modify configuration files
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
-<asciinema-player src="/kpt/gifs/cfg.cast" speed="1" theme="solarized-dark" cols="70" rows="36" font-size="medium" idle-time-limit="1"></asciinema-player>
+<asciinema-player src="/kpt/gifs/cfg.cast" speed="1" theme="solarized-dark" cols="60" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
 <script src="/kpt/gifs/asciinema-player.js"></script>
 
     kpt tutorial cfg
@@ -16,7 +16,7 @@ Programmatically print and modify raw json or yaml Resource Configuration
 
 | Command        | Description                                   |
 |----------------|-----------------------------------------------|
-| [annotate]     | set `metadata.annotation`s on Resources       |
+| [annotate]     | set an annotation on one or more Resources    |
 | [cat]          | print Resources in a package                  |
 | [count]        | print Resource counts by type                 |
 | [create-setter]| create or modify a custom field-setter        |

@@ -101,5 +101,3 @@ A single field value may have multiple setters applied to it for different parts
         --field image --description "current stable release"
 
 ### 
-
-[tutorial-script]: ../gifs/cfg-create-setter.sh

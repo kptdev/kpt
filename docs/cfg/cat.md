@@ -23,5 +23,3 @@ Print Resource Config from a local directory.
     kpt cfg cat my-dir/
 
 ### 
-
-[tutorial-script]: ../gifs/cfg-cat.sh

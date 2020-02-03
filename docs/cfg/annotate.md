@@ -1,9 +1,9 @@
-## cat
+## annotate
 
 Set an annotation on one or more Resources
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
-<asciinema-player src="/kpt/gifs/cfg-annotate.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<asciinema-player src="/kpt/gifs/cfg-annotate.cast" speed="1" theme="solarized-dark" cols="60" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
 <script src="/kpt/gifs/asciinema-player.js"></script>
 
     kpt tutorial cfg annotate
@@ -30,6 +30,4 @@ Set an annotation on one or more Resources
     kpt cfg annotate DIR --kv key1=value1 --kv key2=value2
 
 ### 
-
-[tutorial-script]: ../gifs/cfg-annotate.sh
 

@@ -21,7 +21,7 @@ Programmatically print and modify raw json or yaml Resource Configuration
 
 | Command        | Description                                   |
 |----------------|-----------------------------------------------|
-| [annotate]     | set ` + "`" + `metadata.annotation` + "`" + `s on Resources       |
+| [annotate]     | set an annotation on one or more Resources    |
 | [cat]          | print Resources in a package                  |
 | [count]        | print Resource counts by type                 |
 | [create-setter]| create or modify a custom field-setter        |
@@ -98,7 +98,7 @@ var CatExamples = `
     kpt cfg cat my-dir/
 `
 
-var CountShort = `Count Resources Config from a local directory.`
+var CountShort = `Count Resources config from a local directory`
 var CountLong = `
     kpt cfg count [DIR]
 
