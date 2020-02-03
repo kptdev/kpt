@@ -42,7 +42,7 @@ func NewRunner(parent string) *Runner {
 		diffTool = tool
 	}
 	diffToolOpts := os.Getenv("KPT_EXTERNAL_DIFF_OPTS")
-	c.Flags().StringVar(&r.diffType, "diff-type", string(diff.DiffTypeLocal),
+	c.Flags().StringVar(&r.diffType, "diff-type", "",
 		"diff type you want to perform e.g. "+diff.SupportedDiffTypesLabel())
 	c.Flags().StringVar(&r.DiffTool, "diff-tool", diffTool,
 		"diff tool to use to show the changes")
@@ -56,6 +56,7 @@ func NewRunner(parent string) *Runner {
 	return r
 }
 
+// NewCommand returns a diff command instance.
 func NewCommand(parent string) *cobra.Command {
 	return NewRunner(parent).C
 }
@@ -72,13 +73,31 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		dirVer = args[0]
 	}
-	dir, version, err := argutil.ParseDirVersionWithDefaults(dirVer)
+	dir, version, err := argutil.ParseDirVersion(dirVer)
 	if err != nil {
 		return err
 	}
+	if dir == "" {
+		dir = "./"
+	}
+	if r.diffType == "" {
+		// pick sensible defaults for diff-type
+		r.DiffType = diff.DiffTypeLocal
+		if version != "" {
+			// if target version is specified, default to 'combined' diff-type.
+			// xref: https://github.com/GoogleContainerTools/kpt/issues/139
+			r.DiffType = diff.DiffTypeCombined
+		}
+	} else {
+		r.DiffType = diff.DiffType(r.diffType)
+	}
+	if version == "" {
+		version = "master"
+	}
+
 	r.Path = dir
 	r.Ref = version
-	r.DiffType = diff.DiffType(r.diffType)
+
 	return r.Validate()
 }
 
