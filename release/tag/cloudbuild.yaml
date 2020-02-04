@@ -58,6 +58,12 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'tag', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}',  'gcr.io/$PROJECT_ID/kpt:latest' ]
 
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-t', 'gcr.io/kpt-dev/example-functions:${TAG_NAME}', '-f', 'functions/examples/Dockerfile', '.' ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'tag', 'gcr.io/kpt-dev/example-functions:${TAG_NAME}',  'gcr.io/kpt-dev/example-functions:latest' ]
+
   # run e2e tests and linting
   - name: 'mirror.gcr.io/library/golang'
     args: ['git', 'config', '--global', 'user.email', 'you@example.com']
@@ -88,6 +94,14 @@ steps:
   # update latest tag on release
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/kpt:latest']
+
+  # push the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/kpt-dev/example-functions:${TAG_NAME}']
+
+  # update latest tag on release
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/kpt-dev/example-functions:latest']
 
   # push the binaries
   - name: 'gcr.io/cloud-builders/gsutil'
