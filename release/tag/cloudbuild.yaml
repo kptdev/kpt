@@ -95,6 +95,6 @@ steps:
 
   # update the latest binaries
   - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', '-r', '-h', 'Cache-Control:no-cache,max-age=0', '-a', 'public-read', '/workspace/latest', 'gs://kpt-dev/']
+    args: ['cp', '-r', '-a', 'public-read', '/workspace/latest', 'gs://kpt-dev/']
 
 timeout: '60m'
