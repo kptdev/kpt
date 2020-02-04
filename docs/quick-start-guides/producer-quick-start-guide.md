@@ -19,7 +19,7 @@ Package resource configuration may be bootstrapped in many different ways:
 
 - generated from cli tools
   - `kubectl create deployment nginx --image nginx -o yaml --dry-run > deploy.yaml`
-- copied from examples or blogposts
+- copied from examples or blog posts
 - generated from DSLs or templates
 
 ## Publishing a package
