@@ -14,6 +14,18 @@
 [fn]: fn/README.md
 [tutorial-script]: gifs/kpt.sh
 
+### Quickstart Guides
+
+| Guides                  | Description                                                     |
+|-------------------------|-----------------------------------------------------------------|
+| [Consuming a Package]   | fetch a new copy of a package, writing it to a local directory  |
+| [Publishing a Package]  | publish a new package for others to consume                     |
+
+[Consuming a Package]: quick-start-guides/consumer-quick-start-guide.md
+[Publishing a Package]: quick-start-guides/producer-quick-start-guide.md
+
+---
+
 ### Synopsis
 
 kpt is a toolkit to help you manage, examine, manipulate, customize, validate, and apply Kubernetes resource
@@ -38,16 +50,6 @@ kpt functionality is subdivided into command groups, each of which operates on a
 | [cfg]         | examine and modify configuration files                                          |
 | [fn]          | generate, transform, validate configuration files using containerized functions |
 | TODO          | reconcile configuration files with the live state                               |
-
----
-
-### Quickstart Guides
-
-kpt is intended to be used by both consumer and producers of packages. We've
-provided two quickstart guides to help with both.
-
-- [Consumer](quick-start-guides/consumer-quick-start-guide.md)
-- [Producer](quick-start-guides/producer-quick-start-guide.md)
 
 ---
 

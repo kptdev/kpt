@@ -41,6 +41,76 @@ kpt functionality is subdivided into command groups, each of which operates on a
 | TODO          | reconcile configuration files with the live state                               |
 
 ---
+
+#### [pkg] Package Management
+
+Fetch, update, and sync configuration files using git.
+
+- Fetch and customize blueprints published by others.
+- Fetch the standard scaffolding for your new service.
+- Update your customized package by merging changes from upstream.
+
+**Data Flow**: git repo -> kpt [pkg] -> local files or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| git repository          | local files              |
+
+---
+
+#### [cfg] Configuration Management
+
+Examine and modify configuration files.
+
+- Display structured and condensed views of your resources
+- Filter and display resources by constraints
+- Set high-level knobs published by the package
+- Define and expose new knobs to simplify routine modifications
+
+**Data Flow**: local configuration or stdin -> kpt [cfg] -> local configuration or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
+
+---
+
+#### [fn] Configuration Functions
+
+Generate, transform, validate configuration files using containerized functions.
+
+- Generate resources from code, DSLs, templates, etc.
+- Apply cross-cutting transformations to resources
+- Validate resources
+
+*` + "`" + `fn` + "`" + ` is different from ` + "`" + `cfg` + "`" + ` in that it executes programs published as container images, rather
+than statically compiled into kpt.*
+
+**Data Flow**:  local configuration or stdin -> kpt [fn] (runs a container) -> local configuration or stdout
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | local files or stdout    |
+
+---
+
+#### Coming soon: Live-state Management
+
+Reconcile configuration files with the live state.
+
+- Apply a package
+- Preview changes before applying them
+- Wait until a package has been fully reconciled with the live state
+- Diff local configuration files and the live state
+
+**Data Flow**: local configuration or stdin -> kpt TODO -> apiserver (Kubernetes cluster)
+
+| Configuration Read From | Configuration Written To |
+|-------------------------|--------------------------|
+| local files or stdin    | apiserver                |
+| apiserver               | stdout                   |
+
+---
 `
 var READMEExamples = `
     # get a package
