@@ -58,8 +58,8 @@ pe "kpt cfg annotate helloworld --kv foo=bar --kind Deployment"
 pe "kpt cfg tree helloworld --name --replicas --field=metadata.annotations.foo"
 
 echo ""
-p "#  ${bold}run the generator again -- this time manually...${normal}"
-pe "kpt fn source . --function-config helloworld/helloworld.yaml | ~/go/bin/examples | kpt fn sink ."
+p "#  ${bold}run the generator again${normal}"
+pe "kpt fn run helloworld"
 
 echo ""
 p "#  ${bold}see that the changes have been merged...${normal}"

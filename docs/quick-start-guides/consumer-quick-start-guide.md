@@ -1,87 +1,164 @@
-# How to consume a package #
+# Consuming a package
 
-Consuming a package means that you fetch a package from a remote git repository to your local filesystem,
-customize it by changing values of the resource fields that your are interested in and finally apply it to
-your cluster.
+This tutorial walks through the workflow of consuming a package.
 
-This tutorial walks you through the workflow of consuming a package with an example `helloworld`.
+1. Fetch a package from a remote git repository to your local filesystem
+   - Any git subdirectory containing resource configuration will do
+2. View its contents
+3. Customize it by modifying resource field values
+4. Apply it to a cluster
 
-## Get a package
+## Fetch a copy of a package
 
-`kpt get pkg` gets a package from a git repository
+Fetch a copy of a package from a git repository and write it to a local directory.
+
+```sh
+export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld
 ```
-$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-$ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld
+
+View the package files.
+
+```sh
+tree helloworld
 ```
 
-## View a package
-To view the description of a package, run `kpt pkg desc`.
+Output:
+
+```sh
+helloworld
+├── Kptfile
+├── README.md
+├── deploy.yaml
+└── service.yaml
+
+0 directories, 4 files
 ```
-$ kpt pkg desc helloworld
+
+The package contains 2 resource configuration files -- `deploy.yaml` and `service.yaml`.
+These are the same types of resource configuration that would be applied with `kubectl apply`
+
+## Show the package origin
+
+Packages are simply git subdirectories containing resource configuration files.  Any git
+subdirectory containing resource configuration files may be fetched as a package.
+
+Show the git repo source of a package copy.
+
+```sh
+kpt pkg desc helloworld
+```
+
+Output:
+
+```sh
 helloworld/Kptfile
    PACKAGE NAME        DIR                       REMOTE                              REMOTE PATH              REMOTE REF   REMOTE COMMIT  
   hello-world-set   helloworld   git@github.com:GoogleContainerTools/kpt   /package-examples/helloworld-set   v0.1.0       5c1c019  
 ```
 
-The tree structure of the package can be viewed by `kpt cfg tree`
+| Column         | Description                                           |
+|----------------|-------------------------------------------------------|
+| PACKAGE NAME   | published name of the package                         |
+| DIR            | local directory containing the copy of the package    |
+| REMOTE         | remote git repo the package was copied from           |
+| REMOTE PATH    | remote repo subdirectory the package was copied from  |
+| REMOTE REF     | remote repo ref the package was copied at             |
+| REMOTE COMMIT  | remote repo commit the package was copied at          |
+
+
+## View the package contents
+
+Print the raw package resource configuration.
+
+```sh
+kpt cfg cat helloworld
 ```
-$ kpt cfg tree helloworld
+
+Or print a condensed view.
+
+```sh
+kpt cfg tree helloworld
+```
+
+Output:
+
+```sh
 helloworld
 ├── [deploy.yaml]  Deployment helloworld-gke
 └── [service.yaml]  Service helloworld-gke
 ```
 
-If you want to take a look at the raw K8s resources, run `kpt cfg cat`
-```
-$ kpt cfg cat helloworld
-```
 
 ## Customize a package
-A package contains a list of setters that allow users to customize the package.
 
-List all the setters by kpt cfg list-setters
+Packaged resource configuration may be directly modified using tools such as
+text editors.
+
+Additionally, packages may publish custom per-object field *setters* which
+enable specific resource fields to be modified programatically from the
+command line.
+
+List the available setters.
+
+```sh
+kpt cfg list-setters helloworld
 ```
-$ kpt cfg list-setters helloworld
+
+Output:
+
+```sh
     NAME            DESCRIPTION         VALUE    TYPE     COUNT   SETBY  
   http-port   'helloworld port'         80      integer   3              
   image-tag   'hello-world image tag'   0.1.0   string    1              
   replicas    'helloworld replicas'     5       integer   1 
 ```
 
-It contains three setters: `http-port`, `image-tag` and `replicas`.
-To update the value of any setter, run `kpt cfg set`.
-```
+This package contains three setters which may be used to set resource configuration
+fields through kpt: `http-port`, `image-tag` and `replicas`.
+
+```sh
 # Change http-port to 8080
-$ kpt cfg set helloworld http-port 8080
+kpt cfg set helloworld http-port 8080
 
 # Change the image tag to 0.1.1
-$ kpt cfg set helloworld image-tag 0.1.1 
+kpt cfg set helloworld image-tag 0.1.1 
 
 # Change the replicas to 3
-$ kpt cfg set helloworld replicas 3 
+kpt cfg set helloworld replicas 3 
 ```
 
 View the setter values after the change.
+
+```sh
+kpt cfg list-setters helloworld
 ```
-$ kpt cfg list-setters helloworld
+
+Output:
+
+```sh
     NAME            DESCRIPTION         VALUE    TYPE     COUNT   SETBY  
   http-port   'helloworld port'         8080    integer   3              
   image-tag   'hello-world image tag'   0.1.1   string    1              
   replicas    'helloworld replicas'     3       integer   1
 ```
 
-If you need to customize other field which is not included in the existing setter list.
-You can add a setter for it by `kpt cfg create-setter`.
+Package consumers may add their own setters to the package.
 
+```sh
+# add a setter for the Service name 
+# - the package directory is 'helloworld'
+# - the setter name to create is 'service-name'
+# - the current value of the setter is 'helloworld-gke' -- this must match the actual field value currently
+# - the type of the value is a 'string'
+# - the name of the field that will be set is 'name'
+# - the kind of resource to create the setter for is 'Service' (optional)
+# - the description of the field is 'the service name' (optional)
+kpt cfg create-setter helloworld service-name helloworld-gke  \
+    --type "string" --field name --kind Service --description "the service name"
 ```
-# Add a setter for the Service name 
-$ kpt cfg create-setter helloworld service-name helloworld-gke  --type "string" --field name --kind Service --description "the service name"
-```
 
-Here the `service-name` is the new setter name and `helloworld-gke` is the setter value.
-Note that when creating the setter, the setter value must match the existing field value from the package.
-
-List the setters again. You can see `service-name` is in the setter list.
+List the setters again -- we should see the new one.
 
 ```
 $ kpt cfg list-setters helloworld
@@ -92,10 +169,19 @@ $ kpt cfg list-setters helloworld
   service-name   'the service name'        helloworld-gke   string    1  
 ```
 
+The `service-name` setter has been added, with the current value of `helloworld-gke`.
+
 ## Apply a package
-The package can be applied to a cluster by `kubectl apply`.
+
+The resource configuration in the package can be applied to a cluster using `kubectl apply`.
+
+```sh
+kubectl apply -R -f helloworld
 ```
-$ kubectl apply -R -f helloworld
+
+Output:
+
+```sh
 deployment.apps/helloworld-gke created
 service/helloworld-gke created
 ```
