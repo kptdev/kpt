@@ -74,6 +74,6 @@ steps:
 
   # push the binaries
   - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', '-r', '-h', 'Cache-Control:no-cache,max-age=0', '-a', 'public-read', '/workspace/bin/', 'gs://kpt-dev/']
+    args: ['cp', '-r', '-a', 'public-read', '/workspace/bin/', 'gs://kpt-dev/']
 
 timeout: '60m'
