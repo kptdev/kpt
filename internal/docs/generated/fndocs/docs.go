@@ -228,10 +228,10 @@ var SinkShort = `Explicitly specify an output sink`
 var SinkLong = `
 Implements a Sink by reading command stdin and writing to a local directory.
 
-    kpt fn sink DIR
+    kpt fn sink [DIR]
 
   DIR:
-    Path to local directory.
+    Path to local directory.  If unspecified, sink will write to stdout as if it were a single file.
 
 ` + "`" + `sink` + "`" + ` writes its input to a directory
 `
@@ -243,10 +243,11 @@ var SourceShort = `Explicitly specify an input source`
 var SourceLong = `
 Implements a Source by reading configuration and writing to command stdout.
 
-    kpt fn source DIR
+    kpt fn source [DIR...]
 
   DIR:
-    Path to local directory.
+    One or more paths to local directories.  Contents from directories will be concatenated.
+    If no directories are provided, source will read from stdin as if it were a single file.
 
 ` + "`" + `source` + "`" + ` emits configuration to act as input to a function
 `
