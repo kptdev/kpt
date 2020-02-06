@@ -6,10 +6,10 @@ Explicitly specify an output sink
 
 Implements a Sink by reading command stdin and writing to a local directory.
 
-    kpt fn sink DIR
+    kpt fn sink [DIR]
 
   DIR:
-    Path to local directory.
+    Path to local directory.  If unspecified, sink will write to stdout as if it were a single file.
 
 `sink` writes its input to a directory
 
