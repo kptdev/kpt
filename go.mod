@@ -1,6 +1,6 @@
 module github.com/GoogleContainerTools/kpt
 
-go 1.13.5
+go 1.13
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
