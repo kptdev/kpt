@@ -24,14 +24,14 @@ git init
 # start demo
 clear
 p "# 'kpt pkg get' fetches a directory of configuration from a remote git repository subdirectory"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "tree ."
 pe "cat helloworld/deploy.yaml"
 pe "cat helloworld/service.yaml"
 
 echo " "
 p "# the same remote package may be fetched to multiple different local copies"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld2"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld2"
 pe "tree ."
 
 echo " "
@@ -41,12 +41,12 @@ echo " "
 echo "rm -rf helloworld helloworld2"
 rm -rf helloworld helloworld2
 p "# 'kpt pkg get' can fetch arbitrary nested subdirectories from a repo as packages"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples examples"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples examples"
 pe "tree examples"
 
 echo " "
 p "# subdirectories may be versioned independently from one another by including the subdirectory as part of the tag"
-pe "git ls-remote git@github.com:GoogleContainerTools/kpt | grep /package-examples/"
+pe "git ls-remote https://github.com/GoogleContainerTools/kpt | grep /package-examples/"
 pe "# when resolving a version, first a tag matching the 'subdirectory/version'"
 pe "# is matched, and if it is not found a tag matching 'version' is matched"
 

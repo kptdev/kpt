@@ -36,8 +36,8 @@ normal=$(tput sgr0)
 # start demo
 p "#  ${bold}setup the local package...${normal}"
 pe "kpt pkg init ."
-pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld-prod"
-pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-canary"
+pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld-prod"
+pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-canary"
 pe "cat Kptfile"
 
 echo ""
@@ -50,7 +50,7 @@ pe "diff helloworld-prod helloworld-canary"
 
 echo ""
 p "#  ${bold}promote from canary to prod...${normal}"
-pe "kpt pkg sync set git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-prod"
+pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-prod"
 pe "kpt pkg sync ."
 pe "kpt cfg tree . --field=metadata.labels"
 pe "diff helloworld-prod helloworld-canary"

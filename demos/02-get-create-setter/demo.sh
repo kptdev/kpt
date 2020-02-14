@@ -31,7 +31,7 @@ pwd
 # start demo
 echo ""
 p "# fetch the package and add to git..."
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0 helloworld"
 pe "git add . && git commit -m 'helloworld'"
 
 echo ""

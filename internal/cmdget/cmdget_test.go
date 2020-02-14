@@ -215,27 +215,27 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 
 	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"git@github.com:foo/bar.git/baz", filepath.Join(d, "package", "my-app")})
+	r.Command.SetArgs([]string{"https://github.com/foo/bar.git/baz", filepath.Join(d, "package", "my-app")})
 	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "git@github.com:foo/bar", r.Get.Repo)
+	assert.Equal(t, "https://github.com/foo/bar", r.Get.Repo)
 	assert.Equal(t, "/baz", r.Get.Directory)
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
 
 	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"git@github.com:foo/bar/.git/baz", filepath.Join(d, "package", "my-app")})
+	r.Command.SetArgs([]string{"https://github.com/foo/bar/.git/baz", filepath.Join(d, "package", "my-app")})
 	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "git@github.com:foo/bar", r.Get.Repo)
+	assert.Equal(t, "https://github.com/foo/bar", r.Get.Repo)
 	assert.Equal(t, "/baz", r.Get.Directory)
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
 
 	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"git@github.com:foo/bar.git/baz@v1", filepath.Join(d, "package", "my-app")})
+	r.Command.SetArgs([]string{"https://github.com/foo/bar.git/baz@v1", filepath.Join(d, "package", "my-app")})
 	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "git@github.com:foo/bar", r.Get.Repo)
+	assert.Equal(t, "https://github.com/foo/bar", r.Get.Repo)
 	assert.Equal(t, "/baz", r.Get.Directory)
 	assert.Equal(t, "v1", r.Get.Ref)
 	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)

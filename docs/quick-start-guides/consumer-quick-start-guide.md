@@ -13,7 +13,7 @@ This tutorial walks through the workflow of consuming a package.
 Fetch a copy of a package from a git repository and write it to a local directory.
 
 ```sh
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld
 ```
 
@@ -54,7 +54,7 @@ Output:
 ```sh
 helloworld/Kptfile
    PACKAGE NAME        DIR                       REMOTE                              REMOTE PATH              REMOTE REF   REMOTE COMMIT  
-  hello-world-set   helloworld   git@github.com:GoogleContainerTools/kpt   /package-examples/helloworld-set   v0.1.0       5c1c019  
+  hello-world-set   helloworld   https://github.com/GoogleContainerTools/kpt   /package-examples/helloworld-set   v0.1.0       5c1c019  
 ```
 
 | Column         | Description                                           |

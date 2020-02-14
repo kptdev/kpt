@@ -35,7 +35,7 @@ normal=$(tput sgr0)
 # start demo
 echo ""
 echo "  ${bold}fetch the package...${normal}"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@v0.1.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@v0.1.0 helloworld"
 
 echo ""
 echo "  ${bold}print the package resources...${normal}"

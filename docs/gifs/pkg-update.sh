@@ -24,12 +24,12 @@ git init
 # start demo
 clear
 
-kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld
 git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null
 
 echo "$ # start with a package fetched at version v0.1.0"
-echo "$ kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+echo "$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 echo "$ git add . && git commit -m 'fetched helloworld'"
 
 echo " "

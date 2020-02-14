@@ -21,7 +21,7 @@
 cd $(mktemp -d)
 git init
 
-export PKG=git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
+export PKG=https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
 kpt pkg get $PKG helloworld > /dev/null
 git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null
