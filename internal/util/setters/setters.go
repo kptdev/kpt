@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 )
@@ -71,7 +72,10 @@ func PerformSetters(path string) error {
 
 	if projectID != "" {
 		projectNumber, err := GetProjectNumberFromProjectID(projectID)
-		if err == nil && projectNumber != "" {
+		if err != nil {
+			return err
+		}
+		if projectNumber != "" {
 			fltrs = append(fltrs, &setters.PerformSetters{Name: "gcloud.project.projectNumber", Value: projectNumber, SetBy: "kpt"})
 		}
 	}
@@ -89,9 +93,7 @@ func GetProjectNumberFromProjectID(projectID string) (string, error) {
 		"projects", "describe", projectID, "--format", "value(projectNumber)")
 	b, err := gcloudCmd.Output()
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		return "", err
+		return "", errors.Wrap(err, "failed to get project number")
 	}
-	fmt.Println(strings.TrimSpace(string(b)))
 	return strings.TrimSpace(string(b)), nil
 }
