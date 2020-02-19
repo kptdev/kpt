@@ -123,7 +123,7 @@ They may be an entire repo, or a subdirectory within a repo.
     $ git init
 
     # get the package
-    $ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
+    $ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
     $ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld
 
     # add helloworld to your workspace

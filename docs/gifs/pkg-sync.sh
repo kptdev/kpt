@@ -21,7 +21,7 @@
 cd $(mktemp -d)
 git init
 
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 
 # start demo
 clear
@@ -31,7 +31,7 @@ kpt pkg init . --description 'my package'
 pe "tree ."
 
 echo " "
-echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
+echo "$ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git"
 p "# 'kpt pkg sync set' adds a package dependency to the Kptfile"
 pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.1.0 hello-world-prod"
 

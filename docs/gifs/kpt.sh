@@ -24,9 +24,9 @@ git init
 # start demo
 clear
 echo " "
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 p "# 'kpt pkg' -- fetch, update, and sync configuration files using git"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 pe "tree helloworld"
 p "# the package is composed of YAML or JSON files which may be directly applied to a cluster"
 pe "less helloworld/deploy.yaml"
@@ -57,7 +57,7 @@ pe "kubectl get all -o yaml | kpt cfg tree --image --ports"
 
 pe "clear"
 p "# kpt works just as well with kustomize as raw config"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize helloworld-kustomize"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize helloworld-kustomize"
 pe "kustomize build helloworld-kustomize/ | kpt cfg fmt"
 pe "kubectl apply -k helloworld-kustomize"
 

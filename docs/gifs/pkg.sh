@@ -24,8 +24,8 @@ git init
 # start demo
 clear
 echo " "
-export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git
-echo "$ export SRC_REPO=git@github.com:GoogleContainerTools/kpt.git"
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+echo "$ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git"
 p "# 'kpt pkg get' fetches a package from a git repository"
 pe "kpt pkg get \$SRC_REPO/package-examples/helloworld-set@v0.1.0 helloworld"
 git add . > /dev/null

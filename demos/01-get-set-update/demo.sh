@@ -34,7 +34,7 @@ normal=$(tput sgr0)
 # start demo
 clear
 p "# fetch the package..."
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
 
 echo " "
 p "# print its contents..."

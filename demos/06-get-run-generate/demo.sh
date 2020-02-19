@@ -31,7 +31,7 @@ pwd
 # start demo
 echo ""
 p "#  ${bold}fetch the package...${normal}"
-pe "kpt pkg get git@github.com:GoogleContainerTools/kpt.git/package-examples/helloworld-generate@v0.2.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-generate@v0.2.0 helloworld"
 
 echo ""
 p "#  ${bold}print the package resources (only-generators)...${normal}"
