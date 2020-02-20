@@ -16,6 +16,7 @@ package commands
 
 import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/cfgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 )
@@ -74,7 +75,7 @@ func GetConfigCommand(name string) *cobra.Command {
 	listSetters.Long = cfgdocs.ListSettersShort + "\n" + cfgdocs.ListSettersLong
 	listSetters.Example = cfgdocs.ListSettersExamples
 
-	set := configcobra.Set(name)
+	set := SetCommand(name)
 	set.Short = cfgdocs.SetShort
 	set.Long = cfgdocs.SetShort + "\n" + cfgdocs.SetLong
 	set.Example = cfgdocs.SetExamples
@@ -87,4 +88,27 @@ func GetConfigCommand(name string) *cobra.Command {
 	cfgCmd.AddCommand(an, cat, count, createSetter, fmt,
 		grep, listSetters, set, tree)
 	return cfgCmd
+}
+
+// SetCommand wraps the kustomize set command in order to automatically update
+// a project number if a project id is set.
+func SetCommand(parent string) *cobra.Command {
+	kustomizeCmd := configcobra.Set(parent)
+	setCmd := *kustomizeCmd
+	setCmd.RunE = func(c *cobra.Command, args []string) error {
+		kustomizeCmd.SetArgs(args)
+		if err := kustomizeCmd.Execute(); err != nil {
+			return nil
+		}
+		if len(args) != 3 || args[1] != "gcloud.core.project" {
+			return nil
+		}
+		projectNumber, err := setters.GetProjectNumberFromProjectID(args[2])
+		if err != nil {
+			return nil
+		}
+		kustomizeCmd.SetArgs([]string{args[0], "gcloud.project.projectNumber", projectNumber})
+		return kustomizeCmd.Execute()
+	}
+	return &setCmd
 }
