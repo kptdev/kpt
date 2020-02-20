@@ -9,7 +9,7 @@ kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes
 
 ## Installation
 
-Grab prebuilt Binaries:
+### Grab prebuilt Binaries:
 
 | Platform                 
 | ------------------------ 
@@ -27,6 +27,12 @@ then:
     chmod +x kpt
 
     ./kpt version
+### Install with Homebrew 
+
+```Shell
+brew tap GoogleContainerTools/kpt https://github.com/GoogleContainerTools/kpt.git
+brew install kpt
+```
 
 ### [Documentation](https://googlecontainertools.github.io/kpt)
 
