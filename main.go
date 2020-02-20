@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate $GOBIN/mdtogo docs/live internal/docs/generated/livedocs --license=none
 //go:generate $GOBIN/mdtogo docs/ttl internal/docs/generated/ttldocs --license=none
 //go:generate $GOBIN/mdtogo docs/pkg internal/docs/generated/pkgdocs --license=none
 //go:generate $GOBIN/mdtogo docs/cfg internal/docs/generated/cfgdocs --license=none
