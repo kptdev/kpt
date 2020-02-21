@@ -58,7 +58,7 @@ git commit -m 'synced packaged' > /dev/null
 
 echo " "
 p "# 'kpt pkg sync set' may also be used to update the version of a dependency"
-pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world-1"
+pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.2.0 hello-world-prod"
 pe "kpt pkg sync ."
 pe "diff hello-world-dev hello-world-prod"
 

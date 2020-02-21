@@ -34,11 +34,11 @@ normal=$(tput sgr0)
 # start demo
 echo ""
 echo "  ${bold}fetch the package...${normal}"
-pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld1"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.3.0 helloworld1"
 
 echo ""
 echo "  ${bold}fetch the package, automatically setting field values...${normal}"
-pe "KPT_SET_REPLICAS=3 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld2"
+pe "KPT_SET_REPLICAS=3 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.3.0 helloworld2"
 
 pe "kpt cfg tree helloworld1 --replicas"
 pe "kpt cfg tree helloworld2 --replicas"
