@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	. "github.com/GoogleContainerTools/kpt/internal/kptfile"
@@ -111,4 +112,166 @@ upstreamBadField:
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "upstreamBadField not found")
 	assert.Equal(t, KptFile{}, f)
+}
+
+func TestKptFile_MergeOpenAPI(t *testing.T) {
+	tests := []struct {
+		name     string
+		to       string
+		from     string
+		expected string
+	}{
+		{
+			name: "add value",
+			to: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+`,
+			from: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.image:
+            x-k8s-cli:
+                setter:
+                    name: image
+                    value: nginx
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.7.9
+`,
+		},
+		{
+			name: "copy value",
+			to: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			from: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.image:
+            x-k8s-cli:
+                setter:
+                    name: image
+                    value: nginx
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.0
+`,
+		},
+		{
+			name: "replace values",
+			to: `
+`,
+			from: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.0
+`,
+		},
+		{
+			name: "keep values",
+			to: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			from: `
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.0
+`,
+		},
+	}
+
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			kTo := KptFile{}
+			if !assert.NoError(t, yaml.Unmarshal([]byte(test.to), &kTo)) {
+				t.FailNow()
+			}
+
+			kFrom := KptFile{}
+			if !assert.NoError(t, yaml.Unmarshal([]byte(test.from), &kFrom)) {
+				t.FailNow()
+			}
+
+			err := kTo.MergeOpenAPI(kFrom)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			b, err := yaml.Marshal(kTo)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t,
+				strings.TrimSpace(test.expected),
+				strings.TrimSpace(string(b))) {
+				t.FailNow()
+			}
+		})
+	}
 }
