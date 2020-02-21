@@ -1,0 +1,13 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: helloworld-kustomize
+openAPI:
+  definitions:
+    io.k8s.cli.setters.message:
+      description: message to print
+      x-k8s-cli:
+        setter:
+          name: message
+          value: patch
+          setBy: package-default

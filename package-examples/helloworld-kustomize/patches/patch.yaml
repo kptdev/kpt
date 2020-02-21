@@ -20,7 +20,7 @@ spec:
   template:
     spec:
       containers:
-        - name: helloworld-gke
-          env:
-            - name: MESSAGE
-              value: 'patch'
+      - name: helloworld-gke
+        env:
+        - name: MESSAGE
+          value: 'patch' # {"$ref":"#/definitions/io.k8s.cli.setters.message"}

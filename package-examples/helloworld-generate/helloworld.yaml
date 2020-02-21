@@ -24,7 +24,7 @@ metadata:
         image: gcr.io/kpt-dev/example-functions:v0.1.0
     config.kubernetes.io/local-config: "true"
 spec:
-  replicas: 3 # {"type":"integer","x-kustomize":{"setter":{"name":"replicas","value":"3"}}}
+  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
   selector:
     app: hello
   port: 80

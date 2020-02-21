@@ -28,7 +28,7 @@ metadata:
   labels:
     app: hello
   annotations:
-    tshirt-size: 'small' # {"description":"start out small","type":"string","x-kustomize":{"setBy":"default","setter":{"name":"tshirt-size","value":"small"}}}
+    tshirt-size: 'small' # {"$ref":"#/definitions/io.k8s.cli.setters.tshirt-size"}
 spec:
   replicas: 5
   selector:

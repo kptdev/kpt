@@ -20,7 +20,7 @@ metadata:
   labels:
     app: hello
 spec:
-  replicas: 5 # {"description":"helloworld replicas","type":"integer","x-kustomize":{"setter":{"name":"replicas","value":"5"}}}
+  replicas: 5 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
   selector:
     matchLabels:
       app: hello
@@ -31,10 +31,10 @@ spec:
     spec:
       containers:
       - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 # {"description":"hello-world image tag","type":"string","x-kustomize":{"partialSetters":[{"name":"image-tag","value":"0.1.0"}]}}
+        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-tag"}
         ports:
         - name: http
-          containerPort: 80 # {"description":"helloworld port","type":"integer","x-kustomize":{"setter":{"name":"http-port","value":"80"}}}
+          containerPort: 80 # {"$ref":"#/definitions/io.k8s.cli.setters.http-port"}
         env:
         - name: PORT
-          value: "80" # {"description":"helloworld port","type":"string","x-kustomize":{"setter":{"name":"http-port","value":"80"}}}
+          value: "80" # {"$ref":"#/definitions/io.k8s.cli.setters.http-port"}
