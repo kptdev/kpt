@@ -2,6 +2,14 @@
 
 Create or modify a field substitution
 
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg-create-subst.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
+
+    kpt tutorial cfg create-subst
+
+[tutorial-script]
+
 ### Synopsis
 
     kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
@@ -136,3 +144,5 @@ references*.
     kpt cfg set tag v1.8.0
 
 ### 
+
+[tutorial-script]: ../gifs/cfg-create-subst.sh

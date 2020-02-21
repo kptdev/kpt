@@ -16,7 +16,7 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. $d/../../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 git init > /dev/null
@@ -25,7 +25,6 @@ kpt pkg get https://github.com/kubernetes/examples/staging examples > /dev/null
 git add . > /dev/null
 git commit -m 'fetched examples' > /dev/null
 
-export PKG=https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
 kpt pkg get $PKG helloworld > /dev/null
 git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null

@@ -2,6 +2,12 @@
 
 Set one or more field values using setters
 
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg-set.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
+
+    kpt tutorial cfg set
+
 ### Synopsis
 
     kpt cfg set DIR NAME VALUE

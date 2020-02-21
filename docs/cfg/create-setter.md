@@ -2,6 +2,14 @@
 
 Create or modify a field setter
 
+<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
+<asciinema-player src="/kpt/gifs/cfg-create-setter.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
+<script src="/kpt/gifs/asciinema-player.js"></script>
+
+    kpt tutorial cfg create-setter
+
+[tutorial-script]
+
 ### Synopsis
 
     kpt cfg create-setter DIR NAME VALUE
@@ -78,3 +86,5 @@ spec:
         --description "good starter value"
 
 ### 
+
+[tutorial-script]: ../gifs/cfg-create-setter.sh
