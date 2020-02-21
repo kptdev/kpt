@@ -25,14 +25,17 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/commands"
+	kptcommands "github.com/GoogleContainerTools/kpt/commands"
 	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
+	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -48,6 +51,12 @@ func main() {
 		Short:   overview.READMEShort,
 		Long:    overview.READMELong,
 		Example: overview.READMEExamples,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			// register function to use Kptfile for OpenAPI
+			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
+				return filepath.Join(args[0], kptfile.KptFileName), nil
+			}
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if installComp {
 				os.Setenv("COMP_INSTALL", "1")
@@ -110,7 +119,7 @@ func main() {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(commands.GetKptCommands("kpt")...)
+	cmd.AddCommand(kptcommands.GetKptCommands("kpt")...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
