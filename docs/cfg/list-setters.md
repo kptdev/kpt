@@ -1,14 +1,6 @@
 ## set
 
-Print available field setters
-
-<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
-<asciinema-player src="/kpt/gifs/cfg-set.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
-<script src="/kpt/gifs/asciinema-player.js"></script>
-
-    kpt tutorial cfg set
-
-[tutorial-script]
+List configured field setters
 
 ### Synopsis
 
@@ -16,7 +8,7 @@ Print available field setters
 
   DIR
 
-    A directory containing Resource configuration.
+    A directory containing a Kptfile.
 
   NAME
 
@@ -24,11 +16,10 @@ Print available field setters
 
 ### Examples
 
-  Show setters:
-
-    $ kpt cfg list-setters DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
-    name-prefix   ''            PREFIX    string   2
+    # list the setters in the hello-world package
+    kpt cfg list-setters hello-world/
+      NAME     VALUE    SET BY    DESCRIPTION   COUNT  
+    replicas   4       isabella   good value    1   
 
 ###
 

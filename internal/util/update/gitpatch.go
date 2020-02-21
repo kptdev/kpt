@@ -169,6 +169,11 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 		// found upstream Kptfile, use the upstream copy, but set the `upstream` field
 		// since it is owned locally
 		pf.Upstream = u.UpdateOptions.KptFile.Upstream
+		// also keep the local OpenAPI which may have been modified.
+		err = pf.MergeOpenAPI(u.UpdateOptions.KptFile)
+		if err != nil {
+			return err
+		}
 	}
 
 	// write the Kptfile so the patch sees the updates to it.  use the version we read

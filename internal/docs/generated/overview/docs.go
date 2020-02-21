@@ -38,7 +38,7 @@ kpt functionality is subdivided into command groups, each of which operates on a
 | [pkg]         | fetch, update, and sync configuration files using git                           |
 | [cfg]         | examine and modify configuration files                                          |
 | [fn]          | generate, transform, validate configuration files using containerized functions |
-| TODO          | reconcile configuration files with the live state                               |
+| [live]        | reconcile configuration files with the live state                               |
 
 ---
 
@@ -94,16 +94,16 @@ than statically compiled into kpt.*
 
 ---
 
-#### Coming soon: Live-state Management
+#### [live] Live-state Management
 
 Reconcile configuration files with the live state.
 
 - Apply a package
 - Preview changes before applying them
 - Wait until a package has been fully reconciled with the live state
-- Diff local configuration files and the live state
+- Remove a package
 
-**Data Flow**: local configuration or stdin -> kpt TODO -> apiserver (Kubernetes cluster)
+**Data Flow**: local configuration or stdin -> kpt live -> apiserver (Kubernetes cluster)
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
@@ -127,11 +127,29 @@ var READMEExamples = `
 
     $ kpt cfg set helloworld replicas 3 --set-by pwittrock  --description 'reason'
     set 1 fields
-
-    # apply
-    $ kubectl apply -R -f helloworld
+    
+    # preview what will happen when running apply
+    $ kpt live preview helloworld
+    configmap/test-inventory-2911da3b created
     deployment.apps/helloworld-gke created
     service/helloworld-gke created
+
+    # run apply
+    $ kpt live apply --status helloworld
+    configmap/test-inventory-2911da3b created
+    deployment.apps/helloworld-gke created
+    service/helloworld-gke created
+    configmap/test-inventory-2911da3b is Current: Resource is always ready
+    deployment.apps/helloworld-gke is InProgress: Available: 0/3
+    service/helloworld-gke is Current: Service is ready
+    deployment.apps/helloworld-gke is Current: Deployment is available. Replicas: 3
+    all resources has reached the Current status
+    
+    # remove the resources
+    $ kpt live destroy helloworld
+    service/helloworld-gke pruned
+    deployment.apps/helloworld-gke pruned
+    configmap/test-inventory-2911da3b pruned
 
     # learn about kpt
     $ kpt help

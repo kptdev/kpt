@@ -26,14 +26,8 @@ import (
 )
 
 func PerformSetters(path string) error {
-	rw := &kio.LocalPackageReadWriter{
-		PackagePath:           path,
-		KeepReaderAnnotations: false,
-		IncludeSubpackages:    true,
-	}
 
 	// auto-fill setters from the environment
-	var fltrs []kio.Filter
 	for i := range os.Environ() {
 		e := os.Environ()[i]
 		if !strings.HasPrefix(e, "KPT_SET_") {
@@ -45,7 +39,21 @@ func PerformSetters(path string) error {
 		}
 		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
 		k = strings.ToLower(k)
-		fltrs = append(fltrs, &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"})
+
+		setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
+		rw := &kio.LocalPackageReadWriter{
+			PackagePath:           path,
+			KeepReaderAnnotations: false,
+			IncludeSubpackages:    true,
+		}
+		err := kio.Pipeline{
+			Inputs:  []kio.Reader{rw},
+			Filters: []kio.Filter{setter},
+			Outputs: []kio.Writer{rw},
+		}.Execute()
+		if err != nil {
+			return err
+		}
 	}
 
 	// auto-fill setters from gcloud
@@ -64,10 +72,29 @@ func PerformSetters(path string) error {
 			// don't replace values that aren't set - stick with the defaults as defined in the manifest
 			continue
 		}
-		if c == "core.project" {
+
+		setter := &setters.PerformSetters{
+			Name:  fmt.Sprintf("gcloud.%s", c),
+			Value: v,
+			SetBy: "kpt",
+		}
+		rw := &kio.LocalPackageReadWriter{
+			PackagePath:           path,
+			KeepReaderAnnotations: false,
+			IncludeSubpackages:    true,
+		}
+		err = kio.Pipeline{
+			Inputs:  []kio.Reader{rw},
+			Filters: []kio.Filter{setter},
+			Outputs: []kio.Writer{rw},
+		}.Execute()
+		if err != nil {
+			return err
+		}
+		if c == "core.project" && setter.Count > 0 {
+			// set the projectNumber if we set the projectID
 			projectID = v
 		}
-		fltrs = append(fltrs, &setters.PerformSetters{Name: fmt.Sprintf("gcloud.%s", c), Value: v, SetBy: "kpt"})
 	}
 
 	if projectID != "" {
@@ -76,16 +103,24 @@ func PerformSetters(path string) error {
 			return err
 		}
 		if projectNumber != "" {
-			fltrs = append(fltrs, &setters.PerformSetters{Name: "gcloud.project.projectNumber", Value: projectNumber, SetBy: "kpt"})
+			rw := &kio.LocalPackageReadWriter{
+				PackagePath:           path,
+				KeepReaderAnnotations: false,
+				IncludeSubpackages:    true,
+			}
+			err = kio.Pipeline{
+				Inputs: []kio.Reader{rw},
+				Filters: []kio.Filter{&setters.PerformSetters{
+					Name:  "gcloud.project.projectNumber",
+					Value: projectNumber, SetBy: "kpt"}},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+			if err != nil {
+				return err
+			}
 		}
 	}
-
-	if len(fltrs) == 0 {
-		return nil
-	}
-
-	return kio.Pipeline{Inputs: []kio.Reader{rw}, Filters: fltrs, Outputs: []kio.Writer{rw}}.
-		Execute()
+	return nil
 }
 
 func GetProjectNumberFromProjectID(projectID string) (string, error) {
@@ -93,7 +128,7 @@ func GetProjectNumberFromProjectID(projectID string) (string, error) {
 		"projects", "describe", projectID, "--format", "value(projectNumber)")
 	b, err := gcloudCmd.Output()
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get project number")
+		return "", errors.Wrapf(err, "failed to get project number for %s", projectID)
 	}
 	return strings.TrimSpace(string(b)), nil
 }

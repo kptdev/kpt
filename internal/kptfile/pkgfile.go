@@ -39,6 +39,78 @@ type KptFile struct {
 	PackageMeta PackageMeta `yaml:"packageMetadata,omitempty"`
 
 	Dependencies []Dependency `yaml:"dependencies,omitempty"`
+
+	// OpenAPI contains additional schema for the resources in this package
+	// Uses interface{} instead of Node to work around yaml serialization issues
+	// See https://github.com/go-yaml/yaml/issues/518 and
+	// https://github.com/go-yaml/yaml/issues/575
+	OpenAPI interface{} `yaml:"openAPI,omitempty"`
+}
+
+// MergeOpenAPI adds the OpenAPI definitions from file to k.
+// This function is very complex due to serialization issues with yaml.Node.
+func (k *KptFile) MergeOpenAPI(file KptFile) error {
+	if file.OpenAPI == nil {
+		// no OpenAPI to copy -- do nothing
+		return nil
+	}
+	if k.OpenAPI == nil {
+		// no openAPI at the destination -- just copy it
+		k.OpenAPI = file.OpenAPI
+		return nil
+	}
+
+	// turn the exiting openapi into yaml.Nodes for processing
+	// they aren't yaml.Nodes natively due to serialization bugs in the yaml libs
+	bTo, err := yaml.Marshal(k.OpenAPI)
+	if err != nil {
+		return err
+	}
+	to, err := yaml.Parse(string(bTo))
+	if err != nil {
+		return err
+	}
+	bFrom, err := yaml.Marshal(file.OpenAPI)
+	if err != nil {
+		return err
+	}
+	from, err := yaml.Parse(string(bFrom))
+	if err != nil {
+		return err
+	}
+
+	// get the definitions for the source and destination
+	toDef := to.Field("definitions")
+	if toDef == nil {
+		// no definitions on the destination, just copy the OpenAPI from the source
+		k.OpenAPI = file.OpenAPI
+		return nil
+	}
+	fromDef := from.Field("definitions")
+	if fromDef == nil {
+		// OpenAPI definitions on the source -- do nothings
+		return nil
+	}
+
+	err = fromDef.Value.VisitFields(func(node *yaml.MapNode) error {
+		// copy each definition from the source to the destination
+		return toDef.Value.PipeE(yaml.FieldSetter{
+			Name:  node.Key.YNode().Value,
+			Value: node.Value})
+	})
+	if err != nil {
+		return err
+	}
+
+	// convert the result back to type interface{} and set it on the Kptfile
+	s, err := to.String()
+	if err != nil {
+		return err
+	}
+	var newOpenAPI interface{}
+	k.OpenAPI = newOpenAPI
+	err = yaml.Unmarshal([]byte(s), &k.OpenAPI)
+	return err
 }
 
 type Dependency struct {

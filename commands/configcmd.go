@@ -60,6 +60,11 @@ func GetConfigCommand(name string) *cobra.Command {
 	createSetter.Long = cfgdocs.CreateSetterShort + "\n" + cfgdocs.CreateSetterLong
 	createSetter.Example = cfgdocs.CreateSetterExamples
 
+	createSubstitution := configcobra.CreateSubstitution(name)
+	createSubstitution.Short = cfgdocs.CreateSubstShort
+	createSubstitution.Long = cfgdocs.CreateSubstShort + "\n" + cfgdocs.CreateSubstLong
+	createSubstitution.Example = cfgdocs.CreateSubstExamples
+
 	fmt := configcobra.Fmt(name)
 	fmt.Short = cfgdocs.FmtShort
 	fmt.Long = cfgdocs.FmtShort + "\n" + cfgdocs.FmtLong
@@ -85,7 +90,7 @@ func GetConfigCommand(name string) *cobra.Command {
 	tree.Long = cfgdocs.TreeShort + "\n" + cfgdocs.TreeLong
 	tree.Example = cfgdocs.TreeExamples
 
-	cfgCmd.AddCommand(an, cat, count, createSetter, fmt,
+	cfgCmd.AddCommand(an, cat, count, createSetter, createSubstitution, fmt,
 		grep, listSetters, set, tree)
 	return cfgCmd
 }
