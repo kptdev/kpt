@@ -120,24 +120,197 @@ var CreateSetterLong = `
   DIR
 
     A directory containing Resource configuration.
+    e.g. hello-world/
 
   NAME
 
-    The name of the setter to create.
+    The name of the substitution to create.  This is both the name that will be given
+    to the *set* command, and that will be referenced by fields.
+    e.g. replicas
 
   VALUE
 
-    The current value of the field, or a substring within the field.
+    The new value of the setter.
+    e.g. 3
+
+#### Field Setters
+
+Field setters are OpenAPI definitions that define how fields may be modified programmatically
+using the *set* command.  The OpenAPI definitions for setters are defined in a Kptfile
+and referenced by fields which they set through an OpenAPI reference as a line comment
+(e.g. # {"$ref":"#/definitions/..."}).
+
+Setters may be manually created by editing the Kptfile, or programmatically created using the
+` + "`" + `create-setter` + "`" + ` command.  The ` + "`" + `create-setter` + "`" + ` command will 1) create a new OpenAPI definition
+for a setter in the Kptfile, and 2) identify all fields matching the setter value and create
+an OpenAPI reference to the setter for each.
+
+    # create or update a setter named replicas
+    kpt create-setter hello-world/ replicas 3
+
+Example setter definition in a Kptfile:
+
+	openAPI:
+	  definitions:
+	    io.k8s.cli.setters.replicas:
+	      x-k8s-cli:
+	        setter:
+	          name: "replicas"
+	          value: "3"
+
+This setter is named "replicas" and can be provided to the *set* command to change
+all fields which reference it to the setter's value.
+
+Example setter referenced from a field in a configuration file:
+
+	kind: Deployment
+	metadata:
+	  name: foo
+	spec:
+	  replicas: 3  # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
 `
 var CreateSetterExamples = `
-    # create a setter for port fields matching "8080"
-    kpt cfg create-setter DIR/ port 8080 --type "integer" --field port \
-         --description "default port used by the app"
+    # create a setter called replicas for fields matching "3"
+    kpt cfg create-setter DIR/ replicas 3
 
-    # create a setter for a substring of a field rather than the full field -- e.g. only the
-    # image tag, not the full image
-    kpt cfg create-setter DIR/ image-tag v1.0.1 --type "string" \
-        --field image --description "current stable release"
+    # scope creating setter references to a specified field
+    kpt cfg create-setter DIR/ replicas 3 --field "replicas"
+
+    # scope creating setter references to a specified field path
+    kpt cfg create-setter DIR/ replicas 3 --field "spec.replicas"
+
+    # create a setter called replicas with a description and set-by
+    kpt cfg create-setter DIR/ replicas 3 --set-by "package-default" \
+        --description "good starter value"
+`
+
+var CreateSubstShort = `Create or modify a field substitution`
+var CreateSubstLong = `
+    kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
+
+  DIR
+
+    A directory containing Resource configuration.
+    e.g. hello-world/
+
+  NAME
+
+    The name of the substitution to create.  This is simply the unique key which is referenced
+    by fields which have the substitution applied.
+    e.g. image-substitution
+
+  VALUE
+
+    The current value of the field that will have PATTERN substituted.
+    e.g. nginx:1.7.9
+
+  PATTERN
+
+    A string containing one or more MARKER substrings which will be substituted
+    for setter values.  The pattern may contain multiple different MARKERS,
+    the same MARKER multiple times, and non-MARKER substrings.
+    e.g. IMAGE_SETTER:TAG_SETTER
+
+#### Field Substitutions
+
+Field substitutions are OpenAPI definitions that define how fields may be modified programmatically
+using the *set* command.  The OpenAPI definitions for substitutions are defined in a Kptfile
+and referenced by fields which they set through an OpenAPI reference as a line comment
+(e.g. # {"$ref":"#/definitions/..."}).
+
+Substitutions may be manually created by editing the Kptfile, or programmatically created using the
+` + "`" + `create-subst` + "`" + ` command.  The ` + "`" + `create-subst` + "`" + ` command will 1) create a new OpenAPI definition
+for a substitution in the Kptfile, and 2) identify all fields matching the provided value and create
+an OpenAPI reference to the substitution for each.
+
+Field substitutions are computed by substituting setter values into a pattern.  They are
+composed of 2 parts: a pattern and a list of values.
+
+- The pattern is a string containing markers which will be replaced with 1 or more setter values.
+- The values are pairs of markers and setter references.  The *set* command retrieves the values
+  from the referenced setters, and replaces the markers with the setter values.
+ 
+**The referenced setters must exist before creating the substitution.**
+
+    # create or update a setter named image
+    kpt create-setter hello-world/ image nginx
+
+    # create or update a setter named tag
+    kpt create-setter hello-world/ tag 1.7.9
+
+    # create or update a substitution which is derived from concatenating the
+    # image and tag setters
+    kpt create-subst hello-world/ image-tag nginx:1.7.9 \
+      --pattern IMAGE_SETTER:TAG_SETTER \
+      --value IMAGE_SETTER=image \
+      --value TAG_SETTER=tag
+
+Example setter and substitution definitions in a Kptfile:
+
+	openAPI:
+	  definitions:
+	    io.k8s.cli.setters.image:
+	      x-k8s-cli:
+	        setter:
+	          name: "image"
+	          value: "nginx"
+	    io.k8s.cli.setters.tag:
+	      x-k8s-cli:
+	        setter:
+	          name: "tag"
+	          value: "1.7.9"
+	    io.k8s.cli.substitutions.image-value:
+	      x-k8s-cli:
+	        substitution:
+	          name: image-value
+	          pattern: IMAGE_SETTER:TAG_SETTER
+	          values:
+	          - marker: IMAGE_SETTER
+	            ref: '#/definitions/io.k8s.cli.setters.image'
+	          - marker: TAG_SETTER
+	            ref: '#/definitions/io.k8s.cli.setters.tag'
+
+This substitution defines how a field value may be produced from the setters ` + "`" + `image` + "`" + ` and ` + "`" + `tag` + "`" + `
+by replacing the pattern substring *IMAGE_SETTER* with the value of the ` + "`" + `image` + "`" + ` setter, and
+replacing the pattern substring *TAG_SETTER* with the value of the ` + "`" + `tag` + "`" + ` setter.  Any time
+either the ` + "`" + `image` + "`" + ` or ` + "`" + `tag` + "`" + ` values are changed via *set*, the substitution value will be
+re-calculated for referencing fields.
+
+Example substitution reference from a field in a configuration file:
+
+	kind: Deployment
+	metadata:
+	  name: foo
+	spec:
+	  template:
+	    spec:
+	      containers:
+	      - name: nginx
+	        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-value"}
+
+The ` + "`" + `image` + "`" + ` field has a OpenAPI reference to the ` + "`" + `image-value` + "`" + ` substitution definition.  When
+the *set* command is called, for either the ` + "`" + `image` + "`" + ` or ` + "`" + `tag` + "`" + ` setter, the substitution will
+be recalculated, and the ` + "`" + `image` + "`" + ` field updated with the new value.
+
+**Note**: when setting a field through a substitution, the names of the setters are used
+*not* the name of the substitution.  The name of the substitution is *only used in field
+references*.
+`
+var CreateSubstExamples = `
+    # 1. create the setter for the image name -- set the field so it isn't referenced
+    kpt cfg create-setter DIR/ image nginx --field "none"
+
+    # 2. create the setter for the image tag -- set the field so it isn't referenced
+    kpt cfg create-setter DIR/ tag v1.7.9 --field "none"
+
+    # 3. create the substitution computed from the image and tag setters
+    kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
+      --pattern IMAGE_SETTER:TAG_SETTER \
+      --value IMAGE_SETTER=nginx \
+      --value TAG_SETTER=v1.7.9
+
+    # 4. update the substitution value by setting one of the setters
+    kpt cfg set tag v1.8.0
 `
 
 var FmtShort = `Format configuration files`
@@ -210,111 +383,116 @@ var GrepExamples = `
 
 [tutorial-script]: ../gifs/cfg-grep.sh`
 
-var ListSettersShort = `Print available field setters`
+var ListSettersShort = `List configured field setters`
 var ListSettersLong = `
     kpt cfg list-setters DIR [NAME]
 
   DIR
 
-    A directory containing Resource configuration.
+    A directory containing a Kptfile.
 
   NAME
 
     Optional.  The name of the setter to display.
 `
 var ListSettersExamples = `
-  Show setters:
-
-    $ kpt cfg list-setters DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
-    name-prefix   ''            PREFIX    string   2
+    # list the setters in the hello-world package
+    kpt cfg list-setters hello-world/
+      NAME     VALUE    SET BY    DESCRIPTION   COUNT  
+    replicas   4       isabella   good value    1   
 
 ###
 
 [tutorial-script]: ../gifs/cfg-set.sh`
 
-var SetShort = `Set one or more field values`
+var SetShort = `Set one or more field values using setters`
 var SetLong = `
-May set either the complete or partial field value.
-
-` + "`" + `set` + "`" + ` identifies setters using field metadata published as OpenAPI extensions.
-` + "`" + `set` + "`" + ` parses both the Kubernetes OpenAPI, as well OpenAPI published inline in
-the configuration as comments.
-
-` + "`" + `set` + "`" + ` maybe be used to:
-
-- edit configuration programmatically from the cli
-- create reusable bundles of configuration with custom setters
+    kpt cfg set DIR NAME VALUE
 
   DIR
 
     A directory containing Resource configuration.
+    e.g. hello-world/
 
   NAME
 
-    Optional.  The name of the setter to perform or display.
+    The name of the setter
+    e.g. replicas
 
   VALUE
 
-    Optional.  The value to set on the field.
+    The new value to set on fields
+    e.g. 3
 
+#### Setters
 
-To print the possible setters for the Resources in a directory, run ` + "`" + `set` + "`" + ` on
-a directory -- e.g. ` + "`" + `kpt cfg set DIR/` + "`" + `.
+The *set* command modifies configuration fields using setters defined as OpenAPI definitions
+in a Kptfile.  Setters are referenced by fields using line commands on the fields.  Fields
+referencing a setter will have their value modified to match the setter value when the *set*
+command is called.
 
-#### Tips
+If multiple fields may reference the same setter, all of the field's values will be
+changed when the *set* command is called for that setter.
 
-- A description of the value may be specified with ` + "`" + `--description` + "`" + `.
-- The last setter for the field's value may be defined with ` + "`" + `--set-by` + "`" + `.
-- Create custom setters on Resources, Kustomization.yaml's, patches, etc
+The *set* command must be run on a directory containing a Kptfile with setter definitions.
+The list of setters configured for a package may be found using ` + "`" + `kpt cfg list-setters` + "`" + `.
 
-The description and setBy fields are left unmodified unless specified with flags.
+    kpt cfg set hello-world/ replicas 3
 
-To create a custom setter for a field see: ` + "`" + `kustomize help config create-setter` + "`" + `
+Example setter definition in a Kptfile:
+
+	openAPI:
+	  definitions:
+	    io.k8s.cli.setters.replicas:
+	      x-k8s-cli:
+	        setter:
+	          name: "replicas"
+	          value: "3"
+
+This setter is named "replicas" and can be provided to the *set* command to change
+all fields which reference it to the setter's value.
+
+Example setter referenced from a field in a configuration file:
+
+	kind: Deployment
+	metadata:
+	  name: foo
+	spec:
+	  replicas: 3  # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+
+#### Description
+
+Setters may have a description of the current value.  This may be defined along with
+the value by specifying the ` + "`" + `--description` + "`" + ` flag.
+
+#### SetBy
+
+Setters may record who set the current value.  This may be defined along with the
+value by specifying the ` + "`" + `--set-by` + "`" + ` flag.
+
+#### Substitutions
+
+Substitutions define field values which may be composed of one or more setters substituted
+into a string pattern.  e.g. setting only the tag portion of the ` + "`" + `image` + "`" + ` field.
+
+Anytime set is called for a setter used by a substitution, it will also modify the fields
+referencing that substitution.
+
+See ` + "`" + `kpt cfg create-subst` + "`" + ` for more information on substitutions.
 `
 var SetExamples = `
-  Resource YAML: Name Prefix Setter
+    # set replicas to 3 using the 'replicas' setter
+    kpt cfg set hello-world/ replicas 3
 
-    # DIR/resources.yaml
-    ...
-    metadata:
-        name: PREFIX-app1 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
-    ...
-    ---
-    ...
-    metadata:
-        name: PREFIX-app2 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
-    ...
+    # set the replicas to 5 and include a description of the value
+    kpt cfg set hello-world/ replicas 5 --description "need at least 5 replicas"
 
-  List setters: Show the possible setters
+    # set the replicas to 5 and record who set this value
+    kpt cfg set hello-world/ replicas 5 --set-by "mia"
 
-    $ config set DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
-    name-prefix   ''            PREFIX    string   2
-
-  Perform set: set a new value, owner and description
-
-    $ kpt cfg set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
-    set 2 values
-
-  List setters: Show the new values
-
-    $ config set DIR/
-        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY
-    name-prefix   'test environment'   test     string   2          dev
-
-  New Resource YAML:
-
-    # DIR/resources.yaml
-    ...
-    metadata:
-        name: test-app1 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
-    ...
-    ---
-    ...
-    metadata:
-        name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
-    ...
+    # set the tag portion of the image field to '1.8.1' using the 'tag' setter
+    # the tag setter is referenced as a value by a substitution in the Kptfile
+    kpt cfg set hello-world/ tag 1.8.1
 
 ###
 

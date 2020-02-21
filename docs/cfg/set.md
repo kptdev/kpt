@@ -1,98 +1,100 @@
 ## set
 
-Set one or more field values
-
-<link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
-<asciinema-player src="/kpt/gifs/cfg-set.cast" speed="1" theme="solarized-dark" cols="100" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
-<script src="/kpt/gifs/asciinema-player.js"></script>
-
-    kpt tutorial cfg set
-
-[tutorial-script]
+Set one or more field values using setters
 
 ### Synopsis
 
-May set either the complete or partial field value.
-
-`set` identifies setters using field metadata published as OpenAPI extensions.
-`set` parses both the Kubernetes OpenAPI, as well OpenAPI published inline in
-the configuration as comments.
-
-`set` maybe be used to:
-
-- edit configuration programmatically from the cli
-- create reusable bundles of configuration with custom setters
+    kpt cfg set DIR NAME VALUE
 
   DIR
 
     A directory containing Resource configuration.
+    e.g. hello-world/
 
   NAME
 
-    Optional.  The name of the setter to perform or display.
+    The name of the setter
+    e.g. replicas
 
   VALUE
 
-    Optional.  The value to set on the field.
+    The new value to set on fields
+    e.g. 3
 
+#### Setters
 
-To print the possible setters for the Resources in a directory, run `set` on
-a directory -- e.g. `kpt cfg set DIR/`.
+The *set* command modifies configuration fields using setters defined as OpenAPI definitions
+in a Kptfile.  Setters are referenced by fields using line commands on the fields.  Fields
+referencing a setter will have their value modified to match the setter value when the *set*
+command is called.
 
-#### Tips
+If multiple fields may reference the same setter, all of the field's values will be
+changed when the *set* command is called for that setter.
 
-- A description of the value may be specified with `--description`.
-- The last setter for the field's value may be defined with `--set-by`.
-- Create custom setters on Resources, Kustomization.yaml's, patches, etc
+The *set* command must be run on a directory containing a Kptfile with setter definitions.
+The list of setters configured for a package may be found using `kpt cfg list-setters`.
 
-The description and setBy fields are left unmodified unless specified with flags.
+    kpt cfg set hello-world/ replicas 3
 
-To create a custom setter for a field see: `kustomize help config create-setter`
+Example setter definition in a Kptfile:
+
+```yaml
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: "replicas"
+          value: "3"
+```
+
+This setter is named "replicas" and can be provided to the *set* command to change
+all fields which reference it to the setter's value.
+
+Example setter referenced from a field in a configuration file:
+
+```yaml
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 3  # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+```
+
+#### Description
+
+Setters may have a description of the current value.  This may be defined along with
+the value by specifying the `--description` flag.
+
+#### SetBy
+
+Setters may record who set the current value.  This may be defined along with the
+value by specifying the `--set-by` flag.
+
+#### Substitutions
+
+Substitutions define field values which may be composed of one or more setters substituted
+into a string pattern.  e.g. setting only the tag portion of the `image` field.
+
+Anytime set is called for a setter used by a substitution, it will also modify the fields
+referencing that substitution.
+
+See `kpt cfg create-subst` for more information on substitutions.
 
 ### Examples
 
-  Resource YAML: Name Prefix Setter
+    # set replicas to 3 using the 'replicas' setter
+    kpt cfg set hello-world/ replicas 3
 
-    # DIR/resources.yaml
-    ...
-    metadata:
-        name: PREFIX-app1 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
-    ...
-    ---
-    ...
-    metadata:
-        name: PREFIX-app2 # {"type":"string","x-kustomize":{"partialFieldSetters":[{"name":"name-prefix","value":"PREFIX"}]}}
-    ...
+    # set the replicas to 5 and include a description of the value
+    kpt cfg set hello-world/ replicas 5 --description "need at least 5 replicas"
 
-  List setters: Show the possible setters
+    # set the replicas to 5 and record who set this value
+    kpt cfg set hello-world/ replicas 5 --set-by "mia"
 
-    $ config set DIR/
-        NAME      DESCRIPTION   VALUE     TYPE     COUNT   SETBY
-    name-prefix   ''            PREFIX    string   2
-
-  Perform set: set a new value, owner and description
-
-    $ kpt cfg set DIR/ name-prefix "test" --description "test environment" --set-by "dev"
-    set 2 values
-
-  List setters: Show the new values
-
-    $ config set DIR/
-        NAME      DESCRIPTION         VALUE     TYPE     COUNT     SETBY
-    name-prefix   'test environment'   test     string   2          dev
-
-  New Resource YAML:
-
-    # DIR/resources.yaml
-    ...
-    metadata:
-        name: test-app1 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
-    ...
-    ---
-    ...
-    metadata:
-        name: test-app2 # {"description":"test environment","type":"string","x-kustomize":{"setBy":"dev","partialFieldSetters":[{"name":"name-prefix","value":"test"}]}}
-    ...
+    # set the tag portion of the image field to '1.8.1' using the 'tag' setter
+    # the tag setter is referenced as a value by a substitution in the Kptfile
+    kpt cfg set hello-world/ tag 1.8.1
 
 ###
 
