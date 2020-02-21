@@ -25,6 +25,7 @@ Programmatically print and modify raw json or yaml Resource Configuration
 | [cat]          | print resources                               |
 | [count]        | print resource counts                         |
 | [create-setter]| create or modify a field setter               |
+| [create-subst] | create or modify a field substitution         |
 | [fmt]          | format configuration files                    |
 | [grep]         | find resources by field value                 |
 | [list-setters] | print available field setters                 |
