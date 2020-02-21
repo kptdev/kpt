@@ -19,7 +19,12 @@ GOBIN := $(shell go env GOPATH)/bin
 build:
 	go build -o $(GOBIN)/kpt -v .
 
-all: generate license fix vet fmt lint test build tidy
+all: generate license fix vet fmt lint test build buildall tidy
+
+buildall:
+	GOOS=windows go build -o /dev/null
+	GOOS=linux go build -o /dev/null
+	GOOS=darwin go build -o /dev/null
 
 fix:
 	go fix ./...
