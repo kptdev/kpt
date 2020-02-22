@@ -16,7 +16,7 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. $d/../../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 git init
@@ -41,7 +41,6 @@ p "# packages may publish metadata for how to set specific fields"
 pe "kpt cfg list-setters helloworld"
 pe "kpt cfg set helloworld replicas 3"
 pe "kpt cfg list-setters helloworld replicas"
-pe "git diff helloworld"
 git commit -a -m 'helloworld package' > /dev/null
 echo "$ git commit -a -m 'helloworld package'"
 

@@ -18,7 +18,7 @@
 ########################
 . $d/../../demos/demo-magic/demo-magic.sh
 
-export PKG=https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0
+export PKG=https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.3.0
 kpt pkg get $PKG helloworld > /dev/null
 git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null
@@ -28,7 +28,7 @@ clear
 
 # start demo
 echo "# 'kpt cfg' -- programmatically modify and view Resource configuration"
-echo "# (tutorial uses package-examples/helloworld-set@v0.1.0)"
+echo "# (tutorial uses package-examples/helloworld-set@v0.3.0)"
 
 echo " "
 p "# kpt cfg cat -- print the raw package contents"

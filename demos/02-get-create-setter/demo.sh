@@ -40,7 +40,7 @@ pe "kpt cfg tree helloworld --all"
 
 echo ""
 p "#  create a setter for the Service port protocol..."
-pe "kpt cfg create-setter helloworld http-protocol TCP --field protocol --type string --kind Service"
+pe "kpt cfg create-setter helloworld http-protocol TCP"
 
 echo ""
 p "#  list the setters -- the one we just created should be listed..."

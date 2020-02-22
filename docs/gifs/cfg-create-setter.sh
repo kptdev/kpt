@@ -16,12 +16,11 @@
 ########################
 # include the magic
 ########################
-. ../../demos/demo-magic/demo-magic.sh
+. $d/../../demos/demo-magic/demo-magic.sh
 
 cd $(mktemp -d)
 git init
 
-export PKG=https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0
 kpt pkg get $PKG helloworld > /dev/null
 git add . > /dev/null
 git commit -m 'fetched helloworld' > /dev/null
@@ -36,35 +35,47 @@ kpt pkg desc helloworld
 
 # start demo
 echo " "
-p "# 'kpt cfg create-setter' creates a new field setter by annotating Resource fields"
-pe "kpt cfg tree helloworld --replicas"
-pe "kpt cfg create-setter helloworld replicas 5 --field replicas --type integer"
+p "# 'kpt cfg create-setter' creates a new field setter which can be used to modify field values on the commandline"
+p "# first, print the field we want to create a setter for -- replicas"
+pe "kpt cfg tree helloworld/ --replicas"
+p "# next, create a setter for the replicas field by giving the name of the setter to create and current value of the field -- 5"
+pe "kpt cfg create-setter helloworld/ replicas 5 --set-by 'package-default' --description 'just enough'"
+p "# view the newly created setter"
+pe "kpt cfg list-setters helloworld/"
+
+p "# the setter metadata was written to the Kptfile"
+pe "cat helloworld/Kptfile"
+
+p "# the setter is referenced by the replicas field"
+pe "less helloworld/deploy.yaml"
+
+echo " "
+p "# use the setter to change the replicas from 5 to 11"
+pe "kpt cfg set helloworld/ replicas 11 --set-by 'phil' --description 'temporarily scale up for increased traffic'"
+pe "kpt cfg tree helloworld/ --replicas"
+
+p "# see the updated metadata"
+pe "cat helloworld/Kptfile"
+
+echo " "
+p "# setters can also be used to create substitutions"
+pe "kpt cfg tree helloworld --image --field metadata.labels.version"
+pe "kpt cfg create-setter helloworld version 0.1.0 --set-by 'package-default' --description 'latest release'"
+pe "kpt cfg create-subst helloworld version gcr.io/kpt-dev/helloworld-gke:0.1.0 --pattern gcr.io/kpt-dev/helloworld-gke:VERSION_SETTER  --value VERSION_SETTER=version"
 pe "kpt cfg list-setters helloworld"
 
 echo " "
-p "# setters can be created for a partial field value as a form of substitution"
-p "# partial setter values must be unique strings within the field"
-pe "kpt cfg tree helloworld --image"
-pe "kpt cfg create-setter helloworld version 0.1.0 --field image --partial --type string"
-pe "kpt cfg list-setters helloworld"
+p "# use the setter to change the version label and image field"
+pe "kpt cfg tree helloworld --field metadata.labels.version --image"
+pe "kpt cfg set helloworld version 0.2.0 --set-by 'phil' --description 'production release'"
+pe "kpt cfg tree helloworld --field metadata.labels.version --image"
 
-echo " "
-p "# multiple full and partial fields on multiple objects may be set using a single setter"
-pe "kpt cfg tree helloworld --field metadata.labels.version"
-pe "kpt cfg create-setter helloworld version 0.1.0 --field version --type string"
-pe "kpt cfg list-setters helloworld"
+p "# the substitution metadata was written to the Kptfile"
+pe "cat helloworld/Kptfile"
 
-echo " "
-p "# demo using the setters"
-pe "kpt cfg tree helloworld --field metadata.labels.version --replicas --image"
-pe "kpt cfg set helloworld version 0.2.0"
-pe "kpt cfg set helloworld replicas 11"
-pe "kpt cfg tree helloworld --field metadata.labels.version --replicas --image"
+p "# the substitution is referenced by image field field"
+pe "less helloworld/deploy.yaml"
 
-echo " "
-p "# setter values include a description and set-by for consumers"
-pe "kpt cfg create-setter helloworld service-type LoadBalancer --field type  --type string --description 'external traffic' --set-by 'package-default'"
-pe "kpt cfg list-setters helloworld"
 
-p "# for more information see 'kpt help cfg create-setters'"
-p "kpt help cfg create-setters"
+p "# for more information see 'kpt help cfg create-setter'"
+p "kpt help cfg create-setter"
