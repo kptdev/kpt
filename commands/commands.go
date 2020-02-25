@@ -73,9 +73,7 @@ func GetKptCommands(name string) []*cobra.Command {
 	fnCmd := GetFnCommand(name)
 	pkgCmd := GetPkgCommand(name)
 	ttlCmd := GetTTLCommand(name)
-	// Initially, the "live" command group is not visible.
 	liveCmd := GetLiveCommand(name)
-	liveCmd.Hidden = true
 
 	c = append(c, cfgCmd, pkgCmd, fnCmd, ttlCmd, liveCmd)
 
