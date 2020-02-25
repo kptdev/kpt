@@ -135,7 +135,7 @@ var READMEExamples = `
     service/helloworld-gke created
 
     # run apply
-    $ kpt live apply --status helloworld
+    $ kpt live apply --wait-for-reconcile helloworld
     configmap/test-inventory-2911da3b created
     deployment.apps/helloworld-gke created
     service/helloworld-gke created
