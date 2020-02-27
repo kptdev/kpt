@@ -70,6 +70,74 @@ spec:
   replicas: 3  # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
 ```
 
+Setters may have types specified which ensure that the configuration is always serialized
+correctly as yaml 1.1 -- e.g. if a string field such as an annotation or arg has the value
+"on", then it would need to be quoted otherwise it will be parsed as a bool by yaml 1.1.
+
+A type may be specified using the --type flag, and accepts string,integer,boolean as values.
+The resulting OpenAPI definition looks like:
+
+    # create or update a setter named version which sets the "version" annotation
+    kpt create-setter hello-world/ version 3 --field "annotations.version" --type string
+
+```yaml
+openAPI:
+  definitions:
+    io.k8s.cli.setters.version:
+      x-k8s-cli:
+        setter:
+          name: "version"
+          value: "3"
+      type: string
+```
+
+And the configuration looks like:
+
+```yaml
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    version: "3" # {"$ref":"#/definitions/io.k8s.cli.setters.version"}
+```
+
+Setters may be configured to accept enumeration values which map to different values set
+on the fields.  For example setting cpu resources to small, medium, large -- and mapping
+these to specific cpu values.  This may be done by manually modifying the Kptfile openAPI
+definitions as shown here:
+
+```yaml
+openAPI:
+  definitions:
+    io.k8s.cli.setters.cpu:
+      x-k8s-cli:
+        setter:
+          name: "cpu"
+          value: "small"
+          # enumValues will replace the user provided key with the
+          # map value when setting fields.
+          enumValues:
+            small: "0.5"
+            medium: "2"
+            large: "4"
+```
+
+And the configuration looks like:
+
+```yaml
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  template:
+    spec:
+      containers:
+      - name: foo
+    resources:
+      requests:
+        cpu: "0.5" # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}
+```
+
 ### Examples
 
     # create a setter called replicas for fields matching "3"
@@ -84,6 +152,12 @@ spec:
     # create a setter called replicas with a description and set-by
     kpt cfg create-setter DIR/ replicas 3 --set-by "package-default" \
         --description "good starter value"
+
+    # scope create a setter with a type.  the setter will make sure the set fields
+    # always parse as strings with a yaml 1.1 parser (e.g. values such as 1,on,true wil
+    # be quoted so they are parsed as strings)
+    # only the final part of the the field path is specified
+    kpt cfg create-setter DIR/ app nginx --field "annotations.app" --type string
 
 ### 
 

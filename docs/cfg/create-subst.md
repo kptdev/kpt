@@ -56,20 +56,19 @@ composed of 2 parts: a pattern and a list of values.
 - The values are pairs of markers and setter references.  The *set* command retrieves the values
   from the referenced setters, and replaces the markers with the setter values.
  
-**The referenced setters must exist before creating the substitution.**
+**The referenced setters MAY exist before creating the substitution, in which case the
+existing setters are used instead of recreated.**
 
-    # create or update a setter named image
-    kpt create-setter hello-world/ image nginx
-
-    # create or update a setter named tag
-    kpt create-setter hello-world/ tag 1.7.9
-
-    # create or update a substitution which is derived from concatenating the
-    # image and tag setters
+    # create or update a substitution + 2 setters
+    # the substitution is derived from concatenating the image and tag setter values
     kpt create-subst hello-world/ image-tag nginx:1.7.9 \
       --pattern IMAGE_SETTER:TAG_SETTER \
       --value IMAGE_SETTER=image \
       --value TAG_SETTER=tag
+
+If create-subst cannot infer the setter values from the VALUE + --pattern, and the setters
+do not already exist, then it will throw and error, and the setters must be manually created
+beforehand.
 
 Example setter and substitution definitions in a Kptfile:
 
@@ -128,11 +127,28 @@ references*.
 
 ### Examples
 
+    # Automatically create setters when creating the substitution, inferring the setter
+    # values.
+    #
+    # 1. create a substitution derived from 2 setters.  The user will never call the
+    #    substitution directly, instead it will be computed when the setters are used.
+    kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
+      --pattern IMAGE_SETTER:TAG_SETTER \
+      --value IMAGE_SETTER=nginx \
+      --value TAG_SETTER=v1.7.9
+
+    # 2. update the substitution value by setting one of the 2 setters it is computed from
+    kpt cfg set tag v1.8.0
+
+
+    # Manually create setters and substitution.  This is preferred to configure the setters
+    # with a type, description, set-by, etc.
+    #
     # 1. create the setter for the image name -- set the field so it isn't referenced
-    kpt cfg create-setter DIR/ image nginx --field "none"
+    kpt cfg create-setter DIR/ image nginx --field "none" --set-by "package-default"
 
     # 2. create the setter for the image tag -- set the field so it isn't referenced
-    kpt cfg create-setter DIR/ tag v1.7.9 --field "none"
+    kpt cfg create-setter DIR/ tag v1.7.9 --field "none" --set-by "package-default"
 
     # 3. create the substitution computed from the image and tag setters
     kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
