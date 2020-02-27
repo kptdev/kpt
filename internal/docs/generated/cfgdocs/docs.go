@@ -169,6 +169,66 @@ Example setter referenced from a field in a configuration file:
 	  name: foo
 	spec:
 	  replicas: 3  # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+
+Setters may have types specified which ensure that the configuration is always serialized
+correctly as yaml 1.1 -- e.g. if a string field such as an annotation or arg has the value
+"on", then it would need to be quoted otherwise it will be parsed as a bool by yaml 1.1.
+
+A type may be specified using the --type flag, and accepts string,integer,boolean as values.
+The resulting OpenAPI definition looks like:
+
+    # create or update a setter named version which sets the "version" annotation
+    kpt create-setter hello-world/ version 3 --field "annotations.version" --type string
+
+	openAPI:
+	  definitions:
+	    io.k8s.cli.setters.version:
+	      x-k8s-cli:
+	        setter:
+	          name: "version"
+	          value: "3"
+	      type: string
+
+And the configuration looks like:
+
+	kind: Deployment
+	metadata:
+	  name: foo
+	  annotations:
+	    version: "3" # {"$ref":"#/definitions/io.k8s.cli.setters.version"}
+
+Setters may be configured to accept enumeration values which map to different values set
+on the fields.  For example setting cpu resources to small, medium, large -- and mapping
+these to specific cpu values.  This may be done by manually modifying the Kptfile openAPI
+definitions as shown here:
+
+	openAPI:
+	  definitions:
+	    io.k8s.cli.setters.cpu:
+	      x-k8s-cli:
+	        setter:
+	          name: "cpu"
+	          value: "small"
+	          # enumValues will replace the user provided key with the
+	          # map value when setting fields.
+	          enumValues:
+	            small: "0.5"
+	            medium: "2"
+	            large: "4"
+
+And the configuration looks like:
+
+	kind: Deployment
+	metadata:
+	  name: foo
+	spec:
+	  template:
+	    spec:
+	      containers:
+	      - name: foo
+	    resources:
+	      requests:
+	        cpu: "0.5" # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}
 `
 var CreateSetterExamples = `
     # create a setter called replicas for fields matching "3"
@@ -183,6 +243,12 @@ var CreateSetterExamples = `
     # create a setter called replicas with a description and set-by
     kpt cfg create-setter DIR/ replicas 3 --set-by "package-default" \
         --description "good starter value"
+
+    # scope create a setter with a type.  the setter will make sure the set fields
+    # always parse as strings with a yaml 1.1 parser (e.g. values such as 1,on,true wil
+    # be quoted so they are parsed as strings)
+    # only the final part of the the field path is specified
+    kpt cfg create-setter DIR/ app nginx --field "annotations.app" --type string
 `
 
 var CreateSubstShort = `Create or modify a field substitution`
@@ -231,20 +297,19 @@ composed of 2 parts: a pattern and a list of values.
 - The values are pairs of markers and setter references.  The *set* command retrieves the values
   from the referenced setters, and replaces the markers with the setter values.
  
-**The referenced setters must exist before creating the substitution.**
+**The referenced setters MAY exist before creating the substitution, in which case the
+existing setters are used instead of recreated.**
 
-    # create or update a setter named image
-    kpt create-setter hello-world/ image nginx
-
-    # create or update a setter named tag
-    kpt create-setter hello-world/ tag 1.7.9
-
-    # create or update a substitution which is derived from concatenating the
-    # image and tag setters
+    # create or update a substitution + 2 setters
+    # the substitution is derived from concatenating the image and tag setter values
     kpt create-subst hello-world/ image-tag nginx:1.7.9 \
       --pattern IMAGE_SETTER:TAG_SETTER \
       --value IMAGE_SETTER=image \
       --value TAG_SETTER=tag
+
+If create-subst cannot infer the setter values from the VALUE + --pattern, and the setters
+do not already exist, then it will throw and error, and the setters must be manually created
+beforehand.
 
 Example setter and substitution definitions in a Kptfile:
 
@@ -298,11 +363,28 @@ be recalculated, and the ` + "`" + `image` + "`" + ` field updated with the new 
 references*.
 `
 var CreateSubstExamples = `
+    # Automatically create setters when creating the substitution, inferring the setter
+    # values.
+    #
+    # 1. create a substitution derived from 2 setters.  The user will never call the
+    #    substitution directly, instead it will be computed when the setters are used.
+    kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
+      --pattern IMAGE_SETTER:TAG_SETTER \
+      --value IMAGE_SETTER=nginx \
+      --value TAG_SETTER=v1.7.9
+
+    # 2. update the substitution value by setting one of the 2 setters it is computed from
+    kpt cfg set tag v1.8.0
+
+
+    # Manually create setters and substitution.  This is preferred to configure the setters
+    # with a type, description, set-by, etc.
+    #
     # 1. create the setter for the image name -- set the field so it isn't referenced
-    kpt cfg create-setter DIR/ image nginx --field "none"
+    kpt cfg create-setter DIR/ image nginx --field "none" --set-by "package-default"
 
     # 2. create the setter for the image tag -- set the field so it isn't referenced
-    kpt cfg create-setter DIR/ tag v1.7.9 --field "none"
+    kpt cfg create-setter DIR/ tag v1.7.9 --field "none" --set-by "package-default"
 
     # 3. create the substitution computed from the image and tag setters
     kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
@@ -469,7 +551,8 @@ the value by specifying the ` + "`" + `--description` + "`" + ` flag.
 #### SetBy
 
 Setters may record who set the current value.  This may be defined along with the
-value by specifying the ` + "`" + `--set-by` + "`" + ` flag.
+value by specifying the ` + "`" + `--set-by` + "`" + ` flag.  If unspecified the current value for
+set-by will be cleared from the setter.
 
 #### Substitutions
 

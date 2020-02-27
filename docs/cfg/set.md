@@ -75,7 +75,8 @@ the value by specifying the `--description` flag.
 #### SetBy
 
 Setters may record who set the current value.  This may be defined along with the
-value by specifying the `--set-by` flag.
+value by specifying the `--set-by` flag.  If unspecified the current value for
+set-by will be cleared from the setter.
 
 #### Substitutions
 
