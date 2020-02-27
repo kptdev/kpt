@@ -127,6 +127,16 @@ var READMEExamples = `
 
     $ kpt cfg set helloworld replicas 3 --set-by pwittrock  --description 'reason'
     set 1 fields
+	
+	# add grouping object
+	cat << EOF > helloworld/grouping_object.yaml
+	apiVersion: v1
+	kind: ConfigMap
+	metadata:
+	  name: test-inventory
+	  labels:
+	    cli-utils.sigs.k8s.io/inventory-id: helloworld
+	EOF
     
     # preview what will happen when running apply
     $ kpt live preview helloworld

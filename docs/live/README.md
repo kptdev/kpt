@@ -1,6 +1,6 @@
 ## pkg
 
-Fetch, update, and sync configuration files using git
+Reconcile configuration files with the live state
 
 <link rel="stylesheet" type="text/css" href="/kpt/gifs/asciinema-player.css" />
 <asciinema-player src="coming..." speed="1" theme="solarized-dark" cols="60" rows="26" font-size="medium" idle-time-limit="1"></asciinema-player>
