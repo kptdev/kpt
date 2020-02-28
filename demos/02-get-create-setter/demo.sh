@@ -31,7 +31,7 @@ pwd
 # start demo
 echo ""
 p "# fetch the package and add to git..."
-pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@v0.1.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@v0.3.0 helloworld"
 pe "git add . && git commit -m 'helloworld'"
 
 echo ""
@@ -48,7 +48,7 @@ pe "kpt cfg list-setters helloworld"
 
 echo ""
 p "#  change the Service port protocol using the setter..."
-pe "kpt cfg set helloworld http-protocol UDP --description 'justification for UDP' --set-by 'phil'"
+pe "kpt cfg set helloworld http-protocol UDP --description 'YOLO' --set-by 'phil'"
 
 echo ""
 p "#  observe the updated configuration..."
