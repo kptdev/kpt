@@ -38,7 +38,7 @@ pe "git add ."
 
 echo ""
 echo "  ${bold}add the dependency...${normal}"
-pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld-prod"
+pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.3.0 helloworld-prod"
 pe "git diff"
 
 echo ""
@@ -49,7 +49,7 @@ pe "config tree helloworld-prod"
 pe "git add . && git commit -m 'add helloworld package for production'"
 
 
-pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-staging"
+pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.4.0 helloworld-staging"
 pe "git diff"
 pe "kpt pkg sync ."
 pe "git status"
@@ -60,7 +60,7 @@ pe "diff helloworld-prod helloworld-staging"
 
 echo ""
 echo "  ${bold}update prod...${normal}"
-pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 helloworld-prod"
+pe "kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.4.0 helloworld-prod"
 pe "git diff"
 pe "kpt pkg sync ."
 pe "git diff"

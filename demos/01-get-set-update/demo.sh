@@ -34,15 +34,22 @@ normal=$(tput sgr0)
 # start demo
 clear
 p "# fetch the package..."
-pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.1.0 helloworld"
+pe "kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.3.0 helloworld"
 
 echo " "
-p "# print its contents..."
-pe "kpt cfg tree helloworld --image --ports --name --replicas  --field 'metadata.labels'"
+p "# print the package contents"
+pe "tree helloworld"
+pe "cat helloworld/Kptfile"
+pe "cat helloworld/deploy.yaml"
+pe "cat helloworld/service.yaml"
+
+echo " "
+p "# print the resource contents..."
+pe "kpt cfg tree helloworld --image --ports --name --replicas  --field 'spec.type'"
 
 echo " "
 p "# add to git..."
-pe "git add helloworld && git commit -m 'fetch helloworld package at v0.1.0'"
+pe "git add helloworld && git commit -m 'fetch helloworld package at v0.3.0'"
 
 echo " "
 p "# print setters..."
@@ -62,7 +69,7 @@ pe "kpt cfg tree helloworld --name --replicas"
 
 echo " "
 p "# view the diff..."
-pe "git diff"
+pe "git diff helloworld/service.yaml helloworld/deploy.yaml"
 
 echo " "
 p "# commit changes..."
@@ -70,13 +77,13 @@ pe "git add helloworld && git commit -m 'set replicas to 3'"
 
 echo " "
 p "# update the package to a new version..."
-pe "kpt pkg update helloworld@v0.2.0 --strategy=resource-merge"
+pe "kpt pkg update helloworld@v0.4.0 --strategy=resource-merge"
 
 echo " "
 p "# view the diff..."
-pe "git diff"
+pe "git diff helloworld/service.yaml helloworld/deploy.yaml"
 
 echo " "
 p "# print its contents..."
-pe "kpt cfg tree helloworld --name --replicas --field 'metadata.labels'"
+pe "kpt cfg tree helloworld --name --replicas --field 'spec.type'"
 
