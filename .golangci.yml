@@ -8,12 +8,14 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    - bodyclose
+# bodyclose appears to be broken
+#    - bodyclose
     - deadcode
     - depguard
 #    - dogsled
     - dupl
     - errcheck
+# funlen triggers on test functions which it shouldn't
 #    - funlen
     - gochecknoinits
     - goconst
