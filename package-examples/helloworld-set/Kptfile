@@ -23,7 +23,7 @@ openAPI:
       x-k8s-cli:
         setter:
           name: image-tag
-          value: 0.1.0
+          value: v0.3.0
           setBy: package-default
     io.k8s.cli.substitutions.image-tag:
       x-k8s-cli:

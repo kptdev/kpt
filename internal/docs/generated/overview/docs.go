@@ -122,7 +122,7 @@ var READMEExamples = `
     $ kpt cfg list-setters helloworld
     NAME            DESCRIPTION         VALUE    TYPE     COUNT   SETBY
     http-port   'helloworld port'         80      integer   3
-    image-tag   'hello-world image tag'   0.1.0   string    1
+    image-tag   'hello-world image tag'   v0.3.0  string    1
     replicas    'helloworld replicas'     5       integer   1
 
     $ kpt cfg set helloworld replicas 3 --set-by pwittrock  --description 'reason'
