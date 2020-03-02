@@ -4,7 +4,7 @@ apply a package to the cluster
 
 ### Synopsis
 
-    ktp live apply [FILENAME... | DIRECTORY] [flags]
+    kpt live apply [FILENAME... | DIRECTORY] [flags]
 
 The apply command creates, updates or deletes any resources in the cluster to
 make the state of resources in the cluster match the desired state as specified

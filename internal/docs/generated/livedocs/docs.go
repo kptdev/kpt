@@ -99,7 +99,7 @@ kpt live apply to correctly compute status.
 
 var ApplyShort = `apply a package to the cluster`
 var ApplyLong = `
-    ktp live apply [FILENAME... | DIRECTORY] [flags]
+    kpt live apply [FILENAME... | DIRECTORY] [flags]
 
 The apply command creates, updates or deletes any resources in the cluster to
 make the state of resources in the cluster match the desired state as specified
@@ -139,7 +139,7 @@ Flags:
 
 var DestroyShort = `remove a package from the cluster`
 var DestroyLong = `
-    ktp live destroy [FILENAME... | DIRECTORY] [flags]
+    kpt live destroy [FILENAME... | DIRECTORY] [flags]
 
 The destroy command removes all files belonging to a package from
 the cluster.
@@ -159,7 +159,7 @@ Args:
 
 var PreviewShort = `preview shows the changes apply will make against the live state of the cluster`
 var PreviewLong = `
-    ktp live preview [FILENAME... | DIRECTORY] [flags]
+    kpt live preview [FILENAME... | DIRECTORY] [flags]
 
 The preview command will run through the same steps as apply, but 
 it will only print what would happen when running apply against the current

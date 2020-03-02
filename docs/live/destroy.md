@@ -4,7 +4,7 @@ remove a package from the cluster
 
 ### Synopsis
 
-    ktp live destroy [FILENAME... | DIRECTORY] [flags]
+    kpt live destroy [FILENAME... | DIRECTORY] [flags]
 
 The destroy command removes all files belonging to a package from
 the cluster.
