@@ -50,11 +50,6 @@ Fetch a package from a git repo
     * If the directory DOES exist and already contains a directory with the same name
       of the one that would be created: fail
 
-  --pattern string
-  
-    Pattern to use for writing files.  May contain the following formatting verbs
-    %n: metadata.name, %s: metadata.namespace, %k: kind (default "%n_%k.yaml")
-
 ### Examples
 
     # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
