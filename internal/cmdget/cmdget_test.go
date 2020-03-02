@@ -199,7 +199,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "/blueprints/java", r.Get.Directory)
 	assert.Equal(t, "/baz", r.Get.Destination)
 
-	d, err := ioutil.TempDir("", "ktp")
+	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
 	defer os.RemoveAll(d)
 	err = os.Mkdir(filepath.Join(d, "package"), 0700)

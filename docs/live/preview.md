@@ -4,7 +4,7 @@ preview shows the changes apply will make against the live state of the cluster
 
 ### Synopsis
 
-    ktp live preview [FILENAME... | DIRECTORY] [flags]
+    kpt live preview [FILENAME... | DIRECTORY] [flags]
 
 The preview command will run through the same steps as apply, but 
 it will only print what would happen when running apply against the current
