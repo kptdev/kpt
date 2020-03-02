@@ -1,4 +1,4 @@
-## pkg
+## live
 
 Reconcile configuration files with the live state
 
