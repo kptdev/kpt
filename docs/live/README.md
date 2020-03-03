@@ -97,7 +97,6 @@ functionality for polling a set of resources and computing the aggregate status
 for the set. For CRDs, there is a set of recommendations that if followed, will allow
 kpt live apply to correctly compute status.
 
-###
 [tutorial-script]: ../gifs/live.sh
 [apply]: apply.md
 [preview]: preview.md
