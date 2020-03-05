@@ -26,9 +26,6 @@ Args:
     must contain exactly one ConfigMap with the grouping object annotation.
     
 Flags:
-  no-prune:
-    If true, previously applied objects will not be pruned.
-    
   wait-for-reconcile:
     If true, after all resources have been applied, the cluster will
     be polled until either all resources have been fully reconciled
