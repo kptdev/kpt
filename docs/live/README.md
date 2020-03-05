@@ -13,7 +13,7 @@ Reconcile configuration files with the live state
 
 ### Synopsis
 
-Tools to safely apply and remove packages from clusters.
+Tool to safely apply and delete kubernetes package resources from clusters.
 
 | Command   | Description                                       |
 |-----------|---------------------------------------------------|
