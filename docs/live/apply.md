@@ -18,7 +18,7 @@ Args:
     Directory that contains k8s manifests.
     
 Flags:
-    
+
   wait-for-reconcile:
     If true, after all resources have been applied, the cluster will
     be polled until either all resources have been fully reconciled
@@ -31,6 +31,7 @@ Flags:
   wait-timeout:
     The threshold for how long to wait for all resources to reconcile before
     giving up. The default value is 1 minute.
+    
 
 #### `kubectl apply` vs `kpt live apply`
 
