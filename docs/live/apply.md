@@ -15,7 +15,7 @@ resources has been fully reconciled.
 Args:
 
   DIRECTORY:
-    Directory that contain k8s manifests with no sub-folders.
+    Directory that contains k8s manifests.
     
 Flags:
     
@@ -45,13 +45,14 @@ Usage:
   In terms of usage, both `kubectl apply` and `kpt live apply` follow similar pattern.
   The user experience remains unchanged.
 
-Applied resource set(ARS):
+Applied resource set:
+  This refers to the set of resources in the directory applied to cluster as a group.
   `kpt live apply` tracks the state of your applied resource set and related configuration. This
-  helps `kpt` to reliably reconcile the real world ARS with your configuration changes.
+  helps `kpt` to reliably reconcile the real world resources with your configuration changes.
 
 Prune:
   `kpt live apply` can declaratively delete the resources which are not part of your
-  ARS anymore. `kubectl apply` also has a similar functionality with --prune
+  applied resource set anymore. `kubectl apply` also has a similar functionality with --prune
   flag. However, it heavily depends on labels provided by user, which is imperative and
   error prone. On the other hand, prune is default option for `kpt live apply` and app
   state is completely managed and tracked by kpt. The only additional step users should
@@ -94,12 +95,37 @@ as it might delete other resources not related to this resource set sharing same
 other hand, `kpt live apply` tracks the state of Applied resource set and when the updated package
 is applied, `config-map-1` is automatically deleted (pruned).
 
-##### Inventory ConfigMap
-For tracking the applied resource set state, `kpt live init` generates an inventory ConfigMap
-in input directory with special unique label provided by the user. The input directory is considered
-as the boundary for this label with k8s resources group. This label is used to generate state tracking
-ConfigMap in the cluster while applying the resources. This label must be unique to the directory.
-If not, it might lead to accidental deletions of other resource sets sharing the same cluster.
+##### Grouping object template
+
+In order to take advantage of this prune, a package must contain a **grouping object template**,
+which is a ConfigMap with a special unique label in addition to the resources in the directory.
+This can either be created manually or by using `kpt live init` command. An example is:
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-grouping-object
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: test-group
+```
+
+And the special label is:
+
+```
+cli-utils.sigs.k8s.io/inventory-id: *group-name*
+```
+
+`kpt live apply` recognizes this template from the special label, and based
+on this kpt will create new grouping object with the metadata of all applied
+objects in the ConfigMap's data field. Subsequent `kpt live apply` commands can
+then query the grouping object, and calculate the omitted objects, cleaning up
+accordingly. When a grouping object is created in the cluster, a hash suffix
+is added to the name. Example:
+
+```
+test-grouping-object-17b4dba8
+```
 
 #### Status
 kpt live apply also has support for computing status for resources. This is 

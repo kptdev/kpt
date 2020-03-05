@@ -15,11 +15,11 @@ Reconcile configuration files with the live state
 
 Tool to safely apply and delete kubernetes package resources from live clusters.
 
-| Command   | Description                                               |
-|-----------|-----------------------------------------------------------|
-| [apply]   | apply a package to the live cluster                       |
-| [preview] | preview the operations that apply or destroy will perform |
-| [destroy] | delete the package resources from the live cluster        |
+| Command   | Description                                                   |
+|-----------|---------------------------------------------------------------|
+| [apply]   | apply a package to cluster                                    |
+| [preview] | preview operations that will be executed by apply/destroy     |
+| [destroy] | delete resources of package from cluster                      |
 
 **Data Flow**: local configuration or stdin -> kpt live -> apiserver (Kubernetes cluster)
 

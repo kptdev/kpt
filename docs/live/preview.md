@@ -13,7 +13,7 @@ live cluster state.
 Args:
 
   DIRECTORY:
-    Directory that contain k8s manifests with no sub-folders.
+    Directory that contains k8s manifests.
     
 Flags:
 

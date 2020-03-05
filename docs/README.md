@@ -110,10 +110,10 @@ than statically compiled into kpt.*
 
 Reconcile configuration files with the live state.
 
-- Apply package resources to live cluster
+- Apply package resources to cluster
 - Preview changes before applying them
 - Wait until a package has been fully reconciled with the live state
-- Delete package resources from live cluster
+- Delete package resources from cluster
 
 **Data Flow**: local configuration or stdin -> kpt live -> apiserver (Kubernetes cluster)
 
