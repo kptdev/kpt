@@ -285,11 +285,6 @@ var GetLong = `
       defaulting the name to the Base of REPO/PKG_PATH
     * If the directory DOES exist and already contains a directory with the same name
       of the one that would be created: fail
-
-  --pattern string
-  
-    Pattern to use for writing files.  May contain the following formatting verbs
-    %n: metadata.name, %s: metadata.namespace, %k: kind (default "%n_%k.yaml")
 `
 var GetExamples = `
     # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
