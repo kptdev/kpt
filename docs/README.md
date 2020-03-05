@@ -40,7 +40,7 @@ In order to facilitate programmatic operations, kpt:
 1. Relies upon git as the source of truth
 2. Represents configuration as data, specifically Kubernetes resources serialized as YAML or JSON.
 
-For compability with other arbitrary formats, kpt supports generating resource configuration data from templates,
+For compatibility with other arbitrary formats, kpt supports generating resource configuration data from templates,
 configuration DSLs, and programs.
 
 kpt functionality is subdivided into command groups, each of which operates on a particular set of entities, with a consistent command syntax and pattern of inputs and outputs.
@@ -50,7 +50,7 @@ kpt functionality is subdivided into command groups, each of which operates on a
 | [pkg]         | fetch, update, and sync configuration files using git                           |
 | [cfg]         | examine and modify configuration files                                          |
 | [fn]          | generate, transform, validate configuration files using containerized functions |
-| [live]        | reconcile configuration files with the live state                               |
+| [live]        | reconcile the live state with configuration files                               |
 
 ---
 

@@ -21,6 +21,7 @@ Tools to safely apply and remove packages from clusters.
 
 | Command   | Description                                       |
 |-----------|---------------------------------------------------|
+| [init]    | initialize a pacakge creating a local file        |
 | [apply]   | apply a package to the cluster                    |
 | [preview] | preview the operations that apply will perform    |
 | [destroy] | remove the package from the cluster               |
@@ -29,7 +30,7 @@ Tools to safely apply and remove packages from clusters.
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
-| local files or stdin    | apiserver                |
+| local files             | apiserver                |
 | apiserver               | stdout                   |
 
 #### Pruning
@@ -92,14 +93,16 @@ for the set. For CRDs, there is a set of recommendations that if followed, will 
 kpt live apply to correctly compute status.
 
 ###
+
 [tutorial-script]: ../gifs/live.sh
+[init]: init.md
 [apply]: apply.md
 [preview]: preview.md
 [destroy]: destroy.md`
 
 var ApplyShort = `apply a package to the cluster`
 var ApplyLong = `
-    kpt live apply [FILENAME... | DIRECTORY] [flags]
+    kpt live apply DIRECTORY [flags]
 
 The apply command creates, updates or deletes any resources in the cluster to
 make the state of resources in the cluster match the desired state as specified
@@ -108,16 +111,8 @@ available in kubectl, but also has support for pruning and waiting until all
 resources has been fully reconciled.
 
 Args:
-  NONE:
-    Input will be read from StdIn. Exactly one ConfigMap manifest
-    with the grouping object annotation must be present.
-
-  FILENAME:
-    A set of files that contains k8s manifests. Exactly one of them
-    needs to be a ConfigMap with the grouping object annotation.
-    
   DIRECTORY:
-    One or more directories that contain k8s manifests. The directories 
+    One directory that contain k8s manifests. The directory
     must contain exactly one ConfigMap with the grouping object annotation.
     
 Flags:
@@ -136,45 +131,49 @@ Flags:
 
 var DestroyShort = `remove a package from the cluster`
 var DestroyLong = `
-    kpt live destroy [FILENAME... | DIRECTORY] [flags]
+    kpt live destroy DIRECTORY [flags]
 
 The destroy command removes all files belonging to a package from
 the cluster.
 
 Args:
-  NONE:
-    Input will be read from StdIn. Exactly one ConfigMap manifest
-    with the grouping object annotation must be present.
-
-  FILENAME:
-    A set of files that contains k8s manifests. Exactly one of them
-    needs to be a ConfigMap with the grouping object annotation.
-    
   DIRECTORY:
-    One or more directories that contain k8s manifests. The directories 
+    One directory that contain k8s manifests. The directory
     must contain exactly one ConfigMap with the grouping object annotation.`
+
+var InitShort = `initialize a package by creating a local file`
+var InitLong = `
+    kpt live init DIRECTORY [flags]
+
+The init command initializes the package by locally creating a template
+file. When applied, this template file is used to store the state of all
+applied objects in a package. This file is necessary for other live 
+commands (apply/preview/destroy) to work correctly.
+
+Args:
+  DIRECTORY:
+    One directory that contain k8s manifests. The directory
+    must contain exactly one ConfigMap with the grouping object annotation.
+
+Flags:
+  group-name:
+    String name to group applied resources. Must be composed of valid
+    label value characters. If not specified, the default group name
+    is generated from the package directory name.`
 
 var PreviewShort = `preview shows the changes apply will make against the live state of the cluster`
 var PreviewLong = `
-    kpt live preview [FILENAME... | DIRECTORY] [flags]
+    kpt live preview DIRECTORY [flags]
 
 The preview command will run through the same steps as apply, but 
 it will only print what would happen when running apply against the current
 live cluster state. 
 
 Args:
-  NONE:
-    Input will be read from StdIn. Exactly one ConfigMap manifest
-    with the grouping object annotation must be present.
-
-  FILENAME:
-    A set of files that contains k8s manifests. Exactly one of them
-    needs to be a ConfigMap with the grouping object annotation.
-    
   DIRECTORY:
-    One or more directories that contain k8s manifests. The directories 
+    One directory that contain k8s manifests. The directory
     must contain exactly one ConfigMap with the grouping object annotation.
     
 Flags:
-  no-prune:
-    If true, previously applied objects will not be pruned.`
+  destroy:
+    If true, dry-run deletion of all resources.`
