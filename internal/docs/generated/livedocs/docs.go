@@ -21,6 +21,7 @@ Tools to safely apply and remove packages from clusters.
 
 | Command   | Description                                       |
 |-----------|---------------------------------------------------|
+| [init]    | initialize a pacakge creating a local file        |
 | [apply]   | apply a package to the cluster                    |
 | [preview] | preview the operations that apply will perform    |
 | [destroy] | remove the package from the cluster               |
@@ -92,7 +93,9 @@ for the set. For CRDs, there is a set of recommendations that if followed, will 
 kpt live apply to correctly compute status.
 
 ###
+
 [tutorial-script]: ../gifs/live.sh
+[init]: init.md
 [apply]: apply.md
 [preview]: preview.md
 [destroy]: destroy.md`
@@ -137,6 +140,26 @@ Args:
   DIRECTORY:
     One directory that contain k8s manifests. The directory
     must contain exactly one ConfigMap with the grouping object annotation.`
+
+var InitShort = `initialize a package by creating a local file`
+var InitLong = `
+    kpt live init DIRECTORY [flags]
+
+The init command initializes the package by locally creating a template
+file. When applied, this template file is used to store the state of all
+applied objects in a package. This file is necessary for other live 
+commands (apply/preview/destroy) to work correctly.
+
+Args:
+  DIRECTORY:
+    One directory that contain k8s manifests. The directory
+    must contain exactly one ConfigMap with the grouping object annotation.
+
+Flags:
+  group-name:
+    String name to group applied resources. Must be composed of valid
+    label value characters. If not specified, the default group name
+    is generated from the package directory name.`
 
 var PreviewShort = `preview shows the changes apply will make against the live state of the cluster`
 var PreviewLong = `

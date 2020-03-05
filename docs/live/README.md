@@ -17,6 +17,7 @@ Tools to safely apply and remove packages from clusters.
 
 | Command   | Description                                       |
 |-----------|---------------------------------------------------|
+| [init]    | initialize a package creating a local file        |
 | [apply]   | apply a package to the cluster                    |
 | [preview] | preview the operations that apply will perform    |
 | [destroy] | remove the package from the cluster               |
@@ -97,7 +98,10 @@ functionality for polling a set of resources and computing the aggregate status
 for the set. For CRDs, there is a set of recommendations that if followed, will allow
 kpt live apply to correctly compute status.
 
+###
+
 [tutorial-script]: ../gifs/live.sh
+[init]: init.md
 [apply]: apply.md
 [preview]: preview.md
 [destroy]: destroy.md
