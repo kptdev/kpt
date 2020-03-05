@@ -25,7 +25,7 @@ Tools to safely apply and remove packages from clusters.
 
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
-| local files or stdin    | apiserver                |
+| local files             | apiserver                |
 | apiserver               | stdout                   |
 
 #### Pruning

@@ -4,7 +4,7 @@ apply a package to the cluster
 
 ### Synopsis
 
-    kpt live apply [FILENAME... | DIRECTORY] [flags]
+    kpt live apply DIRECTORY [flags]
 
 The apply command creates, updates or deletes any resources in the cluster to
 make the state of resources in the cluster match the desired state as specified
@@ -13,16 +13,8 @@ available in kubectl, but also has support for pruning and waiting until all
 resources has been fully reconciled.
 
 Args:
-  NONE:
-    Input will be read from StdIn. Exactly one ConfigMap manifest
-    with the grouping object annotation must be present.
-
-  FILENAME:
-    A set of files that contains k8s manifests. Exactly one of them
-    needs to be a ConfigMap with the grouping object annotation.
-    
   DIRECTORY:
-    One or more directories that contain k8s manifests. The directories 
+    One directory that contain k8s manifests. The directory
     must contain exactly one ConfigMap with the grouping object annotation.
     
 Flags:
