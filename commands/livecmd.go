@@ -24,6 +24,7 @@ import (
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/apply"
 	"sigs.k8s.io/cli-utils/cmd/destroy"
+	"sigs.k8s.io/cli-utils/cmd/initcmd"
 	"sigs.k8s.io/cli-utils/cmd/preview"
 )
 
@@ -59,6 +60,10 @@ func GetLiveCommand(name string) *cobra.Command {
 		ErrOut: os.Stderr,
 	}
 
+	initCmd := initcmd.NewCmdInit(ioStreams)
+	initCmd.Short = livedocs.InitShort
+	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
+
 	applyCmd := apply.NewCmdApply(f, ioStreams)
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
@@ -72,7 +77,7 @@ func GetLiveCommand(name string) *cobra.Command {
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 
-	liveCmd.AddCommand(applyCmd, previewCmd, destroyCmd)
+	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, destroyCmd)
 
 	return liveCmd
 }
