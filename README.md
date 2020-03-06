@@ -1,5 +1,7 @@
 # KPT
 
+<img src="https://storage.googleapis.com/kpt-dev/docs/logo.png" width="50" height="50" />
+
 kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes Resource configuration data files.
 
 - Fetch, update, and sync configuration files using git.
