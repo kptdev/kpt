@@ -28,7 +28,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) == 0 {
+	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "must specify new version\n")
 		os.Exit(1)
 	}
