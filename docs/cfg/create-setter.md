@@ -43,7 +43,7 @@ for a setter in the Kptfile, and 2) identify all fields matching the setter valu
 an OpenAPI reference to the setter for each.
 
     # create or update a setter named replicas
-    kpt create-setter hello-world/ replicas 3
+    kpt cfg create-setter hello-world/ replicas 3
 
 Example setter definition in a Kptfile:
 
@@ -78,7 +78,7 @@ A type may be specified using the --type flag, and accepts string,integer,boolea
 The resulting OpenAPI definition looks like:
 
     # create or update a setter named version which sets the "version" annotation
-    kpt create-setter hello-world/ version 3 --field "annotations.version" --type string
+    kpt cfg create-setter hello-world/ version 3 --field "annotations.version" --type string
 
 ```yaml
 openAPI:
