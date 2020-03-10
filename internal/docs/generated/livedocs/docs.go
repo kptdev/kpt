@@ -93,7 +93,6 @@ for the set. For CRDs, there is a set of recommendations that if followed, will 
 kpt live apply to correctly compute status.
 
 ###
-
 [tutorial-script]: ../gifs/live.sh
 [init]: init.md
 [apply]: apply.md

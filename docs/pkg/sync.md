@@ -22,6 +22,12 @@ specified ref.
 This is an alternative to managing package dependencies individually using
 the `get` and `update` commands.
 
+| Command  | Description                             |
+|----------|-----------------------------------------|
+| [set]    | add a sync dependency to a Kptfile      |
+
+#### Run Sync
+
     kpt pkg sync LOCAL_PKG_DIR [flags]
 
   LOCAL_PKG_DIR:
@@ -45,6 +51,8 @@ with `kpt pkg sync set`.  e.g.
 
     kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
+Note that the [set] command must be run from within the local package directory and the
+last argument specifies the local destination directory for the dependency.
 
 Or edit the Kptfile directly:
 
@@ -109,3 +117,5 @@ against the directory.
     kpt pkg sync my-package-dir/
 
 [tutorial-script]: ../gifs/pkg-sync.sh
+[sync-set]: sync-set.md
+

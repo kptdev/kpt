@@ -357,6 +357,8 @@ While is it possible to directly edit the Kptfile, ` + "`" + `set` + "`" + ` can
 Kptfile dependencies.
 
     kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+    
+This command must be run from within the local package directory.
 
   REPO_URI:
 
@@ -439,6 +441,12 @@ specified ref.
 This is an alternative to managing package dependencies individually using
 the ` + "`" + `get` + "`" + ` and ` + "`" + `update` + "`" + ` commands.
 
+| Command  | Description                             |
+|----------|-----------------------------------------|
+| [set]    | add a sync dependency to a Kptfile      |
+
+#### Run Sync
+
     kpt pkg sync LOCAL_PKG_DIR [flags]
 
   LOCAL_PKG_DIR:
@@ -462,6 +470,8 @@ with ` + "`" + `kpt pkg sync set` + "`" + `.  e.g.
 
     kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
         hello-world
+Note that the [set] command must be run from within the local package directory and the
+last argument specifies the local destination directory for the dependency.
 
 Or edit the Kptfile directly:
 
@@ -524,7 +534,9 @@ var SyncExamples = `
     # sync the dependencies
     kpt pkg sync my-package-dir/
 
-[tutorial-script]: ../gifs/pkg-sync.sh`
+[tutorial-script]: ../gifs/pkg-sync.sh
+[sync-set]: sync-set.md
+`
 
 var UpdateShort = `Apply upstream package updates`
 var UpdateLong = `

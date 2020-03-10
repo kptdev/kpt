@@ -19,6 +19,8 @@ While is it possible to directly edit the Kptfile, `set` can be used to add or u
 Kptfile dependencies.
 
     kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+    
+This command must be run from within the local package directory.
 
   REPO_URI:
 
