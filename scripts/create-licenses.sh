@@ -33,6 +33,12 @@ set -o pipefail
 export LANG=C
 export LC_ALL=C
 
+# Name of file to write licenses.
+VENDOR_LICENSE_FILE="LICENSES.txt"
+
+# Zip package name for Mozilla licensed source code.
+ZIP_FILENAME="lib.zip"
+
 ###############################################################################
 # Process package content
 #
@@ -149,7 +155,6 @@ if (( BASH_VERSINFO[0] < 4 )); then
   exit 9
 fi
 
-VENDOR_LICENSE_FILE="LICENSES"
 TMP_LICENSE_FILE="/tmp/LICENSES.$$"
 DEPS_DIR="vendor"
 declare -Ag CONTENT
@@ -163,6 +168,7 @@ V2_LICENSE_DIR="vendor/github.com/cpuguy83/go-md2man"
 mv ${V2_LICENSE_DIR}/v2/LICENSE ${V2_LICENSE_DIR}
 
 # Loop through every vendored package
+mozilla_repos=""
 for PACKAGE in $(go list -m -json all | jq -r .Path | sort -f); do
   if [[ -e "staging/src/${PACKAGE}" ]]; then
     # echo "$PACKAGE is a staging package, skipping" > /dev/stderr
@@ -204,7 +210,15 @@ Options:
 __EOF__
       exit 9
   fi
-  cat "${file}"
+
+  # Check to see if its a Mozilla license. If so, we need to package the source code.
+  license=$(cat "${file}")
+  if [[ "$license" == *"Mozilla"* ]]
+  then
+    mozilla_repos+=" ${DEPS_DIR}/${PACKAGE}"
+  fi
+
+  cat ${file}
 
   echo
   echo "= ${file} $(kube::util::md5 "${file}")"
@@ -213,6 +227,9 @@ __EOF__
 done >> ${TMP_LICENSE_FILE}
 
 cat ${TMP_LICENSE_FILE} > ${VENDOR_LICENSE_FILE}
+
+# Create a package of Mozilla repository source code (only go code).
+zip -qr $ZIP_FILENAME $mozilla_repos -i '*.go'
 
 # Cleanup vendor directory
 rm -rf vendor
