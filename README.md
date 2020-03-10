@@ -1,6 +1,6 @@
-# KPT
-
 <img src="https://storage.googleapis.com/kpt-dev/docs/logo.png" width="50" height="50" />
+
+# KPT
 
 kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes Resource configuration data files.
 
