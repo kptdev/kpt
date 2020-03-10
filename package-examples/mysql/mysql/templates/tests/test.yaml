@@ -1,0 +1,45 @@
+---
+# Source: mysql/templates/tests/test.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: release-name-mysql-test
+  namespace: default
+  labels:
+    app: release-name-mysql
+    chart: "mysql-1.3.1"
+    heritage: "Tiller"
+    release: "release-name"
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  initContainers:
+    - name: test-framework
+      image: "dduportal/bats:0.4.0"
+      command:
+      - "bash"
+      - "-c"
+      - |
+        set -ex
+        # copy bats to tools dir
+        cp -R /usr/local/libexec/ /tools/bats/
+      volumeMounts:
+      - mountPath: /tools
+        name: tools
+  containers:
+    - name: release-name-test
+      image: "mysql:5.7.14"
+      command: ["/tools/bats/bats", "-t", "/tests/run.sh"]
+      volumeMounts:
+      - mountPath: /tests
+        name: tests
+        readOnly: true
+      - mountPath: /tools
+        name: tools
+  volumes:
+  - name: tests
+    configMap:
+      name: release-name-mysql-test
+  - name: tools
+    emptyDir: {}
+  restartPolicy: Never
