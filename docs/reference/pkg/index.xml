@@ -1,0 +1,383 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kpt – Pkg</title>
+    <link>https://googlecontainertools.github.io/kpt/reference/pkg/</link>
+    <description>Recent content in Pkg on Kpt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://googlecontainertools.github.io/kpt/reference/pkg/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Reference: Desc</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/pkg/desc/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/pkg/desc/</guid>
+      <description>
+        
+        
+        &lt;p&gt;Desc displays information about the upstream package in tabular format.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# display description for the local hello-world package&lt;/span&gt;
+kpt pkg desc hello-world/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;kpt pkg desc DIR
+
+DIR:
+  Path to a package directory
+&lt;/code&gt;&lt;/pre&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Diff</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/pkg/diff/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/pkg/diff/</guid>
+      <description>
+        
+        
+        &lt;p&gt;Diff displays differences between upstream and local packages.&lt;/p&gt;
+&lt;p&gt;It can display differences between:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;local package and upstream source version&lt;/li&gt;
+&lt;li&gt;local package and upstream new version&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The diff tool can be specified.  By default, the local &amp;lsquo;diff&amp;rsquo; command is used to
+display differences.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show changes in current package relative to upstream source package&lt;/span&gt;
+kpt pkg diff
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show changes in current package relative to upstream source package&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# using meld tool with auto compare option.&lt;/span&gt;
+kpt pkg diff --diff-tool meld --diff-tool-opts &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;-a&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show changes in upstream source package between current version and&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# target version&lt;/span&gt;
+kpt pkg diff @v4.0.0 --diff-type remote
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show changes in current package relative to target version&lt;/span&gt;
+kpt pkg diff @v4.0.0 --diff-type combined
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show 3way changes between the local package, upstream package at original&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# version and upstream package at target version using meld&lt;/span&gt;
+kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;-a&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;kpt pkg diff [DIR@VERSION]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Local package to compare. Command will fail if the directory doesn&#39;t exist, or does not
+  contain a Kptfile.  Defaults to the current working directory.
+
+VERSION:
+  A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
+  Defaults to the local package version that was last fetched.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--diff-type:
+  The type of changes to view (local by default). Following types are
+  supported:
+
+  local: shows changes in local package relative to upstream source package 
+         at original version
+  remote: shows changes in upstream source package at target version
+          relative to original version
+  combined: shows changes in local package relative to upstream source
+            package at target version
+  3way: shows changes in local package and source package at target version
+        relative to original version side by side
+
+--diff-tool:
+  Commandline tool (diff by default) for showing the changes.
+  Note that it overrides the KPT_EXTERNAL_DIFF environment variable.
+  
+  # Show changes using &#39;meld&#39; commandline tool
+  kpt pkg diff @master --diff-tool meld
+
+--diff-opts:
+  Commandline options to use with the diffing tool.
+  Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
+  # Show changes using &amp;quot;diff&amp;quot; with recurive options
+  kpt pkg diff @master --diff-tool meld --diff-opts &amp;quot;-r&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;environment-variables&#34;&gt;Environment Variables&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;KPT_EXTERNAL_DIFF:
+   Commandline diffing tool (diff by default) that will be used to show
+   changes.
+   # Use meld to show changes
+   KPT_EXTERNAL_DIFF=meld kpt pkg diff
+
+KPT_EXTERNAL_DIFF_OPTS:
+   Commandline options to use for the diffing tool. For ex.
+   # Using &amp;quot;-a&amp;quot; diff option
+   KPT_EXTERNAL_DIFF_OPTS=&amp;quot;-a&amp;quot; kpt pkg diff --diff-tool meld
+&lt;/code&gt;&lt;/pre&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Get</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/pkg/get/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/pkg/get/</guid>
+      <description>
+        
+        
+        &lt;p&gt;
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/pkg-get.cast&#34;
+            cols=&#34;90&#34;
+            rows=&#34;10&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Get fetches a remote package from a git subdirectory and writes it to a new
+local directory.  The local directory name does not need to match the upstream
+directory name.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# creates directory ./cockroachdb/ containing the package contents&lt;/span&gt;
+kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# fetch a cockroachdb&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# if ./my-package doesn&amp;#39;t exist, creates directory ./my-package/ containing&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# the package contents&lt;/span&gt;
+kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# fetch package examples from github.com/kubernetes/examples&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# creates directory ./examples fetched from the provided commit&lt;/span&gt;
+kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+
+REPO_URI:
+  URI of a git repository containing 1 or more packages as subdirectories.
+  In most cases the .git suffix should be specified to delimit the REPO_URI
+  from the PKG_PATH, but this is not required for widely recognized repo
+  prefixes.  If get cannot parse the repo for the directory and version,
+  then it will print an error asking for &#39;.git&#39; to be specified as part of
+  the argument.
+  e.g. https://github.com/kubernetes/examples.git
+  Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
+
+PKG_PATH:
+  Path to remote subdirectory containing Kubernetes resource configuration
+  files or directories. Defaults to the root directory.
+  Uses &#39;/&#39; as the path separator (regardless of OS).
+  e.g. staging/cockroachdb
+
+VERSION:
+  A git tag, branch, ref or commit for the remote version of the package
+  to fetch.  Defaults to the repository master branch.
+  e.g. @master
+
+LOCAL_DEST_DIRECTORY:
+  The local directory to write the package to.
+  e.g. ./my-cockroachdb-copy
+
+    * If the directory does NOT exist: create the specified directory
+      and write the package contents to it
+    * If the directory DOES exist: create a NEW directory under the
+      specified one, defaulting the name to the Base of REPO/PKG_PATH
+    * If the directory DOES exist and already contains a directory with
+      the same name of the one that would be created: fail
+&lt;/code&gt;&lt;/pre&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Init</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/pkg/init/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/pkg/init/</guid>
+      <description>
+        
+        
+        &lt;p&gt;
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/pkg-init.cast&#34;
+            cols=&#34;90&#34;
+            rows=&#34;10&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Init initializes an existing empty directory as an empty kpt package.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;init is optional&lt;/strong&gt;: Any directory containing Kubernetes Resource
+Configuration may be treated as remote package without the existence of
+additional packaging metadata.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Resource Configuration may be placed anywhere under DIR as *.yaml files.&lt;/li&gt;
+&lt;li&gt;DIR may contain additional non-Resource Configuration files.&lt;/li&gt;
+&lt;li&gt;DIR must be pushed to a git repo or repo subdirectory.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Init will augment an existing local directory with packaging metadata to help
+with discovery.&lt;/p&gt;
+&lt;p&gt;Init will:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Create a Kptfile with package name and metadata if it doesn&amp;rsquo;t exist&lt;/li&gt;
+&lt;li&gt;Create a README.md for package documentation if it doesn&amp;rsquo;t exist.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# writes Kptfile package meta if not found&lt;/span&gt;
+mkdir my-pkg
+kpt pkg init my-pkg --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;cockroachdb &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;my cockroachdb implementation&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;kpt pkg init DIR [flags]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Init fails if DIR does not already exist
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--description
+  short description of the package. (default &amp;quot;sample description&amp;quot;)
+
+--name
+  package name.  defaults to the directory base name.
+
+--tag
+  list of tags for the package.
+
+--url
+  link to page with information about the package.
+&lt;/code&gt;&lt;/pre&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Update</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/pkg/update/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/pkg/update/</guid>
+      <description>
+        
+        
+        &lt;p&gt;
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/pkg-update.cast&#34;
+            cols=&#34;90&#34;
+            rows=&#34;10&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Update pulls in upstream changes and merges them into a local package.
+Changes may be applied using one of several strategies.&lt;/p&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
+&lt;p&gt;All changes must be committed to git before running update&lt;/p&gt;
+
+&lt;/div&gt;
+
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# update my-package-dir/&lt;/span&gt;
+git add . &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;some message&amp;#39;&lt;/span&gt;
+kpt pkg update my-package-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# update my-package-dir/ to match the v1.3 branch or tag&lt;/span&gt;
+git add . &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;some message&amp;#39;&lt;/span&gt;
+kpt pkg update my-package-dir/@v1.3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# update applying a git patch&lt;/span&gt;
+git add . &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;package updates&amp;#34;&lt;/span&gt;
+kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;LOCAL_PKG_DIR:
+  Local package to update.  Directory must exist and contain a Kptfile
+  to be updated.
+
+VERSION:
+  A git tag, branch, ref or commit.  Specified after the local_package
+  with @ -- pkg@version.
+  Defaults the local package version that was last fetched.
+
+  Version types:
+    * branch: update the local contents to the tip of the remote branch
+    * tag: update the local contents to the remote tag
+    * commit: update the local contents to the remote commit
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--strategy:
+  Controls how changes to the local package are handled.  Defaults to fast-forward.
+
+    * resource-merge: perform a structural comparison of the original /
+      updated Resources, and merge the changes into the local package.
+    * fast-forward: fail without updating if the local package was modified
+      since it was fetched.
+    * alpha-git-patch: use &#39;git format-patch&#39; and &#39;git am&#39; to apply a
+      patch of the changes between the source version and destination
+      version.
+    * force-delete-replace: WIPE ALL LOCAL CHANGES TO THE PACKAGE.
+      DELETE the local package at local_pkg_dir/ and replace it
+      with the remote version.
+
+-r, --repo:
+  Git repo url for updating contents.  Defaults to the repo the package
+  was fetched from.
+
+--dry-run
+  Print the &#39;alpha-git-patch&#39; strategy patch rather than merging it.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4 id=&#34;env-vars&#34;&gt;Env Vars&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;KPT_CACHE_DIR:
+  Controls where to cache remote packages when fetching them to update
+  local packages.
+  Defaults to ~/.kpt/repos/
+&lt;/code&gt;&lt;/pre&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>

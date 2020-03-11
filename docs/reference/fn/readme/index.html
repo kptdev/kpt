@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.63.2" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kpt/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
+
+<title>Kpt</title><meta property="og:title" content="" />
+<meta property="og:description" content="fn Generate, transform, or validate configuration files using containerized functions.
+Synopsis Functions are executables (that you can write) packaged in container images which accept a collection of Resource configuration as input, and emit a collection of Resource configuration as output.
+   Command Description     run locally execute one or more functions   sink explicitly specify an output sink   source explicitly specify an input source    Data Flow: local configuration or stdin -&gt; kpt [fn] (runs a container) -&gt; local configuration or stdout" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://pwittrock.github.io/kpt/reference/fn/readme/" />
+<meta property="og:site_name" content="Kpt" />
+<meta itemprop="name" content="">
+<meta itemprop="description" content="fn Generate, transform, or validate configuration files using containerized functions.
+Synopsis Functions are executables (that you can write) packaged in container images which accept a collection of Resource configuration as input, and emit a collection of Resource configuration as output.
+   Command Description     run locally execute one or more functions   sink explicitly specify an output sink   source explicitly specify an input source    Data Flow: local configuration or stdin -&gt; kpt [fn] (runs a container) -&gt; local configuration or stdout">
+
+<meta itemprop="wordCount" content="265">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content=""/>
+<meta name="twitter:description" content="fn Generate, transform, or validate configuration files using containerized functions.
+Synopsis Functions are executables (that you can write) packaged in container images which accept a collection of Resource configuration as input, and emit a collection of Resource configuration as output.
+   Command Description     run locally execute one or more functions   sink explicitly specify an output sink   source explicitly specify an input source    Data Flow: local configuration or stdin -&gt; kpt [fn] (runs a container) -&gt; local configuration or stdout"/>
+
+
+
+
+
+<link rel="preload" href="/kpt/scss/main.min.6ca91c1f1fce086842eb1bd80b503b1a623183950b73374882023fde9fdab4ac.css" as="style">
+<link href="/kpt/scss/main.min.6ca91c1f1fce086842eb1bd80b503b1a623183950b73374882023fde9fdab4ac.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+<link rel="stylesheet" type="text/css" href="/css/asciinema-player.css" />
+
+  </head>
+  <body class="td-page">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kpt/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kpt</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/guides/" ><span>Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kpt/reference/" ><span class="active">Command Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-default td-outer">
+      <main role="main" class="td-main">
+        
+
+<h2 id="fn">fn</h2>
+<p>Generate, transform, or validate configuration files using containerized functions.</p>
+<h3 id="synopsis">Synopsis</h3>
+<p>Functions are executables (<a href="#developing-functions">that you can write</a>) packaged in container images which accept a collection of
+Resource configuration as input, and emit a collection of Resource configuration as output.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="run.md">run</a></td>
+<td>locally execute one or more functions</td>
+</tr>
+<tr>
+<td><a href="sink.md">sink</a></td>
+<td>explicitly specify an output sink</td>
+</tr>
+<tr>
+<td><a href="source.md">source</a></td>
+<td>explicitly specify an input source</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Data Flow</strong>:  local configuration or stdin -&gt; kpt [fn] (runs a container) -&gt; local configuration or stdout</p>
+<table>
+<thead>
+<tr>
+<th>Configuration Read From</th>
+<th>Configuration Written To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>local files or stdin</td>
+<td>local files or stdout</td>
+</tr>
+</tbody>
+</table>
+<p>Functions may be used to:</p>
+<ul>
+<li>Generate configuration from templates, DSLs, CRD-style abstractions, key-value pairs, etc.&ndash; e.g. expand Helm charts, JSonnet, Jinja, etc.</li>
+<li>Inject fields or otherwise modify configuration &ndash; e.g.add init-containers, side-cars, etc</li>
+<li>Rollout configuration changes across an organization &ndash; e.g.similar to
+<a href="https://github.com/reactjs/react-codemod">https://github.com/reactjs/react-codemod</a></li>
+<li>Validate configuration &ndash; e.g.ensure organizational policies are enforced</li>
+</ul>
+<p>Functions may be run at different times depending on the function and the organizational needs:</p>
+<ul>
+<li>as part of the build and development process</li>
+<li>as pre-commit checks</li>
+<li>as PR checks</li>
+<li>as pre-release checks</li>
+<li>as pre-rollout checks</li>
+</ul>
+<h4 id="functions-catalog">Functions Catalog</h4>
+<p><a href="https://googlecontainertools.github.io/kpt-functions-catalog/">KPT Functions Catalog</a> repository documents a catalog of kpt functions implemented using different toolchains.</p>
+<h4 id="developing-functions">Developing Functions</h4>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Documentation</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Typescript</td>
+<td><a href="https://googlecontainertools.github.io/kpt-functions-sdk/">KPT Functions SDK</a></td>
+<td><a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">examples</a></td>
+</tr>
+<tr>
+<td>Go</td>
+<td><a href="https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml">kustomize/kyaml</a></td>
+<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go">example</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="examples">Examples</h3>
+<pre><code># run the function defined by gcr.io/example.com/my-fn as a local container
+# against the configuration in DIR
+kpt fn run DIR/ --image gcr.io/example.com/my-fn
+
+# run the functions declared in files under FUNCTIONS_DIR/
+kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
+
+# run the functions declared in files under DIR/
+kpt fn run DIR/
+</code></pre>
+<h3 id="also-see-command-groups">Also See Command Groups</h3>
+<p><a href="../cfg/README.md">cfg</a>, <a href="../pkg/README.md">pkg</a></p>
+<h3 id="heading"></h3>
+
+
+
+      </main>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Google LLC All Rights Reserved</small>
+        <small class="ml-1"><a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></small>
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kpt/js/main.min.b598b52f18af835bd9f331906f352c2f34aedad03efef057573f1bb8d4d0117c.js" integrity="sha256-tZi1Lxivg1vZ8zGQbzUsLzSu2tA&#43;/vBXVz8buNTQEXw=" crossorigin="anonymous"></script>
+
+<script src="/js/asciinema-player.js"></script>
+
+
+  </body>
+</html>
