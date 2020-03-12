@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/guides/consumer/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/installation/gcloud/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/api-reference/kptfile/</loc>
+    <lastmod>2020-03-11T23:20:02-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/installation/homebrew/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/guides/producer/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/installation/binaries/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/fn/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/annotate/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/cat/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/concepts/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/count/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/create-setter/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/create-subst/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/fmt/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/grep/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/list-setters/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/live/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/concepts/packaging/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/set/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/installation/source/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/cfg/tree/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/guides/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/installation/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/api-reference/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/faq/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/index.json</loc>
+    <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/live/apply/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/desc/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/live/destroy/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/diff/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/get/</loc>
+    <lastmod>2020-03-11T23:20:02-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/live/init/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/init/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/live/preview/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/fn/run/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/search/</loc>
+    <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/sync/set/</loc>
+    <lastmod>2020-03-11T23:20:02-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/fn/sink/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/fn/source/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/sync/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://pwittrock.github.io/kpt/reference/pkg/update/</loc>
+    <lastmod>2020-03-11T11:30:59-07:00</lastmod>
+  </url>
+  
+</urlset>

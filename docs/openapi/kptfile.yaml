@@ -1,0 +1,67 @@
+swagger: "2.0"
+definitions:
+  Kptfile:
+    type: "object"
+    description: "Kptfile configures a kpt package"
+    "x-kubernetes-group-version-kind":
+      "kind": "Kptfile"
+    properties:
+      apiVersion:
+        description: "apiVersion of the Kptfile"
+        type: string
+      kind:
+        description: "kind -- always Kptfile"
+        type: string
+      dependencies:
+        description: "Package dependencies to sync with the `kpt pkg sync` command"
+        type: "array"
+        items:
+          "$ref": "#/definitions/Dependency"
+      openAPI:
+        description: "Package specific OpenAPI definitions to be applied to the package contents."
+      upstream:
+        description: "Metadata about the upstream source"
+        "$ref": "#/definitions/Upstream"
+
+  Dependency:
+    type: "object"
+    properties:
+      name:
+        description: "Name of the dependency -- must be unique"
+        type: "string"
+      upstream:
+        description: "Name of the dependency -- must be unique"
+        "$ref": "#/definitions/Upstream"
+      ensureNotExists:
+        description: "Set to true to delete the dependency"
+        type: "boolean"
+      strategy:
+        description: "Update merge strategy."
+        type: "string"
+      autoSet:
+        description: "When syncing this dependency, automatically perform setters by pulling their values from environment variables."
+        type: "boolean"
+
+  Upstream:
+    type: "object"
+    properties:
+      type:
+        description: "Type of the upstream source -- always git"
+        type: "string"
+      git:
+        description: "Metadata about the upstream git repo"
+        properties: 
+          commit:
+            description: "Upstream git commit the the package was last fetched at."
+            type: "string"
+          repo:
+            description: "Upstream git repo."
+            type: "string"
+          directory:
+            description: "Upstream git subdirectory."
+            type: "string"
+          ref:
+            description: "Upstream git ref the the package was last fetched at."
+            type: "string"
+
+

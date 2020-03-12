@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: generate license fix vet fmt lint test build tidy
+.PHONY: docs license fix vet fmt lint test build tidy
 
 GOBIN := $(shell go env GOPATH)/bin
 
 build:
 	go build -o $(GOBIN)/kpt -v .
 
-all: generate license fix vet fmt lint test build buildall tidy
+all: license fix vet fmt lint test build buildall tidy
 
 buildall:
 	GOOS=windows go build -o /dev/null
@@ -32,11 +32,11 @@ fix:
 fmt:
 	go fmt ./...
 
-generate:
-	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
-	rm -rf internal/docs/generated
-	mkdir internal/docs/generated
-	GOBIN=$(GOBIN) go generate ./...
+#generate:
+#	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
+#	rm -rf internal/docs/generated
+#	mkdir internal/docs/generated
+#	GOBIN=$(GOBIN) go generate ./...
 
 tidy:
 	go mod tidy
@@ -67,3 +67,9 @@ docker:
 functions-examples-docker:
 	docker build . -f functions/examples/Dockerfile -t gcr.io/kpt-dev/example-functions:v0.1.0
 	docker push gcr.io/kpt-dev/example-functions:v0.1.0
+
+docs:
+	(cd docsy && hugo)
+
+servedocs:
+	(cd docsy && hugo serve --baseURL /)
