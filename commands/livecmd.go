@@ -64,7 +64,7 @@ func GetLiveCommand(name string) *cobra.Command {
 	initCmd.Short = livedocs.InitShort
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 
-	applyCmd := apply.NewCmdApply(f, ioStreams)
+	applyCmd := apply.ApplyCommand(f, ioStreams)
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
