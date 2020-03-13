@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/function/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Package Consumers | Kpt</title><meta property="og:title" content="Package Consumers" />
-<meta property="og:description" content="Guides for workflows related to consume packages published by other teams or organizations.
+<title>Call functions | Kpt</title><meta property="og:title" content="Call functions" />
+<meta property="og:description" content="Modify or validate the contents of a package by calling a function.
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/function/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Package Consumers">
-<meta itemprop="description" content="Guides for workflows related to consume packages published by other teams or organizations.
+<meta itemprop="name" content="Call functions">
+<meta itemprop="description" content="Modify or validate the contents of a package by calling a function.
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Package Consumers"/>
-<meta name="twitter:description" content="Guides for workflows related to consume packages published by other teams or organizations.
+<meta name="twitter:title" content="Call functions"/>
+<meta name="twitter:description" content="Modify or validate the contents of a package by calling a function.
 "/>
 
 
@@ -49,7 +49,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Package Consumers | Kpt</title>
+    <title>Call functions | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -177,7 +177,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Consumers</a>
   </li>
   <ul>
     <li class="collapse show" id="kptguidesconsumer">
@@ -194,10 +194,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/fetch/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Fetch</a>
+    <a  href="/kpt/guides/consumer/fetch/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Fetch</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerfetch">
+    <li class="collapse " id="kptguidesconsumerfetch">
       
       
       
@@ -217,10 +217,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Update</a>
+    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Update</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerupdate">
+    <li class="collapse " id="kptguidesconsumerupdate">
       
       
       
@@ -240,10 +240,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/customize/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Customize</a>
+    <a  href="/kpt/guides/consumer/customize/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Customize</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumercustomize">
+    <li class="collapse " id="kptguidesconsumercustomize">
       
       
       
@@ -263,10 +263,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Display</a>
+    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Display</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerdisplay">
+    <li class="collapse " id="kptguidesconsumerdisplay">
       
       
       
@@ -286,10 +286,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Apply</a>
+    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Apply</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerapply">
+    <li class="collapse " id="kptguidesconsumerapply">
       
       
       
@@ -309,7 +309,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Call Functions</a>
+    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Call Functions</a>
   </li>
   <ul>
     <li class="collapse show" id="kptguidesconsumerfunction">
@@ -468,8 +468,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/consumer/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Package%20Consumers" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/consumer/function/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Call%20functions" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -498,6 +498,9 @@
 
 
 
+
+
+
 <li class="breadcrumb-item" >
 	<a href="https://googlecontainertools.github.io/kpt/guides/">Guides</a>
 </li>
@@ -505,8 +508,15 @@
 
 
 
-<li class="breadcrumb-item active" aria-current="page">
+<li class="breadcrumb-item" >
 	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/">Package Consumers</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/function/">Call Functions</a>
 </li>
 
 	</ol>
@@ -514,8 +524,8 @@
 
             
 <div class="td-content">
-	<h1>Package Consumers</h1>
-	<div class="lead">Guides for workflows related to consume packages published by other teams or organizations.</div>
+	<h1>Call functions</h1>
+	<div class="lead">Modify or validate the contents of a package by calling a function.</div>
 	
         <div class="section-index">
     
@@ -525,12 +535,11 @@
     <hr class="panel-line">
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/fetch/">Fetch a remote package</a>
-                    </h5>
-                    <p>Fetch a package from a remote git repository and apply its contents to a cluster</p>
-                </div>
+        
+            
+        
+            
+        
             
         
             
@@ -538,48 +547,7 @@
             
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/update/">Update a local package</a>
-                    </h5>
-                    <p>Update a customized local package with upstream (remote) package changes.</p>
-                </div>
-            
         
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/customize/">Customize a local package</a>
-                    </h5>
-                    <p>Customize a local package by modifying its contents.</p>
-                </div>
-            
-        
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/display/">Display local package contents</a>
-                    </h5>
-                    <p>Display the contents of a local package using kpt cfg for rendering.</p>
-                </div>
-            
-        
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/apply/">Apply a local package</a>
-                    </h5>
-                    <p>Apply the contents of a local package to a remote cluster.</p>
-                </div>
-            
-        
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/function/">Call functions</a>
-                    </h5>
-                    <p>Modify or validate the contents of a package by calling a function.</p>
-                </div>
             
         
             
@@ -597,7 +565,7 @@
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6f325036308dbe8af2d0cd00d78eebf71f46c56d">Migrate docs to docsy (6f32503)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
 </div>
 </div>
 

@@ -69,6 +69,7 @@ functions-examples-docker:
 	docker push gcr.io/kpt-dev/example-functions:v0.1.0
 
 docs:
+	rm -rf docs/
 	(cd docsy && hugo)
 
 servedocs:
