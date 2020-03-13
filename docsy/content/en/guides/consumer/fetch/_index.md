@@ -10,7 +10,7 @@ description: >
 
 ## Topics
 
-[kpt pkg get](/reference/pkg/get), [Kptfile](/api-reference/kptfile)
+[kpt pkg get], [Kptfile]
 
 ## Steps
 
@@ -23,7 +23,7 @@ description: >
 ## Fetch a remote package
 
 Packages are fetched from remote git repository subdirectories with
-[kpt pkg get](/reference/pkg/get).  In this guide we will use the [kubernetes examples] repository
+[kpt pkg get].  In this guide we will use the [kubernetes examples] repository
 as a public package catalogue.
 
 
@@ -56,7 +56,7 @@ in the `https://github.com/kubernetes/examples` to the local folder
 ##### Command
 
 The upstream commit and branch / tag reference are stored in the
-package's [Kptfile](/api-reference/kptfile) these can be used to update the
+package's [Kptfile] these can be used to update the
 package later.
 
 ```sh
@@ -168,8 +168,8 @@ statefulset.apps/cockroachdb created
 This guide showed using `kubectl apply` to apply in order to demonstrate how kpt
 packages work out of the box with existing tools.
 
-Kp also provides a next-generation set of apply commands under the
-[kpt live](/reference/live) command.
+Kp also provides a next-generation set of apply commands under the [kpt live]
+command.
 {{% /pageinfo %}}
 
 
@@ -204,3 +204,6 @@ statefulset.apps/cockroachdb   3/3     54s
 
 [kubernetes examples]: https://github.com/kubernetes/examples
 [resource configuration]: https://kubernetes.io/docs/concepts/configuration/overview/#general-configuration-tips
+[kpt pkg get]: ../../..//reference/pkg/get
+[Kptfile]: ../../../api-reference/kptfile
+[kpt live]: ../../../reference/live

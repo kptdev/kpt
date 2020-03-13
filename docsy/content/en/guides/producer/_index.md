@@ -50,4 +50,4 @@ $ git push
 Package authors may publish custom field setters for package consumers to
 programatically set specific fields using [setters]
 
- [setters]: /reference/cfg/create-setter
+ [setters]: ../../../reference/cfg/create-setter

@@ -61,9 +61,8 @@ fetching package /package-examples/helloworld-set from https://github.com/Google
 
 ## List the setters
 
-The `helloworld-set` package contains [setters](/reference/cfg/create-setter)
-and [substitutions](/reference/cfg/create-subst) for modifying configuration
-from the commandline.
+The `helloworld-set` package contains [setters] and [substitutions]
+for modifying configuration from the commandline.
 
 ##### Command
 
@@ -198,7 +197,7 @@ for each local instance of a package.
 See [setters] and [substitutions] for how to add or update them in the
 package [Kptfile].
 
-[Kptfile]: /api-reference/kptfile
-[kpt cfg set]: /reference/cfg/set
-[setters]: /reference/cfg/create-setter
-[substitutions]: /reference/cfg/create-subst
+[Kptfile]: ../../../api-reference/kptfile
+[kpt cfg set]: ../../../reference/cfg/set
+[setters]: ../../../reference/cfg/create-setter
+[substitutions]: ../../../reference/cfg/create-subst

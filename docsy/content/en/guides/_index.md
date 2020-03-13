@@ -24,6 +24,3 @@ Consume a package published to git with kpt get
 {{< imgproc dayNworkflow Fill "960x540" >}}
 Pull in upstream package upstream with kpt update
 {{< /imgproc >}}
-
-[day1workflow]: /diagrams/day1workflow.jpg
-[dayNworkflow]: /diagrams/dayNworkflow.jpg

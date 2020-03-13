@@ -559,7 +559,7 @@
 	<h1>Fetch a remote package</h1>
 	<div class="lead">Fetch a package from a remote git repository and apply its contents to a cluster</div>
 	<h2 id="topics">Topics</h2>
-<p><a href="/reference/pkg/get">kpt pkg get</a>, <a href="/api-reference/kptfile">Kptfile</a></p>
+<p><a href="../../..//reference/pkg/get">kpt pkg get</a>, <a href="../../../api-reference/kptfile">Kptfile</a></p>
 <h2 id="steps">Steps</h2>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
@@ -570,7 +570,7 @@
 </ol>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <p>Packages are fetched from remote git repository subdirectories with
-<a href="/reference/pkg/get">kpt pkg get</a>.  In this guide we will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
+<a href="../../..//reference/pkg/get">kpt pkg get</a>.  In this guide we will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
 as a public package catalogue.</p>
 <h5 id="command">Command</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
@@ -595,7 +595,7 @@ such as GitHub</li>
 <h2 id="view-the-kptfile">View the Kptfile</h2>
 <h5 id="command-1">Command</h5>
 <p>The upstream commit and branch / tag reference are stored in the
-package&rsquo;s <a href="/api-reference/kptfile">Kptfile</a> these can be used to update the
+package&rsquo;s <a href="../../../api-reference/kptfile">Kptfile</a> these can be used to update the
 package later.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat cockroachdb/Kptfile
 </code></pre></div><p>Print the <code>Kptfile</code> written by <code>kpt pkg get</code> to see the upstream package data.</p>
@@ -668,8 +668,8 @@ statefulset.apps/cockroachdb created
 <div class="pageinfo pageinfo-info">
 <p>This guide showed using <code>kubectl apply</code> to apply in order to demonstrate how kpt
 packages work out of the box with existing tools.</p>
-<p>Kp also provides a next-generation set of apply commands under the
-<a href="/reference/live">kpt live</a> command.</p>
+<p>Kp also provides a next-generation set of apply commands under the [kpt live]
+command.</p>
 
 </div>
 
@@ -730,7 +730,7 @@ statefulset.apps/cockroachdb   3/3     54s
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c0e137c2b0a5df0c546d6f42ef89535c491d76b8">Create package consumer guides (c0e137c)</a>
 </div>
 </div>
 
