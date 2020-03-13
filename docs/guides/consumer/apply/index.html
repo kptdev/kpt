@@ -560,11 +560,11 @@
 	<h1>Apply a local package</h1>
 	<div class="lead">Apply the contents of a local package to a remote cluster.</div>
 	<h2 id="topics">Topics</h2>
-<p><a href="/reference/live/apply">kpt live apply</a></p>
+<p><a href="../../../reference/live/apply">kpt live apply</a></p>
 <p>Because kpt packages are composed of resource configuration can be applied with
 <code>kubectl apply -R -f DIR</code>, however kpt includes the next-generation <strong>apply</strong>
 commands developed out of the Kubernetes <a href="https://github.com/kubernetes-sigs/cli-utils">cli-utils</a> repository as the
-<a href="/reference/live/apply">kpt live apply</a> command.</p>
+<a href="../../../reference/live/apply">kpt live apply</a> command.</p>
 <p>Kpt live apply provides additional functionality beyond what is provided by
 <code>kubectl apply</code>, such as communicating back resource status and pruning
 resources for deleted configuration.</p>
@@ -587,7 +587,7 @@ kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworl
 <p>The kpt version of apply uses a ConfigMap map to keep track of previously
 applied resources so they can be pruned later if the configuration for
 them is deleted.  This is called the <strong>grouping object</strong>, and can be created
-with the <a href="/reference/live/init">kpt live init</a> command.</p>
+with the <a href="../../../reference/live/init">kpt live init</a> command.</p>
 
 
 <div class="pageinfo pageinfo-warning">
@@ -651,7 +651,7 @@ service/helloworld-gke   NodePort    10.48.2.143   &lt;none&gt;        80:32442/
 service/kubernetes       ClusterIP   10.48.0.1     &lt;none&gt;        443/TCP        19m
 </code></pre></div><h5 id="command-tree">Command: <code>tree</code></h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get all -o yaml <span style="color:#000;font-weight:bold">|</span> kpt cfg tree
-</code></pre></div><p>The output of kubectl can also be piped to <a href="/reference/cfg/tree">kpt cfg tree</a> to summarize
+</code></pre></div><p>The output of kubectl can also be piped to <a href="../../../reference/cfg/tree">kpt cfg tree</a> to summarize
 the resources.</p>
 <h5 id="output-tree">Output: <code>tree</code></h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">.
@@ -721,7 +721,7 @@ configmap/grouping-object-2911da3b pruned
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c0e137c2b0a5df0c546d6f42ef89535c491d76b8">Create package consumer guides (c0e137c)</a>
 </div>
 </div>
 

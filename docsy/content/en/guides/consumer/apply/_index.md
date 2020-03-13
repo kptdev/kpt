@@ -204,10 +204,10 @@ kubectl get deploy
 No resources found in default namespace.
 ```
 
-[kpt cfg tree]: /reference/cfg/tree
-[kpt live apply]: /reference/live/apply
-[kpt live init]: /reference/live/init
-[setters]: /reference/cfg/create-setter
-[substitutions]: /reference/cfg/create-subst
+[kpt cfg tree]: ../../../reference/cfg/tree
+[kpt live apply]: ../../../reference/live/apply
+[kpt live init]: ../../../reference/live/init
+[setters]: ../../../reference/cfg/create-setter
+[substitutions]: ../../../reference/cfg/create-subst
 [cli-utils]: https://github.com/kubernetes-sigs/cli-utils
 

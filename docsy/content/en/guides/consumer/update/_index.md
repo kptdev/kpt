@@ -9,7 +9,7 @@ description: >
 
 ## Topics
 
-[kpt pkg update](/reference/pkg/update)
+[kpt pkg update]
 
 Because kpt package contents are resource configuration (data) rather
 than templates or DSLs (code), it is possible to merge different versions
@@ -25,8 +25,7 @@ updates remote cluster resources with local file changes, without overwriting
 changes to the resources made by the cluster control-plane (e.g. an autoscaler
 can set replicas without apply overwriting them). 
 
-See [update strategies](/reference/pkg/update/#flags) for more choices on
-how to merge upstream changes.
+See [update strategies] for more choices on how to merge upstream changes.
 {{% /pageinfo %}}
 
 
@@ -222,3 +221,6 @@ The Kptfile was updated with the new upstream metadata.
 
 The updated local package contains *both* the upstream changes (new image tag),
 and local modifications (additional environment variable).
+
+[kpt pkg update]: ../../../reference/pkg/update
+[update strategies]: ../../../reference/pkg/update/#flags

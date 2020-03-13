@@ -556,7 +556,7 @@
 	<h1>Customize a local package</h1>
 	<div class="lead">Customize a local package by modifying its contents.</div>
 	<h2 id="topics">Topics</h2>
-<p><a href="/reference/cfg/set">kpt cfg set</a>, <a href="/reference/cfg/create-setter">setters</a>, <a href="/reference/cfg/create-subst">substitutions</a>, <a href="/api-reference/kptfile">Kptfile</a></p>
+<p><a href="../../../reference/cfg/set">kpt cfg set</a>, <a href="../../../reference/cfg/create-setter">setters</a>, <a href="../../../reference/cfg/create-subst">substitutions</a>, <a href="../../../api-reference/kptfile">Kptfile</a></p>
 <p>Kpt packages can be modified using existing tools and workflows such as
 manually modifying the configuration in an editor, however these workflows
 can be labor intensive and error prone.</p>
@@ -595,9 +595,8 @@ which contain additional metadata kpt can use to work with the package contents.
 <h3 id="output">Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 </code></pre></div><h2 id="list-the-setters">List the setters</h2>
-<p>The <code>helloworld-set</code> package contains <a href="/reference/cfg/create-setter">setters</a>
-and <a href="/reference/cfg/create-subst">substitutions</a> for modifying configuration
-from the commandline.</p>
+<p>The <code>helloworld-set</code> package contains <a href="../../../reference/cfg/create-setter">setters</a> and <a href="../../../reference/cfg/create-subst">substitutions</a>
+for modifying configuration from the commandline.</p>
 <h5 id="command-1">Command</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters helloworld/ 
 </code></pre></div><p>Print the list of setters included in the package.</p>
@@ -679,8 +678,8 @@ in the <code>Kptfile</code> and written to the <code>image</code> field.</p>
 <p>Because setters are defined using data as part of the package as OpenAPI data,
 they don’t need to be compiled into the tool and can be customized
 for each local instance of a package.</p>
-<p>See <a href="/reference/cfg/create-setter">setters</a> and <a href="/reference/cfg/create-subst">substitutions</a> for how to add or update them in the
-package <a href="/api-reference/kptfile">Kptfile</a>.</p>
+<p>See <a href="../../../reference/cfg/create-setter">setters</a> and <a href="../../../reference/cfg/create-subst">substitutions</a> for how to add or update them in the
+package <a href="../../../api-reference/kptfile">Kptfile</a>.</p>
 
         <div class="section-index">
     
@@ -720,7 +719,7 @@ package <a href="/api-reference/kptfile">Kptfile</a>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c0e137c2b0a5df0c546d6f42ef89535c491d76b8">Create package consumer guides (c0e137c)</a>
 </div>
 </div>
 
