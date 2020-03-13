@@ -1,6 +1,6 @@
 ---
-title: "Producer"
-linkTitle: "Producer"
+title: "Package Publishers"
+linkTitle: "Package Publishers"
 weight: 2
 type: docs
 description: >

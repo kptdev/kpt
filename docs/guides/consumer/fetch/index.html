@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/fetch/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Package Publishers | Kpt</title><meta property="og:title" content="Package Publishers" />
-<meta property="og:description" content="Starting guide for producer workflow
+<title>Fetch a remote package | Kpt</title><meta property="og:title" content="Fetch a remote package" />
+<meta property="og:description" content="Fetch a package from a remote git repository and apply its contents to a cluster
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/fetch/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Package Publishers">
-<meta itemprop="description" content="Starting guide for producer workflow
+<meta itemprop="name" content="Fetch a remote package">
+<meta itemprop="description" content="Fetch a package from a remote git repository and apply its contents to a cluster
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Package Publishers"/>
-<meta name="twitter:description" content="Starting guide for producer workflow
+<meta name="twitter:title" content="Fetch a remote package"/>
+<meta name="twitter:description" content="Fetch a package from a remote git repository and apply its contents to a cluster
 "/>
 
 
@@ -49,7 +49,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Package Publishers | Kpt</title>
+    <title>Fetch a remote package | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -177,10 +177,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Consumers</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumer">
+    <li class="collapse show" id="kptguidesconsumer">
       
       
       
@@ -194,10 +194,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/fetch/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Fetch</a>
+    <a  href="/kpt/guides/consumer/fetch/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Fetch</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerfetch">
+    <li class="collapse show" id="kptguidesconsumerfetch">
       
       
       
@@ -338,10 +338,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Package Publishers</a>
+    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Publishers</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducer">
+    <li class="collapse " id="kptguidesproducer">
       
       
       
@@ -468,8 +468,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/producer/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Package%20Publishers" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/consumer/fetch/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Fetch%20a%20remote%20package" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -483,9 +483,33 @@
 
 <nav id="TableOfContents">
   <ul>
-    <li><a href="#authoring-a-package">Authoring a package</a></li>
-    <li><a href="#publishing-a-package">Publishing a package</a></li>
-    <li><a href="#publishing-setters">Publishing setters</a></li>
+    <li><a href="#topics">Topics</a></li>
+    <li><a href="#steps">Steps</a></li>
+    <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#view-the-kptfile">View the Kptfile</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#view-the-package-contents">View the package contents</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#apply-the-package-to-a-cluster">Apply the package to a cluster</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#view-the-applied-package">View the applied package</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
   </ul>
 </nav>
 
@@ -506,6 +530,9 @@
 
 
 
+
+
+
 <li class="breadcrumb-item" >
 	<a href="https://googlecontainertools.github.io/kpt/guides/">Guides</a>
 </li>
@@ -513,8 +540,15 @@
 
 
 
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/">Package Consumers</a>
+</li>
+
+
+
+
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/">Package Publishers</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/fetch/">Fetch</a>
 </li>
 
 	</ol>
@@ -522,45 +556,142 @@
 
             
 <div class="td-content">
-	<h1>Package Publishers</h1>
-	<div class="lead">Starting guide for producer workflow</div>
-	<h1 id="creating-a-package">Creating a package</h1>
-<p>This tutorial walks through the workflow of creating a package.</p>
-<p>A kpt package is just a set of yaml files stored in a git repo. This allows producers of kpt
-packages to create or generate yaml files any way they want using the tool of their choice.
-Once a package is ready, publishing it simply involves pushing it to git and tagging it.</p>
-<p>It is possible to have multiple packages in a single repo under separate subdirectories,
-and it is possible to nest packages.</p>
+	<h1>Fetch a remote package</h1>
+	<div class="lead">Fetch a package from a remote git repository and apply its contents to a cluster</div>
+	<h2 id="topics">Topics</h2>
+<p><a href="/reference/pkg/get">kpt pkg get</a>, <a href="/api-reference/kptfile">Kptfile</a></p>
+<h2 id="steps">Steps</h2>
 <ol>
-<li>Author a package by creating resource configuration yaml</li>
-<li>Publish the package by pushing it to a git subdirectory</li>
-<li>(Optional) Create setters for package consumers to programatically modify fields</li>
+<li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
+<li><a href="#view-the-kptfile">View the Kptfile</a></li>
+<li><a href="#view-the-package-contents">View the package contents</a></li>
+<li><a href="#apply-the-package-to-a-cluster">Apply the package to a cluster</a></li>
+<li><a href="#view-the-applied-package">View the applied package</a></li>
 </ol>
-<h2 id="authoring-a-package">Authoring a package</h2>
-<p>Package resource configuration may be bootstrapped in many different ways:</p>
-<ul>
-<li>generated from cli tools
-<ul>
-<li><code>kubectl create deployment nginx --image nginx -o yaml --dry-run &gt; deploy.yaml</code></li>
-</ul>
-</li>
-<li>copied from examples or blog posts</li>
-<li>generated from DSLs or templates</li>
-</ul>
-<h2 id="publishing-a-package">Publishing a package</h2>
-<pre><code>$ git clone &lt;repo url&gt; # or create a new repo
-$ cd repository
-$ mkdir nginx
-$ kpt pkg init nginx --tag kpt.dev/app=nginx --description &quot;kpt nginx package&quot;
-$ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
-$ git add .
-$ git commit -m &quot;Add nginx package&quot;
-$ git tag v0.1.0
-$ git push
-</code></pre><h2 id="publishing-setters">Publishing setters</h2>
-<p>Package authors may publish custom field setters for package consumers to
-programatically set specific fields using <a href="/reference/cfg/create-setter">setters</a></p>
+<h2 id="fetch-a-remote-package">Fetch a remote package</h2>
+<p>Packages are fetched from remote git repository subdirectories with
+<a href="/reference/pkg/get">kpt pkg get</a>.  In this guide we will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
+as a public package catalogue.</p>
+<h5 id="command">Command</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
+</code></pre></div><h5 id="output">Output</h5>
+<pre><code>fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
+</code></pre><p>This command copied the contents of the <code>staging/cockroachdb</code> subdirectory
+in the <code>https://github.com/kubernetes/examples</code> to the local folder
+<code>cockroachdb</code>.</p>
 
+
+<div class="pageinfo pageinfo-info">
+<ul>
+<li>any git subdirectory containing configuration may be fetched as a package</li>
+<li>the local package directory name does NOT need to match the remote
+directory name</li>
+<li>including <code>.git</code> as part of the repo name is optional for well known hosts
+such as GitHub</li>
+</ul>
+
+</div>
+
+<h2 id="view-the-kptfile">View the Kptfile</h2>
+<h5 id="command-1">Command</h5>
+<p>The upstream commit and branch / tag reference are stored in the
+package&rsquo;s <a href="/api-reference/kptfile">Kptfile</a> these can be used to update the
+package later.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat cockroachdb/Kptfile
+</code></pre></div><p>Print the <code>Kptfile</code> written by <code>kpt pkg get</code> to see the upstream package data.</p>
+<h5 id="output-1">Output</h5>
+<pre><code>apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+    name: cockroachdb
+upstream:
+    type: git
+    git:
+        commit: 629c9459a9f25e468cce8af28350a03e62c5f67d
+        repo: https://github.com/kubernetes/examples
+        directory: staging/cockroachdb
+        ref: master
+</code></pre><h2 id="view-the-package-contents">View the package contents</h2>
+<p>The primary package artifacts are Kubernetes <a href="https://kubernetes.io/docs/concepts/configuration/overview/#general-configuration-tips">resource configuration</a>
+(e.g. YAML files), however packages may also include supporting
+artifacts such as documentation.</p>
+<h5 id="command-2">Command</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">tree cockroachdb/
+</code></pre></div><h5 id="output-2">Output</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cockroachdb/
+├── Kptfile
+├── OWNERS
+├── README.md
+├── cockroachdb-statefulset.yaml
+├── demo.sh
+└── minikube.sh
+
+<span style="color:#0000cf;font-weight:bold">0</span> directories, <span style="color:#0000cf;font-weight:bold">6</span> files
+</code></pre></div><p>The cockroachdb package fetched from <a href="https://github.com/kubernetes/examples">kubernetes examples</a> contains a
+<code>cockroachdb-statefulset.yaml</code> file with the resource configuration, as well
+as other files included in the directory.  The Kptfile was created by
+<code>kpt pkg get</code> for storing package state.  If the upstream package already
+defines a Kptfile, <code>kpt pkg get</code> will update the Kptfile copied from upstream
+rather than replacing it.</p>
+<p>The package contains 2 resource configuration files &ndash; <code>deploy.yaml</code> and
+<code>service.yaml</code>.  These are the same types of resource configuration that
+would be applied with <code>kubectl apply</code></p>
+<h5 id="command-3">Command</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">head cockroachdb/cockroachdb-statefulset.yaml
+</code></pre></div><h5 id="output-3">Output</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">apiVersion: v1
+kind: Service
+metadata:
+  <span style="color:#8f5902;font-style:italic"># This service is meant to be used by clients of the database. It exposes a ClusterIP that will</span>
+  <span style="color:#8f5902;font-style:italic"># automatically load balance connections to the different database pods.</span>
+  name: cockroachdb-public
+  labels:
+    app: cockroachdb
+spec:
+  ports:
+</code></pre></div><p>In this package, the <code>cockroachdb/cockroachdb-statefulset.yaml</code> is plain old
+resource configuration &ndash; nothing special here.  Other packages may have
+resource configuration which is marked up with metadata as comments that
+kpt can use to provide high-level commands for reading and writing the
+configuration.</p>
+<h2 id="apply-the-package-to-a-cluster">Apply the package to a cluster</h2>
+<p>Use <code>kubectl apply</code> to deploy the local package to a remote cluster.</p>
+<h5 id="command-4">Command</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -R -f cockroachdb
+</code></pre></div><h5 id="output-4">Output</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">service/cockroachdb-public created
+service/cockroachdb created
+poddisruptionbudget.policy/cockroachdb-budget unchanged
+statefulset.apps/cockroachdb created
+</code></pre></div>
+
+<div class="pageinfo pageinfo-info">
+<p>This guide showed using <code>kubectl apply</code> to apply in order to demonstrate how kpt
+packages work out of the box with existing tools.</p>
+<p>Kp also provides a next-generation set of apply commands under the
+<a href="/reference/live">kpt live</a> command.</p>
+
+</div>
+
+<h2 id="view-the-applied-package">View the applied package</h2>
+<p>Once applied to the cluster, the remote resources can be displayed using
+the normal tools such as <code>kubectl get</code>.</p>
+<h5 id="command-5">Command</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get all
+</code></pre></div><h5 id="output-5">Output</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">NAME                READY   STATUS    RESTARTS   AGE
+pod/cockroachdb-0   1/1     Running   <span style="color:#0000cf;font-weight:bold">0</span>          54s
+pod/cockroachdb-1   1/1     Running   <span style="color:#0000cf;font-weight:bold">0</span>          41s
+pod/cockroachdb-2   1/1     Running   <span style="color:#0000cf;font-weight:bold">0</span>          27s
+
+NAME                         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT<span style="color:#ce5c00;font-weight:bold">(</span>S<span style="color:#ce5c00;font-weight:bold">)</span>              AGE
+service/cockroachdb          ClusterIP   None         &lt;none&gt;        26257/TCP,8080/TCP   55s
+service/cockroachdb-public   ClusterIP   10.48.2.5    &lt;none&gt;        26257/TCP,8080/TCP   55s
+service/kubernetes           ClusterIP   10.48.0.1    &lt;none&gt;        443/TCP              26m
+
+NAME                           READY   AGE
+statefulset.apps/cockroachdb   3/3     54s
+</code></pre></div>
         <div class="section-index">
     
     
@@ -599,7 +730,7 @@ programatically set specific fields using <a href="/reference/cfg/create-setter"
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6f325036308dbe8af2d0cd00d78eebf71f46c56d">Migrate docs to docsy (6f32503)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
 </div>
 </div>
 

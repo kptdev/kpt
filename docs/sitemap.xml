@@ -3,8 +3,7 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/</loc>
-    <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/fetch/</loc>
   </url>
   
   <url>
@@ -14,6 +13,11 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/api-reference/kptfile/</loc>
+    <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
   </url>
   
@@ -38,8 +42,16 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/update/</loc>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/installation/binaries/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/customize/</loc>
   </url>
   
   <url>
@@ -75,6 +87,10 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/create-subst/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/display/</loc>
   </url>
   
   <url>
@@ -118,8 +134,16 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/apply/</loc>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/</loc>
-    <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+    <lastmod>2020-03-12T21:21:27-07:00</lastmod>
   </url>
   
   <url>
@@ -140,6 +164,26 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/faq/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/overview/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/overview/ecosystem/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/overview/packaging/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/overview/ux/</loc>
+    <priority>0</priority>
   </url>
   
   <url>
