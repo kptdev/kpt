@@ -19,9 +19,76 @@ definitions:
           "$ref": "#/definitions/Dependency"
       openAPI:
         description: "Package specific OpenAPI definitions to be applied to the package contents."
+        "$ref": "#/definitions/OpenAPI"
       upstream:
         description: "Metadata about the upstream source"
         "$ref": "#/definitions/Upstream"
+
+  OpenAPI:
+    type: "object"
+    description: "OpenAPI schema definitions"
+    properties:
+      definitions:
+        type: object
+        additionalProperties:
+          example: "io.k8s.cli.setters.replicas"
+          description: "keys for setters and substitutions must be of the form io.k8s.cli.setters.NAME or io.k8s.cli.substitution.NAME"
+          type: object
+          properties:
+            x-k8s-cli:
+              description: "kubernetes configuration specific extensions"
+              "$ref": "#/definitions/Extension"
+
+  Extension:
+    type: "object"
+    properties:
+      type:
+        description: "field type the setter sets"
+        type: string
+        enum: ["array", "boolean", "integer", "string"]
+        example: "string"
+      setter:
+        description: "definition of setter which may be invoked from the cli"
+        type: object
+        properties:
+          name:
+            description: "name of the setter, should match the name in the definition key"
+            type: string
+            example: "replicas"
+          value:
+            description: "current value of the setter, which should be applied to fields and substitutions"
+            type: string
+            example: "3"
+          listValues:
+            description: "list of string values to be used if the type is array"
+            type: array
+            example: ["a", "b", "c"]
+      substitution:
+        description: "definition of setter which may be invoked from the cli"
+        type: object
+        properties:
+          name:
+            description: "name of the setter, should match the name in the definition key"
+            type: string
+            example: "tag"
+          pattern:
+            description: "pattern to substitute one or more setters into"
+            type: string
+            example: "nginx:$(TAG_SETTER)"
+          values:
+            description: "setters to substitute into the pattern"
+            type: array
+            items:
+              type: object
+              properties:
+                marker:
+                  description: "string marker in the pattern which will be replaced by the setter's value"
+                  type: string
+                  example: "$(TAG_SETTER)"
+                "$ref":
+                  description: "reference to a setter OpenAPI definition to pull the value from"
+                  type: string
+                  example: "#/definitions/io.k8s.cli.setters.tag"
 
   Dependency:
     type: "object"
@@ -50,7 +117,7 @@ definitions:
         type: "string"
       git:
         description: "Metadata about the upstream git repo"
-        properties: 
+        properties:
           commit:
             description: "Upstream git commit the the package was last fetched at."
             type: "string"
@@ -63,5 +130,3 @@ definitions:
           ref:
             description: "Upstream git ref the the package was last fetched at."
             type: "string"
-
-

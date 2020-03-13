@@ -248,6 +248,17 @@
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#day-1-workflow">Day 1 Workflow</a></li>
+        <li><a href="#day-n-workflow">Day N Workflow</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -274,6 +285,28 @@
 	<h1>Guides</h1>
 	
 	<p>Guides to get started using kpt.</p>
+<h3 id="day-1-workflow">Day 1 Workflow</h3>
+<p><img src="/diagrams/day1workflow.jpg" alt="day1 workflow"></p>
+<h3 id="day-n-workflow">Day N Workflow</h3>
+<p><img src="/diagrams/dayNworkflow.jpg" alt="dayN workflow"></p>
+<h4 id="example-imperative-package-workflow">Example imperative package workflow</h4>
+<ol>
+<li><a href="get.md">kpt pkg get</a> to get a package</li>
+<li><a href="../cfg/set.md">kpt cfg set</a>, <a href="../fn/run.md">kpt fn run</a> or <code>vi</code> to modify configuration</li>
+<li><code>git add</code> &amp;&amp; <code>git commit</code></li>
+<li><code>kubectl apply</code> to a cluster:</li>
+<li><a href="update.md">kpt pkg update</a> to pull in new changes</li>
+<li><code>kubectl apply</code> to a cluster</li>
+</ol>
+<h4 id="example-declarative-package-workflow">Example declarative package workflow</h4>
+<ol>
+<li><a href="init.md">kpt pkg init</a></li>
+<li><a href="sync-set.md">kpt pkg sync set</a> dev version of a package</li>
+<li><a href="sync-set.md">kpt pkg sync set</a> prod version of a package</li>
+<li><code>git add</code> &amp;&amp; <code>git commit</code></li>
+<li><code>kubectl apply --context dev</code> apply to dev</li>
+<li><code>kubectl apply --context prod</code> apply to prod</li>
+</ol>
 
         <div class="section-index">
     
@@ -307,7 +340,7 @@
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/47003f4a3b2f2eee9c2205fc9dcd23b3ca49128b">Migrate docs to docsy (47003f4)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6f325036308dbe8af2d0cd00d78eebf71f46c56d">Migrate docs to docsy (6f32503)</a>
 </div>
 </div>
 
