@@ -72,4 +72,4 @@ docs:
 	(cd docsy && hugo)
 
 servedocs:
-	(cd docsy && hugo serve --baseURL /)
+	(cd docsy && hugo serve --baseURL localhost:1313)
