@@ -306,7 +306,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Call Functions</a>
+    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Running Functions</a>
   </li>
   <ul>
     <li class="collapse show" id="kptguidesconsumerfunction">
@@ -342,12 +342,6 @@
       
       
       
-    </li>
-  </ul>
-</ul>
-
-      
-      
       
       
 
@@ -358,27 +352,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section"></a>
+    <a  href="/kpt/guides/producer/publish/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Publish</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesoverview">
-      
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/ecosystem/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section"></a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesoverviewecosystem">
+    <li class="collapse show" id="kptguidesproducerpublish">
       
       
       
@@ -398,10 +375,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/packaging/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section"></a>
+    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Create Setters</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesoverviewpackaging">
+    <li class="collapse show" id="kptguidesproducersetters">
       
       
       
@@ -421,10 +398,79 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/ux/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section"></a>
+    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Create Substitutions</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesoverviewux">
+    <li class="collapse show" id="kptguidesproducersubstitutions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Ecosystem</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesecosystem">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/kustomize/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Kustomize</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesecosystemkustomize">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/helm/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Helm</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesecosystemhelm">
       
       
       
@@ -478,17 +524,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li><a href="#day-1-workflow">Day 1 Workflow</a></li>
-        <li><a href="#day-n-workflow">Day N Workflow</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -514,8 +549,8 @@
 <div class="td-content">
 	<h1>Guides</h1>
 	
-	<p>Guides to get started using kpt.</p>
-<h3 id="day-1-workflow">Day 1 Workflow</h3>
+	<p><em>Packaging is the foundation for building reusable components as project
+blueprints and off the shelf software.</em></p>
 
 
 
@@ -528,12 +563,11 @@
 	
 	<div class="card-body px-0 pt-2 pb-0">
 		<p class="card-text">
-Consume a package published to git with kpt get
+Day 1: Consume a package published to git with kpt get
 </p>
 	</div>
 	
 </div>
-<h3 id="day-n-workflow">Day N Workflow</h3>
 
 
 
@@ -546,7 +580,7 @@ Consume a package published to git with kpt get
 	
 	<div class="card-body px-0 pt-2 pb-0">
 		<p class="card-text">
-Pull in upstream package upstream with kpt update
+Day N: Pull in upstream package upstream with kpt update
 </p>
 	</div>
 	
@@ -562,6 +596,8 @@ Pull in upstream package upstream with kpt update
             
         
             
+        
+            
                 <div class="entry">
                     <h5>
                         <a href="/kpt/guides/consumer/">Package Consumers</a>
@@ -571,20 +607,18 @@ Pull in upstream package upstream with kpt update
             
         
             
+        
+            
+        
+            
+        
+            
                 <div class="entry">
                     <h5>
                         <a href="/kpt/guides/producer/">Package Publishers</a>
                     </h5>
-                    <p>Starting guide for producer workflow</p>
+                    <p>Guides for publishing configuration packages for others to consume</p>
                 </div>
-            
-        
-            
-        
-            
-        
-            
-        
             
         
             
@@ -594,10 +628,14 @@ Pull in upstream package upstream with kpt update
             
                 <div class="entry">
                     <h5>
-                        <a href="/kpt/guides/overview/"></a>
+                        <a href="/kpt/guides/ecosystem/">Ecosystem</a>
                     </h5>
-                    <p></p>
+                    <p>Guides for using kpt with the ecosystem of Kubernetes tooling.</p>
                 </div>
+            
+        
+            
+        
             
         
             
@@ -611,7 +649,7 @@ Pull in upstream package upstream with kpt update
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c0e137c2b0a5df0c546d6f42ef89535c491d76b8">Create package consumer guides (c0e137c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0f13cd83d2d6a37c1dc04e05f63201b2b11ae96b">switch to relative links (0f13cd8)</a>
 </div>
 </div>
 

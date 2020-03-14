@@ -7,6 +7,8 @@ description: >
     Display the contents of a local package using kpt cfg for rendering.
 ---
 
+*Tools can parse and render configuration so it is easier for humans to read.*
+
 ## Topics
 
 [kpt cfg count](/reference/pkg/count), [kpt cfg tree](/reference/pkg/get),

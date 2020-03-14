@@ -8,6 +8,9 @@ description: >
     a cluster
 ---
 
+*Any git directory containing configuration files may be used by kpt
+as a package.*
+
 ## Topics
 
 [kpt pkg get], [Kptfile]
@@ -25,7 +28,6 @@ description: >
 Packages are fetched from remote git repository subdirectories with
 [kpt pkg get].  In this guide we will use the [kubernetes examples] repository
 as a public package catalogue.
-
 
 ##### Command
 

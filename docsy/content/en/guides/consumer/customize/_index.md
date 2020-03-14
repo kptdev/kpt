@@ -7,6 +7,10 @@ description: >
     Customize a local package by modifying its contents.
 ---
 
+*Data enables the creation of tools to read and write the YAML on behalf of
+users.  Dynamic logic can still be developed, but loosely coupled to the data
+that is applied to the cluster.*
+
 ## Topics
 
 [kpt cfg set], [setters], [substitutions], [Kptfile]
