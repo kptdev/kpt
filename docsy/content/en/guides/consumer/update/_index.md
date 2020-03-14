@@ -7,6 +7,9 @@ description: >
     Update a customized local package with upstream (remote) package changes.
 ---
 
+*Packages can be arbitrarily customized and later merge updates from
+upstream.*
+
 ## Topics
 
 [kpt pkg update]

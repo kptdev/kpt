@@ -11,16 +11,13 @@ resources:
 - src: "**dayNworkflow*.jpg"
 ---
 
-Guides to get started using kpt.
-
-### Day 1 Workflow
+*Packaging is the foundation for building reusable components as project
+blueprints and off the shelf software.*
 
 {{< imgproc day1workflow Fill "960x540" >}}
-Consume a package published to git with kpt get
+Day 1: Consume a package published to git with kpt get
 {{< /imgproc >}}
 
-### Day N Workflow
-
 {{< imgproc dayNworkflow Fill "960x540" >}}
-Pull in upstream package upstream with kpt update
+Day N: Pull in upstream package upstream with kpt update
 {{< /imgproc >}}

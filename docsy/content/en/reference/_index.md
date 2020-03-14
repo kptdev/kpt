@@ -52,7 +52,7 @@ all resources has reached the Current status
 | [live]        | reconcile the live state with configuration files                               | local directory | remote cluster  |
 
 
-[updating]: pkg/updat
+[updating]: pkg/update
 [functions]: fn/run
 [setters]: cfg/set
 [gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt

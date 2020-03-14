@@ -22,7 +22,9 @@
       <description>
         
         
-        &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
+        &lt;p&gt;&lt;em&gt;Any git directory containing configuration files may be used by kpt
+as a package.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&#34;../../..//reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
@@ -168,7 +170,9 @@ statefulset.apps/cockroachdb   3/3     54s
       <description>
         
         
-        &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
+        &lt;p&gt;&lt;em&gt;Packages can be arbitrarily customized and later merge updates from
+upstream.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&#34;../../../reference/pkg/update&#34;&gt;kpt pkg update&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Because kpt package contents are resource configuration (data) rather
 than templates or DSLs (code), it is possible to merge different versions
@@ -338,7 +342,10 @@ and local modifications (additional environment variable).&lt;/p&gt;
       <description>
         
         
-        &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
+        &lt;p&gt;&lt;em&gt;Data enables the creation of tools to read and write the YAML on behalf of
+users.  Dynamic logic can still be developed, but loosely coupled to the data
+that is applied to the cluster.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Kpt packages can be modified using existing tools and workflows such as
 manually modifying the configuration in an editor, however these workflows
@@ -476,7 +483,8 @@ package &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;
       <description>
         
         
-        &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
+        &lt;p&gt;&lt;em&gt;Tools can parse and render configuration so it is easier for humans to read.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg count&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/get&#34;&gt;kpt cfg tree&lt;/a&gt;,
 &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg grep&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg cat&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
@@ -726,7 +734,7 @@ configmap/grouping-object-2911da3b pruned
     </item>
     
     <item>
-      <title>Guides: Call functions</title>
+      <title>Guides: Running functions</title>
       <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
@@ -734,7 +742,39 @@ configmap/grouping-object-2911da3b pruned
       <description>
         
         
-        
+        &lt;p&gt;When an operation requires more than just the schema, and data is necessary,
+the dynamic logic can be built into a separate tool.
+Functions bundle dynamic logic in container images and apply that logic to the
+contents of a package &amp;ndash; modifying and validating package contents.&lt;/p&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
+&lt;p&gt;Functions provide a common interface for writing programs to read and write
+resources as data. This enables greater reuse and composition than when
+configuration is itself represented as code. Functions may be written in any
+language, or simply wrap other existing programs.&lt;/p&gt;
+
+&lt;/div&gt;
+
+&lt;p&gt;Let’s look at the example of imperatively running a function to set a label
+value.  The label-namespace image contains a program which will modify the&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run --image gcr.io/kpt-functions/label-namespace . -- &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt read the resources from the package at “.”, provided them as input to
+a container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the
+resources back to the package.&lt;/p&gt;
+&lt;p&gt;This particular function ([label-namespace) adds a label to all
+Namespace resources provided to it.&lt;/p&gt;
+&lt;p&gt;Functions can address many types of workflows, including:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Generate resources from some inputs (like client-side CRDs)&lt;/li&gt;
+&lt;li&gt;Apply cross-cutting transformations (e.g., set a field on all resources that
+look like this)&lt;/li&gt;
+&lt;li&gt;Validating resources conform to best practices defined by the organization
+(e.g., must specify tag as part of the image)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;See the &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-catalog/&#34;&gt;functions catalog&lt;/a&gt; for more examples of functions, and the
+[function docs] for more details on writing functions.&lt;/p&gt;
+
       </description>
     </item>
     

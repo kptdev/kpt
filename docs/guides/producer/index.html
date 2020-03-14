@@ -22,16 +22,16 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
 <title>Package Publishers | Kpt</title><meta property="og:title" content="Package Publishers" />
-<meta property="og:description" content="Starting guide for producer workflow
+<meta property="og:description" content="Guides for publishing configuration packages for others to consume
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/" />
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="Package Publishers">
-<meta itemprop="description" content="Starting guide for producer workflow
+<meta itemprop="description" content="Guides for publishing configuration packages for others to consume
 "><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Package Publishers"/>
-<meta name="twitter:description" content="Starting guide for producer workflow
+<meta name="twitter:description" content="Guides for publishing configuration packages for others to consume
 "/>
 
 
@@ -309,7 +309,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Call Functions</a>
+    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running Functions</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesconsumerfunction">
@@ -345,12 +345,6 @@
       
       
       
-    </li>
-  </ul>
-</ul>
-
-      
-      
       
       
 
@@ -361,27 +355,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section"></a>
+    <a  href="/kpt/guides/producer/publish/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Publish</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesoverview">
-      
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/ecosystem/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section"></a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesoverviewecosystem">
+    <li class="collapse show" id="kptguidesproducerpublish">
       
       
       
@@ -401,10 +378,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/packaging/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section"></a>
+    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Create Setters</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesoverviewpackaging">
+    <li class="collapse show" id="kptguidesproducersetters">
       
       
       
@@ -424,10 +401,79 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/overview/ux/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section"></a>
+    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Create Substitutions</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesoverviewux">
+    <li class="collapse show" id="kptguidesproducersubstitutions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Ecosystem</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystem">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/kustomize/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystemkustomize">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/helm/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Helm</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystemhelm">
       
       
       
@@ -481,14 +527,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#authoring-a-package">Authoring a package</a></li>
-    <li><a href="#publishing-a-package">Publishing a package</a></li>
-    <li><a href="#publishing-setters">Publishing setters</a></li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -523,44 +561,8 @@
             
 <div class="td-content">
 	<h1>Package Publishers</h1>
-	<div class="lead">Starting guide for producer workflow</div>
-	<h1 id="creating-a-package">Creating a package</h1>
-<p>This tutorial walks through the workflow of creating a package.</p>
-<p>A kpt package is just a set of yaml files stored in a git repo. This allows producers of kpt
-packages to create or generate yaml files any way they want using the tool of their choice.
-Once a package is ready, publishing it simply involves pushing it to git and tagging it.</p>
-<p>It is possible to have multiple packages in a single repo under separate subdirectories,
-and it is possible to nest packages.</p>
-<ol>
-<li>Author a package by creating resource configuration yaml</li>
-<li>Publish the package by pushing it to a git subdirectory</li>
-<li>(Optional) Create setters for package consumers to programatically modify fields</li>
-</ol>
-<h2 id="authoring-a-package">Authoring a package</h2>
-<p>Package resource configuration may be bootstrapped in many different ways:</p>
-<ul>
-<li>generated from cli tools
-<ul>
-<li><code>kubectl create deployment nginx --image nginx -o yaml --dry-run &gt; deploy.yaml</code></li>
-</ul>
-</li>
-<li>copied from examples or blog posts</li>
-<li>generated from DSLs or templates</li>
-</ul>
-<h2 id="publishing-a-package">Publishing a package</h2>
-<pre><code>$ git clone &lt;repo url&gt; # or create a new repo
-$ cd repository
-$ mkdir nginx
-$ kpt pkg init nginx --tag kpt.dev/app=nginx --description &quot;kpt nginx package&quot;
-$ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
-$ git add .
-$ git commit -m &quot;Add nginx package&quot;
-$ git tag v0.1.0
-$ git push
-</code></pre><h2 id="publishing-setters">Publishing setters</h2>
-<p>Package authors may publish custom field setters for package consumers to
-programatically set specific fields using <a href="../../../reference/cfg/create-setter">setters</a></p>
-
+	<div class="lead">Guides for publishing configuration packages for others to consume</div>
+	
         <div class="section-index">
     
     
@@ -575,7 +577,21 @@ programatically set specific fields using <a href="../../../reference/cfg/create
             
         
             
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/producer/publish/">Publish</a>
+                    </h5>
+                    <p>Publish a simple package of configuration</p>
+                </div>
+            
         
+            
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/producer/setters/">Create Setters</a>
+                    </h5>
+                    <p>Create high-level setters to provide imperative configuration editing commands.</p>
+                </div>
             
         
             
@@ -584,6 +600,17 @@ programatically set specific fields using <a href="../../../reference/cfg/create
         
             
         
+            
+        
+            
+        
+            
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/producer/substitutions/">Create Substitutions</a>
+                    </h5>
+                    <p>Create high-level substitutions to provide substitute field values using setters.</p>
+                </div>
             
         
             
@@ -599,7 +626,7 @@ programatically set specific fields using <a href="../../../reference/cfg/create
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c0e137c2b0a5df0c546d6f42ef89535c491d76b8">Create package consumer guides (c0e137c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0f13cd83d2d6a37c1dc04e05f63201b2b11ae96b">switch to relative links (0f13cd8)</a>
 </div>
 </div>
 
