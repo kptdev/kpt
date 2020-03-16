@@ -15,6 +15,21 @@ as a package.*
 
 [kpt pkg get], [Kptfile]
 
+## `kpt pkg get` explained
+
+Following is a short explanation of the command that will be demonstrated
+in this guide.
+
+- Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo
+  - Since a [Kptfile] is not included with the package, create a new one for the local package 
+- Write the upstream metadata to the [Kptfile]
+- (Optional) commit the package and push to the team git repo
+- Apply the package to a cluster
+  - May be pushed from the local package copy (manual) or from the team repo
+    (GitOps automation)
+
+{{< svg src="images/get-command" >}}
+
 ## Steps
 
 1. [Fetch a remote package](#fetch-a-remote-package)
@@ -25,8 +40,8 @@ as a package.*
 
 ## Fetch a remote package
 
-Packages are **fetched from remote git repository subdirectories** with
-[kpt pkg get].  In this guide we will use the [kubernetes examples] repository
+Packages are **fetched from remote git repository subdirectories** using
+[kpt pkg get].  This guide will use the [kubernetes examples] repository
 as a public package catalogue.
 
 ##### Command
@@ -41,16 +56,17 @@ kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroach
 fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
 ```
 
-This command copied the contents of the `staging/cockroachdb` subdirectory
-in the `https://github.com/kubernetes/examples` to the local folder
+The contents of the `staging/cockroachdb` subdirectory in the
+`https://github.com/kubernetes/examples` were copied to the local folder
 `cockroachdb`.
 
 {{% pageinfo color="info" %}}
-- any git subdirectory containing configuration may be fetched as a package
-- the local package directory name does NOT need to match the remote
-  directory name
-- including `.git` as part of the repo name is optional for well known hosts
-  such as GitHub
+- Any git subdirectory containing configuration (e.g. `deploy.yaml`) may be
+  fetched and used as a package
+- The local directory name that the package is copied to does NOT need to
+  match the upstream directory name it is copied from
+- including `.git` as part of the repo name is optional but good practice to
+  ensure the repo + subdirectory are parsed correctly by the tool.
 {{% /pageinfo %}}
 
 ## View the Kptfile
@@ -58,7 +74,7 @@ in the `https://github.com/kubernetes/examples` to the local folder
 ##### Command
 
 The upstream commit and branch / tag reference are stored in the package's
-[Kptfile] these can be used to update the package later.
+[Kptfile].  These are used by `kpt pkg update`.
 
 ```sh
 cat cockroachdb/Kptfile
@@ -110,14 +126,18 @@ cockroachdb/
 
 The cockroachdb package fetched from [kubernetes examples] contains a
 `cockroachdb-statefulset.yaml` file with the resource configuration, as well
-as other files included in the directory.  `kpt pkg get` created a `Kptfile`
-since one did not exist (for storing package state).  If the upstream package
-already defines a Kptfile, `kpt pkg get` will update the Kptfile copied from
-upstream rather than replacing it.
+as other files included in the directory.  `
 
 The package contains 2 resource configuration files -- `deploy.yaml` and
-`service.yaml`.  These are the same types of resource configuration that
-would be applied with `kubectl apply`
+`service.yaml`.  These are the same files that would typically be applied with
+`kubectl apply`.
+
+{{% pageinfo color="info" %}}
+kpt pkg get` created a `Kptfile` since one did not exist
+(for storing package state).  If the upstream package already defines a
+Kptfile, then `kpt pkg get` will update the Kptfile copied from
+upstream rather than replacing it.
+{{% /pageinfo %}}
 
 ##### Command
 
@@ -141,11 +161,10 @@ spec:
   ports:
 ```
 
-In this package, the `cockroachdb/cockroachdb-statefulset.yaml` is plain old
-resource configuration -- nothing special here.  Other packages may have
-resource configuration which is marked up with metadata as comments that
-kpt can use to provide high-level commands for reading and writing the
-configuration.
+This package contains `cockroachdb/cockroachdb-statefulset.yaml` as plain old
+resource configuration (e.g. YAML) -- nothing special here.  Other kpt packages
+may have configuration which uses comments to attach metadata to
+specific resources or fields.
 
 ## Apply the package to a cluster
 
@@ -167,18 +186,18 @@ statefulset.apps/cockroachdb created
 ```
 
 {{% pageinfo color="info" %}}
-This guide showed using `kubectl apply` to apply in order to demonstrate how kpt
-packages work out of the box with existing tools.
+This guide used `kubectl apply` to demonstrate how kpt packages work out of the
+box with tools that have been around since the beginning of Kubernetes.
 
-Kp also provides a next-generation set of apply commands under the [kpt live]
-command.
+Kpt also provides the next-generation set of Kubernetes apply commands under
+the [kpt live] command.
 {{% /pageinfo %}}
 
 
 ## View the applied package
 
 Once applied to the cluster, the remote resources can be displayed using
-the normal tools such as `kubectl get`.
+the common tools such as `kubectl get`.
 
 ##### Command
 
@@ -202,7 +221,6 @@ service/kubernetes           ClusterIP   10.48.0.1    <none>        443/TCP     
 NAME                           READY   AGE
 statefulset.apps/cockroachdb   3/3     54s
 ```
-
 
 [kubernetes examples]: https://github.com/kubernetes/examples
 [resource configuration]: https://kubernetes.io/docs/concepts/configuration/overview/#general-configuration-tips

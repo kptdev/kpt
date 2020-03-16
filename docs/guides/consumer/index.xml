@@ -26,6 +26,27 @@
 as a package.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&#34;../../..//reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;kpt-pkg-get-explained&#34;&gt;&lt;code&gt;kpt pkg get&lt;/code&gt; explained&lt;/h2&gt;
+&lt;p&gt;Following is a short explanation of the command that will be demonstrated
+in this guide.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Copy the staging/cockroachdb subdirectory out of the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; git repo
+&lt;ul&gt;
+&lt;li&gt;Since a &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt; is not included with the package, create a new one for the local package&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Write the upstream metadata to the &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;(Optional) commit the package and push to the team git repo&lt;/li&gt;
+&lt;li&gt;Apply the package to a cluster
+&lt;ul&gt;
+&lt;li&gt;May be pushed from the local package copy (manual) or from the team repo
+(GitOps automation)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/get-command.svg&#34; /&gt;
+
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
@@ -35,25 +56,26 @@ as a package.&lt;/em&gt;&lt;/p&gt;
 &lt;li&gt;&lt;a href=&#34;#view-the-applied-package&#34;&gt;View the applied package&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
-&lt;p&gt;Packages are &lt;strong&gt;fetched from remote git repository subdirectories&lt;/strong&gt; with
-&lt;a href=&#34;../../..//reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;.  In this guide we will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
+&lt;p&gt;Packages are &lt;strong&gt;fetched from remote git repository subdirectories&lt;/strong&gt; using
+&lt;a href=&#34;../../..//reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;.  This guide will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
 as a public package catalogue.&lt;/p&gt;
 &lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
 &lt;pre&gt;&lt;code&gt;fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This command copied the contents of the &lt;code&gt;staging/cockroachdb&lt;/code&gt; subdirectory
-in the &lt;code&gt;https://github.com/kubernetes/examples&lt;/code&gt; to the local folder
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The contents of the &lt;code&gt;staging/cockroachdb&lt;/code&gt; subdirectory in the
+&lt;code&gt;https://github.com/kubernetes/examples&lt;/code&gt; were copied to the local folder
 &lt;code&gt;cockroachdb&lt;/code&gt;.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
 &lt;ul&gt;
-&lt;li&gt;any git subdirectory containing configuration may be fetched as a package&lt;/li&gt;
-&lt;li&gt;the local package directory name does NOT need to match the remote
-directory name&lt;/li&gt;
-&lt;li&gt;including &lt;code&gt;.git&lt;/code&gt; as part of the repo name is optional for well known hosts
-such as GitHub&lt;/li&gt;
+&lt;li&gt;Any git subdirectory containing configuration (e.g. &lt;code&gt;deploy.yaml&lt;/code&gt;) may be
+fetched and used as a package&lt;/li&gt;
+&lt;li&gt;The local directory name that the package is copied to does NOT need to
+match the upstream directory name it is copied from&lt;/li&gt;
+&lt;li&gt;including &lt;code&gt;.git&lt;/code&gt; as part of the repo name is optional but good practice to
+ensure the repo + subdirectory are parsed correctly by the tool.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;/div&gt;
@@ -61,7 +83,7 @@ such as GitHub&lt;/li&gt;
 &lt;h2 id=&#34;view-the-kptfile&#34;&gt;View the Kptfile&lt;/h2&gt;
 &lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
 &lt;p&gt;The upstream commit and branch / tag reference are stored in the package&amp;rsquo;s
-&lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt; these can be used to update the package later.&lt;/p&gt;
+&lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;.  These are used by &lt;code&gt;kpt pkg update&lt;/code&gt;.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;cat cockroachdb/Kptfile
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Print the &lt;code&gt;Kptfile&lt;/code&gt; written by &lt;code&gt;kpt pkg get&lt;/code&gt; to see the upstream package data.&lt;/p&gt;
 &lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
@@ -94,13 +116,18 @@ artifacts such as documentation.&lt;/p&gt;
 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt; directories, &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;6&lt;/span&gt; files
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The cockroachdb package fetched from &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; contains a
 &lt;code&gt;cockroachdb-statefulset.yaml&lt;/code&gt; file with the resource configuration, as well
-as other files included in the directory.  &lt;code&gt;kpt pkg get&lt;/code&gt; created a &lt;code&gt;Kptfile&lt;/code&gt;
-since one did not exist (for storing package state).  If the upstream package
-already defines a Kptfile, &lt;code&gt;kpt pkg get&lt;/code&gt; will update the Kptfile copied from
-upstream rather than replacing it.&lt;/p&gt;
+as other files included in the directory.  `&lt;/p&gt;
 &lt;p&gt;The package contains 2 resource configuration files &amp;ndash; &lt;code&gt;deploy.yaml&lt;/code&gt; and
-&lt;code&gt;service.yaml&lt;/code&gt;.  These are the same types of resource configuration that
-would be applied with &lt;code&gt;kubectl apply&lt;/code&gt;&lt;/p&gt;
+&lt;code&gt;service.yaml&lt;/code&gt;.  These are the same files that would typically be applied with
+&lt;code&gt;kubectl apply&lt;/code&gt;.&lt;/p&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
+&lt;p&gt;kpt pkg get&lt;code&gt;created a&lt;/code&gt;Kptfile&lt;code&gt;since one did not exist (for storing package state).  If the upstream package already defines a Kptfile, then&lt;/code&gt;kpt pkg get` will update the Kptfile copied from
+upstream rather than replacing it.&lt;/p&gt;
+
+&lt;/div&gt;
+
 &lt;h5 id=&#34;command-3&#34;&gt;Command&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;head cockroachdb/cockroachdb-statefulset.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-3&#34;&gt;Output&lt;/h5&gt;
@@ -115,11 +142,10 @@ metadata:
     app: cockroachdb
 spec:
   ports:
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In this package, the &lt;code&gt;cockroachdb/cockroachdb-statefulset.yaml&lt;/code&gt; is plain old
-resource configuration &amp;ndash; nothing special here.  Other packages may have
-resource configuration which is marked up with metadata as comments that
-kpt can use to provide high-level commands for reading and writing the
-configuration.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This package contains &lt;code&gt;cockroachdb/cockroachdb-statefulset.yaml&lt;/code&gt; as plain old
+resource configuration (e.g. YAML) &amp;ndash; nothing special here.  Other kpt packages
+may have configuration which uses comments to attach metadata to
+specific resources or fields.&lt;/p&gt;
 &lt;h2 id=&#34;apply-the-package-to-a-cluster&#34;&gt;Apply the package to a cluster&lt;/h2&gt;
 &lt;p&gt;Use &lt;code&gt;kubectl apply&lt;/code&gt; to deploy the local package to a remote cluster.&lt;/p&gt;
 &lt;h5 id=&#34;command-4&#34;&gt;Command&lt;/h5&gt;
@@ -132,16 +158,16 @@ statefulset.apps/cockroachdb created
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
-&lt;p&gt;This guide showed using &lt;code&gt;kubectl apply&lt;/code&gt; to apply in order to demonstrate how kpt
-packages work out of the box with existing tools.&lt;/p&gt;
-&lt;p&gt;Kp also provides a next-generation set of apply commands under the [kpt live]
-command.&lt;/p&gt;
+&lt;p&gt;This guide used &lt;code&gt;kubectl apply&lt;/code&gt; to demonstrate how kpt packages work out of the
+box with tools that have been around since the beginning of Kubernetes.&lt;/p&gt;
+&lt;p&gt;Kpt also provides the next-generation set of Kubernetes apply commands under
+the [kpt live] command.&lt;/p&gt;
 
 &lt;/div&gt;
 
 &lt;h2 id=&#34;view-the-applied-package&#34;&gt;View the applied package&lt;/h2&gt;
 &lt;p&gt;Once applied to the cluster, the remote resources can be displayed using
-the normal tools such as &lt;code&gt;kubectl get&lt;/code&gt;.&lt;/p&gt;
+the common tools such as &lt;code&gt;kubectl get&lt;/code&gt;.&lt;/p&gt;
 &lt;h5 id=&#34;command-5&#34;&gt;Command&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl get all
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-5&#34;&gt;Output&lt;/h5&gt;
@@ -366,6 +392,29 @@ which are part of the package metadata &amp;ndash; i.e. the [Kptfile].&lt;/p&gt;
 
 &lt;/div&gt;
 
+&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
+&lt;p&gt;Following is a short explanation of the command that will be demonstrated
+in this guide.&lt;/p&gt;
+&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Configuration fields reference setter OpenAPI definitions through
+a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Setters are defined as OpenAPI definitions and have values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/set-model.svg&#34; /&gt;
+
+&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value to 3&lt;/li&gt;
+&lt;li&gt;Locate all fields which reference the setter.&lt;/li&gt;
+&lt;li&gt;Set their value to match the new setter value (3)&lt;/li&gt;
+&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/set-command.svg&#34; /&gt;
+
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
@@ -415,32 +464,7 @@ changing values, and writing them back.&lt;/strong&gt;&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;replicas&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.replicas&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
-&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Configuration fields reference setter OpenAPI definitions through
-a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Setters are defined as OpenAPI definitions and have values&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/set-model.pdf&#34; type=&#34;application/pdf&#34; width=&#34;700}&#34; height=&#34;520&#34;&gt;
-    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/set-model.pdf&#34;&gt;$src.pdf&lt;/a&gt;
-&lt;/object&gt;
-
-&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
-&lt;ol&gt;
-&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
-&lt;li&gt;Change the setter OpenAPI value to 3&lt;/li&gt;
-&lt;li&gt;Locate all fields which reference the setter.&lt;/li&gt;
-&lt;li&gt;Set their value to match the new setter value (3)&lt;/li&gt;
-&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/set-command.pdf&#34; type=&#34;application/pdf&#34; width=&#34;700}&#34; height=&#34;630&#34;&gt;
-    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/set-command.pdf&#34;&gt;$src.pdf&lt;/a&gt;
-&lt;/object&gt;
-
-
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -473,6 +497,32 @@ they don’t need to be compiled into the tool and &lt;strong&gt;can be created
 for an instance of a package&lt;/strong&gt; without modifying kpt.&lt;/p&gt;
 
 &lt;/div&gt;
+
+&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
+&lt;p&gt;Following is a short explanation of the command that will be demonstrated
+in this guide.&lt;/p&gt;
+&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Configuration fields reference substitution OpenAPI definitions through
+a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Substitutions are defined as OpenAPI definitions with patterns and values&lt;/li&gt;
+&lt;li&gt;Substitutions reference setters through values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/substitute-model.svg&#34; /&gt;
+
+&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value&lt;/li&gt;
+&lt;li&gt;Locate all fields which reference the setter indirectly through a
+substitution.&lt;/li&gt;
+&lt;li&gt;Compute the new substitution value by substituting the setter values into
+the pattern.&lt;/li&gt;
+&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/substitute-command.svg&#34; /&gt;
 
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
@@ -541,34 +591,6 @@ is not required, and substitutions may have multiple setters.&lt;/p&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;customizing-setters&#34;&gt;Customizing setters&lt;/h3&gt;
 &lt;p&gt;See &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; and &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt; for how to add or update them in the
 package &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;.&lt;/p&gt;
-&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
-&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Configuration fields reference substitution OpenAPI definitions through
-a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Substitutions are defined as OpenAPI definitions with patterns and values&lt;/li&gt;
-&lt;li&gt;Substitutions reference setters through values&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/substitute-model.pdf&#34; type=&#34;application/pdf&#34; width=&#34;698}&#34; height=&#34;675&#34;&gt;
-    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/substitute-model.pdf&#34;&gt;$src.pdf&lt;/a&gt;
-&lt;/object&gt;
-
-&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
-&lt;ol&gt;
-&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
-&lt;li&gt;Change the setter OpenAPI value&lt;/li&gt;
-&lt;li&gt;Locate all fields which reference the setter indirectly through a
-substitution.&lt;/li&gt;
-&lt;li&gt;Compute the new substitution value by substituting the setter values into
-the pattern.&lt;/li&gt;
-&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/substitute-command.pdf&#34; type=&#34;application/pdf&#34; width=&#34;750}&#34; height=&#34;800&#34;&gt;
-    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/substitute-command.pdf&#34;&gt;$src.pdf&lt;/a&gt;
-&lt;/object&gt;
-
 
       </description>
     </item>

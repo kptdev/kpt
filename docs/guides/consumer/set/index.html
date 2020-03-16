@@ -553,6 +553,12 @@
 <nav id="TableOfContents">
   <ul>
     <li><a href="#topics">Topics</a></li>
+    <li><a href="#kpt-cfg-set-explained">kpt cfg set explained</a>
+      <ul>
+        <li><a href="#data-model">Data model</a></li>
+        <li><a href="#command-control-flow">Command control flow</a></li>
+      </ul>
+    </li>
     <li><a href="#steps">Steps</a></li>
     <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
@@ -568,12 +574,6 @@
     <li><a href="#set-a-field">Set a field</a>
       <ul>
         <li></li>
-      </ul>
-    </li>
-    <li><a href="#kpt-cfg-set-explained">kpt cfg set explained</a>
-      <ul>
-        <li><a href="#data-model">Data model</a></li>
-        <li><a href="#command-control-flow">Command control flow</a></li>
       </ul>
     </li>
   </ul>
@@ -648,6 +648,29 @@ which are part of the package metadata &ndash; i.e. the [Kptfile].</p>
 
 </div>
 
+<h2 id="kpt-cfg-set-explained"><code>kpt cfg set</code> explained</h2>
+<p>Following is a short explanation of the command that will be demonstrated
+in this guide.</p>
+<h3 id="data-model">Data model</h3>
+<ul>
+<li>Configuration fields reference setter OpenAPI definitions through
+a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
+<li>Setters are defined as OpenAPI definitions and have values</li>
+</ul>
+
+<img src="https://googlecontainertools.github.io/kpt//images/set-model.svg" />
+
+<h3 id="command-control-flow">Command control flow</h3>
+<ol>
+<li>Read the package OpenAPI and resources.</li>
+<li>Change the setter OpenAPI value to 3</li>
+<li>Locate all fields which reference the setter.</li>
+<li>Set their value to match the new setter value (3)</li>
+<li>Write both the modified OpenAPI and resources back to the package.</li>
+</ol>
+
+<img src="https://googlecontainertools.github.io/kpt//images/set-command.svg" />
+
 <h2 id="steps">Steps</h2>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
@@ -697,32 +720,7 @@ changing values, and writing them back.</strong></p>
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">3</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h2 id="kpt-cfg-set-explained"><code>kpt cfg set</code> explained</h2>
-<h3 id="data-model">Data model</h3>
-<ul>
-<li>Configuration fields reference setter OpenAPI definitions through
-a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
-<li>Setters are defined as OpenAPI definitions and have values</li>
-</ul>
-
-<object data="https://googlecontainertools.github.io/kpt//images/set-model.pdf" type="application/pdf" width="700}" height="520">
-    alt : <a href="https://googlecontainertools.github.io/kpt//images/set-model.pdf">$src.pdf</a>
-</object>
-
-<h3 id="command-control-flow">Command control flow</h3>
-<ol>
-<li>Read the package OpenAPI and resources.</li>
-<li>Change the setter OpenAPI value to 3</li>
-<li>Locate all fields which reference the setter.</li>
-<li>Set their value to match the new setter value (3)</li>
-<li>Write both the modified OpenAPI and resources back to the package.</li>
-</ol>
-
-<object data="https://googlecontainertools.github.io/kpt//images/set-command.pdf" type="application/pdf" width="700}" height="630">
-    alt : <a href="https://googlecontainertools.github.io/kpt//images/set-command.pdf">$src.pdf</a>
-</object>
-
-
+</span></code></pre></div>
         <div class="section-index">
     
     
@@ -767,7 +765,7 @@ a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/def
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3dd4ebdf5004774bbc8f5d3edeb9962e76c7fecb">Update set and substitute guides (3dd4ebd)</a>
 </div>
 </div>
 
