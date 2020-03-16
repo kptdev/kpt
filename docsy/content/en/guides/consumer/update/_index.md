@@ -31,6 +31,17 @@ can set replicas without apply overwriting them).
 See [update strategies] for more choices on how to merge upstream changes.
 {{% /pageinfo %}}
 
+## `kpt pkg update` explained
+
+Following is a short explanation of the command that will be demonstrated
+in this guide.
+
+- Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo
+- Edit the local package contents
+- Commit the changes
+- Update the local package with upstream changes from a new version
+
+{{< svg src="images/update-command" >}}
 
 ## Steps
 

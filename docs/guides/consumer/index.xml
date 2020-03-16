@@ -30,12 +30,13 @@ as a package.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Copy the staging/cockroachdb subdirectory out of the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; git repo
+&lt;li&gt;Get copies the &lt;code&gt;staging/cockroachdb&lt;/code&gt; subdirectory from the
+&lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; git repo
 &lt;ul&gt;
-&lt;li&gt;Since a &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt; is not included with the package, create a new one for the local package&lt;/li&gt;
+&lt;li&gt;Since a &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt; is not included with the package, a new one is created
+for the local package&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;li&gt;Write the upstream metadata to the &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;(Optional) commit the package and push to the team git repo&lt;/li&gt;
 &lt;li&gt;Apply the package to a cluster
 &lt;ul&gt;
@@ -216,6 +217,18 @@ can set replicas without apply overwriting them).&lt;/p&gt;
 &lt;p&gt;See [update strategies] for more choices on how to merge upstream changes.&lt;/p&gt;
 
 &lt;/div&gt;
+
+&lt;h2 id=&#34;kpt-pkg-update-explained&#34;&gt;&lt;code&gt;kpt pkg update&lt;/code&gt; explained&lt;/h2&gt;
+&lt;p&gt;Following is a short explanation of the command that will be demonstrated
+in this guide.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo&lt;/li&gt;
+&lt;li&gt;Edit the local package contents&lt;/li&gt;
+&lt;li&gt;Commit the changes&lt;/li&gt;
+&lt;li&gt;Update the local package with upstream changes from a new version&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/update-command.svg&#34; /&gt;
 
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
