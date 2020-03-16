@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/customize/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/substitute/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Customize a local package | Kpt</title><meta property="og:title" content="Customize a local package" />
-<meta property="og:description" content="Customize a local package by modifying its contents.
+<title>Substitute a values into fields | Kpt</title><meta property="og:title" content="Substitute a values into fields" />
+<meta property="og:description" content="Customize a local package by substituting values into fields.
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/customize/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/substitute/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Customize a local package">
-<meta itemprop="description" content="Customize a local package by modifying its contents.
+<meta itemprop="name" content="Substitute a values into fields">
+<meta itemprop="description" content="Customize a local package by substituting values into fields.
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Customize a local package"/>
-<meta name="twitter:description" content="Customize a local package by modifying its contents.
+<meta name="twitter:title" content="Substitute a values into fields"/>
+<meta name="twitter:description" content="Customize a local package by substituting values into fields.
 "/>
 
 
@@ -49,7 +49,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Customize a local package | Kpt</title>
+    <title>Substitute a values into fields | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -194,10 +194,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/fetch/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Fetch</a>
+    <a  href="/kpt/guides/consumer/get/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Get</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerfetch">
+    <li class="collapse " id="kptguidesconsumerget">
       
       
       
@@ -240,10 +240,33 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/customize/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Customize</a>
+    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Set</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumercustomize">
+    <li class="collapse " id="kptguidesconsumerset">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/substitute/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Substitute</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesconsumersubstitute">
       
       
       
@@ -514,8 +537,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/consumer/customize/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Customize%20a%20local%20package" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/consumer/substitute/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Substitute%20a%20values%20into%20fields" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -542,15 +565,16 @@
         <li></li>
       </ul>
     </li>
-    <li><a href="#set-a-field">Set a field</a>
-      <ul>
-        <li></li>
-      </ul>
-    </li>
     <li><a href="#substitute-a-value">Substitute a value</a>
       <ul>
         <li></li>
         <li><a href="#customizing-setters">Customizing setters</a></li>
+      </ul>
+    </li>
+    <li><a href="#kpt-cfg-set-explained">kpt cfg set explained</a>
+      <ul>
+        <li><a href="#data-model">Data model</a></li>
+        <li><a href="#command-control-flow">Command control flow</a></li>
       </ul>
     </li>
   </ul>
@@ -591,7 +615,7 @@
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/customize/">Customize</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/substitute/">Substitute</a>
 </li>
 
 	</ol>
@@ -599,31 +623,26 @@
 
             
 <div class="td-content">
-	<h1>Customize a local package</h1>
-	<div class="lead">Customize a local package by modifying its contents.</div>
-	<p><em>Data enables the creation of tools to read and write the YAML on behalf of
-users.  Dynamic logic can still be developed, but loosely coupled to the data
-that is applied to the cluster.</em></p>
+	<h1>Substitute a values into fields</h1>
+	<div class="lead">Customize a local package by substituting values into fields.</div>
+	<p><em>Dynamic needs for packages are built into tools which read and write
+configuration data.</em></p>
 <h2 id="topics">Topics</h2>
 <p><a href="../../../reference/cfg/set">kpt cfg set</a>, <a href="../../../reference/cfg/create-setter">setters</a>, <a href="../../../reference/cfg/create-subst">substitutions</a>, <a href="../../../api-reference/kptfile">Kptfile</a></p>
-<p>Kpt packages can be modified using existing tools and workflows such as
-manually modifying the configuration in an editor, however these workflows
-can be labor intensive and error prone.</p>
-<p>To address the UX limitations of hand editing YAML, kpt provides built-in
-commands which can expose high-level values to set fields within the package.</p>
+<p>Substitutions are like setters, but instead of setting a entire field
+value, <strong>they use setters to set only parts of a field value.</strong> &ndash; e.g.
+only set the <em>tag</em> portion of the <code>image</code> field.</p>
 
 
 <div class="pageinfo pageinfo-primary">
-<p>Rather than exposing high-level values as input parameters to a template,
-these commands the ability to <strong>modify the package data in place by setting
-and substituting values</strong>.</p>
-<p>The configuration for these commands is <strong>defined per-package
-through OpenAPI definitions</strong> included in the package metadata
-(i.e. the [Kptfile].</p>
-<p>While traditionally OpenAPI is used to define schema for static types
-(e.g. this is what a Deployment looks like), kpt allows OpenAPI to also define
-schema for individual instances of a type (e.g. this is what the nginx
-Deployment looks like).</p>
+<ul>
+<li>Substitutions are defined in OpenAPI definitions</li>
+<li>OpenAPI is referenced from configuration through field line comments</li>
+<li>Substitutions are <strong>performed by running <code>kpt cfg set</code></strong></li>
+</ul>
+<p>Because setters are defined using data as part of the package as OpenAPI data,
+they don’t need to be compiled into the tool and <strong>can be created
+for an instance of a package</strong> without modifying kpt.</p>
 
 </div>
 
@@ -631,71 +650,41 @@ Deployment looks like).</p>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
 <li><a href="#list-the-setters">List the setters</a></li>
-<li><a href="#set-a-field">Set a field</a></li>
 <li><a href="#substitute-a-value">Substitute a value</a></li>
-<li><a href="#edit-configuration">Edit configuration</a></li>
 </ol>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <h3 id="command">Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
-</code></pre></div><p>Grab a remote package.  This guide will use one of the kpt package examples,
-which contain additional metadata kpt can use to work with the package contents.</p>
+</code></pre></div><p>Grab the setters package, which contains setters and substitutions.</p>
 <h3 id="output">Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 </code></pre></div><h2 id="list-the-setters">List the setters</h2>
-<p>The <code>helloworld-set</code> package contains <a href="../../../reference/cfg/create-setter">setters</a> and <a href="../../../reference/cfg/create-subst">substitutions</a>
-for modifying configuration from the commandline.</p>
-<h5 id="command-1">Command</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters helloworld/ 
-</code></pre></div><p>Print the list of setters included in the package.</p>
-<h5 id="output-1">Output</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-  http-port   <span style="color:#0000cf;font-weight:bold">80</span>      package-default   helloworld port         <span style="color:#0000cf;font-weight:bold">3</span>      
-  image-tag   0.1.0   package-default   hello-world image tag   <span style="color:#0000cf;font-weight:bold">1</span>      
-  replicas    <span style="color:#0000cf;font-weight:bold">5</span>       package-default   helloworld replicas     <span style="color:#0000cf;font-weight:bold">1</span>     
-</code></pre></div><p>The package contains 3 setters which may be used to modify the configuration
-using <code>kpt set</code>.</p>
-<h2 id="set-a-field">Set a field</h2>
-<p>Setters modify the resource configuration in place by reading the resources,
-changing values, and writing them back.</p>
-<h5 id="package-contents">Package contents</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># helloworld/deploy.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h5 id="command-2">Command</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg <span style="color:#204a87">set</span> replicas <span style="color:#0000cf;font-weight:bold">3</span>
-</code></pre></div><p>Change the replicas value in the configuration from 5 to 3.</p>
-<h5 id="output-2">Output</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
-</code></pre></div><h5 id="updated-package-contents">Updated package contents</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">3</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>The package contents now contains the updated replicas value of 3.</p>
-<h2 id="substitute-a-value">Substitute a value</h2>
-<p>Substitutions are performed through calling setters which are referenced by
-substitutions.</p>
+<p>List the <a href="../../../reference/cfg/create-setter">setters</a> &ndash; find the <strong>image-tag setter</strong>.  When set it will perform
+a substitution.</p>
 
 
 <div class="pageinfo pageinfo-primary">
 <p>There is no command to list substitutions because they are not invoked directly,
 but are instead performed when a setter referenced by the substitution is
 invoked.</p>
-<p>Substitutions can be found by looking in the [Kptfile] under
-<code>openAPI.definitions</code></p>
+<p>Substitutions can be found by looking in the Kptfile under
+<code>openAPI.definitions</code>, and identified in configuration through referencing
+a definition with the prefix <code>io.k8s.cli.substitutions.</code></p>
+<p>In this example the substitution name and setter name happen to match, but this
+is not required, and substitutions may have multiple setters.</p>
 
 </div>
 
-<h5 id="package-contents-1">Package contents</h5>
+<h5 id="command-1">Command</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters helloworld/ 
+</code></pre></div><h5 id="output-1">Output</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
+  http-port   <span style="color:#0000cf;font-weight:bold">80</span>      package-default   helloworld port         <span style="color:#0000cf;font-weight:bold">3</span>      
+  image-tag   0.1.0   package-default   hello-world image tag   <span style="color:#0000cf;font-weight:bold">1</span>      
+  replicas    <span style="color:#0000cf;font-weight:bold">5</span>       package-default   helloworld replicas     <span style="color:#0000cf;font-weight:bold">1</span>     
+</code></pre></div><h2 id="substitute-a-value">Substitute a value</h2>
+<h5 id="package-contents">Package contents</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># helloworld/deploy.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -706,14 +695,12 @@ invoked.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/helloworld-gke<span style="color:#000;font-weight:bold">:</span>v0<span style="color:#0000cf;font-weight:bold">.1</span><span style="color:#0000cf;font-weight:bold">.0</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.image-tag&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h5 id="command-3">Command</h5>
+</span></code></pre></div><h5 id="command-2">Command</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"> kpt cfg <span style="color:#204a87">set</span> helloworld/ image-tag v0.2.0
-</code></pre></div><p>Change the tag portion of the image field by setting the <code>image-tag</code> value to
-<code>v0.2.0</code>.  This value will be substituted into a substitution pattern defined
-in the <code>Kptfile</code> and written to the <code>image</code> field.</p>
-<h5 id="output-3">Output</h5>
+</code></pre></div><p>Change the tag portion of the image field using the <code>image-tag</code> setter.</p>
+<h5 id="output-2">Output</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
-</code></pre></div><h5 id="updated-package-contents-1">Updated package contents</h5>
+</code></pre></div><h5 id="updated-package-contents">Updated package contents</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
@@ -724,11 +711,36 @@ in the <code>Kptfile</code> and written to the <code>image</code> field.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/helloworld-gke<span style="color:#000;font-weight:bold">:</span>v0<span style="color:#0000cf;font-weight:bold">.2</span><span style="color:#0000cf;font-weight:bold">.0</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.image-tag&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h3 id="customizing-setters">Customizing setters</h3>
-<p>Because setters are defined using data as part of the package as OpenAPI data,
-they don’t need to be compiled into the tool and can be customized
-for each local instance of a package.</p>
 <p>See <a href="../../../reference/cfg/create-setter">setters</a> and <a href="../../../reference/cfg/create-subst">substitutions</a> for how to add or update them in the
 package <a href="../../../api-reference/kptfile">Kptfile</a>.</p>
+<h2 id="kpt-cfg-set-explained"><code>kpt cfg set</code> explained</h2>
+<h3 id="data-model">Data model</h3>
+<ul>
+<li>Configuration fields reference substitution OpenAPI definitions through
+a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
+<li>Substitutions are defined as OpenAPI definitions with patterns and values</li>
+<li>Substitutions reference setters through values</li>
+</ul>
+
+<object data="https://googlecontainertools.github.io/kpt//images/substitute-model.pdf" type="application/pdf" width="698}" height="675">
+    alt : <a href="https://googlecontainertools.github.io/kpt//images/substitute-model.pdf">$src.pdf</a>
+</object>
+
+<h3 id="command-control-flow">Command control flow</h3>
+<ol>
+<li>Read the package OpenAPI and resources.</li>
+<li>Change the setter OpenAPI value</li>
+<li>Locate all fields which reference the setter indirectly through a
+substitution.</li>
+<li>Compute the new substitution value by substituting the setter values into
+the pattern.</li>
+<li>Write both the modified OpenAPI and resources back to the package.</li>
+</ol>
+
+<object data="https://googlecontainertools.github.io/kpt//images/substitute-command.pdf" type="application/pdf" width="750}" height="800">
+    alt : <a href="https://googlecontainertools.github.io/kpt//images/substitute-command.pdf">$src.pdf</a>
+</object>
+
 
         <div class="section-index">
     
@@ -767,12 +779,14 @@ package <a href="../../../api-reference/kptfile">Kptfile</a>.</p>
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0f13cd83d2d6a37c1dc04e05f63201b2b11ae96b">switch to relative links (0f13cd8)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
 </div>
 </div>
 

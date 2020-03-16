@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+.DS_Store
 .idea/
 *.iml
 coverage.out

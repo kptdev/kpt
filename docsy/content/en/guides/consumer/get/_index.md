@@ -1,6 +1,6 @@
 ---
-title: "Fetch a remote package"
-linkTitle: "Fetch"
+title: "Get a remote package"
+linkTitle: "Get"
 weight: 1
 type: docs
 description: >
@@ -25,7 +25,7 @@ as a package.*
 
 ## Fetch a remote package
 
-Packages are fetched from remote git repository subdirectories with
+Packages are **fetched from remote git repository subdirectories** with
 [kpt pkg get].  In this guide we will use the [kubernetes examples] repository
 as a public package catalogue.
 
@@ -57,9 +57,8 @@ in the `https://github.com/kubernetes/examples` to the local folder
 
 ##### Command
 
-The upstream commit and branch / tag reference are stored in the
-package's [Kptfile] these can be used to update the
-package later.
+The upstream commit and branch / tag reference are stored in the package's
+[Kptfile] these can be used to update the package later.
 
 ```sh
 cat cockroachdb/Kptfile
@@ -111,10 +110,10 @@ cockroachdb/
 
 The cockroachdb package fetched from [kubernetes examples] contains a
 `cockroachdb-statefulset.yaml` file with the resource configuration, as well
-as other files included in the directory.  The Kptfile was created by
-`kpt pkg get` for storing package state.  If the upstream package already
-defines a Kptfile, `kpt pkg get` will update the Kptfile copied from upstream
-rather than replacing it.
+as other files included in the directory.  `kpt pkg get` created a `Kptfile`
+since one did not exist (for storing package state).  If the upstream package
+already defines a Kptfile, `kpt pkg get` will update the Kptfile copied from
+upstream rather than replacing it.
 
 The package contains 2 resource configuration files -- `deploy.yaml` and
 `service.yaml`.  These are the same types of resource configuration that
@@ -132,8 +131,9 @@ head cockroachdb/cockroachdb-statefulset.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  # This service is meant to be used by clients of the database. It exposes a ClusterIP that will
-  # automatically load balance connections to the different database pods.
+  # This service is meant to be used by clients of the database. It exposes a
+  # ClusterIP that will automatically load balance connections to the different
+  # database pods.
   name: cockroachdb-public
   labels:
     app: cockroachdb

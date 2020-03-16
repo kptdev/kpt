@@ -21,3 +21,6 @@ Day 1: Consume a package published to git with kpt get
 {{< imgproc dayNworkflow Fill "960x540" >}}
 Day N: Pull in upstream package upstream with kpt update
 {{< /imgproc >}}
+
+
+
