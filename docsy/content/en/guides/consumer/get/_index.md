@@ -20,9 +20,10 @@ as a package.*
 Following is a short explanation of the command that will be demonstrated
 in this guide.
 
-- Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo
-  - Since a [Kptfile] is not included with the package, create a new one for the local package 
-- Write the upstream metadata to the [Kptfile]
+- Get copies the `staging/cockroachdb` subdirectory from the
+  [kubernetes examples] git repo
+  - Since a [Kptfile] is not included with the package, a new one is created
+    for the local package
 - (Optional) commit the package and push to the team git repo
 - Apply the package to a cluster
   - May be pushed from the local package copy (manual) or from the team repo

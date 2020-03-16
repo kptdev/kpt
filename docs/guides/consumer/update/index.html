@@ -553,6 +553,7 @@
 <nav id="TableOfContents">
   <ul>
     <li><a href="#topics">Topics</a></li>
+    <li><a href="#kpt-pkg-update-explained">kpt pkg update explained</a></li>
     <li><a href="#steps">Steps</a></li>
     <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
@@ -639,6 +640,18 @@ can set replicas without apply overwriting them).</p>
 <p>See [update strategies] for more choices on how to merge upstream changes.</p>
 
 </div>
+
+<h2 id="kpt-pkg-update-explained"><code>kpt pkg update</code> explained</h2>
+<p>Following is a short explanation of the command that will be demonstrated
+in this guide.</p>
+<ul>
+<li>Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo</li>
+<li>Edit the local package contents</li>
+<li>Commit the changes</li>
+<li>Update the local package with upstream changes from a new version</li>
+</ul>
+
+<img src="https://googlecontainertools.github.io/kpt//images/update-command.svg" />
 
 <h2 id="steps">Steps</h2>
 <ol>
@@ -823,7 +836,7 @@ and local modifications (additional environment variable).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9b1f0ac8a8f99e3847dd2ac86fafc3bcae6636fb">Add more guides and clean up old files (9b1f0ac)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/1feeaa7fcb559821e02cd6661bee592b4d4774b4">Update docs diagrams (1feeaa7)</a>
 </div>
 </div>
 
