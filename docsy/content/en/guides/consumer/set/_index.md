@@ -35,6 +35,29 @@ While OpenAPI is often used to define schema for static types
 (e.g. this is what **the nginx Deployment** looks like).
 {{% /pageinfo %}}
 
+## `kpt cfg set` explained
+
+Following is a short explanation of the command that will be demonstrated
+in this guide.
+
+### Data model
+
+- Configuration fields reference setter OpenAPI definitions through
+  a line comment providing OpenAPI as json `# { "$ref": "#/definitions/..." }`
+- Setters are defined as OpenAPI definitions and have values
+
+{{< svg src="images/set-model" >}}
+
+### Command control flow
+
+1. Read the package OpenAPI and resources.
+2. Change the setter OpenAPI value to 3
+3. Locate all fields which reference the setter.
+4. Set their value to match the new setter value (3)
+5. Write both the modified OpenAPI and resources back to the package.
+
+{{< svg src="images/set-command" >}}
+
 ## Steps
 
 1. [Fetch a remote package](#fetch-a-remote-package)
@@ -123,26 +146,6 @@ spec:
  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
 ...
 ```
-
-## `kpt cfg set` explained
-
-### Data model
-
-- Configuration fields reference setter OpenAPI definitions through
-  a line comment providing OpenAPI as json `# { "$ref": "#/definitions/..." }`
-- Setters are defined as OpenAPI definitions and have values
-
-{{< pdf src="images/set-model.pdf" width="700" height="520" >}}
-
-### Command control flow
-
-1. Read the package OpenAPI and resources.
-2. Change the setter OpenAPI value to 3
-3. Locate all fields which reference the setter.
-4. Set their value to match the new setter value (3)
-5. Write both the modified OpenAPI and resources back to the package.
-
-{{< pdf src="images/set-command.pdf" width="700" height="630" >}}
 
 [Kptfile]: ../../../api-reference/kptfile
 [kpt cfg set]: ../../../reference/cfg/set

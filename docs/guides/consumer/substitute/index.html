@@ -553,6 +553,12 @@
 <nav id="TableOfContents">
   <ul>
     <li><a href="#topics">Topics</a></li>
+    <li><a href="#kpt-cfg-set-explained">kpt cfg set explained</a>
+      <ul>
+        <li><a href="#data-model">Data model</a></li>
+        <li><a href="#command-control-flow">Command control flow</a></li>
+      </ul>
+    </li>
     <li><a href="#steps">Steps</a></li>
     <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
@@ -569,12 +575,6 @@
       <ul>
         <li></li>
         <li><a href="#customizing-setters">Customizing setters</a></li>
-      </ul>
-    </li>
-    <li><a href="#kpt-cfg-set-explained">kpt cfg set explained</a>
-      <ul>
-        <li><a href="#data-model">Data model</a></li>
-        <li><a href="#command-control-flow">Command control flow</a></li>
       </ul>
     </li>
   </ul>
@@ -646,6 +646,32 @@ for an instance of a package</strong> without modifying kpt.</p>
 
 </div>
 
+<h2 id="kpt-cfg-set-explained"><code>kpt cfg set</code> explained</h2>
+<p>Following is a short explanation of the command that will be demonstrated
+in this guide.</p>
+<h3 id="data-model">Data model</h3>
+<ul>
+<li>Configuration fields reference substitution OpenAPI definitions through
+a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
+<li>Substitutions are defined as OpenAPI definitions with patterns and values</li>
+<li>Substitutions reference setters through values</li>
+</ul>
+
+<img src="https://googlecontainertools.github.io/kpt//images/substitute-model.svg" />
+
+<h3 id="command-control-flow">Command control flow</h3>
+<ol>
+<li>Read the package OpenAPI and resources.</li>
+<li>Change the setter OpenAPI value</li>
+<li>Locate all fields which reference the setter indirectly through a
+substitution.</li>
+<li>Compute the new substitution value by substituting the setter values into
+the pattern.</li>
+<li>Write both the modified OpenAPI and resources back to the package.</li>
+</ol>
+
+<img src="https://googlecontainertools.github.io/kpt//images/substitute-command.svg" />
+
 <h2 id="steps">Steps</h2>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
@@ -713,34 +739,6 @@ is not required, and substitutions may have multiple setters.</p>
 </span></code></pre></div><h3 id="customizing-setters">Customizing setters</h3>
 <p>See <a href="../../../reference/cfg/create-setter">setters</a> and <a href="../../../reference/cfg/create-subst">substitutions</a> for how to add or update them in the
 package <a href="../../../api-reference/kptfile">Kptfile</a>.</p>
-<h2 id="kpt-cfg-set-explained"><code>kpt cfg set</code> explained</h2>
-<h3 id="data-model">Data model</h3>
-<ul>
-<li>Configuration fields reference substitution OpenAPI definitions through
-a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
-<li>Substitutions are defined as OpenAPI definitions with patterns and values</li>
-<li>Substitutions reference setters through values</li>
-</ul>
-
-<object data="https://googlecontainertools.github.io/kpt//images/substitute-model.pdf" type="application/pdf" width="698}" height="675">
-    alt : <a href="https://googlecontainertools.github.io/kpt//images/substitute-model.pdf">$src.pdf</a>
-</object>
-
-<h3 id="command-control-flow">Command control flow</h3>
-<ol>
-<li>Read the package OpenAPI and resources.</li>
-<li>Change the setter OpenAPI value</li>
-<li>Locate all fields which reference the setter indirectly through a
-substitution.</li>
-<li>Compute the new substitution value by substituting the setter values into
-the pattern.</li>
-<li>Write both the modified OpenAPI and resources back to the package.</li>
-</ol>
-
-<object data="https://googlecontainertools.github.io/kpt//images/substitute-command.pdf" type="application/pdf" width="750}" height="800">
-    alt : <a href="https://googlecontainertools.github.io/kpt//images/substitute-command.pdf">$src.pdf</a>
-</object>
-
 
         <div class="section-index">
     
@@ -786,7 +784,7 @@ the pattern.</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3dd4ebdf5004774bbc8f5d3edeb9962e76c7fecb">Update set and substitute guides (3dd4ebd)</a>
 </div>
 </div>
 
