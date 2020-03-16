@@ -14,11 +14,11 @@
     
     
     <item>
-      <title>Guides: Fetch a remote package</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/consumer/fetch/</link>
+      <title>Guides: Get a remote package</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/get/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/fetch/</guid>
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/get/</guid>
       <description>
         
         
@@ -35,7 +35,7 @@ as a package.&lt;/em&gt;&lt;/p&gt;
 &lt;li&gt;&lt;a href=&#34;#view-the-applied-package&#34;&gt;View the applied package&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
-&lt;p&gt;Packages are fetched from remote git repository subdirectories with
+&lt;p&gt;Packages are &lt;strong&gt;fetched from remote git repository subdirectories&lt;/strong&gt; with
 &lt;a href=&#34;../../..//reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;.  In this guide we will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
 as a public package catalogue.&lt;/p&gt;
 &lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
@@ -60,9 +60,8 @@ such as GitHub&lt;/li&gt;
 
 &lt;h2 id=&#34;view-the-kptfile&#34;&gt;View the Kptfile&lt;/h2&gt;
 &lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
-&lt;p&gt;The upstream commit and branch / tag reference are stored in the
-package&amp;rsquo;s &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt; these can be used to update the
-package later.&lt;/p&gt;
+&lt;p&gt;The upstream commit and branch / tag reference are stored in the package&amp;rsquo;s
+&lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt; these can be used to update the package later.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;cat cockroachdb/Kptfile
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Print the &lt;code&gt;Kptfile&lt;/code&gt; written by &lt;code&gt;kpt pkg get&lt;/code&gt; to see the upstream package data.&lt;/p&gt;
 &lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
@@ -95,10 +94,10 @@ artifacts such as documentation.&lt;/p&gt;
 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt; directories, &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;6&lt;/span&gt; files
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The cockroachdb package fetched from &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; contains a
 &lt;code&gt;cockroachdb-statefulset.yaml&lt;/code&gt; file with the resource configuration, as well
-as other files included in the directory.  The Kptfile was created by
-&lt;code&gt;kpt pkg get&lt;/code&gt; for storing package state.  If the upstream package already
-defines a Kptfile, &lt;code&gt;kpt pkg get&lt;/code&gt; will update the Kptfile copied from upstream
-rather than replacing it.&lt;/p&gt;
+as other files included in the directory.  &lt;code&gt;kpt pkg get&lt;/code&gt; created a &lt;code&gt;Kptfile&lt;/code&gt;
+since one did not exist (for storing package state).  If the upstream package
+already defines a Kptfile, &lt;code&gt;kpt pkg get&lt;/code&gt; will update the Kptfile copied from
+upstream rather than replacing it.&lt;/p&gt;
 &lt;p&gt;The package contains 2 resource configuration files &amp;ndash; &lt;code&gt;deploy.yaml&lt;/code&gt; and
 &lt;code&gt;service.yaml&lt;/code&gt;.  These are the same types of resource configuration that
 would be applied with &lt;code&gt;kubectl apply&lt;/code&gt;&lt;/p&gt;
@@ -108,8 +107,9 @@ would be applied with &lt;code&gt;kubectl apply&lt;/code&gt;&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;apiVersion: v1
 kind: Service
 metadata:
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a ClusterIP that will&lt;/span&gt;
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# automatically load balance connections to the different database pods.&lt;/span&gt;
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a&lt;/span&gt;
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# ClusterIP that will automatically load balance connections to the different&lt;/span&gt;
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# database pods.&lt;/span&gt;
   name: cockroachdb-public
   labels:
     app: cockroachdb
@@ -334,37 +334,35 @@ and local modifications (additional environment variable).&lt;/p&gt;
     </item>
     
     <item>
-      <title>Guides: Customize a local package</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/consumer/customize/</link>
+      <title>Guides: Set field values</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/set/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/customize/</guid>
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/set/</guid>
       <description>
         
         
-        &lt;p&gt;&lt;em&gt;Data enables the creation of tools to read and write the YAML on behalf of
-users.  Dynamic logic can still be developed, but loosely coupled to the data
-that is applied to the cluster.&lt;/em&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;em&gt;Dynamic needs for packages are built into tools which read and write
+configuration data.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Kpt packages can be modified using existing tools and workflows such as
 manually modifying the configuration in an editor, however these workflows
 can be labor intensive and error prone.&lt;/p&gt;
 &lt;p&gt;To address the UX limitations of hand editing YAML, kpt provides built-in
-commands which can expose high-level values to set fields within the package.&lt;/p&gt;
+commands which &lt;strong&gt;expose setting values in a user friendly way from
+the commandline&lt;/strong&gt;.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
-&lt;p&gt;Rather than exposing high-level values as input parameters to a template,
-these commands the ability to &lt;strong&gt;modify the package data in place by setting
-and substituting values&lt;/strong&gt;.&lt;/p&gt;
-&lt;p&gt;The configuration for these commands is &lt;strong&gt;defined per-package
-through OpenAPI definitions&lt;/strong&gt; included in the package metadata
-(i.e. the [Kptfile].&lt;/p&gt;
-&lt;p&gt;While traditionally OpenAPI is used to define schema for static types
-(e.g. this is what a Deployment looks like), kpt allows OpenAPI to also define
-schema for individual instances of a type (e.g. this is what the nginx
-Deployment looks like).&lt;/p&gt;
+&lt;p&gt;Rather than exposing values as input parameters to a template,
+commands &lt;strong&gt;modify the package data in place&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;These commands are &lt;strong&gt;defined per-package through OpenAPI definitions&lt;/strong&gt;
+which are part of the package metadata &amp;ndash; i.e. the [Kptfile].&lt;/p&gt;
+&lt;p&gt;While OpenAPI is often used to define schema for static types
+(e.g. this is what &lt;strong&gt;a Deployment&lt;/strong&gt; looks like), kpt uses OpenAPI to define
+&lt;strong&gt;schema for individual instances of a type&lt;/strong&gt; as well
+(e.g. this is what &lt;strong&gt;the nginx Deployment&lt;/strong&gt; looks like).&lt;/p&gt;
 
 &lt;/div&gt;
 
@@ -373,20 +371,16 @@ Deployment looks like).&lt;/p&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#list-the-setters&#34;&gt;List the setters&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#set-a-field&#34;&gt;Set a field&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#substitute-a-value&#34;&gt;Substitute a value&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#edit-configuration&#34;&gt;Edit configuration&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
 &lt;h3 id=&#34;command&#34;&gt;Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;SRC_REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$SRC_REPO&lt;/span&gt;/package-examples/helloworld-set@v0.3.0 helloworld
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grab a remote package.  This guide will use one of the kpt package examples,
-which contain additional metadata kpt can use to work with the package contents.&lt;/p&gt;
-&lt;h3 id=&#34;output&#34;&gt;Output&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;output&#34;&gt;Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;list-the-setters&#34;&gt;List the setters&lt;/h2&gt;
-&lt;p&gt;The &lt;code&gt;helloworld-set&lt;/code&gt; package contains &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; and &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt;
-for modifying configuration from the commandline.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;helloworld-set&lt;/code&gt; package contains &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; which can be used to
+&lt;strong&gt;set configuration values from the commandline.&lt;/strong&gt;&lt;/p&gt;
 &lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters helloworld/ 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Print the list of setters included in the package.&lt;/p&gt;
@@ -398,8 +392,8 @@ for modifying configuration from the commandline.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The package contains 3 setters which may be used to modify the configuration
 using &lt;code&gt;kpt set&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 id=&#34;set-a-field&#34;&gt;Set a field&lt;/h2&gt;
-&lt;p&gt;Setters modify the resource configuration in place by reading the resources,
-changing values, and writing them back.&lt;/p&gt;
+&lt;p&gt;Setters &lt;strong&gt;modify the resource configuration in place by reading the resources,
+changing values, and writing them back.&lt;/strong&gt;&lt;/p&gt;
 &lt;h5 id=&#34;package-contents&#34;&gt;Package contents&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -421,22 +415,104 @@ changing values, and writing them back.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;replicas&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.replicas&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The package contents now contains the updated replicas value of 3.&lt;/p&gt;
-&lt;h2 id=&#34;substitute-a-value&#34;&gt;Substitute a value&lt;/h2&gt;
-&lt;p&gt;Substitutions are performed through calling setters which are referenced by
-substitutions.&lt;/p&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
+&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Configuration fields reference setter OpenAPI definitions through
+a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Setters are defined as OpenAPI definitions and have values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/set-model.pdf&#34; type=&#34;application/pdf&#34; width=&#34;700}&#34; height=&#34;520&#34;&gt;
+    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/set-model.pdf&#34;&gt;$src.pdf&lt;/a&gt;
+&lt;/object&gt;
+
+&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value to 3&lt;/li&gt;
+&lt;li&gt;Locate all fields which reference the setter.&lt;/li&gt;
+&lt;li&gt;Set their value to match the new setter value (3)&lt;/li&gt;
+&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/set-command.pdf&#34; type=&#34;application/pdf&#34; width=&#34;700}&#34; height=&#34;630&#34;&gt;
+    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/set-command.pdf&#34;&gt;$src.pdf&lt;/a&gt;
+&lt;/object&gt;
+
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Substitute a values into fields</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</guid>
+      <description>
+        
+        
+        &lt;p&gt;&lt;em&gt;Dynamic needs for packages are built into tools which read and write
+configuration data.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Substitutions are like setters, but instead of setting a entire field
+value, &lt;strong&gt;they use setters to set only parts of a field value.&lt;/strong&gt; &amp;ndash; e.g.
+only set the &lt;em&gt;tag&lt;/em&gt; portion of the &lt;code&gt;image&lt;/code&gt; field.&lt;/p&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;Substitutions are defined in OpenAPI definitions&lt;/li&gt;
+&lt;li&gt;OpenAPI is referenced from configuration through field line comments&lt;/li&gt;
+&lt;li&gt;Substitutions are &lt;strong&gt;performed by running &lt;code&gt;kpt cfg set&lt;/code&gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Because setters are defined using data as part of the package as OpenAPI data,
+they don’t need to be compiled into the tool and &lt;strong&gt;can be created
+for an instance of a package&lt;/strong&gt; without modifying kpt.&lt;/p&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#list-the-setters&#34;&gt;List the setters&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#substitute-a-value&#34;&gt;Substitute a value&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
+&lt;h3 id=&#34;command&#34;&gt;Command&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;SRC_REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$SRC_REPO&lt;/span&gt;/package-examples/helloworld-set@v0.3.0 helloworld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grab the setters package, which contains setters and substitutions.&lt;/p&gt;
+&lt;h3 id=&#34;output&#34;&gt;Output&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;list-the-setters&#34;&gt;List the setters&lt;/h2&gt;
+&lt;p&gt;List the &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; &amp;ndash; find the &lt;strong&gt;image-tag setter&lt;/strong&gt;.  When set it will perform
+a substitution.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
 &lt;p&gt;There is no command to list substitutions because they are not invoked directly,
 but are instead performed when a setter referenced by the substitution is
 invoked.&lt;/p&gt;
-&lt;p&gt;Substitutions can be found by looking in the [Kptfile] under
-&lt;code&gt;openAPI.definitions&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Substitutions can be found by looking in the Kptfile under
+&lt;code&gt;openAPI.definitions&lt;/code&gt;, and identified in configuration through referencing
+a definition with the prefix &lt;code&gt;io.k8s.cli.substitutions.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;In this example the substitution name and setter name happen to match, but this
+is not required, and substitutions may have multiple setters.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h5 id=&#34;package-contents-1&#34;&gt;Package contents&lt;/h5&gt;
+&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters helloworld/ 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
+  http-port   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;80&lt;/span&gt;      package-default   helloworld port         &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;      
+  image-tag   0.1.0   package-default   hello-world image tag   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;      
+  replicas    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;5&lt;/span&gt;       package-default   helloworld replicas     &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;     
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;substitute-a-value&#34;&gt;Substitute a value&lt;/h2&gt;
+&lt;h5 id=&#34;package-contents&#34;&gt;Package contents&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -447,14 +523,12 @@ invoked.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;helloworld-gke&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-3&#34;&gt;Command&lt;/h5&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt; kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; helloworld/ image-tag v0.2.0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Change the tag portion of the image field by setting the &lt;code&gt;image-tag&lt;/code&gt; value to
-&lt;code&gt;v0.2.0&lt;/code&gt;.  This value will be substituted into a substitution pattern defined
-in the &lt;code&gt;Kptfile&lt;/code&gt; and written to the &lt;code&gt;image&lt;/code&gt; field.&lt;/p&gt;
-&lt;h5 id=&#34;output-3&#34;&gt;Output&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Change the tag portion of the image field using the &lt;code&gt;image-tag&lt;/code&gt; setter.&lt;/p&gt;
+&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; fields
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;updated-package-contents-1&#34;&gt;Updated package contents&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;updated-package-contents&#34;&gt;Updated package contents&lt;/h5&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;helloworld-gke&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -465,11 +539,36 @@ in the &lt;code&gt;Kptfile&lt;/code&gt; and written to the &lt;code&gt;image&lt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.2&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;customizing-setters&#34;&gt;Customizing setters&lt;/h3&gt;
-&lt;p&gt;Because setters are defined using data as part of the package as OpenAPI data,
-they don’t need to be compiled into the tool and can be customized
-for each local instance of a package.&lt;/p&gt;
 &lt;p&gt;See &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; and &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt; for how to add or update them in the
 package &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
+&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Configuration fields reference substitution OpenAPI definitions through
+a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Substitutions are defined as OpenAPI definitions with patterns and values&lt;/li&gt;
+&lt;li&gt;Substitutions reference setters through values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/substitute-model.pdf&#34; type=&#34;application/pdf&#34; width=&#34;698}&#34; height=&#34;675&#34;&gt;
+    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/substitute-model.pdf&#34;&gt;$src.pdf&lt;/a&gt;
+&lt;/object&gt;
+
+&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value&lt;/li&gt;
+&lt;li&gt;Locate all fields which reference the setter indirectly through a
+substitution.&lt;/li&gt;
+&lt;li&gt;Compute the new substitution value by substituting the setter values into
+the pattern.&lt;/li&gt;
+&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;object data=&#34;https://googlecontainertools.github.io/kpt//images/substitute-command.pdf&#34; type=&#34;application/pdf&#34; width=&#34;750}&#34; height=&#34;800&#34;&gt;
+    alt : &lt;a href=&#34;https://googlecontainertools.github.io/kpt//images/substitute-command.pdf&#34;&gt;$src.pdf&lt;/a&gt;
+&lt;/object&gt;
+
 
       </description>
     </item>

@@ -1,0 +1,4 @@
+{{ $src := .Get "src" }}
+<object data="{{ .Site.BaseURL }}/{{  $src }}" type="application/pdf" width="{{ .Get "width" }}}" height="{{ .Get "height" }}">
+    alt : <a href="{{ .Site.BaseURL }}/{{ $src }}">$src.pdf</a>
+</object>

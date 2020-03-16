@@ -3,13 +3,12 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/fetch/</loc>
-    <lastmod>2020-03-13T15:10:59-07:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/installation/gcloud/</loc>
+    <lastmod>2020-03-11T08:16:39-07:00</lastmod>
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/installation/gcloud/</loc>
-    <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/get/</loc>
   </url>
   
   <url>
@@ -19,6 +18,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/kustomize/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
@@ -33,6 +33,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/publish/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
@@ -42,10 +43,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/setters/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/helm/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
@@ -55,12 +58,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/</loc>
-    <lastmod>2020-03-13T15:10:59-07:00</lastmod>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/update/</loc>
-    <lastmod>2020-03-13T15:10:59-07:00</lastmod>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
@@ -69,17 +72,21 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/customize/</loc>
-    <lastmod>2020-03-13T15:10:59-07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/set/</loc>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</loc>
   </url>
   
   <url>
@@ -104,6 +111,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/substitutions/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
@@ -118,7 +126,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/display/</loc>
-    <lastmod>2020-03-13T15:10:59-07:00</lastmod>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
@@ -168,12 +176,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
-    <lastmod>2020-03-13T13:10:05-07:00</lastmod>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/</loc>
-    <lastmod>2020-03-13T15:10:59-07:00</lastmod>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
