@@ -54,7 +54,7 @@ with the [kpt live init] command.
 
 {{% pageinfo color="warning" %}}
 The grouping object must be created for a package to be applied using
-[kpt live apply].
+`kpt live apply`.
 {{% /pageinfo %}}
 
 ##### Command

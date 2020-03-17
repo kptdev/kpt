@@ -36,7 +36,7 @@ git so it can be expanded again in the future.
 ##### Command
 
 ```sh
-$ helm template mysql-1.3.1.tgz --output-dir .
+helm template mysql-1.3.1.tgz --output-dir .
 ```
 
 Expand the Helm chart into resource configuration.  Template values may be

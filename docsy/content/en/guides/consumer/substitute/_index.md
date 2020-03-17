@@ -28,7 +28,7 @@ they don’t need to be compiled into the tool and **can be created
 for an instance of a package** without modifying kpt.
 {{% /pageinfo %}}
 
-## `kpt cfg set` explained
+## Substitutions explained
 
 Following is a short explanation of the command that will be demonstrated
 in this guide.

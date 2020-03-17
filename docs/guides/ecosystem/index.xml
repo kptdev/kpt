@@ -70,7 +70,7 @@ customized directly.&lt;/p&gt;
 git so it can be expanded again in the future.&lt;/p&gt;
 &lt;h2 id=&#34;expand-the-helm-chart&#34;&gt;Expand the Helm chart&lt;/h2&gt;
 &lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ helm template mysql-1.3.1.tgz --output-dir .
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;helm template mysql-1.3.1.tgz --output-dir .
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Expand the Helm chart into resource configuration.  Template values may be
 provided on the commandline or through a &lt;code&gt;value.yaml&lt;/code&gt;&lt;/p&gt;
 &lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;

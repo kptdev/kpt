@@ -13,6 +13,10 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/init/</loc>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/api-reference/kptfile/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
   </url>
@@ -33,18 +37,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/producer/publish/</loc>
-    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/producer/setters/</loc>
-    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
   <url>
@@ -59,6 +53,11 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/setters/</loc>
     <lastmod>2020-03-13T17:00:27-07:00</lastmod>
   </url>
   
@@ -113,11 +112,6 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/producer/substitutions/</loc>
-    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/create-setter/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
   </url>
@@ -168,6 +162,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/substitutions/</loc>
+    <lastmod>2020-03-13T17:00:27-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/tree/</loc>
     <lastmod>2020-03-11T08:16:39-07:00</lastmod>
   </url>
@@ -178,8 +177,20 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/blueprint/</loc>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
     <lastmod>2020-03-13T17:00:27-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/variant/</loc>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/bootstrap/</loc>
   </url>
   
   <url>

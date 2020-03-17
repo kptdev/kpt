@@ -35,7 +35,7 @@ While OpenAPI is often used to define schema for static types
 (e.g. this is what **the nginx Deployment** looks like).
 {{% /pageinfo %}}
 
-## `kpt cfg set` explained
+## Setters explained
 
 Following is a short explanation of the command that will be demonstrated
 in this guide.
@@ -57,6 +57,8 @@ in this guide.
 5. Write both the modified OpenAPI and resources back to the package.
 
 {{< svg src="images/set-command" >}}
+
+To see how to create a setter: [create setter guide]
 
 ## Steps
 
@@ -150,3 +152,4 @@ spec:
 [Kptfile]: ../../../api-reference/kptfile
 [kpt cfg set]: ../../../reference/cfg/set
 [setters]: ../../../reference/cfg/create-setter
+[create setter guide]: ../../producer/setters

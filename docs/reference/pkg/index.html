@@ -853,10 +853,9 @@
 </tbody>
 </table>
 <p>
+    
     <asciinema-player
             src="https://googlecontainertools.github.io/kpt//casts/pkg.cast"
-            cols="90"
-            rows="10"
             
             preload="1"
             
@@ -871,6 +870,16 @@
             
             
     ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
 </p>
 
 <pre><code>kpt pkg [SUBCOMMAND]
