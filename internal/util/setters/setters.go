@@ -18,11 +18,13 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/setters"
+	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
 func PerformSetters(path string) error {
@@ -40,17 +42,30 @@ func PerformSetters(path string) error {
 		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
 		k = strings.ToLower(k)
 
-		setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
 		rw := &kio.LocalPackageReadWriter{
 			PackagePath:           path,
 			KeepReaderAnnotations: false,
 			IncludeSubpackages:    true,
 		}
+
+		setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{rw},
 			Filters: []kio.Filter{setter},
 			Outputs: []kio.Writer{rw},
 		}.Execute()
+
+		if err != nil {
+			return err
+		}
+
+		setter2 := &settersutil.FieldSetter{Name: k, Value: v, SetBy: "kpt", ResourcesPath: path, OpenAPIPath: filepath.Join(path, "Kptfile")}
+		err = kio.Pipeline{
+			Inputs:  []kio.Reader{rw},
+			Filters: []kio.Filter{setter2},
+			Outputs: []kio.Writer{rw},
+		}.Execute()
+
 		if err != nil {
 			return err
 		}
@@ -91,7 +106,24 @@ func PerformSetters(path string) error {
 		if err != nil {
 			return err
 		}
-		if c == "core.project" && setter.Count > 0 {
+
+		setter2 := &settersutil.FieldSetter{
+			Name:          fmt.Sprintf("gcloud.%s", c),
+			Value:         v,
+			SetBy:         "kpt",
+			OpenAPIPath:   filepath.Join(path, "Kptfile"),
+			ResourcesPath: path,
+		}
+		err = kio.Pipeline{
+			Inputs:  []kio.Reader{rw},
+			Filters: []kio.Filter{setter2},
+			Outputs: []kio.Writer{rw},
+		}.Execute()
+		if err != nil {
+			return err
+		}
+
+		if c == "core.project" && (setter.Count > 0 || setter2.Count > 0) {
 			// set the projectNumber if we set the projectID
 			projectID = v
 		}
@@ -113,6 +145,18 @@ func PerformSetters(path string) error {
 				Filters: []kio.Filter{&setters.PerformSetters{
 					Name:  "gcloud.project.projectNumber",
 					Value: projectNumber, SetBy: "kpt"}},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+			if err != nil {
+				return err
+			}
+
+			err = kio.Pipeline{
+				Inputs: []kio.Reader{rw},
+				Filters: []kio.Filter{&settersutil.FieldSetter{
+					Name:  "gcloud.project.projectNumber",
+					Value: projectNumber, SetBy: "kpt", ResourcesPath: path,
+					OpenAPIPath: filepath.Join(path, "Kptfile")}},
 				Outputs: []kio.Writer{rw},
 			}.Execute()
 			if err != nil {

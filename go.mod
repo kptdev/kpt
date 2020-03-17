@@ -6,13 +6,17 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golangci/golangci-lint v1.22.2 // indirect
+	github.com/google/addlicense v0.0.0-20200301095109-7c013a14f2e2 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
+	github.com/qri-io/starlib v0.4.2-0.20200213133954-ff2e8cd5ef8d // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
+	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/crypto v0.0.0-20200221170553-0f24fbd83dfb // indirect
 	golang.org/x/sys v0.0.0-20191220142924-d4481acd189f // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
@@ -25,5 +29,5 @@ require (
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
 	sigs.k8s.io/cli-utils v0.4.0
 	sigs.k8s.io/kustomize/cmd/config v0.1.1
-	sigs.k8s.io/kustomize/kyaml v0.1.1
+	sigs.k8s.io/kustomize/kyaml v0.1.2-0.20200317173422-c4d949333d0a
 )
