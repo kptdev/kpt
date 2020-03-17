@@ -383,14 +383,60 @@ are used &lt;em&gt;not&lt;/em&gt; the name of the substitution.  The name of the
         &lt;h1 id=&#34;under-development&#34;&gt;&lt;em&gt;Under Development&lt;/em&gt;&lt;/h1&gt;
 &lt;p&gt;&lt;em&gt;Reusable, customizable components can be built and shared as blueprint
 packages.&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;Blueprint packages are developed to give teams within and organization
-a way to quickly get started building a new application, service or
-product offering &amp;ndash; incorporating the best practices and policies
-of the organization.&lt;/p&gt;
+&lt;p&gt;Blueprints are a packaging pattern for developing reusable, customizable
+and updatable configuration bundles.  They incorporate the best practices
+and applicable policies for deploying software within an organization.&lt;/p&gt;
+&lt;p&gt;Blueprints can increase on-boarding velocity within organizations by
+reducing the work and number of decisions for teams consuming them.&lt;/p&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
 &lt;p&gt;Because packages can be updated, blueprint consumers can pull in the
 latest best practices and policies at any time with &lt;code&gt;kpt pkg update&lt;/code&gt;.&lt;/p&gt;
+
+&lt;/div&gt;
+
+&lt;h3 id=&#34;examples-of-blueprints&#34;&gt;Examples of blueprints&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Languages&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Java / Node / Ruby / Python / Golang application&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Frameworks&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Spring, Express, Rails, Django&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Platforms&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kubeflow, Spark&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Applications / Stacks&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Rails Backend + Node Frontend + Prometheus&lt;/li&gt;
+&lt;li&gt;Spring Cloud Microservices (discovery-server, config-server,
+api-gateway, admin-server, hystrix, various backends)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Infrastructure&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CloudSQL + Pubsub + GKE&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
 &lt;p&gt;This guide covers how to write effective blueprint packages with &lt;code&gt;kpt&lt;/code&gt;
 and &lt;code&gt;kustomize&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;overview&#34;&gt;Overview&lt;/h2&gt;
+&lt;p&gt;Blueprint packages are developed&lt;/p&gt;
+&lt;p&gt;Blueprint packages will typically be composed of &lt;strong&gt;&amp;ldquo;publisher&amp;rdquo; owned pieces
+and &amp;ldquo;consumer&amp;rdquo; owned pieces.&lt;/strong&gt;&lt;/p&gt;
 &lt;h2 id=&#34;bases&#34;&gt;Bases&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Consumer editable vs non-editable&lt;/li&gt;
