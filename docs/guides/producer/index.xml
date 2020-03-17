@@ -14,50 +14,56 @@
     
     
     <item>
-      <title>Guides: Publish</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/producer/publish/</link>
+      <title>Guides: Init</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/producer/init/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://googlecontainertools.github.io/kpt/guides/producer/publish/</guid>
+      <guid>https://googlecontainertools.github.io/kpt/guides/producer/init/</guid>
       <description>
         
         
-        &lt;p&gt;A kpt package is just a set of yaml files stored in a git repo. This allows
-producers of kpt  packages to create or generate yaml files any way they want
-using the tool of their choice.&lt;/p&gt;
-&lt;p&gt;Publishing a package is as simple as pushing a directory of Kubernetes
-configuration to a git subdirectory.  The package may be versioned by
-tagging the git repo with the git &lt;code&gt;package-subdirectory/package-version&lt;/code&gt;
-(directory scoped versioning) or as &lt;code&gt;package-version&lt;/code&gt; (repo scoped versioning).&lt;/p&gt;
-&lt;p&gt;Multiple packages may exist in a single repo under separate subdirectories.
-It is possible to nest packages and fetching either parent or child directories
-to fetch the composite or component packages.&lt;/p&gt;
+        &lt;p&gt;A kpt package is published as a git subdirectory containing configuration
+files (YAML). Publishes of kpt packages can create or generate YAML files
+however they like using the tool of their choice.&lt;/p&gt;
+&lt;p&gt;Publishing a package is done by pushing the git directory
+(and optionally tagging it with a version).&lt;/p&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
+&lt;p&gt;Multiple packages may exist in a single repo under separate subdirectories.&lt;/p&gt;
+&lt;p&gt;Packages may be nested &amp;ndash; both parent (composite) and child
+(component) directories may be fetched as a kpt package.&lt;/p&gt;
+&lt;p&gt;A package is versioned by tagging the git repo as one of:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;package-subdirectory/package-version&lt;/code&gt; (directory scoped versioning)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;package-version&lt;/code&gt; (repo scoped versioning)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
-&lt;li&gt;Author a package by creating resource configuration&lt;/li&gt;
-&lt;li&gt;Publish the package by pushing it to a git subdirectory&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#create-a-git-repo&#34;&gt;Create a git repo&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#create-the-package&#34;&gt;Create the package contents&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#create-configuration&#34;&gt;Create configuration&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#publish-package-to-git&#34;&gt;Publish package to git&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h2 id=&#34;authoring-a-package&#34;&gt;Authoring a package&lt;/h2&gt;
-&lt;p&gt;Package resource configuration may be bootstrapped in many different ways:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;generated from cli tools
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;kubectl create deployment nginx --image nginx -o yaml --dry-run &amp;gt; deploy.yaml&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;copied from examples or blog posts&lt;/li&gt;
-&lt;li&gt;generated from DSLs or templates&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;publishing-a-package&#34;&gt;Publishing a package&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ git clone &amp;lt;repo url&amp;gt; &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# or create a new repo&lt;/span&gt;
-$ &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; repository
-$ mkdir nginx
-&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# optional -- init the package with kpt metadata&lt;/span&gt;
-$ kpt pkg init nginx --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;nginx --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;kpt nginx package&amp;#34;&lt;/span&gt;
-$ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
-$ git add .
-$ git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;Add nginx package&amp;#34;&lt;/span&gt;
-$ git tag v0.1.0
-$ git push
+&lt;h2 id=&#34;create-a-git-repo&#34;&gt;Create a git repo&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git clone REPO_URL &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# or create a new repo with `git init`&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; REPO_NAME
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;create-the-package&#34;&gt;Create the package&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mkdir nginx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Recommended: initialize the package with metadata&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg init nginx --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;nginx --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;kpt nginx package&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;create-configuration&#34;&gt;Create configuration&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;publish-package-to-git&#34;&gt;Publish package to git&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git add .
+git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;Add nginx package&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Recommended: tag the commit as a release&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# tag as DIR/VERSION for per-directory versioning&lt;/span&gt;
+git tag nginx/v0.1.0
+git push nginx/v01.0
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
@@ -86,6 +92,29 @@ using &lt;code&gt;kpt cfg set&lt;/code&gt; to set and/or substitute values.&lt;/
 not exist for the package, run &lt;code&gt;kpt pkg init DIR/&lt;/code&gt; to create one.&lt;/p&gt;
 
 &lt;/div&gt;
+
+&lt;h2 id=&#34;setters-explained&#34;&gt;Setters explained&lt;/h2&gt;
+&lt;p&gt;Following is a short explanation of the command that will be demonstrated
+in this guide.&lt;/p&gt;
+&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Configuration fields reference setter OpenAPI definitions through
+a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Setters are defined as OpenAPI definitions and have values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/set-model.svg&#34; /&gt;
+
+&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value to 3&lt;/li&gt;
+&lt;li&gt;Locate all fields which reference the setter.&lt;/li&gt;
+&lt;li&gt;Set their value to match the new setter value (3)&lt;/li&gt;
+&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/set-command.svg&#34; /&gt;
 
 &lt;h4 id=&#34;creating-a-setter&#34;&gt;Creating a Setter&lt;/h4&gt;
 &lt;p&gt;Setters may be created either manually (by editing the Kptfile directly), or
@@ -227,13 +256,41 @@ not exist for the package, run &lt;code&gt;kpt pkg init DIR/&lt;/code&gt; to cre
 
 &lt;/div&gt;
 
-&lt;h4 id=&#34;creating-a-substitution&#34;&gt;Creating a Substitution&lt;/h4&gt;
-&lt;p&gt;Substitution may be created either manually (by editing the Kptfile directly),
-or programmatically.  The &lt;code&gt;create-subst&lt;/code&gt; command will:&lt;/p&gt;
+&lt;h2 id=&#34;substitutions-explained&#34;&gt;Substitutions explained&lt;/h2&gt;
+&lt;p&gt;Following is a short explanation of the command that will be demonstrated
+in this guide.&lt;/p&gt;
+&lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Configuration fields reference substitution OpenAPI definitions through
+a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Substitutions are defined as OpenAPI definitions with patterns and values&lt;/li&gt;
+&lt;li&gt;Substitutions reference setters through values&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/substitute-model.svg&#34; /&gt;
+
+&lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;create a new OpenAPI definition for a substition in the Kptfile&lt;/li&gt;
-&lt;li&gt;create references to the substitution definition on the resource fields&lt;/li&gt;
+&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value&lt;/li&gt;
+&lt;li&gt;Locate all fields which reference the setter indirectly through a
+substitution.&lt;/li&gt;
+&lt;li&gt;Compute the new substitution value by substituting the setter values into
+the pattern.&lt;/li&gt;
+&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
 &lt;/ol&gt;
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/substitute-command.svg&#34; /&gt;
+
+&lt;h2 id=&#34;creating-a-substitution&#34;&gt;Creating a Substitution&lt;/h2&gt;
+&lt;p&gt;Substitution may be created either manually (by editing the Kptfile directly),
+or programmatically (with &lt;code&gt;create-subst&lt;/code&gt;).  The &lt;code&gt;create-subst&lt;/code&gt; command will:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Create a new OpenAPI definition for a substitution in the Kptfile&lt;/li&gt;
+&lt;li&gt;Create references to the substitution OpenAPI definition on the resource
+fields&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;example&#34;&gt;Example&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Kptfile -- original&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;openAPI&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;definitions&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;{}&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -280,14 +337,14 @@ kpt cfg create-subst hello-world/ image-tag nginx:1.7.9 &lt;span style=&#34;colo
 substituting the &lt;code&gt;tag&lt;/code&gt; setter value into the pattern.&lt;/p&gt;
 &lt;p&gt;Any time the &lt;code&gt;tag&lt;/code&gt; value is changed via the &lt;em&gt;set&lt;/em&gt; command, then then
 substitution value will be re-calculated for referencing fields.&lt;/p&gt;
-&lt;h4 id=&#34;creation-semantics&#34;&gt;Creation semantics&lt;/h4&gt;
+&lt;h2 id=&#34;creation-semantics&#34;&gt;Creation semantics&lt;/h2&gt;
 &lt;p&gt;By default create-subst will create referenced setters if they do not already
 exist.  It will infer the current setter value from the pattern and value.&lt;/p&gt;
 &lt;p&gt;If setters already exist before running the create-subst command, then those
 setters are used and left unmodified.&lt;/p&gt;
 &lt;p&gt;If a setter does not exist and create-subst cannot infer the setter value,
 then it will throw and error, and the setter must be manually created.&lt;/p&gt;
-&lt;h4 id=&#34;invoking-a-substitution&#34;&gt;Invoking a Substitution&lt;/h4&gt;
+&lt;h2 id=&#34;invoking-a-substitution&#34;&gt;Invoking a Substitution&lt;/h2&gt;
 &lt;p&gt;Substitutions are invoked by running &lt;code&gt;kpt cfg set&lt;/code&gt; on a setter used by the
 substitution.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; hello-world/ image 1.8.1
@@ -301,10 +358,112 @@ substitution.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;containers&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;nginx&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;nginx&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1.8&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-value&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: When setting a field through a substitution, the names of the setters
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
+&lt;p&gt;When setting a field through a substitution, the names of the setters
 are used &lt;em&gt;not&lt;/em&gt; the name of the substitution.  The name of the substitution is
 &lt;em&gt;only used in the configuration field references&lt;/em&gt;.&lt;/p&gt;
 
+&lt;/div&gt;
+
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Publishing a blueprint</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/producer/blueprint/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/producer/blueprint/</guid>
+      <description>
+        
+        
+        &lt;h1 id=&#34;under-development&#34;&gt;&lt;em&gt;Under Development&lt;/em&gt;&lt;/h1&gt;
+&lt;p&gt;&lt;em&gt;Reusable, customizable components can be built and shared as blueprint
+packages.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Blueprint packages are developed to give teams within and organization
+a way to quickly get started building a new application, service or
+product offering &amp;ndash; incorporating the best practices and policies
+of the organization.&lt;/p&gt;
+&lt;p&gt;Because packages can be updated, blueprint consumers can pull in the
+latest best practices and policies at any time with &lt;code&gt;kpt pkg update&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;This guide covers how to write effective blueprint packages with &lt;code&gt;kpt&lt;/code&gt;
+and &lt;code&gt;kustomize&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;bases&#34;&gt;Bases&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Consumer editable vs non-editable&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;patches&#34;&gt;Patches&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Making editable pieces more editable&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;setters-and-substitutions&#34;&gt;Setters and Substitutions&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Pieces edited by humans&lt;/li&gt;
+&lt;li&gt;Pieces to be edited by automation&lt;/li&gt;
+&lt;li&gt;Limitations&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;commands-args-and-environment-variables&#34;&gt;Commands, Args and Environment Variables&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Merges and overrides&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;generating-configmaps&#34;&gt;Generating ConfigMaps&lt;/h2&gt;
+&lt;h2 id=&#34;updates&#34;&gt;Updates&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;versioning&lt;/li&gt;
+&lt;li&gt;merge friendly updates&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;example&#34;&gt;Example&lt;/h2&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Publishing a variants</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/producer/variant/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/producer/variant/</guid>
+      <description>
+        
+        
+        &lt;h1 id=&#34;under-development&#34;&gt;&lt;em&gt;Under Development&lt;/em&gt;&lt;/h1&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Bootstrapping</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/producer/bootstrap/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/producer/bootstrap/</guid>
+      <description>
+        
+        
+        &lt;h2 id=&#34;fetched-from-another-package&#34;&gt;Fetched from another package&lt;/h2&gt;
+&lt;p&gt;Fetch another package and use it as your starting point (e.g.
+&lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes-examples&lt;/a&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.3.0 helloworld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;generated-from-cli-tools&#34;&gt;Generated from cli tools&lt;/h2&gt;
+&lt;p&gt;Generate configuration from commandline tools (e.g.
+&lt;a href=&#34;https://kubectl.docs.kubernetes.io/pages/imperative_porcelain/creating_resources.html&#34;&gt;kubectl&lt;/a&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl create deployment nginx --image nginx -o yaml --dry-run &amp;gt; deploy.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;copied-from-examples-or-blog-posts&#34;&gt;Copied from examples or blog posts&lt;/h2&gt;
+&lt;p&gt;Some examples may be published as blog posts without being published
+as a package in git.  These can be copied directly from their source.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;generated-from-dsls-or-templates&#34;&gt;Generated from DSLs or templates&lt;/h2&gt;
+&lt;p&gt;Generate configuration from templates (e.g. &lt;a href=&#34;https://helm.sh/&#34;&gt;helm&lt;/a&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;helm fetch stable/mysql
+helm template mysql-1.3.1.tgz --output-dir .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;generated-from-code&#34;&gt;Generated from code&lt;/h2&gt;
+&lt;p&gt;Generate configuration from application source code
+(e.g. &lt;a href=&#34;https://github.com/dekorateio/dekorate&#34;&gt;dekorate&lt;/a&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mvn clean package
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     

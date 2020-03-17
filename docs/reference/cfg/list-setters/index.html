@@ -849,10 +849,9 @@
 	<h1>List Setters</h1>
 	<div class="lead">List setters for a package</div>
 	<p>
+    
     <asciinema-player
             src="https://googlecontainertools.github.io/kpt//casts/cfg-set.cast"
-            cols="90"
-            rows="10"
             
             preload="1"
             
@@ -867,6 +866,16 @@
             
             
     ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
 </p>
 
 <p>List setters displays the setters that may be provided to the set command.

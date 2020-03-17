@@ -1,8 +1,7 @@
 <p>
+    
     <asciinema-player
             src="{{ .Site.BaseURL }}/casts/{{ with .Get "key" | safeURL}}{{ . }}{{ end }}.cast"
-            cols="{{ if .Get "cols" }}{{ .Get "cols" }}{{ else }}90{{ end }}"
-            rows="{{ if .Get "rows" }}{{ .Get "rows" }}{{ else }}10{{ end }}"
             {{ if .Get "autoplay" }}autoplay="{{ .Get "autoplay" }}"{{ end }}
             {{ if .Get "preload" }}preload="{{ .Get "preload" }}"{{ end }}
             {{ if .Get "loop" }}loop="{{ .Get "loop" }}"{{ end }}
@@ -17,4 +16,14 @@
             {{ if .Get "author-url" }}author-url="{{ .Get "author-url" | safeURL }}"{{ end }}
             {{ if .Get "author-img-url" }}author-img-url="{{ .Get "author-img-url" | safeURL }}"{{ end }}
     ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
 </p>

@@ -1,6 +1,6 @@
 ---
 title: "Create Substitutions"
-linkTitle: "Create Substitutions"
+linkTitle: "Substitutions"
 weight: 4
 type: docs
 description: >
@@ -32,13 +32,42 @@ Creating a substitution requires that the package has a Kptfile.  If one does
 not exist for the package, run `kpt pkg init DIR/` to create one.
 {{% /pageinfo %}}
 
-#### Creating a Substitution
+## Substitutions explained
+
+Following is a short explanation of the command that will be demonstrated
+in this guide.
+
+### Data model
+
+- Configuration fields reference substitution OpenAPI definitions through
+  a line comment providing OpenAPI as json `# { "$ref": "#/definitions/..." }`
+- Substitutions are defined as OpenAPI definitions with patterns and values
+- Substitutions reference setters through values
+
+{{< svg src="images/substitute-model" >}}
+
+### Command control flow
+
+1. Read the package OpenAPI and resources.
+2. Change the setter OpenAPI value
+3. Locate all fields which reference the setter indirectly through a 
+   substitution.
+4. Compute the new substitution value by substituting the setter values into
+   the pattern.
+5. Write both the modified OpenAPI and resources back to the package.
+
+{{< svg src="images/substitute-command" >}}
+
+## Creating a Substitution
 
 Substitution may be created either manually (by editing the Kptfile directly),
-or programmatically.  The `create-subst` command will:
+or programmatically (with `create-subst`).  The `create-subst` command will:
 
-1. create a new OpenAPI definition for a substition in the Kptfile
-2. create references to the substitution definition on the resource fields
+1. Create a new OpenAPI definition for a substitution in the Kptfile
+2. Create references to the substitution OpenAPI definition on the resource
+   fields
+
+### Example
 
 ```yaml
 # Kptfile -- original
@@ -103,7 +132,7 @@ substituting the `tag` setter value into the pattern.
 Any time the `tag` value is changed via the *set* command, then then
 substitution value will be re-calculated for referencing fields.
 
-#### Creation semantics
+## Creation semantics
 
 By default create-subst will create referenced setters if they do not already
 exist.  It will infer the current setter value from the pattern and value.
@@ -114,7 +143,7 @@ setters are used and left unmodified.
 If a setter does not exist and create-subst cannot infer the setter value,
 then it will throw and error, and the setter must be manually created.
 
-#### Invoking a Substitution
+## Invoking a Substitution
 
 Substitutions are invoked by running `kpt cfg set` on a setter used by the
 substitution.
@@ -136,8 +165,11 @@ spec:
         image: nginx:1.8.1 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-value"}
 ```
 
-**Note**: When setting a field through a substitution, the names of the setters
+{{% pageinfo color="primary" %}}
+When setting a field through a substitution, the names of the setters
 are used *not* the name of the substitution.  The name of the substitution is
 *only used in the configuration field references*.
+{{% /pageinfo %}}
+
 
 [setters]: ../setters

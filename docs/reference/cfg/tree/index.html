@@ -849,10 +849,9 @@
 	<h1>Tree</h1>
 	<div class="lead">Render resources using a tree structure</div>
 	<p>
+    
     <asciinema-player
             src="https://googlecontainertools.github.io/kpt//casts/cfg-tree.cast"
-            cols="90"
-            rows="10"
             
             preload="1"
             
@@ -867,6 +866,16 @@
             
             
     ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
 </p>
 
 <p>Tree displays the contents of a package using a tree structure to show

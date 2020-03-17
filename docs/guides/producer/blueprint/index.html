@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/publish/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/blueprint/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Publish | Kpt</title><meta property="og:title" content="Publish" />
-<meta property="og:description" content="Publish a simple package of configuration
+<title>Publishing a blueprint | Kpt</title><meta property="og:title" content="Publishing a blueprint" />
+<meta property="og:description" content="Writing effective blueprint packages
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/publish/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/blueprint/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Publish">
-<meta itemprop="description" content="Publish a simple package of configuration
+<meta itemprop="name" content="Publishing a blueprint">
+<meta itemprop="description" content="Writing effective blueprint packages
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Publish"/>
-<meta name="twitter:description" content="Publish a simple package of configuration
+<meta name="twitter:title" content="Publishing a blueprint"/>
+<meta name="twitter:description" content="Writing effective blueprint packages
 "/>
 
 
@@ -49,7 +49,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Publish | Kpt</title>
+    <title>Publishing a blueprint | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -378,10 +378,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/publish/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Publish</a>
+    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Init</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerpublish">
+    <li class="collapse " id="kptguidesproducerinit">
       
       
       
@@ -401,7 +401,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Create Setters</a>
+    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Setters</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducersetters">
@@ -424,10 +424,79 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Create Substitutions</a>
+    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitutions</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducersubstitutions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Blueprints</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerblueprint">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Variants</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducervariant">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/bootstrap/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bootstrapping</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerbootstrap">
       
       
       
@@ -537,8 +606,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/producer/publish/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Publish" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/producer/blueprint/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Publishing%20a%20blueprint" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -549,6 +618,18 @@
 
 
 
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#bases">Bases</a></li>
+    <li><a href="#patches">Patches</a></li>
+    <li><a href="#setters-and-substitutions">Setters and Substitutions</a></li>
+    <li><a href="#commands-args-and-environment-variables">Commands, Args and Environment Variables</a></li>
+    <li><a href="#generating-configmaps">Generating ConfigMaps</a></li>
+    <li><a href="#updates">Updates</a></li>
+    <li><a href="#example">Example</a></li>
+  </ul>
+</nav>
 
 
 
@@ -585,7 +666,7 @@
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/publish/">Publish</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/blueprint/">Blueprints</a>
 </li>
 
 	</ol>
@@ -593,45 +674,45 @@
 
             
 <div class="td-content">
-	<h1>Publish</h1>
-	<div class="lead">Publish a simple package of configuration</div>
-	<p>A kpt package is just a set of yaml files stored in a git repo. This allows
-producers of kpt  packages to create or generate yaml files any way they want
-using the tool of their choice.</p>
-<p>Publishing a package is as simple as pushing a directory of Kubernetes
-configuration to a git subdirectory.  The package may be versioned by
-tagging the git repo with the git <code>package-subdirectory/package-version</code>
-(directory scoped versioning) or as <code>package-version</code> (repo scoped versioning).</p>
-<p>Multiple packages may exist in a single repo under separate subdirectories.
-It is possible to nest packages and fetching either parent or child directories
-to fetch the composite or component packages.</p>
-<ol>
-<li>Author a package by creating resource configuration</li>
-<li>Publish the package by pushing it to a git subdirectory</li>
-</ol>
-<h2 id="authoring-a-package">Authoring a package</h2>
-<p>Package resource configuration may be bootstrapped in many different ways:</p>
+	<h1>Publishing a blueprint</h1>
+	<div class="lead">Writing effective blueprint packages</div>
+	<h1 id="under-development"><em>Under Development</em></h1>
+<p><em>Reusable, customizable components can be built and shared as blueprint
+packages.</em></p>
+<p>Blueprint packages are developed to give teams within and organization
+a way to quickly get started building a new application, service or
+product offering &ndash; incorporating the best practices and policies
+of the organization.</p>
+<p>Because packages can be updated, blueprint consumers can pull in the
+latest best practices and policies at any time with <code>kpt pkg update</code>.</p>
+<p>This guide covers how to write effective blueprint packages with <code>kpt</code>
+and <code>kustomize</code>.</p>
+<h2 id="bases">Bases</h2>
 <ul>
-<li>generated from cli tools
+<li>Consumer editable vs non-editable</li>
+</ul>
+<h2 id="patches">Patches</h2>
 <ul>
-<li><code>kubectl create deployment nginx --image nginx -o yaml --dry-run &gt; deploy.yaml</code></li>
+<li>Making editable pieces more editable</li>
 </ul>
-</li>
-<li>copied from examples or blog posts</li>
-<li>generated from DSLs or templates</li>
+<h2 id="setters-and-substitutions">Setters and Substitutions</h2>
+<ul>
+<li>Pieces edited by humans</li>
+<li>Pieces to be edited by automation</li>
+<li>Limitations</li>
 </ul>
-<h2 id="publishing-a-package">Publishing a package</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ git clone &lt;repo url&gt; <span style="color:#8f5902;font-style:italic"># or create a new repo</span>
-$ <span style="color:#204a87">cd</span> repository
-$ mkdir nginx
-<span style="color:#8f5902;font-style:italic"># optional -- init the package with kpt metadata</span>
-$ kpt pkg init nginx --tag kpt.dev/app<span style="color:#ce5c00;font-weight:bold">=</span>nginx --description <span style="color:#4e9a06">&#34;kpt nginx package&#34;</span>
-$ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
-$ git add .
-$ git commit -m <span style="color:#4e9a06">&#34;Add nginx package&#34;</span>
-$ git tag v0.1.0
-$ git push
-</code></pre></div>
+<h2 id="commands-args-and-environment-variables">Commands, Args and Environment Variables</h2>
+<ul>
+<li>Merges and overrides</li>
+</ul>
+<h2 id="generating-configmaps">Generating ConfigMaps</h2>
+<h2 id="updates">Updates</h2>
+<ul>
+<li>versioning</li>
+<li>merge friendly updates</li>
+</ul>
+<h2 id="example">Example</h2>
+
         <div class="section-index">
     
     
@@ -671,12 +752,18 @@ $ git push
         
             
         
+            
+        
+            
+        
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9b1f0ac8a8f99e3847dd2ac86fafc3bcae6636fb">Add more guides and clean up old files (9b1f0ac)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
 </div>
 </div>
 

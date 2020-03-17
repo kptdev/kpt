@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/set/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/variant/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Set field values | Kpt</title><meta property="og:title" content="Set field values" />
-<meta property="og:description" content="Customize a local package by setting field values.
+<title>Publishing a variants | Kpt</title><meta property="og:title" content="Publishing a variants" />
+<meta property="og:description" content="Publishing a package with variants for multiple environments.
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/set/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/variant/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Set field values">
-<meta itemprop="description" content="Customize a local package by setting field values.
+<meta itemprop="name" content="Publishing a variants">
+<meta itemprop="description" content="Publishing a package with variants for multiple environments.
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Set field values"/>
-<meta name="twitter:description" content="Customize a local package by setting field values.
+<meta name="twitter:title" content="Publishing a variants"/>
+<meta name="twitter:description" content="Publishing a package with variants for multiple environments.
 "/>
 
 
@@ -49,7 +49,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Set field values | Kpt</title>
+    <title>Publishing a variants | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -177,10 +177,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Consumers</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumer">
+    <li class="collapse " id="kptguidesconsumer">
       
       
       
@@ -240,10 +240,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Set</a>
+    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Set</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerset">
+    <li class="collapse " id="kptguidesconsumerset">
       
       
       
@@ -361,10 +361,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Publishers</a>
+    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Publishers</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducer">
+    <li class="collapse show" id="kptguidesproducer">
       
       
       
@@ -470,10 +470,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Variants</a>
+    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Variants</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducervariant">
+    <li class="collapse show" id="kptguidesproducervariant">
       
       
       
@@ -606,8 +606,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/consumer/set/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Set%20field%20values" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/guides/producer/variant/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Publishing%20a%20variants" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -618,35 +618,6 @@
 
 
 
-
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#topics">Topics</a></li>
-    <li><a href="#setters-explained">Setters explained</a>
-      <ul>
-        <li><a href="#data-model">Data model</a></li>
-        <li><a href="#command-control-flow">Command control flow</a></li>
-      </ul>
-    </li>
-    <li><a href="#steps">Steps</a></li>
-    <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
-      <ul>
-        <li><a href="#command">Command</a></li>
-        <li><a href="#output">Output</a></li>
-      </ul>
-    </li>
-    <li><a href="#list-the-setters">List the setters</a>
-      <ul>
-        <li></li>
-      </ul>
-    </li>
-    <li><a href="#set-a-field">Set a field</a>
-      <ul>
-        <li></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
 
 
 
@@ -676,14 +647,14 @@
 
 
 <li class="breadcrumb-item" >
-	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/">Package Consumers</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/">Package Publishers</a>
 </li>
 
 
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/set/">Set</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/variant/">Variants</a>
 </li>
 
 	</ol>
@@ -691,106 +662,10 @@
 
             
 <div class="td-content">
-	<h1>Set field values</h1>
-	<div class="lead">Customize a local package by setting field values.</div>
-	<p><em>Dynamic needs for packages are built into tools which read and write
-configuration data.</em></p>
-<h2 id="topics">Topics</h2>
-<p><a href="../../../reference/cfg/set">kpt cfg set</a>, <a href="../../../reference/cfg/create-setter">setters</a>, <a href="../../../api-reference/kptfile">Kptfile</a></p>
-<p>Kpt packages can be modified using existing tools and workflows such as
-manually modifying the configuration in an editor, however these workflows
-can be labor intensive and error prone.</p>
-<p>To address the UX limitations of hand editing YAML, kpt provides built-in
-commands which <strong>expose setting values in a user friendly way from
-the commandline</strong>.</p>
+	<h1>Publishing a variants</h1>
+	<div class="lead">Publishing a package with variants for multiple environments.</div>
+	<h1 id="under-development"><em>Under Development</em></h1>
 
-
-<div class="pageinfo pageinfo-primary">
-<p>Rather than exposing values as input parameters to a template,
-commands <strong>modify the package data in place</strong>.</p>
-<p>These commands are <strong>defined per-package through OpenAPI definitions</strong>
-which are part of the package metadata &ndash; i.e. the [Kptfile].</p>
-<p>While OpenAPI is often used to define schema for static types
-(e.g. this is what <strong>a Deployment</strong> looks like), kpt uses OpenAPI to define
-<strong>schema for individual instances of a type</strong> as well
-(e.g. this is what <strong>the nginx Deployment</strong> looks like).</p>
-
-</div>
-
-<h2 id="setters-explained">Setters explained</h2>
-<p>Following is a short explanation of the command that will be demonstrated
-in this guide.</p>
-<h3 id="data-model">Data model</h3>
-<ul>
-<li>Configuration fields reference setter OpenAPI definitions through
-a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
-<li>Setters are defined as OpenAPI definitions and have values</li>
-</ul>
-
-<img src="https://googlecontainertools.github.io/kpt//images/set-model.svg" />
-
-<h3 id="command-control-flow">Command control flow</h3>
-<ol>
-<li>Read the package OpenAPI and resources.</li>
-<li>Change the setter OpenAPI value to 3</li>
-<li>Locate all fields which reference the setter.</li>
-<li>Set their value to match the new setter value (3)</li>
-<li>Write both the modified OpenAPI and resources back to the package.</li>
-</ol>
-
-<img src="https://googlecontainertools.github.io/kpt//images/set-command.svg" />
-
-<p>To see how to create a setter: <a href="../../producer/setters">create setter guide</a></p>
-<h2 id="steps">Steps</h2>
-<ol>
-<li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
-<li><a href="#list-the-setters">List the setters</a></li>
-<li><a href="#set-a-field">Set a field</a></li>
-</ol>
-<h2 id="fetch-a-remote-package">Fetch a remote package</h2>
-<h3 id="command">Command</h3>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
-</code></pre></div><h3 id="output">Output</h3>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
-</code></pre></div><h2 id="list-the-setters">List the setters</h2>
-<p>The <code>helloworld-set</code> package contains <a href="../../../reference/cfg/create-setter">setters</a> which can be used to
-<strong>set configuration values from the commandline.</strong></p>
-<h5 id="command-1">Command</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters helloworld/ 
-</code></pre></div><p>Print the list of setters included in the package.</p>
-<h5 id="output-1">Output</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-  http-port   <span style="color:#0000cf;font-weight:bold">80</span>      package-default   helloworld port         <span style="color:#0000cf;font-weight:bold">3</span>      
-  image-tag   0.1.0   package-default   hello-world image tag   <span style="color:#0000cf;font-weight:bold">1</span>      
-  replicas    <span style="color:#0000cf;font-weight:bold">5</span>       package-default   helloworld replicas     <span style="color:#0000cf;font-weight:bold">1</span>     
-</code></pre></div><p>The package contains 3 setters which may be used to modify the configuration
-using <code>kpt set</code>.</p>
-<h2 id="set-a-field">Set a field</h2>
-<p>Setters <strong>modify the resource configuration in place by reading the resources,
-changing values, and writing them back.</strong></p>
-<h5 id="package-contents">Package contents</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># helloworld/deploy.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h5 id="command-2">Command</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg <span style="color:#204a87">set</span> replicas <span style="color:#0000cf;font-weight:bold">3</span>
-</code></pre></div><p>Change the replicas value in the configuration from 5 to 3.</p>
-<h5 id="output-2">Output</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
-</code></pre></div><h5 id="updated-package-contents">Updated package contents</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">3</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div>
         <div class="section-index">
     
     
@@ -841,7 +716,7 @@ changing values, and writing them back.</strong></p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/ebf5a9f688c5e62b700692c633acdc3b1c21eea7">Improve docs diagrams (ebf5a9f)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
 </div>
 </div>
 

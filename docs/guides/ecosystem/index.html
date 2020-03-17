@@ -22,16 +22,16 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
 <title>Ecosystem | Kpt</title><meta property="og:title" content="Ecosystem" />
-<meta property="og:description" content="Guides for using kpt with the ecosystem of Kubernetes tooling.
+<meta property="og:description" content="Guides for using kpt with the Kubernetes ecosystem.
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/ecosystem/" />
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="Ecosystem">
-<meta itemprop="description" content="Guides for using kpt with the ecosystem of Kubernetes tooling.
+<meta itemprop="description" content="Guides for using kpt with the Kubernetes ecosystem.
 "><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Ecosystem"/>
-<meta name="twitter:description" content="Guides for using kpt with the ecosystem of Kubernetes tooling.
+<meta name="twitter:description" content="Guides for using kpt with the Kubernetes ecosystem.
 "/>
 
 
@@ -378,10 +378,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/publish/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Publish</a>
+    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Init</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducerpublish">
+    <li class="collapse " id="kptguidesproducerinit">
       
       
       
@@ -401,7 +401,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Create Setters</a>
+    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Setters</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducersetters">
@@ -424,10 +424,79 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Create Substitutions</a>
+    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitutions</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducersubstitutions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Blueprints</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerblueprint">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Variants</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducervariant">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/bootstrap/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bootstrapping</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerbootstrap">
       
       
       
@@ -584,7 +653,7 @@
             
 <div class="td-content">
 	<h1>Ecosystem</h1>
-	<div class="lead">Guides for using kpt with the ecosystem of Kubernetes tooling.</div>
+	<div class="lead">Guides for using kpt with the Kubernetes ecosystem.</div>
 	<p><em>An important part of the kpt design is that it can be integrated with existing
 systems and work together with as much of the ecosystem as possible
 (rather than competing with it or needing to re-implement pieces).</em></p>
@@ -595,6 +664,8 @@ systems and work together with as much of the ecosystem as possible
     
     
     <hr class="panel-line">
+        
+            
         
             
         
@@ -610,16 +681,20 @@ systems and work together with as much of the ecosystem as possible
             
         
             
-        
-            
-        
-            
                 <div class="entry">
                     <h5>
                         <a href="/kpt/guides/ecosystem/helm/">Helm</a>
                     </h5>
                     <p>Generate kpt packages from Helm charts</p>
                 </div>
+            
+        
+            
+        
+            
+        
+            
+        
             
         
             

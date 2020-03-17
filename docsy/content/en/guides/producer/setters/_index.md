@@ -1,14 +1,12 @@
 ---
 title: "Create Setters"
-linkTitle: "Create Setters"
+linkTitle: "Setters"
 weight: 2
 type: docs
 description: >
     Create high-level setters to provide imperative configuration editing
     commands.
 ---
-
-
 Setters provide a solution for template-free setting or substitution of field
 values through package metadata (OpenAPI).  They are a safer alternative to
 other substitution techniques which do not have the context of the
@@ -24,6 +22,29 @@ using `kpt cfg set` to set and/or substitute values.
 Creating a setter requires that the package has a Kptfile.  If one does
 not exist for the package, run `kpt pkg init DIR/` to create one.
 {{% /pageinfo %}}
+
+## Setters explained
+
+Following is a short explanation of the command that will be demonstrated
+in this guide.
+
+### Data model
+
+- Configuration fields reference setter OpenAPI definitions through
+  a line comment providing OpenAPI as json `# { "$ref": "#/definitions/..." }`
+- Setters are defined as OpenAPI definitions and have values
+
+{{< svg src="images/set-model" >}}
+
+### Command control flow
+
+1. Read the package OpenAPI and resources.
+2. Change the setter OpenAPI value to 3
+3. Locate all fields which reference the setter.
+4. Set their value to match the new setter value (3)
+5. Write both the modified OpenAPI and resources back to the package.
+
+{{< svg src="images/set-command" >}}
 
 #### Creating a Setter
 

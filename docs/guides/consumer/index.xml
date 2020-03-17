@@ -405,7 +405,7 @@ which are part of the package metadata &amp;ndash; i.e. the [Kptfile].&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
+&lt;h2 id=&#34;setters-explained&#34;&gt;Setters explained&lt;/h2&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
 &lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
@@ -428,6 +428,7 @@ a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot
 
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/set-command.svg&#34; /&gt;
 
+&lt;p&gt;To see how to create a setter: &lt;a href=&#34;../../producer/setters&#34;&gt;create setter guide&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
@@ -511,7 +512,7 @@ for an instance of a package&lt;/strong&gt; without modifying kpt.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h2 id=&#34;kpt-cfg-set-explained&#34;&gt;&lt;code&gt;kpt cfg set&lt;/code&gt; explained&lt;/h2&gt;
+&lt;h2 id=&#34;substitutions-explained&#34;&gt;Substitutions explained&lt;/h2&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
 &lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
@@ -773,7 +774,7 @@ with the &lt;a href=&#34;../../../reference/live/init&#34;&gt;kpt live init&lt;/
 
 &lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
 &lt;p&gt;The grouping object must be created for a package to be applied using
-[kpt live apply].&lt;/p&gt;
+&lt;code&gt;kpt live apply&lt;/code&gt;.&lt;/p&gt;
 
 &lt;/div&gt;
 
