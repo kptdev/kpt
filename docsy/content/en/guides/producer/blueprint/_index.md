@@ -12,16 +12,47 @@ description: >
 *Reusable, customizable components can be built and shared as blueprint
 packages.*
 
-Blueprint packages are developed to give teams within and organization
-a way to quickly get started building a new application, service or
-product offering -- incorporating the best practices and policies
-of the organization.
+Blueprints are a packaging pattern for developing reusable, customizable
+and updatable configuration bundles.  They incorporate the best practices
+and applicable policies for deploying software within an organization.
 
+Blueprints can increase on-boarding velocity within organizations by
+reducing the work and number of decisions for teams consuming them. 
+
+{{% pageinfo color="primary" %}}
 Because packages can be updated, blueprint consumers can pull in the
 latest best practices and policies at any time with `kpt pkg update`.
+{{% /pageinfo %}}
+
+### Examples of blueprints
+
+- Languages
+  - Java / Node / Ruby / Python / Golang application
+  
+- Frameworks
+  - Spring, Express, Rails, Django
+  
+- Platforms
+  - Kubeflow, Spark
+  
+- Applications / Stacks
+  - Rails Backend + Node Frontend + Prometheus
+  - Spring Cloud Microservices (discovery-server, config-server,
+    api-gateway, admin-server, hystrix, various backends) 
+
+- Infrastructure
+  - CloudSQL + Pubsub + GKE
+  
 
 This guide covers how to write effective blueprint packages with `kpt` 
 and `kustomize`.
+
+## Overview
+
+Blueprint packages are developed 
+
+Blueprint packages will typically be composed of **"publisher" owned pieces
+and "consumer" owned pieces.**
 
 ## Bases
 

@@ -621,6 +621,12 @@
 
 <nav id="TableOfContents">
   <ul>
+    <li>
+      <ul>
+        <li><a href="#examples-of-blueprints">Examples of blueprints</a></li>
+      </ul>
+    </li>
+    <li><a href="#overview">Overview</a></li>
     <li><a href="#bases">Bases</a></li>
     <li><a href="#patches">Patches</a></li>
     <li><a href="#setters-and-substitutions">Setters and Substitutions</a></li>
@@ -679,14 +685,60 @@
 	<h1 id="under-development"><em>Under Development</em></h1>
 <p><em>Reusable, customizable components can be built and shared as blueprint
 packages.</em></p>
-<p>Blueprint packages are developed to give teams within and organization
-a way to quickly get started building a new application, service or
-product offering &ndash; incorporating the best practices and policies
-of the organization.</p>
+<p>Blueprints are a packaging pattern for developing reusable, customizable
+and updatable configuration bundles.  They incorporate the best practices
+and applicable policies for deploying software within an organization.</p>
+<p>Blueprints can increase on-boarding velocity within organizations by
+reducing the work and number of decisions for teams consuming them.</p>
+
+
+<div class="pageinfo pageinfo-primary">
 <p>Because packages can be updated, blueprint consumers can pull in the
 latest best practices and policies at any time with <code>kpt pkg update</code>.</p>
+
+</div>
+
+<h3 id="examples-of-blueprints">Examples of blueprints</h3>
+<ul>
+<li>
+<p>Languages</p>
+<ul>
+<li>Java / Node / Ruby / Python / Golang application</li>
+</ul>
+</li>
+<li>
+<p>Frameworks</p>
+<ul>
+<li>Spring, Express, Rails, Django</li>
+</ul>
+</li>
+<li>
+<p>Platforms</p>
+<ul>
+<li>Kubeflow, Spark</li>
+</ul>
+</li>
+<li>
+<p>Applications / Stacks</p>
+<ul>
+<li>Rails Backend + Node Frontend + Prometheus</li>
+<li>Spring Cloud Microservices (discovery-server, config-server,
+api-gateway, admin-server, hystrix, various backends)</li>
+</ul>
+</li>
+<li>
+<p>Infrastructure</p>
+<ul>
+<li>CloudSQL + Pubsub + GKE</li>
+</ul>
+</li>
+</ul>
 <p>This guide covers how to write effective blueprint packages with <code>kpt</code>
 and <code>kustomize</code>.</p>
+<h2 id="overview">Overview</h2>
+<p>Blueprint packages are developed</p>
+<p>Blueprint packages will typically be composed of <strong>&ldquo;publisher&rdquo; owned pieces
+and &ldquo;consumer&rdquo; owned pieces.</strong></p>
 <h2 id="bases">Bases</h2>
 <ul>
 <li>Consumer editable vs non-editable</li>
@@ -763,7 +815,7 @@ and <code>kustomize</code>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified January 1, 0001
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 17, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/73253538e190318cb976ab8aeac38191d8b9b7a8">docs: placeholders for producer guides (7325353)</a>
 </div>
 </div>
 
