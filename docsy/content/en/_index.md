@@ -8,7 +8,7 @@ linkTitle = "Kpt"
 Kpt (pronounced “kept”) is an OSS tool to building declarative workflows
 on top of resource configuration.
 
-It's git + YAML architecture means it just works with existing tools,
+Its git + YAML architecture means it just works with existing tools,
 frameworks, and platforms.
 
 Kpt includes solutions to fetch, display, customize, update, validate, and

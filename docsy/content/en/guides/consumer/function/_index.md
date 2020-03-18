@@ -12,7 +12,6 @@ the dynamic logic can be built into a separate tool.
 Functions bundle dynamic logic in container images and apply that logic to the
 contents of a package -- modifying and validating package contents.
 
-
 {{% pageinfo color="primary" %}}
 Functions provide a common interface for writing programs to read and write
 resources as data. This enables greater reuse and composition than when
@@ -20,6 +19,7 @@ configuration is itself represented as code. Functions may be written in any
 language, or simply wrap other existing programs.
 {{% /pageinfo %}}
 
+{{< svg src="images/fn" >}}
 
 Let’s look at the example of imperatively running a function to set a label
 value.  The label-namespace image contains a program which will modify the 

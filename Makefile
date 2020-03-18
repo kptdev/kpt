@@ -68,9 +68,11 @@ functions-examples-docker:
 	docker build . -f functions/examples/Dockerfile -t gcr.io/kpt-dev/example-functions:v0.1.0
 	docker push gcr.io/kpt-dev/example-functions:v0.1.0
 
-docs:
+gendocs:
 	rm -rf docs/
 	(cd docsy && hugo)
+
+docs: gendocs license
 
 servedocs:
 	(cd docsy && hugo serve --baseURL localhost:1313)

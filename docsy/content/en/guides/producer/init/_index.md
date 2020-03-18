@@ -26,6 +26,8 @@ A package is versioned by tagging the git repo as one of:
 -  `package-version` (repo scoped versioning)
 {{% /pageinfo %}}
 
+{{< svg src="images/producer-guide" >}}
+
 ## Steps
 
 1. [Create a git repo](#create-a-git-repo)
