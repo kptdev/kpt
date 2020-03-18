@@ -35,6 +35,8 @@ While OpenAPI is often used to define schema for static types
 (e.g. this is what **the nginx Deployment** looks like).
 {{% /pageinfo %}}
 
+To see more on how to create a setter: [create setter guide]
+
 ## Setters explained
 
 Following is a short explanation of the command that will be demonstrated
@@ -42,23 +44,18 @@ in this guide.
 
 ### Data model
 
-- Configuration fields reference setter OpenAPI definitions through
-  a line comment providing OpenAPI as json `# { "$ref": "#/definitions/..." }`
-- Setters are defined as OpenAPI definitions and have values
-
-{{< svg src="images/set-model" >}}
+- Fields reference setters through OpenAPI definitions specified as
+  line comments -- e.g. `# { "$ref": "#/definitions/..." }`
+- OpenAPI definitions are provided through the Kptfile
 
 ### Command control flow
 
-1. Read the package OpenAPI and resources.
-2. Change the setter OpenAPI value to 3
-3. Locate all fields which reference the setter.
-4. Set their value to match the new setter value (3)
-5. Write both the modified OpenAPI and resources back to the package.
+1. Read the package Kptfile and resources.
+2. Change the setter OpenAPI value in the Kptfile
+3. Locate all fields which reference the setter and change their values.
+4. Write both the modified Kptfile and resources back to the package.
 
 {{< svg src="images/set-command" >}}
-
-To see how to create a setter: [create setter guide]
 
 ## Steps
 

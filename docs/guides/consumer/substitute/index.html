@@ -715,28 +715,27 @@ for an instance of a package</strong> without modifying kpt.</p>
 
 </div>
 
+<p>To see more on how to create a substitution: <a href="../../producer/substitutions">create substitution guide</a></p>
 <h2 id="substitutions-explained">Substitutions explained</h2>
 <p>Following is a short explanation of the command that will be demonstrated
 in this guide.</p>
 <h3 id="data-model">Data model</h3>
 <ul>
-<li>Configuration fields reference substitution OpenAPI definitions through
-a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
-<li>Substitutions are defined as OpenAPI definitions with patterns and values</li>
-<li>Substitutions reference setters through values</li>
+<li>Fields reference substitutions through OpenAPI definitions specified as
+line comments &ndash; e.g. <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
+<li>OpenAPI definitions are provided through the Kptfile</li>
+<li>Substitution OpenAPI definitions contain patterns and values to compute
+the field value</li>
 </ul>
-
-<img src="https://googlecontainertools.github.io/kpt//images/substitute-model.svg" />
-
 <h3 id="command-control-flow">Command control flow</h3>
 <ol>
-<li>Read the package OpenAPI and resources.</li>
-<li>Change the setter OpenAPI value</li>
+<li>Read the package Kptfile and resources.</li>
+<li>Change the setter OpenAPI value in the Kptfile</li>
 <li>Locate all fields which reference the setter indirectly through a
 substitution.</li>
 <li>Compute the new substitution value by substituting the setter values into
 the pattern.</li>
-<li>Write both the modified OpenAPI and resources back to the package.</li>
+<li>Write both the modified Kptfile and resources back to the package.</li>
 </ol>
 
 <img src="https://googlecontainertools.github.io/kpt//images/substitute-command.svg" />
