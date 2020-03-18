@@ -63,24 +63,24 @@ This project follows
 
 ### Adding or updating docs
 
-Docs are under `docsy/` and use the
+Docs are under `site/` and use the
 [docsy](https://github.com/google/docsy) theme for hugo.  Learn more
 about docsy [here](https://www.docsy.dev/docs/).
 
 ### Adding or updating diagrams
 
 - Diagrams are created using Omnigraffle
-- Open docsy/diagrams/diagrams.graffle in omnigraffle
+- Open site/diagrams/diagrams.graffle in omnigraffle
 - Change the diagram you want (or add a new canvas)
 - **Convert text to shapes!!!** -> Edit -> Objects -> Convert Text to Shapes
-- Export the canvas as an svg to `docsy/static/images` 
+- Export the canvas as an svg to `site/static/images` 
 - **Undo convert text to shapes!!!** with command-z
   - This is important
 - Reference the image using the `svg` shortcode
 
 ## Adding or updating asciinema
 
-- asciinema casts are under `docsy/static/casts`
+- asciinema casts are under `site/static/casts`
 - add or modify a `*.sh*` script which will run the commands that will
   be recorded
 - run `make-gif.sh` with the script name (without extension) as the argument

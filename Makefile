@@ -42,8 +42,7 @@ tidy:
 	go mod tidy
 
 license:
-	(which addlicense || go get github.com/google/addlicense)
-	$(GOBIN)/addlicense  -y 2019 -l apache .
+	GOBIN=$(GOBIN) scripts/update-license.sh
 
 lint:
 	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.22.2)
@@ -52,7 +51,7 @@ lint:
 # TODO: enable this as part of `all` target when it works for go-errors
 # https://github.com/google/go-licenses/issues/15
 license-check:
-	(which go-licenses || go get https://github.com/google/go-licenses)
+	(which go-licensesscs || go get https://github.com/google/go-licenses)
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
@@ -68,9 +67,11 @@ functions-examples-docker:
 	docker build . -f functions/examples/Dockerfile -t gcr.io/kpt-dev/example-functions:v0.1.0
 	docker push gcr.io/kpt-dev/example-functions:v0.1.0
 
-docs:
+gendocs:
 	rm -rf docs/
-	(cd docsy && hugo)
+	(cd site && hugo)
+
+docs: gendocs license
 
 servedocs:
-	(cd docsy && hugo serve --baseURL localhost:1313)
+	(cd site && hugo server)

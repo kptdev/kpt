@@ -1,19 +1,3 @@
-<!--
- Copyright 2019 Google LLC
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
--->
-
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Kpt – Cfg</title>
@@ -38,7 +22,9 @@
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-annotate.cast&#34;
@@ -117,7 +103,9 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&g
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-count.cast&#34;
@@ -172,7 +160,9 @@ DIR:
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-count.cast&#34;
@@ -227,7 +217,9 @@ DIR:
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-create-setter.cast&#34;
@@ -305,7 +297,9 @@ VALUE
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-create-subst.cast&#34;
@@ -413,7 +407,9 @@ PATTERN
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-fmt.cast&#34;
@@ -492,7 +488,9 @@ DIR:
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-grep.cast&#34;
@@ -567,7 +565,9 @@ DIR:
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-set.cast&#34;
@@ -635,7 +635,9 @@ NAME
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-set.cast&#34;
@@ -679,9 +681,9 @@ are defined in a Kptfile.&lt;/p&gt;
 &lt;p&gt;Example setter referenced from a field in a configuration file:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;foo&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;foo&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;replicas&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.replicas&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;replicas&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.replicas&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;One could the replicas field to 4 by running&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg set hello-world/ replicas 4
 &lt;/code&gt;&lt;/pre&gt;
@@ -742,7 +744,9 @@ VALUE
       <description>
         
         
-        &lt;p&gt;
+        
+
+&lt;p&gt;
     
     &lt;asciinema-player
             src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-tree.cast&#34;
