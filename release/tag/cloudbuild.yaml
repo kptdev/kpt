@@ -13,43 +13,109 @@
 # limitations under the License.
 
 steps:
-  - name: 'mirror.gcr.io/library/golang'
+  # Build the image that contains most of the tools we need (e.g. tar,
+  # jq, gzip, golang, bash, etc.) to build kpt tarball. This image
+  # (kpt-builder) is re-used on most steps.
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', '/workspace/release/Dockerfile.kpt-build', '-t', 'kpt-builder', '.']
+
+  # Generate and package the licenses and necessary source code.
+  - name: 'kpt-builder'
+    args: ['bash', '/workspace/scripts/create-licenses.sh']
+    volumes:
+      - name: go-modules
+        path: /go
+
+  - name: 'kpt-builder'
     args: ['mkdir', '/workspace/latest']
 
   # FYI: If cross-platform build issues happen, then stop caching the modules in the volume.
   # build windows
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/LICENSES.txt', '/workspace/releases/${TAG_NAME}/windows_amd64']
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/lib.zip', '/workspace/releases/${TAG_NAME}/windows_amd64']
+  # Create the tarball containing the kpt binary and licenses.
+  - name: 'kpt-builder'
+    args: ['tar', '-cf',
+    '/workspace/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64-${TAG_NAME}.tar',
+    '-C', '/workspace/releases/${TAG_NAME}/windows_amd64', '.']
+  - name: 'kpt-builder'
+    args: ['gzip', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64-${TAG_NAME}.tar']
+  # Cleanup by removing files that have been packaged into the
+  # tarball.
+  - name: 'kpt-builder'
+    args: ['rm', '-f',
+    '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe',
+    '/workspace/releases/${TAG_NAME}/windows_amd64/LICENSES.txt',
+    '/workspace/releases/${TAG_NAME}/windows_amd64/lib.zip']
+  - name: 'kpt-builder'
     args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/windows_amd64', '/workspace/latest']
 
   # build linux
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
     env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/LICENSES.txt', '/workspace/releases/${TAG_NAME}/linux_amd64']
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/lib.zip', '/workspace/releases/${TAG_NAME}/linux_amd64']
+  # Create the tarball containing the kpt binary and licenses.
+  - name: 'kpt-builder'
+    args: ['tar', '-cf',
+    '/workspace/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64-${TAG_NAME}.tar',
+    '-C', '/workspace/releases/${TAG_NAME}/linux_amd64', '.']
+  - name: 'kpt-builder'
+    args: ['gzip', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64-${TAG_NAME}.tar']
+  # Cleanup by removing files that have been packaged into the
+  # tarball.
+  - name: 'kpt-builder'
+    args: ['rm', '-f',
+    '/workspace/releases/${TAG_NAME}/linux_amd64/kpt',
+    '/workspace/releases/${TAG_NAME}/linux_amd64/LICENSES.txt',
+    '/workspace/releases/${TAG_NAME}/linux_amd64/lib.zip']
+  - name: 'kpt-builder'
     args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/linux_amd64', '/workspace/latest']
 
   # build darwin
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
         path: /go
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/LICENSES.txt', '/workspace/releases/${TAG_NAME}/darwin_amd64']
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/lib.zip', '/workspace/releases/${TAG_NAME}/darwin_amd64']
+  # Create the tarball containing the kpt binary and licenses.
+  - name: 'kpt-builder'
+    args: ['tar', '-cf',
+    '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64-${TAG_NAME}.tar',
+    '-C', '/workspace/releases/${TAG_NAME}/darwin_amd64', '.']
+  - name: 'kpt-builder'
+    args: ['gzip', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64-${TAG_NAME}.tar']
+  # Cleanup by removing files that have been packaged into the
+  # tarball.
+  - name: 'kpt-builder'
+    args: ['rm', '-f',
+    '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt',
+    '/workspace/releases/${TAG_NAME}/darwin_amd64/LICENSES.txt',
+    '/workspace/releases/${TAG_NAME}/darwin_amd64/lib.zip']
+  - name: 'kpt-builder'
     args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/darwin_amd64', '/workspace/latest']
-  
 
   # build docker image
   - name: 'gcr.io/cloud-builders/docker'
@@ -65,19 +131,19 @@ steps:
     args: [ 'tag', 'gcr.io/kpt-dev/example-functions:${TAG_NAME}',  'gcr.io/kpt-dev/example-functions:latest' ]
 
   # run e2e tests and linting
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
     args: ['git', 'config', '--global', 'user.email', 'you@example.com']
     dir: '/workspace'
     volumes:
       - name: home
         path: /root
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
     args: ['git', 'config', '--global', 'user.name', 'Your Name']
     dir: '/workspace'
     volumes:
       - name: home
         path: /root
-  - name: 'mirror.gcr.io/library/golang'
+  - name: 'kpt-builder'
     args: ['make', 'all']
     env: ['GO111MODULE=on']
     dir: '/workspace'
