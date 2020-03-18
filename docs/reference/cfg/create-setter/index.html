@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.67.1" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/reference/cfg/create-setter/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kpt/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
+
+<title>Create-setter | Kpt</title><meta property="og:title" content="Create-setter" />
+<meta property="og:description" content="Create a setter for one or more field
+" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/reference/cfg/create-setter/" />
+<meta property="og:site_name" content="Kpt" />
+<meta itemprop="name" content="Create-setter">
+<meta itemprop="description" content="Create a setter for one or more field
+"><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Create-setter"/>
+<meta name="twitter:description" content="Create a setter for one or more field
+"/>
+
+
+
+
+
+<link rel="preload" href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
+
+    <title>Create-setter | Kpt</title>
+  </head>
+  <body class="td-section">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kpt/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kpt</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/guides/" ><span>Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kpt/reference/" ><span class="active">Command Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/concepts/" ><span>Concepts</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Command Reference</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptreference">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/pkg/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">pkg</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencepkg">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/pkg/desc/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">desc</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencepkgdesc">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/pkg/diff/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">diff</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencepkgdiff">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/pkg/get/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">get</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencepkgget">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/pkg/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">init</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencepkginit">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/pkg/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">update</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencepkgupdate">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">cfg</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptreferencecfg">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/annotate/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">annotate</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgannotate">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/cat/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">cat</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgcat">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/count/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">count</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgcount">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/create-setter/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">create-setter</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptreferencecfgcreate-setter">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/create-subst/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">create-subst</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgcreate-subst">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/fmt/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fmt</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgfmt">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/grep/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">grep</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfggrep">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/list-setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">list-setters</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfglist-setters">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">set</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgset">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/tree/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">tree</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgtree">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">live</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelive">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">apply</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferenceliveapply">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/destroy/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">destroy</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivedestroy">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">init</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferenceliveinit">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/preview/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">preview</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivepreview">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fn</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefn">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/run/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">run</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnrun">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/sink/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">sink</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnsink">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/source/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">sink</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnsource">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/content/en/reference/cfg/create-setter/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Create-setter" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/reference/">Command Reference</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/reference/cfg/">cfg</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://googlecontainertools.github.io/kpt/reference/cfg/create-setter/">create-setter</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Create-setter</h1>
+	<div class="lead">Create a setter for one or more field</div>
+	
+
+<p>
+    
+    <asciinema-player
+            src="https://googlecontainertools.github.io/kpt//casts/cfg-create-setter.cast"
+            
+            preload="1"
+            
+            start-at="0"
+            speed="1"
+            
+            
+            
+            
+            
+            
+            
+            
+    ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
+</p>
+
+<p>Setters provide a solution for template-free setting or substitution of field
+values through package metadata (OpenAPI).  They are a safer alternative to
+other substitution techniques which do not have the context of the
+structured data &ndash; e.g. using <code>sed</code> to replace values.</p>
+<p>See the <a href="../../../guides/producer/setters">creating setters</a> guide for more info on creating setters.</p>
+<h3 id="examples">Examples</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># create a setter called replicas for fields matching &#34;3&#34;</span>
+kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold">3</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># scope creating setter references to a specified field</span>
+kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold">3</span> --field <span style="color:#4e9a06">&#34;replicas&#34;</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># scope creating setter references to a specified field path</span>
+kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold">3</span> --field <span style="color:#4e9a06">&#34;spec.replicas&#34;</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># create a setter called replicas with a description and set-by</span>
+kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold">3</span> --set-by <span style="color:#4e9a06">&#34;package-default&#34;</span> <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    --description <span style="color:#4e9a06">&#34;good starter value&#34;</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># scope create a setter with a type.  the setter will make sure the set fields</span>
+<span style="color:#8f5902;font-style:italic"># always parse as strings with a yaml 1.1 parser (e.g. values such as 1,on,true</span>
+<span style="color:#8f5902;font-style:italic"># will be quoted so they are parsed as strings)</span>
+<span style="color:#8f5902;font-style:italic"># only the final part of the the field path is specified</span>
+kpt cfg create-setter DIR/ app nginx --field <span style="color:#4e9a06">&#34;annotations.app&#34;</span> --type string
+</code></pre></div><h3 id="synopsis">Synopsis</h3>
+<pre><code>kpt cfg create-setter DIR NAME VALUE
+
+DIR:
+  Path to a package directory
+
+NAME:
+  The name of the substitution to create.  This is both the name that will
+  be given to the *set* command, and that will be referenced by fields.
+  e.g. replicas
+
+VALUE
+  The new value of the setter.
+  e.g. 3
+</code></pre>
+
+        <div class="section-index">
+    
+    
+    
+    
+    <hr class="panel-line">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    
+</div>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b674e3098b4541b9006313bb8ef813324cd792c1">Fix docsy hugo theme (b674e309)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Google LLC All Rights Reserved</small>
+        <small class="ml-1"><a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></small>
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kpt/js/main.min.1b3d8778561d0b887ffb4d8c0a8daeef6dd10d0e685a6169cf95b28a3da7dd70.js" integrity="sha256-Gz2HeFYdC4h/&#43;02MCo2u723RDQ5oWmFpz5Wyij2n3XA=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://googlecontainertools.github.io/kpt//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>
