@@ -374,19 +374,25 @@ are used &lt;em&gt;not&lt;/em&gt; the name of the substitution.  The name of the
       <description>
         
         
-        &lt;h1 id=&#34;under-development&#34;&gt;&lt;em&gt;Under Development&lt;/em&gt;&lt;/h1&gt;
+        
+
+&lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
+&lt;h1 id=&#34;notice-under-development&#34;&gt;Notice: Under Development&lt;/h1&gt;
+
+&lt;/div&gt;
+
 &lt;p&gt;&lt;em&gt;Reusable, customizable components can be built and shared as blueprint
 packages.&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;Blueprints are a packaging pattern for developing reusable, customizable
-and updatable configuration bundles.  They incorporate the best practices
-and applicable policies for deploying software within an organization.&lt;/p&gt;
-&lt;p&gt;Blueprints can increase on-boarding velocity within organizations by
-reducing the work and number of decisions for teams consuming them.&lt;/p&gt;
+&lt;p&gt;Blueprints are a p&lt;strong&gt;attern for developing reusable configuration&lt;/strong&gt; as packages.
+They incorporate  &lt;strong&gt;best practices and policies&lt;/strong&gt; defined by an organization.&lt;/p&gt;
+&lt;p&gt;Blueprints may be used to accelerate on-boarding and increase configuration
+quality.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
 &lt;p&gt;Because packages can be updated, blueprint consumers can pull in the
-latest best practices and policies at any time with &lt;code&gt;kpt pkg update&lt;/code&gt;.&lt;/p&gt;
+latest best practices and policies as they are updated.
+See the consumer update guide for more info.&lt;/p&gt;
 
 &lt;/div&gt;
 
@@ -469,7 +475,13 @@ and &amp;ldquo;consumer&amp;rdquo; owned pieces.&lt;/strong&gt;&lt;/p&gt;
       <description>
         
         
-        &lt;h1 id=&#34;under-development&#34;&gt;&lt;em&gt;Under Development&lt;/em&gt;&lt;/h1&gt;
+        
+
+&lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
+&lt;h1 id=&#34;notice-under-development&#34;&gt;Notice: Under Development&lt;/h1&gt;
+
+&lt;/div&gt;
+
 
       </description>
     </item>
