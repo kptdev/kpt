@@ -39,22 +39,21 @@ in this guide.
 
 ### Data model
 
-- Configuration fields reference substitution OpenAPI definitions through
-  a line comment providing OpenAPI as json `# { "$ref": "#/definitions/..." }`
-- Substitutions are defined as OpenAPI definitions with patterns and values
-- Substitutions reference setters through values
-
-{{< svg src="images/substitute-model" >}}
+- Fields reference substitutions through OpenAPI definitions specified as
+  line comments -- e.g. `# { "$ref": "#/definitions/..." }`
+- OpenAPI definitions are provided through the Kptfile
+- Substitution OpenAPI definitions contain patterns and values to compute
+  the field value
 
 ### Command control flow
 
-1. Read the package OpenAPI and resources.
-2. Change the setter OpenAPI value
+1. Read the package Kptfile and resources.
+2. Change the setter OpenAPI value in the Kptfile
 3. Locate all fields which reference the setter indirectly through a 
    substitution.
 4. Compute the new substitution value by substituting the setter values into
    the pattern.
-5. Write both the modified OpenAPI and resources back to the package.
+5. Write both the modified Kptfile and resources back to the package.
 
 {{< svg src="images/substitute-command" >}}
 

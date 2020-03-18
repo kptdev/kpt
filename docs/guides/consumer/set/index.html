@@ -717,30 +717,26 @@ which are part of the package metadata &ndash; i.e. the [Kptfile].</p>
 
 </div>
 
+<p>To see more on how to create a setter: <a href="../../producer/setters">create setter guide</a></p>
 <h2 id="setters-explained">Setters explained</h2>
 <p>Following is a short explanation of the command that will be demonstrated
 in this guide.</p>
 <h3 id="data-model">Data model</h3>
 <ul>
-<li>Configuration fields reference setter OpenAPI definitions through
-a line comment providing OpenAPI as json <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
-<li>Setters are defined as OpenAPI definitions and have values</li>
+<li>Fields reference setters through OpenAPI definitions specified as
+line comments &ndash; e.g. <code># { &quot;$ref&quot;: &quot;#/definitions/...&quot; }</code></li>
+<li>OpenAPI definitions are provided through the Kptfile</li>
 </ul>
-
-<img src="https://googlecontainertools.github.io/kpt//images/set-model.svg" />
-
 <h3 id="command-control-flow">Command control flow</h3>
 <ol>
-<li>Read the package OpenAPI and resources.</li>
-<li>Change the setter OpenAPI value to 3</li>
-<li>Locate all fields which reference the setter.</li>
-<li>Set their value to match the new setter value (3)</li>
-<li>Write both the modified OpenAPI and resources back to the package.</li>
+<li>Read the package Kptfile and resources.</li>
+<li>Change the setter OpenAPI value in the Kptfile</li>
+<li>Locate all fields which reference the setter and change their values.</li>
+<li>Write both the modified Kptfile and resources back to the package.</li>
 </ol>
 
 <img src="https://googlecontainertools.github.io/kpt//images/set-command.svg" />
 
-<p>To see how to create a setter: <a href="../../producer/setters">create setter guide</a></p>
 <h2 id="steps">Steps</h2>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>

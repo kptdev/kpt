@@ -405,30 +405,26 @@ which are part of the package metadata &amp;ndash; i.e. the [Kptfile].&lt;/p&gt;
 
 &lt;/div&gt;
 
+&lt;p&gt;To see more on how to create a setter: &lt;a href=&#34;../../producer/setters&#34;&gt;create setter guide&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;setters-explained&#34;&gt;Setters explained&lt;/h2&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
 &lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;Configuration fields reference setter OpenAPI definitions through
-a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Setters are defined as OpenAPI definitions and have values&lt;/li&gt;
+&lt;li&gt;Fields reference setters through OpenAPI definitions specified as
+line comments &amp;ndash; e.g. &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;OpenAPI definitions are provided through the Kptfile&lt;/li&gt;
 &lt;/ul&gt;
-
-&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/set-model.svg&#34; /&gt;
-
 &lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
-&lt;li&gt;Change the setter OpenAPI value to 3&lt;/li&gt;
-&lt;li&gt;Locate all fields which reference the setter.&lt;/li&gt;
-&lt;li&gt;Set their value to match the new setter value (3)&lt;/li&gt;
-&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
+&lt;li&gt;Read the package Kptfile and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value in the Kptfile&lt;/li&gt;
+&lt;li&gt;Locate all fields which reference the setter and change their values.&lt;/li&gt;
+&lt;li&gt;Write both the modified Kptfile and resources back to the package.&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/set-command.svg&#34; /&gt;
 
-&lt;p&gt;To see how to create a setter: &lt;a href=&#34;../../producer/setters&#34;&gt;create setter guide&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
@@ -512,28 +508,27 @@ for an instance of a package&lt;/strong&gt; without modifying kpt.&lt;/p&gt;
 
 &lt;/div&gt;
 
+&lt;p&gt;To see more on how to create a substitution: &lt;a href=&#34;../../producer/substitutions&#34;&gt;create substitution guide&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;substitutions-explained&#34;&gt;Substitutions explained&lt;/h2&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
 &lt;h3 id=&#34;data-model&#34;&gt;Data model&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;Configuration fields reference substitution OpenAPI definitions through
-a line comment providing OpenAPI as json &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Substitutions are defined as OpenAPI definitions with patterns and values&lt;/li&gt;
-&lt;li&gt;Substitutions reference setters through values&lt;/li&gt;
+&lt;li&gt;Fields reference substitutions through OpenAPI definitions specified as
+line comments &amp;ndash; e.g. &lt;code&gt;# { &amp;quot;$ref&amp;quot;: &amp;quot;#/definitions/...&amp;quot; }&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;OpenAPI definitions are provided through the Kptfile&lt;/li&gt;
+&lt;li&gt;Substitution OpenAPI definitions contain patterns and values to compute
+the field value&lt;/li&gt;
 &lt;/ul&gt;
-
-&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/substitute-model.svg&#34; /&gt;
-
 &lt;h3 id=&#34;command-control-flow&#34;&gt;Command control flow&lt;/h3&gt;
 &lt;ol&gt;
-&lt;li&gt;Read the package OpenAPI and resources.&lt;/li&gt;
-&lt;li&gt;Change the setter OpenAPI value&lt;/li&gt;
+&lt;li&gt;Read the package Kptfile and resources.&lt;/li&gt;
+&lt;li&gt;Change the setter OpenAPI value in the Kptfile&lt;/li&gt;
 &lt;li&gt;Locate all fields which reference the setter indirectly through a
 substitution.&lt;/li&gt;
 &lt;li&gt;Compute the new substitution value by substituting the setter values into
 the pattern.&lt;/li&gt;
-&lt;li&gt;Write both the modified OpenAPI and resources back to the package.&lt;/li&gt;
+&lt;li&gt;Write both the modified Kptfile and resources back to the package.&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/substitute-command.svg&#34; /&gt;
