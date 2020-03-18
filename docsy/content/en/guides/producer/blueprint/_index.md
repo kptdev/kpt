@@ -7,21 +7,23 @@ description: >
     Writing effective blueprint packages
 ---
 
-# *Under Development*
+{{% pageinfo color="warning" %}}
+# Notice: Under Development
+{{% /pageinfo %}}
 
 *Reusable, customizable components can be built and shared as blueprint
 packages.*
 
-Blueprints are a packaging pattern for developing reusable, customizable
-and updatable configuration bundles.  They incorporate the best practices
-and applicable policies for deploying software within an organization.
+Blueprints are a p**attern for developing reusable configuration** as packages.
+They incorporate  **best practices and policies** defined by an organization.
 
-Blueprints can increase on-boarding velocity within organizations by
-reducing the work and number of decisions for teams consuming them. 
+Blueprints may be used to accelerate on-boarding and increase configuration
+quality. 
 
 {{% pageinfo color="primary" %}}
 Because packages can be updated, blueprint consumers can pull in the
-latest best practices and policies at any time with `kpt pkg update`.
+latest best practices and policies as they are updated.
+See the consumer update guide for more info.
 {{% /pageinfo %}}
 
 ### Examples of blueprints
