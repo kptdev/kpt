@@ -46,7 +46,8 @@ steps:
   - name: 'kpt-builder'
     args: ['tar', '-cf',
     '/workspace/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64-${TAG_NAME}.tar',
-    '-C', '/workspace/releases/${TAG_NAME}/windows_amd64', '.']
+    '-C', '/workspace/releases/${TAG_NAME}/windows_amd64',
+    'kpt.exe', 'LICENSES.txt', 'lib.zip']
   - name: 'kpt-builder'
     args: ['gzip', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64-${TAG_NAME}.tar']
   # Cleanup by removing files that have been packaged into the
@@ -75,7 +76,8 @@ steps:
   - name: 'kpt-builder'
     args: ['tar', '-cf',
     '/workspace/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64-${TAG_NAME}.tar',
-    '-C', '/workspace/releases/${TAG_NAME}/linux_amd64', '.']
+    '-C', '/workspace/releases/${TAG_NAME}/linux_amd64',
+    'kpt', 'LICENSES.txt', 'lib.zip']
   - name: 'kpt-builder'
     args: ['gzip', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64-${TAG_NAME}.tar']
   # Cleanup by removing files that have been packaged into the
@@ -104,7 +106,8 @@ steps:
   - name: 'kpt-builder'
     args: ['tar', '-cf',
     '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64-${TAG_NAME}.tar',
-    '-C', '/workspace/releases/${TAG_NAME}/darwin_amd64', '.']
+    '-C', '/workspace/releases/${TAG_NAME}/darwin_amd64',
+    'kpt', 'LICENSES.txt', 'lib.zip']
   - name: 'kpt-builder'
     args: ['gzip', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64-${TAG_NAME}.tar']
   # Cleanup by removing files that have been packaged into the
