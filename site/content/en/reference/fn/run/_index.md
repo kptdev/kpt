@@ -5,6 +5,9 @@ type: docs
 description: >
    Locally execute one or more functions in containers
 ---
+<!--mdtogo:Short
+    Locally execute one or more functions in containers
+-->
 
 Generate, transform, or validate configuration files using locally run
 containerized functions.
@@ -13,7 +16,7 @@ Functions are packaged as container images which are run locally against
 the contents of a package.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # read the Resources from DIR, provide them to a container my-fun as input,
 # write my-fn output back to DIR
@@ -35,6 +38,7 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 # functions may be scoped to a subset of Resources -- see `kpt help fn run`
 kpt fn run DIR/
 ```
+<!--mdtogo-->
 
 #### Imperatively run an single function
 
@@ -183,7 +187,7 @@ spec:
 ```
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt fn run DIR [flags]
 
 If the container exits with non-zero status code, run will fail and print the
@@ -191,3 +195,4 @@ container `STDERR`.
 
     DIR:
       Path to a package directory.  Defaults to stdin if unspecified.
+<!--mdtogo-->

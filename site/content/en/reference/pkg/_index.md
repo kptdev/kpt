@@ -6,22 +6,28 @@ type: docs
 description: >
    Fetch, update, and sync configuration files using git
 ---
-
-|              Reads From | Writes To                |
-|-------------------------|--------------------------|
-| git repository          | local directory          |
+<!--mdtogo:Short
+    Fetch, update, and sync configuration files using git
+-->
 
 {{< asciinema key="pkg" rows="10" preload="1" >}}
 
-    kpt pkg [SUBCOMMAND]
+<!--mdtogo:Long-->
+|              Reads From | Writes To                |
+|-------------------------|--------------------------|
+| git repository          | local directory          |
 
 The `pkg` command group contains subcommands which read remote upstream
 git repositories, and write local directories.  They are focused on
 providing porcelain on top of workflows which would otherwise require
 wrapping git to pull clone subdirectories and perform updates by merging
 resources rather than files.
-### Examples
+<!--mdtogo-->
 
+    kpt pkg [SUBCOMMAND]
+
+### Examples
+<!--mdtogo:Examples-->
 ```sh
 # create your workspace
 $ mkdir hello-world-workspace
@@ -39,6 +45,7 @@ $ git commit -am "Add hello world to my workspace."
 # pull in upstream updates by merging Resources
 $ kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 ```
+<!--mdtogo-->
 
 ### Synopsis
 

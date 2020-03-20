@@ -6,6 +6,9 @@ type: docs
 description: >
    Set an annotation on one or more resources
 ---
+<!--mdtogo:Short
+    Set an annotation on one or more resources
+-->
 
 {{< asciinema key="cfg-annotate" rows="10" preload="1" >}}
 
@@ -15,7 +18,7 @@ Annotate can be useful when combined with other tools or commands that
 read annotations to configure their behavior.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # set an annotation on all Resources: 'key: value'
 kpt cfg annotate DIR --kv key=value
@@ -35,9 +38,10 @@ kpt cfg annotate DIR --kv key=value --kind Service --name foo
 # set multiple annotations
 kpt cfg annotate DIR --kv key1=value1 --kv key2=value2
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt cfg annotate DIR --kv KEY=VALUE...
 
 #### Args
@@ -62,3 +66,4 @@ kpt cfg annotate DIR --kv key1=value1 --kv key2=value2
 
     --namespace
       Only set annotations on resources with this name.
+<!--mdtogo-->

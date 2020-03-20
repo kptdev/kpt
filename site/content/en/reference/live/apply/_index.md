@@ -5,6 +5,9 @@ type: docs
 description: >
    Apply a package to the cluster (create, update, delete)
 ---
+<!--mdtogo:Short
+    Apply a package to the cluster (create, update, delete)
+-->
 
 Apply creates, updates and deletes resources in the cluster to make the remote
 cluster resources match the local package configuration.
@@ -103,7 +106,7 @@ for the set. For CRDs, there is a set of recommendations that if followed, will 
 kpt live apply to correctly compute status.
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt live apply DIR [flags]
 
 #### Args
@@ -126,3 +129,4 @@ kpt live apply to correctly compute status.
     --wait-timeout:
       The threshold for how long to wait for all resources to reconcile before
       giving up. The default value is 1 minute.
+<!--mdtogo-->

@@ -6,6 +6,9 @@ type: docs
 description: >
    Create a setter for one or more field
 ---
+<!--mdtogo:Short
+    Create a setter for one or more field
+-->
 
 {{< asciinema key="cfg-create-setter" rows="10" preload="1" >}}
 
@@ -17,7 +20,7 @@ structured data -- e.g. using `sed` to replace values.
 See the [creating setters] guide for more info on creating setters.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # create a setter called replicas for fields matching "3"
 kpt cfg create-setter DIR/ replicas 3
@@ -46,9 +49,10 @@ kpt cfg create-setter DIR/ replicas 3 --set-by "package-default" \
 # only the final part of the the field path is specified
 kpt cfg create-setter DIR/ app nginx --field "annotations.app" --type string
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt cfg create-setter DIR NAME VALUE
 
     DIR:
@@ -62,5 +66,6 @@ kpt cfg create-setter DIR/ app nginx --field "annotations.app" --type string
     VALUE
       The new value of the setter.
       e.g. 3
+<!--mdtogo-->
 
 [creating setters]: ../../../guides/producer/setters

@@ -6,6 +6,9 @@ type: docs
 description: >
    Filter resources by their field values
 ---
+<!--mdtogo:Short
+    Filter resources by their field values
+-->
 
 {{< asciinema key="cfg-grep" rows="10" preload="1" >}}
 
@@ -16,7 +19,7 @@ Grep may have sources such as `kubectl get -o yaml` piped to it, or may
 be piped to other commands such as `kpt cfg tree` for display.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # find Deployment Resources
 kpt cfg grep "kind=Deployment" my-dir/
@@ -37,9 +40,10 @@ kpt cfg grep "metadata.name=nginx" my-dir/ | kpt cfg tree
 kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" \
     my-dir/ | kpt cfg tree
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt cfg grep QUERY DIR
 
 #### Args
@@ -58,3 +62,4 @@ kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" \
 
     --invert-match, -v
       keep resources NOT matching the specified pattern
+<!--mdtogo-->
