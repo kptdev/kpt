@@ -10,6 +10,8 @@ description: >
     Reconcile configuration files with the live state
 -->
 
+{{< asciinema key="live" rows="10" preload="1" >}}
+
 <!--mdtogo:Long-->
 | Reads From              | Writes To                |
 |-------------------------|--------------------------|

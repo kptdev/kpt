@@ -9,6 +9,8 @@ description: >
     Apply a package to the cluster (create, update, delete)
 -->
 
+{{< asciinema key="live-apply" rows="10" preload="1" >}}
+
 Apply creates, updates and deletes resources in the cluster to make the remote
 cluster resources match the local package configuration.
 
