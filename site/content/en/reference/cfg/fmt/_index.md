@@ -6,6 +6,9 @@ type: docs
 description: >
    Format configuration files
 ---
+<!--mdtogo:Short
+    Format configuration files
+-->
 
 {{< asciinema key="cfg-fmt" rows="10" preload="1" >}}
 
@@ -34,7 +37,7 @@ field paths.
 - .webhooks.rules.operations (by element value)
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # format file1.yaml and file2.yml
 kpt cfg fmt file1.yaml file2.yml
@@ -54,10 +57,12 @@ kubectl get -o yaml deployments | kpt cfg fmt
 # format kustomize output
 kustomize build | kpt cfg fmt
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt cfg fmt [DIR]
 
     DIR:
       Path to a package directory.  Reads from STDIN if not provided.
+<!--mdtogo-->

@@ -6,9 +6,13 @@ weight: 2
 description: >
     Display and modify JSON or YAML configuration
 ---
+<!--mdtogo:Short
+    Display and modify JSON or YAML configuration
+-->
 
 {{< asciinema key="cfg" rows="10" preload="1" >}}
 
+<!--mdtogo:Long-->
 | Reads From              | Writes To                |
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
@@ -20,11 +24,12 @@ directly.
 
 Many cfg subcommands may also read from STDIN, allowing them to be paired
 with other tools such as `kubectl get`.
+<!--mdtogo-->
 
     kpt cfg [SUBCOMMAND]
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # print the package using tree based structure
 $ kpt cfg tree helloworld --name --image --replicas
@@ -48,3 +53,4 @@ $ kpt cfg list-setters helloworld replicas
 $ kpt cfg set helloworld replicas 3
 set 1 fields
 ```
+<!--mdtogo-->

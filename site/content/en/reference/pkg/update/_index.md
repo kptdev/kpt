@@ -5,6 +5,9 @@ type: docs
 description: >
    Apply upstream package updates
 ---
+<!--mdtogo:Short
+    Apply upstream package updates
+-->
 
 {{< asciinema key="pkg-update" rows="10" preload="1" >}}
 
@@ -16,7 +19,7 @@ All changes must be committed to git before running update
 {{% /pageinfo %}}
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # update my-package-dir/
 git add . && git commit -m 'some message'
@@ -34,9 +37,10 @@ kpt pkg update my-package-dir/@v1.3
 git add . && git commit -m "package updates"
 kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 
 #### Args
@@ -84,4 +88,4 @@ kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
       Controls where to cache remote packages when fetching them to update
       local packages.
       Defaults to ~/.kpt/repos/
-
+<!--mdtogo-->

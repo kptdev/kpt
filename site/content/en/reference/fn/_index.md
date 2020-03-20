@@ -6,7 +6,11 @@ weight: 4
 description: >
    Generate, transform, and validate configuration files.
 ---
+<!--mdtogo:Short
+    Generate, transform, and validate configuration files.
+-->
 
+<!--mdtogo:Long-->
 | Configuration Read From | Configuration Written To |
 |-------------------------|--------------------------|
 | local files or stdin    | local files or stdout    |
@@ -14,6 +18,7 @@ description: >
 Functions are executables ([that you can write](#developing-functions))
 packaged in container images which accept a collection of Resource
 configuration as input, and emit a collection of Resource configuration as output.
+<!--mdtogo-->
 
 Functions may be used to:
 
@@ -35,7 +40,7 @@ the organizational needs:
 * as pre-rollout checks
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # run the function defined by gcr.io/example.com/my-fn as a local container
 # against the configuration in DIR
@@ -51,6 +56,7 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 # run the functions declared in files under DIR/
 kpt fn run DIR/
 ```
+<!--mdtogo-->
 
 #### Functions Catalog
 

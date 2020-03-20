@@ -6,6 +6,9 @@ type: docs
 description: >
    Render resources using a tree structure
 ---
+<!--mdtogo:Short
+    Render resources using a tree structure
+-->
 
 {{< asciinema key="cfg-tree" rows="10" preload="1" >}}
 
@@ -21,7 +24,7 @@ remote cluster resources rather than local package resources.
 Otherwise, directory graph structure is used.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # print Resources using directory structure
 kpt cfg tree my-dir/
@@ -62,9 +65,10 @@ kubectl get all -o yaml | kpt cfg tree \
   --field="status.conditions[type=Ready].status" \
   --field="status.conditions[type=ContainersReady].status"
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt cfg tree [DIR] [flags]
 
 #### Args
@@ -100,3 +104,4 @@ kubectl get all -o yaml | kpt cfg tree \
 
     --resources:
       if true, print the resource reservations
+<!--mdtogo-->

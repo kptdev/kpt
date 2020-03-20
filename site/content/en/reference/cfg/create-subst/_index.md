@@ -6,6 +6,9 @@ type: docs
 description: >
    Create a substitution for one or more fields
 ---
+<!--mdtogo:Short
+    Create a substitution for one or more fields
+-->
 
 {{< asciinema key="cfg-create-subst" rows="10" preload="1" >}}
 
@@ -17,7 +20,7 @@ See the [creating substitutions] guide for more info on creating
 substitutions.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 
 # Automatically create setters when creating the substitution, inferring
@@ -57,9 +60,10 @@ kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
 # 4. update the substitution value by setting one of the setters
 kpt cfg set tag v1.8.0
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
 
     DIR
@@ -80,6 +84,7 @@ kpt cfg set tag v1.8.0
       different MARKERS, the same MARKER multiple times, and non-MARKER
       substrings.
       e.g. IMAGE_SETTER:TAG_SETTER
+<!--mdtogo-->
 
 [setters]: ../create-setter
 [creating substitutions]: ../../../guides/producer/substitutions

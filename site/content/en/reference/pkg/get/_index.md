@@ -5,6 +5,9 @@ type: docs
 description: >
    Fetch a package from a git repo.
 ---
+<!--mdtogo:Short
+    Fetch a package from a git repo.
+-->
 
 {{< asciinema key="pkg-get" rows="10" preload="1" >}}
 
@@ -13,7 +16,7 @@ local directory.  The local directory name does not need to match the upstream
 directory name.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
 # creates directory ./cockroachdb/ containing the package contents
@@ -32,9 +35,10 @@ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@maste
 # creates directory ./examples fetched from the provided commit
 kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
     REPO_URI:
@@ -68,3 +72,4 @@ kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa810
           specified one, defaulting the name to the Base of REPO/PKG_PATH
         * If the directory DOES exist and already contains a directory with
           the same name of the one that would be created: fail
+<!--mdtogo-->

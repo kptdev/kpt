@@ -9,15 +9,20 @@ menu:
 description: >
     Overview of kpt commands
 ---
+<!--mdtogo:Short
+    Overview of kpt commands
+-->
 
 {{< asciinema key="kpt" rows="10" preload="1" >}}
 
+<!--mdtogo:Long-->
 kpt functionality is subdivided into command groups, each of which operates on
 a particular set of entities, with a consistent command syntax and pattern of
 inputs and outputs.
+<!--mdtogo-->
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # get a package
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.5.0 helloworld
@@ -43,6 +48,7 @@ $ kpt live apply --wait-for-reconcile helloworld
 ...
 all resources has reached the Current status
 ```
+<!--mdtogo-->
 
 | Command Group | Description                                                                     |  Reads From     | Writes To       |
 |---------------|---------------------------------------------------------------------------------|-----------------|-----------------|

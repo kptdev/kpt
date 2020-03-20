@@ -5,6 +5,9 @@ type: docs
 description: >
    Initialize an empty package
 ---
+<!--mdtogo:Short
+    Initialize an empty package
+-->
 
 {{< asciinema key="pkg-init" rows="10" preload="1" >}}
 
@@ -27,16 +30,17 @@ Init will:
 * Create a README.md for package documentation if it doesn't exist.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # writes Kptfile package meta if not found
 mkdir my-pkg
 kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb \
     --description "my cockroachdb implementation"
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt pkg init DIR [flags]
 
 #### Args
@@ -57,5 +61,4 @@ kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb \
 
     --url
       link to page with information about the package.
-
-
+<!--mdtogo-->

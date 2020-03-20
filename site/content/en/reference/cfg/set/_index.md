@@ -6,6 +6,9 @@ type: docs
 description: >
    Set one or more field values
 ---
+<!--mdtogo:Short
+    Set one or more field values
+-->
 
 {{< asciinema key="cfg-set" rows="10" preload="1" >}}
 
@@ -56,7 +59,7 @@ When set is called, it may also update substitutions which are derived from
 the setter.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # set replicas to 3 using the 'replicas' setter
 kpt cfg set hello-world/ replicas 3
@@ -77,9 +80,10 @@ kpt cfg set hello-world/ replicas 5 --set-by "mia"
 # the tag setter is referenced as a value by a substitution in the Kptfile
 kpt cfg set hello-world/ tag 1.8.1
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt cfg set DIR NAME VALUE
 
 #### Args
@@ -101,6 +105,7 @@ kpt cfg set hello-world/ tag 1.8.1
     --set-by
       Optional record of who set the value.  Clears the last set-by
       value if unset.
+<!--mdtogo-->
 
 [create-setter]: ../create-setter
 [create-subst]: ../create-subst

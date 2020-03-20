@@ -5,6 +5,9 @@ type: docs
 description: >
    Diff a local package against upstream
 ---
+<!--mdtogo:Short
+    Diff a local package against upstream
+-->
 
 Diff displays differences between upstream and local packages.
 
@@ -17,7 +20,7 @@ The diff tool can be specified.  By default, the local 'diff' command is used to
 display differences.
 
 ### Examples
-
+<!--mdtogo:Examples-->
 ```sh
 # Show changes in current package relative to upstream source package
 kpt pkg diff
@@ -45,9 +48,10 @@ kpt pkg diff @v4.0.0 --diff-type combined
 # version and upstream package at target version using meld
 kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
 ```
+<!--mdtogo-->
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt pkg diff [DIR@VERSION]
 
 #### Args
@@ -100,4 +104,4 @@ kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
        Commandline options to use for the diffing tool. For ex.
        # Using "-a" diff option
        KPT_EXTERNAL_DIFF_OPTS="-a" kpt pkg diff --diff-tool meld
-
+<!--mdtogo-->
