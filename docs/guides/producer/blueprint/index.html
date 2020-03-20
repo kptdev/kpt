@@ -613,20 +613,20 @@
 
 <nav id="TableOfContents">
   <ul>
-    <li>
+    <li><a href="#overview">Overview</a>
       <ul>
-        <li><a href="#examples-of-blueprints">Examples of blueprints</a></li>
+        <li><a href="#example-use-cases-for-blueprints">Example use cases for blueprints</a></li>
       </ul>
     </li>
-    <li><a href="#overview">Overview</a></li>
-    <li><a href="#factoring-and-merging-configuration">Factoring and merging configuration</a></li>
-    <li><a href="#bases">Bases</a></li>
-    <li><a href="#patches">Patches</a></li>
+    <li><a href="#factor--denormalize-the-configuration-data">Factor / denormalize the configuration data</a></li>
+    <li><a href="#commands-args-and-environment-variables">Commands, Args and Environment Variables</a>
+      <ul>
+        <li><a href="#notes">Notes</a></li>
+        <li><a href="#generating-configmaps-and-secrets">Generating ConfigMaps and Secrets</a></li>
+      </ul>
+    </li>
     <li><a href="#setters-and-substitutions">Setters and Substitutions</a></li>
-    <li><a href="#commands-args-and-environment-variables">Commands, Args and Environment Variables</a></li>
-    <li><a href="#generating-configmaps">Generating ConfigMaps</a></li>
     <li><a href="#updates">Updates</a></li>
-    <li><a href="#example">Example</a></li>
   </ul>
 </nav>
 
@@ -675,80 +675,263 @@
 <div class="td-content">
 	<h1>Publishing a blueprint</h1>
 	<div class="lead">Writing effective blueprint packages</div>
-	<p><em>Reusable, customizable components can be built and shared as blueprint
-packages.</em></p>
-<p>Blueprints are a <strong>pattern for developing reusable configuration</strong> as packages.
-They incorporate  <strong>best practices and policies</strong> defined by an organization.</p>
-<p>Blueprints may be used to accelerate on-boarding and increase configuration
-quality.</p>
+	
 
-
-<div class="pageinfo pageinfo-primary">
-<p>Because packages can be updated, blueprint consumers can pull in the
-latest best practices and policies as they are updated.
-See the consumer update guide for more info.</p>
+<div class="pageinfo pageinfo-warning">
+<h1 id="notice-under-development">Notice: Under Development</h1>
 
 </div>
 
-<p>This guide covers how to write effective blueprint packages with <code>kpt</code>
-and <code>kustomize</code>.</p>
-<h3 id="examples-of-blueprints">Examples of blueprints</h3>
-<h4 id="languages">Languages</h4>
-<p>Java / Node / Ruby / Python / Golang application</p>
-<h4 id="frameworks">Frameworks</h4>
-<p>Spring, Express, Rails, Django</p>
-<h4 id="platforms">Platforms</h4>
-<p>Kubeflow, Spark</p>
-<h4 id="applications--stacks">Applications / Stacks</h4>
-<p>Rails Backend + Node Frontend + Prometheus</p>
-<p>Spring Cloud Microservices (discovery-server, config-server, api-gateway,
-admin-server, hystrix, various backends)</p>
-<h4 id="infrastructure-stacks">Infrastructure Stacks</h4>
-<p>CloudSQL + Pubsub + GKE</p>
+<p><em>Reusable, customizable components can be built and shared as blueprints.</em></p>
 <h2 id="overview">Overview</h2>
-<p>Blueprint packages are typically designed to be published and consumed by
-different teams or individuals &ndash; e.g. a 1 (publisher) to many (consumer)
-model.</p>
-<p>Blueprint packages may have consumer editable pieces (e.g. cpu, replicas)
-and publisher editable pieces (e.g. health checks).  What is editable
-and by whom will different between blueprint packages (e.g. the Java
-blueprint would have the image as consumer editable, whereas the Spark
-blueprint would have the image as publisher editable).</p>
+<p>Blueprints are a <strong>pattern for developing reusable, customizable
+configuration</strong>.  Blueprints are typically published and consumed by
+different teams.</p>
 
 
 <div class="pageinfo pageinfo-primary">
-<p>While it is possible for consumers to override any publisher editable pieces
-with kustomize patches, packages should be structured by publishers to
-encourage or discourage editing various of pieces.</p>
+<p>Because packages can be updated to new versions, blueprint consumers
+can pull in changes to a blueprint after fetching it.</p>
 
 </div>
 
-<h2 id="factoring-and-merging-configuration">Factoring and merging configuration</h2>
-<h2 id="bases">Bases</h2>
+<h3 id="example-use-cases-for-blueprints">Example use cases for blueprints</h3>
 <ul>
-<li>Consumer editable vs non-editable</li>
-</ul>
-<h2 id="patches">Patches</h2>
+<li><strong>Languages</strong>: Java / Node / Ruby / Python / Golang application</li>
+<li><strong>Frameworks</strong>: Spring, Express, Rails, Django</li>
+<li><strong>Platforms</strong>: Kubeflow, Spark</li>
+<li><strong>Applications / Stacks</strong>:
 <ul>
-<li>Making editable pieces more editable</li>
+<li>Rails Backend + Node Frontend + Prometheus</li>
+<li>Spring Cloud Microservices (discovery-server, config-server, api-gateway,
+admin-server, hystrix, various backends)</li>
 </ul>
-<h2 id="setters-and-substitutions">Setters and Substitutions</h2>
+</li>
+<li><strong>Infrastructure Stacks</strong>: CloudSQL + Pubsub + GKE</li>
+</ul>
+
+
+
+<img src="https://googlecontainertools.github.io/kpt//images/blueprint.svg" />
+
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># Optional: copy the mysql-kustomize blueprint to follow along</span>
+kpt get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
+</code></pre></div><h2 id="factor--denormalize-the-configuration-data">Factor / denormalize the configuration data</h2>
+<p>Structuring blueprints into separate publisher and consumer focused pieces
+provides a clean UX for consumers to modifys the package.</p>
+<p>Example: provide separate directories with pieces consumers are expected to
+edit (replicas) vs publisher implementation (health check command).</p>
+<p>As a package publisher, it is important to think about <strong>where and how you
+want to promote customization.</strong></p>
+<p>We will use <a href="https://github.com/kubernetes-sigs/kustomize">kustomize</a> to structure the package:</p>
+<ol>
+<li><strong>Factoring out a common field value</strong>
 <ul>
-<li>Pieces edited by humans</li>
-<li>Pieces to be edited by automation</li>
-<li>Limitations</li>
+<li>Example: <code>namespace</code>, <code>commonLabels</code>, <code>commonAnnotations</code></li>
 </ul>
+</li>
+<li><strong>Factoring a single resource into multiple files</strong>
+<ul>
+<li>Example: <code>resources</code> + <code>patches</code></li>
+</ul>
+</li>
+</ol>
+
+
+<div class="pageinfo pageinfo-info">
+<p>Remote kustomize bases may be used to reference the publisher focused pieces
+directly from a git repository rather than including them in the package.</p>
+<p>One disadvantage of this approach is that it creates a dependency on the
+remote package being accessible in order to push &ndash; if you can&rsquo;t fetch the
+remote package, then you can&rsquo;t push changes.</p>
+
+</div>
+
+<p>Example package structure:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ tree mysql/
+mysql/
+├── Kptfile
+├── README.md
+├── instance
+│   ├── kustomization.yaml
+│   ├── service.yaml
+│   └── statefulset.yaml
+└── upstream
+    ├── kustomization.yaml
+    ├── service.yaml
+    └── statefulset.yaml
+</code></pre></div><p>The <code>upstream</code> directory acts as a kustomize base to the <code>instance</code> directory.
+Upstream contains things most <strong>consumers are unlikely to modify</strong> &ndash;
+e.g. the image (for off the shelf software), health check endpoints, etc.</p>
+<p>The <code>instance</code> directory contains patches with fields populated for things
+most <strong>consumers are expected to modify</strong> &ndash; e.g. namespace, cpu, memory,
+user, password, etc.</p>
+
+
+<div class="pageinfo pageinfo-warning">
+<p>While the package is structured into publisher and consumer focused pieces,
+it is still possible for the package consumer to modify (via direct edits)
+or override (via patches) any part of the package.</p>
+<p><strong>Factoring is for UX, not for enforcement of specific configuration values.</strong></p>
+
+</div>
+
 <h2 id="commands-args-and-environment-variables">Commands, Args and Environment Variables</h2>
+<p>How do you configure applications in a way that can be extended or overridden &ndash;
+how can consumers of a package specify new args, flags, environment variables
+or configuration files and merge those with those defined by the package
+publisher?</p>
+<h3 id="notes">Notes</h3>
 <ul>
-<li>Merges and overrides</li>
+<li>Commands and Args are non-associative arrays so it is not possible to
+target specific elements &ndash; any changes replace the entire list of elements.</li>
+<li>Commands and Args are separate fields that are concatenated</li>
+<li>Commands and Args can use values from environment variables</li>
+<li>Environment variables are associative arrays, so it is possible to target
+specific elements within the list to be overridden or added.</li>
+<li>Environment variables can be pulled from ConfigMaps and Secrets</li>
+<li>Kustomize merges ConfigMaps and Secrets per-key (deep merges of the
+values is not supported).</li>
+<li>ConfigMaps and Secrets can be read from apps via environment variables or
+volumes.</li>
 </ul>
-<h2 id="generating-configmaps">Generating ConfigMaps</h2>
-<h2 id="updates">Updates</h2>
+<p>Flags and arguments may be factored into publisher and consumer focused pieces
+by <strong>specifying the <code>command</code> in the <code>upstream</code> base dir and the <code>args</code> in the
+<code>instance</code> dir</strong>.  This allows consumers to set and add flags using <code>args</code>
+without erasing those defined by the publisher in the <code>command</code>.</p>
+<p>When <strong>specifying values for arguments or flag values, it is best to use an
+environment variable read from a generated ConfigMap.</strong>  This enables overriding
+the value using kustomize&rsquo;s generators.</p>
+<p>Example: Enable setting <code>--skip-grant-tables</code> as a flag on mysql.</p>
+<p><em><code># {&quot;$ref&quot;: ...</code> comments are setter references, defined in the next section.</em></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># mysql/instance/statefulset.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#8f5902;font-style:italic"># Wire ConfigMap value from kustomization.yaml to</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#8f5902;font-style:italic"># an environment variable used by an arg</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>StatefulSet<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">labels</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">app</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>release-name-mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span>- --skip-grant-tables=$(SKIP_GRANT_TABLES)<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">env</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>SKIP_GRANT_TABLES<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span><span style="color:#204a87;font-weight:bold">valueFrom</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">configMapKeyRef</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">              </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">              </span><span style="color:#204a87;font-weight:bold">key</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>skip-grant-tables<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># mysql/instance/kustomization.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#8f5902;font-style:italic"># Changing the literal changes the StatefulSet behavior</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">configMapGenerator</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">behavior</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>merge<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">literals</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#8f5902;font-style:italic"># for bootstrapping the root table grants -- set to false after bootstrapped</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#4e9a06">&#34;skip-grant-tables=true&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.skip-grant-tables&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h3 id="generating-configmaps-and-secrets">Generating ConfigMaps and Secrets</h3>
+<p>Kustomize supports generating ConfigMaps and Secrets from the
+kustomization.yaml.</p>
 <ul>
-<li>versioning</li>
-<li>merge friendly updates</li>
+<li>Generated objects have a suffix applied so that the name is unique for
+the data.  This ensures a rollout of Deployments and StatefulSets occurs.</li>
+<li>Generated object may have their values overridden by downstream consumers.</li>
 </ul>
-<h2 id="example">Example</h2>
+<p>Example Upstream:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># mysql/upstream</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">configMapGenerator</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">literals</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>- skip-grant-tables=<span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><p>Example Instance:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># mysql/instance</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">configMapGenerator</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">behavior</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>merge<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">literals</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#4e9a06">&#34;skip-grant-tables=true&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.skip-grant-tables&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#4e9a06">&#34;mysql-user=&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.mysql-user&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#4e9a06">&#34;mysql-database=&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.mysql-database&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="setters-and-substitutions">Setters and Substitutions</h2>
+<p>It may be desirable to provide user friendly commands for customizing the
+package rather than exclusively through text editors and sed:</p>
+<ul>
+<li>Setting a value in several different patches at once</li>
+<li>Setting common or required values &ndash; e.g. the image name for a Java app
+blueprint</li>
+<li>Setting the image tag to match the digest of an image that was just build.</li>
+<li>Setting a value from the environment when the package is fetched the first
+time &ndash; e.g. GCP project.</li>
+</ul>
+<p>Setters and substitutions are a way to define user and automation friendly
+commands for performing structured edits of a configuration.</p>
+<p>Combined with the preceding techniques, setters or substitutions can be used
+to modify generated ConfigMaps and patches in the <code>instance</code> dir.</p>
+<p>See the <a href="../setters">setter</a> and <a href="../substitutions">substitution</a> guides for details.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># mysql/instance/kustomization.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kustomize.config.k8s.io/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kustomization<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#8f5902;font-style:italic">#</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#8f5902;font-style:italic"># namespace is the namespace the mysql instance is run in</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">namespace</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.namespace&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">configMapGenerator</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">behavior</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>merge<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">literals</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#8f5902;font-style:italic"># for bootstrapping the root table grants -- set to false after bootstrapped</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#4e9a06">&#34;skip-grant-tables=true&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.skip-grant-tables&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#4e9a06">&#34;mysql-user=&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.mysql-user&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#4e9a06">&#34;mysql-database=&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.mysql-database&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># mysql/instance/statefulset.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>StatefulSet<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">template</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">containers</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">ports</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span><span style="color:#204a87;font-weight:bold">containerPort</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">3306</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.port&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">resources</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span><span style="color:#204a87;font-weight:bold">requests</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">cpu</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>100m<span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.cpu&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">memory</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>256Mi<span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.memory&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># mysql/instance/service.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Service<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">ports</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">port</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">3306</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.port&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">targetPort</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mysql<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="updates">Updates</h2>
+<p>Individual directories may have their own package versions by prefixing the
+version with the directory path &ndash; e.g.
+<code>package-examples/mysql-kustomize/v0.1.0</code>.</p>
+<p>When publishing a new version of a package, publishers should think about how
+their changes will be merged into existing packages.</p>
+<p>Changing values in the instance package is not recommended, but adding them
+may be ok &ndash; changes to fields will overwrite user changes to those same
+fields, whereas adds will only conflict if the user added the same field.</p>
 
         <div class="section-index">
     
@@ -800,7 +983,7 @@ encourage or discourage editing various of pieces.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/556d29699f4c50850633156fe205b62a6379c358">Docs: blueprint guide (556d2969)</a>
 </div>
 </div>
 

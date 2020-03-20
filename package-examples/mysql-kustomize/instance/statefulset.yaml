@@ -1,0 +1,47 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#
+# This is a patch file applied to the upstream mysql StatefulSet.
+# To override the upstream StatefulSet fields, add them to this patch
+# and modify them.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  template:
+    spec:
+      containers:
+      - name: mysql
+        args:
+          - --skip-grant-tables=$(SKIP_GRANT_TABLES)
+        env:
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql
+              key: mysql-password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql
+              key: mysql-root-password
+        ports:
+        - name: mysql
+          containerPort: 3306 # {"$ref":"#/definitions/io.k8s.cli.setters.port"}
+        resources:
+          requests:
+            cpu: 100m # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}
+            memory: 256Mi # {"$ref":"#/definitions/io.k8s.cli.setters.memory"}

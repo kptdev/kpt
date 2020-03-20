@@ -1,0 +1,98 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+#
+#
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  selector: {} # set by kustomize
+  template:
+    metadata:
+      labels:
+        version: "mysql-1.3.1"
+    spec:
+      initContainers:
+      - name: "remove-lost-found"
+        image: "busybox:1.29.3"
+        command: ["rm", "-fr", "/var/lib/mysql/lost+found"]
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        imagePullPolicy: "IfNotPresent"
+      containers:
+      - name: mysql
+        image: "mysql:5.7.14"
+        ports:
+        - name: mysql
+          containerPort: 3306
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            configMapKeyRef:
+              name: mysql
+              key: mysql-user
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mysql
+              key: mysql-database
+        - name: SKIP_GRANT_TABLES
+          valueFrom:
+            configMapKeyRef:
+              name: mysql
+              key: skip-grant-tables
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}"
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}"
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        imagePullPolicy: "IfNotPresent"
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      resources:
+        requests:
+          storage: "8Gi"
+      accessModes:
+      - "ReadWriteOnce"
+  serviceName: "mysql"
