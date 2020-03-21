@@ -9,6 +9,8 @@ description: >
     Remove all previously applied resources in a package from the cluster
 -->
 
+{{< asciinema key="live-destroy" rows="10" preload="1" >}}
+
 The destroy command removes all files belonging to a package from the cluster.
 
 ### Synopsis

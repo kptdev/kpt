@@ -9,6 +9,8 @@ description: >
     Initialize a package with a object to track previously applied resources
 -->
 
+{{< asciinema key="live-init" rows="10" preload="1" >}}
+
 The init command initializes a package with a template resource which will
 be used to track previously applied resources so that they can be pruned
 when they are deleted.
