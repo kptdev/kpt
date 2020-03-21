@@ -20,7 +20,6 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/ttldocs"
 	"github.com/spf13/cobra"
 )
 
@@ -29,9 +28,9 @@ func GetTTLCommand(name string) *cobra.Command {
 	var print bool
 	ttl := &cobra.Command{
 		Use:     "ttl",
-		Short:   ttldocs.READMEShort,
-		Long:    ttldocs.READMEShort + "\n" + ttldocs.READMELong,
-		Example: ttldocs.READMEExamples,
+		Short:   READMEShort,
+		Long:    READMEShort + "\n" + READMELong,
+		Example: READMEExamples,
 		Aliases: []string{"tutorials", "tutorial"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			p, err := exec.LookPath("asciinema")
@@ -73,3 +72,25 @@ func GetTTLCommand(name string) *cobra.Command {
 
 	return ttl
 }
+
+//TODO: Figure out if this can be generated from the site.
+
+var READMEShort = `Run command tutorials`
+var READMELong = `
+Tutorials simulates running a sequence of commands and their output by playing
+an asciinema cast.
+
+Requires [asciinema].
+`
+var READMEExamples = `
+    # run the tutorial for ` + "`" + `kpt cfg annotate` + "`" + `
+    kpt ttl cfg annotate
+
+    # run the tutorial at 2x speed
+    kpt ttl cfg annotate -s 2
+
+    # run the tutorial at 1/2x speed
+    kpt ttl cfg annotate -s 0.5
+
+    # print the full tutorial rather than playing it
+    kpt ttl cfg annotate --print`

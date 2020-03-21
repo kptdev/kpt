@@ -28,9 +28,9 @@ import (
 func GetPkgCommand(name string) *cobra.Command {
 	pkg := &cobra.Command{
 		Use:     "pkg",
-		Short:   pkgdocs.READMEShort,
-		Long:    pkgdocs.READMELong,
-		Example: pkgdocs.READMEExamples,
+		Short:   pkgdocs.PkgShort,
+		Long:    pkgdocs.PkgLong,
+		Example: pkgdocs.PkgExamples,
 		Aliases: []string{"package"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")

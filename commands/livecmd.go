@@ -31,8 +31,8 @@ import (
 func GetLiveCommand(name string) *cobra.Command {
 	liveCmd := &cobra.Command{
 		Use:   "live",
-		Short: livedocs.READMEShort,
-		Long:  livedocs.READMEShort + "\n" + livedocs.READMELong,
+		Short: livedocs.LiveShort,
+		Long:  livedocs.LiveShort + "\n" + livedocs.LiveLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {

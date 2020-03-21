@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate $GOBIN/mdtogo docs/live internal/docs/generated/livedocs --license=none
-//go:generate $GOBIN/mdtogo docs/ttl internal/docs/generated/ttldocs --license=none
-//go:generate $GOBIN/mdtogo docs/pkg internal/docs/generated/pkgdocs --license=none
-//go:generate $GOBIN/mdtogo docs/cfg internal/docs/generated/cfgdocs --license=none
-//go:generate $GOBIN/mdtogo docs/fn internal/docs/generated/fndocs --license=none
-//go:generate $GOBIN/mdtogo docs internal/docs/generated/overview --license=none
+//go:generate $GOBIN/mdtogo site/content/en/reference/live internal/docs/generated/livedocs --license=none --recursive=true
+//go:generate $GOBIN/mdtogo site/content/en/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true
+//go:generate $GOBIN/mdtogo site/content/en/reference/cfg internal/docs/generated/cfgdocs --license=none --recursive=true
+//go:generate $GOBIN/mdtogo site/content/en/reference/fn internal/docs/generated/fndocs --license=none --recursive=true
+//go:generate $GOBIN/mdtogo site/content/en/reference internal/docs/generated/overview --license=none
 package main
 
 import (
@@ -48,9 +47,9 @@ func main() {
 	installComp := false
 	cmd := &cobra.Command{
 		Use:     "kpt",
-		Short:   overview.READMEShort,
-		Long:    overview.READMELong,
-		Example: overview.READMEExamples,
+		Short:   overview.ReferenceShort,
+		Long:    overview.ReferenceLong,
+		Example: overview.ReferenceExamples,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			// register function to use Kptfile for OpenAPI
 			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
