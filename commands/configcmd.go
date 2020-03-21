@@ -24,9 +24,9 @@ import (
 func GetConfigCommand(name string) *cobra.Command {
 	cfgCmd := &cobra.Command{
 		Use:     "cfg",
-		Short:   cfgdocs.READMEShort,
-		Long:    cfgdocs.READMEShort + "\n" + cfgdocs.READMELong,
-		Example: cfgdocs.READMEExamples,
+		Short:   cfgdocs.CfgShort,
+		Long:    cfgdocs.CfgShort + "\n" + cfgdocs.CfgLong,
+		Example: cfgdocs.CfgExamples,
 		Aliases: []string{"config"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
