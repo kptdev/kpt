@@ -32,11 +32,11 @@ fix:
 fmt:
 	go fmt ./...
 
-#generate:
-#	(which $(GOBIN)/mdtogo || go get sigs.k8s.io/kustomize/cmd/mdtogo)
-#	rm -rf internal/docs/generated
-#	mkdir internal/docs/generated
-#	GOBIN=$(GOBIN) go generate ./...
+generate:
+	go install ./mdtogo
+	rm -rf internal/docs/generated
+	mkdir internal/docs/generated
+	GOBIN=$(GOBIN) go generate ./...
 
 tidy:
 	go mod tidy
