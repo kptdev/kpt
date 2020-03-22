@@ -830,7 +830,11 @@
 <div class="td-content">
 	<h1>Fn</h1>
 	<div class="lead">Generate, transform, and validate configuration files.</div>
-	<table>
+	<!--mdtogo:Short
+    Generate, transform, and validate configuration files.
+-->
+<!--mdtogo:Long-->
+<table>
 <thead>
 <tr>
 <th>Configuration Read From</th>
@@ -847,6 +851,7 @@
 <p>Functions are executables (<a href="#developing-functions">that you can write</a>)
 packaged in container images which accept a collection of Resource
 configuration as input, and emit a collection of Resource configuration as output.</p>
+<!--mdtogo-->
 <p>Functions may be used to:</p>
 <ul>
 <li>Generate configuration from templates, DSLs, CRD-style abstractions,
@@ -867,6 +872,7 @@ the organizational needs:</p>
 <li>as pre-rollout checks</li>
 </ul>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run the function defined by gcr.io/example.com/my-fn as a local container</span>
 <span style="color:#8f5902;font-style:italic"># against the configuration in DIR</span>
 kpt fn run DIR/ --image gcr.io/example.com/my-fn
@@ -874,7 +880,8 @@ kpt fn run DIR/ --image gcr.io/example.com/my-fn
 kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run the functions declared in files under DIR/</span>
 kpt fn run DIR/
-</code></pre></div><h4 id="functions-catalog">Functions Catalog</h4>
+</code></pre></div><!--mdtogo-->
+<h4 id="functions-catalog">Functions Catalog</h4>
 <p><a href="https://googlecontainertools.github.io/kpt-functions-catalog/">KPT Functions Catalog</a> repository documents a catalog of kpt
 functions implemented using different toolchains.</p>
 <h4 id="developing-functions">Developing Functions</h4>
@@ -988,7 +995,7 @@ functions implemented using different toolchains.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

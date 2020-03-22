@@ -830,20 +830,9 @@
 <div class="td-content">
 	<h1>Pkg</h1>
 	<div class="lead">Fetch, update, and sync configuration files using git</div>
-	<table>
-<thead>
-<tr>
-<th>Reads From</th>
-<th>Writes To</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>git repository</td>
-<td>local directory</td>
-</tr>
-</tbody>
-</table>
+	<!--mdtogo:Short
+    Fetch, update, and sync configuration files using git
+-->
 
 
 <p>
@@ -876,14 +865,31 @@
     </script>
 </p>
 
-<pre><code>kpt pkg [SUBCOMMAND]
-</code></pre>
+<!--mdtogo:Long-->
+<table>
+<thead>
+<tr>
+<th>Reads From</th>
+<th>Writes To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>git repository</td>
+<td>local directory</td>
+</tr>
+</tbody>
+</table>
 <p>The <code>pkg</code> command group contains subcommands which read remote upstream
 git repositories, and write local directories.  They are focused on
 providing porcelain on top of workflows which would otherwise require
 wrapping git to pull clone subdirectories and perform updates by merging
 resources rather than files.</p>
+<!--mdtogo-->
+<pre><code>kpt pkg [SUBCOMMAND]
+</code></pre>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># create your workspace</span>
 $ mkdir hello-world-workspace
 $ <span style="color:#204a87">cd</span> hello-world-workspace
@@ -899,7 +905,8 @@ $ git commit -am <span style="color:#4e9a06">&#34;Add hello world to my workspac
 
 <span style="color:#8f5902;font-style:italic"># pull in upstream updates by merging Resources</span>
 $ kpt pkg update helloworld@v0.5.0 --strategy<span style="color:#ce5c00;font-weight:bold">=</span>resource-merge
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
 <h4 id="package-format">Package Format</h4>
 <ol>
 <li><strong>Any git repository containing resource configuration files may be used as a package</strong>, no
@@ -1099,7 +1106,7 @@ can be reconciled.</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

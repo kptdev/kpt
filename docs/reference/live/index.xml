@@ -22,7 +22,42 @@
       <description>
         
         
-        &lt;p&gt;Apply creates, updates and deletes resources in the cluster to make the remote
+        &lt;!--mdtogo:Short
+    Apply a package to the cluster (create, update, delete)
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-apply.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Apply creates, updates and deletes resources in the cluster to make the remote
 cluster resources match the local package configuration.&lt;/p&gt;
 &lt;p&gt;Kpt apply is and extended version of kubectl apply, with added support
 for pruning and blocking on resource status.&lt;/p&gt;
@@ -111,6 +146,7 @@ functionality for polling a set of resources and computing the aggregate status
 for the set. For CRDs, there is a set of recommendations that if followed, will allow
 kpt live apply to correctly compute status.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live apply DIR [flags]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -132,6 +168,7 @@ kpt live apply to correctly compute status.&lt;/p&gt;
   The threshold for how long to wait for all resources to reconcile before
   giving up. The default value is 1 minute.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -145,8 +182,44 @@ kpt live apply to correctly compute status.&lt;/p&gt;
       <description>
         
         
-        &lt;p&gt;The destroy command removes all files belonging to a package from the cluster.&lt;/p&gt;
+        &lt;!--mdtogo:Short
+    Remove all previously applied resources in a package from the cluster
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-destroy.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The destroy command removes all files belonging to a package from the cluster.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live destroy DIR
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -154,6 +227,7 @@ kpt live apply to correctly compute status.&lt;/p&gt;
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -167,12 +241,48 @@ kpt live apply to correctly compute status.&lt;/p&gt;
       <description>
         
         
-        &lt;p&gt;The init command initializes a package with a template resource which will
+        &lt;!--mdtogo:Short
+    Initialize a package with a object to track previously applied resources
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-init.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The init command initializes a package with a template resource which will
 be used to track previously applied resources so that they can be pruned
 when they are deleted.&lt;/p&gt;
 &lt;p&gt;The template resource is required by other live commands
 such as apply, preview and destroy.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live init DIRECTORY [flags]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -186,6 +296,7 @@ such as apply, preview and destroy.&lt;/p&gt;
   label value characters. If not specified, the default group name
   is generated from the package directory name.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -199,10 +310,46 @@ such as apply, preview and destroy.&lt;/p&gt;
       <description>
         
         
-        &lt;p&gt;The preview command will run through the same steps as apply, but
+        &lt;!--mdtogo:Short
+    Preview prints the changes apply would make to the cluster
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-preview.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
 live cluster state.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live preview DIRECTORY [flags]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -214,6 +361,7 @@ live cluster state.&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;--destroy:
   If true, dry-run deletion of all resources.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>

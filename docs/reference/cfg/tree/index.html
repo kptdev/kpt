@@ -840,7 +840,10 @@
 <div class="td-content">
 	<h1>Tree</h1>
 	<div class="lead">Render resources using a tree structure</div>
-	
+	<!--mdtogo:Short
+    Render resources using a tree structure
+-->
+
 
 <p>
     
@@ -881,6 +884,7 @@ between resources (ownerReferences) are detected e.g. when printing
 remote cluster resources rather than local package resources.
 Otherwise, directory graph structure is used.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print Resources using directory structure</span>
 kpt cfg tree my-dir/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print replicas, container name, and container image and fields for Resources</span>
@@ -901,7 +905,9 @@ kubectl get all -o yaml <span style="color:#000;font-weight:bold">|</span> kpt c
 </span><span style="color:#4e9a06"></span>  --field<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;status.conditions[type=Complete].status&#34;</span> <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>  --field<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;status.conditions[type=Ready].status&#34;</span> <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>  --field<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;status.conditions[type=ContainersReady].status&#34;</span>
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt cfg tree [DIR] [flags]
 </code></pre>
 <h4 id="args">Args</h4>
@@ -936,6 +942,7 @@ kubectl get all -o yaml <span style="color:#000;font-weight:bold">|</span> kpt c
 --resources:
   if true, print the resource reservations
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -1003,7 +1010,7 @@ kubectl get all -o yaml <span style="color:#000;font-weight:bold">|</span> kpt c
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

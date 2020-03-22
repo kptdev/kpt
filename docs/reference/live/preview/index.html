@@ -840,10 +840,46 @@
 <div class="td-content">
 	<h1>Preview</h1>
 	<div class="lead">Preview prints the changes apply would make to the cluster</div>
-	<p>The preview command will run through the same steps as apply, but
+	<!--mdtogo:Short
+    Preview prints the changes apply would make to the cluster
+-->
+
+
+<p>
+    
+    <asciinema-player
+            src="https://googlecontainertools.github.io/kpt//casts/live-preview.cast"
+            
+            preload="1"
+            
+            start-at="0"
+            speed="1"
+            
+            
+            
+            
+            
+            
+            
+            
+    ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
+</p>
+
+<p>The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
 live cluster state.</p>
 <h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt live preview DIRECTORY [flags]
 </code></pre>
 <h4 id="args">Args</h4>
@@ -855,6 +891,7 @@ live cluster state.</p>
 <pre><code>--destroy:
   If true, dry-run deletion of all resources.
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -922,7 +959,7 @@ live cluster state.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/fec483d839a5bc76a59844427cecb3786ff73702">Scripts and recordings for live commands (fec483d8)</a>
 </div>
 </div>
 
