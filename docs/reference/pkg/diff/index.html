@@ -840,7 +840,10 @@
 <div class="td-content">
 	<h1>Diff</h1>
 	<div class="lead">Diff a local package against upstream</div>
-	<p>Diff displays differences between upstream and local packages.</p>
+	<!--mdtogo:Short
+    Diff a local package against upstream
+-->
+<p>Diff displays differences between upstream and local packages.</p>
 <p>It can display differences between:</p>
 <ul>
 <li>local package and upstream source version</li>
@@ -849,6 +852,7 @@
 <p>The diff tool can be specified.  By default, the local &lsquo;diff&rsquo; command is used to
 display differences.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># Show changes in current package relative to upstream source package</span>
 kpt pkg diff
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># Show changes in current package relative to upstream source package</span>
@@ -862,7 +866,9 @@ kpt pkg diff @v4.0.0 --diff-type combined
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># Show 3way changes between the local package, upstream package at original</span>
 <span style="color:#8f5902;font-style:italic"># version and upstream package at target version using meld</span>
 kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts <span style="color:#4e9a06">&#34;-a&#34;</span>
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt pkg diff [DIR@VERSION]
 </code></pre>
 <h4 id="args">Args</h4>
@@ -913,6 +919,7 @@ KPT_EXTERNAL_DIFF_OPTS:
    # Using &quot;-a&quot; diff option
    KPT_EXTERNAL_DIFF_OPTS=&quot;-a&quot; kpt pkg diff --diff-tool meld
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -980,7 +987,7 @@ KPT_EXTERNAL_DIFF_OPTS:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

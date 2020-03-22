@@ -840,7 +840,10 @@
 <div class="td-content">
 	<h1>Update</h1>
 	<div class="lead">Apply upstream package updates</div>
-	
+	<!--mdtogo:Short
+    Apply upstream package updates
+-->
+
 
 <p>
     
@@ -882,6 +885,7 @@ Changes may be applied using one of several strategies.</p>
 </div>
 
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># update my-package-dir/</span>
 git add . <span style="color:#ce5c00;font-weight:bold">&amp;&amp;</span> git commit -m <span style="color:#4e9a06">&#39;some message&#39;</span>
 kpt pkg update my-package-dir/
@@ -891,7 +895,9 @@ kpt pkg update my-package-dir/@v1.3
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># update applying a git patch</span>
 git add . <span style="color:#ce5c00;font-weight:bold">&amp;&amp;</span> git commit -m <span style="color:#4e9a06">&#34;package updates&#34;</span>
 kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 </code></pre>
 <h4 id="args">Args</h4>
@@ -937,6 +943,7 @@ VERSION:
   local packages.
   Defaults to ~/.kpt/repos/
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -1004,7 +1011,7 @@ VERSION:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

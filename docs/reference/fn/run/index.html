@@ -840,11 +840,15 @@
 <div class="td-content">
 	<h1>Run</h1>
 	<div class="lead">Locally execute one or more functions in containers</div>
-	<p>Generate, transform, or validate configuration files using locally run
+	<!--mdtogo:Short
+    Locally execute one or more functions in containers
+-->
+<p>Generate, transform, or validate configuration files using locally run
 containerized functions.</p>
 <p>Functions are packaged as container images which are run locally against
 the contents of a package.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># read the Resources from DIR, provide them to a container my-fun as input,</span>
 <span style="color:#8f5902;font-style:italic"># write my-fn output back to DIR</span>
 kpt fn run DIR/ --image gcr.io/example.com/my-fn
@@ -855,7 +859,8 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># discover functions in DIR and run them against Resource in DIR.</span>
 <span style="color:#8f5902;font-style:italic"># functions may be scoped to a subset of Resources -- see `kpt help fn run`</span>
 kpt fn run DIR/
-</code></pre></div><h4 id="imperatively-run-an-single-function">Imperatively run an single function</h4>
+</code></pre></div><!--mdtogo-->
+<h4 id="imperatively-run-an-single-function">Imperatively run an single function</h4>
 <p>A function may be explicitly specified using the <code>--image</code> flag.</p>
 <p><strong>Example:</strong> Locally run the container image <code>gcr.io/example.com/my-fn</code> against
 the Resources in <code>DIR/</code>:</p>
@@ -950,6 +955,7 @@ of CRDs:</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">field</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">nestedField</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>value<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt fn run DIR [flags]
 </code></pre>
 <p>If the container exits with non-zero status code, run will fail and print the
@@ -957,6 +963,7 @@ container <code>STDERR</code>.</p>
 <pre><code>DIR:
   Path to a package directory.  Defaults to stdin if unspecified.
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -1024,7 +1031,7 @@ container <code>STDERR</code>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

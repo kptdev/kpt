@@ -22,16 +22,23 @@
       <description>
         
         
-        &lt;p&gt;Desc displays information about the upstream package in tabular format.&lt;/p&gt;
+        &lt;!--mdtogo:Short
+    Display upstream package metadata
+--&gt;
+&lt;p&gt;Desc displays information about the upstream package in tabular format.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# display description for the local hello-world package&lt;/span&gt;
 kpt pkg desc hello-world/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg desc DIR
 
 DIR:
   Path to a package directory
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -45,7 +52,10 @@ DIR:
       <description>
         
         
-        &lt;p&gt;Diff displays differences between upstream and local packages.&lt;/p&gt;
+        &lt;!--mdtogo:Short
+    Diff a local package against upstream
+--&gt;
+&lt;p&gt;Diff displays differences between upstream and local packages.&lt;/p&gt;
 &lt;p&gt;It can display differences between:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;local package and upstream source version&lt;/li&gt;
@@ -54,6 +64,7 @@ DIR:
 &lt;p&gt;The diff tool can be specified.  By default, the local &amp;lsquo;diff&amp;rsquo; command is used to
 display differences.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show changes in current package relative to upstream source package&lt;/span&gt;
 kpt pkg diff
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show changes in current package relative to upstream source package&lt;/span&gt;
@@ -67,7 +78,9 @@ kpt pkg diff @v4.0.0 --diff-type combined
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Show 3way changes between the local package, upstream package at original&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# version and upstream package at target version using meld&lt;/span&gt;
 kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;-a&amp;#34;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg diff [DIR@VERSION]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -118,6 +131,7 @@ KPT_EXTERNAL_DIFF_OPTS:
    # Using &amp;quot;-a&amp;quot; diff option
    KPT_EXTERNAL_DIFF_OPTS=&amp;quot;-a&amp;quot; kpt pkg diff --diff-tool meld
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -131,7 +145,10 @@ KPT_EXTERNAL_DIFF_OPTS:
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Fetch a package from a git repo.
+--&gt;
+
 
 &lt;p&gt;
     
@@ -167,6 +184,7 @@ KPT_EXTERNAL_DIFF_OPTS:
 local directory.  The local directory name does not need to match the upstream
 directory name.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# creates directory ./cockroachdb/ containing the package contents&lt;/span&gt;
 kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
@@ -177,7 +195,9 @@ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@maste
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# fetch package examples from github.com/kubernetes/examples&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# creates directory ./examples fetched from the provided commit&lt;/span&gt;
 kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
 REPO_URI:
@@ -212,6 +232,7 @@ LOCAL_DEST_DIRECTORY:
     * If the directory DOES exist and already contains a directory with
       the same name of the one that would be created: fail
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -225,7 +246,10 @@ LOCAL_DEST_DIRECTORY:
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Initialize an empty package
+--&gt;
+
 
 &lt;p&gt;
     
@@ -274,11 +298,14 @@ with discovery.&lt;/p&gt;
 &lt;li&gt;Create a README.md for package documentation if it doesn&amp;rsquo;t exist.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# writes Kptfile package meta if not found&lt;/span&gt;
 mkdir my-pkg
 kpt pkg init my-pkg --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;cockroachdb &lt;span style=&#34;color:#4e9a06&#34;&gt;\
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;my cockroachdb implementation&amp;#34;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg init DIR [flags]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -298,6 +325,7 @@ kpt pkg init my-pkg --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weig
 --url
   link to page with information about the package.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -311,7 +339,10 @@ kpt pkg init my-pkg --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weig
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Apply upstream package updates
+--&gt;
+
 
 &lt;p&gt;
     
@@ -353,6 +384,7 @@ Changes may be applied using one of several strategies.&lt;/p&gt;
 &lt;/div&gt;
 
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# update my-package-dir/&lt;/span&gt;
 git add . &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;some message&amp;#39;&lt;/span&gt;
 kpt pkg update my-package-dir/
@@ -362,7 +394,9 @@ kpt pkg update my-package-dir/@v1.3
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# update applying a git patch&lt;/span&gt;
 git add . &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;package updates&amp;#34;&lt;/span&gt;
 kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -408,6 +442,7 @@ VERSION:
   local packages.
   Defaults to ~/.kpt/repos/
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>

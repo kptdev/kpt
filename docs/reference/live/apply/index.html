@@ -853,7 +853,42 @@
 <div class="td-content">
 	<h1>Apply</h1>
 	<div class="lead">Apply a package to the cluster (create, update, delete)</div>
-	<p>Apply creates, updates and deletes resources in the cluster to make the remote
+	<!--mdtogo:Short
+    Apply a package to the cluster (create, update, delete)
+-->
+
+
+<p>
+    
+    <asciinema-player
+            src="https://googlecontainertools.github.io/kpt//casts/live-apply.cast"
+            
+            preload="1"
+            
+            start-at="0"
+            speed="1"
+            
+            
+            
+            
+            
+            
+            
+            
+    ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
+</p>
+
+<p>Apply creates, updates and deletes resources in the cluster to make the remote
 cluster resources match the local package configuration.</p>
 <p>Kpt apply is and extended version of kubectl apply, with added support
 for pruning and blocking on resource status.</p>
@@ -942,6 +977,7 @@ functionality for polling a set of resources and computing the aggregate status
 for the set. For CRDs, there is a set of recommendations that if followed, will allow
 kpt live apply to correctly compute status.</p>
 <h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt live apply DIR [flags]
 </code></pre>
 <h4 id="args">Args</h4>
@@ -963,6 +999,7 @@ kpt live apply to correctly compute status.</p>
   The threshold for how long to wait for all resources to reconcile before
   giving up. The default value is 1 minute.
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -1030,7 +1067,7 @@ kpt live apply to correctly compute status.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/fec483d839a5bc76a59844427cecb3786ff73702">Scripts and recordings for live commands (fec483d8)</a>
 </div>
 </div>
 

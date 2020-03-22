@@ -840,7 +840,10 @@
 <div class="td-content">
 	<h1>Grep</h1>
 	<div class="lead">Filter resources by their field values</div>
-	
+	<!--mdtogo:Short
+    Filter resources by their field values
+-->
+
 
 <p>
     
@@ -877,6 +880,7 @@ field values.</p>
 <p>Grep may have sources such as <code>kubectl get -o yaml</code> piped to it, or may
 be piped to other commands such as <code>kpt cfg tree</code> for display.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># find Deployment Resources</span>
 kpt cfg grep <span style="color:#4e9a06">&#34;kind=Deployment&#34;</span> my-dir/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># find Resources named nginx</span>
@@ -886,7 +890,9 @@ kpt cfg grep <span style="color:#4e9a06">&#34;metadata.name=nginx&#34;</span> my
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># look for Resources matching a specific container image</span>
 kpt cfg grep <span style="color:#4e9a06">&#34;spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9&#34;</span> <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>    my-dir/ <span style="color:#000;font-weight:bold">|</span> kpt cfg tree
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt cfg grep QUERY DIR
 </code></pre>
 <h4 id="args">Args</h4>
@@ -904,6 +910,7 @@ DIR:
 <pre><code>--invert-match, -v
   keep resources NOT matching the specified pattern
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -971,7 +978,7 @@ DIR:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

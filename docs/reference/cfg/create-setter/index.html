@@ -840,7 +840,10 @@
 <div class="td-content">
 	<h1>Create-setter</h1>
 	<div class="lead">Create a setter for one or more field</div>
-	
+	<!--mdtogo:Short
+    Create a setter for one or more field
+-->
+
 
 <p>
     
@@ -878,6 +881,7 @@ other substitution techniques which do not have the context of the
 structured data &ndash; e.g. using <code>sed</code> to replace values.</p>
 <p>See the <a href="../../../guides/producer/setters">creating setters</a> guide for more info on creating setters.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># create a setter called replicas for fields matching &#34;3&#34;</span>
 kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold">3</span>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># scope creating setter references to a specified field</span>
@@ -892,7 +896,9 @@ kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold"
 <span style="color:#8f5902;font-style:italic"># will be quoted so they are parsed as strings)</span>
 <span style="color:#8f5902;font-style:italic"># only the final part of the the field path is specified</span>
 kpt cfg create-setter DIR/ app nginx --field <span style="color:#4e9a06">&#34;annotations.app&#34;</span> --type string
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt cfg create-setter DIR NAME VALUE
 
 DIR:
@@ -907,6 +913,7 @@ VALUE
   The new value of the setter.
   e.g. 3
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -974,7 +981,7 @@ VALUE
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

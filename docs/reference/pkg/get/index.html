@@ -840,7 +840,10 @@
 <div class="td-content">
 	<h1>Get</h1>
 	<div class="lead">Fetch a package from a git repo.</div>
-	
+	<!--mdtogo:Short
+    Fetch a package from a git repo.
+-->
+
 
 <p>
     
@@ -876,6 +879,7 @@
 local directory.  The local directory name does not need to match the upstream
 directory name.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb</span>
 <span style="color:#8f5902;font-style:italic"># creates directory ./cockroachdb/ containing the package contents</span>
 kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
@@ -886,7 +890,9 @@ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@maste
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># fetch package examples from github.com/kubernetes/examples</span>
 <span style="color:#8f5902;font-style:italic"># creates directory ./examples fetched from the provided commit</span>
 kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
 REPO_URI:
@@ -921,6 +927,7 @@ LOCAL_DEST_DIRECTORY:
     * If the directory DOES exist and already contains a directory with
       the same name of the one that would be created: fail
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -988,7 +995,7 @@ LOCAL_DEST_DIRECTORY:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

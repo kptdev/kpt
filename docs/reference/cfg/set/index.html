@@ -852,7 +852,10 @@
 <div class="td-content">
 	<h1>Set</h1>
 	<div class="lead">Set one or more field values</div>
-	
+	<!--mdtogo:Short
+    Set one or more field values
+-->
+
 
 <p>
     
@@ -918,6 +921,7 @@ substituted into a string pattern.  e.g. setting only the tag portion of the
 <p>When set is called, it may also update substitutions which are derived from
 the setter.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># set replicas to 3 using the &#39;replicas&#39; setter</span>
 kpt cfg <span style="color:#204a87">set</span> hello-world/ replicas <span style="color:#0000cf;font-weight:bold">3</span>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># set the replicas to 5 and include a description of the value</span>
@@ -927,7 +931,9 @@ kpt cfg <span style="color:#204a87">set</span> hello-world/ replicas <span style
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># set the tag portion of the image field to &#39;1.8.1&#39; using the &#39;tag&#39; setter</span>
 <span style="color:#8f5902;font-style:italic"># the tag setter is referenced as a value by a substitution in the Kptfile</span>
 kpt cfg <span style="color:#204a87">set</span> hello-world/ tag 1.8.1
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt cfg set DIR NAME VALUE
 </code></pre>
 <h4 id="args">Args</h4>
@@ -948,6 +954,7 @@ VALUE
   Optional record of who set the value.  Clears the last set-by
   value if unset.
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -1015,7 +1022,7 @@ VALUE
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

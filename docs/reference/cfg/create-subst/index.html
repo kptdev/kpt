@@ -840,7 +840,10 @@
 <div class="td-content">
 	<h1>Create-subst</h1>
 	<div class="lead">Create a substitution for one or more fields</div>
-	
+	<!--mdtogo:Short
+    Create a substitution for one or more fields
+-->
+
 
 <p>
     
@@ -878,6 +881,7 @@ field, including combining multiple setters into a single value.</p>
 <p>See the <a href="../../../guides/producer/substitutions">creating substitutions</a> guide for more info on creating
 substitutions.</p>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">
 <span style="color:#8f5902;font-style:italic"># Automatically create setters when creating the substitution, inferring</span>
 <span style="color:#8f5902;font-style:italic"># the setter values.</span>
@@ -915,7 +919,9 @@ kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 <span style="color:#4e9a06">\
 
 <span style="color:#8f5902;font-style:italic"># 4. update the substitution value by setting one of the setters</span>
 kpt cfg <span style="color:#204a87">set</span> tag v1.8.0
-</code></pre></div><h3 id="synopsis">Synopsis</h3>
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
 <pre><code>kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
 
 DIR
@@ -937,6 +943,7 @@ PATTERN
   substrings.
   e.g. IMAGE_SETTER:TAG_SETTER
 </code></pre>
+<!--mdtogo-->
 
         <div class="section-index">
     
@@ -1004,7 +1011,7 @@ PATTERN
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 

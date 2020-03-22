@@ -22,7 +22,10 @@
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Set an annotation on one or more resources
+--&gt;
+
 
 &lt;p&gt;
     
@@ -58,6 +61,7 @@
 &lt;p&gt;Annotate can be useful when combined with other tools or commands that
 read annotations to configure their behavior.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# set an annotation on all Resources: &amp;#39;key: value&amp;#39;&lt;/span&gt;
 kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;value
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# set an annotation on all Service Resources&lt;/span&gt;
@@ -66,7 +70,9 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key&lt;/span&gt
 kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;value --kind Service --name foo
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# set multiple annotations&lt;/span&gt;
 kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;value1 --kv &lt;span style=&#34;color:#000&#34;&gt;key2&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;value2
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg annotate DIR --kv KEY=VALUE...
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -90,6 +96,7 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&g
 --namespace
   Only set annotations on resources with this name.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -103,7 +110,10 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&g
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Print the resources in a package
+--&gt;
+
 
 &lt;p&gt;
     
@@ -139,15 +149,18 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&g
 &lt;p&gt;Cat is useful for printing only the resources in a package which might
 contain other non-resource files.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print Resource config from a directory&lt;/span&gt;
 kpt cfg cat my-dir/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg cat DIR
 
 DIR:
   Path to a package directory
 &lt;/code&gt;&lt;/pre&gt;
-
+&lt;!--mdtogo--&gt;
       </description>
     </item>
     
@@ -160,7 +173,10 @@ DIR:
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Print resource counts for a package
+--&gt;
+
 
 &lt;p&gt;
     
@@ -194,17 +210,20 @@ DIR:
 
 &lt;p&gt;Count quickly summarizes the number of resources in a package.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print Resource counts from a directory&lt;/span&gt;
 kpt cfg count my-dir/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print Resource counts from a cluster&lt;/span&gt;
 kubectl get all -o yaml &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg count
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg count [DIR]
 
 DIR:
   Path to a package directory.  Defaults to stdin if unspecified.
 &lt;/code&gt;&lt;/pre&gt;
-
+&lt;!--mdtogo--&gt;
       </description>
     </item>
     
@@ -217,7 +236,10 @@ DIR:
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Create a setter for one or more field
+--&gt;
+
 
 &lt;p&gt;
     
@@ -255,6 +277,7 @@ other substitution techniques which do not have the context of the
 structured data &amp;ndash; e.g. using &lt;code&gt;sed&lt;/code&gt; to replace values.&lt;/p&gt;
 &lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters&#34;&gt;creating setters&lt;/a&gt; guide for more info on creating setters.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# create a setter called replicas for fields matching &amp;#34;3&amp;#34;&lt;/span&gt;
 kpt cfg create-setter DIR/ replicas &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# scope creating setter references to a specified field&lt;/span&gt;
@@ -269,7 +292,9 @@ kpt cfg create-setter DIR/ replicas &lt;span style=&#34;color:#0000cf;font-weigh
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# will be quoted so they are parsed as strings)&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# only the final part of the the field path is specified&lt;/span&gt;
 kpt cfg create-setter DIR/ app nginx --field &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;annotations.app&amp;#34;&lt;/span&gt; --type string
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg create-setter DIR NAME VALUE
 
 DIR:
@@ -284,6 +309,7 @@ VALUE
   The new value of the setter.
   e.g. 3
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -297,7 +323,10 @@ VALUE
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Create a substitution for one or more fields
+--&gt;
+
 
 &lt;p&gt;
     
@@ -335,6 +364,7 @@ field, including combining multiple setters into a single value.&lt;/p&gt;
 &lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/substitutions&#34;&gt;creating substitutions&lt;/a&gt; guide for more info on creating
 substitutions.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Automatically create setters when creating the substitution, inferring&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# the setter values.&lt;/span&gt;
@@ -372,7 +402,9 @@ kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 &lt;span style=&#34;color:#4e9a
 
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# 4. update the substitution value by setting one of the setters&lt;/span&gt;
 kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; tag v1.8.0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
 
 DIR
@@ -394,6 +426,7 @@ PATTERN
   substrings.
   e.g. IMAGE_SETTER:TAG_SETTER
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -407,7 +440,10 @@ PATTERN
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Format configuration files
+--&gt;
+
 
 &lt;p&gt;
     
@@ -461,6 +497,7 @@ field paths.&lt;/p&gt;
 &lt;li&gt;.webhooks.rules.operations (by element value)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# format file1.yaml and file2.yml&lt;/span&gt;
 kpt cfg fmt file1.yaml file2.yml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# format all *.yaml and *.yml recursively traversing directories&lt;/span&gt;
@@ -469,12 +506,15 @@ kpt cfg fmt my-dir/
 kubectl get -o yaml deployments &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg fmt
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# format kustomize output&lt;/span&gt;
 kustomize build &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg fmt
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg fmt [DIR]
 
 DIR:
   Path to a package directory.  Reads from STDIN if not provided.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -488,7 +528,10 @@ DIR:
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Filter resources by their field values
+--&gt;
+
 
 &lt;p&gt;
     
@@ -525,6 +568,7 @@ field values.&lt;/p&gt;
 &lt;p&gt;Grep may have sources such as &lt;code&gt;kubectl get -o yaml&lt;/code&gt; piped to it, or may
 be piped to other commands such as &lt;code&gt;kpt cfg tree&lt;/code&gt; for display.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# find Deployment Resources&lt;/span&gt;
 kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;kind=Deployment&amp;#34;&lt;/span&gt; my-dir/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# find Resources named nginx&lt;/span&gt;
@@ -534,7 +578,9 @@ kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;metadata.name=ng
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# look for Resources matching a specific container image&lt;/span&gt;
 kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    my-dir/ &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg grep QUERY DIR
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -552,6 +598,7 @@ DIR:
 &lt;pre&gt;&lt;code&gt;--invert-match, -v
   keep resources NOT matching the specified pattern
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -565,7 +612,10 @@ DIR:
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    List setters for a package
+--&gt;
+
 
 &lt;p&gt;
     
@@ -608,12 +658,15 @@ It also displays:&lt;/p&gt;
 &lt;p&gt;See &lt;a href=&#34;../create-setter&#34;&gt;create-setter&lt;/a&gt; and &lt;a href=&#34;../create-subst&#34;&gt;create-subst&lt;/a&gt; for how setters and substitutions
 are defined in a Kptfile.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# list the setters in the hello-world package&lt;/span&gt;
 kpt cfg list-setters hello-world/
 
   NAME     VALUE    SET BY    DESCRIPTION   COUNT  
 replicas   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;       isabella   good value    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;   
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg list-setters DIR [NAME]
 
 DIR
@@ -622,6 +675,7 @@ DIR
 NAME
   Optional.  The name of the setter to display.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -635,7 +689,10 @@ NAME
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Set one or more field values
+--&gt;
+
 
 &lt;p&gt;
     
@@ -701,6 +758,7 @@ substituted into a string pattern.  e.g. setting only the tag portion of the
 &lt;p&gt;When set is called, it may also update substitutions which are derived from
 the setter.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# set replicas to 3 using the &amp;#39;replicas&amp;#39; setter&lt;/span&gt;
 kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; hello-world/ replicas &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# set the replicas to 5 and include a description of the value&lt;/span&gt;
@@ -710,7 +768,9 @@ kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; hello-world/ 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# set the tag portion of the image field to &amp;#39;1.8.1&amp;#39; using the &amp;#39;tag&amp;#39; setter&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# the tag setter is referenced as a value by a substitution in the Kptfile&lt;/span&gt;
 kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; hello-world/ tag 1.8.1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg set DIR NAME VALUE
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -731,6 +791,7 @@ VALUE
   Optional record of who set the value.  Clears the last set-by
   value if unset.
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -744,7 +805,10 @@ VALUE
       <description>
         
         
-        
+        &lt;!--mdtogo:Short
+    Render resources using a tree structure
+--&gt;
+
 
 &lt;p&gt;
     
@@ -785,6 +849,7 @@ between resources (ownerReferences) are detected e.g. when printing
 remote cluster resources rather than local package resources.
 Otherwise, directory graph structure is used.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print Resources using directory structure&lt;/span&gt;
 kpt cfg tree my-dir/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print replicas, container name, and container image and fields for Resources&lt;/span&gt;
@@ -805,7 +870,9 @@ kubectl get all -o yaml &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;status.conditions[type=Complete].status&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;status.conditions[type=Ready].status&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;status.conditions[type=ContainersReady].status&amp;#34;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt cfg tree [DIR] [flags]
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
@@ -840,6 +907,7 @@ kubectl get all -o yaml &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;
 --resources:
   if true, print the resource reservations
 &lt;/code&gt;&lt;/pre&gt;
+&lt;!--mdtogo--&gt;
 
       </description>
     </item>

@@ -830,7 +830,10 @@
 <div class="td-content">
 	<h1>Cfg</h1>
 	<div class="lead">Display and modify JSON or YAML configuration</div>
-	
+	<!--mdtogo:Short
+    Display and modify JSON or YAML configuration
+-->
+
 
 <p>
     
@@ -862,6 +865,7 @@
     </script>
 </p>
 
+<!--mdtogo:Long-->
 <table>
 <thead>
 <tr>
@@ -882,9 +886,11 @@ of workflows which would otherwise require viewing and editing YAML
 directly.</p>
 <p>Many cfg subcommands may also read from STDIN, allowing them to be paired
 with other tools such as <code>kubectl get</code>.</p>
+<!--mdtogo-->
 <pre><code>kpt cfg [SUBCOMMAND]
 </code></pre>
 <h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print the package using tree based structure</span>
 $ kpt cfg tree helloworld --name --image --replicas
 helloworld
@@ -903,7 +909,8 @@ $ kpt cfg list-setters helloworld replicas
 <span style="color:#8f5902;font-style:italic"># set a high-level knob</span>
 $ kpt cfg <span style="color:#204a87">set</span> helloworld replicas <span style="color:#0000cf;font-weight:bold">3</span>
 <span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
-</code></pre></div>
+</code></pre></div><!--mdtogo-->
+
         <div class="section-index">
     
     
@@ -1040,7 +1047,7 @@ $ kpt cfg <span style="color:#204a87">set</span> helloworld replicas <span style
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
 </div>
 </div>
 
