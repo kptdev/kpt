@@ -2,9 +2,13 @@
 title: "Set"
 linkTitle: "set"
 type: docs
+draft: true
 description: >
    Add a sync dependency to a Kptfile
 ---
+<!--mdtogo:Short
+    Add a sync dependency to a Kptfile
+-->
 
 `kpt pkg sync set` can be used to add or update Kptfile dependencies
 programmatically.
@@ -15,6 +19,7 @@ to be updated.
 {{% /pageinfo %}}
 
 ### Examples
+<!--mdtogo:Examples-->
 
 #### Create a new package and add a dependency to it
 
@@ -37,10 +42,11 @@ kpt pkg sync .
 kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
     hello-world --strategy=resource-merge
 ```
+<!--mdtogo-->
 
+### Synopsis
+<!--mdtogo:Long-->
     kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
-
-#### Args
 
     REPO_URI:
       URI of a git repository containing 1 or more packages as subdirectories.
@@ -91,3 +97,4 @@ kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-example
         * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
           THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace
           it with the remote version.
+<!--mdtogo-->
