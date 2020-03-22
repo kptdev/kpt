@@ -2,9 +2,13 @@
 title: "Sync"
 linkTitle: "sync"
 type: docs
+draft: true
 description: >
    Fetch and update packages declaratively
 ---
+<!--mdtogo:Short
+    Fetch and update packages declaratively
+-->
 
 {{< asciinema key="pkg-sync" rows="10" preload="1" >}}
 
@@ -21,7 +25,7 @@ the `get` and `update` commands.
 ### Examples
 
 #### Example sync commands
-
+<!--mdtogo:Examples-->
 ```sh
 # print the dependencies that would be modified
 kpt pkg sync . --dry-run
@@ -31,6 +35,7 @@ kpt pkg sync . --dry-run
 # sync the dependencies
 kpt pkg sync .
 ```
+<!--mdtogo-->
 
 #### Example Kptfile with dependencies
 
@@ -62,7 +67,7 @@ dependencies:
 ```
 
 ### Synopsis
-
+<!--mdtogo:Long-->
     kpt pkg sync LOCAL_PKG_DIR [flags]
 
     LOCAL_PKG_DIR:
@@ -75,6 +80,7 @@ dependencies:
 
     Controls where to cache remote packages during updates.
     Defaults to ~/.kpt/repos/
+<!--mdtogo-->
 
 #### Dependencies
 
