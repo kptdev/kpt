@@ -188,11 +188,15 @@ spec:
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt fn run DIR [flags]
+```
+kpt fn run DIR [flags]
+```
 
 If the container exits with non-zero status code, run will fail and print the
 container `STDERR`.
 
-    DIR:
-      Path to a package directory.  Defaults to stdin if unspecified.
+```
+DIR:
+  Path to a package directory.  Defaults to stdin if unspecified.
+```
 <!--mdtogo-->

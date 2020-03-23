@@ -53,30 +53,28 @@ var CfgExamples = `
 
 var AnnotateShort = `Set an annotation on one or more resources`
 var AnnotateLong = `
-    kpt cfg annotate DIR --kv KEY=VALUE...
+  kpt cfg annotate DIR --kv KEY=VALUE...
 
-#### Args
+Args:
+  DIR:
+    Path to a package directory
 
-    DIR:
-      Path to a package directory
-
-#### Flags
-
-    --apiVersion
-      Only set annotations on resources with this apiVersion.
-
-    --kind
-      Only set annotations on resources of this kind.
-
-    --kv
-      The annotation key and value to set.  May be specified multiple times
-      to set multiple annotations at once.
-
-    --namespace
-      Only set annotations on resources in this namespace.
-
-    --namespace
-      Only set annotations on resources with this name.
+Flags:
+  --apiVersion
+    Only set annotations on resources with this apiVersion.
+  
+  --kind
+    Only set annotations on resources of this kind.
+  
+  --kv
+    The annotation key and value to set.  May be specified multiple times
+    to set multiple annotations at once.
+  
+  --namespace
+    Only set annotations on resources in this namespace.
+  
+  --namespace
+    Only set annotations on resources with this name.
 `
 var AnnotateExamples = `
   # set an annotation on all Resources: 'key: value'
@@ -94,10 +92,10 @@ var AnnotateExamples = `
 
 var CatShort = `Print the resources in a package`
 var CatLong = `
-    kpt cfg cat DIR
-
-    DIR:
-      Path to a package directory
+  kpt cfg cat DIR
+  
+  DIR:
+    Path to a package directory
 `
 var CatExamples = `
   # print Resource config from a directory
@@ -106,10 +104,10 @@ var CatExamples = `
 
 var CountShort = `Print resource counts for a package`
 var CountLong = `
-    kpt cfg count [DIR]
-
-    DIR:
-      Path to a package directory.  Defaults to stdin if unspecified.
+  kpt cfg count [DIR]
+  
+  DIR:
+    Path to a package directory.  Defaults to stdin if unspecified.
 `
 var CountExamples = `
   # print Resource counts from a directory
@@ -121,19 +119,19 @@ var CountExamples = `
 
 var CreateSetterShort = `Create a setter for one or more field`
 var CreateSetterLong = `
-    kpt cfg create-setter DIR NAME VALUE
-
-    DIR:
-      Path to a package directory
-
-    NAME:
-      The name of the substitution to create.  This is both the name that will
-      be given to the *set* command, and that will be referenced by fields.
-      e.g. replicas
-
-    VALUE
-      The new value of the setter.
-      e.g. 3
+  kpt cfg create-setter DIR NAME VALUE
+  
+  DIR:
+    Path to a package directory
+  
+  NAME:
+    The name of the substitution to create.  This is both the name that will
+    be given to the *set* command, and that will be referenced by fields.
+    e.g. replicas
+  
+  VALUE
+    The new value of the setter.
+    e.g. 3
 `
 var CreateSetterExamples = `
   # create a setter called replicas for fields matching "3"
@@ -158,26 +156,26 @@ var CreateSetterExamples = `
 
 var CreateSubstShort = `Create a substitution for one or more fields`
 var CreateSubstLong = `
-    kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
-
-    DIR
-      Path to a package directory
-
-    NAME
-      The name of the substitution to create.  This is simply the unique key
-      which is referenced by fields which have the substitution applied.
-      e.g. image-substitution
-
-    VALUE
-      The current value of the field that will have PATTERN substituted.
-      e.g. nginx:1.7.9
-
-    PATTERN
-      A string containing one or more MARKER substrings which will be
-      substituted for setter values.  The pattern may contain multiple
-      different MARKERS, the same MARKER multiple times, and non-MARKER
-      substrings.
-      e.g. IMAGE_SETTER:TAG_SETTER
+  kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
+  
+  DIR
+    Path to a package directory
+  
+  NAME
+    The name of the substitution to create.  This is simply the unique key
+    which is referenced by fields which have the substitution applied.
+    e.g. image-substitution
+  
+  VALUE
+    The current value of the field that will have PATTERN substituted.
+    e.g. nginx:1.7.9
+  
+  PATTERN
+    A string containing one or more MARKER substrings which will be
+    substituted for setter values.  The pattern may contain multiple
+    different MARKERS, the same MARKER multiple times, and non-MARKER
+    substrings.
+    e.g. IMAGE_SETTER:TAG_SETTER
 `
 var CreateSubstExamples = `
   
@@ -221,10 +219,10 @@ var CreateSubstExamples = `
 
 var FmtShort = `Format configuration files`
 var FmtLong = `
-    kpt cfg fmt [DIR]
-
-    DIR:
-      Path to a package directory.  Reads from STDIN if not provided.
+  kpt cfg fmt [DIR]
+  
+  DIR:
+    Path to a package directory.  Reads from STDIN if not provided.
 `
 var FmtExamples = `
   # format file1.yaml and file2.yml
@@ -242,24 +240,22 @@ var FmtExamples = `
 
 var GrepShort = `Filter resources by their field values`
 var GrepLong = `
-    kpt cfg grep QUERY DIR
+  kpt cfg grep QUERY DIR
 
-#### Args
+Args:
+      QUERY:
+        Query to match expressed as 'path.to.field=value'.
+        Maps and fields are matched as '.field-name' or '.map-key'
+        List elements are matched as '[list-elem-field=field-value]'
+        The value to match is expressed as '=value'
+        '.' as part of a key or value can be escaped as '\.'
+  
+      DIR:
+        Path to a package directory
 
-    QUERY:
-      Query to match expressed as 'path.to.field=value'.
-      Maps and fields are matched as '.field-name' or '.map-key'
-      List elements are matched as '[list-elem-field=field-value]'
-      The value to match is expressed as '=value'
-      '.' as part of a key or value can be escaped as '\.'
-
-    DIR:
-      Path to a package directory
-
-#### Flags
-
-    --invert-match, -v
-      keep resources NOT matching the specified pattern
+Flags:
+      --invert-match, -v
+        keep resources NOT matching the specified pattern
 `
 var GrepExamples = `
   # find Deployment Resources
@@ -278,13 +274,13 @@ var GrepExamples = `
 
 var ListSettersShort = `List setters for a package`
 var ListSettersLong = `
-    kpt cfg list-setters DIR [NAME]
-
-    DIR
-      Path to a package directory
-
-    NAME
-      Optional.  The name of the setter to display.
+  kpt cfg list-setters DIR [NAME]
+  
+  DIR
+    Path to a package directory
+  
+  NAME
+    Optional.  The name of the setter to display.
 `
 var ListSettersExamples = `
   # list the setters in the hello-world package
@@ -296,27 +292,25 @@ var ListSettersExamples = `
 
 var SetShort = `Set one or more field values`
 var SetLong = `
-    kpt cfg set DIR NAME VALUE
+  kpt cfg set DIR NAME VALUE
 
-#### Args
+Args:
+  DIR
+    Path to a package directory. e.g. hello-world/
+  
+  NAME
+    The name of the setter. e.g. replicas
+  
+  VALUE
+    The new value to set on fields. e.g. 3
 
-    DIR
-      Path to a package directory. e.g. hello-world/
-
-    NAME
-      The name of the setter. e.g. replicas
-
-    VALUE
-      The new value to set on fields. e.g. 3
-
-#### Flags
-
-    --description
-      Optional description about the value.
-
-    --set-by
-      Optional record of who set the value.  Clears the last set-by
-      value if unset.
+Flags:
+  --description
+    Optional description about the value.
+  
+  --set-by
+    Optional record of who set the value.  Clears the last set-by
+    value if unset.
 `
 var SetExamples = `
   # set replicas to 3 using the 'replicas' setter
@@ -335,41 +329,39 @@ var SetExamples = `
 
 var TreeShort = `Render resources using a tree structure`
 var TreeLong = `
-    kpt cfg tree [DIR] [flags]
+  kpt cfg tree [DIR] [flags]
 
-#### Args
+Args:
+  DIR:
+    Path to a package directory.  Defaults to STDIN if not specified.
 
-    DIR:
-      Path to a package directory.  Defaults to STDIN if not specified.
-
-#### Flags
-
-    --args:
-      if true, print the container args field
-
-    --command:
-      if true, print the container command field
-
-    --env:
-      if true, print the container env field
-
-    --field:
-      dot-separated path to a field to print
-
-    --image:
-      if true, print the container image fields
-
-    --name:
-      if true, print the container name fields
-
-    --ports:
-      if true, print the container port fields
-
-    --replicas:
-      if true, print the replica field
-
-    --resources:
-      if true, print the resource reservations
+Flags:
+  --args:
+    if true, print the container args field
+  
+  --command:
+    if true, print the container command field
+  
+  --env:
+    if true, print the container env field
+  
+  --field:
+    dot-separated path to a field to print
+  
+  --image:
+    if true, print the container image fields
+  
+  --name:
+    if true, print the container name fields
+  
+  --ports:
+    if true, print the container port fields
+  
+  --replicas:
+    if true, print the replica field
+  
+  --resources:
+    if true, print the resource reservations
 `
 var TreeExamples = `
   # print Resources using directory structure

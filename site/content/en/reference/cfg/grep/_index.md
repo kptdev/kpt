@@ -44,10 +44,12 @@ kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" \
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg grep QUERY DIR
+```
+kpt cfg grep QUERY DIR
+```
 
 #### Args
-
+```
     QUERY:
       Query to match expressed as 'path.to.field=value'.
       Maps and fields are matched as '.field-name' or '.map-key'
@@ -57,9 +59,11 @@ kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" \
 
     DIR:
       Path to a package directory
+```
 
 #### Flags
-
+```
     --invert-match, -v
       keep resources NOT matching the specified pattern
+```
 <!--mdtogo-->

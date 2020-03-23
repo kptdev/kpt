@@ -41,51 +41,56 @@ kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+```
+kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+```
 
 #### Args
+```
+LOCAL_PKG_DIR:
+  Local package to update.  Directory must exist and contain a Kptfile
+  to be updated.
 
-    LOCAL_PKG_DIR:
-      Local package to update.  Directory must exist and contain a Kptfile
-      to be updated.
+VERSION:
+  A git tag, branch, ref or commit.  Specified after the local_package
+  with @ -- pkg@version.
+  Defaults the local package version that was last fetched.
 
-    VERSION:
-  	  A git tag, branch, ref or commit.  Specified after the local_package
-  	  with @ -- pkg@version.
-      Defaults the local package version that was last fetched.
-
-	  Version types:
-        * branch: update the local contents to the tip of the remote branch
-        * tag: update the local contents to the remote tag
-        * commit: update the local contents to the remote commit
+  Version types:
+    * branch: update the local contents to the tip of the remote branch
+    * tag: update the local contents to the remote tag
+    * commit: update the local contents to the remote commit
+```
 
 #### Flags
+```
+--strategy:
+  Controls how changes to the local package are handled.  Defaults to fast-forward.
 
-    --strategy:
-      Controls how changes to the local package are handled.  Defaults to fast-forward.
+    * resource-merge: perform a structural comparison of the original /
+      updated Resources, and merge the changes into the local package.
+    * fast-forward: fail without updating if the local package was modified
+      since it was fetched.
+    * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
+      patch of the changes between the source version and destination
+      version.
+    * force-delete-replace: WIPE ALL LOCAL CHANGES TO THE PACKAGE.
+      DELETE the local package at local_pkg_dir/ and replace it
+      with the remote version.
 
-        * resource-merge: perform a structural comparison of the original /
-          updated Resources, and merge the changes into the local package.
-        * fast-forward: fail without updating if the local package was modified
-          since it was fetched.
-        * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
-          patch of the changes between the source version and destination
-          version.
-        * force-delete-replace: WIPE ALL LOCAL CHANGES TO THE PACKAGE.
-          DELETE the local package at local_pkg_dir/ and replace it
-          with the remote version.
+-r, --repo:
+  Git repo url for updating contents.  Defaults to the repo the package
+  was fetched from.
 
-    -r, --repo:
-      Git repo url for updating contents.  Defaults to the repo the package
-      was fetched from.
-
-    --dry-run
-      Print the 'alpha-git-patch' strategy patch rather than merging it.
+--dry-run
+  Print the 'alpha-git-patch' strategy patch rather than merging it.
+```
 
 #### Env Vars
-
-    KPT_CACHE_DIR:
-      Controls where to cache remote packages when fetching them to update
-      local packages.
-      Defaults to ~/.kpt/repos/
+```
+KPT_CACHE_DIR:
+  Controls where to cache remote packages when fetching them to update
+  local packages.
+  Defaults to ~/.kpt/repos/
+```
 <!--mdtogo-->

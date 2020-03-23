@@ -27,8 +27,10 @@ kpt cfg cat my-dir/
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg cat DIR
+```
+kpt cfg cat DIR
 
-    DIR:
-      Path to a package directory
+DIR:
+  Path to a package directory
+```
 <!--mdtogo-->

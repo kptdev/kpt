@@ -61,8 +61,10 @@ kustomize build | kpt cfg fmt
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg fmt [DIR]
+```
+kpt cfg fmt [DIR]
 
-    DIR:
-      Path to a package directory.  Reads from STDIN if not provided.
+DIR:
+  Path to a package directory.  Reads from STDIN if not provided.
+```
 <!--mdtogo-->

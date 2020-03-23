@@ -42,28 +42,32 @@ kpt cfg annotate DIR --kv key1=value1 --kv key2=value2
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg annotate DIR --kv KEY=VALUE...
+```
+kpt cfg annotate DIR --kv KEY=VALUE...
+```
 
 #### Args
-
-    DIR:
-      Path to a package directory
+```
+DIR:
+  Path to a package directory
+```
 
 #### Flags
+```
+--apiVersion
+  Only set annotations on resources with this apiVersion.
 
-    --apiVersion
-      Only set annotations on resources with this apiVersion.
+--kind
+  Only set annotations on resources of this kind.
 
-    --kind
-      Only set annotations on resources of this kind.
+--kv
+  The annotation key and value to set.  May be specified multiple times
+  to set multiple annotations at once.
 
-    --kv
-      The annotation key and value to set.  May be specified multiple times
-      to set multiple annotations at once.
+--namespace
+  Only set annotations on resources in this namespace.
 
-    --namespace
-      Only set annotations on resources in this namespace.
-
-    --namespace
-      Only set annotations on resources with this name.
+--namespace
+  Only set annotations on resources with this name.
+```
 <!--mdtogo-->

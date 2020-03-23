@@ -47,10 +47,10 @@ var PkgExamples = `
 
 var DescShort = `Display upstream package metadata`
 var DescLong = `
-    kpt pkg desc DIR
-
-    DIR:
-      Path to a package directory
+  kpt pkg desc DIR
+  
+  DIR:
+    Path to a package directory
 `
 var DescExamples = `
   # display description for the local hello-world package
@@ -59,58 +59,55 @@ var DescExamples = `
 
 var DiffShort = `Diff a local package against upstream`
 var DiffLong = `
-    kpt pkg diff [DIR@VERSION]
+  kpt pkg diff [DIR@VERSION]
 
-#### Args
+Args:
+  DIR:
+    Local package to compare. Command will fail if the directory doesn't exist, or does not
+    contain a Kptfile.  Defaults to the current working directory.
+  
+  VERSION:
+    A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
+    Defaults to the local package version that was last fetched.
 
-    DIR:
-      Local package to compare. Command will fail if the directory doesn't exist, or does not
-      contain a Kptfile.  Defaults to the current working directory.
+Flags:
+  --diff-type:
+    The type of changes to view (local by default). Following types are
+    supported:
+  
+    local: shows changes in local package relative to upstream source package 
+           at original version
+    remote: shows changes in upstream source package at target version
+            relative to original version
+    combined: shows changes in local package relative to upstream source
+              package at target version
+    3way: shows changes in local package and source package at target version
+          relative to original version side by side
+  
+  --diff-tool:
+    Commandline tool (diff by default) for showing the changes.
+    Note that it overrides the KPT_EXTERNAL_DIFF environment variable.
+    
+    # Show changes using 'meld' commandline tool
+    kpt pkg diff @master --diff-tool meld
+  
+  --diff-opts:
+    Commandline options to use with the diffing tool.
+    Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
+    # Show changes using "diff" with recurive options
+    kpt pkg diff @master --diff-tool meld --diff-opts "-r"
 
-    VERSION:
-      A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
-      Defaults to the local package version that was last fetched.
-
-#### Flags
-
-    --diff-type:
-      The type of changes to view (local by default). Following types are
-      supported:
-
-	  local: shows changes in local package relative to upstream source package 
-	         at original version
-	  remote: shows changes in upstream source package at target version
-	          relative to original version
-	  combined: shows changes in local package relative to upstream source
-	            package at target version
-	  3way: shows changes in local package and source package at target version
-	        relative to original version side by side
-
-    --diff-tool:
-      Commandline tool (diff by default) for showing the changes.
-      Note that it overrides the KPT_EXTERNAL_DIFF environment variable.
-	  
-	  # Show changes using 'meld' commandline tool
-	  kpt pkg diff @master --diff-tool meld
-
-    --diff-opts:
-      Commandline options to use with the diffing tool.
-      Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
-	  # Show changes using "diff" with recurive options
-	  kpt pkg diff @master --diff-tool meld --diff-opts "-r"
-
-#### Environment Variables
-
-    KPT_EXTERNAL_DIFF:
-       Commandline diffing tool (diff by default) that will be used to show
-       changes.
-       # Use meld to show changes
-       KPT_EXTERNAL_DIFF=meld kpt pkg diff
-
-    KPT_EXTERNAL_DIFF_OPTS:
-       Commandline options to use for the diffing tool. For ex.
-       # Using "-a" diff option
-       KPT_EXTERNAL_DIFF_OPTS="-a" kpt pkg diff --diff-tool meld
+Environment Variables:
+  KPT_EXTERNAL_DIFF:
+     Commandline diffing tool (diff by default) that will be used to show
+     changes.
+     # Use meld to show changes
+     KPT_EXTERNAL_DIFF=meld kpt pkg diff
+  
+  KPT_EXTERNAL_DIFF_OPTS:
+     Commandline options to use for the diffing tool. For ex.
+     # Using "-a" diff option
+     KPT_EXTERNAL_DIFF_OPTS="-a" kpt pkg diff --diff-tool meld
 `
 var DiffExamples = `
   # Show changes in current package relative to upstream source package
@@ -134,39 +131,39 @@ var DiffExamples = `
 
 var GetShort = `Fetch a package from a git repo.`
 var GetLong = `
-    kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
-
-    REPO_URI:
-      URI of a git repository containing 1 or more packages as subdirectories.
-      In most cases the .git suffix should be specified to delimit the REPO_URI
-      from the PKG_PATH, but this is not required for widely recognized repo
-      prefixes.  If get cannot parse the repo for the directory and version,
-      then it will print an error asking for '.git' to be specified as part of
-      the argument.
-      e.g. https://github.com/kubernetes/examples.git
-      Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
-
-    PKG_PATH:
-      Path to remote subdirectory containing Kubernetes resource configuration
-      files or directories. Defaults to the root directory.
-      Uses '/' as the path separator (regardless of OS).
-      e.g. staging/cockroachdb
-
-    VERSION:
-      A git tag, branch, ref or commit for the remote version of the package
-      to fetch.  Defaults to the repository master branch.
-      e.g. @master
-
-    LOCAL_DEST_DIRECTORY:
-      The local directory to write the package to.
-      e.g. ./my-cockroachdb-copy
-
-        * If the directory does NOT exist: create the specified directory
-          and write the package contents to it
-        * If the directory DOES exist: create a NEW directory under the
-          specified one, defaulting the name to the Base of REPO/PKG_PATH
-        * If the directory DOES exist and already contains a directory with
-          the same name of the one that would be created: fail
+  kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+  
+  REPO_URI:
+    URI of a git repository containing 1 or more packages as subdirectories.
+    In most cases the .git suffix should be specified to delimit the REPO_URI
+    from the PKG_PATH, but this is not required for widely recognized repo
+    prefixes.  If get cannot parse the repo for the directory and version,
+    then it will print an error asking for '.git' to be specified as part of
+    the argument.
+    e.g. https://github.com/kubernetes/examples.git
+    Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
+  
+  PKG_PATH:
+    Path to remote subdirectory containing Kubernetes resource configuration
+    files or directories. Defaults to the root directory.
+    Uses '/' as the path separator (regardless of OS).
+    e.g. staging/cockroachdb
+  
+  VERSION:
+    A git tag, branch, ref or commit for the remote version of the package
+    to fetch.  Defaults to the repository master branch.
+    e.g. @master
+  
+  LOCAL_DEST_DIRECTORY:
+    The local directory to write the package to.
+    e.g. ./my-cockroachdb-copy
+  
+      * If the directory does NOT exist: create the specified directory
+        and write the package contents to it
+      * If the directory DOES exist: create a NEW directory under the
+        specified one, defaulting the name to the Base of REPO/PKG_PATH
+      * If the directory DOES exist and already contains a directory with
+        the same name of the one that would be created: fail
 `
 var GetExamples = `
   # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
@@ -185,26 +182,24 @@ var GetExamples = `
 
 var InitShort = `Initialize an empty package`
 var InitLong = `
-    kpt pkg init DIR [flags]
+  kpt pkg init DIR [flags]
 
-#### Args
+Args:
+  DIR:
+    Init fails if DIR does not already exist
 
-    DIR:
-      Init fails if DIR does not already exist
-
-#### Flags
-
-    --description
-      short description of the package. (default "sample description")
-
-    --name
-      package name.  defaults to the directory base name.
-
-    --tag
-      list of tags for the package.
-
-    --url
-      link to page with information about the package.
+Flags:
+  --description
+    short description of the package. (default "sample description")
+  
+  --name
+    package name.  defaults to the directory base name.
+  
+  --tag
+    list of tags for the package.
+  
+  --url
+    link to page with information about the package.
 `
 var InitExamples = `
   # writes Kptfile package meta if not found
@@ -215,16 +210,14 @@ var InitExamples = `
 
 var SyncShort = `Fetch and update packages declaratively`
 var SyncLong = `
-    kpt pkg sync LOCAL_PKG_DIR [flags]
+  kpt pkg sync LOCAL_PKG_DIR [flags]
+  
+  LOCAL_PKG_DIR:
+    Local package with dependencies to sync.  Directory must exist and
+    contain a Kptfile.
 
-    LOCAL_PKG_DIR:
-      Local package with dependencies to sync.  Directory must exist and
-      contain a Kptfile.
-
-#### Env Vars
-
+Env Vars:
   KPT_CACHE_DIR:
-
     Controls where to cache remote packages during updates.
     Defaults to ~/.kpt/repos/
 `
@@ -238,60 +231,59 @@ var SyncExamples = `
 
 var SetShort = `Add a sync dependency to a Kptfile`
 var SetLong = `
-    kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+  kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+  
+  REPO_URI:
+    URI of a git repository containing 1 or more packages as subdirectories.
+    In most cases the .git suffix should be specified to delimit the REPO_URI
+    from the PKG_PATH, but this is not required for widely recognized repo
+    prefixes.  If get cannot parse the repo for the directory and version, 
+    then it will print an error asking for '.git' to be specified as part of
+    the argument.
+    e.g. https://github.com/kubernetes/examples.git
+    Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
+  
+  PKG_PATH:
+    Path to remote subdirectory containing Kubernetes Resource configuration
+    files or directories.  Defaults to the root directory.
+    Uses '/' as the path separator (regardless of OS).
+    e.g. staging/cockroachdb
+  
+  VERSION:
+    A git tag, branch, ref or commit for the remote version of the package to
+    fetch.  Defaults to the repository master branch.
+    e.g. @master
+  
+  LOCAL_DEST_DIRECTORY:
+    The local directory to write the package to. e.g. ./my-cockroachdb-copy
+  
+      * If the directory does NOT exist: create the specified directory and write
+        the package contents to it
+      * If the directory DOES exist: create a NEW directory under the specified one,
+        defaulting the name to the Base of REPO/PKG_PATH
+      * If the directory DOES exist and already contains a directory with the same name
+        of the one that would be created: fail
 
-    REPO_URI:
-      URI of a git repository containing 1 or more packages as subdirectories.
-      In most cases the .git suffix should be specified to delimit the REPO_URI
-      from the PKG_PATH, but this is not required for widely recognized repo
-      prefixes.  If get cannot parse the repo for the directory and version, 
-      then it will print an error asking for '.git' to be specified as part of
-      the argument.
-      e.g. https://github.com/kubernetes/examples.git
-      Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
-
-    PKG_PATH:
-      Path to remote subdirectory containing Kubernetes Resource configuration
-      files or directories.  Defaults to the root directory.
-      Uses '/' as the path separator (regardless of OS).
-      e.g. staging/cockroachdb
-
-    VERSION:
-      A git tag, branch, ref or commit for the remote version of the package to
-      fetch.  Defaults to the repository master branch.
-      e.g. @master
-
-    LOCAL_DEST_DIRECTORY:
-      The local directory to write the package to. e.g. ./my-cockroachdb-copy
-
-        * If the directory does NOT exist: create the specified directory and write
-          the package contents to it
-        * If the directory DOES exist: create a NEW directory under the specified one,
-          defaulting the name to the Base of REPO/PKG_PATH
-        * If the directory DOES exist and already contains a directory with the same name
-          of the one that would be created: fail
-
-#### Flags
-
-    --strategy:
-      Controls how changes to the local package are handled.
-      Defaults to fast-forward.
-
-        * resource-merge: perform a structural comparison of the original /
-          updated Resources, and merge the changes into the local package.
-          See ` + "`" + `kpt help apis merge3` + "`" + ` for details on merge.
-        * fast-forward: fail without updating if the local package was modified
-          since it was fetched.
-        * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
-          patch of the changes between the source version and destination
-          version.
-          REQUIRES THE LOCAL PACKAGE TO HAVE BEEN COMMITTED TO A LOCAL GIT REPO.
-        * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
-          THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace
-          it with the remote version.
+Flags:
+  --strategy:
+    Controls how changes to the local package are handled.
+    Defaults to fast-forward.
+  
+      * resource-merge: perform a structural comparison of the original /
+        updated Resources, and merge the changes into the local package.
+        See ` + "`" + `kpt help apis merge3` + "`" + ` for details on merge.
+      * fast-forward: fail without updating if the local package was modified
+        since it was fetched.
+      * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
+        patch of the changes between the source version and destination
+        version.
+        REQUIRES THE LOCAL PACKAGE TO HAVE BEEN COMMITTED TO A LOCAL GIT REPO.
+      * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
+        THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace
+        it with the remote version.
 `
 var SetExamples = `
-#### Create a new package and add a dependency to it
+Create a new package and add a dependency to it:
 
   # init a package so it can be synced
   kpt pkg init
@@ -303,7 +295,7 @@ var SetExamples = `
   # sync the dependencies
   kpt pkg sync .
 
-#### Update an existing package dependency
+Update an existing package dependency:
 
   # add a dependency to an existing package
   kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
@@ -312,53 +304,50 @@ var SetExamples = `
 
 var UpdateShort = `Apply upstream package updates`
 var UpdateLong = `
-    kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+  kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 
-#### Args
+Args:
+  LOCAL_PKG_DIR:
+    Local package to update.  Directory must exist and contain a Kptfile
+    to be updated.
+  
+  VERSION:
+    A git tag, branch, ref or commit.  Specified after the local_package
+    with @ -- pkg@version.
+    Defaults the local package version that was last fetched.
+  
+    Version types:
+      * branch: update the local contents to the tip of the remote branch
+      * tag: update the local contents to the remote tag
+      * commit: update the local contents to the remote commit
 
-    LOCAL_PKG_DIR:
-      Local package to update.  Directory must exist and contain a Kptfile
-      to be updated.
+Flags:
+  --strategy:
+    Controls how changes to the local package are handled.  Defaults to fast-forward.
+  
+      * resource-merge: perform a structural comparison of the original /
+        updated Resources, and merge the changes into the local package.
+      * fast-forward: fail without updating if the local package was modified
+        since it was fetched.
+      * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
+        patch of the changes between the source version and destination
+        version.
+      * force-delete-replace: WIPE ALL LOCAL CHANGES TO THE PACKAGE.
+        DELETE the local package at local_pkg_dir/ and replace it
+        with the remote version.
+  
+  -r, --repo:
+    Git repo url for updating contents.  Defaults to the repo the package
+    was fetched from.
+  
+  --dry-run
+    Print the 'alpha-git-patch' strategy patch rather than merging it.
 
-    VERSION:
-  	  A git tag, branch, ref or commit.  Specified after the local_package
-  	  with @ -- pkg@version.
-      Defaults the local package version that was last fetched.
-
-	  Version types:
-        * branch: update the local contents to the tip of the remote branch
-        * tag: update the local contents to the remote tag
-        * commit: update the local contents to the remote commit
-
-#### Flags
-
-    --strategy:
-      Controls how changes to the local package are handled.  Defaults to fast-forward.
-
-        * resource-merge: perform a structural comparison of the original /
-          updated Resources, and merge the changes into the local package.
-        * fast-forward: fail without updating if the local package was modified
-          since it was fetched.
-        * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
-          patch of the changes between the source version and destination
-          version.
-        * force-delete-replace: WIPE ALL LOCAL CHANGES TO THE PACKAGE.
-          DELETE the local package at local_pkg_dir/ and replace it
-          with the remote version.
-
-    -r, --repo:
-      Git repo url for updating contents.  Defaults to the repo the package
-      was fetched from.
-
-    --dry-run
-      Print the 'alpha-git-patch' strategy patch rather than merging it.
-
-#### Env Vars
-
-    KPT_CACHE_DIR:
-      Controls where to cache remote packages when fetching them to update
-      local packages.
-      Defaults to ~/.kpt/repos/
+Env Vars:
+  KPT_CACHE_DIR:
+    Controls where to cache remote packages when fetching them to update
+    local packages.
+    Defaults to ~/.kpt/repos/
 `
 var UpdateExamples = `
   # update my-package-dir/

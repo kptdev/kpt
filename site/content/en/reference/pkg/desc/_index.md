@@ -21,8 +21,10 @@ kpt pkg desc hello-world/
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt pkg desc DIR
+```
+kpt pkg desc DIR
 
-    DIR:
-      Path to a package directory
+DIR:
+  Path to a package directory
+```
 <!--mdtogo-->
