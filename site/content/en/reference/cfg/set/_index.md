@@ -84,27 +84,31 @@ kpt cfg set hello-world/ tag 1.8.1
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg set DIR NAME VALUE
+```
+kpt cfg set DIR NAME VALUE
+```
 
 #### Args
+```
+DIR
+  Path to a package directory. e.g. hello-world/
 
-    DIR
-      Path to a package directory. e.g. hello-world/
+NAME
+  The name of the setter. e.g. replicas
 
-    NAME
-      The name of the setter. e.g. replicas
-
-    VALUE
-      The new value to set on fields. e.g. 3
+VALUE
+  The new value to set on fields. e.g. 3
+```
 
 #### Flags
+```
+--description
+  Optional description about the value.
 
-    --description
-      Optional description about the value.
-
-    --set-by
-      Optional record of who set the value.  Clears the last set-by
-      value if unset.
+--set-by
+  Optional record of who set the value.  Clears the last set-by
+  value if unset.
+```
 <!--mdtogo-->
 
 [create-setter]: ../create-setter

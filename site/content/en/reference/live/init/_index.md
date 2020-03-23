@@ -20,18 +20,22 @@ such as apply, preview and destroy.
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt live init DIRECTORY [flags]
+```
+kpt live init DIRECTORY [flags]
+```
 
 #### Args
-
-    DIR:
-      Path to a package directory.  The directory must contain exactly
-      one ConfigMap with the grouping object annotation.
+```
+DIR:
+  Path to a package directory.  The directory must contain exactly
+  one ConfigMap with the grouping object annotation.
+```
 
 #### Flags
-
-    --group-name:
-      String name to group applied resources. Must be composed of valid
-      label value characters. If not specified, the default group name
-      is generated from the package directory name.
+```
+--group-name:
+  String name to group applied resources. Must be composed of valid
+  label value characters. If not specified, the default group name
+  is generated from the package directory name.
+```
 <!--mdtogo-->

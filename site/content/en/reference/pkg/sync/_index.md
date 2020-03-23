@@ -68,18 +68,20 @@ dependencies:
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt pkg sync LOCAL_PKG_DIR [flags]
+```
+kpt pkg sync LOCAL_PKG_DIR [flags]
 
-    LOCAL_PKG_DIR:
-      Local package with dependencies to sync.  Directory must exist and
-      contain a Kptfile.
+LOCAL_PKG_DIR:
+  Local package with dependencies to sync.  Directory must exist and
+  contain a Kptfile.
+```
 
 #### Env Vars
-
-  KPT_CACHE_DIR:
-
-    Controls where to cache remote packages during updates.
-    Defaults to ~/.kpt/repos/
+```
+KPT_CACHE_DIR:
+  Controls where to cache remote packages during updates.
+  Defaults to ~/.kpt/repos/
+```
 <!--mdtogo-->
 
 #### Dependencies

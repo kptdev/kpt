@@ -53,19 +53,21 @@ kpt cfg create-setter DIR/ app nginx --field "annotations.app" --type string
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg create-setter DIR NAME VALUE
+```
+kpt cfg create-setter DIR NAME VALUE
 
-    DIR:
-      Path to a package directory
+DIR:
+  Path to a package directory
 
-    NAME:
-      The name of the substitution to create.  This is both the name that will
-      be given to the *set* command, and that will be referenced by fields.
-      e.g. replicas
+NAME:
+  The name of the substitution to create.  This is both the name that will
+  be given to the *set* command, and that will be referenced by fields.
+  e.g. replicas
 
-    VALUE
-      The new value of the setter.
-      e.g. 3
+VALUE
+  The new value of the setter.
+  e.g. 3
+```
 <!--mdtogo-->
 
 [creating setters]: ../../../guides/producer/setters

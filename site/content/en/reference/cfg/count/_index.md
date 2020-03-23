@@ -29,8 +29,10 @@ kubectl get all -o yaml | kpt cfg count
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg count [DIR]
+```
+kpt cfg count [DIR]
 
-    DIR:
-      Path to a package directory.  Defaults to stdin if unspecified.
+DIR:
+  Path to a package directory.  Defaults to stdin if unspecified.
+```
 <!--mdtogo-->

@@ -17,16 +17,20 @@ live cluster state.
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt live preview DIRECTORY [flags]
+```
+kpt live preview DIRECTORY [flags]
+```
 
 #### Args
-
-    DIRECTORY:
-      One directory that contain k8s manifests. The directory
-      must contain exactly one ConfigMap with the grouping object annotation.
+```
+DIRECTORY:
+  One directory that contain k8s manifests. The directory
+  must contain exactly one ConfigMap with the grouping object annotation.
+```
 
 #### Flags
-
-    --destroy:
-      If true, dry-run deletion of all resources.
+```
+--destroy:
+  If true, dry-run deletion of all resources.
+```
 <!--mdtogo-->

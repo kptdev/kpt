@@ -94,12 +94,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/annotate/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/cat/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -109,17 +109,17 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/count/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/create-setter/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/create-subst/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -129,7 +129,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/fmt/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -139,12 +139,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/grep/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -154,7 +154,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/set/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -169,7 +169,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/tree/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -229,37 +229,37 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/apply/</loc>
-    <lastmod>2020-03-20T15:16:12-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/desc/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/destroy/</loc>
-    <lastmod>2020-03-20T15:16:12-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/diff/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/get/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/init/</loc>
-    <lastmod>2020-03-20T15:16:12-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/init/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -269,12 +269,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/preview/</loc>
-    <lastmod>2020-03-20T15:16:12-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/run/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
@@ -284,17 +284,17 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/sink/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/source/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/update/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
   
 </urlset>

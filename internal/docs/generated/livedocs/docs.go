@@ -28,71 +28,64 @@ deploying local configuration packages to a cluster.
 
 var ApplyShort = `Apply a package to the cluster (create, update, delete)`
 var ApplyLong = `
-    kpt live apply DIR [flags]
+  kpt live apply DIR [flags]
 
-#### Args
+Args:
+  DIR:
+    Path to a package directory.  The directory must contain exactly
+    one ConfigMap with the grouping object annotation.
 
-    DIR:
-      Path to a package directory.  The directory must contain exactly
-      one ConfigMap with the grouping object annotation.
-
-#### Flags:
-
-    --wait-for-reconcile:
-      If true, after all resources have been applied, the cluster will
-      be polled until either all resources have been fully reconciled
-      or the timeout is reached.
-
-    --wait-polling-period:
-      The frequency with which the cluster will be polled to determine 
-      the status of the applied resources. The default value is every 2 seconds.
-
-    --wait-timeout:
-      The threshold for how long to wait for all resources to reconcile before
-      giving up. The default value is 1 minute.
+Flags::
+  --wait-for-reconcile:
+    If true, after all resources have been applied, the cluster will
+    be polled until either all resources have been fully reconciled
+    or the timeout is reached.
+  
+  --wait-polling-period:
+    The frequency with which the cluster will be polled to determine 
+    the status of the applied resources. The default value is every 2 seconds.
+  
+  --wait-timeout:
+    The threshold for how long to wait for all resources to reconcile before
+    giving up. The default value is 1 minute.
 `
 
 var DestroyShort = `Remove all previously applied resources in a package from the cluster`
 var DestroyLong = `
-    kpt live destroy DIR
+  kpt live destroy DIR
 
-#### Args
-
-    DIR:
-      Path to a package directory.  The directory must contain exactly
-      one ConfigMap with the grouping object annotation.
+Args:
+  DIR:
+    Path to a package directory.  The directory must contain exactly
+    one ConfigMap with the grouping object annotation.
 `
 
 var InitShort = `Initialize a package with a object to track previously applied resources`
 var InitLong = `
-    kpt live init DIRECTORY [flags]
+  kpt live init DIRECTORY [flags]
 
-#### Args
+Args:
+  DIR:
+    Path to a package directory.  The directory must contain exactly
+    one ConfigMap with the grouping object annotation.
 
-    DIR:
-      Path to a package directory.  The directory must contain exactly
-      one ConfigMap with the grouping object annotation.
-
-#### Flags
-
-    --group-name:
-      String name to group applied resources. Must be composed of valid
-      label value characters. If not specified, the default group name
-      is generated from the package directory name.
+Flags:
+  --group-name:
+    String name to group applied resources. Must be composed of valid
+    label value characters. If not specified, the default group name
+    is generated from the package directory name.
 `
 
 var PreviewShort = `Preview prints the changes apply would make to the cluster`
 var PreviewLong = `
-    kpt live preview DIRECTORY [flags]
+  kpt live preview DIRECTORY [flags]
 
-#### Args
+Args:
+  DIRECTORY:
+    One directory that contain k8s manifests. The directory
+    must contain exactly one ConfigMap with the grouping object annotation.
 
-    DIRECTORY:
-      One directory that contain k8s manifests. The directory
-      must contain exactly one ConfigMap with the grouping object annotation.
-
-#### Flags
-
-    --destroy:
-      If true, dry-run deletion of all resources.
+Flags:
+  --destroy:
+    If true, dry-run deletion of all resources.
 `

@@ -39,13 +39,13 @@ var FnExamples = `
 
 var RunShort = `Locally execute one or more functions in containers`
 var RunLong = `
-    kpt fn run DIR [flags]
+  kpt fn run DIR [flags]
 
 If the container exits with non-zero status code, run will fail and print the
 container ` + "`" + `STDERR` + "`" + `.
 
-    DIR:
-      Path to a package directory.  Defaults to stdin if unspecified.
+  DIR:
+    Path to a package directory.  Defaults to stdin if unspecified.
 `
 var RunExamples = `
   # read the Resources from DIR, provide them to a container my-fun as input,
@@ -65,10 +65,10 @@ var RunExamples = `
 
 var SinkShort = `Explicitly specify an output sink for a function`
 var SinkLong = `
-    kpt fn sink [DIR]
-
-    DIR:
-      Path to a package directory.  Defaults to stdout if unspecified.
+  kpt fn sink [DIR]
+  
+  DIR:
+    Path to a package directory.  Defaults to stdout if unspecified.
 `
 var SinkExamples = `
   # run a function using explicit sources and sinks
@@ -77,10 +77,10 @@ var SinkExamples = `
 
 var SourceShort = `Explicitly specify an output source for a function`
 var SourceLong = `
-    kpt fn source [DIR...]
-
-    DIR:
-      Path to a package directory.  Defaults to stdin if unspecified.
+  kpt fn source [DIR...]
+  
+  DIR:
+    Path to a package directory.  Defaults to stdin if unspecified.
 `
 var SourceExamples = `
   # print to stdout configuration formatted as an input source

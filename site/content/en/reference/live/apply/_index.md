@@ -109,26 +109,30 @@ kpt live apply to correctly compute status.
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt live apply DIR [flags]
+```
+kpt live apply DIR [flags]
+```
 
 #### Args
-
-    DIR:
-      Path to a package directory.  The directory must contain exactly
-      one ConfigMap with the grouping object annotation.
+```
+DIR:
+  Path to a package directory.  The directory must contain exactly
+  one ConfigMap with the grouping object annotation.
+```
 
 #### Flags:
+```
+--wait-for-reconcile:
+  If true, after all resources have been applied, the cluster will
+  be polled until either all resources have been fully reconciled
+  or the timeout is reached.
 
-    --wait-for-reconcile:
-      If true, after all resources have been applied, the cluster will
-      be polled until either all resources have been fully reconciled
-      or the timeout is reached.
+--wait-polling-period:
+  The frequency with which the cluster will be polled to determine 
+  the status of the applied resources. The default value is every 2 seconds.
 
-    --wait-polling-period:
-      The frequency with which the cluster will be polled to determine 
-      the status of the applied resources. The default value is every 2 seconds.
-
-    --wait-timeout:
-      The threshold for how long to wait for all resources to reconcile before
-      giving up. The default value is 1 minute.
+--wait-timeout:
+  The threshold for how long to wait for all resources to reconcile before
+  giving up. The default value is 1 minute.
+```
 <!--mdtogo-->

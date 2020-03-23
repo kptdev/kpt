@@ -870,8 +870,7 @@ kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts <span st
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
 <pre><code>kpt pkg diff [DIR@VERSION]
-</code></pre>
-<h4 id="args">Args</h4>
+</code></pre><h4 id="args">Args</h4>
 <pre><code>DIR:
   Local package to compare. Command will fail if the directory doesn't exist, or does not
   contain a Kptfile.  Defaults to the current working directory.
@@ -879,8 +878,7 @@ kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts <span st
 VERSION:
   A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
   Defaults to the local package version that was last fetched.
-</code></pre>
-<h4 id="flags">Flags</h4>
+</code></pre><h4 id="flags">Flags</h4>
 <pre><code>--diff-type:
   The type of changes to view (local by default). Following types are
   supported:
@@ -906,8 +904,7 @@ VERSION:
   Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
   # Show changes using &quot;diff&quot; with recurive options
   kpt pkg diff @master --diff-tool meld --diff-opts &quot;-r&quot;
-</code></pre>
-<h4 id="environment-variables">Environment Variables</h4>
+</code></pre><h4 id="environment-variables">Environment Variables</h4>
 <pre><code>KPT_EXTERNAL_DIFF:
    Commandline diffing tool (diff by default) that will be used to show
    changes.
@@ -918,8 +915,7 @@ KPT_EXTERNAL_DIFF_OPTS:
    Commandline options to use for the diffing tool. For ex.
    # Using &quot;-a&quot; diff option
    KPT_EXTERNAL_DIFF_OPTS=&quot;-a&quot; kpt pkg diff --diff-tool meld
-</code></pre>
-<!--mdtogo-->
+</code></pre><!--mdtogo-->
 
         <div class="section-index">
     
@@ -987,7 +983,7 @@ KPT_EXTERNAL_DIFF_OPTS:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
 </div>
 </div>
 

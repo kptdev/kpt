@@ -36,13 +36,15 @@ replicas   4       isabella   good value    1
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg list-setters DIR [NAME]
+```
+kpt cfg list-setters DIR [NAME]
 
-    DIR
-      Path to a package directory
+DIR
+  Path to a package directory
 
-    NAME
-      Optional.  The name of the setter to display.
+NAME
+  Optional.  The name of the setter to display.
+```
 <!--mdtogo-->
 
 [create-setter]: ../create-setter

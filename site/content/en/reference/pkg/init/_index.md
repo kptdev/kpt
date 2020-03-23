@@ -41,24 +41,28 @@ kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb \
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt pkg init DIR [flags]
+```
+kpt pkg init DIR [flags]
+```
 
 #### Args
-
-    DIR:
-      Init fails if DIR does not already exist
+```
+DIR:
+  Init fails if DIR does not already exist
+```
 
 #### Flags
+```
+--description
+  short description of the package. (default "sample description")
 
-    --description
-      short description of the package. (default "sample description")
+--name
+  package name.  defaults to the directory base name.
 
-    --name
-      package name.  defaults to the directory base name.
+--tag
+  list of tags for the package.
 
-    --tag
-      list of tags for the package.
-
-    --url
-      link to page with information about the package.
+--url
+  link to page with information about the package.
+```
 <!--mdtogo-->

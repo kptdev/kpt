@@ -148,13 +148,11 @@ kpt live apply to correctly compute status.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live apply DIR [flags]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;flags&#34;&gt;Flags:&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags:&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--wait-for-reconcile:
   If true, after all resources have been applied, the cluster will
   be polled until either all resources have been fully reconciled
@@ -167,8 +165,7 @@ kpt live apply to correctly compute status.&lt;/p&gt;
 --wait-timeout:
   The threshold for how long to wait for all resources to reconcile before
   giving up. The default value is 1 minute.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -221,13 +218,11 @@ kpt live apply to correctly compute status.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live destroy DIR
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -284,19 +279,16 @@ such as apply, preview and destroy.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live init DIRECTORY [flags]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--group-name:
   String name to group applied resources. Must be composed of valid
   label value characters. If not specified, the default group name
   is generated from the package directory name.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -351,17 +343,14 @@ live cluster state.&lt;/p&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live preview DIRECTORY [flags]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIRECTORY:
   One directory that contain k8s manifests. The directory
   must contain exactly one ConfigMap with the grouping object annotation.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--destroy:
   If true, dry-run deletion of all resources.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>

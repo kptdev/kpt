@@ -15,11 +15,14 @@ The destroy command removes all files belonging to a package from the cluster.
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt live destroy DIR
+```
+kpt live destroy DIR
+```
 
 #### Args
-
-    DIR:
-      Path to a package directory.  The directory must contain exactly
-      one ConfigMap with the grouping object annotation.
+```
+DIR:
+  Path to a package directory.  The directory must contain exactly
+  one ConfigMap with the grouping object annotation.
+```
 <!--mdtogo-->

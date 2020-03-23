@@ -69,39 +69,43 @@ kubectl get all -o yaml | kpt cfg tree \
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg tree [DIR] [flags]
+```
+kpt cfg tree [DIR] [flags]
+```
 
 #### Args
-
-    DIR:
-      Path to a package directory.  Defaults to STDIN if not specified.
+```
+DIR:
+  Path to a package directory.  Defaults to STDIN if not specified.
+```
 
 #### Flags
+```
+--args:
+  if true, print the container args field
 
-    --args:
-      if true, print the container args field
+--command:
+  if true, print the container command field
 
-    --command:
-      if true, print the container command field
+--env:
+  if true, print the container env field
 
-    --env:
-      if true, print the container env field
+--field:
+  dot-separated path to a field to print
 
-    --field:
-      dot-separated path to a field to print
+--image:
+  if true, print the container image fields
 
-    --image:
-      if true, print the container image fields
+--name:
+  if true, print the container name fields
 
-    --name:
-      if true, print the container name fields
+--ports:
+  if true, print the container port fields
 
-    --ports:
-      if true, print the container port fields
+--replicas:
+  if true, print the replica field
 
-    --replicas:
-      if true, print the replica field
-
-    --resources:
-      if true, print the resource reservations
+--resources:
+  if true, print the resource reservations
+```
 <!--mdtogo-->

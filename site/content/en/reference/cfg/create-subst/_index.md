@@ -64,26 +64,28 @@ kpt cfg set tag v1.8.0
 
 ### Synopsis
 <!--mdtogo:Long-->
-    kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
+```
+kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
 
-    DIR
-      Path to a package directory
+DIR
+  Path to a package directory
 
-    NAME
-      The name of the substitution to create.  This is simply the unique key
-      which is referenced by fields which have the substitution applied.
-      e.g. image-substitution
+NAME
+  The name of the substitution to create.  This is simply the unique key
+  which is referenced by fields which have the substitution applied.
+  e.g. image-substitution
 
-    VALUE
-      The current value of the field that will have PATTERN substituted.
-      e.g. nginx:1.7.9
+VALUE
+  The current value of the field that will have PATTERN substituted.
+  e.g. nginx:1.7.9
 
-    PATTERN
-      A string containing one or more MARKER substrings which will be
-      substituted for setter values.  The pattern may contain multiple
-      different MARKERS, the same MARKER multiple times, and non-MARKER
-      substrings.
-      e.g. IMAGE_SETTER:TAG_SETTER
+PATTERN
+  A string containing one or more MARKER substrings which will be
+  substituted for setter values.  The pattern may contain multiple
+  different MARKERS, the same MARKER multiple times, and non-MARKER
+  substrings.
+  e.g. IMAGE_SETTER:TAG_SETTER
+```
 <!--mdtogo-->
 
 [setters]: ../create-setter
