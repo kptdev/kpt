@@ -49,6 +49,19 @@ Flags::
     The threshold for how long to wait for all resources to reconcile before
     giving up. The default value is 1 minute.
 `
+var ApplyExamples = `
+  # apply resources and prune
+  kpt live apply my-dir/
+
+  # apply resources and wait for all the resources to be reconciled before pruning
+  kpt live apply --wait-for-reconcile my-dir/
+
+  # apply resources and specify how long to wait for resources to be reconciled
+  kpt live apply --wait-for-reconcile --wait-timeout=15m my-dir/
+
+  # apply resources and specify how often to poll the cluster for resource status
+  kpt live apply --wait-for-reconcile --wait-polling-period=5s my-dir/
+`
 
 var DestroyShort = `Remove all previously applied resources in a package from the cluster`
 var DestroyLong = `
@@ -58,6 +71,10 @@ Args:
   DIR:
     Path to a package directory.  The directory must contain exactly
     one ConfigMap with the grouping object annotation.
+`
+var DestroyExamples = `
+  # remove all resources in a package from the cluster
+  kpt live destroy my-dir/
 `
 
 var InitShort = `Initialize a package with a object to track previously applied resources`
@@ -75,6 +92,13 @@ Flags:
     label value characters. If not specified, the default group name
     is generated from the package directory name.
 `
+var InitExamples = `
+  # initialize a package
+  kpt live init my-dir/
+
+  # initialize a package with a specific name for the group of resources
+  kpt live init --group-name=foo my-dir/
+`
 
 var PreviewShort = `Preview prints the changes apply would make to the cluster`
 var PreviewLong = `
@@ -88,4 +112,11 @@ Args:
 Flags:
   --destroy:
     If true, dry-run deletion of all resources.
+`
+var PreviewExamples = `
+  # preview apply for a package
+  kpt live preview my-dir/
+
+  # preview destroy for a package
+  kpt live preview --destroy my-dir/
 `

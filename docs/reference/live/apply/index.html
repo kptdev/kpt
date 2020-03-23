@@ -802,6 +802,7 @@
         <li></li>
         <li><a href="#prune">Prune</a></li>
         <li><a href="#status-wait-for-reconcile">Status (wait-for-reconcile)</a></li>
+        <li><a href="#examples">Examples</a></li>
         <li><a href="#synopsis">Synopsis</a></li>
       </ul>
     </li>
@@ -976,6 +977,17 @@ wait until the desired number of pods have been created and become available.</p
 functionality for polling a set of resources and computing the aggregate status
 for the set. For CRDs, there is a set of recommendations that if followed, will allow
 kpt live apply to correctly compute status.</p>
+<h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and prune</span>
+kpt live apply my-dir/
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and wait for all the resources to be reconciled before pruning</span>
+kpt live apply --wait-for-reconcile my-dir/
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and specify how long to wait for resources to be reconciled</span>
+kpt live apply --wait-for-reconcile --wait-timeout<span style="color:#ce5c00;font-weight:bold">=</span>15m my-dir/
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and specify how often to poll the cluster for resource status</span>
+kpt live apply --wait-for-reconcile --wait-polling-period<span style="color:#ce5c00;font-weight:bold">=</span>5s my-dir/
+</code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
 <pre><code>kpt live apply DIR [flags]
@@ -1064,7 +1076,7 @@ kpt live apply to correctly compute status.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 23, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7b674464a7a7da26fd205e016e062a1fdb6fee0f">Add usage examples for the live commands (7b674464)</a>
 </div>
 </div>
 

@@ -18,6 +18,19 @@ when they are deleted.
 The template resource is required by other live commands
 such as apply, preview and destroy.
 
+### Examples
+<!--mdtogo:Examples-->
+```sh
+# initialize a package
+kpt live init my-dir/
+```
+
+```sh
+# initialize a package with a specific name for the group of resources
+kpt live init --group-name=foo my-dir/
+```
+<!--mdtogo-->
+
 ### Synopsis
 <!--mdtogo:Long-->
 ```
