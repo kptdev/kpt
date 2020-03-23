@@ -37,8 +37,7 @@ kpt pkg desc hello-world/
 
 DIR:
   Path to a package directory
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -82,8 +81,7 @@ kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts &lt;span
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg diff [DIR@VERSION]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
   Local package to compare. Command will fail if the directory doesn&#39;t exist, or does not
   contain a Kptfile.  Defaults to the current working directory.
@@ -91,8 +89,7 @@ kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts &lt;span
 VERSION:
   A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
   Defaults to the local package version that was last fetched.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--diff-type:
   The type of changes to view (local by default). Following types are
   supported:
@@ -118,8 +115,7 @@ VERSION:
   Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
   # Show changes using &amp;quot;diff&amp;quot; with recurive options
   kpt pkg diff @master --diff-tool meld --diff-opts &amp;quot;-r&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;environment-variables&#34;&gt;Environment Variables&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;environment-variables&#34;&gt;Environment Variables&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;KPT_EXTERNAL_DIFF:
    Commandline diffing tool (diff by default) that will be used to show
    changes.
@@ -130,8 +126,7 @@ KPT_EXTERNAL_DIFF_OPTS:
    Commandline options to use for the diffing tool. For ex.
    # Using &amp;quot;-a&amp;quot; diff option
    KPT_EXTERNAL_DIFF_OPTS=&amp;quot;-a&amp;quot; kpt pkg diff --diff-tool meld
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -231,8 +226,7 @@ LOCAL_DEST_DIRECTORY:
       specified one, defaulting the name to the Base of REPO/PKG_PATH
     * If the directory DOES exist and already contains a directory with
       the same name of the one that would be created: fail
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -307,12 +301,10 @@ kpt pkg init my-pkg --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weig
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg init DIR [flags]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
   Init fails if DIR does not already exist
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--description
   short description of the package. (default &amp;quot;sample description&amp;quot;)
 
@@ -324,8 +316,7 @@ kpt pkg init my-pkg --tag kpt.dev/app&lt;span style=&#34;color:#ce5c00;font-weig
 
 --url
   link to page with information about the package.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -398,8 +389,7 @@ kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;LOCAL_PKG_DIR:
   Local package to update.  Directory must exist and contain a Kptfile
   to be updated.
@@ -413,8 +403,7 @@ VERSION:
     * branch: update the local contents to the tip of the remote branch
     * tag: update the local contents to the remote tag
     * commit: update the local contents to the remote commit
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--strategy:
   Controls how changes to the local package are handled.  Defaults to fast-forward.
 
@@ -435,14 +424,12 @@ VERSION:
 
 --dry-run
   Print the &#39;alpha-git-patch&#39; strategy patch rather than merging it.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;env-vars&#34;&gt;Env Vars&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;env-vars&#34;&gt;Env Vars&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;KPT_CACHE_DIR:
   Controls where to cache remote packages when fetching them to update
   local packages.
   Defaults to ~/.kpt/repos/
-&lt;/code&gt;&lt;/pre&gt;
-&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>

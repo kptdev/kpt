@@ -894,23 +894,20 @@ kpt cfg grep <span style="color:#4e9a06">&#34;spec.template.spec.containers[name
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
 <pre><code>kpt cfg grep QUERY DIR
-</code></pre>
-<h4 id="args">Args</h4>
-<pre><code>QUERY:
-  Query to match expressed as 'path.to.field=value'.
-  Maps and fields are matched as '.field-name' or '.map-key'
-  List elements are matched as '[list-elem-field=field-value]'
-  The value to match is expressed as '=value'
-  '.' as part of a key or value can be escaped as '\.'
+</code></pre><h4 id="args">Args</h4>
+<pre><code>    QUERY:
+      Query to match expressed as 'path.to.field=value'.
+      Maps and fields are matched as '.field-name' or '.map-key'
+      List elements are matched as '[list-elem-field=field-value]'
+      The value to match is expressed as '=value'
+      '.' as part of a key or value can be escaped as '\.'
 
-DIR:
-  Path to a package directory
-</code></pre>
-<h4 id="flags">Flags</h4>
-<pre><code>--invert-match, -v
-  keep resources NOT matching the specified pattern
-</code></pre>
-<!--mdtogo-->
+    DIR:
+      Path to a package directory
+</code></pre><h4 id="flags">Flags</h4>
+<pre><code>    --invert-match, -v
+      keep resources NOT matching the specified pattern
+</code></pre><!--mdtogo-->
 
         <div class="section-index">
     
@@ -978,7 +975,7 @@ DIR:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
 </div>
 </div>
 
