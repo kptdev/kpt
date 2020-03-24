@@ -145,6 +145,17 @@ wait until the desired number of pods have been created and become available.&lt
 functionality for polling a set of resources and computing the aggregate status
 for the set. For CRDs, there is a set of recommendations that if followed, will allow
 kpt live apply to correctly compute status.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# apply resources and prune&lt;/span&gt;
+kpt live apply my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# apply resources and wait for all the resources to be reconciled before pruning&lt;/span&gt;
+kpt live apply --wait-for-reconcile my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# apply resources and specify how long to wait for resources to be reconciled&lt;/span&gt;
+kpt live apply --wait-for-reconcile --wait-timeout&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;15m my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# apply resources and specify how often to poll the cluster for resource status&lt;/span&gt;
+kpt live apply --wait-for-reconcile --wait-polling-period&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;5s my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live apply DIR [flags]
@@ -215,6 +226,11 @@ kpt live apply to correctly compute status.&lt;/p&gt;
 &lt;/p&gt;
 
 &lt;p&gt;The destroy command removes all files belonging to a package from the cluster.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# remove all resources in a package from the cluster&lt;/span&gt;
+kpt live destroy my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live destroy DIR
@@ -276,6 +292,13 @@ be used to track previously applied resources so that they can be pruned
 when they are deleted.&lt;/p&gt;
 &lt;p&gt;The template resource is required by other live commands
 such as apply, preview and destroy.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package&lt;/span&gt;
+kpt live init my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package with a specific name for the group of resources&lt;/span&gt;
+kpt live init --group-name&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;foo my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live init DIRECTORY [flags]
@@ -340,6 +363,13 @@ such as apply, preview and destroy.&lt;/p&gt;
 &lt;p&gt;The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
 live cluster state.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# preview apply for a package&lt;/span&gt;
+kpt live preview my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# preview destroy for a package&lt;/span&gt;
+kpt live preview --destroy my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live preview DIRECTORY [flags]

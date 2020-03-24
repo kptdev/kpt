@@ -13,6 +13,14 @@ description: >
 
 The destroy command removes all files belonging to a package from the cluster.
 
+### Examples
+<!--mdtogo:Examples-->
+```sh
+# remove all resources in a package from the cluster
+kpt live destroy my-dir/
+```
+<!--mdtogo-->
+
 ### Synopsis
 <!--mdtogo:Long-->
 ```

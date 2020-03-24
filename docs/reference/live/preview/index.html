@@ -878,6 +878,13 @@
 <p>The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
 live cluster state.</p>
+<h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># preview apply for a package</span>
+kpt live preview my-dir/
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># preview destroy for a package</span>
+kpt live preview --destroy my-dir/
+</code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
 <pre><code>kpt live preview DIRECTORY [flags]
@@ -956,7 +963,7 @@ live cluster state.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified March 23, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7b674464a7a7da26fd205e016e062a1fdb6fee0f">Add usage examples for the live commands (7b674464)</a>
 </div>
 </div>
 

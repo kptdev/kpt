@@ -15,6 +15,19 @@ The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
 live cluster state. 
 
+### Examples
+<!--mdtogo:Examples-->
+```sh
+# preview apply for a package
+kpt live preview my-dir/
+```
+
+```sh
+# preview destroy for a package
+kpt live preview --destroy my-dir/
+```
+<!--mdtogo-->
+
 ### Synopsis
 <!--mdtogo:Long-->
 ```
