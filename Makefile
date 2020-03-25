@@ -36,10 +36,14 @@ generate:
 	go install ./mdtogo
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
+	rm -rf internal/guides/generated
+	mkdir internal/guides/generated
 	GOBIN=$(GOBIN) go generate ./...
 	which addlicense || go get github.com/google/addlicense
 	$(GOBIN)/addlicense -y 2019 -l apache internal/docs/generated
+	$(GOBIN)/addlicense -y 2019 -l apache internal/guides/generated
 	go fmt ./internal/docs/generated/...
+	go fmt ./internal/guides/generated/...
 
 tidy:
 	go mod tidy
