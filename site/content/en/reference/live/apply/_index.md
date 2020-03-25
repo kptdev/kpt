@@ -102,10 +102,75 @@ looking at the status, the operation would be reported as successful as soon as 
 deployment resource has been created in the apiserver. With status, kpt live apply will
 wait until the desired number of pods have been created and become available.
 
-Status is computed through a set of rules for specific types, and
+Status is computed through a set of rules for the built-in types, and
 functionality for polling a set of resources and computing the aggregate status
-for the set. For CRDs, there is a set of recommendations that if followed, will allow
-kpt live apply to correctly compute status.
+for the set. For CRDs, the status computation make a set of assumptions about
+the fields in the status object of the resource and the conditions that
+are set by the custom controller. If CRDs follow the recommendations below, 
+kpt live apply will be able to correctly compute status
+
+#### Recommendations for CRDs
+The custom controller should use the following conditions to signal whether
+a resource has been fully reconciled, and whether it has encountered any 
+problems:
+
+**Reconciling**: Indicates that the resource does not yet match its spec. i.e.
+the desired state as expressed in the resource spec object has not been
+fully realized in the cluster. A value of True means the controller
+is in the process of reconciling the resource while a value of False means
+there are no work left for the controller.
+
+**Stalled**: Indicates that the controller is not able to make the expected
+progress towards reconciling the resource. The cause of this status can be
+either that the controller observes an actual problem (like a pod not being
+able to start), or that something is taking longer than expected (similar
+to the `progressDeadlineSeconds` timeout on Deployments). If this condition
+is True, it should be interpreted that something might be wrong. It does not
+mean that the resource will never be reconciled. Most process in Kubernetes
+retry forever, so this should not be considered a terminal state.
+
+These conditions adhere to the [Kubernetes design principles]
+which include expressing conditions using abnormal-true polarity. There is
+currently a [proposal] to change to guidance for conditions. If this is 
+accepted, the recommended conditions for kpt might also change, but we will 
+continue to support the current set of conditions.
+
+CRDs should also set the `observedGeneration` field in the status object, a 
+pattern already common in the built-in types. The controller should update
+this field every time it sees a new generation of the resource. This allows
+the kpt library to distinguish between resources that do not have any
+conditions set because they are fully reconciled, from resources that have no
+conditions set because they have just been created. 
+
+An example of a resource where the latest change has been observed by
+the controller which is currently in the process of reconciling would be:
+
+```yaml
+apiVersion: example.com
+kind: Foo
+metadata:
+  generation: 12
+  name: bar
+spec:
+  replicas: 1
+status:
+  observedGeneration: 12
+  conditions:
+  - lastTransitionTime: "2020-03-25T21:20:38Z"
+    lastUpdateTime: "2020-03-25T21:20:38Z"
+    message: Resource is reconciling
+    reason: Reconciling
+    status: "True"
+    type: Reconciling
+  - lastTransitionTime: "2020-03-25T21:20:27Z"
+    lastUpdateTime: "2020-03-25T21:20:39Z"
+    status: "False"
+    type: Stalled
+```
+
+The status for this resource state will be InProgress. So if the 
+`--wait-for-reconcile` flag is set, kpt live apply will wait until 
+the `Reconciling` condition is `False` before pruning and exiting.
 
 ### Examples
 <!--mdtogo:Examples-->
@@ -159,3 +224,6 @@ DIR:
   giving up. The default value is 1 minute.
 ```
 <!--mdtogo-->
+
+[Kubernetes design principles]: https://www.google.com/url?q=https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md%23typical-status-properties&sa=D&ust=1585160635349000&usg=AFQjCNE3ncANdus3xckLj3fkeupwFUoABw
+[proposal]: https://github.com/kubernetes/community/pull/4521
