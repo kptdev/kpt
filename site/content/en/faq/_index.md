@@ -18,10 +18,10 @@ A: `kpt` was inspired by `apt`, but with a Kubernetes focus.  We wanted to uphol
 
 #### **Q: What does kpt provide that git clone doesn't**
 
-A: `kpt` enables out-of-the-box workflows that `git clone` does not such such:
+A: `kpt` enables out-of-the-box workflows that `git clone` does not such as:
     cloning and versioning git subdirectories, updating from upstream by
     performing structured merges on resources, programmatically editing
-    configuration (rather than with and editor), etc
+    configuration (rather than with an editor), etc
 
 #### **Q: How is `kpt` different from other solutions?**
 
