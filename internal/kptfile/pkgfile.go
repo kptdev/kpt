@@ -45,6 +45,24 @@ type KptFile struct {
 	// See https://github.com/go-yaml/yaml/issues/518 and
 	// https://github.com/go-yaml/yaml/issues/575
 	OpenAPI interface{} `yaml:"openAPI,omitempty"`
+
+	// Functions contains configuration for running functions
+	Functions Functions `yaml:"functions,omitempty"`
+}
+
+type Functions struct {
+	// AutoRunStarlark will cause starlark functions to automatically be run.
+	AutoRunStarlark bool `yaml:"autoRunStarlark,omitempty"`
+
+	// StarlarkFunctions is a list of starlark functions to run
+	StarlarkFunctions []StarlarkFunction `yaml:"starlarkFunctions,omitempty"`
+}
+
+type StarlarkFunction struct {
+	// Name is the name that will be given to the program
+	Name string `yaml:"name,omitempty"`
+	// Path is the path to the *.star script to run
+	Path string `yaml:"path,omitempty"`
 }
 
 // MergeOpenAPI adds the OpenAPI definitions from file to k.
