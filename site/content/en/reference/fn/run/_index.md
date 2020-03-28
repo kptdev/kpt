@@ -84,7 +84,7 @@ Create a file e.g. `DIR/my-function.yaml`:
 ```yaml
 apiVersion: v1
 kind: ConfigMap
-metdata:
+metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
