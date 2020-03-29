@@ -164,14 +164,16 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 				// with fetching the first commit by sha.
 				if err = gitRunner.Run("fetch", "origin"); err != nil {
 					return "", errors.Errorf(
-						"failed to clone git repo: trouble fetching origin %v", err)
+						"failed to clone git repo: trouble fetching origin %v, " +
+							"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
 				}
 				triedFallback = true
 			}
 			// verify we got the commit
 			if err = gitRunner.Run("show", s); err != nil {
 				return "", errors.Errorf(
-					"failed to clone git repo: trouble fetching origin %s: %v", s, err)
+					"failed to clone git repo: trouble fetching origin %s: %v, " +
+						"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", s, err)
 			}
 		}
 	}
@@ -183,22 +185,26 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 		}
 	}
 	if !found {
-		return "", errors.Errorf("failed to clone git repo: unable to find any matching refs: %s",
+		return "", errors.Errorf("failed to clone git repo: unable to find any matching refs: %s, " +
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials",
 			strings.Join(optionalRefs, ","))
 	}
 
 	if err = gitRunner.Run("fetch", "origin"); err != nil {
-		return "", errors.Errorf("failed to clone git repo: trouble fetching origin: %v", err)
+		return "", errors.Errorf("failed to clone git repo: trouble fetching origin: %v, " +
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
 	}
 
 	// reset the repo state
 	if err = gitRunner.Run("checkout", "master"); err != nil {
-		return "", errors.Errorf("failed to clone repo: trouble checking out master: %v", err)
+		return "", errors.Errorf("failed to clone repo: trouble checking out master: %v, " +
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
 	}
 
 	// TODO: make this safe for concurrent operations
 	if err = gitRunner.Run("reset", "--hard", "origin/master"); err != nil {
-		return "", errors.Errorf("failed to clone repo: trouble reset to master: %v", err)
+		return "", errors.Errorf("failed to clone repo: trouble reset to master: %v, " +
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
 	}
 	gitRunner.Dir = filepath.Join(repoCacheDir, dir)
 	return repoCacheDir, nil

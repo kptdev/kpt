@@ -433,7 +433,10 @@ func TestCommand_Run_failClean(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "refs/heads/not-real: exit status 128") {
+	if !assert.Contains(t, err.Error(), "refs/heads/not-real") {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), "exit status 128") {
 		t.FailNow()
 	}
 
@@ -545,7 +548,10 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "refs/heads/foo: exit status 128") {
+	if !assert.Contains(t, err.Error(), "refs/heads/foo") {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), "exit status 128") {
 		t.FailNow()
 	}
 }
@@ -558,7 +564,10 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "refs/tags/foo: exit status 128") {
+	if !assert.Contains(t, err.Error(), "refs/tags/foo") {
+		t.FailNow()
+	}
+	if !assert.Contains(t, err.Error(), "exit status 128") {
 		t.FailNow()
 	}
 }

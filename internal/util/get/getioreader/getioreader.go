@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Get reads a package from input and applies a pattern for generating filesnames.
+// Get reads a package from input and applies a pattern for generating filenames.
 func Get(path, pattern string, input io.Reader) error {
 	if err := os.MkdirAll(path, 0700); err != nil {
 		return err
