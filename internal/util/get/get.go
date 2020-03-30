@@ -175,7 +175,8 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		cmd.Dir = repoSpec.Dir
 		err = cmd.Run()
 		if err != nil {
-			return errors.WrapPrefixf(err, "trouble fetching %s", repoSpec.Ref)
+			return errors.WrapPrefixf(err, "trouble fetching %s, " +
+				"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", repoSpec.Ref)
 		}
 		cmd = exec.Command(gitProgram, "reset", "--hard", "FETCH_HEAD")
 		cmd.Stdout = &out
@@ -194,7 +195,8 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		cmd.Stderr = &out
 		cmd.Dir = repoSpec.Dir
 		if err = cmd.Run(); err != nil {
-			return errors.WrapPrefixf(err, "trouble fetching origin")
+			return errors.WrapPrefixf(err, "trouble fetching origin, " +
+				"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials")
 		}
 		cmd = exec.Command(gitProgram, "reset", "--hard", repoSpec.Ref)
 		cmd.Stdout = &out
@@ -202,7 +204,8 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 		cmd.Dir = repoSpec.Dir
 		if err = cmd.Run(); err != nil {
 			return errors.WrapPrefixf(
-				err, "trouble hard resetting empty repository to %s", repoSpec.Ref)
+				err, "trouble hard resetting empty repository to %s, " +
+					"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", repoSpec.Ref)
 		}
 	}
 
@@ -211,7 +214,8 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	cmd.Dir = repoSpec.Dir
 	err = cmd.Run()
 	if err != nil {
-		return errors.WrapPrefixf(err, "trouble fetching submodules for %s", repoSpec.Ref)
+		return errors.WrapPrefixf(err, "trouble fetching submodules for %s, " +
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", repoSpec.Ref)
 	}
 
 	return nil

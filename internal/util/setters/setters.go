@@ -172,7 +172,8 @@ func GetProjectNumberFromProjectID(projectID string) (string, error) {
 		"projects", "describe", projectID, "--format", "value(projectNumber)")
 	b, err := gcloudCmd.Output()
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to get project number for %s", projectID)
+		return "", errors.Wrapf(err, "failed to get project number for %s, please verify gcloud " +
+			"credentials are valid and try again", projectID)
 	}
 	return strings.TrimSpace(string(b)), nil
 }
