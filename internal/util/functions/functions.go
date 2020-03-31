@@ -15,9 +15,15 @@
 package functions
 
 import (
+	"path/filepath"
+
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/runfn"
+	"sigs.k8s.io/kustomize/kyaml/starlark"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -39,4 +45,48 @@ func RunFunctions(path string, functions []kptfile.Function) error {
 
 	return kio.Pipeline{Inputs: []kio.Reader{rw}, Filters: fltrs, Outputs: []kio.Writer{rw}}.
 		Execute()
+}
+
+// ReconcileFunctions runs functions specified by the Kptfile
+func ReconcileFunctions(path string) error {
+	f, err := ext.GetOpenAPIFile([]string{path})
+	if err != nil {
+		return err
+	}
+	k, err := kptfileutil.ReadFile(f)
+	if err != nil {
+		return err
+	}
+	if k.Functions.AutoRunStarlark {
+		err := runfn.RunFns{
+			EnableStarlark: k.Functions.AutoRunStarlark,
+			// TODO: make auto-running containers an option
+			DisableContainers: true,
+			Path:              filepath.Dir(f),
+		}.Execute()
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(k.Functions.StarlarkFunctions) > 0 {
+		var fltrs []kio.Filter
+		for _, fn := range k.Functions.StarlarkFunctions {
+			fltrs = append(fltrs, &starlark.Filter{
+				Name: fn.Name,
+				Path: fn.Path,
+			})
+		}
+		rw := &kio.LocalPackageReadWriter{PackagePath: path}
+		err = kio.Pipeline{
+			Inputs:  []kio.Reader{rw},
+			Filters: fltrs,
+			Outputs: []kio.Writer{rw},
+		}.Execute()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

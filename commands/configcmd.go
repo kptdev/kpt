@@ -16,6 +16,7 @@ package commands
 
 import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/cfgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
@@ -103,8 +104,12 @@ func SetCommand(parent string) *cobra.Command {
 	setCmd.RunE = func(c *cobra.Command, args []string) error {
 		kustomizeCmd.SetArgs(args)
 		if err := kustomizeCmd.Execute(); err != nil {
-			return nil
+			return err
 		}
+		if err := functions.ReconcileFunctions(args[0]); err != nil {
+			return err
+		}
+
 		if len(args) != 3 || args[1] != "gcloud.core.project" {
 			return nil
 		}
