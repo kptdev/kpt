@@ -123,7 +123,7 @@ spec:
 ##### Command
 
 ```sh
-kpt cfg set replicas 3
+kpt cfg set helloworld/ replicas 3
 ```
 
 Change the replicas value in the configuration from 5 to 3.

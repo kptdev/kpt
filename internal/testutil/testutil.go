@@ -41,6 +41,7 @@ const (
 	Dataset1            = "dataset1"
 	Dataset2            = "dataset2"
 	Dataset3            = "dataset3"
+	Dataset4            = "dataset4" // Dataset4 is replica of Dataset2 with different setter values
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"

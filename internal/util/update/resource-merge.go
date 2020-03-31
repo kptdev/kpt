@@ -17,6 +17,7 @@ package update
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
@@ -25,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
 // ResourceMergeUpdater updates a package by fetching the original and updated source
@@ -49,6 +51,15 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		return errors.Errorf("failed to clone git repo: updated source: %v", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
+
+	err := settersutil.SetAllSetterDefinitions(
+		filepath.Join(options.PackagePath, "Kptfile"),
+		original.AbsPath(),
+		updated.AbsPath(),
+	)
+	if err != nil {
+		return err
+	}
 
 	// get the Kptfile to write after the merge
 	kf, err := u.updatedKptfile(updated.AbsPath(), options)
