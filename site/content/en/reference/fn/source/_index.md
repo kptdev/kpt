@@ -1,12 +1,12 @@
 ---
-title: "Sink"
-linkTitle: "sink"
+title: "Source"
+linkTitle: "source"
 type: docs
 description: >
-   Explicitly specify an output source for a function
+   Explicitly specify an input source for a function
 ---
 <!--mdtogo:Short
-    Explicitly specify an output source for a function
+    Explicitly specify an input source for a function
 -->
 
 Implements a Source by reading configuration and writing to command stdout.

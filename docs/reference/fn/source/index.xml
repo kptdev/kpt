@@ -1,8 +1,8 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Kpt – Sink</title>
+    <title>Kpt – Source</title>
     <link>https://googlecontainertools.github.io/kpt/reference/fn/source/</link>
-    <description>Recent content in Sink on Kpt</description>
+    <description>Recent content in Source on Kpt</description>
     <generator>Hugo -- gohugo.io</generator>
     
 	  <atom:link href="https://googlecontainertools.github.io/kpt/reference/fn/source/index.xml" rel="self" type="application/rss+xml" />
