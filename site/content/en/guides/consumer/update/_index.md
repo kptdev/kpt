@@ -145,7 +145,7 @@ specified version and applying the upstream changes to the local package.
 ##### Command
 
 ```sh
-kpt pkg update helloworld-set@v0.5.0 --strategy=resource-merge
+kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 ```
 
 Update the local package to the upstream version v0.5.0 by doing a 3-way
