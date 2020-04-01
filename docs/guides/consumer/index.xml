@@ -306,7 +306,7 @@ git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;add helloworld 
 &lt;p&gt;Package updates are performed by fetching the upstream package at the
 specified version and applying the upstream changes to the local package.&lt;/p&gt;
 &lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg update helloworld-set@v0.5.0 --strategy&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;resource-merge
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg update helloworld@v0.5.0 --strategy&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;resource-merge
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Update the local package to the upstream version v0.5.0 by doing a 3-way
 merge between 1) the original upstream commit, 2) the local (customized)
 package, 3) the new upstream reference.&lt;/p&gt;
