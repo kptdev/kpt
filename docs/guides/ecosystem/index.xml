@@ -101,7 +101,7 @@ git tag package-examples/mysql/mysql/templates/v0.1.0
 git push package-examples/mysql/mysql/templates/v0.1.0
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Once stored in git, kpt can be used to fetch the package and customize it directly.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
-kpt get/package-examples/mysql/mysql/templates@v0.1.0 mysql/
+kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$REPO&lt;/span&gt;/package-examples/mysql/mysql/templates@v0.16.0 mysql/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The package local package can be modified after it is fetched, and pull in
 upstream changes when the upstream package is regenerated from the chart
 or otherwise modified.&lt;/p&gt;
