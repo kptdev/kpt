@@ -89,7 +89,7 @@ Once stored in git, kpt can be used to fetch the package and customize it direct
 
 ```sh
 export REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt get/package-examples/mysql/mysql/templates@v0.1.0 mysql/
+kpt pkg get $REPO/package-examples/mysql/mysql/templates@v0.16.0 mysql/
 ```
 
 The package local package can be modified after it is fetched, and pull in
