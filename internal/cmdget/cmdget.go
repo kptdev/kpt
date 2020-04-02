@@ -20,7 +20,6 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/get/getioreader"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
@@ -89,10 +88,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	if r.AutoSet {
 		if err := setters.PerformSetters(r.Get.Destination); err != nil {
-			return err
-		}
-	} else { // Setters will also reconcile functions, so only do it in else
-		if err := functions.ReconcileFunctions(r.Get.Destination); err != nil {
 			return err
 		}
 	}
