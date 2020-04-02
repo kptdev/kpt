@@ -490,7 +490,7 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 			}
 
 			// append setters to local Kptfile with values in local package different from upstream(Dataset4)
-			file, err := os.OpenFile(g.RepoName + "/Kptfile", os.O_WRONLY|os.O_APPEND, 0644)
+			file, err := os.OpenFile(g.RepoName+"/Kptfile", os.O_WRONLY|os.O_APPEND, 0644)
 			if !assert.NoError(t, err) {
 				return
 			}
