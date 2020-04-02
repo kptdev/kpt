@@ -466,6 +466,85 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 	}
 }
 
+// TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
+// it was updated to with local values set to different values in upstream.
+func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
+	updates := []struct {
+		updater StrategyType
+	}{
+		{KResourceMerge},
+	}
+	for _, u := range updates {
+		func() {
+			// Setup the test upstream and local packages
+			g := &TestSetupManager{
+				T: t, Name: string(u.updater),
+				// Update upstream to Dataset2
+				UpstreamChanges: []Content{
+					{Data: testutil.Dataset4, Tag: "v1.0"},
+				},
+			}
+			defer g.Clean()
+			if !g.Init() {
+				return
+			}
+
+			// append setters to local Kptfile with values in local package different from upstream(Dataset4)
+			file, err := os.OpenFile(g.RepoName + "/Kptfile", os.O_WRONLY|os.O_APPEND, 0644)
+			if !assert.NoError(t, err) {
+				return
+			}
+			defer file.Close()
+
+			_, err = file.WriteString(`openAPI:
+  definitions:
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: "app-config"
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"`)
+
+			if !assert.NoError(t, err) {
+				return
+			}
+
+			localGit := gitutil.NewLocalGitRunner(g.localGitDir)
+			if !assert.NoError(g.T, localGit.Run("add", ".")) {
+				t.FailNow()
+			}
+			if !assert.NoError(g.T, localGit.Run("commit", "-m", "add files")) {
+				t.FailNow()
+			}
+
+			// Update the local package
+			if !assert.NoError(t, Command{
+				Path:     g.RepoName,
+				Strategy: u.updater,
+				Ref:      "v1.0",
+			}.Run(),
+				u.updater) {
+				return
+			}
+
+			// Expect the local package to have Dataset2
+			// Dataset2 is replica of Dataset4 but with setter values same as local package
+			// This tests the feature https://github.com/GoogleContainerTools/kpt/issues/284
+			if !g.AssertLocalDataEquals(testutil.Dataset2) {
+				return
+			}
+
+			if !assert.NoError(t, g.CheckoutBranch("v1.0", false)) {
+				return
+			}
+		}()
+	}
+}
+
 func TestCommand_Run_emitPatch(t *testing.T) {
 	// Setup the test upstream and local packages
 	g := &TestSetupManager{

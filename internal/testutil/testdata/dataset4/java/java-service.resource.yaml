@@ -13,10 +13,15 @@
 # limitations under the License.
 
 apiVersion: v1
-kind: ConfigMap
+kind: Service
 metadata:
-  name: app-config # {"$ref": "#/definitions/io.k8s.cli.setters.name"}
+  name: app
   labels:
-    app.kubernetes.io/component: undefined
-    app.kubernetes.io/instance: undefined
-data: {}
+    app: java
+spec:
+  selector:
+    app: java
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 80

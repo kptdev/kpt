@@ -17,7 +17,7 @@ kind: StatefulSet
 metadata:
   name: mysql
 spec:
-  replicas: 3 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 2 # {"$ref": "#/definitions/io.k8s.cli.setters.replicas"}
   selector:
     matchLabels:
       app: mysql
