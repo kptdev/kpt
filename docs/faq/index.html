@@ -291,18 +291,18 @@ when they are regenerated to keep the modifications.</li>
 <h4 id="q-isnt-writing-yaml-hard"><strong>Q: Isn&rsquo;t writing YAML hard?</strong></h4>
 <p>A: <code>kpt</code> offers a collection of utilities which enable working with configuration
 programmatically to simplify the experience.  Using <code>vi</code> to edit YAML should be
-necessary only for bootstrapping, and the common cases should use <a href="/reference/cfg/set">setters</a>
-or <a href="/reference/fn/run">functions</a> to generate or modify YAML configuration.</p>
+necessary only for bootstrapping, and the common cases should use <a href="/kpt/reference/cfg/set">setters</a>
+or <a href="/kpt/reference/fn/run">functions</a> to generate or modify YAML configuration.</p>
 <h4 id="q-i-really-like-dsl--templating-solution-x--can-i-use-it-with-kpt"><strong>Q: I really like DSL / templating solution X.  Can I use it with <code>kpt</code>?</strong></h4>
 <p>A: Yes. <code>kpt</code> supports plugging in solutions which generate or manipulate configuration, e.g. from
-DSLs and templates.  This may be performed using <a href="/reference/fn/run">functions</a>.  The generated
+DSLs and templates.  This may be performed using <a href="/kpt/reference/fn/run">functions</a>.  The generated
 output may be modified directly, and merged when regenerated.</p>
 <h4 id="q-i-want-to-write-high-level-abstractions-like-crds-but-on-the-client-side--can-i-do-this-with-kpt"><strong>Q: I want to write high-level abstractions like CRDs, but on the client-side.  Can I do this with <code>kpt</code>?</strong></h4>
 <p>A: Yes.  <code>kpt</code>'s architecture facilitates the developing programs which may generate or modify
-configuration.  Multiple programs may be composed together.  See <a href="/reference/fn/run">functions</a>.</p>
+configuration.  Multiple programs may be composed together.  See <a href="/kpt/reference/fn/run">functions</a>.</p>
 <h4 id="q-how-do-i-roll-out-changes-throughout-my-organization-using-kpt"><strong>Q: How do I roll out changes throughout my organization using <code>kpt</code>?</strong></h4>
 <p>A: This can be done one of several ways, including: 1) using semantic versioning or release
-channels with <a href="/reference/fn/run">functions</a>, or 2) <a href="/reference/pkg/update">updating</a> packages.</p>
+channels with <a href="/kpt/reference/fn/run">functions</a>, or 2) <a href="/kpt/reference/pkg/update">updating</a> packages.</p>
 <h4 id="q-is-there-a-container-image-that-contains-kpt"><strong>Q: Is there a container image that contains kpt?</strong></h4>
 <p>A: Yes. <a href="https://gcr.io/kpt-dev/kpt">gcr.io/kpt-dev/kpt</a> contains the <code>kpt</code> binary.</p>
 <h3 id="community">Community</h3>
@@ -326,7 +326,7 @@ channels with <a href="/reference/fn/run">functions</a>, or 2) <a href="/referen
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9b9fa5af5e820aec434b92c5ae9c9c2b5e9fe95e">Fixing a couple typos (9b9fa5af)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified April 2, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/bd0609329168cac18ce47677ba2c60e092e12ccd">Updating links (bd060932)</a>
 </div>
 </div>
 

@@ -721,7 +721,7 @@ git tag package-examples/mysql/mysql/templates/v0.1.0
 git push package-examples/mysql/mysql/templates/v0.1.0
 </code></pre></div><p>Once stored in git, kpt can be used to fetch the package and customize it directly.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
-kpt get/package-examples/mysql/mysql/templates@v0.1.0 mysql/
+kpt pkg get <span style="color:#000">$REPO</span>/package-examples/mysql/mysql/templates@v0.16.0 mysql/
 </code></pre></div><p>The package local package can be modified after it is fetched, and pull in
 upstream changes when the upstream package is regenerated from the chart
 or otherwise modified.</p>
@@ -776,7 +776,7 @@ or otherwise modified.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified April 2, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c40ba76cc27b84c41d21706ff9182b3f8cbbec1a">docs: fix helm ecosystem mysql pkg get command (c40ba76c)</a>
 </div>
 </div>
 
