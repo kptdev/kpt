@@ -90,13 +90,13 @@ A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` binary.
 
 ### 
 
-[updating]: /reference/pkg/update
-[functions]: /reference/fn/run
-[setters]: /reference/cfg/set
+[updating]: /kpt/reference/pkg/update
+[functions]: /kpt/reference/fn/run
+[setters]: /kpt/reference/cfg/set
 [gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
-[pkg]: /reference/pkg
-[cfg]: /reference/cfg
-[fn]: /reference/fn
-[live]: /reference/live
+[pkg]: /kpt/reference/pkg
+[cfg]: /kpt/reference/cfg
+[fn]: /kpt/reference/fn
+[live]: /kpt/reference/live
 [Kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [Declarative application management in Kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
