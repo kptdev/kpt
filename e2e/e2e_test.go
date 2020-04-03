@@ -40,7 +40,7 @@ func TestKptGetSet(t *testing.T) {
 		{name: "tag-subdir", tag: "v0.1.0", subdir: "helloworld-set"},
 		{name: "tag", tag: "v0.1.0"},
 		{name: "branch", branch: "master"},
-		{name: "setBy", setBy: "foo"},
+		ß{name: "setBy", setBy: "foo"},
 	}
 
 	for i := range tests {
