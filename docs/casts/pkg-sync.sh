@@ -36,7 +36,7 @@ p "# 'kpt pkg sync set' adds a package dependency to the Kptfile"
 pe "kpt pkg sync set \$SRC_REPO/package-examples/helloworld-set@v0.1.0 hello-world-prod"
 
 echo " "
-p "# 'kpt sync' syncs all package dependencies "
+p "# 'kpt pkg sync' syncs all package dependencies "
 p "# at the versions specified in the Kptfile"
 pe "kpt pkg sync ."
 pe "tree ."

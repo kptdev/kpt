@@ -423,7 +423,7 @@ admin-server, hystrix, various backends)&lt;/li&gt;
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/blueprint.svg&#34; /&gt;
 
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Optional: copy the mysql-kustomize blueprint to follow along&lt;/span&gt;
-kpt get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;factor--denormalize-the-configuration-data&#34;&gt;Factor / denormalize the configuration data&lt;/h2&gt;
 &lt;p&gt;Structuring blueprints into separate publisher and consumer focused pieces
 provides a clean UX for consumers to modifys the package.&lt;/p&gt;

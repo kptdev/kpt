@@ -39,7 +39,7 @@ can pull in changes to a blueprint after fetching it.
 
 ```sh
 # Optional: copy the mysql-kustomize blueprint to follow along
-kpt get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
 ```
 
 ## Factor / denormalize the configuration data
