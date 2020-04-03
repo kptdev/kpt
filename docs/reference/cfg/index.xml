@@ -368,12 +368,12 @@ substitutions.&lt;/p&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# setters are used.&lt;/span&gt;
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 &lt;span style=&#34;color:#4e9a06&#34;&gt;\
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --pattern IMAGE_SETTER:TAG_SETTER &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;IMAGE_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;nginx &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;TAG_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;v1.7.9
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;IMAGE_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;image-setter &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;TAG_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;tag-setter
 
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# 2. update the substitution value by setting one of the 2 setters it is&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# computed from&lt;/span&gt;
-kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; tag v1.8.0
+kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; . tag v1.8.0
 
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Manually create setters and substitution.  This is preferred to configure&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# the setters with a type, description, set-by, etc.&lt;/span&gt;
@@ -391,11 +391,11 @@ kpt cfg create-setter DIR/ tag v1.7.9 --field &lt;span style=&#34;color:#4e9a06&
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# 3. create the substitution computed from the image and tag setters&lt;/span&gt;
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 &lt;span style=&#34;color:#4e9a06&#34;&gt;\
 &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --pattern IMAGE_SETTER:TAG_SETTER &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;IMAGE_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;nginx &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;TAG_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;v1.7.9
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;IMAGE_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;image-setter &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;  --value &lt;span style=&#34;color:#000&#34;&gt;TAG_SETTER&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;tag-setter
 
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# 4. update the substitution value by setting one of the setters&lt;/span&gt;
-kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; tag v1.8.0
+kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; . tag v1.8.0
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
