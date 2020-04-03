@@ -891,12 +891,12 @@ substitutions.</p>
 <span style="color:#8f5902;font-style:italic"># setters are used.</span>
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>  --pattern IMAGE_SETTER:TAG_SETTER <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">IMAGE_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>nginx <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">TAG_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>v1.7.9
+</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">IMAGE_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>image-setter <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">TAG_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>tag-setter
 
 <span style="color:#8f5902;font-style:italic"># 2. update the substitution value by setting one of the 2 setters it is</span>
 <span style="color:#8f5902;font-style:italic"># computed from</span>
-kpt cfg <span style="color:#204a87">set</span> tag v1.8.0
+kpt cfg <span style="color:#204a87">set</span> . tag v1.8.0
 
 <span style="color:#8f5902;font-style:italic"># Manually create setters and substitution.  This is preferred to configure</span>
 <span style="color:#8f5902;font-style:italic"># the setters with a type, description, set-by, etc.</span>
@@ -914,11 +914,11 @@ kpt cfg create-setter DIR/ tag v1.7.9 --field <span style="color:#4e9a06">&#34;n
 <span style="color:#8f5902;font-style:italic"># 3. create the substitution computed from the image and tag setters</span>
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>  --pattern IMAGE_SETTER:TAG_SETTER <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">IMAGE_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>nginx <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">TAG_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>v1.7.9
+</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">IMAGE_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>image-setter <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">TAG_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>tag-setter
 
 <span style="color:#8f5902;font-style:italic"># 4. update the substitution value by setting one of the setters</span>
-kpt cfg <span style="color:#204a87">set</span> tag v1.8.0
+kpt cfg <span style="color:#204a87">set</span> . tag v1.8.0
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
@@ -1010,7 +1010,7 @@ PATTERN
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified April 3, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6c3876f046a0770f38c453ae65af2210a6252278">Update _index.md (6c3876f0)</a>
 </div>
 </div>
 
