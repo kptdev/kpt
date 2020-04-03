@@ -21,6 +21,7 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -89,6 +90,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			r.Update.Path)
 	}
 	if err := r.Update.Run(); err != nil {
+		return err
+	}
+
+	if err := functions.ReconcileFunctions(r.Update.Path); err != nil {
 		return err
 	}
 
