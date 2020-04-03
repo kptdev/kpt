@@ -31,12 +31,12 @@ substitutions.
 # setters are used.
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
   --pattern IMAGE_SETTER:TAG_SETTER \
-  --value IMAGE_SETTER=nginx \
-  --value TAG_SETTER=v1.7.9
+  --value IMAGE_SETTER=image-setter \
+  --value TAG_SETTER=tag-setter
 
 # 2. update the substitution value by setting one of the 2 setters it is
 # computed from
-kpt cfg set tag v1.8.0
+kpt cfg set . tag v1.8.0
 
 # Manually create setters and substitution.  This is preferred to configure
 # the setters with a type, description, set-by, etc.
@@ -54,11 +54,11 @@ kpt cfg create-setter DIR/ tag v1.7.9 --field "none" \
 # 3. create the substitution computed from the image and tag setters
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
   --pattern IMAGE_SETTER:TAG_SETTER \
-  --value IMAGE_SETTER=nginx \
-  --value TAG_SETTER=v1.7.9
+  --value IMAGE_SETTER=image-setter \
+  --value TAG_SETTER=tag-setter
 
 # 4. update the substitution value by setting one of the setters
-kpt cfg set tag v1.8.0
+kpt cfg set . tag v1.8.0
 ```
 <!--mdtogo-->
 
