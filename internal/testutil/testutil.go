@@ -45,6 +45,7 @@ const (
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"
+	HelloWorldSet       = "helloworld-set"
 )
 
 // TestGitRepo manages a local git repository for testing
@@ -84,6 +85,62 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool 
 	}
 	diff = diff.Difference(KptfileSet)
 	return assert.Empty(t, diff.List(), g.Updater)
+}
+
+func AssertEqual(t *testing.T, g *TestGitRepo, sourceDir, destDir string) {
+	diff, err := copyutil.Diff(sourceDir, destDir)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	diff = diff.Difference(KptfileSet)
+	if !assert.Empty(t, diff.List(), g.Updater) {
+		t.FailNow()
+	}
+}
+
+func Replace(t *testing.T, path, old, new string) {
+	b, err := ioutil.ReadFile(path)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	// update the expected contents to reflect the set command
+	b = []byte(strings.Replace(
+		string(b), old, new, -1))
+	if !assert.NoError(t, ioutil.WriteFile(path, b, 0)) {
+		t.FailNow()
+	}
+}
+
+func Compare(t *testing.T, a, b string) {
+	// Compare parses the yaml and serializes both files to normalize
+	// formatting
+	b1, err := ioutil.ReadFile(a)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	n1, err := yaml.Parse(string(b1))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	s1, err := n1.String()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	b2, err := ioutil.ReadFile(b)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	n2, err := yaml.Parse(string(b2))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	s2, err := n2.String()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, s1, s2) {
+		t.FailNow()
+	}
 }
 
 // AssertKptfile verifies the contents of the KptFile matches the provided value.
@@ -135,6 +192,17 @@ func (g *TestGitRepo) Commit(message string) error {
 	return nil
 }
 
+func Commit(t *testing.T, g *TestGitRepo, message string) {
+	if !assert.NoError(t, g.Commit(message)) {
+		t.FailNow()
+	}
+}
+
+func CommitTag(t *testing.T, g *TestGitRepo, tag string) {
+	Commit(t, g, tag)
+	Tag(t, g, tag)
+}
+
 // CopyAddData copies data from a source and adds it
 func (g *TestGitRepo) CopyAddData(data string) error {
 	if !filepath.IsAbs(data) {
@@ -157,6 +225,29 @@ func (g *TestGitRepo) CopyAddData(data string) error {
 	return nil
 }
 
+func CopyData(t *testing.T, g *TestGitRepo, data, dest string) {
+	if !filepath.IsAbs(data) {
+		data = filepath.Join(g.DatasetDirectory, data)
+	}
+
+	dest = filepath.Join(g.RepoDirectory, dest)
+	err := os.MkdirAll(dest, 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, copyutil.CopyDir(data, dest)) {
+		t.FailNow()
+	}
+
+	cmd := exec.Command("git", "add", ".")
+	cmd.Dir = g.RepoDirectory
+	stdoutStderr, err := cmd.CombinedOutput()
+	if !assert.NoError(t, err, stdoutStderr) {
+		t.FailNow()
+	}
+}
+
 func (g *TestGitRepo) GetCommit() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
 	cmd.Dir = g.RepoDirectory
@@ -171,6 +262,24 @@ func (g *TestGitRepo) GetCommit() (string, error) {
 func (g *TestGitRepo) RemoveAll() error {
 	err := os.RemoveAll(g.RepoDirectory)
 	return err
+}
+
+func RemoveData(t *testing.T, g *TestGitRepo) {
+	// remove the old data
+	files, err := ioutil.ReadDir(g.RepoDirectory)
+	if err != nil {
+		t.FailNow()
+	}
+	for i := range files {
+		f := files[i]
+		if f.IsDir() && f.Name() == ".git" {
+			continue
+		}
+		err := os.RemoveAll(filepath.Join(g.RepoDirectory, f.Name()))
+		if err != nil {
+			t.FailNow()
+		}
+	}
 }
 
 // ReplaceData replaces the data with a new source
@@ -247,6 +356,23 @@ func (g *TestGitRepo) Tag(tag string) error {
 	}
 
 	return nil
+}
+
+func Tag(t *testing.T, g *TestGitRepo, tag string) {
+	if !assert.NoError(t, g.Tag(tag)) {
+		t.FailNow()
+	}
+}
+
+func CopyKptfile(t *testing.T, src, dest string) {
+	b, err := ioutil.ReadFile(filepath.Join(src, kptfile.KptFileName))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	err = ioutil.WriteFile(filepath.Join(dest, kptfile.KptFileName), b, 0)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
 }
 
 // SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.

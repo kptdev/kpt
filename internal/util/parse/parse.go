@@ -39,13 +39,13 @@ func GitParseArgs(args []string) (Target, error) {
 	if strings.Contains(args[0], ".git") {
 		var repo, dir, version string
 		parts := strings.Split(args[0], ".git")
-		repo = strings.Trim(parts[0], "/")
+		repo = strings.TrimSuffix(parts[0], "/")
 		switch {
 		case len(parts) == 1:
 			// do nothing
 		case strings.Contains(parts[1], "@"):
 			parts := strings.Split(parts[1], "@")
-			version = strings.Trim(parts[1], "/")
+			version = strings.TrimSuffix(parts[1], "/")
 			dir = parts[0]
 		default:
 			dir = parts[1]
