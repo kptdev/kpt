@@ -19,7 +19,6 @@ metadata:
   labels:
     app: wordpress
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: wordpress
@@ -52,3 +51,4 @@ spec:
         persistentVolumeClaim:
           claimName: wp-pv-claim
   serviceName: wordpress-identity
+  replicas: 3
