@@ -671,10 +671,14 @@ sigs.k8s.io/kustomize/cmd/config v0.1.4 h1:g4CVLY9oq+yWfP3B4Vc6tlUC85snk9zT5dWiB
 sigs.k8s.io/kustomize/cmd/config v0.1.4/go.mod h1:+N1rp2jV0rGNJTn70Qzdq3P1tjhdrhl5LEg1Mq1GFFs=
 sigs.k8s.io/kustomize/kyaml v0.1.4 h1:cDG2u7v6CTAZmWKzCjk0hKG7AIN+2mCHx2ifwPbvKrs=
 sigs.k8s.io/kustomize/kyaml v0.1.4/go.mod h1:461i94nj0h0ylJ6w83jLkR4SqqVhn1iY6fjD0JSTQeE=
+sigs.k8s.io/kustomize/kyaml v0.1.5-0.20200405233609-a8b9741866cf h1:vl0SwPkgdR0Whl1DI8OXbzsBwPfnx1AJuat0ZN1vuVU=
+sigs.k8s.io/kustomize/kyaml v0.1.5-0.20200405233609-a8b9741866cf/go.mod h1:461i94nj0h0ylJ6w83jLkR4SqqVhn1iY6fjD0JSTQeE=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
+sigs.k8s.io/structured-merge-diff v0.0.0-20190817042607-6149e4549fca h1:6dsH6AYQWbyZmtttJNe8Gq1cXOeS1BdV3eW37zHilAQ=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190817042607-6149e4549fca/go.mod h1:IIgPezJWb76P0hotTxzDbWsMYB8APh18qZnxkomBpxA=
 sigs.k8s.io/testing_frameworks v0.1.2 h1:vK0+tvjF0BZ/RYFeZ1E6BYBwHJJXhjuZ3TdsEKH+UQM=
 sigs.k8s.io/testing_frameworks v0.1.2/go.mod h1:ToQrwSC3s8Xf/lADdZp3Mktcql9CG0UAmdJG9th5i0w=
 sigs.k8s.io/yaml v1.1.0 h1:4A07+ZFc2wgJwo8YNlQpr1rVlgUDlxXHhPJciaPY5gs=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
+vbom.ml/util v0.0.0-20160121211510-db5cfe13f5cc h1:MksmcCZQWAQJCTA5T0jgI/0sJ51AVm4Z41MrmfczEoc=
 vbom.ml/util v0.0.0-20160121211510-db5cfe13f5cc/go.mod h1:so/NYdZXCz+E3ZpW0uAoCj6uzU2+8OWDFv/HxUSs7kI=

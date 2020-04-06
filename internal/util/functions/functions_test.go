@@ -63,7 +63,7 @@ def run(r):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			}
 		},
@@ -137,7 +137,7 @@ def run(r):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			}
 		},
