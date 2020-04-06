@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/functions"
-	"github.com/stretchr/testify/assert"
+	"github.com/GoogleContainerTools/kpt/internal/util/testutil"
 )
 
 var tests = []testCase{
@@ -191,36 +191,26 @@ func TestReconcileFunctions(t *testing.T) {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
 			d, err := ioutil.TempDir("", "kpt")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			testutil.AssertNoError(t, err)
 			defer os.RemoveAll(d)
 
 			for filename, value := range test.inputs(d) {
 				err = ioutil.WriteFile(
 					filepath.Join(d, filename), []byte(value), 0600)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
+				testutil.AssertNoError(t, err)
 			}
 
 			err = functions.ReconcileFunctions(d)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			testutil.AssertNoError(t, err)
 
 			for filename, expected := range test.outputs(d) {
 				actual, err := ioutil.ReadFile(filepath.Join(d, filename))
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
+				testutil.AssertNoError(t, err)
 
-				if !assert.Equal(t,
+				testutil.AssertEqual(t,
 					strings.TrimSpace(expected),
 					strings.TrimSpace(string(actual)),
-				) {
-					t.FailNow()
-				}
+				)
 			}
 		})
 	}
