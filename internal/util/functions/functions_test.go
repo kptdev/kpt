@@ -63,7 +63,7 @@ def run(r):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			}
 		},
@@ -137,7 +137,7 @@ def run(r):
   for resource in r:
     resource["metadata"]["annotations"]["foo"] = "bar"
 
-run(resourceList["items"])
+run(ctx.resource_list["items"])
 `,
 			}
 		},
@@ -187,7 +187,6 @@ type testCase struct {
 }
 
 func TestReconcileFunctions(t *testing.T) {
-	t.SkipNow() //TODO: this test is failing due to changes in downstream, identify and fix it
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
