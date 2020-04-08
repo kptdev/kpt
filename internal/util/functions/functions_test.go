@@ -24,15 +24,15 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/testutil"
+	"github.com/stretchr/testify/assert"
 )
 
 var tests = []testCase{
 	// Test 1
 	{
 		name: "starlarkFunctions",
-		inputs: func(s string) map[string]string {
-			return map[string]string{
-				"Kptfile": fmt.Sprintf(`
+		inputs: map[string]string{
+			"Kptfile": fmt.Sprintf(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -40,10 +40,10 @@ metadata:
 functions:
   starlarkFunctions:
   - name: func
-    path: %s
-`, filepath.Join(s, "reconcile.star")),
+    path: reconcile.star
+`),
 
-				"deploy.yaml": `
+			"deploy.yaml": `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -57,7 +57,7 @@ spec:
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 
-				"reconcile.star": `
+			"reconcile.star": `
 # set the foo annotation on each resource
 def run(r):
   for resource in r:
@@ -65,11 +65,9 @@ def run(r):
 
 run(ctx.resource_list["items"])
 `,
-			}
 		},
-		outputs: func(s string) map[string]string {
-			return map[string]string{
-				"deploy.yaml": `
+		outputs: map[string]string{
+			"deploy.yaml": `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -84,16 +82,72 @@ spec:
         # head comment
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
-			}
+		},
+	},
+
+	// Test 1
+	{
+		name:   "starlarkFunctions-nested",
+		parent: "a",
+		inputs: map[string]string{
+			"Kptfile": fmt.Sprintf(`
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: my-pkg
+functions:
+  starlarkFunctions:
+  - name: func
+    path: reconcile.star
+`),
+
+			"deploy.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+
+			"reconcile.star": `
+# set the foo annotation on each resource
+def run(r):
+  for resource in r:
+    resource["metadata"]["annotations"]["foo"] = "bar"
+
+run(ctx.resource_list["items"])
+`,
+		},
+		outputs: map[string]string{
+			"deploy.yaml": `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    foo: bar
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
 		},
 	},
 
 	// Test 2
 	{
 		name: "autoRunStarlark",
-		inputs: func(s string) map[string]string {
-			return map[string]string{
-				"Kptfile": `
+		inputs: map[string]string{
+			filepath.Join("Kptfile"): `
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -101,14 +155,14 @@ metadata:
 functions:
   autoRunStarlark: true`,
 
-				"deploy1.yaml": fmt.Sprintf(`apiVersion: apps/v1
+			"deploy1.yaml": `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
     config.kubernetes.io/function: |
       starlark:
-        path: %s
+        path: "pkg/reconcile.star"
 spec:
   template:
     spec:
@@ -116,9 +170,9 @@ spec:
       - name: nginx
         # head comment
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
-`, filepath.Join(s, "reconcile.star")),
+`,
 
-				"deploy2.yaml": `apiVersion: apps/v1
+			"deploy2.yaml": `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-2
@@ -131,7 +185,7 @@ spec:
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
 
-				"reconcile.star": `
+			filepath.Join("pkg", "reconcile.star"): `
 # set the foo annotation on each resource
 def run(r):
   for resource in r:
@@ -139,18 +193,16 @@ def run(r):
 
 run(ctx.resource_list["items"])
 `,
-			}
 		},
-		outputs: func(s string) map[string]string {
-			return map[string]string{
-				"deploy1.yaml": fmt.Sprintf(`apiVersion: apps/v1
+		outputs: map[string]string{
+			"deploy1.yaml": `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
     config.kubernetes.io/function: |
       starlark:
-        path: %s
+        path: "pkg/reconcile.star"
     foo: bar
 spec:
   template:
@@ -159,9 +211,9 @@ spec:
       - name: nginx
         # head comment
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
-`, filepath.Join(s, "reconcile.star")),
+`,
 
-				"deploy2.yaml": `apiVersion: apps/v1
+			"deploy2.yaml": `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-2
@@ -175,43 +227,150 @@ spec:
         # head comment
         image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
 `,
-			}
 		},
+	},
+
+	// Test 2
+	{
+		name: "relative",
+		inputs: map[string]string{
+			filepath.Join("Kptfile"): `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: my-pkg
+functions:
+  autoRunStarlark: true`,
+
+			"deploy1.yaml": `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-1
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: "../reconcile.star"
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+
+			"deploy2.yaml": `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-2
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+
+			"reconcile.star": `
+# set the foo annotation on each resource
+def run(r):
+  for resource in r:
+    resource["metadata"]["annotations"]["foo"] = "bar"
+
+run(ctx.resource_list["items"])
+`,
+		},
+		outputs: map[string]string{
+			"deploy1.yaml": `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-1
+  annotations:
+    config.kubernetes.io/function: |
+      starlark:
+        path: "../reconcile.star"
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+
+			"deploy2.yaml": `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-2
+spec:
+  template:
+    spec:
+      containers:
+      - name: nginx
+        # head comment
+        image: nginx:1.8.1 # {"$ref": "#/definitions/io.k8s.cli.substitutions.image"}
+`,
+		},
+		err: "function path ../reconcile.star not allowed to start with ../",
 	},
 }
 
 type testCase struct {
 	name    string
-	inputs  func(string) map[string]string
-	outputs func(string) map[string]string
+	inputs  map[string]string
+	outputs map[string]string
+	err     string
+	parent  string
 }
+
+var relativePathValues = []bool{true, false}
 
 func TestReconcileFunctions(t *testing.T) {
 	for i := range tests {
 		test := tests[i]
-		t.Run(test.name, func(t *testing.T) {
-			d, err := ioutil.TempDir("", "kpt")
-			testutil.AssertNoError(t, err)
-			defer os.RemoveAll(d)
-
-			for filename, value := range test.inputs(d) {
-				err = ioutil.WriteFile(
-					filepath.Join(d, filename), []byte(value), 0600)
+		for j := range relativePathValues {
+			relativePath := relativePathValues[j]
+			name := fmt.Sprintf("%s/relative-%v", test.name, relativePath)
+			t.Run(name, func(t *testing.T) {
+				d, err := ioutil.TempDir("", "kpt")
 				testutil.AssertNoError(t, err)
-			}
+				defer os.RemoveAll(d)
+				testutil.AssertNoError(t, os.Chdir(d))
 
-			err = functions.ReconcileFunctions(d)
-			testutil.AssertNoError(t, err)
+				for filename, value := range test.inputs {
+					abs := filepath.Join(d, test.parent, filename)
+					err = os.MkdirAll(filepath.Dir(abs), 0700)
+					testutil.AssertNoError(t, err)
+					err = ioutil.WriteFile(abs, []byte(value), 0600)
+					testutil.AssertNoError(t, err)
+				}
 
-			for filename, expected := range test.outputs(d) {
-				actual, err := ioutil.ReadFile(filepath.Join(d, filename))
-				testutil.AssertNoError(t, err)
+				var path string
+				if relativePath {
+					path = "."
+				} else {
+					path = d
+				}
+				path = filepath.Join(path, test.parent)
+				err = functions.ReconcileFunctions(path)
+				if test.err == "" {
+					testutil.AssertNoError(t, err)
+				} else if !assert.EqualError(t, err, test.err) {
+					t.FailNow()
+				}
 
-				testutil.AssertEqual(t,
-					strings.TrimSpace(expected),
-					strings.TrimSpace(string(actual)),
-				)
-			}
-		})
+				for filename, expected := range test.outputs {
+					abs := filepath.Join(d, test.parent, filename)
+					actual, err := ioutil.ReadFile(abs)
+					testutil.AssertNoError(t, err)
+
+					testutil.AssertEqual(t,
+						strings.TrimSpace(expected),
+						strings.TrimSpace(string(actual)),
+					)
+				}
+			})
+		}
 	}
 }

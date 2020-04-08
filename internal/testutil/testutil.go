@@ -46,6 +46,7 @@ const (
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"
 	HelloWorldSet       = "helloworld-set"
+	HelloWorldFn        = "helloworld-fn"
 )
 
 // TestGitRepo manages a local git repository for testing

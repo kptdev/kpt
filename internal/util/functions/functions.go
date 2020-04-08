@@ -19,7 +19,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
@@ -49,20 +48,17 @@ func RunFunctions(path string, functions []kptfile.Function) error {
 
 // ReconcileFunctions runs functions specified by the Kptfile
 func ReconcileFunctions(path string) error {
-	f, err := ext.GetOpenAPIFile([]string{path})
+	k, err := kptfileutil.ReadFile(path)
 	if err != nil {
-		return err
-	}
-	k, err := kptfileutil.ReadFile(f)
-	if err != nil {
-		return err
+		// do nothing if the package doesn't have a Kptfile
+		return nil
 	}
 	if k.Functions.AutoRunStarlark {
 		err := runfn.RunFns{
 			EnableStarlark: k.Functions.AutoRunStarlark,
 			// TODO: make auto-running containers an option
 			DisableContainers: true,
-			Path:              filepath.Dir(f),
+			Path:              path,
 		}.Execute()
 		if err != nil {
 			return err
@@ -74,7 +70,7 @@ func ReconcileFunctions(path string) error {
 		for _, fn := range k.Functions.StarlarkFunctions {
 			fltrs = append(fltrs, &starlark.Filter{
 				Name: fn.Name,
-				Path: fn.Path,
+				Path: filepath.Join(path, fn.Path),
 			})
 		}
 		rw := &kio.LocalPackageReadWriter{PackagePath: path}
