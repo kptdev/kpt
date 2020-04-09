@@ -126,7 +126,9 @@ as other files included in the directory.  `&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
-&lt;p&gt;kpt pkg get&lt;code&gt;created a&lt;/code&gt;Kptfile&lt;code&gt;since one did not exist (for storing package state).  If the upstream package already defines a Kptfile, then&lt;/code&gt;kpt pkg get` will update the Kptfile copied from
+&lt;p&gt;&lt;code&gt;kpt pkg get&lt;/code&gt; created a &lt;code&gt;Kptfile&lt;/code&gt; since one did not exist
+(for storing package state).  If the upstream package already defines a
+&lt;code&gt;Kptfile&lt;/code&gt;, then &lt;code&gt;kpt pkg get&lt;/code&gt; will update the &lt;code&gt;Kptfile&lt;/code&gt; copied from
 upstream rather than replacing it.&lt;/p&gt;
 
 &lt;/div&gt;
