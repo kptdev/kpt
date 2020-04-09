@@ -466,6 +466,57 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 	}
 }
 
+// TestCommand_ResourceMerge_NonKRMUpdates tests if the local non KRM files are updated
+func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
+	updates := []struct {
+		updater StrategyType
+	}{
+		{KResourceMerge},
+	}
+	for _, u := range updates {
+		func() {
+			// Setup the test upstream and local packages
+			g := &TestSetupManager{
+				T: t, Name: string(u.updater),
+				// Update upstream to Dataset5
+				UpstreamChanges: []Content{
+					{Data: testutil.Dataset5, Tag: "v1.0"},
+				},
+			}
+			defer g.Clean()
+			if !g.Init() {
+				t.FailNow()
+			}
+
+			// Update the local package
+			if !assert.NoError(t, Command{
+				Path:     g.RepoName,
+				Strategy: u.updater,
+				Ref:      "v1.0",
+			}.Run(),
+				u.updater) {
+				t.FailNow()
+			}
+
+			// Expect the local package to have Dataset5
+			if !g.AssertLocalDataEquals(testutil.Dataset5) {
+				t.FailNow()
+			}
+
+			if !assert.NoError(t, g.CheckoutBranch("v1.0", false)) {
+				t.FailNow()
+			}
+			commit, err := g.GetCommit()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !g.AssertKptfile(commit, "v1.0") {
+				t.FailNow()
+			}
+		}()
+	}
+}
+
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
 // it was updated to with local values set to different values in upstream.
 func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
@@ -735,6 +786,86 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 			}
 			assert.Contains(t, err.Error(), "unrecognized update strategy")
 		}()
+	}
+}
+
+type nonKRMTestCase struct {
+	name            string
+	updated         string
+	original        string
+	local           string
+	modifyLocalFile bool
+	expectedLocal   string
+}
+
+var nonKRMTests = []nonKRMTestCase{
+	// Dataset5 is replica of Dataset2 with additional non KRM files
+	{
+		name:          "updated-filesDeleted",
+		updated:       testutil.Dataset2,
+		original:      testutil.Dataset5,
+		local:         testutil.Dataset5,
+		expectedLocal: testutil.Dataset2,
+	},
+	{
+		name:          "updated-filesAdded",
+		updated:       testutil.Dataset5,
+		original:      testutil.Dataset2,
+		local:         testutil.Dataset2,
+		expectedLocal: testutil.Dataset5,
+	},
+	{
+		name:          "local-filesAdded",
+		updated:       testutil.Dataset2,
+		original:      testutil.Dataset2,
+		local:         testutil.Dataset5,
+		expectedLocal: testutil.Dataset5,
+	},
+	{
+		name:            "local-filesModified",
+		updated:         testutil.Dataset5,
+		original:        testutil.Dataset5,
+		local:           testutil.Dataset5,
+		modifyLocalFile: true,
+		expectedLocal:   testutil.Dataset5,
+	},
+}
+
+// TestReplaceNonKRMFiles tests if the non KRM files are updated in 3-way merge fashion
+func TestReplaceNonKRMFiles(t *testing.T) {
+	for i := range nonKRMTests {
+		test := nonKRMTests[i]
+		t.Run(test.name, func(t *testing.T) {
+			ds, err := testutil.GetTestDataPath()
+			assert.NoError(t, err)
+			updated, err := ioutil.TempDir("", "")
+			assert.NoError(t, err)
+			original, err := ioutil.TempDir("", "")
+			assert.NoError(t, err)
+			local, err := ioutil.TempDir("", "")
+			assert.NoError(t, err)
+			expectedLocal, err := ioutil.TempDir("", "")
+			assert.NoError(t, err)
+
+			err = copyutil.CopyDir(filepath.Join(ds, test.updated), updated)
+			assert.NoError(t, err)
+			err = copyutil.CopyDir(filepath.Join(ds, test.original), original)
+			assert.NoError(t, err)
+			err = copyutil.CopyDir(filepath.Join(ds, test.local), local)
+			assert.NoError(t, err)
+			err = copyutil.CopyDir(filepath.Join(ds, test.expectedLocal), expectedLocal)
+			assert.NoError(t, err)
+			if test.modifyLocalFile {
+				err = ioutil.WriteFile(filepath.Join(local, "somefunction.py"), []byte("Print some other thing"), 0600)
+				assert.NoError(t, err)
+				err = ioutil.WriteFile(filepath.Join(expectedLocal, "somefunction.py"), []byte("Print some other thing"), 0600)
+				assert.NoError(t, err)
+			}
+			err = ReplaceNonKRMFiles(updated, original, local)
+			assert.NoError(t, err)
+			tg := testutil.TestGitRepo{}
+			tg.AssertEqual(t, local, filepath.Join(expectedLocal))
+		})
 	}
 }
 

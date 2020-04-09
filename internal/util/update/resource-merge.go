@@ -15,6 +15,8 @@
 package update
 
 import (
+	"bytes"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -24,8 +26,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -77,7 +82,11 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		return err
 	}
 
-	return kptfileutil.WriteFile(options.PackagePath, kf)
+	if err := kptfileutil.WriteFile(options.PackagePath, kf); err != nil {
+		return err
+	}
+
+	return ReplaceNonKRMFiles(updated.AbsPath(), original.AbsPath(), options.PackagePath)
 }
 
 // updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the update
@@ -109,4 +118,131 @@ func (u ResourceMergeUpdater) updatedKptfile(updatedPath string, options UpdateO
 	// keep the local OpenAPI values
 	err = kf.MergeOpenAPI(options.KptFile)
 	return kf, err
+}
+
+// replaceNonKRMFiles replaces the non KRM files in localDir with the corresponding files in updatedDir,
+// it also deletes non KRM files and sub dirs which are present in localDir and not in updatedDir
+func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
+	updatedSubDirs, updatedFiles, err := getSubDirsAndNonKrmFiles(updatedDir)
+	if err != nil {
+		return err
+	}
+
+	originalSubDirs, originalFiles, err := getSubDirsAndNonKrmFiles(originalDir)
+	if err != nil {
+		return err
+	}
+
+	localSubDirs, localFiles, err := getSubDirsAndNonKrmFiles(localDir)
+	if err != nil {
+		return err
+	}
+
+	// identify all non KRM files modified locally, to leave them untouched
+	locallyModifiedFiles := sets.String{}
+	for _, file := range localFiles.List() {
+		if !originalFiles.Has(file) {
+			// new local file has been added
+			locallyModifiedFiles.Insert(file)
+			continue
+		}
+		same, err := compareFiles(filepath.Join(originalDir, file), filepath.Join(localDir, file))
+		if err != nil {
+			return err
+		}
+		if !same {
+			// local file has been modified
+			locallyModifiedFiles.Insert(file)
+			continue
+		}
+
+		// remove the file from local if it is not modified and is deleted from updated upstream
+		if !updatedFiles.Has(file) {
+			if err = os.Remove(filepath.Join(localDir, file)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// make sure local has all sub-dirs present in updated
+	for _, dir := range updatedSubDirs.List() {
+		if err = os.MkdirAll(filepath.Join(localDir, dir), 0700); err != nil {
+			return err
+		}
+	}
+
+	// replace all non KRM files in local with the ones in updated
+	for _, file := range updatedFiles.List() {
+		if locallyModifiedFiles.Has(file) {
+			// skip syncing locally modified files
+			continue
+		}
+		err = copyutil.SyncFile(filepath.Join(updatedDir, file), filepath.Join(localDir, file))
+		if err != nil {
+			return err
+		}
+	}
+
+	// delete all the empty dirs in local which are not in updated
+	for _, dir := range localSubDirs.List() {
+		if !updatedSubDirs.Has(dir) && originalSubDirs.Has(dir) {
+			// removes only empty dirs
+			os.Remove(filepath.Join(localDir, dir))
+		}
+	}
+
+	return nil
+}
+
+// getSubDirsAndNonKrmFiles returns the list of all non git sub dirs and, non git+non KRM files
+// in the root directory
+func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
+	files := sets.String{}
+	dirs := sets.String{}
+	r := kio.LocalPackageReader{}
+	r.MatchFilesGlob = kio.DefaultMatch
+	r.MatchFilesGlob = append(r.MatchFilesGlob, "Kptfile")
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			path = strings.TrimPrefix(path, root)
+			if len(path) > 0 && !strings.Contains(path, ".git") {
+				dirs.Insert(path)
+			}
+			return nil
+		}
+		match, err := r.ShouldSkipFile(info)
+		if err != nil {
+			return err
+		}
+		if !match {
+			path = strings.TrimPrefix(path, root)
+			if len(path) > 0 && !strings.Contains(path, ".git") {
+				files.Insert(path)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return dirs, files, nil
+}
+
+// compareFiles returns true if src file content is equal to dst file content
+func compareFiles(src, dst string) (bool, error) {
+	b1, err := ioutil.ReadFile(src)
+	if err != nil {
+		return false, err
+	}
+	b2, err := ioutil.ReadFile(dst)
+	if err != nil {
+		return false, err
+	}
+	if bytes.Equal(b1, b2) {
+		return true, nil
+	}
+	return false, nil
 }

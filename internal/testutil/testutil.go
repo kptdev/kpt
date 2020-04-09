@@ -42,6 +42,7 @@ const (
 	Dataset2            = "dataset2"
 	Dataset3            = "dataset3"
 	Dataset4            = "dataset4" // Dataset4 is replica of Dataset2 with different setter values
+	Dataset5            = "dataset5" // Dataset5 is replica of Dataset2 with additional non KRM files
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"
@@ -312,11 +313,7 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
 func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 	// configure the path to the test dataset
-	_, filename, _, ok := runtime.Caller(1)
-	if !ok {
-		return errors.Errorf("failed to testutil package location")
-	}
-	ds, err := filepath.Abs(filepath.Join(filepath.Dir(filename), "testdata"))
+	ds, err := GetTestDataPath()
 	if err != nil {
 		return err
 	}
@@ -344,6 +341,26 @@ func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 		return err
 	}
 	return g.Commit("initial commit")
+}
+
+func GetTestDataPath() (string, error) {
+	filename, err := getTestUtilGoFilePath()
+	if err != nil {
+		return "", err
+	}
+	ds, err := filepath.Abs(filepath.Join(filepath.Dir(filename), "testdata"))
+	if err != nil {
+		return "", err
+	}
+	return ds, nil
+}
+
+func getTestUtilGoFilePath() (string, error) {
+	_, filename, _, ok := runtime.Caller(1)
+	if !ok {
+		return "", errors.Errorf("failed to testutil package location")
+	}
+	return filename, nil
 }
 
 // Tag initializes tags the git repository
