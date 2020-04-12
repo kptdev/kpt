@@ -47,9 +47,8 @@ func GetLiveCommand(name string) *cobra.Command {
 
 	// Create the factory and IOStreams for the "live" commands. The factory
 	// is created using the config flags.
-	flags := liveCmd.Flags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
-	kubeConfigFlags.AddFlags(flags)
+	kubeConfigFlags.AddFlags(liveCmd.Flags())
 	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(kubeConfigFlags)
 	matchVersionKubeConfigFlags.AddFlags(liveCmd.PersistentFlags())
 	liveCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
@@ -70,16 +69,19 @@ func GetLiveCommand(name string) *cobra.Command {
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
 	applyCmd.Example = livedocs.ApplyExamples
+	kubeConfigFlags.AddFlags(applyCmd.PersistentFlags())
 
 	previewCmd := preview.NewCmdPreview(f, ioStreams)
 	previewCmd.Short = livedocs.PreviewShort
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
+	kubeConfigFlags.AddFlags(previewCmd.PersistentFlags())
 
 	destroyCmd := destroy.NewCmdDestroy(f, ioStreams)
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
+	kubeConfigFlags.AddFlags(destroyCmd.PersistentFlags())
 
 	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, destroyCmd)
 
