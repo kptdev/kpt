@@ -53,9 +53,9 @@ steps:
 
   # copy latest
   - name: 'kpt-builder'
-    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '/workspace/latest']
+    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '/workspace/latest/windows_amd64']
   - name: 'kpt-builder'
-    args: ['cp', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/kpt_windows_amd64.tar.gz']
+    args: ['cp', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/windows_amd64/kpt_windows_amd64.tar.gz']
 
   # Cleanup by removing files that have been packaged into the
   # tarball.
@@ -88,9 +88,9 @@ steps:
 
     # copy latest
   - name: 'kpt-builder'
-    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '/workspace/latest']
+    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '/workspace/latest/linux_amd64']
   - name: 'kpt-builder'
-    args: ['cp', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/kpt_linux_amd64.tar.gz']
+    args: ['cp', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/linux_amd64/kpt_linux_amd64.tar.gz']
 
   # Cleanup by removing files that have been packaged into the
   # tarball.
@@ -123,9 +123,9 @@ steps:
 
   # copy latest
   - name: 'kpt-builder'
-    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '/workspace/latest']
+    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '/workspace/latest/darwin_amd64']
   - name: 'kpt-builder'
-    args: ['cp', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/kpt_darwin_amd64.tar.gz']
+    args: ['cp', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/darwin_amd64/kpt_darwin_amd64.tar.gz']
 
   # Cleanup by removing files that have been packaged into the
   # tarball.
