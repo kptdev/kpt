@@ -53,7 +53,9 @@ steps:
 
   # copy latest
   - name: 'kpt-builder'
-    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '/workspace/latest/windows_amd64']
+    args: ['mkdir', '/workspace/latest/windows_amd64/']
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '/workspace/latest/windows_amd64/kpt.exe']
   - name: 'kpt-builder'
     args: ['cp', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/windows_amd64/kpt_windows_amd64.tar.gz']
 
@@ -88,7 +90,9 @@ steps:
 
     # copy latest
   - name: 'kpt-builder'
-    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '/workspace/latest/linux_amd64']
+    args: ['mkdir', '/workspace/latest/linux_amd64/']
+  - name: 'kpt-builder'
+    args: ['cp', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '/workspace/latest/linux_amd64/kpt']
   - name: 'kpt-builder'
     args: ['cp', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/linux_amd64/kpt_linux_amd64.tar.gz']
 
@@ -123,7 +127,9 @@ steps:
 
   # copy latest
   - name: 'kpt-builder'
-    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '/workspace/latest/darwin_amd64']
+    args: ['mkdir', '/workspace/latest/darwin_amd64/']
+  - name: 'kpt-builder'
+    args: ['cp', '-r', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '/workspace/latest/darwin_amd64/kpt']
   - name: 'kpt-builder'
     args: ['cp', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64-${TAG_NAME}.tar.gz', '/workspace/latest/darwin_amd64/kpt_darwin_amd64.tar.gz']
 
