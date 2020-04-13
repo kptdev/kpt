@@ -12,4 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-print("This is somefunction")
+apiVersion: v1
+kind: Service
+metadata:
+  name: helloworld-gke
+  labels:
+    app: hello
+spec:
+  type: NodePort
+  selector:
+    app: h
+  ports:
+  - protocol: TCP
+    port: 80 # {"$ref":"#/definitions/io.k8s.cli.setters.http-port"}
+    targetPort: http

@@ -38,16 +38,17 @@ import (
 const TmpDirPrefix = "test-kpt"
 
 const (
-	Dataset1            = "dataset1"
-	Dataset2            = "dataset2"
-	Dataset3            = "dataset3"
-	Dataset4            = "dataset4" // Dataset4 is replica of Dataset2 with different setter values
-	Dataset5            = "dataset5" // Dataset5 is replica of Dataset2 with additional non KRM files
-	DatasetMerged       = "datasetmerged"
-	DiffOutput          = "diff_output"
-	UpdateMergeConflict = "updateMergeConflict"
-	HelloWorldSet       = "helloworld-set"
-	HelloWorldFn        = "helloworld-fn"
+	Dataset1              = "dataset1"
+	Dataset2              = "dataset2"
+	Dataset3              = "dataset3"
+	Dataset4              = "dataset4" // Dataset4 is replica of Dataset2 with different setter values
+	Dataset5              = "dataset5" // Dataset5 is replica of Dataset2 with additional non KRM files
+	DatasetMerged         = "datasetmerged"
+	DiffOutput            = "diff_output"
+	UpdateMergeConflict   = "updateMergeConflict"
+	HelloWorldSet         = "helloworld-set"
+	HelloWorldFn          = "helloworld-fn"
+	HelloWorldFnNoKptfile = "helloworld-fn-no-kptfile"
 )
 
 // TestGitRepo manages a local git repository for testing
@@ -387,7 +388,7 @@ func CopyKptfile(t *testing.T, src, dest string) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	err = ioutil.WriteFile(filepath.Join(dest, kptfile.KptFileName), b, 0)
+	err = ioutil.WriteFile(filepath.Join(dest, kptfile.KptFileName), b, 0600)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
