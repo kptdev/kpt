@@ -5,7 +5,7 @@ linkTitle = "Kpt"
 +++
 
 {{% blocks/lead color="primary" %}}
-Kpt (pronounced “kept”) is an OSS tool to building declarative workflows
+Kpt (pronounced “kept”) is an OSS tool for building declarative workflows
 on top of resource configuration.
 
 Its git + YAML architecture means it just works with existing tools,
