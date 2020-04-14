@@ -33,7 +33,7 @@ steps:
   # build windows
   - name: 'kpt-builder'
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '.']
+    args: ['go', 'build', '-ldflags', '-X github.com/GoogleContainerTools/kpt/run.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/windows_amd64/kpt.exe', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
@@ -70,7 +70,7 @@ steps:
   # build linux
   - name: 'kpt-builder'
     env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '.']
+    args: ['go', 'build', '-ldflags', '-X github.com/GoogleContainerTools/kpt/run.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/linux_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
@@ -107,7 +107,7 @@ steps:
   # build darwin
   - name: 'kpt-builder'
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-ldflags', '-X main.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '.']
+    args: ['go', 'build', '-ldflags', '-X github.com/GoogleContainerTools/kpt/run.version=${TAG_NAME}', '-o', '/workspace/releases/${TAG_NAME}/darwin_amd64/kpt', '.']
     dir: '/workspace/'
     volumes:
       - name: go-modules
