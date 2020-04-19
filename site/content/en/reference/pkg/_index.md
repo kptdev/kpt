@@ -57,14 +57,11 @@ $ kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 3. Packages **may be customized in place either manually (e.g. with `vi`) or programmatically**.
 4. Packages **must** be worked on within a local git repo.
 
-![day1 workflow][day1workflow]
-![dayN workflow][dayNworkflow]
-
 #### Model
 
 1. **Packages are simply subdirectories of resource configuration files in git**
     * They may also contain supplemental non-resource artifacts, such as markdown files, templates, etc.
-    * The ability to fetch a subdirectory of a git repo is a key difference compared to 
+    * The ability to fetch a subdirectory of a git repo is a key difference compared to
       [git subtree](https://github.com/git/git/blob/master/contrib/subtree/git-subtree.txt).
 
 2. **Any existing git subdirectory containing resource configuration files may be used as a package**
