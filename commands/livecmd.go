@@ -24,6 +24,7 @@ import (
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/apply"
 	"sigs.k8s.io/cli-utils/cmd/destroy"
+	"sigs.k8s.io/cli-utils/cmd/diff"
 	"sigs.k8s.io/cli-utils/cmd/initcmd"
 	"sigs.k8s.io/cli-utils/cmd/preview"
 )
@@ -76,12 +77,17 @@ func GetLiveCommand(name string) *cobra.Command {
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
 
+	diffCmd := diff.NewCmdDiff(f, ioStreams)
+	diffCmd.Short = livedocs.DiffShort
+	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
+	diffCmd.Example = livedocs.DiffExamples
+
 	destroyCmd := destroy.NewCmdDestroy(f, ioStreams)
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
 
-	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, destroyCmd)
+	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd)
 
 	return liveCmd
 }
