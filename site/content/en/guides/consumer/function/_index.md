@@ -32,8 +32,8 @@ Kpt read the resources from the package at “.”, provided them as input to
 a container running `gcr.io/kpt-functions/label-namespace`, and wrote the
 resources back to the package.
 
-This particular function ([label-namespace) adds a label to all
-Namespace resources provided to it.
+This particular function ([label-namespace]) adds a label to all Namespace resources
+provided to it.
 
 Functions can address many types of workflows, including:
 

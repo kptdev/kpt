@@ -912,8 +912,8 @@ value.  The label-namespace image contains a program which will modify the&lt;/p
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt read the resources from the package at “.”, provided them as input to
 a container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the
 resources back to the package.&lt;/p&gt;
-&lt;p&gt;This particular function ([label-namespace) adds a label to all
-Namespace resources provided to it.&lt;/p&gt;
+&lt;p&gt;This particular function (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) adds a label to all Namespace resources
+provided to it.&lt;/p&gt;
 &lt;p&gt;Functions can address many types of workflows, including:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Generate resources from some inputs (like client-side CRDs)&lt;/li&gt;
