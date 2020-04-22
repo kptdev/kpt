@@ -69,7 +69,7 @@ pe "kpt cfg tree helloworld --name --replicas"
 
 echo " "
 p "# view the diff..."
-pe "git diff helloworld/service.yaml helloworld/deploy.yaml"
+pe "git diff -w helloworld/service.yaml helloworld/deploy.yaml"
 
 echo " "
 p "# commit changes..."
@@ -81,7 +81,7 @@ pe "kpt pkg update helloworld@v0.4.0 --strategy=resource-merge"
 
 echo " "
 p "# view the diff..."
-pe "git diff helloworld/service.yaml helloworld/deploy.yaml"
+pe "git diff -w helloworld/service.yaml helloworld/deploy.yaml"
 
 echo " "
 p "# print its contents..."
