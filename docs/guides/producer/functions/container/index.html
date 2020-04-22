@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/init/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/functions/container/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Init | Kpt</title><meta property="og:title" content="Init" />
-<meta property="og:description" content="Initialize and publish a new package
+<title>Container Runtime | Kpt</title><meta property="og:title" content="Container Runtime" />
+<meta property="og:description" content="Writing functions as containers
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/init/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/container/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Init">
-<meta itemprop="description" content="Initialize and publish a new package
+<meta itemprop="name" content="Container Runtime">
+<meta itemprop="description" content="Writing functions as containers
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Init"/>
-<meta name="twitter:description" content="Initialize and publish a new package
+<meta name="twitter:title" content="Container Runtime"/>
+<meta name="twitter:description" content="Writing functions as containers
 "/>
 
 
@@ -51,7 +51,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Init | Kpt</title>
+    <title>Container Runtime | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -370,10 +370,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Init</a>
+    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Init</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerinit">
+    <li class="collapse " id="kptguidesproducerinit">
       
       
       
@@ -416,10 +416,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions</a>
+    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Functions</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducerfunctions">
+    <li class="collapse show" id="kptguidesproducerfunctions">
       
       
       
@@ -433,10 +433,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/container/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Container Runtime</a>
+    <a  href="/kpt/guides/producer/functions/container/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Container Runtime</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducerfunctionscontainer">
+    <li class="collapse show" id="kptguidesproducerfunctionscontainer">
       
       
       
@@ -667,8 +667,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/init/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Init" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/container/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Container%20Runtime" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -682,11 +682,9 @@
 
 <nav id="TableOfContents">
   <ul>
-    <li><a href="#steps">Steps</a></li>
-    <li><a href="#create-a-git-repo">Create a git repo</a></li>
-    <li><a href="#create-the-package">Create the package</a></li>
-    <li><a href="#create-configuration">Create configuration</a></li>
-    <li><a href="#publish-package-to-git">Publish package to git</a></li>
+    <li><a href="#imperative-run">Imperative Run</a></li>
+    <li><a href="#declarative-run">Declarative Run</a></li>
+    <li><a href="#network">Network</a></li>
   </ul>
 </nav>
 
@@ -700,6 +698,9 @@
             <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
 	<ol class="breadcrumb spb-1">
 		
+
+
+
 
 
 
@@ -724,8 +725,15 @@
 
 
 
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/">Functions</a>
+</li>
+
+
+
+
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/init/">Init</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/container/">Container Runtime</a>
 </li>
 
 	</ol>
@@ -733,55 +741,50 @@
 
             
 <div class="td-content">
-	<h1>Init</h1>
-	<div class="lead">Initialize and publish a new package</div>
-	<p>A kpt package is published as a git subdirectory containing configuration
-files (YAML). Publishes of kpt packages can create or generate YAML files
-however they like using the tool of their choice.</p>
-<p>Publishing a package is done by pushing the git directory
-(and optionally tagging it with a version).</p>
-
-
-<div class="pageinfo pageinfo-primary">
-<p>Multiple packages may exist in a single repo under separate subdirectories.</p>
-<p>Packages may be nested &ndash; both parent (composite) and child
-(component) directories may be fetched as a kpt package.</p>
-<p>A package is versioned by tagging the git repo as one of:</p>
+	<h1>Container Runtime</h1>
+	<div class="lead">Writing functions as containers</div>
+	<p>Functions may be written as container images.  The container must run a program which:</p>
 <ul>
-<li><code>package-subdirectory/package-version</code> (directory scoped versioning)</li>
-<li><code>package-version</code> (repo scoped versioning)</li>
+<li>Reads a ResourceList from STDIN</li>
+<li>Writes a ResourceList to STDOUT</li>
+<li>Exits non-0 on failure</li>
+<li>Writes error messages to users on STDERR</li>
 </ul>
-
-</div>
-
-
-
-
-<img src="https://googlecontainertools.github.io/kpt//images/producer-guide.svg" />
-
-<h2 id="steps">Steps</h2>
-<ol>
-<li><a href="#create-a-git-repo">Create a git repo</a></li>
-<li><a href="#create-the-package">Create the package contents</a></li>
-<li><a href="#create-configuration">Create configuration</a></li>
-<li><a href="#publish-package-to-git">Publish package to git</a></li>
-</ol>
-<h2 id="create-a-git-repo">Create a git repo</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone REPO_URL <span style="color:#8f5902;font-style:italic"># or create a new repo with `git init`</span>
-<span style="color:#204a87">cd</span> REPO_NAME
-</code></pre></div><h2 id="create-the-package">Create the package</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir nginx
-</code></pre></div><p>Recommended: initialize the package with metadata</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg init nginx --tag kpt.dev/app<span style="color:#ce5c00;font-weight:bold">=</span>nginx --description <span style="color:#4e9a06">&#34;kpt nginx package&#34;</span>
-</code></pre></div><h2 id="create-configuration">Create configuration</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
-</code></pre></div><h2 id="publish-package-to-git">Publish package to git</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add .
-git commit -m <span style="color:#4e9a06">&#34;Add nginx package&#34;</span>
-</code></pre></div><p>Recommended: tag the commit as a release</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># tag as DIR/VERSION for per-directory versioning</span>
-git tag nginx/v0.1.0
-git push nginx/v01.0
+<p>By default containers are run without network access, and without the ability to write to volumes
+outside the container.</p>
+<p>While container functions may be written in any language so long as they adhere to the io
+specification (read / write ResourceList), the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk">kpt-functions-sdk</a> provides a solution for
+writing functions using typescript.</p>
+<h2 id="imperative-run">Imperative Run</h2>
+<p>Container functions may be run imperatively using the <code>--image</code> flag with <code>kpt fn run</code>.  This
+will create a container from the image, then write to its STDIN a ResourceList and read from
+it&rsquo;s STDOUT a ResourceList.</p>
+<h2 id="declarative-run">Declarative Run</h2>
+<p>Container functions may be run by declaring the function in a resource using the
+<code>config.kubernetes.io/function</code> annotation.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>function-input<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/a/b<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><p>To run the declared function use <code>kpt fn run DIR/</code> on the directory containing the example.</p>
+<h2 id="network">Network</h2>
+<p>By default, container functions cannot access network or volumes.  Functions may enable network
+access using the <code>--network</code> flag, and specifying that a network is required in the functionConfig.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>function-input<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/a/b<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">network</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span><span style="color:#204a87;font-weight:bold">required</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn run DIR/ --network
 </code></pre></div>
         <div class="section-index">
     
@@ -839,7 +842,7 @@ git push nginx/v01.0
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified April 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/97c3b3649390ea2a31408379b11ad8cc5b9a219e">Move function docs to guides (97c3b364)</a>
 </div>
 </div>
 

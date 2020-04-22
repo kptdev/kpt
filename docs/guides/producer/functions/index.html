@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.68.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/functions/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kpt/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
+
+<title>Functions | Kpt</title><meta property="og:title" content="Functions" />
+<meta property="og:description" content="Writing kpt functions to generated, transform, and validate resources.
+" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/" />
+<meta property="og:site_name" content="Kpt" />
+<meta itemprop="name" content="Functions">
+<meta itemprop="description" content="Writing kpt functions to generated, transform, and validate resources.
+"><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Functions"/>
+<meta name="twitter:description" content="Writing kpt functions to generated, transform, and validate resources.
+"/>
+
+
+
+
+
+<link rel="preload" href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
+
+    <title>Functions | Kpt</title>
+  </head>
+  <body class="td-section">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kpt/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kpt</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kpt/guides/" ><span class="active">Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/reference/" ><span>Command Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/concepts/" ><span>Concepts</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Guides</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguides">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumer">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/get/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Get</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerget">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Update</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerupdate">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Set</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerset">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/substitute/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitute</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumersubstitute">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Display</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerdisplay">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Apply</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerapply">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running Functions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunction">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Publishers</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducer">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Init</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerinit">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Setters</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducersetters">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Functions</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerfunctions">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/container/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Container Runtime</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerfunctionscontainer">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerfunctionsstarlark">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitutions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducersubstitutions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Blueprints</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerblueprint">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Variants</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducervariant">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/bootstrap/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bootstrapping</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerbootstrap">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Ecosystem</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystem">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/kustomize/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystemkustomize">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/helm/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Helm</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystemhelm">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Functions" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#input--output">Input / Output</a>
+      <ul>
+        <li><a href="#resourcelistitems">ResourceList.items</a></li>
+        <li><a href="#resourcelistfunctionconfig">ResourceList.functionConfig</a></li>
+      </ul>
+    </li>
+    <li><a href="#running-functions">Running Functions</a>
+      <ul>
+        <li><a href="#imperative-run">Imperative Run</a></li>
+        <li><a href="#declarative-run">Declarative Run</a></li>
+      </ul>
+    </li>
+    <li><a href="#declaring-functions">Declaring Functions</a></li>
+    <li><a href="#function-scoping">Function Scoping</a></li>
+    <li><a href="#validation">Validation</a>
+      <ul>
+        <li><a href="#resourcelistresults">ResourceList.results</a></li>
+      </ul>
+    </li>
+    <li><a href="#deferring-failure">Deferring Failure</a></li>
+    <li><a href="#functionconfig-for-imperative-runs">FunctionConfig for imperative runs</a></li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/">Guides</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/">Package Publishers</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/">Functions</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Functions</h1>
+	<div class="lead">Writing kpt functions to generated, transform, and validate resources.</div>
+	<p>Kpt functions are conceptually similar to Kubernetes <em>controllers</em> and <em>validating webhooks</em> &ndash;
+they are programs which read resources as input, then write resources as output (creating,
+modifying, deleting, or validating resources).</p>
+<p>Unlike controllers and validating webhooks, kpt functions can be run outside of the Kubernetes
+control plane.  This allows them to run in more contexts or embedded in other systems.
+For example, functions could be:</p>
+<ul>
+<li>manually run locally</li>
+<li>automatically run locally as part of <em>make</em>, <em>mvn</em>, <em>go generate</em>, etc</li>
+<li>automatically run in CICD systems</li>
+<li>run by controllers as reconcile implementations</li>
+</ul>
+
+
+
+<img src="https://googlecontainertools.github.io/kpt//images/fn.svg" />
+
+
+
+<div class="pageinfo pageinfo-primary">
+<p>Unlikely pure-templating and DSL approaches, functions must be able to both <em>read</em> and <em>write</em>
+resources, and specifically should be able to read resources they have previously written &ndash;
+updating the inputs rather generating new resources.</p>
+<p>This mirrors the level-triggered controller architecture used in the Kubernetes control plane.
+A function reconciles the desired state of the resource configuration to match the declared state
+specified by the functionConfig.</p>
+<p>Functions that implement abstractions should update resources they have generated in the past
+by reading them from the input.</p>
+
+</div>
+
+<p>The following function runtimes are available in kpt:</p>
+<table>
+<thead>
+<tr>
+<th>Runtime</th>
+<th>Read Resources From</th>
+<th>Write Resources To</th>
+<th>Write Error Messages To</th>
+<th>Validation Failure</th>
+<th>Maturity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Containers</td>
+<td>STDIN</td>
+<td>STDOUT</td>
+<td>STDERR</td>
+<td>Exit Code</td>
+<td>Beta</td>
+</tr>
+<tr>
+<td>Starlark</td>
+<td><code>ctx.resource_list</code></td>
+<td><code>ctx.resource_list</code></td>
+<td><code>log</code></td>
+<td>Exit Code</td>
+<td>Alpha</td>
+</tr>
+</tbody>
+</table>
+<h2 id="input--output">Input / Output</h2>
+<p>Functions read a <code>ResourceList</code>, modify it, and write it back out.</p>
+<h3 id="resourcelistitems">ResourceList.items</h3>
+<p>The ResourceList contains:</p>
+<ul>
+<li>(input+output) a list of resource <code>items</code></li>
+<li>(input) configuration for the function</li>
+<li>(output) validation results</li>
+</ul>
+<p>Items are resources read from some source &ndash; such as a package directory.</p>
+<p>After a function adds, deletes or modifies items, the items will be written to a sink.
+In most cases the sink will be the same as the source (directory).</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Service<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h3 id="resourcelistfunctionconfig">ResourceList.functionConfig</h3>
+<p>Functions may optionally be configured using the <code>ResourceList.functionConfig</code>
+field.  <code>functionConfig</code> is analogous to a Deployment, and <code>items</code>
+is analogous to the set of all resources in the Deployment controller in-memory cache
+(e.g. all the resources in the cluster) &ndash; this includes the ReplicaSets created, updated
+and deleted for that Deployment.</p>
+<p><em>Functions are responsible for identifying which resources from the <code>items</code> that they own.</em></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">foo</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>bar<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div>
+
+<div class="pageinfo pageinfo-primary">
+<p>Some functions use a ConfigMap as the functionConfig instead of introducing a new resource type
+bespoke to the function.</p>
+
+</div>
+
+<h2 id="running-functions">Running Functions</h2>
+<p>Functions may be run either imperatively using the form <code>kpt fn run DIR/ --image fn</code>, or they
+may be run declaratively using the form <code>kpt fn run DIR/</code>.</p>
+<p>Either way, <code>kpt fn run</code> will</p>
+<ol>
+<li>read the package directory as input</li>
+<li>encapsulate the package resources in a <code>ResourceList</code></li>
+<li>run the function(s), providing the ResourceList as input</li>
+<li>write the function(s) output back to the package directory; creating, deleting, or updating
+resources</li>
+</ol>
+<h3 id="imperative-run">Imperative Run</h3>
+<p>Functions can be run imperatively by specifying the <code>--image</code> flag.</p>
+<p><code>kpt fn run DIR/ --image some-image:version</code> will:</p>
+<ul>
+<li>create a container from the image</li>
+<li>read all resources from the package directory</li>
+<li>provide the resources as input to the function (container)</li>
+<li>write the output items back to the package directory</li>
+</ul>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
+mkdir results/
+kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- <span style="color:#000">subject_name</span><span style="color:#ce5c00;font-weight:bold">=</span>bob@foo-corp.com
+</code></pre></div>
+
+<div class="pageinfo pageinfo-primary">
+<p>If key-value pairs are provided after a <code>--</code> argument, then a ConfigMap will be generated
+with these values as <code>data</code> elements, and the ConfigMap will be set as the functionConfig
+field.</p>
+
+</div>
+
+<h3 id="declarative-run">Declarative Run</h3>
+<p>Functions can be specified declaratively using the <code>config.kubernetes.io/function</code>
+annotation on a resource serving as the functionConfig.</p>
+<p><code>kpt fn run DIR/</code> (without <code>--image</code>) will:</p>
+<ul>
+<li>read all resources from the package directory</li>
+<li>for each resource with this annotation, kpt will run the specified function (using the resource as
+the functionConfig)
+<ul>
+<li>functions are run sequentially, with the output of each function provided as input
+to the next</li>
+</ul>
+</li>
+<li>write the output items back to the package directory</li>
+</ul>
+
+
+<div class="pageinfo pageinfo-primary">
+<p>If multiple functions are specified in the same yaml file (e.g. separated by <code>---</code>),
+then they are run in the order they are specified.</p>
+
+</div>
+
+<h2 id="declaring-functions">Declaring Functions</h2>
+<p>Functions may be run by declaratively through the <code>config.kubernetes.io/function</code> annotation.</p>
+<p>The following is a declaration to run the function implemented by the
+<code>gcr.io/example.com/image:v1.0.0</code> image, and to provide this ExampleFunction as the functionConfig.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleFunction<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/example.com/image<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#0000cf;font-weight:bold">.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="function-scoping">Function Scoping</h2>
+<p>Functions are scoped to resources that live in their same directory, or subdirectories of their
+directory.</p>
+<p><code>kpt fn run DIR/</code> will recursively traverse DIR/ looking for declared functions and invoking
+them &ndash; passing in only those resources scoped to the function.</p>
+<h2 id="validation">Validation</h2>
+<h3 id="resourcelistresults">ResourceList.results</h3>
+<p>Functions may define validation results through the <code>results</code> field.
+When functions are run using the <code>--results-dir</code>, each function&rsquo;s results field will be written
+to a file under the specified directory.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">foo</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>bar<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">results</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;kubeval&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">  
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#204a87;font-weight:bold">severity</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>error<span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># one of [&#34;error&#34;, &#34;warn&#34;, &#34;info&#34;] -- error code should be non-0 if there are 1 or more errors</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">tags</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># arbitrary metadata about the result</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">error-type</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;field&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">message</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;Value exceeds the namespace quota, reduce the value to make the pod schedulable&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">resourceRef</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># key to lookup the resource</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">namespace</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>bar<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">file</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#8f5902;font-style:italic"># optional if present as annotation</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>deploy.yaml<span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># read from annotation if present</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#8f5902;font-style:italic"># optional if present as annotation</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">index</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># read from annotation if present</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">field</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;spec.template.spec.containers[3].resources.limits.cpu&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">currentValue</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;200&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># number | string | boolean</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">suggestedValue</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;2&#34;</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># number | string | boolean</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#204a87;font-weight:bold">severity</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>warn<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;something else&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#204a87;font-weight:bold">severity</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>info<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">     </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="deferring-failure">Deferring Failure</h2>
+<p>When running multiple validation functions, it may be desired to defer failures until all functions
+have been run so that the results of all functions are written to the results directory.
+Functions can specify that failures should be deferred by specifying <code>deferFailure</code> in the
+declaration.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleFunction<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/example.com/image<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#0000cf;font-weight:bold">.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">deferFailure</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># continue running functions if this fails, and fail at the end</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="functionconfig-for-imperative-runs">FunctionConfig for imperative runs</h2>
+<p>When functions are run imperatively, the functionConfig may be generated from commandline arguments.</p>
+<p>When functions are run using the form <code>kpt fn run DIR/ --image foo:v1 -- a=b c=d</code>, the arguments
+following <code>--</code> are parsed into a ConfigMap which is set as the functionConfig.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">a</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>b<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><p>If the first argument after <code>--</code> is <em>not</em> a key=value pair, it will be used as the
+functionConfig type.</p>
+<p><code>kpt fn run DIR/ --image foo:v1 -- Foo a=b c=d</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">a</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>b<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div>
+        <div class="section-index">
+    
+    
+    
+    
+    <hr class="panel-line">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/producer/functions/container/">Container Runtime</a>
+                    </h5>
+                    <p>Writing functions as containers</p>
+                </div>
+            
+        
+            
+        
+            
+        
+            
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/producer/functions/starlark/">Starlark Runtime</a>
+                    </h5>
+                    <p>Writing functions as containers</p>
+                </div>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    
+</div>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">Last modified April 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/97c3b3649390ea2a31408379b11ad8cc5b9a219e">Move function docs to guides (97c3b364)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Google LLC All Rights Reserved</small>
+        <small class="ml-1"><a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></small>
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kpt/js/main.min.1b3d8778561d0b887ffb4d8c0a8daeef6dd10d0e685a6169cf95b28a3da7dd70.js" integrity="sha256-Gz2HeFYdC4h/&#43;02MCo2u723RDQ5oWmFpz5Wyij2n3XA=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://googlecontainertools.github.io/kpt//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>
