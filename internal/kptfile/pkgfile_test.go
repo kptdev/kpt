@@ -117,13 +117,14 @@ upstreamBadField:
 func TestKptFile_MergeOpenAPI(t *testing.T) {
 	tests := []struct {
 		name     string
-		to       string
-		from     string
+		updated  string
+		local    string
+		original string
 		expected string
 	}{
 		{
-			name: "add value",
-			to: `
+			name: "add one delete one",
+			updated: `
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -132,7 +133,7 @@ openAPI:
           name: "image"
           value: "nginx"
 `,
-			from: `
+			local: `
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -140,6 +141,202 @@ openAPI:
         setter:
           name: "tag"
           value: "1.7.9"
+`,
+			original: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.image:
+            x-k8s-cli:
+                setter:
+                    name: image
+                    value: nginx
+`,
+		},
+		{
+			name: "keep locally changed value",
+			updated: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			local: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			original: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.image:
+            x-k8s-cli:
+                setter:
+                    name: image
+                    value: nginx
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.0
+`,
+		},
+		{
+			name: "and one and copy value from updated to local",
+			updated: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.1"
+`,
+			local: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			original: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.image:
+            x-k8s-cli:
+                setter:
+                    name: image
+                    value: nginx
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.1
+`,
+		},
+		{
+			name: "keep local",
+			updated: `
+`,
+			local: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			original: `
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.0
+`,
+		},
+		{
+			name: "add definition from updated",
+			updated: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			local: `
+`,
+			original: `
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.0
+`,
+		},
+		{
+			name: "local, updated, original diverged",
+			updated: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+`,
+			local: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			original: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.nomatch:
+      x-k8s-cli:
+        setter:
+          name: "nomatch"
+          value: "something"
 `,
 			expected: `
 openAPI:
@@ -157,8 +354,17 @@ openAPI:
 `,
 		},
 		{
-			name: "copy value",
-			to: `
+			name: "delete updated",
+			updated: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+`,
+			local: `
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -170,11 +376,16 @@ openAPI:
       x-k8s-cli:
         setter:
           name: "tag"
-          value: "1.7.9"
+          value: "1.8.0"
 `,
-			from: `
+			original: `
 openAPI:
   definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
     io.k8s.cli.setters.tag:
       x-k8s-cli:
         setter:
@@ -189,57 +400,6 @@ openAPI:
                 setter:
                     name: image
                     value: nginx
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.0
-`,
-		},
-		{
-			name: "replace values",
-			to: `
-`,
-			from: `
-openAPI:
-  definitions:
-    io.k8s.cli.setters.tag:
-      x-k8s-cli:
-        setter:
-          name: "tag"
-          value: "1.8.0"
-`,
-			expected: `
-openAPI:
-    definitions:
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.0
-`,
-		},
-		{
-			name: "keep values",
-			to: `
-openAPI:
-  definitions:
-    io.k8s.cli.setters.tag:
-      x-k8s-cli:
-        setter:
-          name: "tag"
-          value: "1.8.0"
-`,
-			from: `
-`,
-			expected: `
-openAPI:
-    definitions:
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.0
 `,
 		},
 	}
@@ -247,22 +407,27 @@ openAPI:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			kTo := KptFile{}
-			if !assert.NoError(t, yaml.Unmarshal([]byte(test.to), &kTo)) {
+			kUpdated := KptFile{}
+			if !assert.NoError(t, yaml.Unmarshal([]byte(test.updated), &kUpdated)) {
 				t.FailNow()
 			}
 
-			kFrom := KptFile{}
-			if !assert.NoError(t, yaml.Unmarshal([]byte(test.from), &kFrom)) {
+			kLocal := KptFile{}
+			if !assert.NoError(t, yaml.Unmarshal([]byte(test.local), &kLocal)) {
 				t.FailNow()
 			}
 
-			err := kTo.MergeOpenAPI(kFrom)
+			kOriginal := KptFile{}
+			if !assert.NoError(t, yaml.Unmarshal([]byte(test.original), &kOriginal)) {
+				t.FailNow()
+			}
+
+			err := kUpdated.MergeOpenAPI(kLocal, kOriginal)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			b, err := yaml.Marshal(kTo)
+			b, err := yaml.Marshal(kUpdated)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

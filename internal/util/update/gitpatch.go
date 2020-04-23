@@ -170,7 +170,7 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 		// since it is owned locally
 		pf.Upstream = u.UpdateOptions.KptFile.Upstream
 		// also keep the local OpenAPI which may have been modified.
-		err = pf.MergeOpenAPI(u.UpdateOptions.KptFile)
+		err = pf.MergeOpenAPI(u.UpdateOptions.KptFile, u.UpdateOptions.KptFile)
 		if err != nil {
 			return err
 		}

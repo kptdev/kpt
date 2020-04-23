@@ -57,17 +57,22 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	}
 	defer os.RemoveAll(updated.AbsPath())
 
-	err := settersutil.SetAllSetterDefinitions(
-		filepath.Join(options.PackagePath, "Kptfile"),
-		original.AbsPath(),
-		updated.AbsPath(),
-	)
+	// get the Kptfile to write after the merge
+	kf, err := u.updatedKptfile(updated.AbsPath(), original.AbsPath(), options)
 	if err != nil {
 		return err
 	}
 
-	// get the Kptfile to write after the merge
-	kf, err := u.updatedKptfile(updated.AbsPath(), options)
+	if err := kptfileutil.WriteFile(options.PackagePath, kf); err != nil {
+		return err
+	}
+
+	err = settersutil.SetAllSetterDefinitions(
+		filepath.Join(options.PackagePath, "Kptfile"),
+		original.AbsPath(),
+		updated.AbsPath(),
+		options.PackagePath,
+	)
 	if err != nil {
 		return err
 	}
@@ -84,15 +89,11 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		return err
 	}
 
-	if err := kptfileutil.WriteFile(options.PackagePath, kf); err != nil {
-		return err
-	}
-
 	return ReplaceNonKRMFiles(updated.AbsPath(), original.AbsPath(), options.PackagePath)
 }
 
 // updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the update
-func (u ResourceMergeUpdater) updatedKptfile(updatedPath string, options UpdateOptions) (
+func (u ResourceMergeUpdater) updatedKptfile(updatedPath, originalPath string, options UpdateOptions) (
 	kptfile.KptFile, error) {
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
 	cmd.Dir = updatedPath
@@ -103,23 +104,31 @@ func (u ResourceMergeUpdater) updatedKptfile(updatedPath string, options UpdateO
 		return kptfile.KptFile{}, err
 	}
 	commit := strings.TrimSpace(string(b))
-	kf, err := kptfileutil.ReadFile(updatedPath)
+	updatedKf, err := kptfileutil.ReadFile(updatedPath)
 	if err != nil {
-		kf, err = kptfileutil.ReadFile(options.PackagePath)
+		updatedKf, err = kptfileutil.ReadFile(options.PackagePath)
+		if err != nil {
+			return kptfile.KptFile{}, err
+		}
+	}
+
+	originalKf, err := kptfileutil.ReadFile(originalPath)
+	if err != nil {
+		originalKf, err = kptfileutil.ReadFile(options.PackagePath)
 		if err != nil {
 			return kptfile.KptFile{}, err
 		}
 	}
 
 	// local package controls the upstream field
-	kf.Upstream = options.KptFile.Upstream
-	kf.Upstream.Git.Commit = commit
-	kf.Upstream.Git.Ref = options.ToRef
-	kf.Upstream.Git.Repo = options.ToRepo
+	updatedKf.Upstream = options.KptFile.Upstream
+	updatedKf.Upstream.Git.Commit = commit
+	updatedKf.Upstream.Git.Ref = options.ToRef
+	updatedKf.Upstream.Git.Repo = options.ToRepo
 
 	// keep the local OpenAPI values
-	err = kf.MergeOpenAPI(options.KptFile)
-	return kf, err
+	err = updatedKf.MergeOpenAPI(options.KptFile, originalKf)
+	return updatedKf, err
 }
 
 // replaceNonKRMFiles replaces the non KRM files in localDir with the corresponding files in updatedDir,

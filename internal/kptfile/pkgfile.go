@@ -65,55 +65,70 @@ type StarlarkFunction struct {
 	Path string `yaml:"path,omitempty"`
 }
 
-// MergeOpenAPI adds the OpenAPI definitions from file to k.
+// MergeOpenAPI adds the OpenAPI definitions from localKf to updatedKf.
+// It takes originalKf as a reference for 3-way merge
 // This function is very complex due to serialization issues with yaml.Node.
-func (k *KptFile) MergeOpenAPI(file KptFile) error {
-	if file.OpenAPI == nil {
+func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
+	if localKf.OpenAPI == nil {
 		// no OpenAPI to copy -- do nothing
 		return nil
 	}
-	if k.OpenAPI == nil {
+	if updatedKf.OpenAPI == nil {
 		// no openAPI at the destination -- just copy it
-		k.OpenAPI = file.OpenAPI
+		updatedKf.OpenAPI = localKf.OpenAPI
 		return nil
 	}
 
 	// turn the exiting openapi into yaml.Nodes for processing
 	// they aren't yaml.Nodes natively due to serialization bugs in the yaml libs
-	bTo, err := yaml.Marshal(k.OpenAPI)
+	bUpdated, err := yaml.Marshal(updatedKf.OpenAPI)
 	if err != nil {
 		return err
 	}
-	to, err := yaml.Parse(string(bTo))
+	updated, err := yaml.Parse(string(bUpdated))
 	if err != nil {
 		return err
 	}
-	bFrom, err := yaml.Marshal(file.OpenAPI)
+	bLocal, err := yaml.Marshal(localKf.OpenAPI)
 	if err != nil {
 		return err
 	}
-	from, err := yaml.Parse(string(bFrom))
+	local, err := yaml.Parse(string(bLocal))
+	if err != nil {
+		return err
+	}
+
+	bOriginal, err := yaml.Marshal(originalKf.OpenAPI)
+	if err != nil {
+		return err
+	}
+	original, err := yaml.Parse(string(bOriginal))
 	if err != nil {
 		return err
 	}
 
 	// get the definitions for the source and destination
-	toDef := to.Field("definitions")
-	if toDef == nil {
+	updatedDef := updated.Field("definitions")
+	if updatedDef == nil {
 		// no definitions on the destination, just copy the OpenAPI from the source
-		k.OpenAPI = file.OpenAPI
+		updatedKf.OpenAPI = localKf.OpenAPI
 		return nil
 	}
-	fromDef := from.Field("definitions")
-	if fromDef == nil {
-		// OpenAPI definitions on the source -- do nothings
+	localDef := local.Field("definitions")
+	if localDef == nil {
+		// no OpenAPI definitions on the source -- do nothings
 		return nil
 	}
+	oriDef := original.Field("definitions")
 
-	err = fromDef.Value.VisitFields(func(node *yaml.MapNode) error {
+	err = localDef.Value.VisitFields(func(node *yaml.MapNode) error {
+		key := node.Key.YNode().Value
+		if shouldSkipCopy(updatedDef, localDef, oriDef, key) {
+			return nil
+		}
 		// copy each definition from the source to the destination
-		return toDef.Value.PipeE(yaml.FieldSetter{
-			Name:  node.Key.YNode().Value,
+		return updatedDef.Value.PipeE(yaml.FieldSetter{
+			Name:  key,
 			Value: node.Value})
 	})
 	if err != nil {
@@ -121,14 +136,43 @@ func (k *KptFile) MergeOpenAPI(file KptFile) error {
 	}
 
 	// convert the result back to type interface{} and set it on the Kptfile
-	s, err := to.String()
+	s, err := updated.String()
 	if err != nil {
 		return err
 	}
 	var newOpenAPI interface{}
-	k.OpenAPI = newOpenAPI
-	err = yaml.Unmarshal([]byte(s), &k.OpenAPI)
+	updatedKf.OpenAPI = newOpenAPI
+	err = yaml.Unmarshal([]byte(s), &updatedKf.OpenAPI)
 	return err
+}
+
+// shouldSkipCopy decides if a node with key should be copied from fromDef to toDef
+func shouldSkipCopy(updatedDef, localDef, originalDef *yaml.MapNode, key string) bool {
+	if originalDef == nil || updatedDef == nil || localDef == nil {
+		return false
+	}
+	localVal := localDef.Value.Field(key)
+	originalVal := originalDef.Value.Field(key)
+	updatedVal := updatedDef.Value.Field(key)
+	if localVal == nil || originalVal == nil {
+		return false
+	}
+
+	localValStr, err := localDef.Value.Field(key).Value.String()
+	if err != nil {
+		return false
+	}
+	originalValStr, err := originalDef.Value.Field(key).Value.String()
+	if err != nil {
+		return false
+	}
+
+	// skip copying if the definition is deleted from upstream
+	if updatedVal == nil {
+		return true
+	}
+	// skip copying if original val matches with from val(local val)
+	return localValStr == originalValStr
 }
 
 type Dependency struct {
