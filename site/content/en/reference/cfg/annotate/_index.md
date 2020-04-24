@@ -67,7 +67,7 @@ DIR:
 --namespace
   Only set annotations on resources in this namespace.
 
---namespace
+--name
   Only set annotations on resources with this name.
 ```
 <!--mdtogo-->
