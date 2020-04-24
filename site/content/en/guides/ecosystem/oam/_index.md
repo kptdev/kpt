@@ -195,17 +195,17 @@ Initialized: ../sampleapp/grouping-object-template.yaml
 
 ```shell
 $ kpt live apply sampleapp --wait-for-reconcile
-configmap/grouping-object-a4e18a93 created
-applicationconfiguration.core.oam.dev/example-appconfig configured
-component.core.oam.dev/test-component created
-3 resource(s) applied. 2 created, 0 unchanged, 1 configured
-configmap/grouping-object-a4e18a93 is Current: Resource is always ready
+configmap/inventory-9ac03a44 unchanged
+applicationconfiguration.core.oam.dev/example-appconfig created
+component.core.oam.dev/example-component created
+3 resource(s) applied. 2 created, 1 unchanged, 0 configured
+configmap/inventory-9ac03a44 is Current: Resource is always ready
+applicationconfiguration.core.oam.dev/example-appconfig is NotFound: Resource not found
+component.core.oam.dev/example-component is NotFound: Resource not found
 applicationconfiguration.core.oam.dev/example-appconfig is Current: Resource is current
-resources failed to the reached Current status
-configmap/grouping-object-a4e18a93 pruned
-2 resource(s) pruned
+component.core.oam.dev/example-component is Current: Resource is current
+all resources has reached the Current status
+0 resource(s) pruned
 ```
-
-Currently `kpt live apply` seems not work well and will be fixed soon by [issue #498](https://github.com/GoogleContainerTools/kpt/issues/498).
 
 Happly building OAM apps with kpt!
