@@ -10,7 +10,7 @@ description: >
     Print the resources in a package
 -->
 
-{{< asciinema key="cfg-count" rows="10" preload="1" >}}
+{{< asciinema key="cfg-cat" rows="10" preload="1" >}}
 
 Cat prints the resources in a package as yaml to stdout.
 
