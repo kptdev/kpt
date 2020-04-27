@@ -91,7 +91,7 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&g
 --namespace
   Only set annotations on resources in this namespace.
 
---namespace
+--name
   Only set annotations on resources with this name.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
@@ -115,7 +115,7 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&g
 &lt;p&gt;
     
     &lt;asciinema-player
-            src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-count.cast&#34;
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-cat.cast&#34;
             
             preload=&#34;1&#34;
             
@@ -157,6 +157,7 @@ kpt cfg cat my-dir/
 DIR:
   Path to a package directory
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
       </description>
     </item>
     

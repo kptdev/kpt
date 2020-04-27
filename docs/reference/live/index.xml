@@ -299,6 +299,82 @@ kpt live destroy my-dir/
     </item>
     
     <item>
+      <title>Reference: Diff</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/diff/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/diff/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Diff the local package config against the live cluster resources
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-destroy.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The diff command compares the live cluster state of each pacakge
+resource against the local package config.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# diff the config in &amp;#34;my-dir&amp;#34; against the live cluster resources&lt;/span&gt;
+kpt live diff my-dir/
+
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# specify the local diff program to use&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;KUBECTL_EXTERNAL_DIFF&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;meld&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt; kpt live diff my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live diff DIR
+
+Output is always YAML.
+
+KUBECTL_EXTERNAL_DIFF environment variable can be used to select your own diff command. By default, the &amp;quot;diff&amp;quot; command
+available in your path will be run with &amp;quot;-u&amp;quot; (unicode) and &amp;quot;-N&amp;quot; (treat new files as empty) options.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Path to a package directory.  The directory must contain exactly one ConfigMap with the inventory annotation.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;exit-status&#34;&gt;Exit Status&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;The following exit values shall be returned:
+
+0 No differences were found. 1 Differences were found. &amp;gt;1 kpt live or diff failed with an error.
+
+Note: KUBECTL_EXTERNAL_DIFF, if used, is expected to follow that convention.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
       <title>Reference: Init</title>
       <link>https://googlecontainertools.github.io/kpt/reference/live/init/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
