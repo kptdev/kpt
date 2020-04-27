@@ -34,7 +34,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-04-19T16:46:54+08:00</lastmod>
   </url>
   
   <url>
@@ -94,12 +94,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/annotate/</loc>
-    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
+    <lastmod>2020-04-24T15:55:16-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/cat/</loc>
-    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
+    <lastmod>2020-04-24T16:02:15-07:00</lastmod>
   </url>
   
   <url>
@@ -255,6 +255,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/destroy/</loc>
     <lastmod>2020-03-23T10:46:40-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/reference/live/diff/</loc>
+    <lastmod>2020-04-20T14:05:22-07:00</lastmod>
   </url>
   
   <url>

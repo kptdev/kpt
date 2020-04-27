@@ -152,6 +152,88 @@ metadata:
     version: "3" # {"$ref":"#/definitions/io.k8s.cli.setters.version"}
 ```
 
+#### Setting Lists
+
+It is possible to create setters for fields which are a list of strings.
+The setter type must be `array`, and the reference must be on the list field.
+The list setter will take variable args for its value rather than a single value.
+
+**Note:** Currently `create-setter` will not directly create a setter reference for a
+list field.  The simplest way to create a list setter is to create a setter for one of
+the elements, and then move the reference to the list field.
+
+
+```yaml
+# example.yaml
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list:
+  - "a"
+```
+
+```yaml
+# Kptfile
+kind: Kptfile
+```
+
+
+`$ kpt cfg create-setter --type array . list a`
+
+**Note:** Move the setter reference from the element (`- "a"`) to the list (`list: `)
+
+```yaml
+# example.yaml
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - "a"
+```
+
+```yaml
+# Kptfile
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - "a"
+```
+
+`$ kpt cfg set . list a b c`
+
+```yaml
+# example.yaml
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  - "a"
+  - "b"
+  - "c"
+```
+
+```yaml
+# Kptfile
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
+          - "a"
+          - "b"
+          - "c"
+```
+
 #### Enumerations
 
 Setters may be configured to map an enum input to a different value set
