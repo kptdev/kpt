@@ -80,7 +80,7 @@ access using the &lt;code&gt;--network&lt;/code&gt; flag, and specifying that a 
         
 
 &lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
-&lt;p&gt;The Starlark runtime is Alpha, and must be enabled with the &lt;code&gt;--enable-starlark&lt;/code&gt;
+&lt;p&gt;The Starlark runtime is Alpha, and must be enabled with the &lt;code&gt;--enable-star&lt;/code&gt;
 flag.&lt;/p&gt;
 
 &lt;/div&gt;

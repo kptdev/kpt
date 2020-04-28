@@ -8,7 +8,7 @@ description: >
 ---
 
 {{% pageinfo color="warning" %}}
-The Starlark runtime is Alpha, and must be enabled with the `--enable-starlark`
+The Starlark runtime is Alpha, and must be enabled with the `--enable-star`
 flag.
 {{% /pageinfo %}}
 
