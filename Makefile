@@ -76,9 +76,9 @@ functions-examples-docker:
 
 gendocs:
 	rm -rf docs/
-	(cd site && hugo)
+	(cd site && go run github.com/gohugoio/hugo)
 
 docs: gendocs license
 
 servedocs:
-	(cd site && hugo server)
+	(cd site && go run github.com/gohugoio/hugo server)
