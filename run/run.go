@@ -16,6 +16,7 @@ package run
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -27,8 +28,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
@@ -111,7 +115,7 @@ func GetMain() *cobra.Command {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(kptcommands.GetKptCommands("kpt")...)
+	cmd.AddCommand(kptcommands.GetKptCommands("kpt", newFactory(cmd))...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
@@ -175,16 +179,26 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 	}
 }
 
-var version string
+func newFactory(cmd *cobra.Command) util.Factory {
+	flags := cmd.PersistentFlags()
+	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
+	kubeConfigFlags.AddFlags(flags)
+	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
+		Delegate:  kubeConfigFlags,
+		UserAgent: fmt.Sprintf("kpt/%s", version),
+	}
+	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(userAgentKubeConfigFlags)
+	matchVersionKubeConfigFlags.AddFlags(cmd.PersistentFlags())
+	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+	return util.NewFactory(matchVersionKubeConfigFlags)
+}
+
+var version = "unknown"
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
 	Run: func(cmd *cobra.Command, args []string) {
-		if version == "" {
-			fmt.Println("unknown (built from source)")
-			return
-		}
 		fmt.Printf("%s\n", version)
 	},
 }

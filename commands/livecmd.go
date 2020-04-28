@@ -15,7 +15,6 @@
 package commands
 
 import (
-	"flag"
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
@@ -29,7 +28,7 @@ import (
 	"sigs.k8s.io/cli-utils/cmd/preview"
 )
 
-func GetLiveCommand(name string) *cobra.Command {
+func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	liveCmd := &cobra.Command{
 		Use:   "live",
 		Short: livedocs.LiveShort,
@@ -46,15 +45,6 @@ func GetLiveCommand(name string) *cobra.Command {
 		},
 	}
 
-	// Create the factory and IOStreams for the "live" commands. The factory
-	// is created using the config flags.
-	flags := liveCmd.PersistentFlags()
-	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
-	kubeConfigFlags.AddFlags(flags)
-	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(kubeConfigFlags)
-	matchVersionKubeConfigFlags.AddFlags(liveCmd.PersistentFlags())
-	liveCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	f := util.NewFactory(matchVersionKubeConfigFlags)
 	ioStreams := genericclioptions.IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
