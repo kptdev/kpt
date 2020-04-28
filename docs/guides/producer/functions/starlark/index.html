@@ -22,16 +22,16 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
 <title>Starlark Runtime | Kpt</title><meta property="og:title" content="Starlark Runtime" />
-<meta property="og:description" content="Writing functions as containers
+<meta property="og:description" content="Writing functions as Starlark programs
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/" />
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="Starlark Runtime">
-<meta itemprop="description" content="Writing functions as containers
+<meta itemprop="description" content="Writing functions as Starlark programs
 "><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Starlark Runtime"/>
-<meta name="twitter:description" content="Writing functions as containers
+<meta name="twitter:description" content="Writing functions as Starlark programs
 "/>
 
 
@@ -680,6 +680,19 @@
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#debugging-functions">Debugging Functions</a></li>
+    <li><a href="#openapi">OpenAPI</a></li>
+    <li><a href="#retaining-yaml-comments">Retaining YAML Comments</a></li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -734,38 +747,44 @@
             
 <div class="td-content">
 	<h1>Starlark Runtime</h1>
-	<div class="lead">Writing functions as containers</div>
+	<div class="lead">Writing functions as Starlark programs</div>
 	
 
 <div class="pageinfo pageinfo-warning">
-<p>The Starlark runtime is Alpha, and must be enabled with the <code>--enable-starlark</code>
-flag.</p>
+<p>The Starlark runtime is Alpha, and must be enabled with the <code>--enable-star</code> flag.</p>
 
 </div>
 
 <p>Functions may be written as Starlark scripts which modify a ResourceList provided as
 a variable.</p>
 <h4 id="imperative-run">Imperative Run</h4>
-<p>Starlark functions can be run imperatively by specifying them in the functionConfig.  Following
-is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation to each resource in its
-package.</p>
+<p>Starlark functions can be run imperatively by providing the Starlark script as a flag
+on <code>kpt fn run</code>.  Following is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation
+to every resource in the package.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
 <span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
 <span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
   <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">resource</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#000">r</span><span style="color:#000;font-weight:bold">:</span>
+    <span style="color:#8f5902;font-style:italic"># mutate the resource</span>
     <span style="color:#000">resource</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;annotations&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;foo&#34;</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">an</span>
 
+<span style="color:#8f5902;font-style:italic"># get the value of the annotation to add</span>
 <span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;data&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
+
 <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
 </code></pre></div><p>Run the Starlark function with:</p>
 <pre><code># run c.star as a function, generating a ConfigMap with value=bar as the functionConfig
 kpt fn run . --enable-star --star-path c.star -- value=bar
-</code></pre><p>Any resource in the directory will have the <code>foo: bar</code> annotation added.</p>
+</code></pre><p>Any resource under <code>.</code> will have the <code>foo: bar</code> annotation added.</p>
 <h4 id="declarative-run">Declarative Run</h4>
-<p>Starlark functions can be run declaratively using the <code>config.kubernetes.io/function</code>
-annotation.  Following is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation to
-each resource in its package.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
+<p>Starlark functions can also be run declaratively using the <code>config.kubernetes.io/function</code>
+annotation.  This annotation indicates that the resource is functionConfig that should
+be provided to a function.</p>
+<p>Following is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation to
+each resource in its package.  The ExampleKind resource will be set as the
+ResourceList.functionConfig.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>function-input<span style="color:#f8f8f8;text-decoration:underline">
@@ -774,7 +793,8 @@ each resource in its package.</p>
 </span><span style="color:#8f5902;font-style:italic">      starlark: {path: c.star, name: example-name}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;hello world&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Example Starlark function to add an annotation:</p>
+</span></code></pre></div><p>Example Starlark function to which will add an annotation to each resource scoped to <code>example.yaml</code>
+(those under the directory containing <code>example.yaml</code>):</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
 <span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
 <span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
@@ -783,9 +803,30 @@ each resource in its package.</p>
 
 <span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;spec&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
 <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
-</code></pre></div><p>And running them on the directory containing the functionConfig yaml with:</p>
+</code></pre></div><p>Run them on the directory containing <code>example.yaml</code> using:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn run DIR/ --enable-star
-</code></pre></div>
+</code></pre></div><h2 id="debugging-functions">Debugging Functions</h2>
+<p>It is possible to debug Starlark functions using <code>print</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
+<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;name&#34;</span><span style="color:#000;font-weight:bold">])</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --enable-star --star-path c.star
+</code></pre></div><blockquote>
+<p>foo</p>
+</blockquote>
+<h2 id="openapi">OpenAPI</h2>
+<p>The OpenAPI known to kpt is provided to the Starlark program through the <code>ctx.open_api</code> variable.
+This may contain metadata about the resources and their types.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic">#c.star</span>
+<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">open_api</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;definitions&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;io.k8s.api.apps.v1.Deployment&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;description&#34;</span><span style="color:#000;font-weight:bold">])</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --enable-star --star-path c.star
+</code></pre></div><blockquote>
+<p>Deployment enables declarative updates for Pods and ReplicaSets.</p>
+</blockquote>
+<h2 id="retaining-yaml-comments">Retaining YAML Comments</h2>
+<p>While Starlark programs are unable to retain comments on resources, kpt will
+attempt to retain comments by copying them from the function inputs to the function outputs.</p>
+<p>It is not possible at this time to add, modify or delete comments from Starlark scripts.</p>
+
         <div class="section-index">
     
     
@@ -842,7 +883,7 @@ each resource in its package.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified April 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/66b3df8083d0e9a5db44f477077afadba63422ca">Move function docs to guides (66b3df80)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified April 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/ba736d7503305eb939e82d0215ceee2cdb358d4d">Update Starlark function docs (ba736d75)</a>
 </div>
 </div>
 
