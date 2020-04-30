@@ -92,7 +92,7 @@ or programmatically (with ` + "`" + `create-subst` + "`" + `).  The ` + "`" + `c
           image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-value"}
 
   # create an image substitution and a setter that populates it
-  kpt cfg create-subst hello-world/ image-tag nginx:1.7.9 \
+  kpt cfg create-subst hello-world/ image-value nginx:1.7.9 \
     --pattern nginx:TAG_SETTER --value TAG_SETTER=tag
 
   # Kptfile -- updated
@@ -145,7 +145,7 @@ then it will throw and error, and the setter must be manually created.
 Substitutions are invoked by running ` + "`" + `kpt cfg set` + "`" + ` on a setter used by the
 substitution.
 
-  kpt cfg set hello-world/ image 1.8.1
+  kpt cfg set hello-world/ tag 1.8.1
 
   # deployment.yaml -- updated
   kind: Deployment

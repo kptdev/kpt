@@ -29,43 +29,39 @@ substitutions.
 # 1. create a substitution derived from 2 setters.  The user will never
 # call the substitution directly, instead it will be computed when the
 # setters are used.
-kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
-  --pattern IMAGE_SETTER:TAG_SETTER \
-  --value IMAGE_SETTER=image-setter \
-  --value TAG_SETTER=tag-setter
+kpt cfg create-subst DIR/ image-tag --field-value nginx:v1.7.9 \
+  --pattern \${image-setter}:\${tag-setter}
 
 # 2. update the substitution value by setting one of the 2 setters it is
 # computed from
-kpt cfg set . tag v1.8.0
+kpt cfg set . tag-setter v1.8.0
 
 # Manually create setters and substitution.  This is preferred to configure
 # the setters with a type, description, set-by, etc.
 #
 # 1. create the setter for the image name -- set the field so it isn't
 # referenced
-kpt cfg create-setter DIR/ image nginx --field "none" \
+kpt cfg create-setter DIR/ image-setter nginx --field "none" \
     --set-by "package-default"
 
 # 2. create the setter for the image tag -- set the field so it isn't
 # referenced
-kpt cfg create-setter DIR/ tag v1.7.9 --field "none" \
+kpt cfg create-setter DIR/ tag-setter v1.7.9 --field "none" \
     --set-by "package-default"
 
 # 3. create the substitution computed from the image and tag setters
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 \
-  --pattern IMAGE_SETTER:TAG_SETTER \
-  --value IMAGE_SETTER=image-setter \
-  --value TAG_SETTER=tag-setter
+  --pattern \${image-setter}:\${tag-setter}
 
 # 4. update the substitution value by setting one of the setters
-kpt cfg set . tag v1.8.0
+kpt cfg set . tag-setter v1.8.0
 ```
 <!--mdtogo-->
 
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
+kpt cfg create-subst DIR NAME --field-value VALUE --pattern PATTERN
 
 DIR
   Path to a package directory
@@ -84,7 +80,7 @@ PATTERN
   substituted for setter values.  The pattern may contain multiple
   different MARKERS, the same MARKER multiple times, and non-MARKER
   substrings.
-  e.g. IMAGE_SETTER:TAG_SETTER
+  e.g. ${image-setter}:${tag-setter}
 ```
 <!--mdtogo-->
 
