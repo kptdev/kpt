@@ -72,7 +72,7 @@ var SinkLong = `
 `
 var SinkExamples = `
   # run a function using explicit sources and sinks
-  kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
+  kpt fn source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
 `
 
 var SourceShort = `Explicitly specify an output source for a function`
@@ -87,5 +87,5 @@ var SourceExamples = `
   kpt fn source DIR/
 
   # run a function using explicit sources and sinks
-  kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
+  kpt fn source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
 `
