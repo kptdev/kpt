@@ -22,7 +22,7 @@ class Kpt < Formula
 
   def install
     ENV["GO111MODULE"] = "on"
-    system "go", "build", "-ldflags", "-X main.version=#{version}", *std_go_args
+    system "go", "build", "-ldflags", "-X github.com/GoogleContainerTools/kpt/run.version=#{version}", *std_go_args
   end
 
   test do
