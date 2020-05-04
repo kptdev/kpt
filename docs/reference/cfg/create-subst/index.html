@@ -912,40 +912,36 @@ substitutions.</p>
 <span style="color:#8f5902;font-style:italic"># 1. create a substitution derived from 2 setters.  The user will never</span>
 <span style="color:#8f5902;font-style:italic"># call the substitution directly, instead it will be computed when the</span>
 <span style="color:#8f5902;font-style:italic"># setters are used.</span>
-kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --pattern IMAGE_SETTER:TAG_SETTER <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">IMAGE_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>image-setter <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">TAG_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>tag-setter
+kpt cfg create-subst DIR/ image-tag --field-value nginx:v1.7.9 <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>  --pattern <span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>image-setter<span style="color:#ce5c00;font-weight:bold">}</span>:<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>tag-setter<span style="color:#ce5c00;font-weight:bold">}</span>
 
 <span style="color:#8f5902;font-style:italic"># 2. update the substitution value by setting one of the 2 setters it is</span>
 <span style="color:#8f5902;font-style:italic"># computed from</span>
-kpt cfg <span style="color:#204a87">set</span> . tag v1.8.0
+kpt cfg <span style="color:#204a87">set</span> . tag-setter v1.8.0
 
 <span style="color:#8f5902;font-style:italic"># Manually create setters and substitution.  This is preferred to configure</span>
 <span style="color:#8f5902;font-style:italic"># the setters with a type, description, set-by, etc.</span>
 #
 <span style="color:#8f5902;font-style:italic"># 1. create the setter for the image name -- set the field so it isn&#39;t</span>
 <span style="color:#8f5902;font-style:italic"># referenced</span>
-kpt cfg create-setter DIR/ image nginx --field <span style="color:#4e9a06">&#34;none&#34;</span> <span style="color:#4e9a06">\
+kpt cfg create-setter DIR/ image-setter nginx --field <span style="color:#4e9a06">&#34;none&#34;</span> <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>    --set-by <span style="color:#4e9a06">&#34;package-default&#34;</span>
 
 <span style="color:#8f5902;font-style:italic"># 2. create the setter for the image tag -- set the field so it isn&#39;t</span>
 <span style="color:#8f5902;font-style:italic"># referenced</span>
-kpt cfg create-setter DIR/ tag v1.7.9 --field <span style="color:#4e9a06">&#34;none&#34;</span> <span style="color:#4e9a06">\
+kpt cfg create-setter DIR/ tag-setter v1.7.9 --field <span style="color:#4e9a06">&#34;none&#34;</span> <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>    --set-by <span style="color:#4e9a06">&#34;package-default&#34;</span>
 
 <span style="color:#8f5902;font-style:italic"># 3. create the substitution computed from the image and tag setters</span>
 kpt cfg create-subst DIR/ image-tag nginx:v1.7.9 <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --pattern IMAGE_SETTER:TAG_SETTER <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">IMAGE_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>image-setter <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>  --value <span style="color:#000">TAG_SETTER</span><span style="color:#ce5c00;font-weight:bold">=</span>tag-setter
+</span><span style="color:#4e9a06"></span>  --pattern <span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>image-setter<span style="color:#ce5c00;font-weight:bold">}</span>:<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>tag-setter<span style="color:#ce5c00;font-weight:bold">}</span>
 
 <span style="color:#8f5902;font-style:italic"># 4. update the substitution value by setting one of the setters</span>
-kpt cfg <span style="color:#204a87">set</span> . tag v1.8.0
+kpt cfg <span style="color:#204a87">set</span> . tag-setter v1.8.0
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
-<pre><code>kpt cfg create-subst DIR NAME VALUE --pattern PATTERN --value MARKER=SETTER
+<pre><code>kpt cfg create-subst DIR NAME --field-value VALUE --pattern PATTERN
 
 DIR
   Path to a package directory
@@ -964,7 +960,7 @@ PATTERN
   substituted for setter values.  The pattern may contain multiple
   different MARKERS, the same MARKER multiple times, and non-MARKER
   substrings.
-  e.g. IMAGE_SETTER:TAG_SETTER
+  e.g. ${image-setter}:${tag-setter}
 </code></pre><!--mdtogo-->
 
         <div class="section-index">
@@ -1035,7 +1031,7 @@ PATTERN
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified April 3, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6c3876f046a0770f38c453ae65af2210a6252278">Update _index.md (6c3876f0)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified April 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9147a0a72a3a65856e85d65aacdfb314413cc3e5">Update docs for create-subst (9147a0a7)</a>
 </div>
 </div>
 

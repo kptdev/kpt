@@ -83,6 +83,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/oam/</loc>
+    <lastmod>2020-04-24T14:03:59+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/set/</loc>
     <lastmod>2020-03-30T20:54:38-07:00</lastmod>
   </url>
@@ -124,7 +129,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/create-subst/</loc>
-    <lastmod>2020-04-03T11:31:44-07:00</lastmod>
+    <lastmod>2020-04-29T15:53:27-07:00</lastmod>
   </url>
   
   <url>
