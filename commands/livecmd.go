@@ -48,7 +48,7 @@ func GetLiveCommand(name string) *cobra.Command {
 
 	// Create the factory and IOStreams for the "live" commands. The factory
 	// is created using the config flags.
-	flags := liveCmd.Flags()
+	flags := liveCmd.PersistentFlags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
 	kubeConfigFlags.AddFlags(flags)
 	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(kubeConfigFlags)
