@@ -53,7 +53,7 @@ So release your OAM app only needs two steps.
 
 ### Fetch OAM app from remote Repository
 
-Using our [example repository](https://github.com/oam-dev/sample/tree/master/5.OAM_KPT_Demo/repository/) for this demo.
+Using our [example repository](https://github.com/oam-dev/samples/tree/master/5.OAM_KPT_Demo/repository/) for this demo.
 
 You could fetch OAM app from remote Repository using [kpt pkg get](https://googlecontainertools.github.io/kpt/reference/pkg/get/).
 
