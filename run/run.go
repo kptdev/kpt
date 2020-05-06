@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	kptopenapi "github.com/GoogleContainerTools/kpt/internal/util/openapi"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -47,12 +48,6 @@ func GetMain() *cobra.Command {
 		Short:   overview.ReferenceShort,
 		Long:    overview.ReferenceLong,
 		Example: overview.ReferenceExamples,
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			// register function to use Kptfile for OpenAPI
-			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
-				return filepath.Join(args[0], kptfile.KptFileName), nil
-			}
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if installComp {
 				os.Setenv("COMP_INSTALL", "1")
@@ -76,6 +71,17 @@ func GetMain() *cobra.Command {
 			return cmd.Usage()
 		},
 	}
+
+	f := newFactory(cmd)
+
+	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// register function to use Kptfile for OpenAPI
+		ext.GetOpenAPIFile = func(args []string) (s string, err error) {
+			return filepath.Join(args[0], kptfile.KptFileName), nil
+		}
+		return kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
+	}
+
 	cmd.Flags().BoolVar(&installComp, "install-completion", false,
 		"install shell completion")
 	// this command will be invoked by the shell-completion code
@@ -115,11 +121,17 @@ func GetMain() *cobra.Command {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(kptcommands.GetKptCommands("kpt", newFactory(cmd))...)
+	cmd.AddCommand(kptcommands.GetKptCommands("kpt", f)...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
 		"print a stack-trace on failure")
+
+	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaSource, "k8s-schema-source", "",
+		"source for the kubernetes openAPI schema. Default is to first try to fetch "+
+			"it from the cluster given by the context and fall back to the builtin schema")
+	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaPath, "k8s-schema-path",
+		"./openapi.json", "path to the kubernetes openAPI schema file")
 
 	if _, err := exec.LookPath("git"); err != nil {
 		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")

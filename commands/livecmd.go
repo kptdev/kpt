@@ -17,6 +17,7 @@ package commands
 import (
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdfetchk8sschema"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -77,7 +78,10 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
 
-	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd)
+	fetchOpenAPICmd := cmdfetchk8sschema.NewCommand(name, f, ioStreams)
+
+	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd,
+		fetchOpenAPICmd)
 
 	return liveCmd
 }

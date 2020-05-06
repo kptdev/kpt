@@ -78,3 +78,11 @@ var ExitOnError bool
 
 // StackOnError if true, will print a stack trace on failure.
 var StackOnError bool
+
+// K8sSchemaSource defines where we should look for the kubernetes openAPI
+// schema
+var K8sSchemaSource string
+
+// K8sSchemaPath defines the path to the openAPI schema if we are reading from
+// a file
+var K8sSchemaPath string

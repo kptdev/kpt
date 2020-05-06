@@ -1,0 +1,8 @@
+{
+  "definitions": {
+    "io.k8s.clusterSchema": {
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}
