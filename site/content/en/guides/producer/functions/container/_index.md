@@ -1,10 +1,10 @@
 ---
 title: "Container Runtime"
 linkTitle: "Container Runtime"
-weight: 4
+weight: 1
 type: docs
 description: >
-   Writing functions as containers
+   Writing and running functions as containers
 ---
 
 Functions may be written as container images.  The container must run a program which:

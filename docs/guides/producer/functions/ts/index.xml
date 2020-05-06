@@ -1,0 +1,17 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kpt – TypeScript Function SDK</title>
+    <link>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/</link>
+    <description>Recent content in TypeScript Function SDK on Kpt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+  </channel>
+</rss>

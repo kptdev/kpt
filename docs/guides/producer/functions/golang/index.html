@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="generator" content="Hugo 0.68.3" />
+
+<META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kpt/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
+
+<title>Go Function SDK | Kpt</title><meta property="og:title" content="Go Function SDK" />
+<meta property="og:description" content="Writing exec and container functions in Golang.
+" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/" />
+<meta property="og:site_name" content="Kpt" />
+<meta itemprop="name" content="Go Function SDK">
+<meta itemprop="description" content="Writing exec and container functions in Golang.
+"><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Go Function SDK"/>
+<meta name="twitter:description" content="Writing exec and container functions in Golang.
+"/>
+
+
+
+
+
+<link rel="preload" href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
+
+    <title>Go Function SDK | Kpt</title>
+  </head>
+  <body class="td-section">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kpt/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kpt</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kpt/guides/" ><span class="active">Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/reference/" ><span>Command Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/concepts/" ><span>Concepts</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Guides</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguides">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumer">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/get/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Get</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerget">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Update</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerupdate">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Set</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerset">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/substitute/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitute</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumersubstitute">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Display</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerdisplay">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Apply</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerapply">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running Functions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunction">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Publishers</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducer">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Init</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerinit">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Setters</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducersetters">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Functions</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerfunctions">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/container/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Container Runtime</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionscontainer">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/exec/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exec Runtime</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionsexec">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionsstarlark">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerfunctionsgolang">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Function SDK</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionsts">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitutions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducersubstitutions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Blueprints</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerblueprint">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Variants</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducervariant">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/bootstrap/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bootstrapping</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerbootstrap">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Ecosystem</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystem">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/kustomize/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystemkustomize">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/helm/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Helm</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystemhelm">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/ecosystem/oam/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">OAM</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesecosystemoam">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/golang/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Go%20Function%20SDK" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#hello-world-go-function">Hello World Go Function</a></li>
+        <li><a href="#build-and-test-the-function">Build and test the function</a></li>
+        <li><a href="#publish-the-function">Publish the function</a></li>
+        <li><a href="#declarative-function-configuration">Declarative function configuration</a></li>
+        <li><a href="#kyaml">kyaml</a></li>
+        <li><a href="#validation">Validation</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/">Guides</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/">Package Publishers</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/">Functions</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/">Go Function SDK</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Go Function SDK</h1>
+	<div class="lead">Writing exec and container functions in Golang.</div>
+	<p>Writing exec and container functions in Golang.</p>
+<h3 id="hello-world-go-function">Hello World Go Function</h3>
+<h4 id="create-the-go-module">Create the go module</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go mod init github.com/user/repo
+</code></pre></div><h4 id="create-the-maingo">Create the <code>main.go</code></h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// main.go
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
+
+<span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">(</span>
+	<span style="color:#4e9a06">&#34;os&#34;</span>
+
+	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/fn/framework&#34;</span>
+	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/yaml&#34;</span>
+<span style="color:#000;font-weight:bold">)</span>
+
+<span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">value</span> <span style="color:#204a87;font-weight:bold">string</span>
+
+<span style="color:#204a87;font-weight:bold">func</span> <span style="color:#000">main</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000;font-weight:bold">{</span>
+	<span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">nil</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">items</span> <span style="color:#000;font-weight:bold">[]</span><span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">([]</span><span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">error</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#8f5902;font-style:italic">// framework has parse the ResourceList.functionConfig input into the
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// cmd flags(from the ResourceList.functionConfig.data field).
+</span><span style="color:#8f5902;font-style:italic"></span>		<span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">items</span> <span style="color:#000;font-weight:bold">{</span>
+            <span style="color:#8f5902;font-style:italic">// modify the resources using the kyaml/yaml library:
+</span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#8f5902;font-style:italic">// https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml
+</span><span style="color:#8f5902;font-style:italic"></span>			<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">items</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">SetAnnotation</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">value</span><span style="color:#000;font-weight:bold">));</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
+				<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">err</span>
+			<span style="color:#000;font-weight:bold">}</span>
+		<span style="color:#000;font-weight:bold">}</span>
+		<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">items</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">nil</span>
+	<span style="color:#000;font-weight:bold">})</span>
+	<span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Flags</span><span style="color:#000;font-weight:bold">().</span><span style="color:#000">StringVar</span><span style="color:#000;font-weight:bold">(</span><span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">value</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;flag value&#34;</span><span style="color:#000;font-weight:bold">)</span>
+	<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Execute</span><span style="color:#000;font-weight:bold">();</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
+		<span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
+	<span style="color:#000;font-weight:bold">}</span>
+<span style="color:#000;font-weight:bold">}</span>
+</code></pre></div><p>Note: resources should be modified using the <a href="#kyaml">kyaml/yaml</a> library.</p>
+<h3 id="build-and-test-the-function">Build and test the function</h3>
+<p>Build the go binary and test it by running it as an executable function.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go build -o my-fn .
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run the my-fn function against the configuration in PACKAGE_DIR/</span>
+kpt fn run PACKAGE_DIR/ --enable-exec --exec-path ./my-fn -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>foo
+</code></pre></div><h3 id="publish-the-function">Publish the function</h3>
+<p>Build the function into a container image.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># optional: generate a Dockerfile to contain the function</span>
+go run ./main.go gen ./
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># build the function into an image</span>
+docker build . -t gcr.io/project/fn-name:tag
+<span style="color:#8f5902;font-style:italic"># optional: push the image to a container registry</span>
+docker push gcr.io/project/fn-name:tag
+</code></pre></div><p>Run the function as a container</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>foo
+</code></pre></div><h3 id="declarative-function-configuration">Declarative function configuration</h3>
+<h4 id="run-the-function-declaratively">Run the function declaratively</h4>
+<p>Run as a container function:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># PACKAGE_DIR/example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Example<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/project/fn-name<span style="color:#000;font-weight:bold">:</span>tag<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>a<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/
+</code></pre></div><p>Or as an exec function:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># PACKAGE_DIR/example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Example<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      exec:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>/path/to/my-fn<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>a<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/ --enable-exec
+</code></pre></div><h4 id="implement-the-function-using-declarative-input">Implement the function using declarative input</h4>
+<p>Functions may alternatively be written using a struct for parsing the functionConfig rather than
+flags.  The example shown below explicitly implements what the preceding example implements
+implicitly.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
+
+<span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">(</span>
+	<span style="color:#4e9a06">&#34;os&#34;</span>
+
+	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/fn/framework&#34;</span>
+	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/yaml&#34;</span>
+<span style="color:#000;font-weight:bold">)</span>
+
+<span style="color:#204a87;font-weight:bold">func</span> <span style="color:#000">main</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000;font-weight:bold">{</span>
+	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Data</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#000">Value</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;value,omitempty&#34;`</span>
+	<span style="color:#000;font-weight:bold">}</span>
+	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Example</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#000">Data</span> <span style="color:#000">Data</span> <span style="color:#4e9a06">`yaml:&#34;data,omitempty&#34;`</span>
+	<span style="color:#000;font-weight:bold">}</span>
+	<span style="color:#000">functionConfig</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">Example</span><span style="color:#000;font-weight:bold">{}</span>
+
+	<span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">functionConfig</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">items</span> <span style="color:#000;font-weight:bold">[]</span><span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">([]</span><span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">error</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#8f5902;font-style:italic">// framework has parsed the input ResourceList.functionConfig into the functionConfig
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// variable
+</span><span style="color:#8f5902;font-style:italic"></span>		<span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">items</span> <span style="color:#000;font-weight:bold">{</span>
+			<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">items</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">SetAnnotation</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">functionConfig</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Data</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Value</span><span style="color:#000;font-weight:bold">));</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
+				<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">err</span>
+			<span style="color:#000;font-weight:bold">}</span>
+		<span style="color:#000;font-weight:bold">}</span>
+		<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">items</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">nil</span>
+	<span style="color:#000;font-weight:bold">})</span>
+
+	<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Execute</span><span style="color:#000;font-weight:bold">();</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
+		<span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
+	<span style="color:#000;font-weight:bold">}</span>
+<span style="color:#000;font-weight:bold">}</span>
+</code></pre></div><p>Note: functionConfig need not read from the <code>data</code> field if it is not going to be run
+imperatively with <code>kpt fn run DIR/ --image gcr.io/some/image -- foo=bar</code> or
+<code>kpt fn run DIR/ --exec-path /some/bin --enable-exec -- foo=bar</code>.  This is more appropriate
+for functions implementing abstractions (e.g. client-side CRD equivalents).</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ce5c00;font-weight:bold">...</span>
+	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">NestedValue</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+		<span style="color:#000">Value</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;value,omitempty&#34;`</span>
+	<span style="color:#000;font-weight:bold">}</span>
+	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Spec</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#000">NestedValue</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;nestedValue,omitempty&#34;`</span>
+        <span style="color:#000">MapValues</span> <span style="color:#204a87;font-weight:bold">map</span><span style="color:#000;font-weight:bold">[</span><span style="color:#204a87;font-weight:bold">string</span><span style="color:#000;font-weight:bold">]</span><span style="color:#204a87;font-weight:bold">string</span>  <span style="color:#4e9a06">`yaml:&#34;mapValues,omitempty&#34;`</span>
+        <span style="color:#000">ListItems</span> <span style="color:#000;font-weight:bold">[]</span><span style="color:#204a87;font-weight:bold">string</span>  <span style="color:#4e9a06">`yaml:&#34;listItems,omitempty&#34;`</span>
+	<span style="color:#000;font-weight:bold">}</span>
+	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Example</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#000">Spec</span> <span style="color:#000">Spec</span> <span style="color:#4e9a06">`yaml:&#34;spec,omitempty&#34;`</span>
+	<span style="color:#000;font-weight:bold">}</span>
+	<span style="color:#000">functionConfig</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">Example</span><span style="color:#000;font-weight:bold">{}</span>
+<span style="color:#ce5c00;font-weight:bold">...</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># PACKAGE_DIR/example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Example<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      exec:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>/path/to/my-fn<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">nestedValue</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>something<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">mapValues</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">key</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>value<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">listItems</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- a<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- b<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h3 id="kyaml">kyaml</h3>
+<p>Functions written in go should use the <a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml?tab=doc">sigs.k8s.io/kustomize/kyaml</a> libraries for modifying
+resource configuration.</p>
+<p>The <a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc">sigs.k8s.io/kustomize/kyaml/yaml</a> library offers utilities for reading and modifying
+yaml configuration, while retaining comments and structure.</p>
+<p>To use the kyaml/yaml library, become familiar with:</p>
+<ul>
+<li>The <code>*yaml.RNode</code> type, which represents a configuration object or field
+<ul>
+<li><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc#RNode">link</a></li>
+</ul>
+</li>
+<li>The <code>Pipe</code> and <code>PipeE</code> functions, which apply a series of pipelined operations to the <code>*RNode</code>.
+<ul>
+<li><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc#RNode.Pipe">link</a></li>
+</ul>
+</li>
+</ul>
+<h4 id="workflow">Workflow</h4>
+<p>To modify a *yaml.RNode call PipeE() on the *RNode, passing in the operations to be performed.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Set the spec.replicas field to 3 if it exists
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">node</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span>
+<span style="color:#ce5c00;font-weight:bold">...</span>
+<span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Lookup</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;spec&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;replicas&#34;</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">FieldSetter</span><span style="color:#000;font-weight:bold">{</span><span style="color:#000">StringValue</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;3&#34;</span><span style="color:#000;font-weight:bold">})</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Set the spec.replicas field to 3, creating it if it doesn&#39;t exist
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">node</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span>
+<span style="color:#ce5c00;font-weight:bold">...</span>
+<span style="color:#8f5902;font-style:italic">// pass in the type of the node to create if it doesn&#39;t exist (e.g. Sequence, Map, Scalar)
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">LookupCreate</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">ScalarNode</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;spec&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;replicas&#34;</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">FieldSetter</span><span style="color:#000;font-weight:bold">{</span><span style="color:#000">StringValue</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;3&#34;</span><span style="color:#000;font-weight:bold">})</span>
+</code></pre></div><p>To read a value from a *yaml.RNode call Pipe() on the RNode, passing in the operations to
+lookup a field.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Read the spec.replicas field
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">node</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span>
+<span style="color:#ce5c00;font-weight:bold">...</span>
+<span style="color:#000">replicas</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Pipe</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Lookup</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;spec&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;replicas&#34;</span><span style="color:#000;font-weight:bold">))</span>
+</code></pre></div>
+
+<div class="pageinfo pageinfo-info">
+<p>Operations are any types implementing the <code>yaml.Filter</code> interface, so it is simple to
+define custom operations and provide them to <code>Pipe</code>, combining them with the built-in operations.</p>
+
+</div>
+
+<h4 id="visiting-fields-and-elements">Visiting Fields and Elements</h4>
+<p>Maps (i.e. Objects) and Sequences (i.e. Lists) support functions for visiting their fields and
+elements.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Visit each of the elements in a Sequence (i.e. a List)
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">VisitElements</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">elem</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
+    <span style="color:#8f5902;font-style:italic">// do something with each element in the list
+</span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>	
+<span style="color:#000;font-weight:bold">})</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Visit each of the fields in a Map (i.e. an Object)
+</span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">VisitFields</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">n</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">MapNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
+    <span style="color:#8f5902;font-style:italic">// do something with each field in the map / object
+</span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>	
+<span style="color:#000;font-weight:bold">})</span>
+</code></pre></div><h3 id="validation">Validation</h3>
+<p>Go functions can implement high fidelity validation results by returning a <code>framework.Result</code> as
+an error.  If run using <code>kpt fn run --results-dir SOME_DIR/</code>, the results will be written to a file
+in the specified directory.</p>
+<p>If the result contains an item with severity of <code>framework.Error</code>, the function will exit non-0.
+Otherwise it will exit 0.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">functionConfig</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">items</span> <span style="color:#000;font-weight:bold">[]</span><span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">([]</span><span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">error</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#000;font-weight:bold">{</span>
+    <span style="color:#ce5c00;font-weight:bold">...</span>
+    <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#ce5c00;font-weight:bold">...</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#8f5902;font-style:italic">// return validation results to be written under the results dir
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">items</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span><span style="color:#000;font-weight:bold">{</span><span style="color:#ce5c00;font-weight:bold">...</span><span style="color:#000;font-weight:bold">}</span>
+    <span style="color:#000;font-weight:bold">}</span>
+    <span style="color:#ce5c00;font-weight:bold">...</span>
+<span style="color:#000;font-weight:bold">})</span>
+
+</code></pre></div>
+        <div class="section-index">
+    
+    
+    
+    
+    <hr class="panel-line">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    
+</div>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8b1b5312f8ff847348a5de2691ae68d22c95abc1">Update functions docs for writing go functions (8b1b5312)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Google LLC All Rights Reserved</small>
+        <small class="ml-1"><a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></small>
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kpt/js/main.min.1b3d8778561d0b887ffb4d8c0a8daeef6dd10d0e685a6169cf95b28a3da7dd70.js" integrity="sha256-Gz2HeFYdC4h/&#43;02MCo2u723RDQ5oWmFpz5Wyij2n3XA=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://googlecontainertools.github.io/kpt//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>

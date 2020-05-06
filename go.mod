@@ -6,7 +6,6 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/google/addlicense v0.0.0-20200422172452-68a83edd47bc // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
