@@ -20,7 +20,7 @@ kpt fn source DIR/
 
 ```sh
 # run a function using explicit sources and sinks
-kpt fn source DIR/ | kpt run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
+kpt fn source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
 ```
 <!--mdtogo-->
 

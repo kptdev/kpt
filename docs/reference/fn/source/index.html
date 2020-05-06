@@ -872,7 +872,7 @@
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print to stdout configuration formatted as an input source</span>
 kpt fn <span style="color:#204a87">source</span> DIR/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run a function using explicit sources and sinks</span>
-kpt fn <span style="color:#204a87">source</span> DIR/ <span style="color:#000;font-weight:bold">|</span> kpt run --image gcr.io/example.com/my-fn <span style="color:#000;font-weight:bold">|</span> kpt fn sink DIR/
+kpt fn <span style="color:#204a87">source</span> DIR/ <span style="color:#000;font-weight:bold">|</span> kpt fn run --image gcr.io/example.com/my-fn <span style="color:#000;font-weight:bold">|</span> kpt fn sink DIR/
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
