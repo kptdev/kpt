@@ -53,7 +53,7 @@ So release your OAM app only needs two steps.
 
 ### Fetch OAM app from remote Repository
 
-Using our [example repository](https://github.com/oam-dev/sample/tree/master/5.OAM_KPT_Demo/repository/) for this demo.
+Using our [example repository](https://github.com/oam-dev/samples/tree/master/5.OAM_KPT_Demo/repository/) for this demo.
 
 You could fetch OAM app from remote Repository using [kpt pkg get](https://googlecontainertools.github.io/kpt/reference/pkg/get/).
 
@@ -76,7 +76,7 @@ sampleapp
 ├── appconfig.yaml
 └── component.yaml
 
-0 directories, 5 files
+0 directories, 3 files
 ```
 
 ### Install sample app
@@ -105,7 +105,16 @@ example-appconfig-workload-deployment   3/3     3            3           114s
 
 When some changes occurred both local and remote apps, you could sync and merge with kpt.
 
-For example, we changed our sampleapp and tag it as `v0.1.0`. Then our local sampleapp also be changed.
+Because kpt packages must be checked into a git repo before they are updated, if your app is not in the control of git,
+you could init like below:
+
+```shell
+git init
+git add sampleapp
+git commit -m "init"
+```
+
+Then our local sampleapp can be changed and sync with the remote app. For example, assume our remote sampleapp has changed and tagged as `v0.1.0`.
 
 ```shell
 kpt pkg update sampleapp@v0.1.0 --strategy=resource-merge
@@ -120,7 +129,7 @@ Ref to [update section](https://googlecontainertools.github.io/kpt/guides/consum
 
 In Open Application Model, developers can claim certain fields in the application YAML as "configurable", so in the following workflow, operators (or the platform) will be allowed to modify these fields.
 
-Now this workflow can be easily achieved with help of kpt.
+Now this goal can be easily achieved with help of kpt.
 
 #### Create setter by App Developer
 
@@ -163,11 +172,14 @@ kind: Component
 metadata:
   name: test-component # {"$ref":"#/definitions/io.k8s.cli.setters.instance-name"}
 spec:
-  parameters:
-  - name: instance-name
-    fieldPaths:
-    - metadata.name
-...
+  workload:
+    apiVersion: core.oam.dev/v1alpha2
+    kind: ContainerizedWorkload
+    spec:
+      containers:
+      - name: my-nginx
+        image: nginx:1.16.1 # {"$ref":"#/definitions/io.k8s.cli.setters.image"}
+        ...
 ```
 
 ### App Overview
@@ -180,7 +192,7 @@ ApplicationConfiguration: 1
 Component: 1
 ```
 
-So in the sampleapp, we have one ApplicationConfiguration and Component.
+So in the sampleapp, we have one ApplicationConfiguration and one Component.
 
 ### Live apply
 
