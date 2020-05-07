@@ -82,7 +82,7 @@ var KptfileSet = func() sets.String {
 // use a set of golden files as the sourceDir rather than the original TestGitRepo
 // that was copied.
 func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool {
-	diff, err := copyutil.Diff(sourceDir, destDir)
+	diff, err := Diff(sourceDir, destDir)
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -91,7 +91,7 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool 
 }
 
 func AssertEqual(t *testing.T, g *TestGitRepo, sourceDir, destDir string) {
-	diff, err := copyutil.Diff(sourceDir, destDir)
+	diff, err := Diff(sourceDir, destDir)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -100,6 +100,99 @@ func AssertEqual(t *testing.T, g *TestGitRepo, sourceDir, destDir string) {
 		t.FailNow()
 	}
 }
+
+// Diff returns a list of files that differ between the source and destination.
+//
+// Diff is guaranteed to return a non-empty set if any files differ, but
+// this set is not guaranteed to contain all differing files.
+func Diff(sourceDir, destDir string) (sets.String, error) {
+	// get set of filenames in the package source
+	upstreamFiles := sets.String{}
+	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// skip git repo if it exists
+		if strings.Contains(path, ".git") {
+			return nil
+		}
+
+		upstreamFiles.Insert(strings.TrimPrefix(strings.TrimPrefix(path, sourceDir), string(filepath.Separator)))
+		return nil
+	})
+	if err != nil {
+		return sets.String{}, err
+	}
+
+	// get set of filenames in the cloned package
+	localFiles := sets.String{}
+	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// skip git repo if it exists
+		if strings.Contains(path, ".git") {
+			return nil
+		}
+
+		localFiles.Insert(strings.TrimPrefix(strings.TrimPrefix(path, destDir), string(filepath.Separator)))
+		return nil
+	})
+	if err != nil {
+		return sets.String{}, err
+	}
+
+	// verify the source and cloned packages have the same set of filenames
+	diff := upstreamFiles.SymmetricDifference(localFiles)
+
+	// verify file contents match
+	for _, f := range upstreamFiles.Intersection(localFiles).List() {
+		fi, err := os.Stat(filepath.Join(destDir, f))
+		if err != nil {
+			return diff, err
+		}
+		if fi.Mode().IsDir() {
+			// already checked that this directory exists in the local files
+			continue
+		}
+
+		// compare upstreamFiles
+		b1, err := ioutil.ReadFile(filepath.Join(destDir, f))
+		if err != nil {
+			return diff, err
+		}
+		b2, err := ioutil.ReadFile(filepath.Join(sourceDir, f))
+		if err != nil {
+			return diff, err
+		}
+
+		s1 := strings.TrimSpace(strings.TrimPrefix(string(b1), trimPrefix))
+		s2 := strings.TrimSpace(strings.TrimPrefix(string(b2), trimPrefix))
+
+		if s1 != s2 {
+			fmt.Println(copyutil.PrettyFileDiff(s1, s2))
+			diff.Insert(f)
+		}
+	}
+	// return the differing files
+	return diff, nil
+}
+
+const trimPrefix = `# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.`
 
 func Replace(t *testing.T, path, old, new string) {
 	b, err := ioutil.ReadFile(path)
