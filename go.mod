@@ -6,11 +6,10 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/google/addlicense v0.0.0-20200422172452-68a83edd47bc // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20200221170553-0f24fbd83dfb // indirect
@@ -23,6 +22,6 @@ require (
 	// Once there is a 0.18 release, we can import a semver release.
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
 	sigs.k8s.io/cli-utils v0.9.0
-	sigs.k8s.io/kustomize/cmd/config v0.1.7
-	sigs.k8s.io/kustomize/kyaml v0.1.8
+	sigs.k8s.io/kustomize/cmd/config v0.1.8
+	sigs.k8s.io/kustomize/kyaml v0.1.9
 )
