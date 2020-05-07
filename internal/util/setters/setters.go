@@ -21,10 +21,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters"
+	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
+)
+
+const (
+	GcloudProject       = "gcloud.core.project"
+	GcloudProjectNumber = "gcloud.project.projectNumber"
 )
 
 func PerformSetters(path string) error {
@@ -143,7 +151,7 @@ func PerformSetters(path string) error {
 			err = kio.Pipeline{
 				Inputs: []kio.Reader{rw},
 				Filters: []kio.Filter{&setters.PerformSetters{
-					Name:  "gcloud.project.projectNumber",
+					Name:  GcloudProjectNumber,
 					Value: projectNumber, SetBy: "kpt"}},
 				Outputs: []kio.Writer{rw},
 			}.Execute()
@@ -154,7 +162,7 @@ func PerformSetters(path string) error {
 			err = kio.Pipeline{
 				Inputs: []kio.Reader{rw},
 				Filters: []kio.Filter{&settersutil.FieldSetter{
-					Name:  "gcloud.project.projectNumber",
+					Name:  GcloudProjectNumber,
 					Value: projectNumber, SetBy: "kpt", ResourcesPath: path,
 					OpenAPIPath: filepath.Join(path, "Kptfile")}},
 				Outputs: []kio.Writer{rw},
@@ -176,4 +184,17 @@ func GetProjectNumberFromProjectID(projectID string) (string, error) {
 			"credentials are valid and try again", projectID)
 	}
 	return strings.TrimSpace(string(b)), nil
+}
+
+// DefExists returns true if the setterName exists in Kptfile definitions
+func DefExists(resourcePath, setterName string) bool {
+	if err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, "Kptfile")); err != nil {
+		return false
+	}
+	ref, err := spec.NewRef(setters2.DefinitionsPrefix + setters2.SetterDefinitionPrefix + setterName)
+	if err != nil {
+		return false
+	}
+	setter, _ := openapi.Resolve(&ref)
+	return setter != nil
 }
