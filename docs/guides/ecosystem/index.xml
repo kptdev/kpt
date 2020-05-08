@@ -148,7 +148,7 @@ git push -u origin master
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h3 id=&#34;fetch-oam-app-from-remote-repository&#34;&gt;Fetch OAM app from remote Repository&lt;/h3&gt;
-&lt;p&gt;Using our &lt;a href=&#34;https://github.com/oam-dev/sample/tree/master/5.OAM_KPT_Demo/repository/&#34;&gt;example repository&lt;/a&gt; for this demo.&lt;/p&gt;
+&lt;p&gt;Using our &lt;a href=&#34;https://github.com/oam-dev/samples/tree/master/5.OAM_KPT_Demo/repository/&#34;&gt;example repository&lt;/a&gt; for this demo.&lt;/p&gt;
 &lt;p&gt;You could fetch OAM app from remote Repository using &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;.&lt;/p&gt;
 &lt;h4 id=&#34;command&#34;&gt;Command&lt;/h4&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/oam-dev/samples.git/5.OAM_KPT_Demo/repository/sampleapp sampleapp
@@ -160,7 +160,7 @@ sampleapp
 ├── appconfig.yaml
 └── component.yaml
 
-&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt; directories, &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;5&lt;/span&gt; files
+&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt; directories, &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt; files
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;install-sample-app&#34;&gt;Install sample app&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kubectl apply -f sampleapp/
 component.core.oam.dev/example-component created
@@ -176,13 +176,18 @@ NAME                                    READY   UP-TO-DATE   AVAILABLE   AGE
 example-appconfig-workload-deployment   3/3     &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;            &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;           114s
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;sync-with-remote-app-repository&#34;&gt;Sync with Remote App Repository&lt;/h3&gt;
 &lt;p&gt;When some changes occurred both local and remote apps, you could sync and merge with kpt.&lt;/p&gt;
-&lt;p&gt;For example, we changed our sampleapp and tag it as &lt;code&gt;v0.1.0&lt;/code&gt;. Then our local sampleapp also be changed.&lt;/p&gt;
+&lt;p&gt;Because kpt packages must be checked into a git repo before they are updated, if your app is not in the control of git,
+you could init like below:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;git init
+git add sampleapp
+git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;init&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then our local sampleapp can be changed and sync with the remote app. For example, assume our remote sampleapp has changed and tagged as &lt;code&gt;v0.1.0&lt;/code&gt;.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg update sampleapp@v0.1.0 --strategy&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;resource-merge
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Ref to &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/consumer/update/#commit-local-changes&#34;&gt;update section&lt;/a&gt; of kpt for more details.&lt;/p&gt;
 &lt;h3 id=&#34;parameter-setting&#34;&gt;Parameter Setting&lt;/h3&gt;
 &lt;p&gt;&lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/consumer/set/&#34;&gt;kpt setters&lt;/a&gt; is a powerful feature which naturally matches to the idea of &amp;ldquo;separate concerns&amp;rdquo; design from OAM.&lt;/p&gt;
 &lt;p&gt;In Open Application Model, developers can claim certain fields in the application YAML as &amp;ldquo;configurable&amp;rdquo;, so in the following workflow, operators (or the platform) will be allowed to modify these fields.&lt;/p&gt;
-&lt;p&gt;Now this workflow can be easily achieved with help of kpt.&lt;/p&gt;
+&lt;p&gt;Now this goal can be easily achieved with help of kpt.&lt;/p&gt;
 &lt;h4 id=&#34;create-setter-by-app-developer&#34;&gt;Create setter by App Developer&lt;/h4&gt;
 &lt;p&gt;Let&amp;rsquo;s say the developer need to claim two fields as &amp;ldquo;configurable&amp;rdquo; for his application, he can add two kpt setters here:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt cfg create-setter sampleapp/ instance-name example-component --field &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;metadata.name&amp;#34;&lt;/span&gt; --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;use to set an instance name&amp;#34;&lt;/span&gt; --set-by &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;sampleapp developer&amp;#34;&lt;/span&gt;
@@ -204,17 +209,20 @@ kind: Component
 metadata:
   name: test-component &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.instance-name&amp;#34;}&lt;/span&gt;
 spec:
-  parameters:
-  - name: instance-name
-    fieldPaths:
-    - metadata.name
-...
+  workload:
+    apiVersion: core.oam.dev/v1alpha2
+    kind: ContainerizedWorkload
+    spec:
+      containers:
+      - name: my-nginx
+        image: nginx:1.16.1 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.image&amp;#34;}&lt;/span&gt;
+        ...
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;app-overview&#34;&gt;App Overview&lt;/h3&gt;
 &lt;p&gt;With kpt, you could see an overview of your App.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt cfg count sampleapp
 ApplicationConfiguration: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
 Component: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So in the sampleapp, we have one ApplicationConfiguration and Component.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So in the sampleapp, we have one ApplicationConfiguration and one Component.&lt;/p&gt;
 &lt;h3 id=&#34;live-apply&#34;&gt;Live apply&lt;/h3&gt;
 &lt;p&gt;kpt includes the next-generation &lt;strong&gt;apply&lt;/strong&gt; commands developed out of the Kubernetes &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-utils&#34;&gt;cli-utils&lt;/a&gt; repository as the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/live/apply&#34;&gt;&lt;code&gt;kpt live apply&lt;/code&gt;&lt;/a&gt; command.&lt;/p&gt;
 &lt;p&gt;This means with &lt;code&gt;kpt live apply&lt;/code&gt; command, we could wait for the controller reconcile.&lt;/p&gt;
