@@ -33,17 +33,18 @@ import (
 var value string
 
 func main() {
-	cmd := framework.Command(nil, func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+    resourceList := &framework.ResourceList{}
+	cmd := framework.Command(resourceList, func() error {
         // framework has parse the ResourceList.functionConfig input into the
-        // cmd flags(from the ResourceList.functionConfig.data field).
-		for i := range items {
+        // cmd flags (from the ResourceList.functionConfig.data field).
+		for i := range resourceList.Items {
             // modify the resources using the kyaml/yaml library:
             // https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml
-			if err := items[i].PipeE(yaml.SetAnnotation("value", value)); err != nil {
-				return nil, err
+			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("value", value)); err != nil {
+				return err
 			}
 		}
-		return items, nil
+		return nil
 	})
 	cmd.Flags().StringVar(&value, "value", "", "flag value")
 	if err := cmd.Execute(); err != nil {
@@ -154,15 +155,24 @@ func main() {
         Value string `yaml:"value,omitempty"`
 	}
 	type Example struct {
+        // Data contains the function configuration (e.g. client-side CRD).  Using "data"
+        // as the field name to contain key-value pairs enables the function to be invoked
+        // imperatively via `kpt fn run DIR/ --image img:tag -- key=value` and the
+        // key=value arguments will be parsed into the functionConfig.data field.
+        // If the function does not need to be invoked imperatively, other field names
+        // may be used.
         Data Data `yaml:"data,omitempty"`
 	}
 	functionConfig := &Example{}
+    resourceList := &framework.ResourceList{FunctionConfig: functionConfig}
 
-	cmd := framework.Command(functionConfig, func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-        // framework has parsed the input ResourceList.functionConfig into the functionConfig
-        // variable
-		for i := range items {
-			if err := items[i].PipeE(yaml.SetAnnotation("value", functionConfig.Data.Value)); err != nil {
+	cmd := framework.Command(resourceList, func() error {
+		for i := range resourceList.Items {
+            // use the kyaml libraries to modify each resource by applying transformations
+			err := resourceList.Items[i].PipeE(
+                yaml.SetAnnotation("value", functionConfig.Data.Value),
+            )
+            if err != nil {
 				return nil, err
 			}
 		}
@@ -290,20 +300,25 @@ err := node.VisitFields(func(n *yaml.MapNode) error {
 
 ### Validation
 
-Go functions can implement high fidelity validation results by returning a `framework.Result` as
-an error.  If run using `kpt fn run --results-dir SOME_DIR/`, the results will be written to a file
+Go functions can implement high fidelity validation results by setting a `framework.Result`
+on the `ResourceList`.
+
+If run using `kpt fn run --results-dir SOME_DIR/`, the result will be written to a file
 in the specified directory.
 
-If the result contains an item with severity of `framework.Error`, the function will exit non-0.
-Otherwise it will exit 0.
+If the result is returned and contains an item with severity of `framework.Error`, the function
+will exit non-0.  Otherwise it will exit 0.
 
 
 ```go
-cmd := framework.Command(functionConfig, func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+cmd := framework.Command(resourceList, func() error {
     ...
     if ... {
         // return validation results to be written under the results dir
-        return items, framework.Result{...}
+    	resourceList.Result = framework.Result{...}
+
+        // return the results as an error if desireds
+        return resourceList.Result
     }
     ...
 })
