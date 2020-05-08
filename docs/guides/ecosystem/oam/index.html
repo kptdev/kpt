@@ -865,7 +865,7 @@ git push -u origin master
 </code></pre></div></li>
 </ol>
 <h3 id="fetch-oam-app-from-remote-repository">Fetch OAM app from remote Repository</h3>
-<p>Using our <a href="https://github.com/oam-dev/sample/tree/master/5.OAM_KPT_Demo/repository/">example repository</a> for this demo.</p>
+<p>Using our <a href="https://github.com/oam-dev/samples/tree/master/5.OAM_KPT_Demo/repository/">example repository</a> for this demo.</p>
 <p>You could fetch OAM app from remote Repository using <a href="https://googlecontainertools.github.io/kpt/reference/pkg/get/">kpt pkg get</a>.</p>
 <h4 id="command">Command</h4>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg get https://github.com/oam-dev/samples.git/5.OAM_KPT_Demo/repository/sampleapp sampleapp
@@ -877,7 +877,7 @@ sampleapp
 ├── appconfig.yaml
 └── component.yaml
 
-<span style="color:#0000cf;font-weight:bold">0</span> directories, <span style="color:#0000cf;font-weight:bold">5</span> files
+<span style="color:#0000cf;font-weight:bold">0</span> directories, <span style="color:#0000cf;font-weight:bold">3</span> files
 </code></pre></div><h3 id="install-sample-app">Install sample app</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kubectl apply -f sampleapp/
 component.core.oam.dev/example-component created
@@ -893,13 +893,18 @@ NAME                                    READY   UP-TO-DATE   AVAILABLE   AGE
 example-appconfig-workload-deployment   3/3     <span style="color:#0000cf;font-weight:bold">3</span>            <span style="color:#0000cf;font-weight:bold">3</span>           114s
 </code></pre></div><h3 id="sync-with-remote-app-repository">Sync with Remote App Repository</h3>
 <p>When some changes occurred both local and remote apps, you could sync and merge with kpt.</p>
-<p>For example, we changed our sampleapp and tag it as <code>v0.1.0</code>. Then our local sampleapp also be changed.</p>
+<p>Because kpt packages must be checked into a git repo before they are updated, if your app is not in the control of git,
+you could init like below:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">git init
+git add sampleapp
+git commit -m <span style="color:#4e9a06">&#34;init&#34;</span>
+</code></pre></div><p>Then our local sampleapp can be changed and sync with the remote app. For example, assume our remote sampleapp has changed and tagged as <code>v0.1.0</code>.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg update sampleapp@v0.1.0 --strategy<span style="color:#ce5c00;font-weight:bold">=</span>resource-merge
 </code></pre></div><p>Ref to <a href="https://googlecontainertools.github.io/kpt/guides/consumer/update/#commit-local-changes">update section</a> of kpt for more details.</p>
 <h3 id="parameter-setting">Parameter Setting</h3>
 <p><a href="https://googlecontainertools.github.io/kpt/guides/consumer/set/">kpt setters</a> is a powerful feature which naturally matches to the idea of &ldquo;separate concerns&rdquo; design from OAM.</p>
 <p>In Open Application Model, developers can claim certain fields in the application YAML as &ldquo;configurable&rdquo;, so in the following workflow, operators (or the platform) will be allowed to modify these fields.</p>
-<p>Now this workflow can be easily achieved with help of kpt.</p>
+<p>Now this goal can be easily achieved with help of kpt.</p>
 <h4 id="create-setter-by-app-developer">Create setter by App Developer</h4>
 <p>Let&rsquo;s say the developer need to claim two fields as &ldquo;configurable&rdquo; for his application, he can add two kpt setters here:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg create-setter sampleapp/ instance-name example-component --field <span style="color:#4e9a06">&#34;metadata.name&#34;</span> --description <span style="color:#4e9a06">&#34;use to set an instance name&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
@@ -921,17 +926,20 @@ kind: Component
 metadata:
   name: test-component <span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.instance-name&#34;}</span>
 spec:
-  parameters:
-  - name: instance-name
-    fieldPaths:
-    - metadata.name
-...
+  workload:
+    apiVersion: core.oam.dev/v1alpha2
+    kind: ContainerizedWorkload
+    spec:
+      containers:
+      - name: my-nginx
+        image: nginx:1.16.1 <span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.setters.image&#34;}</span>
+        ...
 </code></pre></div><h3 id="app-overview">App Overview</h3>
 <p>With kpt, you could see an overview of your App.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg count sampleapp
 ApplicationConfiguration: <span style="color:#0000cf;font-weight:bold">1</span>
 Component: <span style="color:#0000cf;font-weight:bold">1</span>
-</code></pre></div><p>So in the sampleapp, we have one ApplicationConfiguration and Component.</p>
+</code></pre></div><p>So in the sampleapp, we have one ApplicationConfiguration and one Component.</p>
 <h3 id="live-apply">Live apply</h3>
 <p>kpt includes the next-generation <strong>apply</strong> commands developed out of the Kubernetes <a href="https://github.com/kubernetes-sigs/cli-utils">cli-utils</a> repository as the <a href="https://googlecontainertools.github.io/kpt/reference/live/apply"><code>kpt live apply</code></a> command.</p>
 <p>This means with <code>kpt live apply</code> command, we could wait for the controller reconcile.</p>
@@ -1015,7 +1023,7 @@ all resources has reached the Current status
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified April 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/398aa1e23b0e73e626605490d4459bea3621bf76">remove fixed issue in doc (398aa1e2)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0c8e21fb1544640d3243b513e8b5fee127c7770a">Fix broken issue for `example repository` (0c8e21fb)</a>
 </div>
 </div>
 

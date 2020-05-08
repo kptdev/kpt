@@ -11,10 +11,18 @@ Writing exec and container functions in Golang.
 
 ### Hello World Go Function
 
+Go libraries:
+
+| Library | Purpose  |
+|---|---|
+| [sigs.k8s.io/kustomize/kyaml/fn/framework]  | Setup function command |
+| [sigs.k8s.io/kustomize/kyaml/yaml]  | Modify resources  |
+
 #### Create the go module
 
 ```sh
 go mod init github.com/user/repo
+go get sigs.k8s.io/kustomize/kyaml
 ```
 
 #### Create the `main.go`
@@ -35,8 +43,8 @@ var value string
 func main() {
     resourceList := &framework.ResourceList{}
 	cmd := framework.Command(resourceList, func() error {
-        // framework has parse the ResourceList.functionConfig input into the
-        // cmd flags (from the ResourceList.functionConfig.data field).
+        // cmd.Execute() will parse the ResourceList.functionConfig into cmd.Flags from
+		// the ResourceList.functionConfig.data field.
 		for i := range resourceList.Items {
             // modify the resources using the kyaml/yaml library:
             // https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml
@@ -52,8 +60,6 @@ func main() {
 	}
 }
 ```
-
-Note: resources should be modified using the [kyaml/yaml](#kyaml) library.
 
 ### Build and test the function
 
@@ -327,3 +333,7 @@ cmd := framework.Command(resourceList, func() error {
 
 [sigs.k8s.io/kustomize/kyaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml?tab=doc
 [sigs.k8s.io/kustomize/kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc
+[sigs.k8s.io/kustomize/kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/fn/framework?tab=doc
+[kyaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml?tab=doc
+[kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc
+[kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/fn/framework?tab=doc

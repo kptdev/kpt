@@ -844,8 +844,28 @@
 	<div class="lead">Writing exec and container functions in Golang.</div>
 	<p>Writing exec and container functions in Golang.</p>
 <h3 id="hello-world-go-function">Hello World Go Function</h3>
+<p>Go libraries:</p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/fn/framework?tab=doc">sigs.k8s.io/kustomize/kyaml/fn/framework</a></td>
+<td>Setup function command</td>
+</tr>
+<tr>
+<td><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc">sigs.k8s.io/kustomize/kyaml/yaml</a></td>
+<td>Modify resources</td>
+</tr>
+</tbody>
+</table>
 <h4 id="create-the-go-module">Create the go module</h4>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go mod init github.com/user/repo
+go get sigs.k8s.io/kustomize/kyaml
 </code></pre></div><h4 id="create-the-maingo">Create the <code>main.go</code></h4>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// main.go
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
@@ -862,8 +882,8 @@
 <span style="color:#204a87;font-weight:bold">func</span> <span style="color:#000">main</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#000">resourceList</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">ResourceList</span><span style="color:#000;font-weight:bold">{}</span>
 	<span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
-        <span style="color:#8f5902;font-style:italic">// framework has parse the ResourceList.functionConfig input into the
-</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// cmd flags (from the ResourceList.functionConfig.data field).
+        <span style="color:#8f5902;font-style:italic">// cmd.Execute() will parse the ResourceList.functionConfig into cmd.Flags from
+</span><span style="color:#8f5902;font-style:italic"></span>		<span style="color:#8f5902;font-style:italic">// the ResourceList.functionConfig.data field.
 </span><span style="color:#8f5902;font-style:italic"></span>		<span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span> <span style="color:#000;font-weight:bold">{</span>
             <span style="color:#8f5902;font-style:italic">// modify the resources using the kyaml/yaml library:
 </span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#8f5902;font-style:italic">// https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml
@@ -878,8 +898,7 @@
 		<span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
 	<span style="color:#000;font-weight:bold">}</span>
 <span style="color:#000;font-weight:bold">}</span>
-</code></pre></div><p>Note: resources should be modified using the <a href="#kyaml">kyaml/yaml</a> library.</p>
-<h3 id="build-and-test-the-function">Build and test the function</h3>
+</code></pre></div><h3 id="build-and-test-the-function">Build and test the function</h3>
 <p>Build the go binary and test it by running it as an executable function.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go build -o my-fn .
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run the my-fn function against the configuration in PACKAGE_DIR/</span>
@@ -1069,8 +1088,10 @@ will exit non-0.  Otherwise it will exit 0.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#ce5c00;font-weight:bold">...</span>
     <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#ce5c00;font-weight:bold">...</span> <span style="color:#000;font-weight:bold">{</span>
-    	<span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span><span style="color:#000;font-weight:bold">{</span><span style="color:#ce5c00;font-weight:bold">...</span><span style="color:#000;font-weight:bold">}</span>
         <span style="color:#8f5902;font-style:italic">// return validation results to be written under the results dir
+</span><span style="color:#8f5902;font-style:italic"></span>    	<span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span><span style="color:#000;font-weight:bold">{</span><span style="color:#ce5c00;font-weight:bold">...</span><span style="color:#000;font-weight:bold">}</span>
+
+        <span style="color:#8f5902;font-style:italic">// return the results as an error if desireds
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span>
     <span style="color:#000;font-weight:bold">}</span>
     <span style="color:#ce5c00;font-weight:bold">...</span>
@@ -1141,7 +1162,7 @@ will exit non-0.  Otherwise it will exit 0.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3c44ea84504f5a8562da759510ecbdf5c955439d">Update functions docs for writing go functions (3c44ea84)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 8, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/852764b7afc8aaf436ea992c08c8a158312e3f16">Update docs for kustomize kyaml v0.1.10 (852764b7)</a>
 </div>
 </div>
 
