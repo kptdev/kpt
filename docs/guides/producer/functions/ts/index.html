@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,15 +21,18 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Guides | Kpt</title><meta property="og:title" content="Guides" />
-<meta property="og:description" content="Kubernetes configuration package management" />
+<title>TypeScript Function SDK | Kpt</title><meta property="og:title" content="TypeScript Function SDK" />
+<meta property="og:description" content="Writing exec and container functions in TypeScript.
+" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Guides">
-<meta itemprop="description" content="Kubernetes configuration package management"><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Guides"/>
-<meta name="twitter:description" content="Kubernetes configuration package management"/>
+<meta itemprop="name" content="TypeScript Function SDK">
+<meta itemprop="description" content="Writing exec and container functions in TypeScript.
+"><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="TypeScript Function SDK"/>
+<meta name="twitter:description" content="Writing exec and container functions in TypeScript.
+"/>
 
 
 
@@ -48,7 +51,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Guides | Kpt</title>
+    <title>TypeScript Function SDK | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -149,7 +152,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Guides</a>
+    <a  href="/kpt/guides/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Guides</a>
   </li>
   <ul>
     <li class="collapse show" id="kptguides">
@@ -166,10 +169,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Consumers</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumer">
+    <li class="collapse " id="kptguidesconsumer">
       
       
       
@@ -183,10 +186,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/get/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Get</a>
+    <a  href="/kpt/guides/consumer/get/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Get</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerget">
+    <li class="collapse " id="kptguidesconsumerget">
       
       
       
@@ -206,10 +209,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Update</a>
+    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Update</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerupdate">
+    <li class="collapse " id="kptguidesconsumerupdate">
       
       
       
@@ -229,10 +232,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Set</a>
+    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Set</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerset">
+    <li class="collapse " id="kptguidesconsumerset">
       
       
       
@@ -252,10 +255,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/substitute/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Substitute</a>
+    <a  href="/kpt/guides/consumer/substitute/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitute</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumersubstitute">
+    <li class="collapse " id="kptguidesconsumersubstitute">
       
       
       
@@ -275,10 +278,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Display</a>
+    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Display</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerdisplay">
+    <li class="collapse " id="kptguidesconsumerdisplay">
       
       
       
@@ -298,10 +301,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Apply</a>
+    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Apply</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerapply">
+    <li class="collapse " id="kptguidesconsumerapply">
       
       
       
@@ -321,10 +324,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Running Functions</a>
+    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running Functions</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesconsumerfunction">
+    <li class="collapse " id="kptguidesconsumerfunction">
       
       
       
@@ -367,10 +370,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Init</a>
+    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Init</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerinit">
+    <li class="collapse " id="kptguidesproducerinit">
       
       
       
@@ -390,10 +393,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Setters</a>
+    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Setters</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducersetters">
+    <li class="collapse " id="kptguidesproducersetters">
       
       
       
@@ -430,10 +433,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/container/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Container Runtime</a>
+    <a  href="/kpt/guides/producer/functions/container/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Container Runtime</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionscontainer">
+    <li class="collapse " id="kptguidesproducerfunctionscontainer">
       
       
       
@@ -453,10 +456,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/exec/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Exec Runtime</a>
+    <a  href="/kpt/guides/producer/functions/exec/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exec Runtime</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionsexec">
+    <li class="collapse " id="kptguidesproducerfunctionsexec">
       
       
       
@@ -476,10 +479,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionsstarlark">
+    <li class="collapse " id="kptguidesproducerfunctionsstarlark">
       
       
       
@@ -499,10 +502,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionsgolang">
+    <li class="collapse " id="kptguidesproducerfunctionsgolang">
       
       
       
@@ -522,7 +525,7 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/ts/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">TypeScript Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/ts/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">TypeScript Function SDK</a>
   </li>
   <ul>
     <li class="collapse show" id="kptguidesproducerfunctionsts">
@@ -551,10 +554,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Substitutions</a>
+    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitutions</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducersubstitutions">
+    <li class="collapse " id="kptguidesproducersubstitutions">
       
       
       
@@ -574,10 +577,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Blueprints</a>
+    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Blueprints</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerblueprint">
+    <li class="collapse " id="kptguidesproducerblueprint">
       
       
       
@@ -597,10 +600,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Variants</a>
+    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Variants</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducervariant">
+    <li class="collapse " id="kptguidesproducervariant">
       
       
       
@@ -620,10 +623,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/bootstrap/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Bootstrapping</a>
+    <a  href="/kpt/guides/producer/bootstrap/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bootstrapping</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerbootstrap">
+    <li class="collapse " id="kptguidesproducerbootstrap">
       
       
       
@@ -649,10 +652,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Ecosystem</a>
+    <a  href="/kpt/guides/ecosystem/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Ecosystem</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesecosystem">
+    <li class="collapse " id="kptguidesecosystem">
       
       
       
@@ -666,10 +669,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/kustomize/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Kustomize</a>
+    <a  href="/kpt/guides/ecosystem/kustomize/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesecosystemkustomize">
+    <li class="collapse " id="kptguidesecosystemkustomize">
       
       
       
@@ -689,10 +692,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/helm/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Helm</a>
+    <a  href="/kpt/guides/ecosystem/helm/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Helm</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesecosystemhelm">
+    <li class="collapse " id="kptguidesecosystemhelm">
       
       
       
@@ -712,10 +715,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/oam/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">OAM</a>
+    <a  href="/kpt/guides/ecosystem/oam/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">OAM</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesecosystemoam">
+    <li class="collapse " id="kptguidesecosystemoam">
       
       
       
@@ -756,8 +759,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Guides" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/ts/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=TypeScript%20Function%20SDK" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -783,8 +786,38 @@
 
 
 
-<li class="breadcrumb-item active" aria-current="page">
+
+
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
 	<a href="https://googlecontainertools.github.io/kpt/guides/">Guides</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/">Package Publishers</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/">Functions</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/">TypeScript Function SDK</a>
 </li>
 
 	</ol>
@@ -792,9 +825,11 @@
 
             
 <div class="td-content">
-	<h1>Guides</h1>
-	
-	
+	<h1>TypeScript Function SDK</h1>
+	<div class="lead">Writing exec and container functions in TypeScript.</div>
+	<p>See <a href="https://googlecontainertools.github.io/kpt-functions-sdk/">kpt-functions-sdk</a> for
+instructions on writing functions as TypeScript programs.</p>
+
         <div class="section-index">
     
     
@@ -811,25 +846,9 @@
             
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/">Package Consumers</a>
-                    </h5>
-                    <p>Guides for workflows related to consume packages published by other teams or organizations.</p>
-                </div>
-            
         
             
         
-            
-        
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/producer/">Package Publishers</a>
-                    </h5>
-                    <p>Guides for publishing configuration packages for others to consume.</p>
-                </div>
             
         
             
@@ -837,12 +856,7 @@
             
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/ecosystem/">Ecosystem</a>
-                    </h5>
-                    <p>Guides for using kpt with the Kubernetes ecosystem.</p>
-                </div>
+        
             
         
             
@@ -880,7 +894,7 @@
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8b1b5312f8ff847348a5de2691ae68d22c95abc1">Update functions docs for writing go functions (8b1b5312)</a>
 </div>
 </div>
 

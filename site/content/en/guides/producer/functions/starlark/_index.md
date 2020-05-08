@@ -1,10 +1,10 @@
 ---
-title: "Starlark Runtime"
-linkTitle: "Starlark Runtime"
-weight: 4
+title: "Starlark Runtime and SDK"
+linkTitle: "Starlark Runtime and SDK"
+weight: 3
 type: docs
 description: >
-   Writing functions as Starlark programs
+   Writing and running functions as Starlark scripts
 ---
 
 {{% pageinfo color="warning" %}}

@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Starlark Runtime | Kpt</title><meta property="og:title" content="Starlark Runtime" />
-<meta property="og:description" content="Writing functions as Starlark programs
+<title>Starlark Runtime and SDK | Kpt</title><meta property="og:title" content="Starlark Runtime and SDK" />
+<meta property="og:description" content="Writing and running functions as Starlark scripts
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Starlark Runtime">
-<meta itemprop="description" content="Writing functions as Starlark programs
+<meta itemprop="name" content="Starlark Runtime and SDK">
+<meta itemprop="description" content="Writing and running functions as Starlark scripts
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Starlark Runtime"/>
-<meta name="twitter:description" content="Writing functions as Starlark programs
+<meta name="twitter:title" content="Starlark Runtime and SDK"/>
+<meta name="twitter:description" content="Writing and running functions as Starlark scripts
 "/>
 
 
@@ -51,7 +51,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Starlark Runtime | Kpt</title>
+    <title>Starlark Runtime and SDK | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -456,10 +456,79 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
+    <a  href="/kpt/guides/producer/functions/exec/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exec Runtime</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionsexec">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
   </li>
   <ul>
     <li class="collapse show" id="kptguidesproducerfunctionsstarlark">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionsgolang">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Function SDK</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionsts">
       
       
       
@@ -691,7 +760,7 @@
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/starlark/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Starlark%20Runtime" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Starlark%20Runtime%20and%20SDK" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -761,7 +830,7 @@
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/">Starlark Runtime</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/">Starlark Runtime and SDK</a>
 </li>
 
 	</ol>
@@ -769,8 +838,8 @@
 
             
 <div class="td-content">
-	<h1>Starlark Runtime</h1>
-	<div class="lead">Writing functions as Starlark programs</div>
+	<h1>Starlark Runtime and SDK</h1>
+	<div class="lead">Writing and running functions as Starlark scripts</div>
 	
 
 <div class="pageinfo pageinfo-warning">
@@ -903,12 +972,18 @@ attempt to retain comments by copying them from the function inputs to the funct
         
             
         
+            
+        
+            
+        
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified April 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a843029e8bf643b628b817f2849ee54da9d92bfa">Update Starlark function docs (a843029e)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8b1b5312f8ff847348a5de2691ae68d22c95abc1">Update functions docs for writing go functions (8b1b5312)</a>
 </div>
 </div>
 

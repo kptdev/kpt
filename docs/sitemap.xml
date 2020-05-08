@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/container/</loc>
+    <lastmod>2020-05-06T11:29:00-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/installation/gcloud/</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
   </url>
@@ -40,6 +45,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/</loc>
     <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/exec/</loc>
+    <lastmod>2020-05-06T11:29:00-07:00</lastmod>
   </url>
   
   <url>
@@ -93,6 +103,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/</loc>
+    <lastmod>2020-05-06T11:29:00-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
   </url>
@@ -110,11 +125,6 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/concepts/</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/container/</loc>
-    <lastmod>2020-04-22T13:09:43-07:00</lastmod>
   </url>
   
   <url>
@@ -153,6 +163,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/</loc>
+    <lastmod>2020-05-06T11:29:00-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/grep/</loc>
     <lastmod>2020-03-22T23:09:14-07:00</lastmod>
   </url>
@@ -178,11 +193,6 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/</loc>
-    <lastmod>2020-04-28T12:44:13-07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/substitutions/</loc>
     <lastmod>2020-04-06T22:37:06+09:00</lastmod>
   </url>
@@ -200,6 +210,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/blueprint/</loc>
     <lastmod>2020-04-03T06:16:46-06:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/</loc>
+    <lastmod>2020-05-06T11:29:00-07:00</lastmod>
   </url>
   
   <url>
