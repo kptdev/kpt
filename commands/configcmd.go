@@ -116,15 +116,19 @@ func SetCommand(parent string) *cobra.Command {
 			}
 		}
 
-		if len(args) != 3 || args[1] != "gcloud.core.project" {
+		if len(args) != 3 || args[1] != setters.GcloudProject {
 			return nil
 		}
-		projectNumber, err := setters.GetProjectNumberFromProjectID(args[2])
-		if err != nil {
-			return nil
+
+		if setters.DefExists(args[0], setters.GcloudProjectNumber) {
+			projectNumber, err := setters.GetProjectNumberFromProjectID(args[2])
+			if err != nil {
+				return nil
+			}
+			kustomizeCmd.SetArgs([]string{args[0], setters.GcloudProjectNumber, projectNumber})
+			return kustomizeCmd.Execute()
 		}
-		kustomizeCmd.SetArgs([]string{args[0], "gcloud.project.projectNumber", projectNumber})
-		return kustomizeCmd.Execute()
+		return nil
 	}
 	return &setCmd
 }
