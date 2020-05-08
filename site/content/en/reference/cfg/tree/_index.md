@@ -46,7 +46,7 @@ kpt cfg tree my-dir/ --field "metadata.annotations.foo"
 ```
 
 ```sh
-# print the "foo"" annotation
+# print the status of resources with status.condition type of "Completed"
 kubectl get all -o yaml | kpt cfg tree \
   --field="status.conditions[type=Completed].status"
 ```
