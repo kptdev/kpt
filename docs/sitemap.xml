@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/concepts/architecture/</loc>
+    <lastmod>2020-05-06T08:41:17-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/container/</loc>
     <lastmod>2020-05-06T11:29:00-07:00</lastmod>
   </url>
@@ -40,6 +45,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/</loc>
     <lastmod>2020-04-19T16:46:54+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/concepts/api-conventions/</loc>
+    <lastmod>2020-05-06T08:41:17-07:00</lastmod>
   </url>
   
   <url>
@@ -98,6 +108,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/concepts/packaging/</loc>
+    <lastmod>2020-05-06T08:41:17-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/set/</loc>
     <lastmod>2020-03-30T20:54:38-07:00</lastmod>
   </url>
@@ -124,7 +139,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/concepts/</loc>
-    <lastmod>2020-03-18T14:46:20-07:00</lastmod>
+    <lastmod>2020-05-06T08:41:17-07:00</lastmod>
   </url>
   
   <url>
@@ -164,7 +179,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/</loc>
-    <lastmod>2020-05-08T09:34:45-07:00</lastmod>
+    <lastmod>2020-05-08T10:08:12-07:00</lastmod>
   </url>
   
   <url>
@@ -175,11 +190,6 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/</loc>
     <lastmod>2020-03-22T23:09:14-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/concepts/packaging/</loc>
-    <lastmod>2020-03-18T14:46:20-07:00</lastmod>
   </url>
   
   <url>

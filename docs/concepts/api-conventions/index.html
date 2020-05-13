@@ -7,7 +7,7 @@
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/concepts/packaging/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/concepts/api-conventions/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -21,17 +21,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Packaging | Kpt</title><meta property="og:title" content="Packaging" />
-<meta property="og:description" content="Packaging goals and design decisions
+<title>API Conventions | Kpt</title><meta property="og:title" content="API Conventions" />
+<meta property="og:description" content="Kpt API Conventions
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/concepts/packaging/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/concepts/api-conventions/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Packaging">
-<meta itemprop="description" content="Packaging goals and design decisions
+<meta itemprop="name" content="API Conventions">
+<meta itemprop="description" content="Kpt API Conventions
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Packaging"/>
-<meta name="twitter:description" content="Packaging goals and design decisions
+<meta name="twitter:title" content="API Conventions"/>
+<meta name="twitter:description" content="Kpt API Conventions
 "/>
 
 
@@ -51,7 +51,7 @@
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Packaging | Kpt</title>
+    <title>API Conventions | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -192,10 +192,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/concepts/api-conventions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">API Conventions</a>
+    <a  href="/kpt/concepts/api-conventions/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">API Conventions</a>
   </li>
   <ul>
-    <li class="collapse " id="kptconceptsapi-conventions">
+    <li class="collapse show" id="kptconceptsapi-conventions">
       
       
       
@@ -215,10 +215,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/concepts/packaging/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Packaging</a>
+    <a  href="/kpt/concepts/packaging/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Packaging</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptconceptspackaging">
+    <li class="collapse " id="kptconceptspackaging">
       
       
       
@@ -253,8 +253,8 @@
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/concepts/packaging/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Packaging" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/concepts/api-conventions/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=API%20Conventions" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -265,6 +265,24 @@
 
 
 
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#cli-conventions">CLI conventions</a>
+      <ul>
+        <li><a href="#io">IO</a></li>
+        <li><a href="#arguments-subcommands-and-flags">Arguments, subcommands and flags</a></li>
+        <li><a href="#documentation">Documentation</a></li>
+      </ul>
+    </li>
+    <li><a href="#resource-annotations">Resource annotations</a>
+      <ul>
+        <li><a href="#io-1">IO</a></li>
+        <li><a href="#functions">Functions</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
 
 
 
@@ -291,7 +309,7 @@
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/concepts/packaging/">Packaging</a>
+	<a href="https://googlecontainertools.github.io/kpt/concepts/api-conventions/">API Conventions</a>
 </li>
 
 	</ol>
@@ -299,22 +317,78 @@
 
             
 <div class="td-content">
-	<h1>Packaging</h1>
-	<div class="lead">Packaging goals and design decisions</div>
-	<p>The two primary sets of capabilities that are required to enable reuse are:</p>
-<ol>
-<li>The ability to distribute/publish/share, compose, and update groups of
-configuration artifacts, commonly known as packages.</li>
-<li>The ability to adapt them to your use cases, which we call customization.</li>
-</ol>
-<p>In order to facilitate programmatic operations, kpt:</p>
-<ol>
-<li>Relies upon git as the source of truth</li>
-<li>Represents configuration as data, specifically Kubernetes resources
-serialized as YAML or JSON.</li>
-</ol>
-<p>For compatibility with other arbitrary formats, kpt supports generating
-resource configuration data from templates, configuration DSLs, and programs.</p>
+	<h1>API Conventions</h1>
+	<div class="lead">Kpt API Conventions</div>
+	<h2 id="cli-conventions">CLI conventions</h2>
+<p>Following are the CLI conventions used for building kpt.  This is a living document that should
+be iterated upon.</p>
+<h3 id="io">IO</h3>
+<ul>
+<li>Commands that read resources should be able to read them from files, directories or stdin
+<ul>
+<li>It should be possible to pipe <code>kubectl get -o yaml</code> to the input of these commands</li>
+</ul>
+</li>
+<li>Commands that write resources should be able to write them to files, directories or stdout
+<ul>
+<li>It should be possible to pipe the output of these commands to <code>kubectl apply -f -</code></li>
+</ul>
+</li>
+<li>It should be possible to compose commands by piping them together
+<ul>
+<li>Metadata (such as which file a resource was read from) may need to be persisted to the
+resources (e.g. as annotations) or as part of the output format (e.g. ResourceList) so
+this state isn&rsquo;t lost between piped commands.</li>
+<li>e.g. it should be possible to read resources from one command, and pipe them to another command
+which will write them back to files.</li>
+</ul>
+</li>
+</ul>
+<h3 id="arguments-subcommands-and-flags">Arguments, subcommands and flags</h3>
+<ul>
+<li>Directories and files should be arguments
+<ul>
+<li>e.g. <code>kpt live apply DIR/</code> vs <code>kubectl apply -f DIR/</code></li>
+<li>This makes it easier to compose with tools such as <code>find</code> and <code>xargs</code></li>
+</ul>
+</li>
+<li>Subcommands commands should be used in favor of mutually exclusive or complex flags
+<ul>
+<li>e.g. <code>kubectl create cronjob --schedule=X</code> vs <code>kubectl run --generator=cronjob --schedule=X</code></li>
+<li>This simplifies the documentation (subcommands support more documentation options than flags do)</li>
+</ul>
+</li>
+<li>Features which are alpha should be guarded behind flags and documented as alpha in the command
+help or flag help.</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<p>Documentation should be compiled into the command help itself.</p>
+<ul>
+<li>Reference documentation should be built into the help for each command</li>
+<li>Guides and concept docs should be built into their own &ldquo;help&rdquo; commands</li>
+<li>Reference documentation should have asciinema-style &ldquo;images&rdquo; that demonstrate
+how the commands are used.</li>
+</ul>
+<h2 id="resource-annotations">Resource annotations</h2>
+<p>kpt uses the following annotations to store resource metadata.</p>
+<p>See the [sig-cli configuration IO docs].</p>
+<h3 id="io-1">IO</h3>
+<h4 id="configkubernetesiopath">config.kubernetes.io/path</h4>
+<p><code>config.kubernetes.io/path</code> stores the file path that the resource was read from.</p>
+<ul>
+<li>When reading resources, if reading from a directory kpt should annotate each resource with the path of the file it was read from</li>
+<li>When writing resources, if writing to a directory kpt should read the annotation and write each to the file matching the path</li>
+</ul>
+<h4 id="configkubernetesioindex">config.kubernetes.io/index</h4>
+<p><code>config.kubernetes.io/index</code> stores the index into the file that the resource was read from.</p>
+<ul>
+<li>When reading resources, if reading from a file kpt should annotate the resource with the index into the file</li>
+<li>When writing resources, if writing to a file kpt should write the resources in order specified by the indexes</li>
+</ul>
+<h3 id="functions">Functions</h3>
+<h4 id="configkubernetesiofunction">config.kubernetes.io/function</h4>
+<p><code>config.kubernetes.io/function</code> indicates that the resource may be provided to the specified function
+as the ResourceList.functionConfig.</p>
 
         <div class="section-index">
     

@@ -1,7 +1,7 @@
 ---
 title: "Packaging"
 linkTitle: "Packaging"
-weight: 4
+weight: 3
 type: docs
 description: >
    Packaging goals and design decisions
