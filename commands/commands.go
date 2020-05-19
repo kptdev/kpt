@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
+	"k8s.io/kubectl/pkg/cmd/util"
 )
 
 func GetAnthosCommands(name string) []*cobra.Command {
@@ -67,13 +68,13 @@ func NormalizeCommand(c ...*cobra.Command) {
 }
 
 // GetKptCommands returns the set of kpt commands to be registered
-func GetKptCommands(name string) []*cobra.Command {
+func GetKptCommands(name string, f util.Factory) []*cobra.Command {
 	var c []*cobra.Command
 	cfgCmd := GetConfigCommand(name)
 	fnCmd := GetFnCommand(name)
 	pkgCmd := GetPkgCommand(name)
 	ttlCmd := GetTTLCommand(name)
-	liveCmd := GetLiveCommand(name)
+	liveCmd := GetLiveCommand(name, f)
 	guideCmd := GetGuideCommand(name)
 
 	c = append(c, cfgCmd, pkgCmd, fnCmd, ttlCmd, liveCmd, guideCmd)

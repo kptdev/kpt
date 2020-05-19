@@ -15,9 +15,9 @@
 package commands
 
 import (
-	"flag"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdfetchk8sschema"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/cli-utils/cmd/preview"
 )
 
-func GetLiveCommand(name string) *cobra.Command {
+func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	liveCmd := &cobra.Command{
 		Use:   "live",
 		Short: livedocs.LiveShort,
@@ -46,15 +46,6 @@ func GetLiveCommand(name string) *cobra.Command {
 		},
 	}
 
-	// Create the factory and IOStreams for the "live" commands. The factory
-	// is created using the config flags.
-	flags := liveCmd.PersistentFlags()
-	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
-	kubeConfigFlags.AddFlags(flags)
-	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(kubeConfigFlags)
-	matchVersionKubeConfigFlags.AddFlags(liveCmd.PersistentFlags())
-	liveCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	f := util.NewFactory(matchVersionKubeConfigFlags)
 	ioStreams := genericclioptions.IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
@@ -87,7 +78,10 @@ func GetLiveCommand(name string) *cobra.Command {
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
 
-	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd)
+	fetchOpenAPICmd := cmdfetchk8sschema.NewCommand(name, f, ioStreams)
+
+	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd,
+		fetchOpenAPICmd)
 
 	return liveCmd
 }
