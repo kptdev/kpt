@@ -1,10 +1,10 @@
 ---
-title: "OAM"
-linkTitle: "OAM"
+title: "Open Application Model (OAM)"
+linkTitle: "Open Application Model (OAM)"
 weight: 3
 type: docs
 description: >
-    Managing custom Kubernetes applications with kpt
+    Using kpt to manage custom Kubernetes applications defined by Open Application Model (OAM)
 ---
 
 This guidance will demonstrate how to use kpt to manage custom Kubernetes applications (i.e. apps defined by CRDs instead of raw Kubernetes workloads).
