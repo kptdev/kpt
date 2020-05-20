@@ -210,18 +210,29 @@ DIR:
 
 #### Flags:
 ```
---wait-for-reconcile:
-  If true, after all resources have been applied, the cluster will
-  be polled until either all resources have been fully reconciled
-  or the timeout is reached.
-
---wait-polling-period:
+--poll-period:
   The frequency with which the cluster will be polled to determine 
   the status of the applied resources. The default value is every 2 seconds.
 
---wait-timeout:
+--reconcile-timeout:
   The threshold for how long to wait for all resources to reconcile before
-  giving up. The default value is 1 minute.
+  giving up. If this flag is not set, kpt live apply will not wait for
+  resources to reconcile.
+
+--prune-timeout:
+  The threshold for how long to wait for all pruned resources to be 
+  deleted before giving up. If this flag is not set, kpt live apply will not
+  wait. In most cases, it would also make sense to set the 
+  --prune-propagation-policy to Foreground when this flag is set.
+
+--prune-propagation-policy:
+  The propagation policy kpt live apply should use when pruning resources. The
+  default value here is Background. The other options are Foreground and Orphan.
+
+--output:
+  This determines the output format of the command. The default value is 
+  events, which will print the events as they happen. The other option is 
+  table, which will show the output in a table format.
 ```
 <!--mdtogo-->
 
