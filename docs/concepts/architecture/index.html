@@ -275,7 +275,7 @@
     </li>
     <li><a href="#design-principles">Design Principles</a>
       <ul>
-        <li><a href="#configuration-as-data-vs-configuration-as-code">Configuration as Data vs Configuration as Code</a></li>
+        <li><a href="#configuration-as-data-vs-configuration-as-code">Configuration-as-Data vs Configuration-as-Code</a></li>
         <li><a href="#shift-left--gitops">Shift-Left &amp; GitOps</a></li>
         <li><a href="#shift-right-vs-shift-left">Shift-Right vs Shift-Left</a></li>
         <li><a href="#composability">Composability</a></li>
@@ -361,12 +361,13 @@ automation).</li>
 enable <strong>composing loosely coupled solutions</strong> through reading and writing to a shared data model
 (e.g. resources, controllers, OpenAPI).</p>
 <h2 id="design-principles">Design Principles</h2>
-<h3 id="configuration-as-data-vs-configuration-as-code">Configuration as Data vs Configuration as Code</h3>
+<h3 id="configuration-as-data-vs-configuration-as-code">Configuration-as-Data vs Configuration-as-Code</h3>
 <p>kpt packages configuration as data (APIs) rather than as code (templates /  DSLs). In this model,
 the configuration is static data, which many tools may read &amp; write.</p>
 <p>This model has its roots in the Unix Philosophy:</p>
-<pre><code>Expect the output of every program to become the input to another, as yet unknown, program
-</code></pre>
+<blockquote>
+<p>Expect the output of every program to become the input to another, as yet unknown, program</p>
+</blockquote>
 <p>As well as in the Kubernetes control-plane where resources are read and written by loosely coupled
 controllers.</p>
 <h3 id="shift-left--gitops">Shift-Left &amp; GitOps</h3>
@@ -374,7 +375,7 @@ controllers.</p>
 applying them to the cluster, kpt shifts the control-plane left &ndash; enabling more issues to be
 caught before they are pushed into a cluster.</p>
 <ul>
-<li>Cluster changes may be reviewed, approved, validated, audited and rolled back using git.</li>
+<li>Cluster changes may be reviewed, approved, validated, audited and rolled back using git</li>
 <li>Git automation may be applied to changes to cluster state</li>
 </ul>
 <h3 id="shift-right-vs-shift-left">Shift-Right vs Shift-Left</h3>
@@ -387,19 +388,19 @@ caught before they are pushed into a cluster.</p>
 <p>Design solutions to work together, expecting the output of each command to be read as input
 by another.</p>
 <ul>
-<li>Operations read configuration and write it back.</li>
+<li>Commands read configuration and write configuration.</li>
 <li>The inputs and outputs should be symmetric.</li>
-<li>It should be possible to pipe kpt operations together, and it should be possible to write
-the output of a kpt operation back to its source (updating it in-place).</li>
+<li>It should be possible to pipe kpt commands together, and it should be possible to write
+the output of a kpt command back to its source (updating it in-place).</li>
 </ul>
 <p>Tools which read / write data may be developed in different languages and composed together.
 Tools which write configuration back to the same source it was read from should retain comments
 set on the input, as the comments may be used by kpt and other tools as metadata.</p>
-<p>Programs may be developed independently of one another, with operations built directly into
+<p>Programs may be developed independently of one another, with commands built directly into
 the CLI &ndash; e.g. <code>kpt cfg set</code>.</p>
 <p>Additionally, kpt offers <em>functions</em> as an extension mechanism to simplify publishing logic,
 and to provide deeper integration with kpt &ndash; e.g. invoking functions automatically
-after kpt operations.</p>
+after kpt commands.</p>
 <h4 id="kpt-vs-kubernetes-1">kpt vs kubernetes:</h4>
 <ul>
 <li>kpt: resource configuration is read, modified and written back to its source (or another destination)
@@ -407,7 +408,7 @@ after kpt operations.</p>
 <li>resources may be updated using 3-way merge (kpt pkg update)</li>
 </ul>
 </li>
-<li>kubernetes: resources are read, modified and written back to the apiserver
+<li>kubernetes: resources are read, modified, and written back to the apiserver
 <ul>
 <li>resources may be updated using 3-way merge (kubectl apply)</li>
 </ul>
@@ -415,7 +416,7 @@ after kpt operations.</p>
 </ul>
 <h3 id="resource-oriented">Resource oriented</h3>
 <p>Desired system state is expressed using Kubernetes resources &ndash; declarative, static data structures.
-This is changed through modification of resources &ndash; these may be done:</p>
+The desired state is changed through modification of resources &ndash; these may be done:</p>
 <ul>
 <li>programmatically by manually invoked tools &ndash; e.g. <code>kpt cfg set</code></li>
 <li>through direct text edits &ndash; e.g. <code>vi</code></li>
@@ -423,8 +424,8 @@ This is changed through modification of resources &ndash; these may be done:</p>
 </ul>
 <p>High-level logic should be built into programs which understand configuration and are capable of
 generating and transforming it given some context.</p>
-<p>Since all tools read / write configuration data, multiple tools may be composed through
-invoking them against shared configuration data / pipelining their operations.</p>
+<p>Since all tools read and write configuration data, multiple tools may be composed by
+invoking them against the same configuration data and pipelining their commands.</p>
 <h4 id="kpt-vs-kubernetes-2">kpt vs kubernetes:</h4>
 <ul>
 <li>kpt:
@@ -488,18 +489,18 @@ Kubernetes examples or published by the Kubernetes apiserver.</p>
 </ul>
 <p>Much like Kubernetes controllers, kpt should be able to read its previous outputs and modify
 them, rather than generating them from scratch &ndash; e.g. read a directory of
-configuration and write back to the same directory.</p>
-<p><strong>Note:</strong> This requires symmetric inputs and outputs.</p>
+configuration and write it back to the same directory.</p>
+<p><strong>Note:</strong> This principle requires symmetric inputs and outputs.</p>
 <p>Dynamic logic may be written using templates or DSLs &ndash; which would not support the read-write
 workflow &ndash; by merging the newly generated template / DSL output resources with the input
 resources.</p>
 <h3 id="targets">Targets</h3>
 <p>Unlike the Kubernetes control-plane, which reads and writes from the apiserver, kpt
-reads and writes from arbitrary, sources so long as they provide resource configuration.</p>
+reads and writes from arbitrary sources, so long as they provide resource configuration.</p>
 <ul>
 <li>Local files</li>
 <li>Files stored in git</li>
-<li>Command stdin + stdout</li>
+<li>Command stdin &amp; stdout</li>
 <li>Apiserver endpoints</li>
 </ul>
 
@@ -523,7 +524,7 @@ reads and writes from arbitrary, sources so long as they provide resource config
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/dd2f0485b8635b4a65d39e9056816614f1a62cba">kpt architecture docs (dd2f0485)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 17, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/75a6f8670213bf4391b2b10221188b6348c5ba05">Minor suggestions to arch page doc (75a6f867)</a>
 </div>
 </div>
 

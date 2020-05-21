@@ -646,6 +646,29 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/fetch-k8s-schema/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fetch-k8s-schema</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivefetch-k8s-schema">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/reference/live/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">init</a>
   </li>
   <ul>
@@ -1074,18 +1097,29 @@ kpt live apply --wait-for-reconcile --wait-polling-period<span style="color:#ce5
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
 </code></pre><h4 id="flags">Flags:</h4>
-<pre><code>--wait-for-reconcile:
-  If true, after all resources have been applied, the cluster will
-  be polled until either all resources have been fully reconciled
-  or the timeout is reached.
-
---wait-polling-period:
+<pre><code>--poll-period:
   The frequency with which the cluster will be polled to determine 
   the status of the applied resources. The default value is every 2 seconds.
 
---wait-timeout:
+--reconcile-timeout:
   The threshold for how long to wait for all resources to reconcile before
-  giving up. The default value is 1 minute.
+  giving up. If this flag is not set, kpt live apply will not wait for
+  resources to reconcile.
+
+--prune-timeout:
+  The threshold for how long to wait for all pruned resources to be 
+  deleted before giving up. If this flag is not set, kpt live apply will not
+  wait. In most cases, it would also make sense to set the 
+  --prune-propagation-policy to Foreground when this flag is set.
+
+--prune-propagation-policy:
+  The propagation policy kpt live apply should use when pruning resources. The
+  default value here is Background. The other options are Foreground and Orphan.
+
+--output:
+  This determines the output format of the command. The default value is 
+  events, which will print the events as they happen. The other option is 
+  table, which will show the output in a table format.
 </code></pre><!--mdtogo-->
 
         <div class="section-index">
@@ -1151,12 +1185,14 @@ kpt live apply --wait-for-reconcile --wait-polling-period<span style="color:#ce5
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 25, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7905f5f26c2ab8066a67eeb675b74656df5bba17">Update live documentation with recommendations for CRDs (7905f5f2)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d2fce708901964d1c0ac372f4b3920cab6c1528c">Update the docs for kpt live apply (d2fce708)</a>
 </div>
 </div>
 
