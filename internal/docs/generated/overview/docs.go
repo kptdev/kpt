@@ -37,7 +37,7 @@ var ReferenceExamples = `
   $ kpt cfg set helloworld replicas 3 --set-by pwittrock  --description 'reason'
   set 1 fields
 
-  # apply the package to a clsuter
+  # apply the package to a cluster
   $ kpt live apply --wait-for-reconcile helloworld
   ...
   all resources has reached the Current status

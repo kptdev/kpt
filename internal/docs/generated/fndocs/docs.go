@@ -75,7 +75,7 @@ var SinkExamples = `
   kpt fn source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
 `
 
-var SourceShort = `Explicitly specify an output source for a function`
+var SourceShort = `Explicitly specify an input source for a function`
 var SourceLong = `
   kpt fn source [DIR...]
   

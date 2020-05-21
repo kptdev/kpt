@@ -130,9 +130,9 @@ The package contains 2 resource configuration files -- ` + "`" + `deploy.yaml` +
 ` + "`" + `kubectl apply` + "`" + `.
 
 {{% pageinfo color="info" %}}
-kpt pkg get` + "`" + ` created a ` + "`" + `Kptfile` + "`" + ` since one did not exist
+` + "`" + `kpt pkg get` + "`" + ` created a ` + "`" + `Kptfile` + "`" + ` since one did not exist
 (for storing package state).  If the upstream package already defines a
-Kptfile, then ` + "`" + `kpt pkg get` + "`" + ` will update the Kptfile copied from
+` + "`" + `Kptfile` + "`" + `, then ` + "`" + `kpt pkg get` + "`" + ` will update the ` + "`" + `Kptfile` + "`" + ` copied from
 upstream rather than replacing it.
 {{% /pageinfo %}}
 
