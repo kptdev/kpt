@@ -121,7 +121,7 @@ changing values, and writing them back.**
 
 ##### Command
 
-  kpt cfg set replicas 3
+  kpt cfg set helloworld/ replicas 3
 
 Change the replicas value in the configuration from 5 to 3.
 

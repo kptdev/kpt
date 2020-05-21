@@ -85,7 +85,7 @@ repository.  It may optionally be tagged with a package version.
 Once stored in git, kpt can be used to fetch the package and customize it directly.
 
   export REPO=https://github.com/GoogleContainerTools/kpt.git
-  kpt pkg get $REPO/package-examples/mysql/mysql/templates@v0.1.0 mysql/
+  kpt pkg get $REPO/package-examples/mysql/mysql/templates@v0.16.0 mysql/
 
 The package local package can be modified after it is fetched, and pull in
 upstream changes when the upstream package is regenerated from the chart

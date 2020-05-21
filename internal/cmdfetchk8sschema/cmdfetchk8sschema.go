@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/openapi"
 	"github.com/spf13/cobra"
@@ -33,17 +34,10 @@ func NewRunner(parent string, f util.Factory,
 	}
 	// TODO: Update description with info from the site.
 	c := &cobra.Command{
-		Use:   "fetch-k8s-schema",
-		Short: "Fetch kubernetes schema from cluster and print to stdout",
-		Long: `
-Fetch kubernetes schema from cluster and print to stdout
-
-  kpt live fetch-k8s-schema [flags]
-
-Flags:
-  --pretty-print:
-    Format the schema before printing it
-`,
+		Use:     "fetch-k8s-schema",
+		Short:   livedocs.FetchK8sSchemaShort,
+		Long:    livedocs.FetchK8sSchemaShort + "\n" + livedocs.FetchK8sSchemaLong,
+		Example: livedocs.FetchK8sSchemaExamples,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// Don't run the PreRun functions that read k8s-schema since
 			// we are doing that in the command itself.

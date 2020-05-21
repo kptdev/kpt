@@ -372,7 +372,7 @@ var TreeExamples = `
   # print the "foo"" annotation
   kpt cfg tree my-dir/ --field "metadata.annotations.foo"
 
-  # print the "foo"" annotation
+  # print the status of resources with status.condition type of "Completed"
   kubectl get all -o yaml | kpt cfg tree \
     --field="status.conditions[type=Completed].status"
 

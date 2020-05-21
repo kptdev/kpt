@@ -114,6 +114,11 @@ var (
 				Description: "Helm",
 				Content:     ecosystem.HelmGuide,
 			},
+			{
+				Name:        "OAM",
+				Description: "OAM",
+				Content:     ecosystem.OamGuide,
+			},
 		},
 	}
 )
