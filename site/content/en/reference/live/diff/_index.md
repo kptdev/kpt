@@ -9,8 +9,6 @@ description: >
     Diff the local package config against the live cluster resources
 -->
 
-{{< asciinema key="live-destroy" rows="10" preload="1" >}}
-
 The diff command compares the live cluster state of each pacakge
 resource against the local package config.
 
