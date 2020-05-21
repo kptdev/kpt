@@ -34,6 +34,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
+	"sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
@@ -199,7 +200,11 @@ func newFactory(cmd *cobra.Command) util.Factory {
 		Delegate:  kubeConfigFlags,
 		UserAgent: fmt.Sprintf("kpt/%s", version),
 	}
-	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(userAgentKubeConfigFlags)
+	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(
+		&factory.CachingRESTClientGetter{
+			Delegate: userAgentKubeConfigFlags,
+		},
+	)
 	matchVersionKubeConfigFlags.AddFlags(cmd.PersistentFlags())
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 	return util.NewFactory(matchVersionKubeConfigFlags)
