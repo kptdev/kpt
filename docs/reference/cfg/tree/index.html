@@ -646,6 +646,29 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/fetch-k8s-schema/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fetch-k8s-schema</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivefetch-k8s-schema">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/reference/live/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">init</a>
   </li>
   <ul>
@@ -916,7 +939,7 @@ kpt cfg tree my-dir --replicas --image --name
 kpt cfg tree my-dir/ --all
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print the &#34;foo&#34;&#34; annotation</span>
 kpt cfg tree my-dir/ --field <span style="color:#4e9a06">&#34;metadata.annotations.foo&#34;</span>
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print the &#34;foo&#34;&#34; annotation</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print the status of resources with status.condition type of &#34;Completed&#34;</span>
 kubectl get all -o yaml <span style="color:#000;font-weight:bold">|</span> kpt cfg tree <span style="color:#4e9a06">\
 </span><span style="color:#4e9a06"></span>  --field<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;status.conditions[type=Completed].status&#34;</span>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print live Resources from a cluster using owners for graph structure</span>
@@ -1027,12 +1050,14 @@ kubectl get all -o yaml <span style="color:#000;font-weight:bold">|</span> kpt c
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 8, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c81946dd8b7d285f953f13e2c866f33303dc3209">a fix bc the foo label description was repeated (c81946dd)</a>
 </div>
 </div>
 

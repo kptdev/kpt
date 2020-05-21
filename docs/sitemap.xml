@@ -4,7 +4,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/concepts/architecture/</loc>
-    <lastmod>2020-05-06T08:41:17-07:00</lastmod>
+    <lastmod>2020-05-17T07:47:33-07:00</lastmod>
   </url>
   
   <url>
@@ -104,7 +104,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/oam/</loc>
-    <lastmod>2020-05-06T20:33:34+08:00</lastmod>
+    <lastmod>2020-05-17T20:29:11-07:00</lastmod>
   </url>
   
   <url>
@@ -209,7 +209,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/tree/</loc>
-    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
+    <lastmod>2020-05-08T09:50:36-07:00</lastmod>
   </url>
   
   <url>
@@ -259,7 +259,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/</loc>
-    <lastmod>2020-03-19T21:01:23-07:00</lastmod>
+    <lastmod>2020-05-20T19:55:06-07:00</lastmod>
   </url>
   
   <url>
@@ -274,7 +274,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/apply/</loc>
-    <lastmod>2020-03-25T11:37:02-07:00</lastmod>
+    <lastmod>2020-05-20T16:26:20-07:00</lastmod>
   </url>
   
   <url>
@@ -289,12 +289,17 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/diff/</loc>
-    <lastmod>2020-04-20T14:05:22-07:00</lastmod>
+    <lastmod>2020-05-20T19:55:06-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/diff/</loc>
     <lastmod>2020-03-22T23:09:14-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/reference/live/fetch-k8s-schema/</loc>
+    <lastmod>2020-05-20T19:55:06-07:00</lastmod>
   </url>
   
   <url>

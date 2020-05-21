@@ -646,6 +646,29 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/fetch-k8s-schema/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">fetch-k8s-schema</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptreferencelivefetch-k8s-schema">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/reference/live/init/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">init</a>
   </li>
   <ul>
@@ -818,6 +841,17 @@
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#examples">Examples</a></li>
+        <li><a href="#openapi-schema">OpenAPI schema</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -898,12 +932,29 @@ replicas    <span style="color:#4e9a06">&#39;helloworld replicas&#39;</span>    
 
 $ kpt cfg <span style="color:#204a87">set</span> helloworld replicas <span style="color:#0000cf;font-weight:bold">3</span> --set-by pwittrock  --description <span style="color:#4e9a06">&#39;reason&#39;</span>
 <span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply the package to a clsuter</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply the package to a cluster</span>
 $ kpt live apply --wait-for-reconcile helloworld
 ...
 all resources has reached the Current status
 </code></pre></div><!--mdtogo-->
-<table>
+<h3 id="openapi-schema">OpenAPI schema</h3>
+<p>Kpt relies on the OpenAPI schema for Kubernetes to understand the structure
+of kubernetes manifests. Kpt already comes with a builtin
+OpenAPI schema, but that will obviously not include any CRDs. So in some
+situations it might be beneficial to use a schema that accurately reflects both
+the correct version of Kubernetes and the CRDs used. Kpt provides a few global
+flags to allows users to specify the schema that should be used.</p>
+<p>By default, kpt will first try to fetch the OpenAPI schema from the cluster
+given by the current context. If that doesn&rsquo;t work, it will silently fall back
+to using the builtin schema.</p>
+<pre><code>--k8s-schema-source
+  Set the source for the OpenAPI schema. Allowed values are cluster, file, or
+  builtin. If an OpenAPI schema can't be find at the given source, kpt will 
+  return an error.
+
+--k8s-schema-path
+  The path to an OpenAPI schema file. The default value is ./openapi.json
+</code></pre><table>
 <thead>
 <tr>
 <th>Command Group</th>
@@ -1031,12 +1082,14 @@ all resources has reached the Current status
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e81e28db585cca8ca18d678c24a9d9c815106959">Add info about specifying openAPI schema to docs (e81e28db)</a>
 </div>
 </div>
 

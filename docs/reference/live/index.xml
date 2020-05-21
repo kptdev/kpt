@@ -219,18 +219,29 @@ kpt live apply --wait-for-reconcile --wait-polling-period&lt;span style=&#34;col
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
 &lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags:&lt;/h4&gt;
-&lt;pre&gt;&lt;code&gt;--wait-for-reconcile:
-  If true, after all resources have been applied, the cluster will
-  be polled until either all resources have been fully reconciled
-  or the timeout is reached.
-
---wait-polling-period:
+&lt;pre&gt;&lt;code&gt;--poll-period:
   The frequency with which the cluster will be polled to determine 
   the status of the applied resources. The default value is every 2 seconds.
 
---wait-timeout:
+--reconcile-timeout:
   The threshold for how long to wait for all resources to reconcile before
-  giving up. The default value is 1 minute.
+  giving up. If this flag is not set, kpt live apply will not wait for
+  resources to reconcile.
+
+--prune-timeout:
+  The threshold for how long to wait for all pruned resources to be 
+  deleted before giving up. If this flag is not set, kpt live apply will not
+  wait. In most cases, it would also make sense to set the 
+  --prune-propagation-policy to Foreground when this flag is set.
+
+--prune-propagation-policy:
+  The propagation policy kpt live apply should use when pruning resources. The
+  default value here is Background. The other options are Foreground and Orphan.
+
+--output:
+  This determines the output format of the command. The default value is 
+  events, which will print the events as they happen. The other option is 
+  table, which will show the output in a table format.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
@@ -310,38 +321,6 @@ kpt live destroy my-dir/
         &lt;!--mdtogo:Short
     Diff the local package config against the live cluster resources
 --&gt;
-
-
-&lt;p&gt;
-    
-    &lt;asciinema-player
-            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-destroy.cast&#34;
-            
-            preload=&#34;1&#34;
-            
-            start-at=&#34;0&#34;
-            speed=&#34;1&#34;
-            
-            
-            
-            
-            
-            
-            
-            
-    &gt;&lt;/asciinema-player&gt;
-        &lt;script&gt;
-        let c=document.getElementsByClassName(&#34;td-content&#34;)
-        if (c &amp;&amp; c.length &gt; 0) {
-            let w = c[0].clientWidth
-            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
-            if (p &amp;&amp; p.length &gt; 0) {
-                p.cols = w
-            }
-        }
-    &lt;/script&gt;
-&lt;/p&gt;
-
 &lt;p&gt;The diff command compares the live cluster state of each pacakge
 resource against the local package config.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
@@ -369,6 +348,39 @@ available in your path will be run with &amp;quot;-u&amp;quot; (unicode) and &am
 0 No differences were found. 1 Differences were found. &amp;gt;1 kpt live or diff failed with an error.
 
 Note: KUBECTL_EXTERNAL_DIFF, if used, is expected to follow that convention.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Fetch-k8s-schema</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/fetch-k8s-schema/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/fetch-k8s-schema/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Fetch the OpenAPI schema from the cluster
+--&gt;
+&lt;p&gt;The fetch-k8s-schema command downloads the OpenAPI schema from the cluster
+given by the context. It prints the result to stdout.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print the schema for the cluster given by the current context&lt;/span&gt;
+kpt live fetch-k8s-schema
+
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print the schema after formatting using a named context&lt;/span&gt;
+kpt live fetch-k8s-schema --context&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;myContext --pretty-print
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live fetch-k8s-schema [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--pretty-print
+  Format the output before printing
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
