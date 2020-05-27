@@ -20,7 +20,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 )
+
+const SHORT_HAND_REF = "$kpt-set"
 
 func GetConfigCommand(name string) *cobra.Command {
 	cfgCmd := &cobra.Command{
@@ -56,12 +59,12 @@ func GetConfigCommand(name string) *cobra.Command {
 	count.Long = cfgdocs.CountShort + "\n" + cfgdocs.CountLong
 	count.Example = cfgdocs.CountExamples
 
-	createSetter := configcobra.CreateSetter(name)
+	createSetter := CreateSetterCommand(name)
 	createSetter.Short = cfgdocs.CreateSetterShort
 	createSetter.Long = cfgdocs.CreateSetterShort + "\n" + cfgdocs.CreateSetterLong
 	createSetter.Example = cfgdocs.CreateSetterExamples
 
-	createSubstitution := configcobra.CreateSubstitution(name)
+	createSubstitution := CreateSubstCommand(name)
 	createSubstitution.Short = cfgdocs.CreateSubstShort
 	createSubstitution.Long = cfgdocs.CreateSubstShort + "\n" + cfgdocs.CreateSubstLong
 	createSubstitution.Example = cfgdocs.CreateSubstExamples
@@ -96,9 +99,20 @@ func GetConfigCommand(name string) *cobra.Command {
 	return cfgCmd
 }
 
+func CreateSetterCommand(parent string) *cobra.Command {
+	fieldmeta.SetShortHandRef(SHORT_HAND_REF)
+	return configcobra.CreateSetter(parent)
+}
+
+func CreateSubstCommand(parent string) *cobra.Command {
+	fieldmeta.SetShortHandRef(SHORT_HAND_REF)
+	return configcobra.CreateSubstitution(parent)
+}
+
 // SetCommand wraps the kustomize set command in order to automatically update
 // a project number if a project id is set.
 func SetCommand(parent string) *cobra.Command {
+	fieldmeta.SetShortHandRef(SHORT_HAND_REF)
 	kustomizeCmd := configcobra.Set(parent)
 	setCmd := *kustomizeCmd
 	var autoRun bool
