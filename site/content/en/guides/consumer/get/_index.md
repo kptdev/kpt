@@ -127,11 +127,7 @@ cockroachdb/
 
 The cockroachdb package fetched from [kubernetes examples] contains a
 `cockroachdb-statefulset.yaml` file with the resource configuration, as well
-as other files included in the directory.  `
-
-The package contains 2 resource configuration files -- `deploy.yaml` and
-`service.yaml`.  These are the same files that would typically be applied with
-`kubectl apply`.
+as other files included in the directory.
 
 {{% pageinfo color="info" %}}
 `kpt pkg get` created a `Kptfile` since one did not exist
