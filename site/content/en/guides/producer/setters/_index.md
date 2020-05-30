@@ -152,6 +152,53 @@ metadata:
     version: "3" # {"$ref":"#/definitions/io.k8s.cli.setters.version"}
 ```
 
+#### OpenAPI Validations
+Users can input any additional validation constraints during `create-setter`
+operation in the form of openAPI schema. Relevant openAPI specification
+constraints can be provided in json file format. The `set` operation validates
+the input value against provided schema during setter creation and throws an
+error if the input value doesn't meet any of the constraints. 
+
+```sh
+$ cat /path/to/file.json
+{"maximum": 10, "type": "integer"}
+
+# create setter with openAPI property constraints
+kpt cfg create-setter replicas 3 --schema-path /path/to/file.json
+```
+
+The command creates setter with the following definition
+
+```yaml
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      maximum: 10
+      type: integer
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+```
+
+```sh
+# try to set value not adhering to the constraints
+kpt cfg set replicas 11
+```
+
+```sh
+error: The input value doesn't validate against provided OpenAPI schema:
+validation failure list: replicas in body should be less than or equal to 10
+```
+
+```sh
+Relevant fixtures from openAPI JSON schema suite
+
+{"minLength", "maxLength", "pattern", "type", "minimum", "maximum", "multipleOf",
+"enum", "maxItems", "minItems", "format", "patternProperties", "uniqueItems",
+"allOf", "not", "oneOf", "anyOf"}
+```
+
 #### Setting Lists
 
 It is possible to create setters for fields which are a list of strings.
