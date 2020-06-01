@@ -201,12 +201,12 @@ func shouldRemoveValue (updatedDef, localDef, originalDef *yaml.MapNode, key str
 		return false
 	}
 
-	originalValStr, err := originalDef.Value.Field(key).Value.String()
+	originalValStr, err := originalVal.Value.String()
 	if err != nil {
 		return false
 	}
 
-	updatedValStr, err := updatedDef.Value.Field(key).Value.String()
+	updatedValStr, err := updatedVal.Value.String()
 	if err != nil {
 		return false
 	}
