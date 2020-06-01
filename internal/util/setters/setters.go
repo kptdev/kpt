@@ -23,10 +23,10 @@ import (
 
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters"
-	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
@@ -191,7 +191,7 @@ func DefExists(resourcePath, setterName string) bool {
 	if err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, "Kptfile")); err != nil {
 		return false
 	}
-	ref, err := spec.NewRef(setters2.DefinitionsPrefix + setters2.SetterDefinitionPrefix + setterName)
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + setterName)
 	if err != nil {
 		return false
 	}

@@ -18,11 +18,15 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/e2e"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/run"
+	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/cmd/config/ext"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
 func TestKptGetSet(t *testing.T) {
@@ -204,6 +208,258 @@ func TestKptGetSet(t *testing.T) {
 			testutil.AssertEqual(t, upstreamGit,
 				filepath.Join(expected, test.subdir),
 				localDir)
+		})
+	}
+}
+
+func TestSetters(t *testing.T) {
+	var tests = []struct {
+		name              string
+		inputOpenAPI      string
+		command           string
+		input             string
+		args              []string
+		out               string
+		expectedOpenAPI   string
+		expectedResources string
+		errMsg            string
+	}{
+		{
+			name:    "add replicas",
+			command: "create-setter",
+			args:    []string{"replicas", "3", "--description", "hello world", "--set-by", "me"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+`,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}
+ `,
+		},
+		{
+			name:    "substitution replicas",
+			command: "create-subst",
+			args: []string{
+				"my-image-subst", "--field-value", "nginx:1.7.9", "--pattern", "${my-image-setter}:${my-tag-setter}"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+      - name: sidecar
+        image: sidecar:1.7.9
+ `,
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image-setter:
+      x-k8s-cli:
+        setter:
+          name: my-image-setter
+          value: "nginx"
+    io.k8s.cli.setters.my-tag-setter:
+      x-k8s-cli:
+        setter:
+          name: my-tag-setter
+          value: "1.7.9"
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.my-image-setter:
+      x-k8s-cli:
+        setter:
+          name: my-image-setter
+          value: "nginx"
+    io.k8s.cli.setters.my-tag-setter:
+      x-k8s-cli:
+        setter:
+          name: my-tag-setter
+          value: "1.7.9"
+    io.k8s.cli.substitutions.my-image-subst:
+      x-k8s-cli:
+        substitution:
+          name: my-image-subst
+          pattern: ${my-image-setter}:${my-tag-setter}
+          values:
+          - marker: ${my-image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
+          - marker: ${my-tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9 # {"$kpt-set":"my-image-subst"}
+      - name: sidecar
+        image: sidecar:1.7.9
+ `,
+		},
+		{
+			name:    "set replicas",
+			command: "set",
+			args:    []string{"replicas", "4", "--description", "hi there", "--set-by", "pw"},
+			out:     "set 1 fields\n",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+ `,
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hi there
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "4"
+          setBy: pw
+ `,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 4 # {"$kpt-set":"replicas"}
+ `,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+
+			dir, err := ioutil.TempDir("", "")
+			if err != nil {
+				t.FailNow()
+			}
+			defer os.RemoveAll(dir)
+
+			err = ioutil.WriteFile(dir+"/Kptfile", []byte(test.inputOpenAPI), 0600)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			old := ext.GetOpenAPIFile
+			defer func() { ext.GetOpenAPIFile = old }()
+			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
+				return dir + "/Kptfile", nil
+			}
+
+			r, err := ioutil.TempFile(dir, "k8s-cli-*.yaml")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			cmd := run.GetMain()
+			args := []string{"cfg", test.command, dir}
+			args = append(args, test.args...)
+			cmd.SetArgs(args)
+			e2e.Exec(t, cmd)
+
+			if test.errMsg != "" {
+				if !assert.NotNil(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), test.errMsg) {
+					t.FailNow()
+				}
+			}
+
+			if test.errMsg == "" && !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualResources, err := ioutil.ReadFile(r.Name())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(test.expectedResources),
+				strings.TrimSpace(string(actualResources))) {
+				t.FailNow()
+			}
+
+			actualOpenAPI, err := ioutil.ReadFile(dir + "/Kptfile")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(test.expectedOpenAPI),
+				strings.TrimSpace(string(actualOpenAPI))) {
+				t.FailNow()
+			}
 		})
 	}
 }
