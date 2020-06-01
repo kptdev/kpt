@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 )
 
-const SHORT_HAND_REF = "$kpt-set"
+const ShortHandRef = "$kpt-set"
 
 func GetConfigCommand(name string) *cobra.Command {
 	cfgCmd := &cobra.Command{
@@ -100,19 +100,19 @@ func GetConfigCommand(name string) *cobra.Command {
 }
 
 func CreateSetterCommand(parent string) *cobra.Command {
-	fieldmeta.SetShortHandRef(SHORT_HAND_REF)
+	fieldmeta.SetShortHandRef(ShortHandRef)
 	return configcobra.CreateSetter(parent)
 }
 
 func CreateSubstCommand(parent string) *cobra.Command {
-	fieldmeta.SetShortHandRef(SHORT_HAND_REF)
+	fieldmeta.SetShortHandRef(ShortHandRef)
 	return configcobra.CreateSubstitution(parent)
 }
 
 // SetCommand wraps the kustomize set command in order to automatically update
 // a project number if a project id is set.
 func SetCommand(parent string) *cobra.Command {
-	fieldmeta.SetShortHandRef(SHORT_HAND_REF)
+	fieldmeta.SetShortHandRef(ShortHandRef)
 	kustomizeCmd := configcobra.Set(parent)
 	setCmd := *kustomizeCmd
 	var autoRun bool
