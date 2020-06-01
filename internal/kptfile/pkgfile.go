@@ -135,6 +135,22 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 		return err
 	}
 
+	// handles the case where e.g. setter is deleted
+	err = updatedDef.Value.VisitFields(func(node *yaml.MapNode) error {
+		key := node.Key.YNode().Value
+		if shouldRemoveValue(updatedDef, localDef, oriDef, key) {
+			return updatedDef.Value.PipeE(yaml.FieldClearer{
+				Name: key,
+			})
+
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+
 	// convert the result back to type interface{} and set it on the Kptfile
 	s, err := updated.String()
 	if err != nil {
@@ -173,6 +189,33 @@ func shouldSkipCopy(updatedDef, localDef, originalDef *yaml.MapNode, key string)
 	}
 	// skip copying if original val matches with from val(local val)
 	return localValStr == originalValStr
+}
+
+// shouldRemoveValue decides if a node with key should be removed from Def
+func shouldRemoveValue (updatedDef, localDef, originalDef *yaml.MapNode, key string) bool  {
+	localVal := localDef.Value.Field(key)
+	originalVal := originalDef.Value.Field(key)
+	updatedVal := updatedDef.Value.Field(key)
+
+	if originalVal == nil || updatedVal == nil {
+		return false
+	}
+
+	originalValStr, err := originalDef.Value.Field(key).Value.String()
+	if err != nil {
+		return false
+	}
+
+	updatedValStr, err := updatedDef.Value.Field(key).Value.String()
+	if err != nil {
+		return false
+	}
+
+	if localVal == nil && originalValStr == updatedValStr {
+		return true
+	}
+
+	return false
 }
 
 type Dependency struct {
