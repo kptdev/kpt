@@ -782,7 +782,7 @@
         <li><a href="#output">Output</a></li>
       </ul>
     </li>
-    <li><a href="#initialize-the-package-grouping-object">Initialize the package grouping object</a>
+    <li><a href="#initialize-the-package-inventory-template">Initialize the package inventory template</a>
       <ul>
         <li></li>
       </ul>
@@ -867,7 +867,7 @@ resources for deleted configuration.</p>
 <h2 id="steps">Steps</h2>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
-<li><a href="#initialize-the-package-grouping-object">Initialize the package grouping object</a></li>
+<li><a href="#initialize-the-package-inventory-template">Initialize the package inventory template</a></li>
 <li><a href="#apply-to-a-cluster">Apply to a cluster</a></li>
 <li><a href="#print-the-live-resources">Print the live resources</a></li>
 <li><a href="#prune-resources">Prune resources</a></li>
@@ -875,19 +875,21 @@ resources for deleted configuration.</p>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <h3 id="command">Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
+kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.5.0 helloworld
 </code></pre></div><p>Grab a remote package to apply to a cluster.</p>
 <h3 id="output">Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
-</code></pre></div><h2 id="initialize-the-package-grouping-object">Initialize the package grouping object</h2>
+</code></pre></div><h2 id="initialize-the-package-inventory-template">Initialize the package inventory template</h2>
 <p>The kpt version of apply uses a ConfigMap map to keep track of previously
 applied resources so they can be pruned later if the configuration for
-them is deleted.  This is called the <strong>grouping object</strong>, and can be created
-with the <a href="../../../reference/live/init">kpt live init</a> command.</p>
+them is deleted. The <a href="../../../reference/live/init">kpt live init</a> command will generate an inventory template
+(which is just a normal ConfigMap manifest with a special annotation) used by
+<a href="../../../reference/live/apply">kpt live apply</a> to generate an actual ConfigMap in the cluster which we refer
+to as an inventory object.</p>
 
 
 <div class="pageinfo pageinfo-warning">
-<p>The grouping object must be created for a package to be applied using
+<p>The inventory template must be created for a package to be applied using
 <code>kpt live apply</code>.</p>
 
 </div>
@@ -895,34 +897,34 @@ with the <a href="../../../reference/live/init">kpt live init</a> command.</p>
 <h5 id="command-1">Command</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt live init helloworld
 </code></pre></div><h5 id="output-1">Output</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">Initialized: helloworld/grouping-object-template.yaml
-</code></pre></div><h5 id="grouping-object">Grouping object</h5>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">Initialized: helloworld/inventory-template.yaml
+</code></pre></div><h5 id="inventory-template">Inventory template</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>grouping-object<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>inventory<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">labels</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># DANGER: Do not change the value of this label.</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># Changing this value will cause a loss of continuity</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># with previously applied grouped objects. Set deletion</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># with previously applied inventory objects. Set deletion</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># and pruning functionality will be impaired.</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">cli-utils.sigs.k8s.io/inventory-id</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld<span style="color:#0000cf;font-weight:bold">-247599</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">cli-utils.sigs.k8s.io/inventory-id</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>060da2f6-dc0e<span style="color:#0000cf;font-weight:bold">-4425</span>-a286-9a4acbad063d<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><p>A ConfigMap with the <code>cli-utils.sigs.k8s.io/inventory-id</code> label has been
 created, and will be used by apply to generate a history of previously
 applied resources.  This file should be checked into <code>git</code> along with the
 rest of the package, but otherwise ignored by users.</p>
 <h2 id="apply-to-a-cluster">Apply to a cluster</h2>
 <h5 id="command-2">Command</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt live apply helloworld --wait-for-reconcile
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt live apply helloworld --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>2m
 </code></pre></div><p>Apply the resources to the cluster and block until the changes have
 been fully rolled out &ndash; e.g. until the Pods are running.</p>
 <h5 id="output-2">Output</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">configmap/grouping-object-2911da3b created
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">configmap/inventory-17c4dd3c created
 service/helloworld-gke created
 deployment.apps/helloworld-gke created
 <span style="color:#0000cf;font-weight:bold">3</span> resource<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span> applied. <span style="color:#0000cf;font-weight:bold">3</span> created, <span style="color:#0000cf;font-weight:bold">0</span> unchanged, <span style="color:#0000cf;font-weight:bold">0</span> configured
-configmap/grouping-object-2911da3b is Current: Resource is always ready
+configmap/inventory-2911da3b is Current: Resource is always ready
 service/helloworld-gke is Current: Service is ready
 deployment.apps/helloworld-gke is InProgress: Available: 0/5
 deployment.apps/helloworld-gke is InProgress: Available: 2/5
@@ -937,7 +939,7 @@ be rolled out.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get configmaps,deploy,services
 </code></pre></div><h5 id="output-3">Output</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">NAME                                 DATA   AGE
-configmap/grouping-object-2911da3b   <span style="color:#0000cf;font-weight:bold">2</span>      2m47s
+configmap/inventory-28c4kc3c         <span style="color:#0000cf;font-weight:bold">2</span>      2m47s
 
 NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/helloworld-gke   5/5     <span style="color:#0000cf;font-weight:bold">5</span>            <span style="color:#0000cf;font-weight:bold">5</span>           2m47s
@@ -965,15 +967,15 @@ the resources.</p>
 resource configuration.sh</p>
 <h5 id="command-4">Command</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">rm helloworld/deploy.yaml
-kpt live apply helloworld/ --wait-for-reconcile
-</code></pre></div><p>Apply uses the previously created grouping objects (ConfigMaps) to calculate
+kpt live apply helloworld/ --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>2m
+</code></pre></div><p>Apply uses the previously created inventory objects (ConfigMaps) to calculate
 the set of resources to prune (delete) after applying.  In this case the
 Deployment.</p>
 <h5 id="output-4">Output</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">service/helloworld-gke is Current: Service is ready
 resources failed to the reached Current status
 deployment.apps/helloworld-gke pruned
-configmap/grouping-object-2911da3b pruned
+configmap/inventory-2911da3b pruned
 <span style="color:#0000cf;font-weight:bold">2</span> resource<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span> pruned
 </code></pre></div><h5 id="print-the-live-resources-1">Print the live resources</h5>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get deploy
@@ -1043,7 +1045,7 @@ configmap/grouping-object-2911da3b pruned
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0fa5d0aab08bc2cd0bb5f2988c899e6e8dfac031">Fix errors in the apply guide (0fa5d0aa)</a>
 </div>
 </div>
 
