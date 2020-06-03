@@ -23,7 +23,7 @@ RUN go mod download
 COPY . .
 RUN go build -v -o /usr/local/bin/kpt ./
 
-FROM alpine:latest
+FROM alpine:3.11
 RUN apk update && apk upgrade && \
         apk add --no-cache git less man diffutils bash openssh && \
     rm -rf /var/lib/apt/lists/* && \
