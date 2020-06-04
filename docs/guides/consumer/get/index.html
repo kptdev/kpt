@@ -209,10 +209,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Update</a>
+    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Display</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerupdate">
+    <li class="collapse " id="kptguidesconsumerdisplay">
       
       
       
@@ -278,10 +278,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Display</a>
+    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Apply</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerdisplay">
+    <li class="collapse " id="kptguidesconsumerapply">
       
       
       
@@ -301,10 +301,10 @@
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Apply</a>
+    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Update</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerapply">
+    <li class="collapse " id="kptguidesconsumerupdate">
       
       
       
@@ -907,6 +907,10 @@ fetched and used as a package</li>
 match the upstream directory name it is copied from</li>
 <li>including <code>.git</code> as part of the repo name is optional but good practice to
 ensure the repo + subdirectory are parsed correctly by the tool.</li>
+<li>Packages inside the same repo can be versioned individually by creating tags
+with the format <code>&lt;path to package in repo&gt;/&lt;version&gt;</code>, similar to how go
+modules are versioned. For example, a tag named <code>staging/cockroachdb/v1.2.3</code>
+would be interpreted by kpt as version <code>v1.2.3</code> of the cockroachdb package.</li>
 </ul>
 
 </div>
@@ -1078,7 +1082,7 @@ statefulset.apps/cockroachdb   3/3     54s
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 26, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/5cb591182d73798d699634c108a3d365e4c3302f">Remove stale reference to files that don&#39;t exist (5cb59118)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 3, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4c9e64de7e255bbed3221a3ab42b505e82e52bf8">Small improvements to the consumer guides (4c9e64de)</a>
 </div>
 </div>
 

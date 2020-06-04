@@ -19,7 +19,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/get/</loc>
-    <lastmod>2020-05-26T11:32:33-07:00</lastmod>
+    <lastmod>2020-06-03T20:23:32-07:00</lastmod>
   </url>
   
   <url>
@@ -58,6 +58,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/display/</loc>
+    <lastmod>2020-06-03T20:23:32-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/exec/</loc>
     <lastmod>2020-05-06T11:29:00-07:00</lastmod>
   </url>
@@ -80,11 +85,6 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/setters/</loc>
     <lastmod>2020-05-29T17:02:30-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/update/</loc>
-    <lastmod>2020-03-30T20:54:38-07:00</lastmod>
   </url>
   
   <url>
@@ -123,11 +123,6 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</loc>
-    <lastmod>2020-03-18T14:46:20-07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/annotate/</loc>
     <lastmod>2020-04-24T15:55:16-07:00</lastmod>
   </url>
@@ -155,11 +150,6 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/create-subst/</loc>
     <lastmod>2020-04-29T15:53:27-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/display/</loc>
-    <lastmod>2020-03-18T14:46:20-07:00</lastmod>
   </url>
   
   <url>
@@ -203,6 +193,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</loc>
+    <lastmod>2020-06-03T20:23:32-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/substitutions/</loc>
     <lastmod>2020-05-20T14:56:30-04:00</lastmod>
   </url>
@@ -228,8 +223,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
-    <lastmod>2020-04-20T16:15:37-07:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/update/</loc>
+    <lastmod>2020-06-03T20:23:32-07:00</lastmod>
   </url>
   
   <url>
@@ -240,6 +235,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/bootstrap/</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
+    <lastmod>2020-06-03T20:23:32-07:00</lastmod>
   </url>
   
   <url>
