@@ -73,5 +73,5 @@ Recommended: tag the commit as a release
 ```sh
 # tag as DIR/VERSION for per-directory versioning
 git tag nginx/v0.1.0
-git push nginx/v01.0
+git push nginx/v0.1.0
 ```
