@@ -1,7 +1,7 @@
 ---
 title: "Display local package contents"
 linkTitle: "Display"
-weight: 4
+weight: 2
 type: docs
 description: >
     Display the contents of a local package using kpt cfg for rendering.

@@ -1,7 +1,7 @@
 ---
 title: "Running functions"
 linkTitle: "Running Functions"
-weight: 6
+weight: 7
 type: docs
 description: >
     Modify or validate the contents of a package by calling a function.

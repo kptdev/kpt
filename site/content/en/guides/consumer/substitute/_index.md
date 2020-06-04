@@ -1,7 +1,7 @@
 ---
 title: "Substitute a values into fields"
 linkTitle: "Substitute"
-weight: 3
+weight: 4
 type: docs
 description: >
     Customize a local package by substituting values into fields.

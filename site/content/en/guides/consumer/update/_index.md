@@ -1,7 +1,7 @@
 ---
 title: "Update a local package"
 linkTitle: "Update"
-weight: 2
+weight: 6
 type: docs
 description: >
     Update a customized local package with upstream (remote) package changes.
