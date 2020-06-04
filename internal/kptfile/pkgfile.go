@@ -123,6 +123,9 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 
 	// merge the definitions
 	err = mergeDef(updatedDef, localDef, oriDef)
+	if err != nil {
+		return err
+	}
 
 	// convert the result back to type interface{} and set it on the Kptfile
 	s, err := updated.String()
