@@ -79,6 +79,10 @@ fetched and used as a package&lt;/li&gt;
 match the upstream directory name it is copied from&lt;/li&gt;
 &lt;li&gt;including &lt;code&gt;.git&lt;/code&gt; as part of the repo name is optional but good practice to
 ensure the repo + subdirectory are parsed correctly by the tool.&lt;/li&gt;
+&lt;li&gt;Packages inside the same repo can be versioned individually by creating tags
+with the format &lt;code&gt;&amp;lt;path to package in repo&amp;gt;/&amp;lt;version&amp;gt;&lt;/code&gt;, similar to how go
+modules are versioned. For example, a tag named &lt;code&gt;staging/cockroachdb/v1.2.3&lt;/code&gt;
+would be interpreted by kpt as version &lt;code&gt;v1.2.3&lt;/code&gt; of the cockroachdb package.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;/div&gt;
@@ -190,188 +194,125 @@ statefulset.apps/cockroachdb   3/3     54s
     </item>
     
     <item>
-      <title>Guides: Update a local package</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/consumer/update/</link>
+      <title>Guides: Display local package contents</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/display/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/update/</guid>
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/display/</guid>
       <description>
         
         
-        &lt;p&gt;&lt;em&gt;Packages can be arbitrarily customized and later merge updates from
-upstream.&lt;/em&gt;&lt;/p&gt;
+        &lt;p&gt;&lt;em&gt;Tools can parse and render configuration so it is easier for humans to read.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;../../../reference/pkg/update&#34;&gt;kpt pkg update&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Because kpt package contents are resource configuration (data) rather
-than templates or DSLs (code), it is possible to merge different versions
-of the package together using the structure of the resources to compute
-differences.&lt;/p&gt;
-&lt;p&gt;This allows package consumers to customize their copy, and merge updates
-from upstream.&lt;/p&gt;
-
-
-&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
-&lt;p&gt;The technique of merging fields to perform updates is also how &lt;code&gt;kubectl apply&lt;/code&gt;
-updates remote cluster resources with local file changes, without overwriting
-changes to the resources made by the cluster control-plane (e.g. an autoscaler
-can set replicas without apply overwriting them).&lt;/p&gt;
-&lt;p&gt;See [update strategies] for more choices on how to merge upstream changes.&lt;/p&gt;
-
-&lt;/div&gt;
-
-&lt;h2 id=&#34;kpt-pkg-update-explained&#34;&gt;&lt;code&gt;kpt pkg update&lt;/code&gt; explained&lt;/h2&gt;
-&lt;p&gt;Following is a short explanation of the command that will be demonstrated
-in this guide.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo&lt;/li&gt;
-&lt;li&gt;Edit the local package contents&lt;/li&gt;
-&lt;li&gt;Commit the changes&lt;/li&gt;
-&lt;li&gt;Update the local package with upstream changes from a new version&lt;/li&gt;
-&lt;/ul&gt;
-
-
-
-&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/update-command.svg&#34; /&gt;
-
+&lt;p&gt;&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg count&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/get&#34;&gt;kpt cfg tree&lt;/a&gt;,
+&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg grep&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg cat&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#edit-the-contents&#34;&gt;Edit the contents&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#commit-local-changes&#34;&gt;Commit local changes&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#view-new-package-contents&#34;&gt;View new package contents&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#summarize-resource-counts&#34;&gt;Summarize resource counts&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#display-resources-as-a-tree&#34;&gt;Display resources as a tree&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#filter-resources&#34;&gt;Filter resources&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#dump-all-resources&#34;&gt;Dump all resources&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
-&lt;p&gt;Packages can be fetched at specific versions defined by git tags, and have
-updated to later versions to merge in upstream changes.&lt;/p&gt;
+&lt;p&gt;Packages are fetched from remote git repository subdirectories with
+&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;.  In this guide we will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
+as a public package catalogue.&lt;/p&gt;
 &lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$REPO&lt;/span&gt;/package-examples/helloworld-set@v0.3.0 helloworld
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Fetch the &lt;code&gt;helloworld-set&lt;/code&gt; package at version &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
-&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
-&lt;pre&gt;&lt;code&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
-&lt;p&gt;Each subdirectory within a git repo may be tagged with its own version
-using the subdirectory path as a tag prefix, and kpt will automatically
-resolve the subdirectory version.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;package-examples/helloworld-set@v0.3.0&lt;/code&gt; is resolved to the tag
-&lt;code&gt;package-examples/helloworld-set/v0.3.0&lt;/code&gt; if it exists, otherwise it is
-resolved to the tag &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
-
-&lt;/div&gt;
-
-&lt;h2 id=&#34;edit-the-contents&#34;&gt;Edit the contents&lt;/h2&gt;
-&lt;p&gt;Edit the contents of the package by making changes to it.&lt;/p&gt;
-&lt;h5 id=&#34;old-local-configuration&#34;&gt;Old local configuration&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (upstream)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;PORT&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The old package contents without local modifications.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;vi helloworld/deploy.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;new-local-configuration&#34;&gt;New local configuration&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (locally modified)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;PORT&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;NEW_ENV&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This is a local package addition&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;local package edits&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The new package contents with local modifications.&lt;/p&gt;
-&lt;h2 id=&#34;commit-local-changes&#34;&gt;Commit local changes&lt;/h2&gt;
-
-
-&lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
-&lt;p&gt;In order for updates to be easily undone, configuration must be
-committed to git prior to performing a package update.&lt;/p&gt;
-&lt;p&gt;kpt will throw an error if trying to update a package and the git repo
-has uncommitted changes.&lt;/p&gt;
-
-&lt;/div&gt;
-
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git init
-git add .
-git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;add helloworld package at v0.3.0&amp;#34;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/h2&gt;
-&lt;p&gt;Package updates are performed by fetching the upstream package at the
-specified version and applying the upstream changes to the local package.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/kubernetes/examples/staging/ examples
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Fetch the entire examples/staging directory as a kpt package under &lt;code&gt;examples&lt;/code&gt;.
+This will contain many resources.&lt;/p&gt;
 &lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg update helloworld@v0.5.0 --strategy&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;resource-merge
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Update the local package to the upstream version v0.5.0 by doing a 3-way
-merge between 1) the original upstream commit, 2) the local (customized)
-package, 3) the new upstream reference.&lt;/p&gt;
-&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;updating package helloworld to v0.5.0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;changes&#34;&gt;Changes&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--- a/helloworld/deploy.yaml
-+++ b/helloworld/deploy.yaml
-@@ -31,7 +31,7 @@ spec:
-     spec:
-       containers:
-       - name: helloworld-gke
--        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;
-+        image: gcr.io/kpt-dev/helloworld-gke:v0.3.0 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;
-         ports:
-         - name: http
-           containerPort: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;80&lt;/span&gt; &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;
-diff --git a/helloworld/service.yaml b/helloworld/service.yaml
-index 0853ee1..c938fde &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;100644&lt;/span&gt;
---- a/helloworld/service.yaml
-+++ b/helloworld/service.yaml
-@@ -22,7 +22,7 @@ metadata:
-   labels:
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The Deployment was updated with a new image tag.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--- a/helloworld/service.yaml
-+++ b/helloworld/service.yaml
-@@ -22,7 +22,7 @@ metadata:
-   labels:
-     app: hello
- spec:
--  type: LoadBalancer
-+  type: NodePort
-   selector:
-     app: hello
-   ports:
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The Service was updated with a new &lt;code&gt;type&lt;/code&gt;.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--- a/helloworld/Kptfile
-+++ b/helloworld/Kptfile
-@@ -5,10 +5,10 @@ metadata:
- upstream:
-     type: git
-     git:
--        commit: 3d721bafd701deb06aeb43c5ea5afda3134cfdd6
-+        commit: 3f173ad974081896b47f6929b2c3cb595d71af94
-         repo: https://github.com/GoogleContainerTools/kpt
-         directory: /package-examples/helloworld-set
--        ref: v0.3.0
-+        ref: v0.5.0
- openAPI:
-     definitions:
-         io.k8s.cli.setters.http-port:
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The Kptfile was updated with the new upstream metadata.&lt;/p&gt;
-&lt;h2 id=&#34;view-new-package-contents&#34;&gt;View new package contents&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (updated from upstream)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.3.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;PORT&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;NEW_ENV&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This is a local package addition&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;local package edits&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The updated local package contains &lt;em&gt;both&lt;/em&gt; the upstream changes (new image tag),
-and local modifications (additional environment variable).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;tree examples
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;examples/
+├── Kptfile
+├── cloud-controller-manager
+│   └── persistent-volume-label-initializer-config.yaml
+├── cluster-dns
+│   ├── README.md
+...
 
+&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;79&lt;/span&gt; directories, &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;329&lt;/span&gt; files
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The package is composed of 79 directories and, 329 files.  This is too many
+to work with using tools such as &lt;code&gt;less&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;summarize-resource-counts&#34;&gt;Summarize resource counts&lt;/h2&gt;
+&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;kpt cfg count&lt;/code&gt; command summarizes the resource counts to show the shape of a
+package.&lt;/p&gt;
+&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;...
+Deployment: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;10&lt;/span&gt;
+Endpoints: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+InitializerConfiguration: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+Namespace: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;
+Pod: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;45&lt;/span&gt;
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-3&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/cockroachdb/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running &lt;code&gt;count&lt;/code&gt; on a subdirectory will summarize that directory even if
+it doesn&amp;rsquo;t have a Kptfile.&lt;/p&gt;
+&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;PodDisruptionBudget: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+Service: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt;
+StatefulSet: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-4&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/ --kind&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;false&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The total aggregate resource count can be shown with &lt;code&gt;--kind=false&lt;/code&gt;&lt;/p&gt;
+&lt;h5 id=&#34;output-3&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;201&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;display-resources-as-a-tree&#34;&gt;Display resources as a tree&lt;/h2&gt;
+&lt;h5 id=&#34;command-5&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree examples/cockroachdb/ --image --replicas 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Because the raw YAML configuration may be difficult for humans to easily
+view and understand, kpt provides a command for rendering configuration
+as a tree.  Flags may be provided to print specific fields under the resources.&lt;/p&gt;
+&lt;h5 id=&#34;output-4&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;examples/cockroachdb
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet cockroachdb
+│   ├── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
+│   └── spec.template.spec.containers
+│       └── &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt;
+│           └── image: cockroachdb/cockroach:v1.1.0
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  PodDisruptionBudget cockroachdb-budget
+└── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb-public
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In addition to the built-in printable fields, &lt;code&gt;kpt cfg tree&lt;/code&gt; will print
+arbitrary fields by providing the &lt;code&gt;--field&lt;/code&gt; flag.&lt;/p&gt;
+&lt;h2 id=&#34;filter-resources&#34;&gt;Filter resources&lt;/h2&gt;
+&lt;h5 id=&#34;command-6&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.replicas&amp;gt;3&amp;#34;&lt;/span&gt; examples &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree --replicas
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grep can be used to filter resources by field values.  The output of
+&lt;code&gt;kpt cfg grep&lt;/code&gt; is the matching full resource configuration, which
+may be piped to tree for rendering.&lt;/p&gt;
+&lt;h5 id=&#34;output-5&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;.
+├── storage/minio
+│   └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;minio-distributed-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet minio
+│       └── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;
+├── sysdig-cloud
+│   └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;sysdig-rc.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  ReplicationController sysdig-agent
+│       └── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;100&lt;/span&gt;
+└── volumes/vsphere
+    └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;simple-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet web
+        └── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;14&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;dump-all-resources&#34;&gt;Dump all resources&lt;/h2&gt;
+&lt;h5 id=&#34;command-7&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg cat examples/cockroachdb
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The raw YAML configuration may be dumped using &lt;code&gt;kpt cfg cat&lt;/code&gt;.  This will
+print only the YAML for Kubernetes resources.&lt;/p&gt;
+&lt;h5 id=&#34;output-6&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;apiVersion: v1
+kind: Service
+metadata:
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a ClusterIP that will&lt;/span&gt;
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# automatically load balance connections to the different database pods.&lt;/span&gt;
+  name: cockroachdb-public
+  labels:
+    app: cockroachdb
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -612,129 +553,6 @@ package &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;
     </item>
     
     <item>
-      <title>Guides: Display local package contents</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/consumer/display/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/display/</guid>
-      <description>
-        
-        
-        &lt;p&gt;&lt;em&gt;Tools can parse and render configuration so it is easier for humans to read.&lt;/em&gt;&lt;/p&gt;
-&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg count&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/get&#34;&gt;kpt cfg tree&lt;/a&gt;,
-&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg grep&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/count&#34;&gt;kpt cfg cat&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#summarize-resource-counts&#34;&gt;Summarize resource counts&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#display-resources-as-a-tree&#34;&gt;Display resources as a tree&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#filter-resources&#34;&gt;Filter resources&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#dump-all-resources&#34;&gt;Dump all resources&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
-&lt;p&gt;Packages are fetched from remote git repository subdirectories with
-&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;.  In this guide we will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
-as a public package catalogue.&lt;/p&gt;
-&lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/kubernetes/examples/staging/ examples
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Fetch the entire examples/staging directory as a kpt package under &lt;code&gt;examples&lt;/code&gt;.
-This will contain many resources.&lt;/p&gt;
-&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;tree examples
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;examples/
-├── Kptfile
-├── cloud-controller-manager
-│   └── persistent-volume-label-initializer-config.yaml
-├── cluster-dns
-│   ├── README.md
-...
-
-&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;79&lt;/span&gt; directories, &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;329&lt;/span&gt; files
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The package is composed of 79 directories and, 329 files.  This is too many
-to work with using tools such as &lt;code&gt;less&lt;/code&gt;.&lt;/p&gt;
-&lt;h2 id=&#34;summarize-resource-counts&#34;&gt;Summarize resource counts&lt;/h2&gt;
-&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;kpt cfg count&lt;/code&gt; command summarizes the resource counts to show the shape of a
-package.&lt;/p&gt;
-&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;...
-Deployment: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;10&lt;/span&gt;
-Endpoints: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
-InitializerConfiguration: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
-Namespace: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;
-Pod: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;45&lt;/span&gt;
-...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-3&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/cockroachdb/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running &lt;code&gt;count&lt;/code&gt; on a subdirectory will summarize that directory even if
-it doesn&amp;rsquo;t have a Kptfile.&lt;/p&gt;
-&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;PodDisruptionBudget: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
-Service: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt;
-StatefulSet: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-4&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/ --kind&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;false&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The total aggregate resource count can be shown with &lt;code&gt;--kind=false&lt;/code&gt;&lt;/p&gt;
-&lt;h5 id=&#34;output-3&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;201&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;display-resources-as-a-tree&#34;&gt;Display resources as a tree&lt;/h2&gt;
-&lt;h5 id=&#34;command-5&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree examples/cockroachdb/ --image --replicas 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Because the raw YAML configuration may be difficult for humans to easily
-view and understand, kpt provides a command for rendering configuration
-as a tree.  Flags may be provided to print specific fields under the resources.&lt;/p&gt;
-&lt;h5 id=&#34;output-4&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;examples/cockroachdb
-├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb
-├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet cockroachdb
-│   ├── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
-│   └── spec.template.spec.containers
-│       └── &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt;
-│           └── image: cockroachdb/cockroach:v1.1.0
-├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  PodDisruptionBudget cockroachdb-budget
-└── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb-public
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In addition to the built-in printable fields, &lt;code&gt;kpt cfg tree&lt;/code&gt; will print
-arbitrary fields by providing the &lt;code&gt;--field&lt;/code&gt; flag.&lt;/p&gt;
-&lt;h2 id=&#34;filter-resources&#34;&gt;Filter resources&lt;/h2&gt;
-&lt;h5 id=&#34;command-6&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.replicas&amp;gt;3&amp;#34;&lt;/span&gt; examples &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree --replicas
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grep can be used to filter resources by field values.  The output of
-&lt;code&gt;kpt cfg grep&lt;/code&gt; is the matching full resource configuration, which
-may be piped to tree for rendering.&lt;/p&gt;
-&lt;h5 id=&#34;output-5&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;.
-├── storage/minio
-│   └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;minio-distributed-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet minio
-│       └── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;
-├── sysdig-cloud
-│   └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;sysdig-rc.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  ReplicationController sysdig-agent
-│       └── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;100&lt;/span&gt;
-└── volumes/vsphere
-    └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;simple-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet web
-        └── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;14&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;dump-all-resources&#34;&gt;Dump all resources&lt;/h2&gt;
-&lt;h5 id=&#34;command-7&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg cat examples/cockroachdb
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The raw YAML configuration may be dumped using &lt;code&gt;kpt cfg cat&lt;/code&gt;.  This will
-print only the YAML for Kubernetes resources.&lt;/p&gt;
-&lt;h5 id=&#34;output-6&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;apiVersion: v1
-kind: Service
-metadata:
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a ClusterIP that will&lt;/span&gt;
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# automatically load balance connections to the different database pods.&lt;/span&gt;
-  name: cockroachdb-public
-  labels:
-    app: cockroachdb
-...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-      </description>
-    </item>
-    
-    <item>
       <title>Guides: Apply a local package</title>
       <link>https://googlecontainertools.github.io/kpt/guides/consumer/apply/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -874,6 +692,192 @@ configmap/inventory-2911da3b pruned
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl get deploy
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;No resources found in default namespace.
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Update a local package</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/update/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/update/</guid>
+      <description>
+        
+        
+        &lt;p&gt;&lt;em&gt;Packages can be arbitrarily customized and later merge updates from
+upstream.&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;../../../reference/pkg/update&#34;&gt;kpt pkg update&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Because kpt package contents are resource configuration (data) rather
+than templates or DSLs (code), it is possible to merge different versions
+of the package together using the structure of the resources to compute
+differences.&lt;/p&gt;
+&lt;p&gt;This allows package consumers to customize their copy, and merge updates
+from upstream.&lt;/p&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
+&lt;p&gt;The technique of merging fields to perform updates is also how &lt;code&gt;kubectl apply&lt;/code&gt;
+updates remote cluster resources with local file changes, without overwriting
+changes to the resources made by the cluster control-plane (e.g. an autoscaler
+can set replicas without apply overwriting them).&lt;/p&gt;
+&lt;p&gt;See [update strategies] for more choices on how to merge upstream changes.&lt;/p&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&#34;kpt-pkg-update-explained&#34;&gt;&lt;code&gt;kpt pkg update&lt;/code&gt; explained&lt;/h2&gt;
+&lt;p&gt;Following is a short explanation of the command that will be demonstrated
+in this guide.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo&lt;/li&gt;
+&lt;li&gt;Edit the local package contents&lt;/li&gt;
+&lt;li&gt;Commit the changes&lt;/li&gt;
+&lt;li&gt;Update the local package with upstream changes from a new version&lt;/li&gt;
+&lt;/ul&gt;
+
+
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/update-command.svg&#34; /&gt;
+
+&lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#edit-the-contents&#34;&gt;Edit the contents&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#commit-local-changes&#34;&gt;Commit local changes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#view-new-package-contents&#34;&gt;View new package contents&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
+&lt;p&gt;Packages can be fetched at specific versions defined by git tags, and have
+updated to later versions to merge in upstream changes.&lt;/p&gt;
+&lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$REPO&lt;/span&gt;/package-examples/helloworld-set@v0.3.0 helloworld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Fetch the &lt;code&gt;helloworld-set&lt;/code&gt; package at version &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
+&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
+&lt;pre&gt;&lt;code&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
+&lt;p&gt;Each subdirectory within a git repo may be tagged with its own version
+using the subdirectory path as a tag prefix, and kpt will automatically
+resolve the subdirectory version.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;package-examples/helloworld-set@v0.3.0&lt;/code&gt; is resolved to the tag
+&lt;code&gt;package-examples/helloworld-set/v0.3.0&lt;/code&gt; if it exists, otherwise it is
+resolved to the tag &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&#34;edit-the-contents&#34;&gt;Edit the contents&lt;/h2&gt;
+&lt;p&gt;Edit the contents of the package by making changes to it.&lt;/p&gt;
+&lt;h5 id=&#34;old-local-configuration&#34;&gt;Old local configuration&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (upstream)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;PORT&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The old package contents without local modifications.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;vi helloworld/deploy.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;new-local-configuration&#34;&gt;New local configuration&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (locally modified)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;PORT&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;NEW_ENV&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This is a local package addition&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;local package edits&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The new package contents with local modifications.&lt;/p&gt;
+&lt;h2 id=&#34;commit-local-changes&#34;&gt;Commit local changes&lt;/h2&gt;
+
+
+&lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
+&lt;p&gt;In order for updates to be easily undone, configuration must be
+committed to git prior to performing a package update.&lt;/p&gt;
+&lt;p&gt;kpt will throw an error if trying to update a package and the git repo
+has uncommitted changes.&lt;/p&gt;
+
+&lt;/div&gt;
+
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git init
+git add .
+git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;add helloworld package at v0.3.0&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/h2&gt;
+&lt;p&gt;Package updates are performed by fetching the upstream package at the
+specified version and applying the upstream changes to the local package.&lt;/p&gt;
+&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg update helloworld@v0.5.0 --strategy&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;resource-merge
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Update the local package to the upstream version v0.5.0 by doing a 3-way
+merge between 1) the original upstream commit, 2) the local (customized)
+package, 3) the new upstream reference.&lt;/p&gt;
+&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;updating package helloworld to v0.5.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;changes&#34;&gt;Changes&lt;/h5&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--- a/helloworld/deploy.yaml
++++ b/helloworld/deploy.yaml
+@@ -31,7 +31,7 @@ spec:
+     spec:
+       containers:
+       - name: helloworld-gke
+-        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;
++        image: gcr.io/kpt-dev/helloworld-gke:v0.3.0 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;
+         ports:
+         - name: http
+           containerPort: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;80&lt;/span&gt; &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;
+diff --git a/helloworld/service.yaml b/helloworld/service.yaml
+index 0853ee1..c938fde &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;100644&lt;/span&gt;
+--- a/helloworld/service.yaml
++++ b/helloworld/service.yaml
+@@ -22,7 +22,7 @@ metadata:
+   labels:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The Deployment was updated with a new image tag.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--- a/helloworld/service.yaml
++++ b/helloworld/service.yaml
+@@ -22,7 +22,7 @@ metadata:
+   labels:
+     app: hello
+ spec:
+-  type: LoadBalancer
++  type: NodePort
+   selector:
+     app: hello
+   ports:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The Service was updated with a new &lt;code&gt;type&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--- a/helloworld/Kptfile
++++ b/helloworld/Kptfile
+@@ -5,10 +5,10 @@ metadata:
+ upstream:
+     type: git
+     git:
+-        commit: 3d721bafd701deb06aeb43c5ea5afda3134cfdd6
++        commit: 3f173ad974081896b47f6929b2c3cb595d71af94
+         repo: https://github.com/GoogleContainerTools/kpt
+         directory: /package-examples/helloworld-set
+-        ref: v0.3.0
++        ref: v0.5.0
+ openAPI:
+     definitions:
+         io.k8s.cli.setters.http-port:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The Kptfile was updated with the new upstream metadata.&lt;/p&gt;
+&lt;h2 id=&#34;view-new-package-contents&#34;&gt;View new package contents&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (updated from upstream)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.3.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;env&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;PORT&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.http-port&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;NEW_ENV&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This is a local package addition&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;local package edits&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The updated local package contains &lt;em&gt;both&lt;/em&gt; the upstream changes (new image tag),
+and local modifications (additional environment variable).&lt;/p&gt;
+
       </description>
     </item>
     

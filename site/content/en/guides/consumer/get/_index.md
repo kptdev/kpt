@@ -68,6 +68,10 @@ The contents of the `staging/cockroachdb` subdirectory in the
   match the upstream directory name it is copied from
 - including `.git` as part of the repo name is optional but good practice to
   ensure the repo + subdirectory are parsed correctly by the tool.
+- Packages inside the same repo can be versioned individually by creating tags 
+  with the format `<path to package in repo>/<version>`, similar to how go
+  modules are versioned. For example, a tag named `staging/cockroachdb/v1.2.3` 
+  would be interpreted by kpt as version `v1.2.3` of the cockroachdb package.
 {{% /pageinfo %}}
 
 ## View the Kptfile
