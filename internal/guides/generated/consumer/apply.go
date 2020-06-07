@@ -34,7 +34,7 @@ resources for deleted configuration.
 ## Steps
 
 1. [Fetch a remote package](#fetch-a-remote-package)
-2. [Initialize the package grouping object](#initialize-the-package-grouping-object)
+2. [Initialize the package inventory template](#initialize-the-package-inventory-template)
 3. [Apply to a cluster](#apply-to-a-cluster)
 4. [Print the live resources](#print-the-live-resources)
 4. [Prune resources](#prune-resources)
@@ -44,7 +44,7 @@ resources for deleted configuration.
 ### Command
 
   export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-  kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.3.0 helloworld
+  kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 helloworld
 
 Grab a remote package to apply to a cluster.
 
@@ -52,15 +52,17 @@ Grab a remote package to apply to a cluster.
 
   fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 
-## Initialize the package grouping object
+## Initialize the package inventory template
 
 The kpt version of apply uses a ConfigMap map to keep track of previously
 applied resources so they can be pruned later if the configuration for
-them is deleted.  This is called the **grouping object**, and can be created
-with the [kpt live init] command.
+them is deleted. The [kpt live init] command will generate an inventory template
+(which is just a normal ConfigMap manifest with a special annotation) used by 
+[kpt live apply] to generate an actual ConfigMap in the cluster which we refer
+to as an inventory object.
 
 {{% pageinfo color="warning" %}}
-The grouping object must be created for a package to be applied using
+The inventory template must be created for a package to be applied using
 ` + "`" + `kpt live apply` + "`" + `.
 {{% /pageinfo %}}
 
@@ -70,21 +72,21 @@ The grouping object must be created for a package to be applied using
 
 ##### Output
 
-  Initialized: helloworld/grouping-object-template.yaml
+  Initialized: helloworld/inventory-template.yaml
 
-##### Grouping object
+##### Inventory template
 
   apiVersion: v1
   kind: ConfigMap
   metadata:
   ...
-    name: grouping-object
+    name: inventory
     labels:
       # DANGER: Do not change the value of this label.
       # Changing this value will cause a loss of continuity
-      # with previously applied grouped objects. Set deletion
+      # with previously applied inventory objects. Set deletion
       # and pruning functionality will be impaired.
-      cli-utils.sigs.k8s.io/inventory-id: helloworld-247599
+      cli-utils.sigs.k8s.io/inventory-id: 060da2f6-dc0e-4425-a286-9a4acbad063d
 
 A ConfigMap with the ` + "`" + `cli-utils.sigs.k8s.io/inventory-id` + "`" + ` label has been
 created, and will be used by apply to generate a history of previously
@@ -95,18 +97,18 @@ rest of the package, but otherwise ignored by users.
 
 ##### Command
 
-  kpt live apply helloworld --wait-for-reconcile
+  kpt live apply helloworld --reconcile-timeout=2m
 
 Apply the resources to the cluster and block until the changes have
 been fully rolled out -- e.g. until the Pods are running.
 
 ##### Output
 
-  configmap/grouping-object-2911da3b created
+  configmap/inventory-17c4dd3c created
   service/helloworld-gke created
   deployment.apps/helloworld-gke created
   3 resource(s) applied. 3 created, 0 unchanged, 0 configured
-  configmap/grouping-object-2911da3b is Current: Resource is always ready
+  configmap/inventory-2911da3b is Current: Resource is always ready
   service/helloworld-gke is Current: Service is ready
   deployment.apps/helloworld-gke is InProgress: Available: 0/5
   deployment.apps/helloworld-gke is InProgress: Available: 2/5
@@ -128,7 +130,7 @@ Display the resources in the cluster using kubectl.
 ##### Output
 
   NAME                                 DATA   AGE
-  configmap/grouping-object-2911da3b   2      2m47s
+  configmap/inventory-28c4kc3c         2      2m47s
   
   NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
   deployment.apps/helloworld-gke   5/5     5            5           2m47s
@@ -165,9 +167,9 @@ resource configuration.sh
 ##### Command
 
   rm helloworld/deploy.yaml
-  kpt live apply helloworld/ --wait-for-reconcile
+  kpt live apply helloworld/ --reconcile-timeout=2m
 
-Apply uses the previously created grouping objects (ConfigMaps) to calculate
+Apply uses the previously created inventory objects (ConfigMaps) to calculate
 the set of resources to prune (delete) after applying.  In this case the
 Deployment.
 
@@ -176,7 +178,7 @@ Deployment.
   service/helloworld-gke is Current: Service is ready
   resources failed to the reached Current status
   deployment.apps/helloworld-gke pruned
-  configmap/grouping-object-2911da3b pruned
+  configmap/inventory-2911da3b pruned
   2 resource(s) pruned
 
 ##### Print the live resources

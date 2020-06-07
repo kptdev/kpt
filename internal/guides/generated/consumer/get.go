@@ -72,6 +72,10 @@ The contents of the ` + "`" + `staging/cockroachdb` + "`" + ` subdirectory in th
   match the upstream directory name it is copied from
 - including ` + "`" + `.git` + "`" + ` as part of the repo name is optional but good practice to
   ensure the repo + subdirectory are parsed correctly by the tool.
+- Packages inside the same repo can be versioned individually by creating tags 
+  with the format ` + "`" + `<path to package in repo>/<version>` + "`" + `, similar to how go
+  modules are versioned. For example, a tag named ` + "`" + `staging/cockroachdb/v1.2.3` + "`" + ` 
+  would be interpreted by kpt as version ` + "`" + `v1.2.3` + "`" + ` of the cockroachdb package.
 {{% /pageinfo %}}
 
 ## View the Kptfile
@@ -123,11 +127,7 @@ artifacts such as documentation.
 
 The cockroachdb package fetched from [kubernetes examples] contains a
 ` + "`" + `cockroachdb-statefulset.yaml` + "`" + ` file with the resource configuration, as well
-as other files included in the directory.  ` + "`" + `
-
-The package contains 2 resource configuration files -- ` + "`" + `deploy.yaml` + "`" + ` and
-` + "`" + `service.yaml` + "`" + `.  These are the same files that would typically be applied with
-` + "`" + `kubectl apply` + "`" + `.
+as other files included in the directory.
 
 {{% pageinfo color="info" %}}
 ` + "`" + `kpt pkg get` + "`" + ` created a ` + "`" + `Kptfile` + "`" + ` since one did not exist
