@@ -92,7 +92,7 @@ is added to the name. Example:
 test-grouping-object-17b4dba8
 ```
 
-### Status (wait-for-reconcile)
+### Status (reconcile-timeout=<DURATION>)
 
 kpt live apply also has support for computing status for resources. This is 
 useful during apply for making sure that not only are the set of resources applied
@@ -169,7 +169,7 @@ status:
 ```
 
 The status for this resource state will be InProgress. So if the 
-`--wait-for-reconcile` flag is set, kpt live apply will wait until 
+`--reconcile-timeout` flag is set, kpt live apply will wait until 
 the `Reconciling` condition is `False` before pruning and exiting.
 
 ### Examples
@@ -181,17 +181,12 @@ kpt live apply my-dir/
 
 ```sh
 # apply resources and wait for all the resources to be reconciled before pruning
-kpt live apply --wait-for-reconcile my-dir/
-```
-
-```sh
-# apply resources and specify how long to wait for resources to be reconciled
-kpt live apply --wait-for-reconcile --wait-timeout=15m my-dir/
+kpt live apply --reconcile-timeout=15m my-dir/
 ```
 
 ```sh
 # apply resources and specify how often to poll the cluster for resource status
-kpt live apply --wait-for-reconcile --wait-polling-period=5s my-dir/
+kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir/
 ```
 <!--mdtogo-->
 

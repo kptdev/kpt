@@ -44,7 +44,7 @@ set 1 fields
 
 ```sh
 # apply the package to a cluster
-$ kpt live apply --wait-for-reconcile helloworld
+$ kpt live apply --reconcile-timeout=10m helloworld
 ...
 all resources has reached the Current status
 ```

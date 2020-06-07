@@ -186,7 +186,7 @@ This means with ` + "`" + `kpt live apply` + "`" + ` command, we could wait for 
   $ kpt live init sampleapp
   Initialized: ../sampleapp/grouping-object-template.yaml
 
-  $ kpt live apply sampleapp --wait-for-reconcile
+  $ kpt live apply sampleapp --reconcile-timeout=10m
   configmap/inventory-9ac03a44 unchanged
   applicationconfiguration.core.oam.dev/example-appconfig created
   component.core.oam.dev/example-component created
