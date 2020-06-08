@@ -27,10 +27,13 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/run"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/kubectl/pkg/util/logs"
 )
 
 func main() {
 	cmd := run.GetMain()
+	logs.InitLogs()
+	defer logs.FlushLogs()
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
