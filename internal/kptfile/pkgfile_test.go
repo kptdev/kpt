@@ -402,6 +402,55 @@ openAPI:
                     value: nginx
 `,
 		},
+		{
+			name: "keep deleted",
+			updated: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			local: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			original: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.0
+`,
+		},
 	}
 
 	for i := range tests {

@@ -121,16 +121,8 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 	}
 	oriDef := original.Field("definitions")
 
-	err = localDef.Value.VisitFields(func(node *yaml.MapNode) error {
-		key := node.Key.YNode().Value
-		if shouldSkipCopy(updatedDef, localDef, oriDef, key) {
-			return nil
-		}
-		// copy each definition from the source to the destination
-		return updatedDef.Value.PipeE(yaml.FieldSetter{
-			Name:  key,
-			Value: node.Value})
-	})
+	// merge the definitions
+	err = mergeDef(updatedDef, localDef, oriDef)
 	if err != nil {
 		return err
 	}
@@ -146,6 +138,54 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 	return err
 }
 
+// mergeDef takes localDef, originalDef and updateDef, it iterates through the unique keys of localDef
+// and updateDef, skip copy the local node if nothing changed or updateDef get deleted.
+// It deletes the node from updateDef if node get deleted in localDef
+func mergeDef(updatedDef, localDef, originalDef *yaml.MapNode) error {
+	localKeys, err := localDef.Value.Fields()
+	if err != nil {
+		return err
+	}
+	updatedKeys, err := updatedDef.Value.Fields()
+	if err != nil {
+		return nil
+	}
+	keys := append(updatedKeys, localKeys...)
+
+	unique := make(map[string]bool, len(keys))
+	for _, key := range keys {
+		if unique[key] {
+			continue
+		}
+		unique[key] = true
+
+		node := localDef.Value.Field(key)
+		if node == nil {
+			node = updatedDef.Value.Field(key)
+		}
+
+		if shouldSkipCopy(updatedDef, localDef, originalDef, key) {
+			continue
+		}
+
+		if shouldRemoveValue(updatedDef, localDef, originalDef, key) {
+			err = updatedDef.Value.PipeE(yaml.FieldClearer{Name: key})
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		err = updatedDef.Value.PipeE(yaml.FieldSetter{
+			Name:  key,
+			Value: node.Value})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // shouldSkipCopy decides if a node with key should be copied from fromDef to toDef
 func shouldSkipCopy(updatedDef, localDef, originalDef *yaml.MapNode, key string) bool {
 	if originalDef == nil || updatedDef == nil || localDef == nil {
@@ -158,11 +198,11 @@ func shouldSkipCopy(updatedDef, localDef, originalDef *yaml.MapNode, key string)
 		return false
 	}
 
-	localValStr, err := localDef.Value.Field(key).Value.String()
+	localValStr, err := localVal.Value.String()
 	if err != nil {
 		return false
 	}
-	originalValStr, err := originalDef.Value.Field(key).Value.String()
+	originalValStr, err := originalVal.Value.String()
 	if err != nil {
 		return false
 	}
@@ -173,6 +213,33 @@ func shouldSkipCopy(updatedDef, localDef, originalDef *yaml.MapNode, key string)
 	}
 	// skip copying if original val matches with from val(local val)
 	return localValStr == originalValStr
+}
+
+// shouldRemoveValue decides if a node with key should be removed from Def
+func shouldRemoveValue(updatedDef, localDef, originalDef *yaml.MapNode, key string) bool {
+	localVal := localDef.Value.Field(key)
+	originalVal := originalDef.Value.Field(key)
+	updatedVal := updatedDef.Value.Field(key)
+
+	if originalVal == nil || updatedVal == nil {
+		return false
+	}
+
+	originalValStr, err := originalVal.Value.String()
+	if err != nil {
+		return false
+	}
+
+	updatedValStr, err := updatedVal.Value.String()
+	if err != nil {
+		return false
+	}
+
+	if localVal == nil && originalValStr == updatedValStr {
+		return true
+	}
+
+	return false
 }
 
 type Dependency struct {
