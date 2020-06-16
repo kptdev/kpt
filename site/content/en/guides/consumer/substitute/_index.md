@@ -38,7 +38,7 @@ in this guide.
 ### Data model
 
 - Fields reference substitutions through OpenAPI definitions specified as
-  line comments -- e.g. `# { "$ref": "#/definitions/..." }`
+  line comments -- e.g. `# { "$kpt-set": "my-substitution" }`
 - OpenAPI definitions are provided through the Kptfile
 - Substitution OpenAPI definitions contain patterns and values to compute
   the field value

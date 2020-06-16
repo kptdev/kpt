@@ -274,7 +274,7 @@ structured data &amp;ndash; e.g. using &lt;code&gt;sed&lt;/code&gt; to replace v
 &lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters&#34;&gt;creating setters&lt;/a&gt; guide for more info on creating setters.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
 &lt;!--mdtogo:Examples--&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# create a setter called replicas for fields matching &amp;#34;3&amp;#34;&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# create a setter called replicas for fields matching value &amp;#34;3&amp;#34;&lt;/span&gt;
 kpt cfg create-setter DIR/ replicas &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# scope creating setter references to a specified field&lt;/span&gt;
 kpt cfg create-setter DIR/ replicas &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt; --field &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;replicas&amp;#34;&lt;/span&gt;
@@ -297,13 +297,23 @@ DIR:
   Path to a package directory
 
 NAME:
-  The name of the substitution to create.  This is both the name that will
+  The name of the setter to create.  This is both the name that will
   be given to the *set* command, and that will be referenced by fields.
   e.g. replicas
 
 VALUE
-  The new value of the setter.
+  The value of the filed for which setter reference must be added.
   e.g. 3
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--description
+  Optional description about the value.
+
+--set-by
+  Optional record of who set the value.
+
+--value   
+  Optional flag, alternative to specifying the value as an argument
+  e.g. used to specify values that start with &#39;-&#39;
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
@@ -773,6 +783,10 @@ VALUE
 --set-by
   Optional record of who set the value.  Clears the last set-by
   value if unset.
+
+--values   
+  Optional flag, the values of the setter to be set to
+  e.g. used to specify values that start with &#39;-&#39;
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>

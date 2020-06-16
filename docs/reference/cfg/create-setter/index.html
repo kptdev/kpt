@@ -114,6 +114,16 @@
 				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
 			</li>
 			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/contact/" ><span>Contact</span></a>
+			</li>
+			
 			
 			
 		</ul>
@@ -928,7 +938,7 @@ structured data &ndash; e.g. using <code>sed</code> to replace values.</p>
 <p>See the <a href="../../../guides/producer/setters">creating setters</a> guide for more info on creating setters.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># create a setter called replicas for fields matching &#34;3&#34;</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># create a setter called replicas for fields matching value &#34;3&#34;</span>
 kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold">3</span>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># scope creating setter references to a specified field</span>
 kpt cfg create-setter DIR/ replicas <span style="color:#0000cf;font-weight:bold">3</span> --field <span style="color:#4e9a06">&#34;replicas&#34;</span>
@@ -951,13 +961,23 @@ DIR:
   Path to a package directory
 
 NAME:
-  The name of the substitution to create.  This is both the name that will
+  The name of the setter to create.  This is both the name that will
   be given to the *set* command, and that will be referenced by fields.
   e.g. replicas
 
 VALUE
-  The new value of the setter.
+  The value of the filed for which setter reference must be added.
   e.g. 3
+</code></pre><h4 id="flags">Flags</h4>
+<pre><code>--description
+  Optional description about the value.
+
+--set-by
+  Optional record of who set the value.
+
+--value   
+  Optional flag, alternative to specifying the value as an argument
+  e.g. used to specify values that start with '-'
 </code></pre><!--mdtogo-->
 
         <div class="section-index">
@@ -1030,7 +1050,7 @@ VALUE
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/df4299619fd9e1cf000a17e9e2e8f986b767af3f">Update setters docs (df429961)</a>
 </div>
 </div>
 

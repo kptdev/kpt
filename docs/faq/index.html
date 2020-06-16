@@ -114,6 +114,16 @@
 				<a class="nav-link active" href="/kpt/faq/" ><span class="active">FAQ</span></a>
 			</li>
 			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/contact/" ><span>Contact</span></a>
+			</li>
+			
 			
 			
 		</ul>
@@ -197,18 +207,6 @@
 
 
 
-<nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li></li>
-        <li><a href="#community">Community</a></li>
-        <li><a href="#heading"></a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
-
 
 
           </div>
@@ -235,7 +233,7 @@
 	<h1>FAQ</h1>
 	<div class="lead">Frequently asked questions</div>
 	<h4 id="q-whats-with-the-name"><strong>Q: What&rsquo;s with the name?</strong></h4>
-<p>A: <code>kpt</code> was inspired by <code>apt</code>, but with a Kubernetes focus.  We wanted to uphold the tradition
+<p>A: <code>kpt</code> was inspired by <code>apt</code>, but with a Kubernetes focus. We wanted to uphold the tradition
 of naming tools to start with <code>k</code>, and also be short enough that you don&rsquo;t have to alias it.
 It is pronounced &ldquo;kept&rdquo;.</p>
 <h4 id="q-what-does-kpt-provide-that-git-clone-doesnt"><strong>Q: What does kpt provide that git clone doesn&rsquo;t</strong></h4>
@@ -290,26 +288,23 @@ when they are regenerated to keep the modifications.</li>
 </ol>
 <h4 id="q-isnt-writing-yaml-hard"><strong>Q: Isn&rsquo;t writing YAML hard?</strong></h4>
 <p>A: <code>kpt</code> offers a collection of utilities which enable working with configuration
-programmatically to simplify the experience.  Using <code>vi</code> to edit YAML should be
+programmatically to simplify the experience. Using <code>vi</code> to edit YAML should be
 necessary only for bootstrapping, and the common cases should use <a href="/kpt/reference/cfg/set">setters</a>
 or <a href="/kpt/reference/fn/run">functions</a> to generate or modify YAML configuration.</p>
-<h4 id="q-i-really-like-dsl--templating-solution-x--can-i-use-it-with-kpt"><strong>Q: I really like DSL / templating solution X.  Can I use it with <code>kpt</code>?</strong></h4>
+<h4 id="q-i-really-like-dsl--templating-solution-x-can-i-use-it-with-kpt"><strong>Q: I really like DSL / templating solution X. Can I use it with <code>kpt</code>?</strong></h4>
 <p>A: Yes. <code>kpt</code> supports plugging in solutions which generate or manipulate configuration, e.g. from
-DSLs and templates.  This may be performed using <a href="/kpt/reference/fn/run">functions</a>.  The generated
+DSLs and templates. This may be performed using <a href="/kpt/reference/fn/run">functions</a>. The generated
 output may be modified directly, and merged when regenerated.</p>
-<h4 id="q-i-want-to-write-high-level-abstractions-like-crds-but-on-the-client-side--can-i-do-this-with-kpt"><strong>Q: I want to write high-level abstractions like CRDs, but on the client-side.  Can I do this with <code>kpt</code>?</strong></h4>
-<p>A: Yes.  <code>kpt</code>'s architecture facilitates the developing programs which may generate or modify
-configuration.  Multiple programs may be composed together.  See <a href="/kpt/reference/fn/run">functions</a>.</p>
+<h4 id="q-i-want-to-write-high-level-abstractions-like-crds-but-on-the-client-side-can-i-do-this-with-kpt"><strong>Q: I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with <code>kpt</code>?</strong></h4>
+<p>A: Yes. <code>kpt</code>'s architecture facilitates the developing programs which may generate or modify
+configuration. Multiple programs may be composed together. See <a href="/kpt/reference/fn/run">functions</a>.</p>
 <h4 id="q-how-do-i-roll-out-changes-throughout-my-organization-using-kpt"><strong>Q: How do I roll out changes throughout my organization using <code>kpt</code>?</strong></h4>
 <p>A: This can be done one of several ways, including: 1) using semantic versioning or release
 channels with <a href="/kpt/reference/fn/run">functions</a>, or 2) <a href="/kpt/reference/pkg/update">updating</a> packages.</p>
 <h4 id="q-is-there-a-container-image-that-contains-kpt"><strong>Q: Is there a container image that contains kpt?</strong></h4>
 <p>A: Yes. <a href="https://gcr.io/kpt-dev/kpt">gcr.io/kpt-dev/kpt</a> contains the <code>kpt</code> binary.</p>
-<h3 id="community">Community</h3>
-<p><strong>We&rsquo;d love to hear from you!</strong></p>
-<ul>
-<li><a href="https://groups.google.com/forum/#!forum/kpt-users">kpt-users mailing list</a></li>
-</ul>
+<h4 id="q-i-still-have-questions-how-do-i-contact-you"><strong>Q: I still have questions. How do I contact you?</strong></h4>
+<p>A: <a href="/kpt/contact">Please reach out!</a></p>
 <h3 id="heading"></h3>
 
         <div class="section-index">
@@ -326,7 +321,7 @@ channels with <a href="/kpt/reference/fn/run">functions</a>, or 2) <a href="/kpt
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified April 2, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/bd0609329168cac18ce47677ba2c60e092e12ccd">Updating links (bd060932)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/95d57f4dc97db1fc08e130c6a9fa8030fe3041ab">Add Contacts page with a link to the Slack channel (95d57f4d)</a>
 </div>
 </div>
 

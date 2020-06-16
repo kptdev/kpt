@@ -114,6 +114,16 @@
 				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
 			</li>
 			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/contact/" ><span>Contact</span></a>
+			</li>
+			
 			
 			
 		</ul>
@@ -945,7 +955,7 @@ Component: <span style="color:#0000cf;font-weight:bold">1</span>
 <p>This means with <code>kpt live apply</code> command, we could wait for the controller reconcile.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt live init sampleapp
 Initialized: ../sampleapp/grouping-object-template.yaml
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt live apply sampleapp --wait-for-reconcile
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt live apply sampleapp --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>10m
 configmap/inventory-9ac03a44 unchanged
 applicationconfiguration.core.oam.dev/example-appconfig created
 component.core.oam.dev/example-component created
@@ -1023,7 +1033,7 @@ all resources has reached the Current status
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 17, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9deaf56365b123a77ec739ce4918fc7802ed0804">Update _index.md (9deaf563)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9fee402604a997997b7c7e823366249f2d1c36ff">Updates the kpt generated docs with new flag info (9fee4026)</a>
 </div>
 </div>
 

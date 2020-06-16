@@ -114,6 +114,16 @@
 				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
 			</li>
 			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/contact/" ><span>Contact</span></a>
+			</li>
+			
 			
 			
 		</ul>
@@ -847,7 +857,7 @@
       <ul>
         <li></li>
         <li><a href="#prune">Prune</a></li>
-        <li><a href="#status-wait-for-reconcile">Status (wait-for-reconcile)</a></li>
+        <li><a href="#status-reconcile-timeoutduration">Status (reconcile-timeout=<DURATION>)</a></li>
         <li><a href="#examples">Examples</a></li>
         <li><a href="#synopsis">Synopsis</a></li>
       </ul>
@@ -1011,7 +1021,7 @@ then query the grouping object, and calculate the omitted objects, cleaning up
 accordingly. When a grouping object is created in the cluster, a hash suffix
 is added to the name. Example:</p>
 <pre><code>test-grouping-object-17b4dba8
-</code></pre><h3 id="status-wait-for-reconcile">Status (wait-for-reconcile)</h3>
+</code></pre><h3 id="status-reconcile-timeoutduration">Status (reconcile-timeout=<DURATION>)</h3>
 <p>kpt live apply also has support for computing status for resources. This is
 useful during apply for making sure that not only are the set of resources applied
 into the cluster, but also that the desired state expressed in the resource are
@@ -1076,18 +1086,16 @@ the controller which is currently in the process of reconciling would be:</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">status</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;False&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">type</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Stalled<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><p>The status for this resource state will be InProgress. So if the
-<code>--wait-for-reconcile</code> flag is set, kpt live apply will wait until
+<code>--reconcile-timeout</code> flag is set, kpt live apply will wait until
 the <code>Reconciling</code> condition is <code>False</code> before pruning and exiting.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and prune</span>
 kpt live apply my-dir/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and wait for all the resources to be reconciled before pruning</span>
-kpt live apply --wait-for-reconcile my-dir/
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and specify how long to wait for resources to be reconciled</span>
-kpt live apply --wait-for-reconcile --wait-timeout<span style="color:#ce5c00;font-weight:bold">=</span>15m my-dir/
+kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>15m my-dir/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply resources and specify how often to poll the cluster for resource status</span>
-kpt live apply --wait-for-reconcile --wait-polling-period<span style="color:#ce5c00;font-weight:bold">=</span>5s my-dir/
+kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>15m --poll-period<span style="color:#ce5c00;font-weight:bold">=</span>5s my-dir/
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
@@ -1192,7 +1200,7 @@ kpt live apply --wait-for-reconcile --wait-polling-period<span style="color:#ce5
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d2fce708901964d1c0ac372f4b3920cab6c1528c">Update the docs for kpt live apply (d2fce708)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9fee402604a997997b7c7e823366249f2d1c36ff">Updates the kpt generated docs with new flag info (9fee4026)</a>
 </div>
 </div>
 
