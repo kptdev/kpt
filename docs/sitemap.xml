@@ -24,7 +24,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/init/</loc>
-    <lastmod>2020-03-18T14:46:20-07:00</lastmod>
+    <lastmod>2020-06-04T15:49:15+08:00</lastmod>
   </url>
   
   <url>
@@ -84,7 +84,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/setters/</loc>
-    <lastmod>2020-05-29T17:02:30-07:00</lastmod>
+    <lastmod>2020-06-15T20:34:10-07:00</lastmod>
   </url>
   
   <url>
@@ -104,7 +104,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/oam/</loc>
-    <lastmod>2020-05-17T20:29:11-07:00</lastmod>
+    <lastmod>2020-06-07T00:22:45-07:00</lastmod>
   </url>
   
   <url>
@@ -114,7 +114,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/set/</loc>
-    <lastmod>2020-03-30T20:54:38-07:00</lastmod>
+    <lastmod>2020-06-15T20:34:10-07:00</lastmod>
   </url>
   
   <url>
@@ -144,7 +144,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/create-setter/</loc>
-    <lastmod>2020-03-22T23:09:14-07:00</lastmod>
+    <lastmod>2020-06-15T20:34:10-07:00</lastmod>
   </url>
   
   <url>
@@ -194,12 +194,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</loc>
-    <lastmod>2020-06-03T20:23:32-07:00</lastmod>
+    <lastmod>2020-06-15T20:34:10-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/substitutions/</loc>
-    <lastmod>2020-05-20T14:56:30-04:00</lastmod>
+    <lastmod>2020-06-15T20:34:10-07:00</lastmod>
   </url>
   
   <url>
@@ -243,6 +243,16 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/contact/</loc>
+    <lastmod>2020-06-11T10:56:29-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/faq/</loc>
+    <lastmod>2020-06-11T10:56:29-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
   </url>
@@ -259,12 +269,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/</loc>
-    <lastmod>2020-05-20T19:55:06-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/faq/</loc>
-    <lastmod>2020-04-02T15:42:54-04:00</lastmod>
+    <lastmod>2020-06-07T00:22:45-07:00</lastmod>
   </url>
   
   <url>
@@ -274,7 +279,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/apply/</loc>
-    <lastmod>2020-05-20T16:26:20-07:00</lastmod>
+    <lastmod>2020-06-07T00:22:45-07:00</lastmod>
   </url>
   
   <url>

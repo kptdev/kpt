@@ -22,7 +22,7 @@ See the [creating setters] guide for more info on creating setters.
 ### Examples
 <!--mdtogo:Examples-->
 ```sh
-# create a setter called replicas for fields matching "3"
+# create a setter called replicas for fields matching value "3"
 kpt cfg create-setter DIR/ replicas 3
 ```
 
@@ -60,13 +60,26 @@ DIR:
   Path to a package directory
 
 NAME:
-  The name of the substitution to create.  This is both the name that will
+  The name of the setter to create.  This is both the name that will
   be given to the *set* command, and that will be referenced by fields.
   e.g. replicas
 
 VALUE
-  The new value of the setter.
+  The value of the filed for which setter reference must be added.
   e.g. 3
+```
+
+#### Flags
+```
+--description
+  Optional description about the value.
+
+--set-by
+  Optional record of who set the value.
+
+--value   
+  Optional flag, alternative to specifying the value as an argument
+  e.g. used to specify values that start with '-'
 ```
 <!--mdtogo-->
 

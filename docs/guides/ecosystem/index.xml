@@ -228,7 +228,7 @@ Component: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span
 &lt;p&gt;This means with &lt;code&gt;kpt live apply&lt;/code&gt; command, we could wait for the controller reconcile.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt live init sampleapp
 Initialized: ../sampleapp/grouping-object-template.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt live apply sampleapp --wait-for-reconcile
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt live apply sampleapp --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;10m
 configmap/inventory-9ac03a44 unchanged
 applicationconfiguration.core.oam.dev/example-appconfig created
 component.core.oam.dev/example-component created

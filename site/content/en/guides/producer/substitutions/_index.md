@@ -40,7 +40,7 @@ in this guide.
 ### Data model
 
 - Fields reference substitutions through OpenAPI definitions specified as
-  line comments -- e.g. `# { "$ref": "#/definitions/..." }`
+  line comments -- e.g. `# { "$kpt-set": "substitution" }`
 - OpenAPI definitions are provided through the Kptfile
 - Substitution OpenAPI definitions contain patterns and values to compute
   the field value
@@ -84,7 +84,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-value"}
+        image: nginx:1.7.9 # {"$kpt-set":"image-value"}
 ```
 
 ```sh
@@ -122,7 +122,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-value"}
+        image: nginx:1.7.9 # {"$kpt-set":"image-value"}
 ```
 
 This substitution defines how the value for a field may be produced by
@@ -161,7 +161,155 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.8.1 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-value"}
+        image: nginx:1.8.1 # {"$kpt-set":"image-value"}
+```
+
+## Nested Substitutions
+
+In addition to referring to setters, a substitution may also refer to another
+substitution forming a tree structure. Upon invoking `kpt cfg set` on a setter,
+the value will be set if a substitution is an ancestor/parent of the setter.
+
+Here is the example of a simple setter and a substitution to start with
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: myspace # {"$kpt-set":"namespace-setter"}
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: sidecar
+        image: nginx:1.7.9 # {"$kpt-set":"image-subst"}
+      - name: nginx
+        image: myspace/nginx:1.7.9
+```
+
+```yaml
+apiVersion: v1alpha1
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace-setter:
+      x-k8s-cli:
+        setter:
+          name: namespace-setter
+          value: myspace
+    io.k8s.cli.setters.image-setter:
+      x-k8s-cli:
+        setter:
+          name: image-setter
+          value: nginx
+    io.k8s.cli.setters.tag-setter:
+      x-k8s-cli:
+        setter:
+          name: tag-setter
+          value: 1.7.9
+    io.k8s.cli.substitutions.image-subst:
+      x-k8s-cli:
+        substitution:
+          name: image-subst
+          pattern: ${image-setter}:${tag-setter}
+          values:
+          - marker: ${image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.image-setter'
+          - marker: ${tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.tag-setter'
+```
+
+Now create a nested substitution for the value `myspace/nginx:1.7.9` which is
+a combination of `namespace-setter` and `image-subst`
+
+```sh
+kpt cfg create-subst hello-world/ nested-subst --field-value myspace/nginx:1.7.9 \
+  --pattern \${namespace-setter}/\${image-subst}
+```
+
+```yaml
+# deployment.yaml -- updated
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: myspace # {"$kpt-set":"namespace-setter"}
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: sidecar
+        image: nginx:1.7.9 # {"$kpt-set":"image-subst"}
+      - name: nginx
+        image: myspace/nginx:1.7.9 # {"$kpt-set":"nested-subst"}
+```
+
+```yaml
+# Kptfile -- updated
+apiVersion: v1alpha1
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace-setter:
+      x-k8s-cli:
+        setter:
+          name: namespace-setter
+          value: myspace
+    io.k8s.cli.setters.image-setter:
+      x-k8s-cli:
+        setter:
+          name: image-setter
+          value: nginx
+    io.k8s.cli.setters.tag-setter:
+      x-k8s-cli:
+        setter:
+          name: tag-setter
+          value: 1.7.9
+    io.k8s.cli.substitutions.image-subst:
+      x-k8s-cli:
+        substitution:
+          name: image-subst
+          pattern: ${image-setter}:${tag-setter}
+          values:
+          - marker: ${image-setter}
+            ref: '#/definitions/io.k8s.cli.setters.image-setter'
+          - marker: ${tag-setter}
+            ref: '#/definitions/io.k8s.cli.setters.tag-setter'
+    io.k8s.cli.substitutions.nested-subst:
+      x-k8s-cli:
+        substitution:
+          name: nested-subst
+          pattern: ${namespace-setter}/${image-subst}
+          values:
+          - marker: ${image-subst}
+            ref: '#/definitions/io.k8s.cli.substitutions.image-subst'
+          - marker: ${namespace-setter}
+            ref: '#/definitions/io.k8s.cli.setters.namespace-setter'
+```
+
+```sh
+kpt cfg set hello-world/ namespace-setter otherspace
+```
+
+```yaml
+# deployment.yaml -- updated
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: otherspace # {"$kpt-set":"namespace-setter"}
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: sidecar
+        image: nginx:1.7.9 # {"$kpt-set":"image-subst"}
+      - name: nginx
+        image: otherspace/nginx:1.7.9 # {"$kpt-set":"nested-subst"}
 ```
 
 {{% pageinfo color="primary" %}}

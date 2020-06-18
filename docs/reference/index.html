@@ -114,6 +114,16 @@
 				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
 			</li>
 			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/contact/" ><span>Contact</span></a>
+			</li>
+			
 			
 			
 		</ul>
@@ -933,7 +943,7 @@ replicas    <span style="color:#4e9a06">&#39;helloworld replicas&#39;</span>    
 $ kpt cfg <span style="color:#204a87">set</span> helloworld replicas <span style="color:#0000cf;font-weight:bold">3</span> --set-by pwittrock  --description <span style="color:#4e9a06">&#39;reason&#39;</span>
 <span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply the package to a cluster</span>
-$ kpt live apply --wait-for-reconcile helloworld
+$ kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>10m helloworld
 ...
 all resources has reached the Current status
 </code></pre></div><!--mdtogo-->
@@ -1089,7 +1099,7 @@ to using the builtin schema.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e81e28db585cca8ca18d678c24a9d9c815106959">Add info about specifying openAPI schema to docs (e81e28db)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9fee402604a997997b7c7e823366249f2d1c36ff">Updates the kpt generated docs with new flag info (9fee4026)</a>
 </div>
 </div>
 

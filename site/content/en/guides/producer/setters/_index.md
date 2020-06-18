@@ -31,7 +31,7 @@ in this guide.
 ### Data model
 
 - Fields reference setters through OpenAPI definitions specified as
-  line comments -- e.g. `# { "$ref": "#/definitions/..." }`
+  line comments -- e.g. `# { "$kpt-set": "replicas-setter" }`
 - OpenAPI definitions are provided through the Kptfile
 
 ### Command control flow
@@ -90,7 +90,7 @@ kind: Deployment
 metadata:
   name: foo
 spec:
-  replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+  replicas: 3 # {"$kpt-set":"replicas"}
 ```
 
 #### Invoking a Setter
@@ -103,7 +103,7 @@ metadata:
  labels:
    app: hello
 spec:
- replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ replicas: 3 # {"$kpt-set":"replicas"}
 ```
 
 ```sh
@@ -119,37 +119,7 @@ metadata:
  labels:
    app: hello
 spec:
- replicas: 5 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
-```
-
-#### Types
-
-Setters may have types specified which ensure that the configuration is always
-serialized correctly as yaml 1.1 -- e.g. if a string field such as an
-annotation or arg has the value "on", then it would need to be quoted otherwise
-it will be parsed as a bool by yaml 1.1.
-
-This may be done by modifying the Kptfile OpenAPI definitions as shown here:
-
-```yaml
-openAPI:
-  definitions:
-    io.k8s.cli.setters.version:
-      x-k8s-cli:
-        setter:
-          name: "version"
-          value: "3"
-      type: string
-```
-
-Set would change the configuration like this:
-
-```yaml
-kind: Deployment
-metadata:
-  name: foo
-  annotations:
-    version: "3" # {"$ref":"#/definitions/io.k8s.cli.setters.version"}
+ replicas: 5 # {"$kpt-set":"replicas"}
 ```
 
 #### OpenAPI Validations
@@ -192,23 +162,54 @@ validation failure list: replicas in body should be less than or equal to 10
 ```
 
 ```sh
-Relevant fixtures from openAPI JSON schema suite
+Example schema for integer validation
 
-{"minLength", "maxLength", "pattern", "type", "minimum", "maximum", "multipleOf",
-"enum", "maxItems", "minItems", "format", "patternProperties", "uniqueItems",
-"allOf", "not", "oneOf", "anyOf"}
+{
+  "maximum": 10,
+  "type": "integer",
+  "minimum": 3,
+  "format": "int64",
+  "multipleOf": 2
+}
+
+Example schema for string validation
+
+{
+  "maxLength": 10,
+  "type": "string",
+  "minLength": 3,
+  "pattern": "^[A-Za-z]+$",
+  "enum": [
+    "nginx",
+    "ubuntu"
+  ]
+}
+
+Example schema for array validation
+
+{
+  "maxItems": 10,
+  "type": "array",
+  "minItems": 3,
+  "uniqueItems": true,
+  "items": {
+    "type": "string",
+    "maxLength": 4
+  }
+}
+
 ```
+
+Relevant resources for more information: [OpenAPI types]
 
 #### Setting Lists
 
-It is possible to create setters for fields which are a list of strings.
+It is possible to create setters for fields which are a list of strings/integers.
 The setter type must be `array`, and the reference must be on the list field.
 The list setter will take variable args for its value rather than a single value.
 
-**Note:** Currently `create-setter` will not directly create a setter reference for a
-list field.  The simplest way to create a list setter is to create a setter for one of
-the elements, and then move the reference to the list field.
-
+**Note:** You should skip passing the value arg while creating array setters. `field`
+flag is required for array setters.
 
 ```yaml
 # example.yaml
@@ -217,6 +218,7 @@ kind: Example
 spec:
   list:
   - "a"
+  - "b"
 ```
 
 ```yaml
@@ -224,45 +226,16 @@ spec:
 kind: Kptfile
 ```
 
-
-`$ kpt cfg create-setter --type array . list a`
-
-**Note:** Move the setter reference from the element (`- "a"`) to the list (`list: `)
+`$ kpt cfg create-setter . list --type array --field spec.list`
 
 ```yaml
 # example.yaml
 apiVersion: example.com/v1beta1
 kind: Example
 spec:
-  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-  - "a"
-```
-
-```yaml
-# Kptfile
-kind: Kptfile
-openAPI:
-  definitions:
-    io.k8s.cli.setters.list:
-      type: array
-      x-k8s-cli:
-        setter:
-          name: list
-          listValues:
-          - "a"
-```
-
-`$ kpt cfg set . list a b c`
-
-```yaml
-# example.yaml
-apiVersion: example.com/v1beta1
-kind: Example
-spec:
-  list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+  list: # {"$kpt-set":"list"}
   - "a"
   - "b"
-  - "c"
 ```
 
 ```yaml
@@ -278,7 +251,35 @@ openAPI:
           listValues:
           - "a"
           - "b"
+```
+
+`$ kpt cfg set . list c d e`
+
+```yaml
+# example.yaml
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$kpt-set":"list"}
+  - "c"
+  - "d"
+  - "e"
+```
+
+```yaml
+# Kptfile
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.list:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: list
+          listValues:
           - "c"
+          - "d"
+          - "e"
 ```
 
 #### Enumerations
@@ -320,5 +321,7 @@ spec:
       - name: foo
     resources:
       requests:
-        cpu: "0.5" # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}
+        cpu: "0.5" # {"$kpt-set":"cpu"}
 ```
+
+[OpenAPI types]: https://swagger.io/docs/specification/data-models/data-types/

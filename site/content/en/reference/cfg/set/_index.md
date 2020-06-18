@@ -108,6 +108,10 @@ VALUE
 --set-by
   Optional record of who set the value.  Clears the last set-by
   value if unset.
+
+--values   
+  Optional flag, the values of the setter to be set to
+  e.g. used to specify values that start with '-'
 ```
 <!--mdtogo-->
 

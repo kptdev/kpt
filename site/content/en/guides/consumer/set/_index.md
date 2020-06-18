@@ -45,7 +45,7 @@ in this guide.
 ### Data model
 
 - Fields reference setters through OpenAPI definitions specified as
-  line comments -- e.g. `# { "$ref": "#/definitions/..." }`
+  line comments -- e.g. `# { "$kpt-set": "replicas-setter" }`
 - OpenAPI definitions are provided through the Kptfile
 
 ### Command control flow
@@ -117,7 +117,7 @@ metadata:
  name: helloworld-gke
 ...
 spec:
- replicas: 5 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ replicas: 5 # {"$kpt-set":"replicas"}
 ```
 
 ##### Command
@@ -142,7 +142,7 @@ metadata:
  name: helloworld-gke
 ...
 spec:
- replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+ replicas: 3 # {"$kpt-set":"replicas"}
 ...
 ```
 
