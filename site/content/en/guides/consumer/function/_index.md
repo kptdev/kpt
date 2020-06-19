@@ -7,6 +7,8 @@ description: >
     Modify or validate the contents of a package by calling a function.
 ---
 
+## Functions User Guide
+
 When an operation requires more than just the schema, and data is necessary,
 the dynamic logic can be built into a separate tool.
 Functions bundle dynamic logic in container images and apply that logic to the
@@ -22,7 +24,8 @@ language, or simply wrap other existing programs.
 {{< svg src="images/fn" >}}
 
 Let’s look at the example of imperatively running a function to set a label
-value.  The label-namespace image contains a program which will modify the 
+value.  The ([label-namespace]) image contains a program which adds a label to all Namespace resources
+provided to it.
 
 ```sh
 kpt fn run --image gcr.io/kpt-functions/label-namespace . -- label_name=color label_value=orange
@@ -32,20 +35,22 @@ Kpt read the resources from the package at “.”, provided them as input to
 a container running `gcr.io/kpt-functions/label-namespace`, and wrote the
 resources back to the package.
 
-This particular function ([label-namespace]) adds a label to all Namespace resources
-provided to it.
-
 Functions can address many types of workflows, including:
 
-- Generate resources from some inputs (like client-side CRDs)
-- Apply cross-cutting transformations (e.g., set a field on all resources that
+- Generating resources from some inputs (like client-side CRDs)
+- Applying cross-cutting transformations (e.g., set a field on all resources that
   look like this)
 - Validating resources conform to best practices defined by the organization
   (e.g., must specify tag as part of the image)
+- Sending resources to a destination (e.g., saving them locally or deploying them to a cluster)
 
-See the [functions catalog] for more examples of functions, and the
-[function docs] for more details on writing functions.
+## Next Steps
+
+- See more examples of functions in the [functions catalog].
+- Get a quickstart on writing functions from the [function producer docs].
+- Find out how to structure a pipeline of functions from the [functions concepts] page.
 
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
-[functions catalog]: https://googlecontainertools.github.io/kpt-functions-catalog/
-[functions docs]: https://googlecontainertools.github.io/kpt-functions-sdk/
+[functions catalog]: catalog/
+[function producer docs]: ../../producer/functions/
+[functions concepts]: ../../../concepts/functions/

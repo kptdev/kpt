@@ -12,14 +12,33 @@ description: >
 The kpt's design mirrors the Kubernetes control-plane architecture -- with multiple programs
 (e.g. controllers) reading and writing shared configuration data (i.e. resources).
 
-#### Influences
+### Influences
 
-- Unix philosophy
-  - [link](https://en.wikipedia.org/wiki/Unix_philosophy)
-- Resource / controller model
-  - [link](https://kubernetes.io/docs/concepts/architecture/controller/)
-- GitOps
-  - [link](https://www.weave.works/technologies/gitops/)
+#### Unix philosophy
+
+Packages of configuration should be small, modular, and reusable.
+
+- [link](https://en.wikipedia.org/wiki/Unix_philosophy)
+
+#### Resource / controller model
+
+Kpt provides commands to fetch, update, modify, and apply configuration. This allows users to reuse and compose various packages of Kubernetes resources.
+
+- [link](https://kubernetes.io/docs/concepts/architecture/controller/)
+
+#### GitOps
+
+GitOps refers to using a version control system as the source of truth for configuration.
+
+- [link](https://www.weave.works/technologies/gitops/)
+
+#### Configuration as data
+
+Many configuration tools conflate data with the operations on that
+data (e.g. YAML files embedding a templating language).
+As configuration becomes complex, it becomes hard to read and understand.
+Our design philosophy is to keep configuration as data in order to manage this complexity.
+We do this by keeping resources serialized as either JSON or YAML configuration.
 
 #### kpt vs kubernetes:
 

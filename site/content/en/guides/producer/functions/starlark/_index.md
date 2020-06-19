@@ -11,7 +11,7 @@ description: >
 The Starlark runtime is Alpha, and must be enabled with the `--enable-star` flag.
 {{% /pageinfo %}}
 
-Functions may be written as Starlark scripts which modify a ResourceList provided as
+Functions may be written as [Starlark] scripts which modify a ResourceList provided as
 a variable.
 
 #### Imperative Run
@@ -36,7 +36,7 @@ run(ctx.resource_list["items"], an)
 
 Run the Starlark function with:
 
-```
+```sh
 # run c.star as a function, generating a ConfigMap with value=bar as the functionConfig
 kpt fn run . --enable-star --star-path c.star -- value=bar
 ```
@@ -123,3 +123,5 @@ While Starlark programs are unable to retain comments on resources, kpt will
 attempt to retain comments by copying them from the function inputs to the function outputs.
 
 It is not possible at this time to add, modify or delete comments from Starlark scripts.
+
+[Starlark]: https://github.com/bazelbuild/starlark

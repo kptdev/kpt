@@ -335,7 +335,8 @@ to numeric values set in the configuration.&lt;/p&gt;
       <description>
         
         
-        &lt;p&gt;Kpt functions are conceptually similar to Kubernetes &lt;em&gt;controllers&lt;/em&gt; and &lt;em&gt;validating webhooks&lt;/em&gt; &amp;ndash;
+        &lt;h2 id=&#34;functions-developer-guide&#34;&gt;Functions Developer Guide&lt;/h2&gt;
+&lt;p&gt;Kpt functions are conceptually similar to Kubernetes &lt;em&gt;controllers&lt;/em&gt; and &lt;em&gt;validating webhooks&lt;/em&gt; &amp;ndash;
 they are programs which read resources as input, then write resources as output (creating,
 modifying, deleting, or validating resources).&lt;/p&gt;
 &lt;p&gt;Unlike controllers and validating webhooks, kpt functions can be run outside of the Kubernetes
@@ -590,7 +591,13 @@ functionConfig type.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;items&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Learn how to &lt;a href=&#34;../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;li&gt;Consult the &lt;a href=&#34;../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
       </description>
     </item>
     

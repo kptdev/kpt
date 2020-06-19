@@ -130,6 +130,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -140,6 +142,19 @@
 <section class="row td-search-result">
 <div class="col-12 col-md-8 offset-md-2">
 <h2 class="ml-4">Search Results</h2>
+
+<script>
+(function() {
+var cx = '008308500095222693785:e13nhtiqflu';
+var gcse = document.createElement('script');
+gcse.type = 'text/javascript';
+gcse.async = true;
+gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
+var s = document.getElementsByTagName('script')[0];
+s.parentNode.insertBefore(gcse, s);
+})();
+</script>
+			<gcse:searchresults-only></gcse:searchresults-only>
 
 </div>
 </section>
@@ -162,6 +177,12 @@
     </a>
   </li>
   
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
 </ul>
 
         
@@ -174,7 +195,7 @@
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

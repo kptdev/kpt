@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -339,6 +343,64 @@
   <ul>
     <li class="collapse " id="kptguidesconsumerfunction">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/catalog/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions Catalog</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctioncatalog">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -540,6 +602,29 @@
   <ul>
     <li class="collapse show" id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/develop/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">TypeScript Developer Guide</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerfunctionstsdevelop">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -784,6 +869,7 @@
 
 <nav id="TableOfContents">
   <ul>
+    <li><a href="#functions-developer-guide">Functions Developer Guide</a></li>
     <li><a href="#input--output">Input / Output</a>
       <ul>
         <li><a href="#resourcelistitems">ResourceList.items</a></li>
@@ -805,6 +891,7 @@
     </li>
     <li><a href="#deferring-failure">Deferring Failure</a></li>
     <li><a href="#functionconfig-for-imperative-runs">FunctionConfig for imperative runs</a></li>
+    <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
 
@@ -853,7 +940,8 @@
 <div class="td-content">
 	<h1>Functions</h1>
 	<div class="lead">Writing kpt functions to generated, transform, and validate resources.</div>
-	<p>Kpt functions are conceptually similar to Kubernetes <em>controllers</em> and <em>validating webhooks</em> &ndash;
+	<h2 id="functions-developer-guide">Functions Developer Guide</h2>
+<p>Kpt functions are conceptually similar to Kubernetes <em>controllers</em> and <em>validating webhooks</em> &ndash;
 they are programs which read resources as input, then write resources as output (creating,
 modifying, deleting, or validating resources).</p>
 <p>Unlike controllers and validating webhooks, kpt functions can be run outside of the Kubernetes
@@ -1108,7 +1196,13 @@ functionConfig type.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div>
+</span></code></pre></div><h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>Learn how to <a href="../../consumer/function/">run functions</a>.</li>
+<li>Find out how to structure a pipeline of functions from the <a href="../../../concepts/functions/">functions concepts</a> page.</li>
+<li>Consult the <a href="../../../reference/fn/">fn command reference</a>.</li>
+</ul>
+
         <div class="section-index">
     
     
@@ -1189,8 +1283,18 @@ functionConfig type.</p>
                     <h5>
                         <a href="/kpt/guides/producer/functions/ts/">TypeScript Function SDK</a>
                     </h5>
-                    <p>Writing exec and container functions in TypeScript.</p>
+                    <p>Writing functions in TypeScript.</p>
                 </div>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
             
         
             
@@ -1231,6 +1335,12 @@ functionConfig type.</p>
     </a>
   </li>
   
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
 </ul>
 
         
@@ -1243,7 +1353,7 @@ functionConfig type.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

@@ -102,7 +102,7 @@ github_project_repo = "https://github.com/GoogleContainerTools/kpt"
 github_subdir = "site"
 
 # Google Custom Search Engine ID. Remove or comment out to disable search.
-# gcs_engine_id = "011737558837375720776:fsdu1nryfng"
+gcs_engine_id = "008308500095222693785:e13nhtiqflu"
 
 # Enable Algolia DocSearch
 algolia_docsearch = false
@@ -140,10 +140,15 @@ no = 'Sorry to hear that. Please <a href="https://github.com/GoogleContainerTool
 	url = "https://groups.google.com/forum/#!forum/kpt-users"
 	icon = "fa fa-envelope"
         desc = "Discussion and help from your fellow users"
+[[params.links.user]]
+	name = "User slack channel"
+	url = "https://kubernetes.slack.com/channels/kpt"
+	icon = "fab fa-slack"
+        desc = "Discussion and help from the kpt community"
 # Developer relevant links. These will show up on right side of footer and in the community page if you have one.
 [[params.links.developer]]
 	name = "GitHub"
-	url = "https://github.com/GoogleContainerTools/kpt"
+	url = "https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md"
 	icon = "fab fa-github"
         desc = "Development takes place here!"
 

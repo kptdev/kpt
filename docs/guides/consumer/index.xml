@@ -890,7 +890,8 @@ and local modifications (additional environment variable).&lt;/p&gt;
       <description>
         
         
-        &lt;p&gt;When an operation requires more than just the schema, and data is necessary,
+        &lt;h2 id=&#34;functions-user-guide&#34;&gt;Functions User Guide&lt;/h2&gt;
+&lt;p&gt;When an operation requires more than just the schema, and data is necessary,
 the dynamic logic can be built into a separate tool.
 Functions bundle dynamic logic in container images and apply that logic to the
 contents of a package &amp;ndash; modifying and validating package contents.&lt;/p&gt;
@@ -910,23 +911,27 @@ language, or simply wrap other existing programs.&lt;/p&gt;
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/fn.svg&#34; /&gt;
 
 &lt;p&gt;Let’s look at the example of imperatively running a function to set a label
-value.  The label-namespace image contains a program which will modify the&lt;/p&gt;
+value.  The (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) image contains a program which adds a label to all Namespace resources
+provided to it.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run --image gcr.io/kpt-functions/label-namespace . -- &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt read the resources from the package at “.”, provided them as input to
 a container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the
 resources back to the package.&lt;/p&gt;
-&lt;p&gt;This particular function (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) adds a label to all Namespace resources
-provided to it.&lt;/p&gt;
 &lt;p&gt;Functions can address many types of workflows, including:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Generate resources from some inputs (like client-side CRDs)&lt;/li&gt;
-&lt;li&gt;Apply cross-cutting transformations (e.g., set a field on all resources that
+&lt;li&gt;Generating resources from some inputs (like client-side CRDs)&lt;/li&gt;
+&lt;li&gt;Applying cross-cutting transformations (e.g., set a field on all resources that
 look like this)&lt;/li&gt;
 &lt;li&gt;Validating resources conform to best practices defined by the organization
 (e.g., must specify tag as part of the image)&lt;/li&gt;
+&lt;li&gt;Sending resources to a destination (e.g., saving them locally or deploying them to a cluster)&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;See the &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-catalog/&#34;&gt;functions catalog&lt;/a&gt; for more examples of functions, and the
-[function docs] for more details on writing functions.&lt;/p&gt;
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;See more examples of functions in the &lt;a href=&#34;catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;/ul&gt;
 
       </description>
     </item>

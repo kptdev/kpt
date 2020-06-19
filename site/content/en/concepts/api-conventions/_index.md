@@ -7,12 +7,12 @@ description: >
    Kpt API Conventions
 ---
 
-## CLI conventions
+## CLI Conventions
 
 Following are the CLI conventions used for building kpt.  This is a living document that should
 be iterated upon.
 
-### IO
+### Command IO Conventions
 
 - Commands that read resources should be able to read them from files, directories or stdin
   - It should be possible to pipe `kubectl get -o yaml` to the input of these commands
@@ -45,13 +45,11 @@ Documentation should be compiled into the command help itself.
 - Reference documentation should have asciinema-style "images" that demonstrate
   how the commands are used.
 
-## Resource annotations
+## Resource Annotations
 
 kpt uses the following annotations to store resource metadata.
 
-See the [sig-cli configuration IO docs].
-
-### IO
+### Resource IO Annotations
 
 #### config.kubernetes.io/path
 
@@ -67,11 +65,19 @@ See the [sig-cli configuration IO docs].
 - When reading resources, if reading from a file kpt should annotate the resource with the index into the file
 - When writing resources, if writing to a file kpt should write the resources in order specified by the indexes
 
-### Functions
+### Functions Annotations
 
 #### config.kubernetes.io/function
 
 `config.kubernetes.io/function` indicates that the resource may be provided to the specified function
 as the ResourceList.functionConfig.
 
-[sig-cli docs]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/config-io.md
+## Next Steps
+
+- See the [Configuration IO API Semantics] for when to use resource annotations.
+- Learn more about [functions concepts].
+- Consult the [FAQ] for answers to common questions.
+
+[Configuration IO API Semantics]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/config-io.md
+[functions concepts]: ../functions/
+[FAQ]: ../../faq/

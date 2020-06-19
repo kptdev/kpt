@@ -135,7 +135,7 @@ function and exit 0.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;p&gt;Functions may be written as Starlark scripts which modify a ResourceList provided as
+&lt;p&gt;Functions may be written as &lt;a href=&#34;https://github.com/bazelbuild/starlark&#34;&gt;Starlark&lt;/a&gt; scripts which modify a ResourceList provided as
 a variable.&lt;/p&gt;
 &lt;h4 id=&#34;imperative-run&#34;&gt;Imperative Run&lt;/h4&gt;
 &lt;p&gt;Starlark functions can be run imperatively by providing the Starlark script as a flag
@@ -153,9 +153,9 @@ to every resource in the package.&lt;/p&gt;
 
 &lt;span style=&#34;color:#000&#34;&gt;run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;ctx&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;resource_list&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;items&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;an&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Run the Starlark function with:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;# run c.star as a function, generating a ConfigMap with value=bar as the functionConfig
-kpt fn run . --enable-star --star-path c.star -- value=bar
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Any resource under &lt;code&gt;.&lt;/code&gt; will have the &lt;code&gt;foo: bar&lt;/code&gt; annotation added.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# run c.star as a function, generating a ConfigMap with value=bar as the functionConfig&lt;/span&gt;
+kpt fn run . --enable-star --star-path c.star -- &lt;span style=&#34;color:#000&#34;&gt;value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;bar
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Any resource under &lt;code&gt;.&lt;/code&gt; will have the &lt;code&gt;foo: bar&lt;/code&gt; annotation added.&lt;/p&gt;
 &lt;h4 id=&#34;declarative-run&#34;&gt;Declarative Run&lt;/h4&gt;
 &lt;p&gt;Starlark functions can also be run declaratively using the &lt;code&gt;config.kubernetes.io/function&lt;/code&gt;
 annotation.  This annotation indicates that the resource is functionConfig that should
@@ -487,8 +487,79 @@ will exit non-0.  Otherwise it will exit 0.&lt;/p&gt;
       <description>
         
         
-        &lt;p&gt;See &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/&#34;&gt;kpt-functions-sdk&lt;/a&gt; for
-instructions on writing functions as TypeScript programs.&lt;/p&gt;
+        &lt;p&gt;We provide an opinionated Typescript SDK for implementing KPT Functions. This provides various
+advantages:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;General-purpose language:&lt;/strong&gt; Domain-Specific Languages begin their life with a reasonable
+feature set, but often grow over time. They bloat in order to accommodate the tremendous variety
+of customer use cases. Rather than follow this same course, KPT functions employ a true,
+general-purpose programming language that provides:
+&lt;ul&gt;
+&lt;li&gt;Proper abstractions and language features&lt;/li&gt;
+&lt;li&gt;A extensive ecosystem of tooling (e.g. IDE support)&lt;/li&gt;
+&lt;li&gt;A comprehensive catalog of well-supported libraries&lt;/li&gt;
+&lt;li&gt;Robust community support and detailed documentation&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Type-safety:&lt;/strong&gt; Kubernetes configuration is typed, and its schema is defined using the OpenAPI spec.
+Typescript has a sophisticated type system that accommodates the complexity of Kubernetes resources.
+The SDK enables generating Typescript classes for core and CRD types, providing safe and easy
+interaction with Kubernetes objects.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Batteries-included:&lt;/strong&gt; The SDK provides a simple, powerful API for querying and manipulating configuration
+files. It provides the scaffolding required to develop, build, test, and publish functions,
+allowing you to focus on implementing your business-logic.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;developer-quickstart&#34;&gt;Developer Quickstart&lt;/h2&gt;
+&lt;p&gt;This quickstart will get you started developing a KPT Function with the TypeScript SDK,
+using an existing Hello World package.&lt;/p&gt;
+&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
+&lt;h4 id=&#34;system-requirements&#34;&gt;System Requirements&lt;/h4&gt;
+&lt;p&gt;Currently supported platforms: amd64 Linux/Mac&lt;/p&gt;
+&lt;h4 id=&#34;setting-up-your-local-environment&#34;&gt;Setting Up Your Local Environment&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Install &lt;a href=&#34;https://nodejs.org/en/download/&#34;&gt;node&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/v17.09/engine/installation&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Install &lt;a href=&#34;../../../../installation/&#34;&gt;kpt&lt;/a&gt; and add it to $PATH&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;hello-world-package&#34;&gt;Hello World Package&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Get the &lt;code&gt;hello-world&lt;/code&gt; package:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git clone --depth &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; https://github.com/GoogleContainerTools/kpt-functions-sdk.git
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All subsequent commands are run from the &lt;code&gt;hello-world&lt;/code&gt; directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; kpt-functions-sdk/ts/hello-world
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install all dependencies:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm install
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Run the following in a separate terminal to continuously build your function as you make changes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run watch
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Run the &lt;code&gt;label_namespace&lt;/code&gt; function:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;CONFIGS&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;../../example-configs
+
+kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+node dist/label_namespace_run.js -d &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color -d &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As the name suggests, this function added the given label to all &lt;code&gt;Namespace&lt;/code&gt; objects
+in the &lt;code&gt;example-configs&lt;/code&gt; directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Try modifying the function in &lt;code&gt;src/label_namespace.ts&lt;/code&gt; to perform other operations
+on &lt;code&gt;example-configs&lt;/code&gt;, then repeat step 4.&lt;/p&gt;
+&lt;p&gt;The function should implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use the typescript SDK.&lt;/li&gt;
+&lt;li&gt;Read the complete &lt;a href=&#34;develop/&#34;&gt;Typescript Developer Guide&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Learn how to &lt;a href=&#34;../../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
 
       </description>
     </item>
