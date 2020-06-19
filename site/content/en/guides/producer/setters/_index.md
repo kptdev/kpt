@@ -53,12 +53,6 @@ command will:
 2. create references to the setter definition on the resource fields
 
 ```yaml
-# Kptfile -- original
-openAPI:
-  definitions: {}
-```
-
-```yaml
 # deployment.yaml -- original
 kind: Deployment
 metadata:
@@ -134,7 +128,7 @@ $ cat /path/to/file.json
 {"maximum": 10, "type": "integer"}
 
 # create setter with openAPI property constraints
-kpt cfg create-setter replicas 3 --schema-path /path/to/file.json
+kpt cfg create-setter DIR/ replicas 3 --schema-path /path/to/file.json
 ```
 
 The command creates setter with the following definition
@@ -153,7 +147,7 @@ openAPI:
 
 ```sh
 # try to set value not adhering to the constraints
-kpt cfg set replicas 11
+kpt cfg set DIR/ replicas 11
 ```
 
 ```sh
@@ -226,7 +220,7 @@ spec:
 kind: Kptfile
 ```
 
-`$ kpt cfg create-setter . list --type array --field spec.list`
+`$ kpt cfg create-setter DIR/ list --type array --field spec.list`
 
 ```yaml
 # example.yaml
@@ -253,7 +247,7 @@ openAPI:
           - "b"
 ```
 
-`$ kpt cfg set . list c d e`
+`$ kpt cfg set DIR/ list c d e`
 
 ```yaml
 # example.yaml
