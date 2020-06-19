@@ -15,7 +15,7 @@ containerized functions.
 Functions are packaged as container images which are run locally against
 the contents of a package.
 
-### Examples
+## Examples
 <!--mdtogo:Examples-->
 ```sh
 # read the Resources from DIR, provide them to a container my-fun as input,
@@ -40,7 +40,7 @@ kpt fn run DIR/
 ```
 <!--mdtogo-->
 
-#### Imperatively run an single function
+## Imperatively run a single function
 
 A function may be explicitly specified using the `--image` flag.
 
@@ -72,7 +72,7 @@ of the function:
 kpt fn run DIR/ --image gcr.io/example.com/my-fn -- foo=bar
 ```
 
-#### Declaratively run one or more functions
+## Declaratively run one or more functions
 
 Functions and their input configuration may be declared in files rather than directly
 on the command line.
@@ -102,13 +102,13 @@ kpt fn run DIR/
 Here, rather than specifying `gcr.io/example.com/my-fn` as a flag, we specify it in a
 file using the `config.kubernetes.io/function` annotation.
 
-##### Scoping Rules
+## Scoping Rules
 
-Functions which are nested under some sub directory are scoped only to Resources under 
-that same sub directory. This allows fine grain control over how functions are 
+Functions which are nested under some sub directory are scoped only to Resources under
+that same sub directory. This allows fine grain control over how functions are
 executed:
 
-__Example:__ Function declared in `stuff/my-function.yaml` is scoped to Resources in 
+__Example:__ Function declared in `stuff/my-function.yaml` is scoped to Resources in
 `stuff/` and is NOT scoped to Resources in `apps/`:
 
 ```sh
@@ -123,7 +123,7 @@ __Example:__ Function declared in `stuff/my-function.yaml` is scoped to Resource
     └── not-inscope-service.yaml
 ```
 
-Alternatively, you can also place function configurations in a special directory named 
+Alternatively, you can also place function configurations in a special directory named
 `functions`.
 
 __Example__: This is equivalent to previous example:
@@ -141,7 +141,7 @@ __Example__: This is equivalent to previous example:
     └── not-inscope-service.yaml
 ```
 
-Alternatively, you can also use `--fn-path` to explicitly provide the directory 
+Alternatively, you can also use `--fn-path` to explicitly provide the directory
 containing function configurations:
 
 ```sh
@@ -150,15 +150,15 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 
 Alternatively, scoping can be disabled using `--global-scope` flag.
 
-##### Declaring Multiple Functions
+## Declaring Multiple Functions
 
-You may declare multiple functions. If they are specified in the same file 
+You may declare multiple functions. If they are specified in the same file
 (multi-object YAML file separated by `---`), they will
 be run sequentially in the order that they are specified.
 
-##### Custom `functionConfig`
+## Custom `functionConfig`
 
-Functions may define their own API input types - these may be client-side equivalents 
+Functions may define their own API input types - these may be client-side equivalents
 of CRDs:
 
 __Example__: Declare two functions in `DIR/functions/my-functions.yaml`:
@@ -186,17 +186,38 @@ spec:
     nestedField: value
 ```
 
-### Synopsis
+## Synopsis
 <!--mdtogo:Long-->
-```
+```sh
 kpt fn run DIR [flags]
 ```
 
 If the container exits with non-zero status code, run will fail and print the
 container `STDERR`.
 
-```
+```sh
 DIR:
   Path to a package directory.  Defaults to stdin if unspecified.
 ```
 <!--mdtogo-->
+
+## Structured Results
+
+Functions may emit results using the structure defined in the [typescript result] interface as an alternative to
+exiting with a non-zero status code. Users may want to store these results separately from configuration
+files. Kpt provides the `--results-dir` flag for users to specify a destination to write results to.
+
+```sh
+kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
+```
+
+## Next Steps
+
+- See more examples of functions in the [functions catalog].
+- Get a quickstart on writing functions from the [function producer docs].
+- Find out how to structure a pipeline of functions from the [functions concepts] page.
+
+[typescript result]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/kpt-functions/src/types.ts
+[functions catalog]: ../../../guides/consumer/function/catalog
+[function producer docs]: ../../../guides/producer/functions/
+[functions concepts]: ../../../concepts/functions/

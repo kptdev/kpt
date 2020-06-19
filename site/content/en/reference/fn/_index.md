@@ -72,9 +72,9 @@ functions implemented using different toolchains.
 
 ## Next Steps
 
-- Learn how to [run functions].
-- Find out how to structure a pipeline of functions from the [functions concepts] page.
-- See more examples of functions in the functions [catalog].
+* Learn how to [run functions].
+* Find out how to structure a pipeline of functions from the [functions concepts] page.
+* See more examples of functions in the functions [catalog].
 
 [run]: run
 [source]: source

@@ -855,6 +855,20 @@
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#examples">Examples</a></li>
+    <li><a href="#imperatively-run-a-single-function">Imperatively run a single function</a></li>
+    <li><a href="#declaratively-run-one-or-more-functions">Declaratively run one or more functions</a></li>
+    <li><a href="#scoping-rules">Scoping Rules</a></li>
+    <li><a href="#declaring-multiple-functions">Declaring Multiple Functions</a></li>
+    <li><a href="#custom-functionconfig">Custom <code>functionConfig</code></a></li>
+    <li><a href="#synopsis">Synopsis</a></li>
+    <li><a href="#structured-results">Structured Results</a></li>
+    <li><a href="#next-steps">Next Steps</a></li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -907,7 +921,7 @@
 containerized functions.</p>
 <p>Functions are packaged as container images which are run locally against
 the contents of a package.</p>
-<h3 id="examples">Examples</h3>
+<h2 id="examples">Examples</h2>
 <!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># read the Resources from DIR, provide them to a container my-fun as input,</span>
 <span style="color:#8f5902;font-style:italic"># write my-fn output back to DIR</span>
@@ -920,7 +934,7 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 <span style="color:#8f5902;font-style:italic"># functions may be scoped to a subset of Resources -- see `kpt help fn run`</span>
 kpt fn run DIR/
 </code></pre></div><!--mdtogo-->
-<h4 id="imperatively-run-an-single-function">Imperatively run an single function</h4>
+<h2 id="imperatively-run-a-single-function">Imperatively run a single function</h2>
 <p>A function may be explicitly specified using the <code>--image</code> flag.</p>
 <p><strong>Example:</strong> Locally run the container image <code>gcr.io/example.com/my-fn</code> against
 the Resources in <code>DIR/</code>:</p>
@@ -936,7 +950,7 @@ kpt sink DIR/
 <code>ConfigMap</code> containing <code>data: {foo: bar}</code>. This is used to parameterize the behavior
 of the function:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --image gcr.io/example.com/my-fn -- <span style="color:#000">foo</span><span style="color:#ce5c00;font-weight:bold">=</span>bar
-</code></pre></div><h4 id="declaratively-run-one-or-more-functions">Declaratively run one or more functions</h4>
+</code></pre></div><h2 id="declaratively-run-one-or-more-functions">Declaratively run one or more functions</h2>
 <p>Functions and their input configuration may be declared in files rather than directly
 on the command line.</p>
 <p><strong>Example:</strong> This is equivalent to the preceding example:</p>
@@ -954,7 +968,7 @@ on the command line.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/
 </code></pre></div><p>Here, rather than specifying <code>gcr.io/example.com/my-fn</code> as a flag, we specify it in a
 file using the <code>config.kubernetes.io/function</code> annotation.</p>
-<h5 id="scoping-rules">Scoping Rules</h5>
+<h2 id="scoping-rules">Scoping Rules</h2>
 <p>Functions which are nested under some sub directory are scoped only to Resources under
 that same sub directory. This allows fine grain control over how functions are
 executed:</p>
@@ -986,11 +1000,11 @@ executed:</p>
 containing function configurations:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 </code></pre></div><p>Alternatively, scoping can be disabled using <code>--global-scope</code> flag.</p>
-<h5 id="declaring-multiple-functions">Declaring Multiple Functions</h5>
+<h2 id="declaring-multiple-functions">Declaring Multiple Functions</h2>
 <p>You may declare multiple functions. If they are specified in the same file
 (multi-object YAML file separated by <code>---</code>), they will
 be run sequentially in the order that they are specified.</p>
-<h5 id="custom-functionconfig">Custom <code>functionConfig</code></h5>
+<h2 id="custom-functionconfig">Custom <code>functionConfig</code></h2>
 <p>Functions may define their own API input types - these may be client-side equivalents
 of CRDs:</p>
 <p><strong>Example</strong>: Declare two functions in <code>DIR/functions/my-functions.yaml</code>:</p>
@@ -1014,14 +1028,25 @@ of CRDs:</p>
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">field</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">nestedField</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>value<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h3 id="synopsis">Synopsis</h3>
+</span></code></pre></div><h2 id="synopsis">Synopsis</h2>
 <!--mdtogo:Long-->
-<pre><code>kpt fn run DIR [flags]
-</code></pre><p>If the container exits with non-zero status code, run will fail and print the
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR <span style="color:#ce5c00;font-weight:bold">[</span>flags<span style="color:#ce5c00;font-weight:bold">]</span>
+</code></pre></div><p>If the container exits with non-zero status code, run will fail and print the
 container <code>STDERR</code>.</p>
-<pre><code>DIR:
-  Path to a package directory.  Defaults to stdin if unspecified.
-</code></pre><!--mdtogo-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">DIR:
+  Path to a package directory.  Defaults to stdin <span style="color:#204a87;font-weight:bold">if</span> unspecified.
+</code></pre></div><!--mdtogo-->
+<h2 id="structured-results">Structured Results</h2>
+<p>Functions may emit results using the structure defined in the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/kpt-functions/src/types.ts">typescript result</a> interface as an alternative to
+exiting with a non-zero status code. Users may want to store these results separately from configuration
+files. Kpt provides the <code>--results-dir</code> flag for users to specify a destination to write results to.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
+</code></pre></div><h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>See more examples of functions in the <a href="../../../guides/consumer/function/catalog">functions catalog</a>.</li>
+<li>Get a quickstart on writing functions from the <a href="../../../guides/producer/functions/">function producer docs</a>.</li>
+<li>Find out how to structure a pipeline of functions from the <a href="../../../concepts/functions/">functions concepts</a> page.</li>
+</ul>
 
         <div class="section-index">
     

@@ -910,13 +910,6 @@ language, or simply wrap other existing programs.&lt;/p&gt;
 
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/fn.svg&#34; /&gt;
 
-&lt;p&gt;Let’s look at the example of imperatively running a function to set a label
-value.  The (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) image contains a program which adds a label to all Namespace resources
-provided to it.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run --image gcr.io/kpt-functions/label-namespace . -- &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt read the resources from the package at “.”, provided them as input to
-a container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the
-resources back to the package.&lt;/p&gt;
 &lt;p&gt;Functions can address many types of workflows, including:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Generating resources from some inputs (like client-side CRDs)&lt;/li&gt;
@@ -926,11 +919,49 @@ look like this)&lt;/li&gt;
 (e.g., must specify tag as part of the image)&lt;/li&gt;
 &lt;li&gt;Sending resources to a destination (e.g., saving them locally or deploying them to a cluster)&lt;/li&gt;
 &lt;/ul&gt;
+&lt;h2 id=&#34;calling-functions-imperatively&#34;&gt;Calling Functions Imperatively&lt;/h2&gt;
+&lt;p&gt;Let’s look at the example of imperatively running a function to set a label
+value.  The (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) image contains a program which adds a label to all Namespace resources
+provided to it.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run --image gcr.io/kpt-functions/label-namespace . -- &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt read the configs from the package at “.” to generate input resources. Behind the scenes, it also
+parsed the arguments and provided them through a functionConfig field along with the input. It passed
+this information to a container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the resources
+back to the package.&lt;/p&gt;
+&lt;h2 id=&#34;calling-functions-declaratively&#34;&gt;Calling Functions Declaratively&lt;/h2&gt;
+&lt;p&gt;The most common way of invoking kpt functions in production will be the &lt;a href=&#34;../../../reference/fn/run/#declaratively-run-one-or-more-functions&#34;&gt;declarative method&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s run the same (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) function declaratively, which means we make a reusable function
+configuration resource which contains all information necessary to run the function, from container
+image to argument values. Once we create file with this information we can check it into &lt;a href=&#34;https://en.wikipedia.org/wiki/Version_control&#34;&gt;VCS&lt;/a&gt; and
+run the function in a repeatable fashion, making it incredibly powerful for production use.&lt;/p&gt;
+&lt;p&gt;First create a function configuration file in the directory you want to apply the function
+e.g. &lt;code&gt;label-ns-fc.yaml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ConfigMap&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;annotations&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;config.kubernetes.io/function&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;|
+&lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;      container:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-functions/label-namespace&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;data&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;&amp;#34;label_name&amp;#34;: &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;color&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;&amp;#34;label_value&amp;#34;: &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;orange&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This file contains a &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation specifying the docker image to use for
+the config as well as a data field containing a key-value map of the &amp;ldquo;label_name&amp;rdquo; and &amp;ldquo;label_value&amp;rdquo;
+arguments specified earlier. Using a map also makes it easier to pass more complex arguments values like
+a list of strings.&lt;/p&gt;
+&lt;p&gt;Next, run the function.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt used configs from the package at “.” to generate input resources. It recognized that the
+&lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation denoted  &lt;code&gt;label-ns-fc.yaml&lt;/code&gt; as a function config file and ran
+a container using the &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt; image, passing in the function config
+resource as well as all other input resources.&lt;/p&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;See more examples of functions in the &lt;a href=&#34;catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;li&gt;Learn more ways of using &lt;code&gt;kpt fn&lt;/code&gt; command from the &lt;a href=&#34;../../../reference/fn/run/&#34;&gt;reference&lt;/a&gt; doc.&lt;/li&gt;
 &lt;/ul&gt;
 
       </description>
