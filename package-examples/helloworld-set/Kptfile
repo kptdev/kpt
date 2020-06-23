@@ -1,35 +1,37 @@
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
-  name: hello-world-set
+  name: helloworld-set
+packageMetadata:
+  shortDescription: kpt example
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:
+      description: helloworld replicas
       x-k8s-cli:
         setter:
           name: replicas
           value: "5"
           setBy: package-default
-      description: helloworld replicas
     io.k8s.cli.setters.http-port:
+      description: helloworld port
       x-k8s-cli:
         setter:
           name: http-port
           value: "80"
           setBy: package-default
-      description: helloworld port
     io.k8s.cli.setters.image-tag:
-      description: hello-world image tag
+      description: helloworld image tag
       x-k8s-cli:
         setter:
           name: image-tag
-          value: v0.3.0
+          value: v0.1.0
           setBy: package-default
-    io.k8s.cli.substitutions.image-tag:
+    io.k8s.cli.substitutions.image:
       x-k8s-cli:
         substitution:
-          name: image-tag
-          pattern: gcr.io/kpt-dev/helloworld-gke:IMAGE_TAG_SETTER
+          name: image
+          pattern: gcr.io/kpt-dev/helloworld-gke:${image-tag}
           values:
-          - marker: IMAGE_TAG_SETTER
+          - marker: ${image-tag}
             ref: '#/definitions/io.k8s.cli.setters.image-tag'
