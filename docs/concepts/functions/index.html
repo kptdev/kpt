@@ -354,7 +354,7 @@
 	<h1>Functions</h1>
 	<div class="lead">Functions goals and specification</div>
 	<h2 id="introduction">Introduction</h2>
-<p>KPT Functions are client-side programs that make it easy to operate on a repository of Kubernetes configuration files.</p>
+<p>Config Functions are client-side programs that make it easy to operate on a repository of Kubernetes configuration files.</p>
 <p>Use cases:</p>
 <ul>
 <li><strong>Configuration Validation:</strong> e.g. Require all <code>Namespace</code> configurations to have a <code>cost-center</code> label.</li>
@@ -363,9 +363,9 @@
 security posture.</li>
 </ul>
 <img src="https://storage.googleapis.com/kpt-functions/docs/run.gif">
-<p>KPT functions can be run locally or as part of a CI/CD pipeline.</p>
-<p>In GitOps workflows, KPT functions read and write configuration files from a Git repo. Changes
-to the system authored by humans and mutating KPT functions are reviewed before being committed to the repo. KPT functions
+<p>Config functions can be run locally or as part of a CI/CD pipeline.</p>
+<p>In GitOps workflows, config functions read and write configuration files from a Git repo. Changes
+to the system authored by humans and mutating config functions are reviewed before being committed to the repo. Config functions
 can be run as pre-commit or post-commit steps to validate configurations before they are applied to a cluster.</p>
 <h2 id="why-functions">Why Functions</h2>
 <p>We build functions using the same <a href="../architecture/#influences">architecture influences</a> as the rest of kpt, specifically:</p>
@@ -442,7 +442,7 @@ system (e.g. reading files from a filesystem).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7bf1a36d19747d493ad7972c23b53c7070f7ae57">Transfer kpt-functions sdk and catalog docs to kpt (7bf1a36d)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e97fd3815e38a1a9c6fc33db1936b6a027063acd">Clarify links, add functions to catalog (e97fd381)</a>
 </div>
 </div>
 

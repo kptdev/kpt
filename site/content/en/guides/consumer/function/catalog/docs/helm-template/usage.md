@@ -9,7 +9,7 @@ description: >
 
 ## Using helm-template
 
-Kpt packages are just configuration so any solution, like the `helm template` command, which emits configuration can also be used to generate kpt packages. The `helm-template` kpt function generates a new kpt package from a local Helm chart or upserts Helm chart configuration to an existing kpt package. In the context of a pipeline, these packages can then be further customized using other kpt functions.
+Kpt packages are just configuration so any solution, like the `helm template` command, which emits configuration can also be used to generate kpt packages. The `helm-template` config function generates a new kpt package from a local Helm chart or upserts Helm chart configuration to an existing kpt package. In the context of a pipeline, these packages can then be further customized using other config functions.
 
 ## Examples
 

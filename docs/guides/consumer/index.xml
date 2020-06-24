@@ -929,7 +929,7 @@ parsed the arguments and provided them through a functionConfig field along with
 this information to a container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the resources
 back to the package.&lt;/p&gt;
 &lt;h2 id=&#34;calling-functions-declaratively&#34;&gt;Calling Functions Declaratively&lt;/h2&gt;
-&lt;p&gt;The most common way of invoking kpt functions in production will be the &lt;a href=&#34;../../../reference/fn/run/#declaratively-run-one-or-more-functions&#34;&gt;declarative method&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The most common way of invoking config functions in production will be the &lt;a href=&#34;../../../reference/fn/run/#declaratively-run-one-or-more-functions&#34;&gt;declarative method&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Let&amp;rsquo;s run the same &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt; function declaratively, which means we make a reusable function
 configuration resource which contains all information necessary to run the function, from container
 image to argument values. Once we create file with this information we can check it into &lt;a href=&#34;https://en.wikipedia.org/wiki/Version_control&#34;&gt;VCS&lt;/a&gt; and

@@ -22,16 +22,16 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
 <title>Functions | Kpt</title><meta property="og:title" content="Functions" />
-<meta property="og:description" content="Writing kpt functions to generated, transform, and validate resources.
+<meta property="og:description" content="Writing config functions to generated, transform, and validate resources.
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/" />
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="Functions">
-<meta itemprop="description" content="Writing kpt functions to generated, transform, and validate resources.
+<meta itemprop="description" content="Writing config functions to generated, transform, and validate resources.
 "><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Functions"/>
-<meta name="twitter:description" content="Writing kpt functions to generated, transform, and validate resources.
+<meta name="twitter:description" content="Writing config functions to generated, transform, and validate resources.
 "/>
 
 
@@ -939,12 +939,12 @@
             
 <div class="td-content">
 	<h1>Functions</h1>
-	<div class="lead">Writing kpt functions to generated, transform, and validate resources.</div>
+	<div class="lead">Writing config functions to generated, transform, and validate resources.</div>
 	<h2 id="functions-developer-guide">Functions Developer Guide</h2>
-<p>Kpt functions are conceptually similar to Kubernetes <em>controllers</em> and <em>validating webhooks</em> &ndash;
+<p>Config functions are conceptually similar to Kubernetes <em>controllers</em> and <em>validating webhooks</em> &ndash;
 they are programs which read resources as input, then write resources as output (creating,
 modifying, deleting, or validating resources).</p>
-<p>Unlike controllers and validating webhooks, kpt functions can be run outside of the Kubernetes
+<p>Unlike controllers and validating webhooks, config functions can be run outside of the Kubernetes
 control plane.  This allows them to run in more contexts or embedded in other systems.
 For example, functions could be:</p>
 <ul>

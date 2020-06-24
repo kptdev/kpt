@@ -23,7 +23,7 @@
         
         
         &lt;h2 id=&#34;using-helm-template&#34;&gt;Using helm-template&lt;/h2&gt;
-&lt;p&gt;Kpt packages are just configuration so any solution, like the &lt;code&gt;helm template&lt;/code&gt; command, which emits configuration can also be used to generate kpt packages. The &lt;code&gt;helm-template&lt;/code&gt; kpt function generates a new kpt package from a local Helm chart or upserts Helm chart configuration to an existing kpt package. In the context of a pipeline, these packages can then be further customized using other kpt functions.&lt;/p&gt;
+&lt;p&gt;Kpt packages are just configuration so any solution, like the &lt;code&gt;helm template&lt;/code&gt; command, which emits configuration can also be used to generate kpt packages. The &lt;code&gt;helm-template&lt;/code&gt; config function generates a new kpt package from a local Helm chart or upserts Helm chart configuration to an existing kpt package. In the context of a pipeline, these packages can then be further customized using other config functions.&lt;/p&gt;
 &lt;h2 id=&#34;examples&#34;&gt;Examples&lt;/h2&gt;
 &lt;h3 id=&#34;example-1-hello-world&#34;&gt;Example 1: Hello World&lt;/h3&gt;
 &lt;h4 id=&#34;hello-world-prerequisites&#34;&gt;Hello World: Prerequisites&lt;/h4&gt;

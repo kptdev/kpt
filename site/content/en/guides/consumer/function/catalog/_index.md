@@ -4,7 +4,7 @@ linkTitle: "Functions Catalog"
 weight: 8
 type: docs
 description: >
-    Catalog of kpt functions.
+    Catalog of Config Functions.
 ---
 
 <!---

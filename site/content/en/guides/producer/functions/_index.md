@@ -4,16 +4,16 @@ linkTitle: "Functions"
 weight: 4
 type: docs
 description: >
-   Writing kpt functions to generated, transform, and validate resources.
+   Writing config functions to generated, transform, and validate resources.
 ---
 
 ## Functions Developer Guide
 
-Kpt functions are conceptually similar to Kubernetes *controllers* and *validating webhooks* --
+Config functions are conceptually similar to Kubernetes *controllers* and *validating webhooks* --
 they are programs which read resources as input, then write resources as output (creating,
 modifying, deleting, or validating resources).
 
-Unlike controllers and validating webhooks, kpt functions can be run outside of the Kubernetes
+Unlike controllers and validating webhooks, config functions can be run outside of the Kubernetes
 control plane.  This allows them to run in more contexts or embedded in other systems.
 For example, functions could be:
 

@@ -49,7 +49,7 @@ back to the package.
 
 ## Calling Functions Declaratively
 
-The most common way of invoking kpt functions in production will be the [declarative method].
+The most common way of invoking config functions in production will be the [declarative method].
 
 Let's run the same [label-namespace] function declaratively, which means we make a reusable function
 configuration resource which contains all information necessary to run the function, from container

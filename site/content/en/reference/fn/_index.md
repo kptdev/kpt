@@ -60,7 +60,7 @@ kpt fn run DIR/
 
 #### Functions Catalog
 
-The [catalog] documents kpt functions implemented using different toolchains like starlark, typescript, and golang.
+The [catalog] documents config functions implemented using different toolchains like starlark, typescript, and golang.
 
 #### Developing Functions
 

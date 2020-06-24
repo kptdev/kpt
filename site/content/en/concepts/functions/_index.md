@@ -9,7 +9,7 @@ description: >
 
 ## Introduction
 
-KPT Functions are client-side programs that make it easy to operate on a repository of Kubernetes configuration files.
+Config Functions are client-side programs that make it easy to operate on a repository of Kubernetes configuration files.
 
 Use cases:
 
@@ -20,10 +20,10 @@ Use cases:
 
 <img src="https://storage.googleapis.com/kpt-functions/docs/run.gif">
 
-KPT functions can be run locally or as part of a CI/CD pipeline.
+Config functions can be run locally or as part of a CI/CD pipeline.
 
-In GitOps workflows, KPT functions read and write configuration files from a Git repo. Changes
-to the system authored by humans and mutating KPT functions are reviewed before being committed to the repo. KPT functions
+In GitOps workflows, config functions read and write configuration files from a Git repo. Changes
+to the system authored by humans and mutating config functions are reviewed before being committed to the repo. Config functions
 can be run as pre-commit or post-commit steps to validate configurations before they are applied to a cluster.
 
 ## Why Functions

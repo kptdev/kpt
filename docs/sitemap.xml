@@ -4,7 +4,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/concepts/architecture/</loc>
-    <lastmod>2020-06-19T15:07:12-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
@@ -104,7 +104,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/oam/</loc>
-    <lastmod>2020-06-07T00:22:45-07:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
@@ -159,12 +159,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/</loc>
-    <lastmod>2020-06-19T15:31:23-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/concepts/functions/</loc>
-    <lastmod>2020-06-19T15:07:12-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
@@ -224,12 +224,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/</loc>
-    <lastmod>2020-06-19T15:07:12-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/develop/</loc>
-    <lastmod>2020-06-19T15:07:12-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
@@ -249,32 +249,32 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/pipeline/</loc>
-    <lastmod>2020-06-19T15:07:12-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
-    <lastmod>2020-06-19T15:31:23-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
-    <lastmod>2020-06-19T15:31:23-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/docs/helm-template/usage/</loc>
-    <lastmod>2020-06-19T15:07:12-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/contact/</loc>
-    <lastmod>2020-06-11T10:56:29-07:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/faq/</loc>
-    <lastmod>2020-06-11T10:56:29-07:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
@@ -294,7 +294,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/</loc>
-    <lastmod>2020-06-07T00:22:45-07:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
@@ -354,7 +354,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/</loc>
-    <lastmod>2020-06-19T15:07:12-04:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
@@ -374,12 +374,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/sink/</loc>
-    <lastmod>2020-04-30T21:01:31-05:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/source/</loc>
-    <lastmod>2020-04-30T21:01:31-05:00</lastmod>
+    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
   </url>
   
   <url>

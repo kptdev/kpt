@@ -22,7 +22,7 @@
       <description>
         
         
-        &lt;p&gt;This guide will walk you through developing a KPT function using the Typescript SDK.&lt;/p&gt;
+        &lt;p&gt;This guide will walk you through developing a config function using the Typescript SDK.&lt;/p&gt;
 &lt;h2 id=&#34;setup&#34;&gt;Setup&lt;/h2&gt;
 &lt;h3 id=&#34;system-requirements&#34;&gt;System Requirements&lt;/h3&gt;
 &lt;p&gt;Currently supported platforms: amd64 Linux/Mac&lt;/p&gt;
@@ -95,7 +95,7 @@ for type generation:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;code&gt;package.json&lt;/code&gt;: The &lt;code&gt;kpt-functions&lt;/code&gt; framework library is the only item declared in &lt;code&gt;dependencies&lt;/code&gt;.
-Everything required to compile and test your KPT function is declared as &lt;code&gt;devDependencies&lt;/code&gt;,
+Everything required to compile and test your config function is declared as &lt;code&gt;devDependencies&lt;/code&gt;,
 including the &lt;code&gt;create-kpt-functions&lt;/code&gt; CLI discussed later in the &lt;code&gt;README&lt;/code&gt;.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;

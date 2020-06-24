@@ -1,7 +1,7 @@
 {
   "name": "kpt-functions-catalog-docs",
   "version": "0.1.0",
-  "description": "Generate docs for KPT functions catalog",
+  "description": "Generate docs for config functions catalog",
   "author": "KPT Authors",
   "license": "Apache-2.0",
   "main": "index.js",

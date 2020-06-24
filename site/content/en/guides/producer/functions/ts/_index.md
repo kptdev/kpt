@@ -7,12 +7,12 @@ description: >
    Writing functions in TypeScript.
 ---
 
-We provide an opinionated Typescript SDK for implementing KPT Functions. This provides various
+We provide an opinionated Typescript SDK for implementing config functions. This provides various
 advantages:
 
 - **General-purpose language:** Domain-Specific Languages begin their life with a reasonable
   feature set, but often grow over time. They bloat in order to accommodate the tremendous variety
-  of customer use cases. Rather than follow this same course, KPT functions employ a true,
+  of customer use cases. Rather than follow this same course, config functions employ a true,
   general-purpose programming language that provides:
   - Proper abstractions and language features
   - A extensive ecosystem of tooling (e.g. IDE support)
@@ -28,7 +28,7 @@ advantages:
 
 ## Developer Quickstart
 
-This quickstart will get you started developing a KPT Function with the TypeScript SDK,
+This quickstart will get you started developing a config function with the TypeScript SDK,
 using an existing Hello World package.
 
 ### Prerequisites

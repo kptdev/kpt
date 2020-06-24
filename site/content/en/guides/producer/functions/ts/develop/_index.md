@@ -7,7 +7,7 @@ description: >
    Developing functions in TypeScript.
 ---
 
-This guide will walk you through developing a KPT function using the Typescript SDK.
+This guide will walk you through developing a config function using the Typescript SDK.
 
 ## Setup
 
@@ -105,7 +105,7 @@ Follow the instructions and respond to all prompts.
 This process will create the following:
 
 1. `package.json`: The `kpt-functions` framework library is the only item declared in `dependencies`.
-   Everything required to compile and test your KPT function is declared as `devDependencies`,
+   Everything required to compile and test your config function is declared as `devDependencies`,
    including the `create-kpt-functions` CLI discussed later in the `README`.
 1. `src/`: Directory containing the source files for all your functions, e.g.:
 
