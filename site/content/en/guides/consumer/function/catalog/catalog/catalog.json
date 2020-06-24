@@ -8,7 +8,7 @@
   },
   {
     "image": "gcr.io/kpt-functions/read-yaml",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/read_yaml.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/read_yaml.ts",
     "description": "Reads a directory of Kubernetes configuration recursively.",
     "type": "source",
     "demo": true,
@@ -37,22 +37,29 @@
   },
   {
     "image": "gcr.io/kpt-functions/write-yaml",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/write_yaml.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/write_yaml.ts",
     "description": "Writes a directory of Kubernetes configuration. It maintains the original directory structure as read by source functions.",
     "type": "sink",
     "demo": true,
     "toolchain": "../../../producer/functions/ts"
   },
   {
+    "image": "gcr.io/kpt-functions/istioctl-analyze",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/istioctl_analyze.ts",
+    "description": "Istioctl analyze is a diagnostic tool that can detect potential issues with Istio configuration and output errors to the results field.",
+    "type": "validator",
+    "toolchain": "../../../producer/functions/ts"
+  },
+  {
     "image": "gcr.io/kpt-functions/gatekeeper-validate",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/go/pkg/functions/gatekeeper/validate.go",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/go/pkg/functions/gatekeeper/validate.go",
     "description": "Enforces OPA constraints on input objects. The constraints are also passed as part of the input to the function.",
     "type": "validator",
     "toolchain": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/go/pkg/framework"
   },
   {
     "image": "gcr.io/kpt-functions/validate-rolebinding",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/validate_rolebinding.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts",
     "description": "Enforces a blacklist of subjects in RoleBinding objects.",
     "type": "validator",
     "demo": true,
@@ -74,7 +81,7 @@
   },
   {
     "image": "gcr.io/kpt-functions/suggest-psp",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/suggest_psp.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/suggest_psp.ts",
     "description": "Lints PodSecurityPolicy by suggesting 'spec.allowPrivilegeEscalation' field be set to 'false'.",
     "type": "validator",
     "demo": true,
@@ -82,15 +89,29 @@
   },
   {
     "image": "gcr.io/kpt-functions/mutate-psp",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/mutate_psp.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/mutate_psp.ts",
     "description": "Mutates PodSecurityPolicy objects by setting spec.allowPrivilegeEscalation to false.",
     "type": "transformer",
     "demo": true,
     "toolchain": "../../../producer/functions/ts"
   },
   {
+    "image": "set_namespace.star",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/starlark/set_namespace.star",
+    "description": "Sets the namespace field of all configs passed in.",
+    "type": "transformer",
+    "toolchain": "../../../producer/functions/starlark"
+  },
+  {
+    "image": "gcr.io/kubeflow-images-public/kustomize-fns/remove-namespace",
+    "source": "https://github.com/kubeflow/kfctl/blob/master/kustomize-fns/remove-namespace/main.go",
+    "description": "Removes the namespace field of cluster-scoped configs.",
+    "type": "transformer",
+    "toolchain": "../../../producer/functions/golang"
+  },
+  {
     "image": "gcr.io/kpt-functions/label-namespace",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/hello-world/src/label_namespace.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts",
     "description": "Adds a label to all Namespaces.",
     "type": "transformer",
     "demo": true,
@@ -98,7 +119,7 @@
   },
   {
     "image": "gcr.io/kpt-functions/helm-template",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/ts/src/helm_template.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/helm_template.ts",
     "description": "Render chart templates locally using helm template. (See [usage](docs/helm-template/usage/index.html)).",
     "type": "transformer",
     "toolchain": "../../../producer/functions/ts"
@@ -111,8 +132,16 @@
     "toolchain": "../../../producer/functions/golang"
   },
   {
+    "image": "gcr.io/kpt-functions/annotate-config",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/annotate_config.ts",
+    "description": "Adds an annotation to all configs.",
+    "type": "transformer",
+    "demo": true,
+    "toolchain": "../../../producer/functions/ts"
+  },
+  {
     "image": "gcr.io/kpt-functions/expand-team-cr",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/expand_team_cr.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts",
     "description": "Reads custom resources of type Team and generates multiple Namespace and RoleBinding objects.",
     "type": "generator",
     "demo": true,
@@ -120,7 +149,7 @@
   },
   {
     "image": "gcr.io/kpt-functions/helm-template",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/ts/src/helm_template.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/helm_template.ts",
     "description": "Render chart templates locally using helm template. (See [usage](docs/helm-template/usage/index.html)).",
     "type": "generator",
     "toolchain": "../../../producer/functions/ts"
@@ -136,12 +165,11 @@
     "image": "gcr.io/kustomize-functions/example-cockroachdb",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-heredoc-cockroachdb/image/cockroachdb-template.sh",
     "description": "Generate configuration from heredoc template using the functionConfig as the template input.",
-    "type": "generator",
-    "toolchain": "../../../producer/functions/golang"
+    "type": "generator"
   },
   {
     "image": "gcr.io/kpt-functions/no-op",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/no_op.ts",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/no_op.ts",
     "description": "No Op function for testing purposes",
     "type": "misc",
     "demo": true,

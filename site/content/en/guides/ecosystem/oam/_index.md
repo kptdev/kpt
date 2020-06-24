@@ -21,7 +21,7 @@ With the heart of Configuration-as-Data, a typical Kubernetes native application
 
 ![img](./resource/kpt_oam.png)
 
-In this workflow, kpt is the manipulator of data. Stored in data source like Git, the original data (e.g. deployment.yaml) will pass through a pipeline of kpt functionalities to be manipulated into the desire state step by step. For example, `labels` added, `replicas` modified and `image` updated etc. 
+In this workflow, kpt is the manipulator of data. Stored in data source like Git, the original data (e.g. deployment.yaml) will pass through a pipeline of kpt functionalities to be manipulated into the desire state step by step. For example, `labels` added, `replicas` modified and `image` updated etc.
 
 So what is OAM then? OAM is the format of data. More accurately, OAM is a specific data format so Kubernetes can expose higher level abstraction such as "application" to developers.
 
@@ -44,6 +44,7 @@ So release your OAM app only needs two steps.
 1. Create/Fork a github repo.
 
 2. Commit and push your app.
+
     ```shell
     git add sampleapp/
     git commit -m "my sampleapp commit"
@@ -100,7 +101,6 @@ NAME                                    READY   UP-TO-DATE   AVAILABLE   AGE
 example-appconfig-workload-deployment   3/3     3            3           114s
 ```
 
-
 ### Sync with Remote App Repository
 
 When some changes occurred both local and remote apps, you could sync and merge with kpt.
@@ -122,7 +122,6 @@ kpt pkg update sampleapp@v0.1.0 --strategy=resource-merge
 
 Ref to [update section](https://googlecontainertools.github.io/kpt/guides/consumer/update/#commit-local-changes) of kpt for more details.
 
-
 ### Parameter Setting
 
 [kpt setters](https://googlecontainertools.github.io/kpt/guides/consumer/set/) is a powerful feature which naturally matches to the idea of "separate concerns" design from OAM.
@@ -136,11 +135,11 @@ Now this goal can be easily achieved with help of kpt.
 Let's say the developer need to claim two fields as "configurable" for his application, he can add two kpt setters here:
 
 ```shell
-$ kpt cfg create-setter sampleapp/ instance-name example-component --field "metadata.name" --description "use to set an instance name" --set-by "sampleapp developer"
+kpt cfg create-setter sampleapp/ instance-name example-component --field "metadata.name" --description "use to set an instance name" --set-by "sampleapp developer"
 ```
 
 ```shell
-$ kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field "image" --description "use to set image for component" --set-by "sampleapp developer"
+kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field "image" --description "use to set image for component" --set-by "sampleapp developer"
 ```
 
 Then the app operator could see which parameters are available in this component like below:
@@ -220,4 +219,4 @@ all resources has reached the Current status
 0 resource(s) pruned
 ```
 
-Happly building OAM apps with kpt!
+Happy building OAM apps with kpt!

@@ -22,24 +22,17 @@
       <description>
         
         
-        &lt;h1 id=&#34;using-helm-template&#34;&gt;Using helm-template&lt;/h1&gt;
+        &lt;h2 id=&#34;using-helm-template&#34;&gt;Using helm-template&lt;/h2&gt;
 &lt;p&gt;Kpt packages are just configuration so any solution, like the &lt;code&gt;helm template&lt;/code&gt; command, which emits configuration can also be used to generate kpt packages. The &lt;code&gt;helm-template&lt;/code&gt; kpt function generates a new kpt package from a local Helm chart or upserts Helm chart configuration to an existing kpt package. In the context of a pipeline, these packages can then be further customized using other kpt functions.&lt;/p&gt;
 &lt;h2 id=&#34;examples&#34;&gt;Examples&lt;/h2&gt;
 &lt;h3 id=&#34;example-1-hello-world&#34;&gt;Example 1: Hello World&lt;/h3&gt;
-&lt;h4 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h4&gt;
+&lt;h4 id=&#34;hello-world-prerequisites&#34;&gt;Hello World: Prerequisites&lt;/h4&gt;
 &lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Install kpt.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;gcloud components install kpt
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Install helm.&lt;/p&gt;
-&lt;/li&gt;
+&lt;li&gt;Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.&lt;/li&gt;
+&lt;li&gt;Install kpt.&lt;/li&gt;
+&lt;li&gt;Install helm.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id=&#34;steps&#34;&gt;Steps&lt;/h4&gt;
+&lt;h4 id=&#34;hello-world-steps&#34;&gt;Hello World: Steps&lt;/h4&gt;
 &lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;Create a new helm chart called &amp;ldquo;helloworld-chart&amp;rdquo;.&lt;/p&gt;
@@ -57,15 +50,14 @@ kpt fn sink helloworld-configs
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h3 id=&#34;example-2-expand-and-apply-multiple-charts-to-a-cluster&#34;&gt;Example 2: Expand and apply multiple charts to a cluster&lt;/h3&gt;
-&lt;h4 id=&#34;prerequisites-1&#34;&gt;Prerequisites&lt;/h4&gt;
+&lt;h4 id=&#34;multiple-charts-prerequisites&#34;&gt;Multiple Charts: Prerequisites&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Install kpt.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;gcloud components install kpt
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Install helm.&lt;/p&gt;
 &lt;/li&gt;
@@ -76,7 +68,7 @@ helm pull bitnami/mongodb --untar
 helm pull bitnami/redis --untar
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id=&#34;steps-1&#34;&gt;Steps&lt;/h4&gt;
+&lt;h4 id=&#34;multiple-charts-steps&#34;&gt;Multiple Charts: Steps&lt;/h4&gt;
 &lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;Run &lt;code&gt;helm-template&lt;/code&gt; on each of the charts you need. You can pipe these commands, as shown below. The following commands expand the mongodb and redis charts and store the resulting yaml into a new output directory.&lt;/p&gt;

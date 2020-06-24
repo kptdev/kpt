@@ -31,7 +31,7 @@ can be run as pre-commit or post-commit steps to validate configurations before 
 We build functions using the same [architecture influences] as the rest of kpt, specifically:
 
 - **Configuration as data:** enables us to programmatically manipulate configurations using stateless programs called _functions_.
-- **Unix philosophy:** inspires us to develop a [catalog][catalog] of useful, interoperable functions which implement the [Configuration Functions Specification][spec].
+- **Unix philosophy:** inspires us to develop a [catalog] of useful, interoperable functions which implement the [Configuration Functions Specification][spec].
 
 ## Functions Concepts
 
@@ -74,10 +74,12 @@ Functions can be composed into a pipeline:
 
 ## Next Steps
 
+- Get a quickstart on writing functions from the [function producer docs].
 - See more examples of functions in the functions [catalog].
-- Consult the [function producer docs] for more details on writing functions.
+- Learn more ways of using the `kpt fn` command from the [reference] doc.
 
 [architecture influences]: ../architecture/#influences
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [catalog]: ../../guides/consumer/function/catalog
 [function producer docs]: ../../guides/producer/functions/
+[reference]: ../../reference/fn/run/

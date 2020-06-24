@@ -38,7 +38,7 @@
 &lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/v17.09/engine/installation&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;your-kubernetes-cluster&#34;&gt;Your Kubernetes Cluster&lt;/h3&gt;
-&lt;p&gt;For the type generation functionality to work, you need a Kubernetes cluster with the &lt;a href=&#34;https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing&#34;&gt;CRD OpenAPI Publishing&lt;/a&gt; feature which is beta with Kubernetes 1.15.&lt;/p&gt;
+&lt;p&gt;For the type generation functionality to work, you need a Kubernetes cluster with the &lt;a href=&#34;https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing&#34;&gt;CRD OpenAPI Publishing&lt;/a&gt; feature which is beta with Kubernetes 1.15.&lt;/p&gt;
 &lt;p&gt;Alternatively, you can use an existing NPM package with pre-generated types such as the &lt;code&gt;hello-world&lt;/code&gt;
 package discussed in the &lt;a href=&#34;../#developer-quickstart&#34;&gt;Quickstart&lt;/a&gt; and skip to &lt;a href=&#34;#implement-the-function&#34;&gt;implementing the function&lt;/a&gt;.&lt;/p&gt;
 &lt;h4 id=&#34;using-a-kind-cluster&#34;&gt;Using a &lt;code&gt;kind&lt;/code&gt; Cluster&lt;/h4&gt;

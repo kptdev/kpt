@@ -944,7 +944,7 @@ source and a sink function.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
 <span style="color:#204a87">cd</span> example-configs
 git add . <span style="color:#ce5c00;font-weight:bold">&amp;&amp;</span> git commit -m <span style="color:#4e9a06">&#39;fetched example-configs&#39;</span>
-</code></pre></div><p>You can run a function, like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/hello-world/src/label_namespace.ts">label-namespace</a>, imperatively:</p>
+</code></pre></div><p>You can run a function, like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a>, imperatively:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run --image gcr.io/kpt-functions/label-namespace . -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange
 </code></pre></div><p>You should see labels added to <code>Namespace</code> configuration files:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git status
@@ -987,7 +987,7 @@ git status
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run --help
 </code></pre></div><h2 id="next-steps">Next Steps</h2>
 <ul>
-<li><a href="../catalog/">Try running other functions in the Catalog</a></li>
+<li>Try running other functions in the <a href="../catalog/">catalog</a>.</li>
 <li>Get a quickstart on writing functions from the <a href="../../../producer/functions/">function producer docs</a>.</li>
 <li>Learn about <a href="../../../../concepts/functions/">functions concepts</a> like sources, sinks, and pipelines.</li>
 </ul>
@@ -1084,7 +1084,7 @@ git status
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

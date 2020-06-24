@@ -25,7 +25,7 @@ Currently supported platforms: amd64 Linux/Mac
 
 ### Your Kubernetes Cluster
 
-For the type generation functionality to work, you need a Kubernetes cluster with the [CRD OpenAPI Publishing][beta-feature] feature which is beta with Kubernetes 1.15.
+For the type generation functionality to work, you need a Kubernetes cluster with the [CRD OpenAPI Publishing][crd-openapi] feature which is beta with Kubernetes 1.15.
 
 Alternatively, you can use an existing NPM package with pre-generated types such as the `hello-world`
 package discussed in the [Quickstart](../#developer-quickstart) and skip to [implementing the function](#implement-the-function).
@@ -144,7 +144,7 @@ code .
 In `src/my_func.ts`, implement the `KptFunc` interface [documented here][api-kptfunc].
 
 Take a look at [these example functions][demo-funcs] to better understand how to use
-the typescript library. These functions are available as container images documented in the [catalog][catalog].
+the typescript library. These functions are available as container images documented in the [catalog].
 
 Once you've written some code, build the package with:
 
@@ -236,18 +236,14 @@ npm run kpt:docker-build -- --tag=latest
 - Find out how to structure a pipeline of functions from the [functions concepts] page.
 - Take a look at [these example functions][demo-funcs] to better understand how to use the typescript SDK.
 
-[spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
-[kustomize-run]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-impl.md
 [demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
-[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/label_namespace.ts
 [catalog]: ../../../../consumer/function/catalog
 [api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html
 [vscode]: https://code.visualstudio.com/
-[npm-packages]: https://github.com/GoogleContainerTools/kpt-functions-sdk/packages
 [download-node]: https://nodejs.org/en/download/
 [download-kind]: https://github.com/kubernetes-sigs/kind
 [install-node]: https://github.com/nodejs/help/wiki/Installation
 [install-docker]: https://docs.docker.com/v17.09/engine/installation
-[beta-feature]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing
+[crd-openapi]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing
 [run functions]: ../../../../consumer/function/
 [functions concepts]: ../../../../../concepts/functions/

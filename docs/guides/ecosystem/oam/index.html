@@ -1002,8 +1002,8 @@ git commit -m <span style="color:#4e9a06">&#34;init&#34;</span>
 <p>Now this goal can be easily achieved with help of kpt.</p>
 <h4 id="create-setter-by-app-developer">Create setter by App Developer</h4>
 <p>Let&rsquo;s say the developer need to claim two fields as &ldquo;configurable&rdquo; for his application, he can add two kpt setters here:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg create-setter sampleapp/ instance-name example-component --field <span style="color:#4e9a06">&#34;metadata.name&#34;</span> --description <span style="color:#4e9a06">&#34;use to set an instance name&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field <span style="color:#4e9a06">&#34;image&#34;</span> --description <span style="color:#4e9a06">&#34;use to set image for component&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt cfg create-setter sampleapp/ instance-name example-component --field <span style="color:#4e9a06">&#34;metadata.name&#34;</span> --description <span style="color:#4e9a06">&#34;use to set an instance name&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field <span style="color:#4e9a06">&#34;image&#34;</span> --description <span style="color:#4e9a06">&#34;use to set image for component&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
 </code></pre></div><p>Then the app operator could see which parameters are available in this component like below:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg list-setters sampleapp/
   NAME              VALUE               SET BY                   DESCRIPTION             COUNT
@@ -1052,7 +1052,7 @@ applicationconfiguration.core.oam.dev/example-appconfig is Current: Resource is 
 component.core.oam.dev/example-component is Current: Resource is current
 all resources has reached the Current status
 <span style="color:#0000cf;font-weight:bold">0</span> resource<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span> pruned
-</code></pre></div><p>Happly building OAM apps with kpt!</p>
+</code></pre></div><p>Happy building OAM apps with kpt!</p>
 
         <div class="section-index">
     
@@ -1146,7 +1146,7 @@ all resources has reached the Current status
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

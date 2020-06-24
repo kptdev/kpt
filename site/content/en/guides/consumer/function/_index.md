@@ -51,7 +51,7 @@ back to the package.
 
 The most common way of invoking kpt functions in production will be the [declarative method].
 
-Let's run the same ([label-namespace]) function declaratively, which means we make a reusable function
+Let's run the same [label-namespace] function declaratively, which means we make a reusable function
 configuration resource which contains all information necessary to run the function, from container
 image to argument values. Once we create file with this information we can check it into [VCS](https://en.wikipedia.org/wiki/Version_control) and
 run the function in a repeatable fashion, making it incredibly powerful for production use.
@@ -93,7 +93,7 @@ resource as well as all other input resources.
 - See more examples of functions in the [functions catalog].
 - Get a quickstart on writing functions from the [function producer docs].
 - Find out how to structure a pipeline of functions from the [functions concepts] page.
-- Learn more ways of using `kpt fn` command from the [reference] doc.
+- Learn more ways of using the `kpt fn` command from the [reference] doc.
 
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
 [functions catalog]: catalog/

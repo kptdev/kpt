@@ -930,7 +930,7 @@ this information to a container running &lt;code&gt;gcr.io/kpt-functions/label-n
 back to the package.&lt;/p&gt;
 &lt;h2 id=&#34;calling-functions-declaratively&#34;&gt;Calling Functions Declaratively&lt;/h2&gt;
 &lt;p&gt;The most common way of invoking kpt functions in production will be the &lt;a href=&#34;../../../reference/fn/run/#declaratively-run-one-or-more-functions&#34;&gt;declarative method&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Let&amp;rsquo;s run the same (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) function declaratively, which means we make a reusable function
+&lt;p&gt;Let&amp;rsquo;s run the same &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt; function declaratively, which means we make a reusable function
 configuration resource which contains all information necessary to run the function, from container
 image to argument values. Once we create file with this information we can check it into &lt;a href=&#34;https://en.wikipedia.org/wiki/Version_control&#34;&gt;VCS&lt;/a&gt; and
 run the function in a repeatable fashion, making it incredibly powerful for production use.&lt;/p&gt;
@@ -961,7 +961,7 @@ resource as well as all other input resources.&lt;/p&gt;
 &lt;li&gt;See more examples of functions in the &lt;a href=&#34;catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
-&lt;li&gt;Learn more ways of using &lt;code&gt;kpt fn&lt;/code&gt; command from the &lt;a href=&#34;../../../reference/fn/run/&#34;&gt;reference&lt;/a&gt; doc.&lt;/li&gt;
+&lt;li&gt;Learn more ways of using the &lt;code&gt;kpt fn&lt;/code&gt; command from the &lt;a href=&#34;../../../reference/fn/run/&#34;&gt;reference&lt;/a&gt; doc.&lt;/li&gt;
 &lt;/ul&gt;
 
       </description>

@@ -16,7 +16,7 @@ apply Kubernetes configuration.
 
 {{% /blocks/lead %}}
 
-{{< blocks/section color="orange" >}}
+{{< blocks/section color="light" >}}
 {{% blocks/feature icon="fa fa-download" title="Install" url="installation" %}}
 Install via gcloud, homebrew, binaries or source.
 {{% /blocks/feature %}}

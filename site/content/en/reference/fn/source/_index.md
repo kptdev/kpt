@@ -26,10 +26,16 @@ kpt fn source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt fn sink D
 
 ### Synopsis
 <!--mdtogo:Long-->
-```
+```sh
 kpt fn source [DIR...]
 
 DIR:
   Path to a package directory.  Defaults to stdin if unspecified.
 ```
 <!--mdtogo-->
+
+### Next Steps
+
+- Learn about [functions concepts] like sources, sinks, and pipelines.
+
+[functions concepts]: ../../../concepts/functions/

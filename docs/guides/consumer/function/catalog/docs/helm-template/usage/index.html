@@ -874,6 +874,7 @@
 
 <nav id="TableOfContents">
   <ul>
+    <li><a href="#using-helm-template">Using helm-template</a></li>
     <li><a href="#examples">Examples</a>
       <ul>
         <li><a href="#example-1-hello-world">Example 1: Hello World</a></li>
@@ -953,24 +954,17 @@
 <div class="td-content">
 	<h1>Helm-template Usage</h1>
 	<div class="lead">Helm-template Usage.</div>
-	<h1 id="using-helm-template">Using helm-template</h1>
+	<h2 id="using-helm-template">Using helm-template</h2>
 <p>Kpt packages are just configuration so any solution, like the <code>helm template</code> command, which emits configuration can also be used to generate kpt packages. The <code>helm-template</code> kpt function generates a new kpt package from a local Helm chart or upserts Helm chart configuration to an existing kpt package. In the context of a pipeline, these packages can then be further customized using other kpt functions.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="example-1-hello-world">Example 1: Hello World</h3>
-<h4 id="prerequisites">Prerequisites</h4>
+<h4 id="hello-world-prerequisites">Hello World: Prerequisites</h4>
 <ul>
-<li>
-<p>Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.</p>
-</li>
-<li>
-<p>Install kpt.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud components install kpt
-</code></pre></div></li>
-<li>
-<p>Install helm.</p>
-</li>
+<li>Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.</li>
+<li>Install kpt.</li>
+<li>Install helm.</li>
 </ul>
-<h4 id="steps">Steps</h4>
+<h4 id="hello-world-steps">Hello World: Steps</h4>
 <ol>
 <li>
 <p>Create a new helm chart called &ldquo;helloworld-chart&rdquo;.</p>
@@ -988,15 +982,14 @@ kpt fn sink helloworld-configs
 </code></pre></div></li>
 </ol>
 <h3 id="example-2-expand-and-apply-multiple-charts-to-a-cluster">Example 2: Expand and apply multiple charts to a cluster</h3>
-<h4 id="prerequisites-1">Prerequisites</h4>
+<h4 id="multiple-charts-prerequisites">Multiple Charts: Prerequisites</h4>
 <ul>
 <li>
 <p>Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.</p>
 </li>
 <li>
 <p>Install kpt.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud components install kpt
-</code></pre></div></li>
+</li>
 <li>
 <p>Install helm.</p>
 </li>
@@ -1007,7 +1000,7 @@ helm pull bitnami/mongodb --untar
 helm pull bitnami/redis --untar
 </code></pre></div></li>
 </ul>
-<h4 id="steps-1">Steps</h4>
+<h4 id="multiple-charts-steps">Multiple Charts: Steps</h4>
 <ol>
 <li>
 <p>Run <code>helm-template</code> on each of the charts you need. You can pipe these commands, as shown below. The following commands expand the mongodb and redis charts and store the resulting yaml into a new output directory.</p>
@@ -1062,7 +1055,7 @@ docker run -u <span style="color:#4e9a06">&#34;</span><span style="color:#204a87
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

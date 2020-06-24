@@ -47,12 +47,13 @@ chmod +x kpt
 GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 ```
 
-### [Documentation](https://googlecontainertools.github.io/kpt)
+### [Documentation][docs]
 
-See the [docs](https://googlecontainertools.github.io/kpt) for more information on how to use `kpt`.
+See the [docs] for more information on how to use `kpt`.
 
 ---
 
 [linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
 [darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
 [windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
+[docs]: https://googlecontainertools.github.io/kpt

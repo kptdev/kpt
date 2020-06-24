@@ -861,6 +861,7 @@
       <ul>
         <li><a href="#examples">Examples</a></li>
         <li><a href="#openapi-schema">OpenAPI schema</a></li>
+        <li><a href="#next-steps">Next Steps</a></li>
       </ul>
     </li>
   </ul>
@@ -961,14 +962,14 @@ flags to allows users to specify the schema that should be used.</p>
 <p>By default, kpt will first try to fetch the OpenAPI schema from the cluster
 given by the current context. If that doesn&rsquo;t work, it will silently fall back
 to using the builtin schema.</p>
-<pre><code>--k8s-schema-source
-  Set the source for the OpenAPI schema. Allowed values are cluster, file, or
-  builtin. If an OpenAPI schema can't be find at the given source, kpt will 
-  return an error.
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--k8s-schema-source
+  Set the <span style="color:#204a87">source</span> <span style="color:#204a87;font-weight:bold">for</span> the OpenAPI schema. Allowed values are cluster, file, or
+  builtin. If an OpenAPI schema can<span style="color:#a40000">&#39;</span>t be find at the given source, kpt will
+  <span style="color:#204a87;font-weight:bold">return</span> an error.
 
 --k8s-schema-path
   The path to an OpenAPI schema file. The default value is ./openapi.json
-</code></pre><table>
+</code></pre></div><table>
 <thead>
 <tr>
 <th>Command Group</th>
@@ -1004,6 +1005,12 @@ to using the builtin schema.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="next-steps">Next Steps</h3>
+<ul>
+<li>Learn about kpt <a href="../concepts/architecture">architecture</a> including major influences and a high-level comparison with kustomize.</li>
+<li>Read kpt <a href="../guides">guides</a> for how to produce and consume packages and integrate with a wider ecosystem of tools.</li>
+<li>Consult the <a href="../faq">FAQ</a> for answers to common questions.</li>
+</ul>
 
         <div class="section-index">
     
@@ -1121,7 +1128,7 @@ to using the builtin schema.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

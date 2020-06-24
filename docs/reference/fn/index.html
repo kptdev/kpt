@@ -942,8 +942,7 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 kpt fn run DIR/
 </code></pre></div><!--mdtogo-->
 <h4 id="functions-catalog">Functions Catalog</h4>
-<p><a href="../../guides/consumer/function/catalog">KPT Functions Catalog</a> documents a catalog of kpt
-functions implemented using different toolchains.</p>
+<p>The <a href="../../guides/consumer/function/catalog">catalog</a> documents kpt functions implemented using different toolchains like starlark, typescript, and golang.</p>
 <h4 id="developing-functions">Developing Functions</h4>
 <table>
 <thead>
@@ -956,13 +955,23 @@ functions implemented using different toolchains.</p>
 <tbody>
 <tr>
 <td>Typescript</td>
-<td><a href="../../guides/producer/functions/ts">KPT Functions SDK</a></td>
+<td><a href="../../guides/producer/functions/ts">Typescript SDK</a></td>
 <td><a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">examples</a></td>
 </tr>
 <tr>
 <td>Go</td>
-<td><a href="https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml">kustomize/kyaml</a></td>
-<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go">example</a></td>
+<td><a href="../../guides/producer/functions/golang">Golang SDK</a></td>
+<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-go-nginx/image/main.go">example</a></td>
+</tr>
+<tr>
+<td>Shell</td>
+<td>Use builtin shell functions</td>
+<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-heredoc-cockroachdb/image/cockroachdb-template.sh">example</a></td>
+</tr>
+<tr>
+<td>Starlark</td>
+<td><a href="../../guides/producer/functions/starlark">Starlark SDK</a></td>
+<td>Example coming soon!</td>
 </tr>
 </tbody>
 </table>
@@ -1064,7 +1073,7 @@ functions implemented using different toolchains.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7bf1a36d19747d493ad7972c23b53c7070f7ae57">Transfer kpt-functions sdk and catalog docs to kpt (7bf1a36d)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4be5d836e58fc37df9edf072ac187c45cfca5c8f">Add structured results section and link to toolchain used to make catalog functions (4be5d836)</a>
 </div>
 </div>
 
@@ -1082,7 +1091,7 @@ functions implemented using different toolchains.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

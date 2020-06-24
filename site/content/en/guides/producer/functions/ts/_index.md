@@ -69,7 +69,7 @@ Currently supported platforms: amd64 Linux/Mac
    npm run watch
    ```
 
-1. Run the `label_namespace` function:
+1. Run the [`label_namespace`][label-namespace] function:
 
    ```sh
    export CONFIGS=../../example-configs
@@ -87,7 +87,7 @@ Currently supported platforms: amd64 Linux/Mac
    ```
 
 1. Try modifying the function in `src/label_namespace.ts` to perform other operations
-   on `example-configs`, then repeat step 4.
+   on `example-configs`, then repeat step 4. You can also explore other functions such as [suggest-psp] or [validate-rolebinding].
 
    The function should implement the `KptFunc` interface [documented here][api-kptfunc].
 
@@ -104,3 +104,6 @@ Currently supported platforms: amd64 Linux/Mac
 [api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html
 [Typescript Developer Guide]: develop/
 [run functions]: ../../../consumer/function/
+[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/label_namespace.ts
+[suggest-psp]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/suggest_psp.ts
+[validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/validate_rolebinding.ts

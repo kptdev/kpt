@@ -26,8 +26,7 @@ configuration (rather than with an editor), etc
 #### **Q: How is `kpt` different from other solutions?**
 
 A: Rather than expressing configuration as code, `kpt` represents configuration packages as data,
-in particular as YAML or JSON objects adhering to the
-[Kubernetes resource model]
+in particular as YAML or JSON objects adhering to the [kubernetes resource model]
 
 #### **Q: Why resource configuration as the artifact rather than templates or configuration DSLs?**
 
@@ -69,13 +68,13 @@ or [functions] to generate or modify YAML configuration.
 #### **Q: I really like DSL / templating solution X. Can I use it with `kpt`?**
 
 A: Yes. `kpt` supports plugging in solutions which generate or manipulate configuration, e.g. from
-DSLs and templates. This may be performed using [functions]. The generated
+DSLs and templates. This may be performed using [source functions] from our catalog. The generated
 output may be modified directly, and merged when regenerated.
 
 #### **Q: I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with `kpt`?**
 
 A: Yes. `kpt`'s architecture facilitates the developing programs which may generate or modify
-configuration. Multiple programs may be composed together. See [functions].
+configuration. See the [functions pipeline] page for how to compose multiple programs together.
 
 #### **Q: How do I roll out changes throughout my organization using `kpt`?**
 
@@ -90,16 +89,21 @@ A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` binary.
 
 A: [Please reach out!][contact]
 
-###
+### Next Steps
 
-[updating]: /kpt/reference/pkg/update
-[functions]: /kpt/reference/fn/run
-[setters]: /kpt/reference/cfg/set
+- Learn about kpt [architecture] including major influences and a high-level comparison with kustomize.
+- Consult the [command reference] for how to use kpt.
+- Read kpt [guides] for how to produce and consume packages and integrate with a wider ecosystem of tools.
+
+[updating]: ../reference/pkg/update
+[functions]: ../reference/fn/run
+[setters]: ../reference/cfg/set
 [gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
-[pkg]: /kpt/reference/pkg
-[cfg]: /kpt/reference/cfg
-[fn]: /kpt/reference/fn
-[live]: /kpt/reference/live
-[contact]: /kpt/contact
+[contact]: ../contact
 [kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
+[architecture]: ../concepts/architecture
+[source functions]: ../guides/consumer/function/catalog/#sources
+[functions pipeline]: ../guides/consumer/function/pipeline/
+[command reference]: ../reference
+[guides]: ../guides

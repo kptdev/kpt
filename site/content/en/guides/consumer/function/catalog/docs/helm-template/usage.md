@@ -7,7 +7,7 @@ description: >
     Helm-template Usage.
 ---
 
-# Using helm-template
+## Using helm-template
 
 Kpt packages are just configuration so any solution, like the `helm template` command, which emits configuration can also be used to generate kpt packages. The `helm-template` kpt function generates a new kpt package from a local Helm chart or upserts Helm chart configuration to an existing kpt package. In the context of a pipeline, these packages can then be further customized using other kpt functions.
 
@@ -15,18 +15,13 @@ Kpt packages are just configuration so any solution, like the `helm template` co
 
 ### Example 1: Hello World
 
-#### Prerequisites
+#### Hello World: Prerequisites
 
 * Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.
-* Install kpt.  
-
-    ```sh
-    gcloud components install kpt
-    ```
-
+* Install kpt.
 * Install helm.
 
-#### Steps
+#### Hello World: Steps
 
 1. Create a new helm chart called "helloworld-chart".  
 
@@ -50,15 +45,10 @@ Kpt packages are just configuration so any solution, like the `helm template` co
 
 ### Example 2: Expand and apply multiple charts to a cluster
 
-#### Prerequisites
+#### Multiple Charts: Prerequisites
 
 * Install kubectl and have an appropriate kubeconfig entry to your Kubernetes cluster.
-* Install kpt.  
-
-    ```sh
-    gcloud components install kpt
-    ```
-
+* Install kpt.
 * Install helm.
 * Download the helm charts for this example to your filesystem or use your own.  
 
@@ -68,7 +58,7 @@ Kpt packages are just configuration so any solution, like the `helm template` co
     helm pull bitnami/redis --untar
     ```
 
-#### Steps
+#### Multiple Charts: Steps
 
 1. Run `helm-template` on each of the charts you need. You can pipe these commands, as shown below. The following commands expand the mongodb and redis charts and store the resulting yaml into a new output directory.  
 
@@ -96,7 +86,7 @@ Kpt packages are just configuration so any solution, like the `helm template` co
 
 ### How can I set arbitrary values in my chart
 
-We recommend that you create a function config file with the values you want so you can check the new file into a version-controlled repository. You can specify arbitrary arguments to the helm-template command in this way. The below example specifies a different values file than the default. 
+We recommend that you create a function config file with the values you want so you can check the new file into a version-controlled repository. You can specify arbitrary arguments to the helm-template command in this way. The below example specifies a different values file than the default.
 
 ```sh
 cat >fc.yaml <<EOF

@@ -102,15 +102,13 @@ kpt fn run --help
 
 ## Next Steps
 
-- [Try running other functions in the Catalog][catalog]
+- Try running other functions in the [catalog].
 - Get a quickstart on writing functions from the [function producer docs].
 - Learn about [functions concepts] like sources, sinks, and pipelines.
 
-[concept-source]: ../../../../concepts/functions/#source-function
 [concept-pipeline]: ../../../../concepts/functions/#pipeline
 [catalog]: ../catalog/
-[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/hello-world/src/label_namespace.ts
-[download-kpt]: ../../../../installation/
+[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
 [cloud-build]: https://cloud.google.com/cloud-build/
 [tekton]: https://cloud.google.com/tekton/
 [argo]: https://github.com/argoproj/argo
