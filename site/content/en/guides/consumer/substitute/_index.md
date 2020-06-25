@@ -124,7 +124,7 @@ metadata:
     spec:
       containers:
       - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:v0.1.0 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-tag"}
+        image: gcr.io/kpt-dev/helloworld-gke:v0.1.0 # {"$kpt-set":"image-tag"}
 ...
 ```
 
@@ -152,7 +152,7 @@ metadata:
     spec:
       containers:
       - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:v0.2.0 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-tag"}
+        image: gcr.io/kpt-dev/helloworld-gke:v0.2.0 # {"$kpt-set":"image-tag"}
 ...
 ```
 

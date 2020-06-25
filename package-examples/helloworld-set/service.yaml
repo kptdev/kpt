@@ -22,10 +22,10 @@ metadata:
   labels:
     app: hello
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: hello
   ports:
   - protocol: TCP
-    port: 80 # {"$ref":"#/definitions/io.k8s.cli.setters.http-port"}
+    port: 80 # {"$kpt-set":"http-port"}
     targetPort: http

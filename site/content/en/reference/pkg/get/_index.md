@@ -33,7 +33,7 @@ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@maste
 ```sh
 # fetch package examples from github.com/kubernetes/examples
 # creates directory ./examples fetched from the provided commit
-kpt pkg get https://github.com/kubernetes/examples.git/@8186bef8e5c0621bf80fa8106bd595aae8b62884 ./
+kpt pkg get https://github.com/kubernetes/examples.git/@[COMMIT_HASH] ./
 ```
 <!--mdtogo-->
 
