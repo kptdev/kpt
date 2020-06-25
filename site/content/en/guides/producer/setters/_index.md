@@ -318,4 +318,51 @@ spec:
         cpu: "0.5" # {"$kpt-set":"cpu"}
 ```
 
+#### Deleting a Setter
+
+Setters may be deleted either manually (by editing the Kptfile directly), or
+programmatically (through the `delete-setter` command).  The `delete-setter`
+command will:
+
+1. delete an OpenAPI definition for a setter in the Kptfile
+2. remove references to the setter definition on the resource fields
+
+```yaml
+# Kptfile -- original
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: "replicas"
+          value: "3"
+```
+
+```yaml
+# deployment.yaml -- original
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}
+```
+
+```sh
+# delete a setter named "replicas"
+kpt cfg delete-setter replicas
+```
+```yaml
+# Kptfile -- updated
+openAPI:
+```
+
+```yaml
+# deployment.yaml -- updated
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 3 
+```
+
 [OpenAPI types]: https://swagger.io/docs/specification/data-models/data-types/

@@ -39,7 +39,7 @@ in this guide.
 ### Data model
 
 - Fields reference setters through OpenAPI definitions specified as
-  line comments -- e.g. ` + "`" + `# { "$ref": "#/definitions/..." }` + "`" + `
+  line comments -- e.g. ` + "`" + `# { "$kpt-set": "replicas-setter" }` + "`" + `
 - OpenAPI definitions are provided through the Kptfile
 
 ### Command control flow
@@ -59,10 +59,6 @@ command will:
 
 1. create a new OpenAPI definition for a setter in the Kptfile
 2. create references to the setter definition on the resource fields
-
-  # Kptfile -- original
-  openAPI:
-    definitions: {}
 
   # deployment.yaml -- original
   kind: Deployment
@@ -89,7 +85,7 @@ command will:
   metadata:
     name: foo
   spec:
-    replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+    replicas: 3 # {"$kpt-set":"replicas"}
 
 #### Invoking a Setter
 
@@ -100,7 +96,7 @@ command will:
    labels:
      app: hello
   spec:
-   replicas: 3 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
+   replicas: 3 # {"$kpt-set":"replicas"}
 
   # set the replicas field to 5
   kpt cfg set DIR/ replicas 5
@@ -112,33 +108,7 @@ command will:
    labels:
      app: hello
   spec:
-   replicas: 5 # {"$ref":"#/definitions/io.k8s.cli.setters.replicas"}
-
-#### Types
-
-Setters may have types specified which ensure that the configuration is always
-serialized correctly as yaml 1.1 -- e.g. if a string field such as an
-annotation or arg has the value "on", then it would need to be quoted otherwise
-it will be parsed as a bool by yaml 1.1.
-
-This may be done by modifying the Kptfile OpenAPI definitions as shown here:
-
-  openAPI:
-    definitions:
-      io.k8s.cli.setters.version:
-        x-k8s-cli:
-          setter:
-            name: "version"
-            value: "3"
-        type: string
-
-Set would change the configuration like this:
-
-  kind: Deployment
-  metadata:
-    name: foo
-    annotations:
-      version: "3" # {"$ref":"#/definitions/io.k8s.cli.setters.version"}
+   replicas: 5 # {"$kpt-set":"replicas"}
 
 #### OpenAPI Validations
 Users can input any additional validation constraints during ` + "`" + `create-setter` + "`" + `
@@ -151,7 +121,7 @@ error if the input value doesn't meet any of the constraints.
   {"maximum": 10, "type": "integer"}
   
   # create setter with openAPI property constraints
-  kpt cfg create-setter replicas 3 --schema-path /path/to/file.json
+  kpt cfg create-setter DIR/ replicas 3 --schema-path /path/to/file.json
 
 The command creates setter with the following definition
 
@@ -166,27 +136,58 @@ The command creates setter with the following definition
             value: "3"
 
   # try to set value not adhering to the constraints
-  kpt cfg set replicas 11
+  kpt cfg set DIR/ replicas 11
 
   error: The input value doesn't validate against provided OpenAPI schema:
   validation failure list: replicas in body should be less than or equal to 10
 
-  Relevant fixtures from openAPI JSON schema suite
+  Example schema for integer validation
   
-  {"minLength", "maxLength", "pattern", "type", "minimum", "maximum", "multipleOf",
-  "enum", "maxItems", "minItems", "format", "patternProperties", "uniqueItems",
-  "allOf", "not", "oneOf", "anyOf"}
+  {
+    "maximum": 10,
+    "type": "integer",
+    "minimum": 3,
+    "format": "int64",
+    "multipleOf": 2
+  }
+  
+  Example schema for string validation
+  
+  {
+    "maxLength": 10,
+    "type": "string",
+    "minLength": 3,
+    "pattern": "^[A-Za-z]+$",
+    "enum": [
+      "nginx",
+      "ubuntu"
+    ]
+  }
+  
+  Example schema for array validation
+  
+  {
+    "maxItems": 10,
+    "type": "array",
+    "minItems": 3,
+    "uniqueItems": true,
+    "items": {
+      "type": "string",
+      "maxLength": 4
+    }
+  }
+  
+
+Relevant resources for more information: [OpenAPI types]
 
 #### Setting Lists
 
-It is possible to create setters for fields which are a list of strings.
+It is possible to create setters for fields which are a list of strings/integers.
 The setter type must be ` + "`" + `array` + "`" + `, and the reference must be on the list field.
 The list setter will take variable args for its value rather than a single value.
 
-**Note:** Currently ` + "`" + `create-setter` + "`" + ` will not directly create a setter reference for a
-list field.  The simplest way to create a list setter is to create a setter for one of
-the elements, and then move the reference to the list field.
-
+**Note:** You should skip passing the value arg while creating array setters. ` + "`" + `field` + "`" + `
+flag is required for array setters.
 
   # example.yaml
   apiVersion: example.com/v1beta1
@@ -194,44 +195,20 @@ the elements, and then move the reference to the list field.
   spec:
     list:
     - "a"
+    - "b"
 
   # Kptfile
   kind: Kptfile
 
-
-` + "`" + `$ kpt cfg create-setter --type array . list a` + "`" + `
-
-**Note:** Move the setter reference from the element (` + "`" + `- "a"` + "`" + `) to the list (` + "`" + `list: ` + "`" + `)
+` + "`" + `$ kpt cfg create-setter DIR/ list --type array --field spec.list` + "`" + `
 
   # example.yaml
   apiVersion: example.com/v1beta1
   kind: Example
   spec:
-    list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
-    - "a"
-
-  # Kptfile
-  kind: Kptfile
-  openAPI:
-    definitions:
-      io.k8s.cli.setters.list:
-        type: array
-        x-k8s-cli:
-          setter:
-            name: list
-            listValues:
-            - "a"
-
-` + "`" + `$ kpt cfg set . list a b c` + "`" + `
-
-  # example.yaml
-  apiVersion: example.com/v1beta1
-  kind: Example
-  spec:
-    list: # {"$ref":"#/definitions/io.k8s.cli.setters.list"}
+    list: # {"$kpt-set":"list"}
     - "a"
     - "b"
-    - "c"
 
   # Kptfile
   kind: Kptfile
@@ -245,7 +222,31 @@ the elements, and then move the reference to the list field.
             listValues:
             - "a"
             - "b"
+
+` + "`" + `$ kpt cfg set DIR/ list c d e` + "`" + `
+
+  # example.yaml
+  apiVersion: example.com/v1beta1
+  kind: Example
+  spec:
+    list: # {"$kpt-set":"list"}
+    - "c"
+    - "d"
+    - "e"
+
+  # Kptfile
+  kind: Kptfile
+  openAPI:
+    definitions:
+      io.k8s.cli.setters.list:
+        type: array
+        x-k8s-cli:
+          setter:
+            name: list
+            listValues:
             - "c"
+            - "d"
+            - "e"
 
 #### Enumerations
 
@@ -283,4 +284,42 @@ Set would change the configuration like this:
         - name: foo
       resources:
         requests:
-          cpu: "0.5" # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}`
+          cpu: "0.5" # {"$kpt-set":"cpu"}
+
+#### Deleting a Setter
+
+Setters may be deleted either manually (by editing the Kptfile directly), or
+programmatically (through the ` + "`" + `delete-setter` + "`" + ` command).  The ` + "`" + `delete-setter` + "`" + `
+command will:
+
+1. delete an OpenAPI definition for a setter in the Kptfile
+2. remove references to the setter definition on the resource fields
+
+  # Kptfile -- original
+  openAPI:
+    definitions:
+      io.k8s.cli.setters.replicas:
+        x-k8s-cli:
+          setter:
+            name: "replicas"
+            value: "3"
+
+  # deployment.yaml -- original
+  kind: Deployment
+  metadata:
+    name: foo
+  spec:
+    replicas: 3 # {"$kpt-set":"replicas"}
+
+  # delete a setter named "replicas"
+  kpt cfg delete-setter replicas
+  # Kptfile -- updated
+  openAPI:
+
+  # deployment.yaml -- updated
+  kind: Deployment
+  metadata:
+    name: foo
+  spec:
+    replicas: 3 
+`
