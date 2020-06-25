@@ -166,7 +166,7 @@ __Example__: Declare two functions in `DIR/functions/my-functions.yaml`:
 ```yaml
 apiVersion: v1
 kind: ConfigMap
-metdata:
+metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
@@ -176,7 +176,7 @@ data:
 ---
 apiVersion: v1
 kind: MyType
-metdata:
+metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
