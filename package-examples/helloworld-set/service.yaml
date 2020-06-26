@@ -22,7 +22,7 @@ metadata:
   labels:
     app: hello
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: hello
   ports:
