@@ -19,6 +19,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdfetchk8sschema"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -57,13 +58,13 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples
 
-	applyCmd := apply.ApplyCommand(f, ioStreams)
+	applyCmd := ApplyCommand(f, ioStreams)
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
 	applyCmd.Example = livedocs.ApplyExamples
 
-	previewCmd := preview.NewCmdPreview(f, ioStreams)
+	previewCmd := PreviewCommand(f, ioStreams)
 	previewCmd.Short = livedocs.PreviewShort
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
@@ -84,4 +85,36 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 		fetchOpenAPICmd)
 
 	return liveCmd
+}
+
+func ApplyCommand(f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
+	liveCmd := apply.ApplyCommand(f, ioStreams)
+	applyCmd := *liveCmd
+	applyCmd.RunE = func(c *cobra.Command, args []string) error {
+		if err := setters.CheckRequiredSettersSet(args[0]); err != nil {
+			return err
+		}
+		liveCmd.SetArgs(args)
+		if err := liveCmd.Execute(); err != nil {
+			return err
+		}
+		return nil
+	}
+	return &applyCmd
+}
+
+func PreviewCommand(f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
+	liveCmd := preview.NewCmdPreview(f, ioStreams)
+	previewCmd := *liveCmd
+	previewCmd.RunE = func(c *cobra.Command, args []string) error {
+		if err := setters.CheckRequiredSettersSet(args[0]); err != nil {
+			return err
+		}
+		liveCmd.SetArgs(args)
+		if err := liveCmd.Execute(); err != nil {
+			return err
+		}
+		return nil
+	}
+	return &previewCmd
 }

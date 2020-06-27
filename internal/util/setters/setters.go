@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
@@ -28,6 +29,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -197,4 +199,49 @@ func DefExists(resourcePath, setterName string) bool {
 	}
 	setter, _ := openapi.Resolve(&ref)
 	return setter != nil
+}
+
+// CheckRequiredSettersSet iterates through all the setter definitions in Kptfile
+// and returns error if any of the setter has required filed true and isSet false
+func CheckRequiredSettersSet(path string) error {
+	kf, err := kptfileutil.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+
+	bOpenAPI, err := yaml.Marshal(kf.OpenAPI)
+	if err != nil {
+		return nil
+	}
+
+	openAPI, err := yaml.Parse(string(bOpenAPI))
+	if err != nil {
+		return nil
+	}
+
+	definitions, err := openAPI.Pipe(yaml.Lookup("definitions"))
+	if err != nil {
+		return nil
+	}
+
+	keys, err := definitions.Fields()
+	if err != nil {
+		return nil
+	}
+
+	for _, key := range keys {
+		required, err := definitions.Pipe(yaml.Lookup(key, "x-k8s-cli", "setter", "required"))
+		if required == nil || err != nil {
+			continue
+		}
+		requiredVal := required.Document().Value
+
+		isSet, err := definitions.Pipe(yaml.Lookup(key, "x-k8s-cli", "setter", "isSet"))
+		if requiredVal == "true" &&
+			(isSet == nil || err != nil || isSet.Document().Value != "true") {
+			return errors.Errorf("setter %s is required but not set, "+
+				"please set it to new value and try again", strings.TrimPrefix(key, fieldmeta.SetterDefinitionPrefix))
+		}
+	}
+	return nil
 }
