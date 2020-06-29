@@ -996,7 +996,7 @@ line comments &ndash; e.g. <code># { &quot;$kpt-set&quot;: &quot;replicas-setter
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <h3 id="command">Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
+kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.6.0 helloworld
 </code></pre></div><h3 id="output">Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 </code></pre></div><h2 id="list-the-setters">List the setters</h2>
@@ -1006,10 +1006,12 @@ kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworl
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters helloworld/ 
 </code></pre></div><p>Print the list of setters included in the package.</p>
 <h5 id="output-1">Output</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-  http-port   <span style="color:#0000cf;font-weight:bold">80</span>      package-default   helloworld port         <span style="color:#0000cf;font-weight:bold">3</span>      
-  image-tag   0.1.0   package-default   hello-world image tag   <span style="color:#0000cf;font-weight:bold">1</span>      
-  replicas    <span style="color:#0000cf;font-weight:bold">5</span>       package-default   helloworld replicas     <span style="color:#0000cf;font-weight:bold">1</span>     
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">    NAME      VALUE        SET BY            DESCRIPTION        COUNT
+  http-port   <span style="color:#0000cf;font-weight:bold">80</span>       package-default   helloworld port        <span style="color:#0000cf;font-weight:bold">3</span>
+  image-tag   v0.1.0   package-default   helloworld image tag   <span style="color:#0000cf;font-weight:bold">1</span>
+  replicas    <span style="color:#0000cf;font-weight:bold">5</span>        package-default   helloworld replicas    <span style="color:#0000cf;font-weight:bold">1</span>
+  SUBSTITUTION                    PATTERN                     REFERENCES
+  image          gcr.io/kpt-dev/helloworld-gke:<span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#000;font-weight:bold">-tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image-tag<span style="color:#ce5c00;font-weight:bold">]</span>
 </code></pre></div><p>The package contains 3 setters which may be used to modify the configuration
 using <code>kpt set</code>.</p>
 <h2 id="set-a-field">Set a field</h2>

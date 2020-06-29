@@ -69,7 +69,7 @@ in this guide.
 
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.3.0 helloworld
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.6.0 helloworld
 ```
 
 ### Output
@@ -94,10 +94,12 @@ Print the list of setters included in the package.
 ##### Output
 
 ```sh
-    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-  http-port   80      package-default   helloworld port         3      
-  image-tag   0.1.0   package-default   hello-world image tag   1      
-  replicas    5       package-default   helloworld replicas     1     
+    NAME      VALUE        SET BY            DESCRIPTION        COUNT
+  http-port   80       package-default   helloworld port        3
+  image-tag   v0.1.0   package-default   helloworld image tag   1
+  replicas    5        package-default   helloworld replicas    1
+  SUBSTITUTION                    PATTERN                     REFERENCES
+  image          gcr.io/kpt-dev/helloworld-gke:${image-tag}   [image-tag]
 ```
 
 The package contains 3 setters which may be used to modify the configuration
