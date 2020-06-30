@@ -34,7 +34,10 @@ type testSuite struct {
 }
 
 func TestPipeline(t *testing.T) {
-	testSuites := []testSuite{githubActionsTestSuite}
+	testSuites := []testSuite{
+		githubActionsTestSuite,
+		cloudBuildTestSuite,
+	}
 
 	for _, testSuite := range testSuites {
 		pipeline := testSuite.pipeline

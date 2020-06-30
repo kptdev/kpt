@@ -30,7 +30,7 @@ func ExportCommand() *cobra.Command {
 	return GetExportRunner().Command
 }
 
-// Create a ExportRunner instance and wire it to the corresponding Command.
+// GetExportRunner creates a ExportRunner instance and wires it to the corresponding Command.
 func GetExportRunner() *ExportRunner {
 	r := &ExportRunner{PipelineConfig: &types.PipelineConfig{}}
 	c := &cobra.Command{
@@ -81,7 +81,7 @@ type ExportRunner struct {
 	Pipeline orchestrators.Pipeline
 }
 
-// Generate the pipeline and write it into a file or stdout.
+// runE generates the pipeline and writes it into a file or stdout.
 func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
 	pipeline := r.Pipeline.Init(r.PipelineConfig).Generate()
 

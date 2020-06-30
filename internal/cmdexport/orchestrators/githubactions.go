@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Represent a GitHub Actions workflow.
+// GitHubActions represents a GitHub Actions workflow.
 // @see https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
 type GitHubActions struct {
 	Name string                          `yaml:",omitempty"`
