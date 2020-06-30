@@ -25,13 +25,15 @@ import (
 	"gotest.tools/assert"
 )
 
-var tempDir, _ = ioutil.TempDir("", "kpt-fn-export-test")
+// Use file path as key, and content as value.
+type files map[string]string
 
 type TestCase struct {
 	description string
 	params      []string
 	expected    string
 	err         string
+	files       files
 }
 
 var testCases = []TestCase{
@@ -70,7 +72,7 @@ jobs:
 			"github-actions",
 			".",
 			"--output",
-			filepath.Join(tempDir, "main.yaml"),
+			"main.yaml",
 		},
 		expected: `
 name: kpt
@@ -90,7 +92,10 @@ jobs:
 	},
 	{
 		description: "exports a GitHub Actions pipeline with --fn-path",
-		params:      []string{"github-actions", ".", "--fn-path", "functions/"},
+		files: map[string]string{
+			"function.yaml": "",
+		},
+		params: []string{"github-actions", ".", "--fn-path", "function.yaml"},
 		expected: `
 name: kpt
 on:
@@ -104,18 +109,21 @@ jobs:
           - name: Run all kpt functions
             uses: docker://gongpu/kpt:latest
             with:
-                args: fn run . --fn-path functions/
+                args: fn run . --fn-path function.yaml
 `,
 	},
 	{
-		description: "exports a Cloud Build pipeline",
+		description: "exports a Cloud Build pipeline with --fn-path",
+		files: map[string]string{
+			"functions/function.yaml": "",
+		},
 		params: []string{
 			"cloud-build",
 			".",
 			"--fn-path",
 			"functions/",
 			"--output",
-			filepath.Join(tempDir, "cloudbuild.yaml"),
+			"cloudbuild.yaml",
 		},
 		expected: `
 steps:
@@ -128,11 +136,69 @@ steps:
       - functions/
 `,
 	},
+	{
+		description: "fails to export a Cloud Build pipeline with non-exist function path",
+		params: []string{
+			"cloud-build",
+			".",
+			"--fn-path",
+			"functions.yaml",
+			"--output",
+			"cloudbuild.yaml",
+		},
+		err: "function path (functions.yaml) does not exist",
+	},
+	{
+		description: "fails to export a Cloud Build pipeline with outside function path",
+		params: []string{
+			"cloud-build",
+			".",
+			"--fn-path",
+			"../functions/functions.yaml",
+			"--output",
+			"cloudbuild.yaml",
+		},
+		err: "function path (../functions/functions.yaml) is not within the current working directory",
+	},
+}
+
+func setupTempDir(files files) (dir string, err error) {
+	tempDir, err := ioutil.TempDir("", "kpt-fn-export-test")
+	if err != nil {
+		return "", err
+	}
+
+	for p, content := range files {
+		p = filepath.Join(tempDir, p)
+
+		err = os.MkdirAll(
+			filepath.Dir(p),
+			0755, // drwxr-xr-x
+		)
+		if err != nil {
+			return "", nil
+		}
+
+		err = ioutil.WriteFile(
+			p,
+			[]byte(content),
+			0644, // -rw-r--r--
+		)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return tempDir, nil
 }
 
 func TestCmdExport(t *testing.T) {
 	for i := range testCases {
 		testCase := testCases[i]
+		tempDir, err := setupTempDir(testCase.files)
+		assert.NilError(t, err)
+		err = os.Chdir(tempDir)
+		assert.NilError(t, err)
 
 		t.Run(testCase.description, func(t *testing.T) {
 			r := GetExportRunner()
@@ -162,7 +228,7 @@ func TestCmdExport(t *testing.T) {
 				assert.Equal(t, expected, actual)
 			}
 		})
-	}
 
-	_ = os.RemoveAll(tempDir)
+		_ = os.RemoveAll(tempDir)
+	}
 }
