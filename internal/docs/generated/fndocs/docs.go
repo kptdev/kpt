@@ -42,7 +42,7 @@ var ExportLong = `
   kpt fn export ORCHESTRATOR DIR/ [--fn-path FUNCTIONS_DIR/] [--output OUTPUT_FILENAME]
   
   ORCHESTRATOR:
-    Supported orchestrators are github-actions, and cloud-build.
+    Supported orchestrators are github-actions, cloud-build, and gitlab-ci.
   DIR:
     Path to a package directory. If you do not specify the --fn-path flag, this command will discover functions in DIR and run them against resources in it.
 `

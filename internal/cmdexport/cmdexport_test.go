@@ -178,6 +178,32 @@ steps:
       - functions
 `,
 	},
+	{
+		description: "exports a GitLab CI pipeline with --fn-path",
+		files: map[string]string{
+			"resources/resource.yaml": "",
+			"functions/function.yaml": "",
+		},
+		params: []string{
+			"gitlab-ci",
+			"resources",
+			"--fn-path",
+			"functions",
+			"--output",
+			".gitlab-ci.yml",
+		},
+		expected: `
+stages:
+  - run-kpt-functions
+kpt:
+    stage: run-kpt-functions
+    image: docker
+    services:
+      - docker:dind
+    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gongpu/kpt:latest
+        fn run /app/resources --fn-path /app/functions
+`,
+	},
 }
 
 // ReplaceDIRMacro replaces all `{DIR}` macros in params with cwd.

@@ -55,6 +55,10 @@ func GetExportRunner() *ExportRunner {
 				{
 					r.Pipeline = new(orchestrators.CloudBuild)
 				}
+			case "gitlab-ci":
+				{
+					r.Pipeline = new(orchestrators.GitLabCI)
+				}
 			default:
 				return fmt.Errorf("unsupported orchestrator %v", r.Orchestrator)
 			}
