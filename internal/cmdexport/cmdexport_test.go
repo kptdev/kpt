@@ -36,6 +36,11 @@ type TestCase struct {
 
 var testCases = []TestCase{
 	{
+		description: "fails on not providing enough args",
+		params:      []string{"github-actions"},
+		err:         "accepts 2 args, received 1",
+	},
+	{
 		description: "fails on an unsupported orchestrator",
 		params:      []string{"random-orchestrator", "."},
 		err:         "unsupported orchestrator random-orchestrator",
@@ -100,6 +105,27 @@ jobs:
             uses: docker://gongpu/kpt:latest
             with:
                 args: fn run . --fn-path functions/
+`,
+	},
+	{
+		description: "exports a Cloud Build pipeline",
+		params: []string{
+			"cloud-build",
+			".",
+			"--fn-path",
+			"functions/",
+			"--output",
+			filepath.Join(tempDir, "cloudbuild.yaml"),
+		},
+		expected: `
+steps:
+  - name: gongpu/kpt:latest
+    args:
+      - fn
+      - run
+      - .
+      - --fn-path
+      - functions/
 `,
 	},
 }

@@ -51,6 +51,10 @@ func GetExportRunner() *ExportRunner {
 				{
 					r.Pipeline = new(orchestrators.GitHubActions)
 				}
+			case "cloud-build":
+				{
+					r.Pipeline = new(orchestrators.CloudBuild)
+				}
 			default:
 				return fmt.Errorf("unsupported orchestrator %v", r.Orchestrator)
 			}
