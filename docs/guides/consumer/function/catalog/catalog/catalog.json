@@ -29,6 +29,13 @@
     "toolchain": "../../../producer/functions/golang"
   },
   {
+    "image": "lyft/kustomizer:v3.3.0",
+    "args": "kustomize build [...]",
+    "source": "https://github.com/lyft/kustomizer/blob/master/Dockerfile",
+    "description": "Run kustomize to build configuration",
+    "type": "source"
+  },
+  {
     "image": "gcr.io/kpt-dev/kpt",
     "args": "fn sink",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/internal/commands/sink.go",
@@ -66,10 +73,18 @@
     "toolchain": "../../../producer/functions/ts"
   },
   {
+    "image": "gcr.io/kpt-functions/kubeval",
+    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/kubeval.ts",
+    "description": "Validates configuration using kubeval.",
+    "type": "validator",
+    "toolchain": "../../../producer/functions/ts"
+  },
+  {
     "image": "gcr.io/kustomize-functions/example-validator-kubeval",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/validator-kubeval/image/main.go",
     "description": "Validates that all containers have cpu and memory reservations set.",
     "type": "validator",
+    "demo": true,
     "toolchain": "../../../producer/functions/golang"
   },
   {

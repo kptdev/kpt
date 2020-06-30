@@ -64,7 +64,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/exec/</loc>
-    <lastmod>2020-05-06T11:29:00-07:00</lastmod>
+    <lastmod>2020-06-26T17:29:58-05:00</lastmod>
   </url>
   
   <url>
@@ -114,7 +114,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/set/</loc>
-    <lastmod>2020-06-15T20:34:10-07:00</lastmod>
+    <lastmod>2020-06-23T21:53:30-07:00</lastmod>
   </url>
   
   <url>
@@ -259,7 +259,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
-    <lastmod>2020-06-24T17:57:00-05:00</lastmod>
+    <lastmod>2020-06-30T18:25:26-04:00</lastmod>
   </url>
   
   <url>
@@ -330,6 +330,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/diff/</loc>
     <lastmod>2020-03-22T23:09:14-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/reference/fn/export/</loc>
+    <lastmod>2020-06-25T16:43:31+00:00</lastmod>
   </url>
   
   <url>
