@@ -190,8 +190,8 @@ git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;init&amp;#34;&l
 &lt;p&gt;Now this goal can be easily achieved with help of kpt.&lt;/p&gt;
 &lt;h4 id=&#34;create-setter-by-app-developer&#34;&gt;Create setter by App Developer&lt;/h4&gt;
 &lt;p&gt;Let&amp;rsquo;s say the developer need to claim two fields as &amp;ldquo;configurable&amp;rdquo; for his application, he can add two kpt setters here:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt cfg create-setter sampleapp/ instance-name example-component --field &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;metadata.name&amp;#34;&lt;/span&gt; --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;use to set an instance name&amp;#34;&lt;/span&gt; --set-by &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;sampleapp developer&amp;#34;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;image&amp;#34;&lt;/span&gt; --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;use to set image for component&amp;#34;&lt;/span&gt; --set-by &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;sampleapp developer&amp;#34;&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt cfg create-setter sampleapp/ instance-name example-component --field &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;metadata.name&amp;#34;&lt;/span&gt; --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;use to set an instance name&amp;#34;&lt;/span&gt; --set-by &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;sampleapp developer&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;image&amp;#34;&lt;/span&gt; --description &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;use to set image for component&amp;#34;&lt;/span&gt; --set-by &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;sampleapp developer&amp;#34;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then the app operator could see which parameters are available in this component like below:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt cfg list-setters sampleapp/
   NAME              VALUE               SET BY                   DESCRIPTION             COUNT
@@ -240,7 +240,7 @@ applicationconfiguration.core.oam.dev/example-appconfig is Current: Resource is 
 component.core.oam.dev/example-component is Current: Resource is current
 all resources has reached the Current status
 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt; resource&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;s&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt; pruned
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Happly building OAM apps with kpt!&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Happy building OAM apps with kpt!&lt;/p&gt;
 
       </description>
     </item>

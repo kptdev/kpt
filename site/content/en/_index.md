@@ -16,6 +16,17 @@ apply Kubernetes configuration.
 
 {{% /blocks/lead %}}
 
+{{< blocks/section color="light" >}}
+{{% blocks/feature icon="fa fa-download" title="Install" url="installation" %}}
+Install via gcloud, homebrew, binaries or source.
+{{% /blocks/feature %}}
+
+{{% blocks/feature icon="fab fa-github" title="Contribute" url="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md" %}}
+We use a pull request workflow on **GitHub**. New users are always welcome!
+{{% /blocks/feature %}}
+
+{{< /blocks/section >}}
+
 {{< blocks/section color="dark" >}}
 {{% blocks/feature title="`kpt pkg`" url="reference/pkg" %}}
 A packaging solution for resource configuration.
@@ -38,16 +49,3 @@ transform and validate configuration.
 {{% /blocks/feature %}}
 
 {{< /blocks/section >}}
-
-{{< blocks/section >}}
-{{% blocks/feature icon="fab fa-envelope" title="Install" url="installation" %}}
-Install via gcloud, homebrew, binaries or source.
-{{% /blocks/feature %}}
-
-{{% blocks/feature icon="fab fa-github" title="Contribute" %}}
-We do a [Pull Request](https://github.com/GoogleContainerTools/kpt/pulls) contributions workflow on **GitHub**. New users are always welcome!
-{{% /blocks/feature %}}
-
-{{< /blocks/section >}}
-
-

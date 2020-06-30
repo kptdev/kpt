@@ -29,7 +29,7 @@
 containerized functions.&lt;/p&gt;
 &lt;p&gt;Functions are packaged as container images which are run locally against
 the contents of a package.&lt;/p&gt;
-&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;h2 id=&#34;examples&#34;&gt;Examples&lt;/h2&gt;
 &lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# read the Resources from DIR, provide them to a container my-fun as input,&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# write my-fn output back to DIR&lt;/span&gt;
@@ -42,7 +42,7 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# functions may be scoped to a subset of Resources -- see `kpt help fn run`&lt;/span&gt;
 kpt fn run DIR/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
-&lt;h4 id=&#34;imperatively-run-an-single-function&#34;&gt;Imperatively run an single function&lt;/h4&gt;
+&lt;h2 id=&#34;imperatively-run-a-single-function&#34;&gt;Imperatively run a single function&lt;/h2&gt;
 &lt;p&gt;A function may be explicitly specified using the &lt;code&gt;--image&lt;/code&gt; flag.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt; Locally run the container image &lt;code&gt;gcr.io/example.com/my-fn&lt;/code&gt; against
 the Resources in &lt;code&gt;DIR/&lt;/code&gt;:&lt;/p&gt;
@@ -58,7 +58,7 @@ kpt sink DIR/
 &lt;code&gt;ConfigMap&lt;/code&gt; containing &lt;code&gt;data: {foo: bar}&lt;/code&gt;. This is used to parameterize the behavior
 of the function:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/ --image gcr.io/example.com/my-fn -- &lt;span style=&#34;color:#000&#34;&gt;foo&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;bar
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;declaratively-run-one-or-more-functions&#34;&gt;Declaratively run one or more functions&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;declaratively-run-one-or-more-functions&#34;&gt;Declaratively run one or more functions&lt;/h2&gt;
 &lt;p&gt;Functions and their input configuration may be declared in files rather than directly
 on the command line.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt; This is equivalent to the preceding example:&lt;/p&gt;
@@ -76,7 +76,7 @@ on the command line.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Here, rather than specifying &lt;code&gt;gcr.io/example.com/my-fn&lt;/code&gt; as a flag, we specify it in a
 file using the &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation.&lt;/p&gt;
-&lt;h5 id=&#34;scoping-rules&#34;&gt;Scoping Rules&lt;/h5&gt;
+&lt;h2 id=&#34;scoping-rules&#34;&gt;Scoping Rules&lt;/h2&gt;
 &lt;p&gt;Functions which are nested under some sub directory are scoped only to Resources under
 that same sub directory. This allows fine grain control over how functions are
 executed:&lt;/p&gt;
@@ -108,11 +108,11 @@ executed:&lt;/p&gt;
 containing function configurations:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alternatively, scoping can be disabled using &lt;code&gt;--global-scope&lt;/code&gt; flag.&lt;/p&gt;
-&lt;h5 id=&#34;declaring-multiple-functions&#34;&gt;Declaring Multiple Functions&lt;/h5&gt;
+&lt;h2 id=&#34;declaring-multiple-functions&#34;&gt;Declaring Multiple Functions&lt;/h2&gt;
 &lt;p&gt;You may declare multiple functions. If they are specified in the same file
 (multi-object YAML file separated by &lt;code&gt;---&lt;/code&gt;), they will
 be run sequentially in the order that they are specified.&lt;/p&gt;
-&lt;h5 id=&#34;custom-functionconfig&#34;&gt;Custom &lt;code&gt;functionConfig&lt;/code&gt;&lt;/h5&gt;
+&lt;h2 id=&#34;custom-functionconfig&#34;&gt;Custom &lt;code&gt;functionConfig&lt;/code&gt;&lt;/h2&gt;
 &lt;p&gt;Functions may define their own API input types - these may be client-side equivalents
 of CRDs:&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example&lt;/strong&gt;: Declare two functions in &lt;code&gt;DIR/functions/my-functions.yaml&lt;/code&gt;:&lt;/p&gt;
@@ -136,14 +136,25 @@ of CRDs:&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;field&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;nestedField&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;value&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h2&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt fn run DIR [flags]
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;If the container exits with non-zero status code, run will fail and print the
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;flags&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If the container exits with non-zero status code, run will fail and print the
 container &lt;code&gt;STDERR&lt;/code&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;DIR:
-  Path to a package directory.  Defaults to stdin if unspecified.
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;DIR:
+  Path to a package directory.  Defaults to stdin &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; unspecified.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h2 id=&#34;structured-results&#34;&gt;Structured Results&lt;/h2&gt;
+&lt;p&gt;Functions may emit results using the structure defined in the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/kpt-functions/src/types.ts&#34;&gt;typescript result&lt;/a&gt; interface as an alternative to
+exiting with a non-zero status code. Users may want to store these results separately from configuration
+files. Kpt provides the &lt;code&gt;--results-dir&lt;/code&gt; flag for users to specify a destination to write results to.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;See more examples of functions in the &lt;a href=&#34;../../../guides/consumer/function/catalog&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../../guides/producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;/ul&gt;
 
       </description>
     </item>
@@ -170,11 +181,15 @@ kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; DIR/ &lt;sp
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt fn sink [DIR]
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn sink &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;DIR&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
 
 DIR:
-  Path to a package directory.  Defaults to stdout if unspecified.
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+  Path to a package directory.  Defaults to stdout &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; unspecified.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Learn about &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; like sources, sinks, and pipelines.&lt;/li&gt;
+&lt;/ul&gt;
 
       </description>
     </item>
@@ -201,11 +216,15 @@ kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; DIR/ &lt;sp
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt fn source [DIR...]
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;DIR...&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
 
 DIR:
-  Path to a package directory.  Defaults to stdin if unspecified.
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+  Path to a package directory.  Defaults to stdin &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; unspecified.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Learn about &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; like sources, sinks, and pipelines.&lt;/li&gt;
+&lt;/ul&gt;
 
       </description>
     </item>

@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -339,6 +343,64 @@
   <ul>
     <li class="collapse show" id="kptguidesconsumerfunction">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesconsumerfunctionpipeline">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/catalog/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Functions Catalog</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesconsumerfunctioncatalog">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -540,6 +602,29 @@
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/develop/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Developer Guide</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsdevelop">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -782,6 +867,15 @@
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#functions-user-guide">Functions User Guide</a></li>
+    <li><a href="#calling-functions-imperatively">Calling Functions Imperatively</a></li>
+    <li><a href="#calling-functions-declaratively">Calling Functions Declaratively</a></li>
+    <li><a href="#next-steps">Next Steps</a></li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -827,7 +921,8 @@
 <div class="td-content">
 	<h1>Running functions</h1>
 	<div class="lead">Modify or validate the contents of a package by calling a function.</div>
-	<p>When an operation requires more than just the schema, and data is necessary,
+	<h2 id="functions-user-guide">Functions User Guide</h2>
+<p>When an operation requires more than just the schema, and data is necessary,
 the dynamic logic can be built into a separate tool.
 Functions bundle dynamic logic in container images and apply that logic to the
 contents of a package &ndash; modifying and validating package contents.</p>
@@ -846,24 +941,59 @@ language, or simply wrap other existing programs.</p>
 
 <img src="https://googlecontainertools.github.io/kpt//images/fn.svg" />
 
-<p>Let’s look at the example of imperatively running a function to set a label
-value.  The label-namespace image contains a program which will modify the</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run --image gcr.io/kpt-functions/label-namespace . -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange
-</code></pre></div><p>Kpt read the resources from the package at “.”, provided them as input to
-a container running <code>gcr.io/kpt-functions/label-namespace</code>, and wrote the
-resources back to the package.</p>
-<p>This particular function (<a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a>) adds a label to all Namespace resources
-provided to it.</p>
 <p>Functions can address many types of workflows, including:</p>
 <ul>
-<li>Generate resources from some inputs (like client-side CRDs)</li>
-<li>Apply cross-cutting transformations (e.g., set a field on all resources that
+<li>Generating resources from some inputs (like client-side CRDs)</li>
+<li>Applying cross-cutting transformations (e.g., set a field on all resources that
 look like this)</li>
 <li>Validating resources conform to best practices defined by the organization
 (e.g., must specify tag as part of the image)</li>
+<li>Sending resources to a destination (e.g., saving them locally or deploying them to a cluster)</li>
 </ul>
-<p>See the <a href="https://googlecontainertools.github.io/kpt-functions-catalog/">functions catalog</a> for more examples of functions, and the
-[function docs] for more details on writing functions.</p>
+<h2 id="calling-functions-imperatively">Calling Functions Imperatively</h2>
+<p>Let’s look at the example of imperatively running a function to set a label
+value.  The (<a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a>) image contains a program which adds a label to all Namespace resources
+provided to it.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run --image gcr.io/kpt-functions/label-namespace . -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange
+</code></pre></div><p>Kpt read the configs from the package at “.” to generate input resources. Behind the scenes, it also
+parsed the arguments and provided them through a functionConfig field along with the input. It passed
+this information to a container running <code>gcr.io/kpt-functions/label-namespace</code>, and wrote the resources
+back to the package.</p>
+<h2 id="calling-functions-declaratively">Calling Functions Declaratively</h2>
+<p>The most common way of invoking config functions in production will be the <a href="../../../reference/fn/run/#declaratively-run-one-or-more-functions">declarative method</a>.</p>
+<p>Let&rsquo;s run the same <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a> function declaratively, which means we make a reusable function
+configuration resource which contains all information necessary to run the function, from container
+image to argument values. Once we create file with this information we can check it into <a href="https://en.wikipedia.org/wiki/Version_control">VCS</a> and
+run the function in a repeatable fashion, making it incredibly powerful for production use.</p>
+<p>First create a function configuration file in the directory you want to apply the function
+e.g. <code>label-ns-fc.yaml</code>:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-functions/label-namespace<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">&#34;label_name&#34;: </span><span style="color:#4e9a06">&#34;color&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">&#34;label_value&#34;: </span><span style="color:#4e9a06">&#34;orange&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><p>This file contains a <code>config.kubernetes.io/function</code> annotation specifying the docker image to use for
+the config as well as a data field containing a key-value map of the &ldquo;label_name&rdquo; and &ldquo;label_value&rdquo;
+arguments specified earlier. Using a map also makes it easier to pass more complex arguments values like
+a list of strings.</p>
+<p>Next, run the function.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run .
+</code></pre></div><p>Kpt used configs from the package at “.” to generate input resources. It recognized that the
+<code>config.kubernetes.io/function</code> annotation denoted  <code>label-ns-fc.yaml</code> as a function config file and ran
+a container using the <code>gcr.io/kpt-functions/label-namespace</code> image, passing in the function config
+resource as well as all other input resources.</p>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>See more examples of functions in the <a href="catalog/">functions catalog</a>.</li>
+<li>Get a quickstart on writing functions from the <a href="../../producer/functions/">function producer docs</a>.</li>
+<li>Find out how to structure a pipeline of functions from the <a href="../../../concepts/functions/">functions concepts</a> page.</li>
+<li>Learn more ways of using the <code>kpt fn</code> command from the <a href="../../../reference/fn/run/">reference</a> doc.</li>
+</ul>
 
         <div class="section-index">
     
@@ -923,13 +1053,37 @@ look like this)</li>
             
         
             
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/consumer/function/pipeline/">Running a functions pipeline</a>
+                    </h5>
+                    <p>Compose functions into a pipeline.</p>
+                </div>
+            
+        
+            
+        
+            
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/consumer/function/catalog/">Functions Catalog</a>
+                    </h5>
+                    <p>Catalog of Config Functions.</p>
+                </div>
+            
+        
+            
+        
+            
+        
+            
         
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 3, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4c9e64de7e255bbed3221a3ab42b505e82e52bf8">Small improvements to the consumer guides (4c9e64de)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/58c7dec1dea573854cc74942007cc7106045de62">Rename kpt function to config function (58c7dec1)</a>
 </div>
 </div>
 
@@ -947,8 +1101,14 @@ look like this)</li>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -964,7 +1124,7 @@ look like this)</li>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

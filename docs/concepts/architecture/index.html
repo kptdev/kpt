@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -238,6 +242,29 @@
 
       
       
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/functions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptconceptsfunctions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
     </li>
   </ul>
 </ul>
@@ -280,7 +307,7 @@
   <ul>
     <li><a href="#background">Background</a>
       <ul>
-        <li></li>
+        <li><a href="#influences">Influences</a></li>
       </ul>
     </li>
     <li><a href="#design-principles">Design Principles</a>
@@ -340,23 +367,30 @@
 	<h2 id="background">Background</h2>
 <p>The kpt&rsquo;s design mirrors the Kubernetes control-plane architecture &ndash; with multiple programs
 (e.g. controllers) reading and writing shared configuration data (i.e. resources).</p>
-<h4 id="influences">Influences</h4>
-<ul>
-<li>Unix philosophy
+<h3 id="influences">Influences</h3>
+<h4 id="unix-philosophy">Unix philosophy</h4>
+<p>Packages of configuration should be small, modular, and reusable.</p>
 <ul>
 <li><a href="https://en.wikipedia.org/wiki/Unix_philosophy">link</a></li>
 </ul>
-</li>
-<li>Resource / controller model
+<h4 id="resource--controller-model">Resource / controller model</h4>
+<p>Kpt provides commands to fetch, update, modify, and apply configuration. This allows users to reuse and compose various packages of Kubernetes resources.</p>
 <ul>
 <li><a href="https://kubernetes.io/docs/concepts/architecture/controller/">link</a></li>
 </ul>
-</li>
-<li>GitOps
+<h4 id="gitops">GitOps</h4>
+<p>GitOps refers to using a version control system as the source of truth for configuration.</p>
 <ul>
 <li><a href="https://www.weave.works/technologies/gitops/">link</a></li>
 </ul>
-</li>
+<h4 id="configuration-as-data">Configuration as data</h4>
+<p>Many configuration tools conflate data with the operations on that
+data (e.g. YAML files embedding a templating language).
+As configuration becomes complex, it becomes hard to read and understand.
+Our design philosophy is to keep configuration as data in order to manage this complexity.
+We do this by keeping resources serialized as either JSON or YAML configuration.</p>
+<ul>
+<li><a href="https://changelog.com/gotime/114#t=00:12:09.18">link</a></li>
 </ul>
 <h4 id="kpt-vs-kubernetes">kpt vs kubernetes:</h4>
 <ul>
@@ -529,12 +563,14 @@ reads and writes from arbitrary sources, so long as they provide resource config
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 17, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/75a6f8670213bf4391b2b10221188b6348c5ba05">Minor suggestions to arch page doc (75a6f867)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e97fd3815e38a1a9c6fc33db1936b6a027063acd">Clarify links, add functions to catalog (e97fd381)</a>
 </div>
 </div>
 
@@ -552,8 +588,14 @@ reads and writes from arbitrary sources, so long as they provide resource config
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -569,7 +611,7 @@ reads and writes from arbitrary sources, so long as they provide resource config
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

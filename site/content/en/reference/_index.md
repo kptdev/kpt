@@ -51,21 +51,22 @@ all resources has reached the Current status
 <!--mdtogo-->
 
 ### OpenAPI schema
+
 Kpt relies on the OpenAPI schema for Kubernetes to understand the structure
-of kubernetes manifests. Kpt already comes with a builtin 
+of kubernetes manifests. Kpt already comes with a builtin
 OpenAPI schema, but that will obviously not include any CRDs. So in some
 situations it might be beneficial to use a schema that accurately reflects both
 the correct version of Kubernetes and the CRDs used. Kpt provides a few global
-flags to allows users to specify the schema that should be used. 
+flags to allows users to specify the schema that should be used.
 
-By default, kpt will first try to fetch the OpenAPI schema from the cluster 
-given by the current context. If that doesn't work, it will silently fall back 
+By default, kpt will first try to fetch the OpenAPI schema from the cluster
+given by the current context. If that doesn't work, it will silently fall back
 to using the builtin schema.
 
-```
+```sh
 --k8s-schema-source
   Set the source for the OpenAPI schema. Allowed values are cluster, file, or
-  builtin. If an OpenAPI schema can't be find at the given source, kpt will 
+  builtin. If an OpenAPI schema can't be find at the given source, kpt will
   return an error.
 
 --k8s-schema-path
@@ -79,11 +80,16 @@ to using the builtin schema.
 | [fn]          | generate, transform, validate configuration files using containerized functions | local directory | local directory |
 | [live]        | reconcile the live state with configuration files                               | local directory | remote cluster  |
 
-[updating]: pkg/update
-[functions]: fn/run
-[setters]: cfg/set
-[gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
+### Next Steps
+
+- Learn about kpt [architecture] including major influences and a high-level comparison with kustomize.
+- Read kpt [guides] for how to produce and consume packages and integrate with a wider ecosystem of tools.
+- Consult the [FAQ] for answers to common questions.
+
 [pkg]: pkg/
 [cfg]: cfg/
 [fn]: fn/
 [live]: live/
+[architecture]: ../concepts/architecture
+[guides]: ../guides
+[FAQ]: ../faq

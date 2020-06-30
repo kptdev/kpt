@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -238,6 +242,29 @@
 
       
       
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/functions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptconceptsfunctions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
     </li>
   </ul>
 </ul>
@@ -311,7 +338,8 @@
 <div class="td-content">
 	<h1>Packaging</h1>
 	<div class="lead">Packaging goals and design decisions</div>
-	<p>The two primary sets of capabilities that are required to enable reuse are:</p>
+	<h2 id="packaging">Packaging</h2>
+<p>The two primary sets of capabilities that are required to enable reuse are:</p>
 <ol>
 <li>The ability to distribute/publish/share, compose, and update groups of
 configuration artifacts, commonly known as packages.</li>
@@ -320,11 +348,11 @@ configuration artifacts, commonly known as packages.</li>
 <p>In order to facilitate programmatic operations, kpt:</p>
 <ol>
 <li>Relies upon git as the source of truth</li>
-<li>Represents configuration as data, specifically Kubernetes resources
-serialized as YAML or JSON.</li>
+<li>Represents configuration as data, specifically represents Kubernetes object configuration as resources
+serialized in YAML or JSON format.</li>
 </ol>
 <p>For compatibility with other arbitrary formats, kpt supports generating
-resource configuration data from templates, configuration DSLs, and programs.</p>
+resource configuration data from templates, configuration DSLs, and programs using <a href="../functions/#source-function">source functions</a>.</p>
 
         <div class="section-index">
     
@@ -341,12 +369,14 @@ resource configuration data from templates, configuration DSLs, and programs.</p
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/186760406e45268af6caa15e62624c2d78d6d259">kpt architecture docs (18676040)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7bf1a36d19747d493ad7972c23b53c7070f7ae57">Transfer kpt-functions sdk and catalog docs to kpt (7bf1a36d)</a>
 </div>
 </div>
 
@@ -364,8 +394,14 @@ resource configuration data from templates, configuration DSLs, and programs.</p
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -381,7 +417,7 @@ resource configuration data from templates, configuration DSLs, and programs.</p
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

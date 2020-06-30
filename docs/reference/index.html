@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -857,6 +861,7 @@
       <ul>
         <li><a href="#examples">Examples</a></li>
         <li><a href="#openapi-schema">OpenAPI schema</a></li>
+        <li><a href="#next-steps">Next Steps</a></li>
       </ul>
     </li>
   </ul>
@@ -957,14 +962,14 @@ flags to allows users to specify the schema that should be used.</p>
 <p>By default, kpt will first try to fetch the OpenAPI schema from the cluster
 given by the current context. If that doesn&rsquo;t work, it will silently fall back
 to using the builtin schema.</p>
-<pre><code>--k8s-schema-source
-  Set the source for the OpenAPI schema. Allowed values are cluster, file, or
-  builtin. If an OpenAPI schema can't be find at the given source, kpt will 
-  return an error.
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--k8s-schema-source
+  Set the <span style="color:#204a87">source</span> <span style="color:#204a87;font-weight:bold">for</span> the OpenAPI schema. Allowed values are cluster, file, or
+  builtin. If an OpenAPI schema can<span style="color:#a40000">&#39;</span>t be find at the given source, kpt will
+  <span style="color:#204a87;font-weight:bold">return</span> an error.
 
 --k8s-schema-path
   The path to an OpenAPI schema file. The default value is ./openapi.json
-</code></pre><table>
+</code></pre></div><table>
 <thead>
 <tr>
 <th>Command Group</th>
@@ -1000,6 +1005,12 @@ to using the builtin schema.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="next-steps">Next Steps</h3>
+<ul>
+<li>Learn about kpt <a href="../concepts/architecture">architecture</a> including major influences and a high-level comparison with kustomize.</li>
+<li>Read kpt <a href="../guides">guides</a> for how to produce and consume packages and integrate with a wider ecosystem of tools.</li>
+<li>Consult the <a href="../faq">FAQ</a> for answers to common questions.</li>
+</ul>
 
         <div class="section-index">
     
@@ -1099,7 +1110,7 @@ to using the builtin schema.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9fee402604a997997b7c7e823366249f2d1c36ff">Updates the kpt generated docs with new flag info (9fee4026)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e97fd3815e38a1a9c6fc33db1936b6a027063acd">Clarify links, add functions to catalog (e97fd381)</a>
 </div>
 </div>
 
@@ -1117,8 +1128,14 @@ to using the builtin schema.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -1134,7 +1151,7 @@ to using the builtin schema.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

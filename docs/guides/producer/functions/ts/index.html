@@ -22,16 +22,16 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
 <title>TypeScript Function SDK | Kpt</title><meta property="og:title" content="TypeScript Function SDK" />
-<meta property="og:description" content="Writing exec and container functions in TypeScript.
+<meta property="og:description" content="Writing functions in TypeScript.
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/" />
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="TypeScript Function SDK">
-<meta itemprop="description" content="Writing exec and container functions in TypeScript.
+<meta itemprop="description" content="Writing functions in TypeScript.
 "><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="TypeScript Function SDK"/>
-<meta name="twitter:description" content="Writing exec and container functions in TypeScript.
+<meta name="twitter:description" content="Writing functions in TypeScript.
 "/>
 
 
@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -339,6 +343,64 @@
   <ul>
     <li class="collapse " id="kptguidesconsumerfunction">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/catalog/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions Catalog</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctioncatalog">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -540,6 +602,29 @@
   <ul>
     <li class="collapse show" id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/develop/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">TypeScript Developer Guide</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesproducerfunctionstsdevelop">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -782,6 +867,18 @@
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#developer-quickstart">Developer Quickstart</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#hello-world-package">Hello World Package</a></li>
+      </ul>
+    </li>
+    <li><a href="#next-steps">Next Steps</a></li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -836,9 +933,80 @@
             
 <div class="td-content">
 	<h1>TypeScript Function SDK</h1>
-	<div class="lead">Writing exec and container functions in TypeScript.</div>
-	<p>See <a href="https://googlecontainertools.github.io/kpt-functions-sdk/">kpt-functions-sdk</a> for
-instructions on writing functions as TypeScript programs.</p>
+	<div class="lead">Writing functions in TypeScript.</div>
+	<p>We provide an opinionated Typescript SDK for implementing config functions. This provides various
+advantages:</p>
+<ul>
+<li><strong>General-purpose language:</strong> Domain-Specific Languages begin their life with a reasonable
+feature set, but often grow over time. They bloat in order to accommodate the tremendous variety
+of customer use cases. Rather than follow this same course, config functions employ a true,
+general-purpose programming language that provides:
+<ul>
+<li>Proper abstractions and language features</li>
+<li>A extensive ecosystem of tooling (e.g. IDE support)</li>
+<li>A comprehensive catalog of well-supported libraries</li>
+<li>Robust community support and detailed documentation</li>
+</ul>
+</li>
+<li><strong>Type-safety:</strong> Kubernetes configuration is typed, and its schema is defined using the OpenAPI spec.
+Typescript has a sophisticated type system that accommodates the complexity of Kubernetes resources.
+The SDK enables generating Typescript classes for core and CRD types, providing safe and easy
+interaction with Kubernetes objects.</li>
+<li><strong>Batteries-included:</strong> The SDK provides a simple, powerful API for querying and manipulating configuration
+files. It provides the scaffolding required to develop, build, test, and publish functions,
+allowing you to focus on implementing your business-logic.</li>
+</ul>
+<h2 id="developer-quickstart">Developer Quickstart</h2>
+<p>This quickstart will get you started developing a config function with the TypeScript SDK,
+using an existing Hello World package.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<h4 id="system-requirements">System Requirements</h4>
+<p>Currently supported platforms: amd64 Linux/Mac</p>
+<h4 id="setting-up-your-local-environment">Setting Up Your Local Environment</h4>
+<ul>
+<li>Install <a href="https://nodejs.org/en/download/">node</a></li>
+<li>Install <a href="https://docs.docker.com/v17.09/engine/installation">docker</a></li>
+<li>Install <a href="../../../../installation/">kpt</a> and add it to $PATH</li>
+</ul>
+<h3 id="hello-world-package">Hello World Package</h3>
+<ol>
+<li>
+<p>Get the <code>hello-world</code> package:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone --depth <span style="color:#0000cf;font-weight:bold">1</span> https://github.com/GoogleContainerTools/kpt-functions-sdk.git
+</code></pre></div><p>All subsequent commands are run from the <code>hello-world</code> directory:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> kpt-functions-sdk/ts/hello-world
+</code></pre></div></li>
+<li>
+<p>Install all dependencies:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm install
+</code></pre></div></li>
+<li>
+<p>Run the following in a separate terminal to continuously build your function as you make changes:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run watch
+</code></pre></div></li>
+<li>
+<p>Run the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/label_namespace.ts"><code>label_namespace</code></a> function:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">CONFIGS</span><span style="color:#ce5c00;font-weight:bold">=</span>../../example-configs
+
+kpt fn <span style="color:#204a87">source</span> <span style="color:#000">$CONFIGS</span> <span style="color:#000;font-weight:bold">|</span>
+node dist/label_namespace_run.js -d <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color -d <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange <span style="color:#000;font-weight:bold">|</span>
+kpt fn sink <span style="color:#000">$CONFIGS</span>
+</code></pre></div><p>As the name suggests, this function added the given label to all <code>Namespace</code> objects
+in the <code>example-configs</code> directory:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git diff <span style="color:#000">$CONFIGS</span>
+</code></pre></div></li>
+<li>
+<p>Try modifying the function in <code>src/label_namespace.ts</code> to perform other operations
+on <code>example-configs</code>, then repeat step 4. You can also explore other functions such as <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/suggest_psp.ts">suggest-psp</a> or <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/validate_rolebinding.ts">validate-rolebinding</a>.</p>
+<p>The function should implement the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html">documented here</a>.</p>
+</li>
+</ol>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>Take a look at <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">these example functions</a> to better understand how to use the typescript SDK.</li>
+<li>Read the complete <a href="develop/">Typescript Developer Guide</a>.</li>
+<li>Learn how to <a href="../../../consumer/function/">run functions</a>.</li>
+</ul>
 
         <div class="section-index">
     
@@ -890,6 +1058,23 @@ instructions on writing functions as TypeScript programs.</p>
             
         
             
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/guides/producer/functions/ts/develop/">TypeScript Developer Guide</a>
+                    </h5>
+                    <p>Developing functions in TypeScript.</p>
+                </div>
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
         
             
         
@@ -904,7 +1089,7 @@ instructions on writing functions as TypeScript programs.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3c44ea84504f5a8562da759510ecbdf5c955439d">Update functions docs for writing go functions (3c44ea84)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/58c7dec1dea573854cc74942007cc7106045de62">Rename kpt function to config function (58c7dec1)</a>
 </div>
 </div>
 
@@ -922,8 +1107,14 @@ instructions on writing functions as TypeScript programs.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -939,7 +1130,7 @@ instructions on writing functions as TypeScript programs.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

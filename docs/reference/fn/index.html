@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -938,8 +942,7 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 kpt fn run DIR/
 </code></pre></div><!--mdtogo-->
 <h4 id="functions-catalog">Functions Catalog</h4>
-<p><a href="https://googlecontainertools.github.io/kpt-functions-catalog/">KPT Functions Catalog</a> repository documents a catalog of kpt
-functions implemented using different toolchains.</p>
+<p>The <a href="../../guides/consumer/function/catalog">catalog</a> documents config functions implemented using different toolchains like starlark, typescript, and golang.</p>
 <h4 id="developing-functions">Developing Functions</h4>
 <table>
 <thead>
@@ -952,17 +955,32 @@ functions implemented using different toolchains.</p>
 <tbody>
 <tr>
 <td>Typescript</td>
-<td><a href="https://googlecontainertools.github.io/kpt-functions-sdk/">KPT Functions SDK</a></td>
+<td><a href="../../guides/producer/functions/ts">Typescript SDK</a></td>
 <td><a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">examples</a></td>
 </tr>
 <tr>
 <td>Go</td>
-<td><a href="https://github.com/kubernetes-sigs/kustomize/tree/master/kyaml">kustomize/kyaml</a></td>
-<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go">example</a></td>
+<td><a href="../../guides/producer/functions/golang">Golang SDK</a></td>
+<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-go-nginx/image/main.go">example</a></td>
+</tr>
+<tr>
+<td>Shell</td>
+<td>Use builtin shell functions</td>
+<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-heredoc-cockroachdb/image/cockroachdb-template.sh">example</a></td>
+</tr>
+<tr>
+<td>Starlark</td>
+<td><a href="../../guides/producer/functions/starlark">Starlark SDK</a></td>
+<td>Example coming soon!</td>
 </tr>
 </tbody>
 </table>
-<h3 id="synopsis">Synopsis</h3>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>Learn how to <a href="../../guides/consumer/function/">run functions</a>.</li>
+<li>Find out how to structure a pipeline of functions from the <a href="../../concepts/functions/">functions concepts</a> page.</li>
+<li>See more examples of functions in the functions <a href="../../guides/consumer/function/catalog">catalog</a>.</li>
+</ul>
 
         <div class="section-index">
     
@@ -1055,7 +1073,7 @@ functions implemented using different toolchains.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b5797b1a0ef0f8d4967962e5168222753d2efbd1">Update the reference site content with mdtogo html comments (b5797b1a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/58c7dec1dea573854cc74942007cc7106045de62">Rename kpt function to config function (58c7dec1)</a>
 </div>
 </div>
 
@@ -1073,8 +1091,14 @@ functions implemented using different toolchains.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -1090,7 +1114,7 @@ functions implemented using different toolchains.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

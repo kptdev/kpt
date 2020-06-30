@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -339,6 +343,64 @@
   <ul>
     <li class="collapse " id="kptguidesconsumerfunction">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/catalog/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions Catalog</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctioncatalog">
+      
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -540,6 +602,29 @@
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/develop/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Developer Guide</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsdevelop">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
     </li>
@@ -917,8 +1002,8 @@ git commit -m <span style="color:#4e9a06">&#34;init&#34;</span>
 <p>Now this goal can be easily achieved with help of kpt.</p>
 <h4 id="create-setter-by-app-developer">Create setter by App Developer</h4>
 <p>Let&rsquo;s say the developer need to claim two fields as &ldquo;configurable&rdquo; for his application, he can add two kpt setters here:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg create-setter sampleapp/ instance-name example-component --field <span style="color:#4e9a06">&#34;metadata.name&#34;</span> --description <span style="color:#4e9a06">&#34;use to set an instance name&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field <span style="color:#4e9a06">&#34;image&#34;</span> --description <span style="color:#4e9a06">&#34;use to set image for component&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt cfg create-setter sampleapp/ instance-name example-component --field <span style="color:#4e9a06">&#34;metadata.name&#34;</span> --description <span style="color:#4e9a06">&#34;use to set an instance name&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt cfg create-setter sampleapp/ image nginx:1.16.1 --field <span style="color:#4e9a06">&#34;image&#34;</span> --description <span style="color:#4e9a06">&#34;use to set image for component&#34;</span> --set-by <span style="color:#4e9a06">&#34;sampleapp developer&#34;</span>
 </code></pre></div><p>Then the app operator could see which parameters are available in this component like below:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt cfg list-setters sampleapp/
   NAME              VALUE               SET BY                   DESCRIPTION             COUNT
@@ -967,7 +1052,7 @@ applicationconfiguration.core.oam.dev/example-appconfig is Current: Resource is 
 component.core.oam.dev/example-component is Current: Resource is current
 all resources has reached the Current status
 <span style="color:#0000cf;font-weight:bold">0</span> resource<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span> pruned
-</code></pre></div><p>Happly building OAM apps with kpt!</p>
+</code></pre></div><p>Happy building OAM apps with kpt!</p>
 
         <div class="section-index">
     
@@ -1028,12 +1113,22 @@ all resources has reached the Current status
         
             
         
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9fee402604a997997b7c7e823366249f2d1c36ff">Updates the kpt generated docs with new flag info (9fee4026)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e97fd3815e38a1a9c6fc33db1936b6a027063acd">Clarify links, add functions to catalog (e97fd381)</a>
 </div>
 </div>
 
@@ -1051,8 +1146,14 @@ all resources has reached the Current status
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -1068,7 +1169,7 @@ all resources has reached the Current status
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>

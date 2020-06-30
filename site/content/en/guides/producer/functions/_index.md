@@ -4,14 +4,16 @@ linkTitle: "Functions"
 weight: 4
 type: docs
 description: >
-   Writing kpt functions to generated, transform, and validate resources.
+   Writing config functions to generated, transform, and validate resources.
 ---
 
-Kpt functions are conceptually similar to Kubernetes *controllers* and *validating webhooks* --
+## Functions Developer Guide
+
+Config functions are conceptually similar to Kubernetes *controllers* and *validating webhooks* --
 they are programs which read resources as input, then write resources as output (creating,
 modifying, deleting, or validating resources).
 
-Unlike controllers and validating webhooks, kpt functions can be run outside of the Kubernetes
+Unlike controllers and validating webhooks, config functions can be run outside of the Kubernetes
 control plane.  This allows them to run in more contexts or embedded in other systems.
 For example, functions could be:
 
@@ -34,14 +36,13 @@ specified by the functionConfig.
 Functions that implement abstractions should update resources they have generated in the past
 by reading them from the input.
 {{% /pageinfo %}}
- 
+
 The following function runtimes are available in kpt:
 
 | Runtime    | Read Resources From | Write Resources To | Write Error Messages To | Validation Failure | Maturity |
 |------------|---------------------|--------------------|-------------------------|--------------------|----------|
 | Containers | STDIN               | STDOUT             | STDERR                  | Exit Code          | Beta     |
 | Starlark   | `ctx.resource_list` | `ctx.resource_list`| `log`                   | Exit Code          | Alpha    |
-
 
 ## Input / Output
 
@@ -50,7 +51,7 @@ Functions read a `ResourceList`, modify it, and write it back out.
 ### ResourceList.items
 
 The ResourceList contains:
- 
+
 - (input+output) a list of resource `items`
 - (input) configuration for the function
 - (output) validation results
@@ -76,7 +77,7 @@ items:
 ### ResourceList.functionConfig
 
 Functions may optionally be configured using the `ResourceList.functionConfig`
-field.  `functionConfig` is analogous to a Deployment, and `items` 
+field.  `functionConfig` is analogous to a Deployment, and `items`
 is analogous to the set of all resources in the Deployment controller in-memory cache
 (e.g. all the resources in the cluster) -- this includes the ReplicaSets created, updated
 and deleted for that Deployment.
@@ -105,7 +106,7 @@ bespoke to the function.
 Functions may be run either imperatively using the form `kpt fn run DIR/ --image fn`, or they
 may be run declaratively using the form `kpt fn run DIR/`.
 
-Either way, `kpt fn run` will 
+Either way, `kpt fn run` will
 
 1. read the package directory as input
 2. encapsulate the package resources in a `ResourceList`
@@ -142,7 +143,7 @@ Functions can be specified declaratively using the `config.kubernetes.io/functio
 annotation on a resource serving as the functionConfig.
 
 `kpt fn run DIR/` (without `--image`) will:
- 
+
 - read all resources from the package directory
 - for each resource with this annotation, kpt will run the specified function (using the resource as
   the functionConfig)
@@ -277,3 +278,13 @@ functionConfig:
 items:
   ...
 ```
+
+## Next Steps
+
+- Learn how to [run functions].
+- Find out how to structure a pipeline of functions from the [functions concepts] page.
+- Consult the [fn command reference].
+
+[run functions]: ../../consumer/function/
+[functions concepts]: ../../../concepts/functions/
+[fn command reference]: ../../../reference/fn/

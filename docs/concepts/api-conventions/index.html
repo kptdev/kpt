@@ -129,6 +129,8 @@
 		</ul>
 	</div>
 	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 </div>
 </nav>
 
@@ -146,6 +148,8 @@
   
   <form class="td-sidebar__search d-flex align-items-center">
     
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
 
     <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
     </button>
@@ -238,6 +242,29 @@
 
       
       
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/functions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptconceptsfunctions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
     </li>
   </ul>
 </ul>
@@ -278,19 +305,20 @@
 
 <nav id="TableOfContents">
   <ul>
-    <li><a href="#cli-conventions">CLI conventions</a>
+    <li><a href="#cli-conventions">CLI Conventions</a>
       <ul>
-        <li><a href="#io">IO</a></li>
+        <li><a href="#command-io-conventions">Command IO Conventions</a></li>
         <li><a href="#arguments-subcommands-and-flags">Arguments, subcommands and flags</a></li>
         <li><a href="#documentation">Documentation</a></li>
       </ul>
     </li>
-    <li><a href="#resource-annotations">Resource annotations</a>
+    <li><a href="#resource-annotations">Resource Annotations</a>
       <ul>
-        <li><a href="#io-1">IO</a></li>
-        <li><a href="#functions">Functions</a></li>
+        <li><a href="#resource-io-annotations">Resource IO Annotations</a></li>
+        <li><a href="#functions-annotations">Functions Annotations</a></li>
       </ul>
     </li>
+    <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
 
@@ -329,10 +357,10 @@
 <div class="td-content">
 	<h1>API Conventions</h1>
 	<div class="lead">Kpt API Conventions</div>
-	<h2 id="cli-conventions">CLI conventions</h2>
+	<h2 id="cli-conventions">CLI Conventions</h2>
 <p>Following are the CLI conventions used for building kpt.  This is a living document that should
 be iterated upon.</p>
-<h3 id="io">IO</h3>
+<h3 id="command-io-conventions">Command IO Conventions</h3>
 <ul>
 <li>Commands that read resources should be able to read them from files, directories or stdin
 <ul>
@@ -379,10 +407,9 @@ help or flag help.</li>
 <li>Reference documentation should have asciinema-style &ldquo;images&rdquo; that demonstrate
 how the commands are used.</li>
 </ul>
-<h2 id="resource-annotations">Resource annotations</h2>
+<h2 id="resource-annotations">Resource Annotations</h2>
 <p>kpt uses the following annotations to store resource metadata.</p>
-<p>See the [sig-cli configuration IO docs].</p>
-<h3 id="io-1">IO</h3>
+<h3 id="resource-io-annotations">Resource IO Annotations</h3>
 <h4 id="configkubernetesiopath">config.kubernetes.io/path</h4>
 <p><code>config.kubernetes.io/path</code> stores the file path that the resource was read from.</p>
 <ul>
@@ -395,10 +422,16 @@ how the commands are used.</li>
 <li>When reading resources, if reading from a file kpt should annotate the resource with the index into the file</li>
 <li>When writing resources, if writing to a file kpt should write the resources in order specified by the indexes</li>
 </ul>
-<h3 id="functions">Functions</h3>
+<h3 id="functions-annotations">Functions Annotations</h3>
 <h4 id="configkubernetesiofunction">config.kubernetes.io/function</h4>
 <p><code>config.kubernetes.io/function</code> indicates that the resource may be provided to the specified function
 as the ResourceList.functionConfig.</p>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>See the <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/config-io.md">Configuration IO API Semantics</a> for when to use resource annotations.</li>
+<li>Learn more about <a href="../functions/">functions concepts</a>.</li>
+<li>Consult the <a href="../../faq/">FAQ</a> for answers to common questions.</li>
+</ul>
 
         <div class="section-index">
     
@@ -415,12 +448,14 @@ as the ResourceList.functionConfig.</p>
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/186760406e45268af6caa15e62624c2d78d6d259">kpt architecture docs (18676040)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7bf1a36d19747d493ad7972c23b53c7070f7ae57">Transfer kpt-functions sdk and catalog docs to kpt (7bf1a36d)</a>
 </div>
 </div>
 
@@ -438,8 +473,14 @@ as the ResourceList.functionConfig.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/forum/#!forum/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
       <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
     </a>
   </li>
   
@@ -455,7 +496,7 @@ as the ResourceList.functionConfig.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
-    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
       <i class="fab fa-github"></i>
     </a>
   </li>
