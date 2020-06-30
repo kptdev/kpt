@@ -37,6 +37,7 @@ func TestPipeline(t *testing.T) {
 	testSuites := []testSuite{
 		githubActionsTestSuite,
 		cloudBuildTestSuite,
+		gitlabCITestSuite,
 	}
 
 	for _, testSuite := range testSuites {
