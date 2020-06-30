@@ -47,7 +47,7 @@ func TestPipeline(t *testing.T) {
 			testCase := testCases[i]
 
 			t.Run(testCase.description, func(t *testing.T) {
-				pipeline := pipeline.Init(testCase.config).Generate()
+				pipeline, _ := pipeline.Init(testCase.config).Generate()
 
 				actual := string(pipeline)
 				expected := strings.TrimLeft(testCase.expected, "\n")

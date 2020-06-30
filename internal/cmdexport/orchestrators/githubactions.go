@@ -82,8 +82,6 @@ func (p *GitHubActions) Init(config *types.PipelineConfig) Pipeline {
 	return p
 }
 
-func (p *GitHubActions) Generate() []byte {
-	data, _ := yaml.Marshal(p)
-
-	return data
+func (p *GitHubActions) Generate() (out []byte, err error) {
+	return yaml.Marshal(p)
 }

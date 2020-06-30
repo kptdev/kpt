@@ -54,8 +54,6 @@ func (p *CloudBuild) Init(config *types.PipelineConfig) Pipeline {
 	return p
 }
 
-func (p *CloudBuild) Generate() []byte {
-	data, _ := yaml.Marshal(p)
-
-	return data
+func (p *CloudBuild) Generate() (out []byte, err error) {
+	return yaml.Marshal(p)
 }

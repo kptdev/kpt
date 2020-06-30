@@ -87,7 +87,11 @@ type ExportRunner struct {
 
 // runE generates the pipeline and writes it into a file or stdout.
 func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
-	pipeline := r.Pipeline.Init(r.PipelineConfig).Generate()
+	pipeline, e := r.Pipeline.Init(r.PipelineConfig).Generate()
+
+	if e != nil {
+		return e
+	}
 
 	if r.OutputFilePath != "" {
 		fo, err := os.Create(r.OutputFilePath)
