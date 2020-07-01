@@ -93,7 +93,7 @@ func TestIsInsideDirectory(t *testing.T) {
 	result, err = IsInsideDir(file, base)
 	assert.NilError(t, err)
 	assert.Equal(t, result, true)
-	result, err = IsInsideDir(path.Join(base, file), baseWithSeparator)
+	result, err = IsInsideDir(file, baseWithSeparator)
 	assert.NilError(t, err)
 	assert.Equal(t, result, true)
 	result, err = IsInsideDir(path.Join(base, ".."), base)

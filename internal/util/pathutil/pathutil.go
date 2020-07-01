@@ -68,15 +68,12 @@ func IsInsideDir(path string, directory string) (isInside bool, err error) {
 		return
 	}
 
-	separator := string(os.PathSeparator)
-	// Trim the ending separator if any
-	directory = strings.TrimRight(directory, separator)
-	directoryWithSeparator := fmt.Sprintf("%s%s", directory, separator)
+	rel, err := filepath.Rel(directory, path)
+	if err != nil {
+		return false, err
+	}
 
-	isInside = path == directory || strings.HasPrefix(
-		path,
-		directoryWithSeparator,
-	)
+	isInside = rel == "." || !strings.HasPrefix(rel, ".")
 
 	return
 }
