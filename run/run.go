@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
 var pgr []string
@@ -80,7 +81,17 @@ func GetMain() *cobra.Command {
 		ext.GetOpenAPIFile = func(args []string) (s string, err error) {
 			return filepath.Join(args[0], kptfile.KptFileName), nil
 		}
-		return kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
+		err := kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
+		if err != nil {
+			return err
+		}
+
+		// add openAPI definitions from Kptfile to configured openAPI
+		if addErr := openapi.AddSchemaFromFile(filepath.Join(args[0], kptfile.KptFileName)); addErr != nil {
+			// do not throw error if schema doesn't exist or not readable from Kptfile
+			return nil
+		}
+		return nil
 	}
 
 	cmd.Flags().BoolVar(&installComp, "install-completion", false,
