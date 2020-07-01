@@ -22,5 +22,5 @@ const KptImage = "gongpu/kpt:latest"
 // Pipeline is an abstraction of different workflow orchestrators.
 type Pipeline interface {
 	Init(config *types.PipelineConfig) Pipeline
-	Generate() []byte
+	Generate() (out []byte, err error)
 }

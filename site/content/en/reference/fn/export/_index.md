@@ -31,7 +31,7 @@ kpt fn export github-actions DIR/ --fn-path FUNCTIONS_DIR/
 kpt fn export ORCHESTRATOR DIR/ [--fn-path FUNCTIONS_DIR/] [--output OUTPUT_FILENAME]
 
 ORCHESTRATOR:
-  `github-actions` is currently the only supported workflow orchestrator.
+  Supported orchestrators are github-actions, and cloud-build.
 DIR:
   Path to a package directory. If you do not specify the --fn-path flag, this command will discover functions in DIR and run them against resources in it.
 ```

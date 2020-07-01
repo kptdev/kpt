@@ -14,7 +14,7 @@
 
 package types
 
-// Configuration of a pipeline.
+// PipelineConfig describes configuration of a pipeline.
 type PipelineConfig struct {
 	Dir     string
 	FnPaths []string

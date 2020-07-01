@@ -18,6 +18,8 @@ package cmdexport
 import (
 	"fmt"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/orchestrators"
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
@@ -30,7 +32,7 @@ func ExportCommand() *cobra.Command {
 	return GetExportRunner().Command
 }
 
-// Create a ExportRunner instance and wire it to the corresponding Command.
+// GetExportRunner creates a ExportRunner instance and wires it to the corresponding Command.
 func GetExportRunner() *ExportRunner {
 	r := &ExportRunner{PipelineConfig: &types.PipelineConfig{}}
 	c := &cobra.Command{
@@ -50,6 +52,10 @@ func GetExportRunner() *ExportRunner {
 			case "github-actions":
 				{
 					r.Pipeline = new(orchestrators.GitHubActions)
+				}
+			case "cloud-build":
+				{
+					r.Pipeline = new(orchestrators.CloudBuild)
 				}
 			default:
 				return fmt.Errorf("unsupported orchestrator %v", r.Orchestrator)
@@ -81,9 +87,17 @@ type ExportRunner struct {
 	Pipeline orchestrators.Pipeline
 }
 
-// Generate the pipeline and write it into a file or stdout.
+// runE generates the pipeline and writes it into a file or stdout.
 func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
-	pipeline := r.Pipeline.Init(r.PipelineConfig).Generate()
+	if err := r.checkFnPaths(); err != nil {
+		return err
+	}
+
+	pipeline, e := r.Pipeline.Init(r.PipelineConfig).Generate()
+
+	if e != nil {
+		return e
+	}
 
 	if r.OutputFilePath != "" {
 		fo, err := os.Create(r.OutputFilePath)
@@ -98,4 +112,36 @@ func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
 	_, err := c.OutOrStdout().Write(pipeline)
 
 	return err
+}
+
+// checkPaths checks if fnPaths exist within the current directory.
+func (r *ExportRunner) checkFnPaths() error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	cwd = fmt.Sprintf("%s%s", cwd, string(os.PathSeparator))
+
+	for _, fnPath := range r.FnPaths {
+		p := fnPath
+		if !path.IsAbs(p) {
+			p = path.Join(cwd, p)
+		}
+
+		if !strings.HasPrefix(p, cwd) {
+			return fmt.Errorf(
+				"function path (%s) is not within the current working directory",
+				fnPath,
+			)
+		}
+
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			return fmt.Errorf(
+				`function path (%s) does not exist`,
+				fnPath,
+			)
+		}
+	}
+
+	return nil
 }

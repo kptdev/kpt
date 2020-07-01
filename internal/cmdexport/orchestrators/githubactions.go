@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Represent a GitHub Actions workflow.
+// GitHubActions represents a GitHub Actions workflow.
 // @see https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions
 type GitHubActions struct {
 	Name string                          `yaml:",omitempty"`
@@ -82,8 +82,6 @@ func (p *GitHubActions) Init(config *types.PipelineConfig) Pipeline {
 	return p
 }
 
-func (p *GitHubActions) Generate() []byte {
-	data, _ := yaml.Marshal(p)
-
-	return data
+func (p *GitHubActions) Generate() (out []byte, err error) {
+	return yaml.Marshal(p)
 }
