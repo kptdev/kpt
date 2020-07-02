@@ -3,6 +3,17 @@
   <head>
     <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="google-site-verification" content="-2TBRWogwEMIWbmCsyMqHGwiGaO54EpmmqdpV3jpCjM" />
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-171557011-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-171557011-1');
+</script>
+
 <meta name="generator" content="Hugo 0.68.3" />
 
 <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -940,7 +951,7 @@ kpt fn <span style="color:#204a87">export</span> github-actions DIR/ --fn-path F
 <pre><code>kpt fn export ORCHESTRATOR DIR/ [--fn-path FUNCTIONS_DIR/] [--output OUTPUT_FILENAME]
 
 ORCHESTRATOR:
-  `github-actions` is currently the only supported workflow orchestrator.
+  Supported orchestrators are github-actions, and cloud-build.
 DIR:
   Path to a package directory. If you do not specify the --fn-path flag, this command will discover functions in DIR and run them against resources in it.
 </code></pre><!--mdtogo-->
@@ -1017,7 +1028,7 @@ DIR:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 25, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/631e977168815ffe69126fbd4b9ee470303c03b5">Add export command with GitHubActions support (631e9771)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified June 30, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/945bdc4b9b347074203d4f2f609685423abf4fde">Support exporting Cloud Build pipelines (945bdc4b)</a>
 </div>
 </div>
 
