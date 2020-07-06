@@ -19,7 +19,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
+	"github.com/GoogleContainerTools/kpt/internal/cmdexport/pathutil"
 )
 
 // PipelineConfig describes configuration of a pipeline.
