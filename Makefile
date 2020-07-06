@@ -80,7 +80,7 @@ gencatalog:
 
 gendocs:
 	rm -rf docs/
-	(cd site && go run github.com/gohugoio/hugo)
+	(cd site && env HUGO_ENV="production" hugo)
 
 docs: gencatalog gendocs license
 
