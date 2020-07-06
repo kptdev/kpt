@@ -47,7 +47,7 @@ in this guide.
 ### Data model
 
 - Fields reference substitutions through OpenAPI definitions specified as
-  line comments -- e.g. ` + "`" + `# { "$ref": "#/definitions/..." }` + "`" + `
+  line comments -- e.g. ` + "`" + `# { "$kpt-set": "my-substitution" }` + "`" + `
 - OpenAPI definitions are provided through the Kptfile
 - Substitution OpenAPI definitions contain patterns and values to compute
   the field value
@@ -124,7 +124,7 @@ is not required, and substitutions may have multiple setters.
       spec:
         containers:
         - name: helloworld-gke
-          image: gcr.io/kpt-dev/helloworld-gke:v0.1.0 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-tag"}
+          image: gcr.io/kpt-dev/helloworld-gke:v0.1.0 # {"$kpt-set":"image-tag"}
   ...
 
 ##### Command
@@ -146,7 +146,7 @@ Change the tag portion of the image field using the ` + "`" + `image-tag` + "`" 
       spec:
         containers:
         - name: helloworld-gke
-          image: gcr.io/kpt-dev/helloworld-gke:v0.2.0 # {"$ref":"#/definitions/io.k8s.cli.substitutions.image-tag"}
+          image: gcr.io/kpt-dev/helloworld-gke:v0.2.0 # {"$kpt-set":"image-tag"}
   ...
 
 ### Customizing setters

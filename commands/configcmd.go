@@ -64,6 +64,11 @@ func GetConfigCommand(name string) *cobra.Command {
 	createSetter.Long = cfgdocs.CreateSetterShort + "\n" + cfgdocs.CreateSetterLong
 	createSetter.Example = cfgdocs.CreateSetterExamples
 
+	deleteSetter := DeleteSetterCommand(name)
+	deleteSetter.Short = cfgdocs.DeleteSetterShort
+	deleteSetter.Long = cfgdocs.DeleteSetterShort + "\n" + cfgdocs.DeleteSetterLong
+	deleteSetter.Example = cfgdocs.DeleteSetterExamples
+
 	createSubstitution := CreateSubstCommand(name)
 	createSubstitution.Short = cfgdocs.CreateSubstShort
 	createSubstitution.Long = cfgdocs.CreateSubstShort + "\n" + cfgdocs.CreateSubstLong
@@ -94,7 +99,7 @@ func GetConfigCommand(name string) *cobra.Command {
 	tree.Long = cfgdocs.TreeShort + "\n" + cfgdocs.TreeLong
 	tree.Example = cfgdocs.TreeExamples
 
-	cfgCmd.AddCommand(an, cat, count, createSetter, createSubstitution, fmt,
+	cfgCmd.AddCommand(an, cat, count, createSetter, deleteSetter, createSubstitution, fmt,
 		grep, listSetters, set, tree)
 	return cfgCmd
 }
@@ -102,6 +107,11 @@ func GetConfigCommand(name string) *cobra.Command {
 func CreateSetterCommand(parent string) *cobra.Command {
 	fieldmeta.SetShortHandRef(ShortHandRef)
 	return configcobra.CreateSetter(parent)
+}
+
+func DeleteSetterCommand(parent string) *cobra.Command {
+	fieldmeta.SetShortHandRef(ShortHandRef)
+	return configcobra.DeleteSetter(parent)
 }
 
 func CreateSubstCommand(parent string) *cobra.Command {

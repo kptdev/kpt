@@ -7,7 +7,6 @@ require (
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/google/addlicense v0.0.0-20200622132530-df58acafd6d5 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
@@ -25,6 +24,6 @@ require (
 	// Once there is a 0.18 release, we can import a semver release.
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
 	sigs.k8s.io/cli-utils v0.15.0
-	sigs.k8s.io/kustomize/cmd/config v0.3.0
-	sigs.k8s.io/kustomize/kyaml v0.3.1-0.20200618190311-fb6830c98a78
+	sigs.k8s.io/kustomize/cmd/config v0.0.0-20200629173832-441581b74521
+	sigs.k8s.io/kustomize/kyaml v0.3.2
 )

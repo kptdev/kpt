@@ -51,7 +51,8 @@ func TestKptGetSet(t *testing.T) {
 				"Kptfile": {
 					`                    setBy: package-default
                     value: "5"`,
-					`                    value: "7"`,
+					`                    value: "7"
+                    isSet: true`,
 				},
 			},
 		},
@@ -62,7 +63,8 @@ func TestKptGetSet(t *testing.T) {
 				"Kptfile": {
 					`                    setBy: package-default
                     value: "5"`,
-					`                    value: "7"`,
+					`                    value: "7"
+                    isSet: true`,
 				},
 			},
 		},
@@ -72,7 +74,8 @@ func TestKptGetSet(t *testing.T) {
 				"Kptfile": {
 					`                    setBy: package-default
                     value: "5"`,
-					`                    value: "7"`,
+					`                    value: "7"
+                    isSet: true`,
 				},
 			},
 		},
@@ -83,7 +86,8 @@ func TestKptGetSet(t *testing.T) {
 				"Kptfile": {
 					`                    setBy: package-default
                     value: "5"`,
-					`                    value: "7"`,
+					`                    value: "7"
+                    isSet: true`,
 				},
 			},
 		},
@@ -95,7 +99,8 @@ func TestKptGetSet(t *testing.T) {
 					`                    setBy: package-default
                     value: "5"`,
 					`                    setBy: foo
-                    value: "7"`,
+                    value: "7"
+                    isSet: true`,
 				},
 			},
 		},
@@ -113,7 +118,8 @@ func TestKptGetSet(t *testing.T) {
 				"Kptfile": {
 					`                    setBy: package-default
                     value: "5"`,
-					`                    value: "7"`,
+					`                    value: "7"
+                    isSet: true`,
 				},
 			},
 		},
@@ -378,6 +384,7 @@ openAPI:
           name: replicas
           value: "4"
           setBy: pw
+          isSet: true
  `,
 			expectedResources: `
 apiVersion: apps/v1
