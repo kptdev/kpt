@@ -44,8 +44,8 @@ func (p *CloudBuild) Init(config *types.PipelineConfig) Pipeline {
 			step.Args,
 			append(
 				[]string{"--fn-path"},
-				fnPaths...
-			)...
+				fnPaths...,
+			)...,
 		)
 	}
 
