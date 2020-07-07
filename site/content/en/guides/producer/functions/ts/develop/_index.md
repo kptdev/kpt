@@ -1,7 +1,7 @@
 ---
 title: "TypeScript Developer Guide"
 linkTitle: "TypeScript Developer Guide"
-weight: 6
+weight: 7
 type: docs
 description: >
    Developing functions in TypeScript.
