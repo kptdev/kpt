@@ -18,8 +18,6 @@ package cmdexport
 import (
 	"fmt"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/orchestrators"
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
@@ -57,13 +55,18 @@ func GetExportRunner() *ExportRunner {
 				{
 					r.Pipeline = new(orchestrators.CloudBuild)
 				}
+			case "gitlab-ci":
+				{
+					r.Pipeline = new(orchestrators.GitLabCI)
+				}
 			default:
 				return fmt.Errorf("unsupported orchestrator %v", r.Orchestrator)
 			}
 
 			return nil
 		},
-		RunE: r.runE,
+		PreRunE: r.preRunE,
+		RunE:    r.runE,
 	}
 
 	c.Flags().StringSliceVar(
@@ -87,12 +90,24 @@ type ExportRunner struct {
 	Pipeline orchestrators.Pipeline
 }
 
-// runE generates the pipeline and writes it into a file or stdout.
-func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
-	if err := r.checkFnPaths(); err != nil {
-		return err
+func (r *ExportRunner) preRunE(cmd *cobra.Command, args []string) (err error) {
+	r.CWD, err = os.Getwd()
+	if err != nil {
+		return
 	}
 
+	err = r.CheckFnPaths()
+	if err != nil {
+		return
+	}
+
+	err = r.PipelineConfig.UseRelativePaths()
+
+	return
+}
+
+// runE generates the pipeline and writes it into a file or stdout.
+func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
 	pipeline, e := r.Pipeline.Init(r.PipelineConfig).Generate()
 
 	if e != nil {
@@ -114,34 +129,3 @@ func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
 	return err
 }
 
-// checkPaths checks if fnPaths exist within the current directory.
-func (r *ExportRunner) checkFnPaths() error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	cwd = fmt.Sprintf("%s%s", cwd, string(os.PathSeparator))
-
-	for _, fnPath := range r.FnPaths {
-		p := fnPath
-		if !path.IsAbs(p) {
-			p = path.Join(cwd, p)
-		}
-
-		if !strings.HasPrefix(p, cwd) {
-			return fmt.Errorf(
-				"function path (%s) is not within the current working directory",
-				fnPath,
-			)
-		}
-
-		if _, err := os.Stat(p); os.IsNotExist(err) {
-			return fmt.Errorf(
-				`function path (%s) does not exist`,
-				fnPath,
-			)
-		}
-	}
-
-	return nil
-}

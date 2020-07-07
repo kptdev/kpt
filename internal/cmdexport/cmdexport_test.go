@@ -133,33 +133,96 @@ steps:
       - run
       - .
       - --fn-path
-      - functions/
+      - functions
 `,
 	},
 	{
-		description: "fails to export a Cloud Build pipeline with non-exist function path",
-		params: []string{
-			"cloud-build",
-			".",
-			"--fn-path",
-			"functions.yaml",
-			"--output",
-			"cloudbuild.yaml",
-		},
-		err: "function path (functions.yaml) does not exist",
-	},
-	{
-		description: "fails to export a Cloud Build pipeline with outside function path",
+		description: "fails to export a Cloud Build pipeline with outside function paths",
 		params: []string{
 			"cloud-build",
 			".",
 			"--fn-path",
 			"../functions/functions.yaml",
+			"--fn-path",
+			"../functions/functions2.yaml",
 			"--output",
 			"cloudbuild.yaml",
 		},
-		err: "function path (../functions/functions.yaml) is not within the current working directory",
+		err: `
+function paths are not within the current working directory:
+../functions/functions.yaml
+../functions/functions2.yaml`,
 	},
+	{
+		description: "converts input paths into relative format",
+		files: map[string]string{
+			"functions/function.yaml": "",
+		},
+		params: []string{
+			"cloud-build",
+			// NOTE: `{DIR}` is a macro variable and will be replaced with cwd before test cases are executed.
+			"{DIR}",
+			"--fn-path",
+			"{DIR}/functions/",
+			"--output",
+			"cloudbuild.yaml",
+		},
+		expected: `
+steps:
+  - name: gongpu/kpt:latest
+    args:
+      - fn
+      - run
+      - .
+      - --fn-path
+      - functions
+`,
+	},
+	{
+		description: "exports a GitLab CI pipeline with --fn-path",
+		files: map[string]string{
+			"resources/resource.yaml": "",
+			"functions/function.yaml": "",
+		},
+		params: []string{
+			"gitlab-ci",
+			"resources",
+			"--fn-path",
+			"functions",
+			"--output",
+			".gitlab-ci.yml",
+		},
+		expected: `
+stages:
+  - run-kpt-functions
+kpt:
+    stage: run-kpt-functions
+    image: docker
+    services:
+      - docker:dind
+    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gongpu/kpt:latest
+        fn run /app/resources --fn-path /app/functions
+`,
+	},
+}
+
+// ReplaceDIRMacro replaces all `{DIR}` macros in params with cwd.
+func (t *TestCase) ReplaceDIRMacro() error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	var params []string
+	for _, param := range t.params {
+		param = strings.Replace(param, "{DIR}", cwd, -1)
+
+		params = append(params, param)
+	}
+
+	t.params = params
+
+	return nil
 }
 
 func setupTempDir(files files) (dir string, err error) {
@@ -200,7 +263,11 @@ func TestCmdExport(t *testing.T) {
 		err = os.Chdir(tempDir)
 		assert.NilError(t, err)
 
+		err = testCase.ReplaceDIRMacro()
+		assert.NilError(t, err)
+
 		t.Run(testCase.description, func(t *testing.T) {
+
 			r := GetExportRunner()
 			r.Command.SetArgs(testCase.params)
 
@@ -211,7 +278,8 @@ func TestCmdExport(t *testing.T) {
 			err := r.Command.Execute()
 
 			if testCase.err != "" {
-				assert.Error(t, err, testCase.err)
+				expectedError := strings.TrimLeft(testCase.err, "\n")
+				assert.Error(t, err, expectedError)
 			} else {
 				assert.NilError(t, err)
 
