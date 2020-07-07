@@ -15,10 +15,11 @@ configuration data.*
 [kpt cfg set], [setters], [substitutions], [Kptfile]
 
 Substitutions are like setters, but instead of setting a entire field
-value, **they use setters to set only parts of a field value.** -- e.g. 
+value, **they use setters to set only parts of a field value.** -- e.g.
 only set the *tag* portion of the `image` field.
 
 {{% pageinfo color="primary" %}}
+
 - Substitutions are defined in OpenAPI definitions
 - OpenAPI is referenced from configuration through field line comments
 - Substitutions are **performed by running `kpt cfg set`**
@@ -47,7 +48,7 @@ in this guide.
 
 1. Read the package Kptfile and resources.
 2. Change the setter OpenAPI value in the Kptfile
-3. Locate all fields which reference the setter indirectly through a 
+3. Locate all fields which reference the setter indirectly through a
    substitution.
 4. Compute the new substitution value by substituting the setter values into
    the pattern.
@@ -63,7 +64,7 @@ in this guide.
 
 ## Fetch a remote package
 
-### Command
+### Fetch Command
 
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
@@ -72,7 +73,7 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.3.0 helloworld
 
 Grab the setters package, which contains setters and substitutions.
 
-### Output
+### Fetch Output
 
 ```sh
 fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
@@ -96,24 +97,24 @@ In this example the substitution name and setter name happen to match, but this
 is not required, and substitutions may have multiple setters.
 {{% /pageinfo %}}
 
-##### Command
+### List Command
 
 ```sh
-kpt cfg list-setters helloworld/ 
+kpt cfg list-setters helloworld/
 ```
 
-##### Output
+### List Output
 
 ```sh
     NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-  http-port   80      package-default   helloworld port         3      
-  image-tag   0.1.0   package-default   hello-world image tag   1      
-  replicas    5       package-default   helloworld replicas     1     
+  http-port   80      package-default   helloworld port         3
+  image-tag   0.1.0   package-default   hello-world image tag   1
+  replicas    5       package-default   helloworld replicas     1
 ```
 
 ## Substitute a value
 
-##### Package contents
+### Package contents
 
 ```yaml
 # helloworld/deploy.yaml
@@ -128,7 +129,7 @@ metadata:
 ...
 ```
 
-##### Command
+### Command
 
 ```sh
  kpt cfg set helloworld/ image-tag v0.2.0
@@ -136,13 +137,13 @@ metadata:
 
 Change the tag portion of the image field using the `image-tag` setter.
 
-##### Output
+### Output
 
 ```sh
 set 1 fields
 ```
 
-##### Updated package contents
+### Updated package contents
 
 ```yaml
 kind: Deployment
@@ -156,13 +157,13 @@ metadata:
 ...
 ```
 
-### Customizing setters
+## Customizing setters
 
 See [setters] and [substitutions] for how to add or update them in the
 package [Kptfile].
 
-[Kptfile]: ../../../api-reference/kptfile
-[kpt cfg set]: ../../../reference/cfg/set
-[setters]: ../../../reference/cfg/create-setter
-[substitutions]: ../../../reference/cfg/create-subst
-[create substitution guide]: ../../producer/substitutions
+[Kptfile]: ../../../api-reference/kptfile/
+[kpt cfg set]: ../../../reference/cfg/set/
+[setters]: ../../../reference/cfg/create-setter/
+[substitutions]: ../../../reference/cfg/create-subst/
+[create substitution guide]: ../../producer/substitutions/

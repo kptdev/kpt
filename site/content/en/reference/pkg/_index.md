@@ -66,7 +66,7 @@ $ kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 
 2. **Any existing git subdirectory containing resource configuration files may be used as a package**
     * Nothing besides a git directory containing resource configuration is required.
-    * e.g. any [example in the examples repo](https://github.com/kubernetes/examples/staging/cockroachdb) may
+    * e.g. any [example in the examples repo](https://github.com/kubernetes/examples/tree/master/staging/cockroachdb) may
       be used as a package:
 
           kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb \

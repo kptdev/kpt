@@ -24,11 +24,27 @@ resources for deleted configuration.
 
 ## Steps
 
-1. [Fetch a remote package](#fetch-a-remote-package)
-2. [Initialize the package inventory template](#initialize-the-package-inventory-template)
-3. [Apply to a cluster](#apply-to-a-cluster)
-4. [Print the live resources](#print-the-live-resources)
-4. [Prune resources](#prune-resources)
+- [Topics](#topics)
+- [Steps](#steps)
+- [Fetch a remote package](#fetch-a-remote-package)
+  - [Command](#command)
+  - [Output](#output)
+- [Initialize the package inventory template](#initialize-the-package-inventory-template)
+  - [Init Command](#init-command)
+  - [Init Output](#init-output)
+  - [Inventory template](#inventory-template)
+- [Apply to a cluster](#apply-to-a-cluster)
+  - [Apply Command](#apply-command)
+  - [Apply Output](#apply-output)
+- [Print the live resources](#print-the-live-resources)
+  - [Print Command](#print-command)
+  - [Print Output](#print-output)
+  - [Command: `tree`](#command-tree)
+  - [Output: `tree`](#output-tree)
+- [Prune resources](#prune-resources)
+  - [Prune Command](#prune-command)
+  - [Prune Output](#prune-output)
+  - [Print the live resources after pruning](#print-the-live-resources-after-pruning)
 
 ## Fetch a remote package
 
@@ -52,7 +68,7 @@ fetching package /package-examples/helloworld-set from https://github.com/Google
 The kpt version of apply uses a ConfigMap map to keep track of previously
 applied resources so they can be pruned later if the configuration for
 them is deleted. The [kpt live init] command will generate an inventory template
-(which is just a normal ConfigMap manifest with a special annotation) used by 
+(which is just a normal ConfigMap manifest with a special annotation) used by
 [kpt live apply] to generate an actual ConfigMap in the cluster which we refer
 to as an inventory object.
 
@@ -61,19 +77,19 @@ The inventory template must be created for a package to be applied using
 `kpt live apply`.
 {{% /pageinfo %}}
 
-##### Command
+### Init Command
 
 ```sh
 kpt live init helloworld
 ```
 
-##### Output
+### Init Output
 
 ```sh
 Initialized: helloworld/inventory-template.yaml
 ```
 
-##### Inventory template
+### Inventory template
 
 ```yaml
 apiVersion: v1
@@ -96,7 +112,7 @@ rest of the package, but otherwise ignored by users.
 
 ## Apply to a cluster
 
-##### Command
+### Apply Command
 
 ```sh
 kpt live apply helloworld --reconcile-timeout=2m
@@ -105,7 +121,7 @@ kpt live apply helloworld --reconcile-timeout=2m
 Apply the resources to the cluster and block until the changes have
 been fully rolled out -- e.g. until the Pods are running.
 
-##### Output
+### Apply Output
 
 ```sh
 configmap/inventory-17c4dd3c created
@@ -128,13 +144,13 @@ be rolled out.
 
 Display the resources in the cluster using kubectl.
 
-##### Command
+### Print Command
 
 ```sh
 kubectl get configmaps,deploy,services
 ```
 
-##### Output
+### Print Output
 
 ```sh
 NAME                                 DATA   AGE
@@ -148,7 +164,7 @@ service/helloworld-gke   NodePort    10.48.2.143   <none>        80:32442/TCP   
 service/kubernetes       ClusterIP   10.48.0.1     <none>        443/TCP        19m
 ```
 
-##### Command: `tree`
+### Command: `tree`
 
 ```sh
 kubectl get all -o yaml | kpt cfg tree
@@ -157,7 +173,7 @@ kubectl get all -o yaml | kpt cfg tree
 The output of kubectl can also be piped to [kpt cfg tree] to summarize
 the resources.
 
-##### Output: `tree`
+### Output: `tree`
 
 ```sh
 .
@@ -177,7 +193,7 @@ the resources.
 Resources can be deleted from the cluster by deleting them from the
 resource configuration.sh
 
-##### Command
+### Prune Command
 
 ```sh
 rm helloworld/deploy.yaml
@@ -188,7 +204,7 @@ Apply uses the previously created inventory objects (ConfigMaps) to calculate
 the set of resources to prune (delete) after applying.  In this case the
 Deployment.
 
-##### Output 
+### Prune Output
 
 ```sh
 service/helloworld-gke is Current: Service is ready
@@ -198,7 +214,7 @@ configmap/inventory-2911da3b pruned
 2 resource(s) pruned
 ```
 
-##### Print the live resources
+### Print the live resources after pruning
 
 ```sh
 kubectl get deploy
@@ -208,10 +224,9 @@ kubectl get deploy
 No resources found in default namespace.
 ```
 
-[kpt cfg tree]: ../../../reference/cfg/tree
-[kpt live apply]: ../../../reference/live/apply
-[kpt live init]: ../../../reference/live/init
-[setters]: ../../../reference/cfg/create-setter
-[substitutions]: ../../../reference/cfg/create-subst
+[kpt cfg tree]: ../../../reference/cfg/tree/
+[kpt live apply]: ../../../reference/live/apply/
+[kpt live init]: ../../../reference/live/init/
+[setters]: ../../../reference/cfg/create-setter/
+[substitutions]: ../../../reference/cfg/create-subst/
 [cli-utils]: https://github.com/kubernetes-sigs/cli-utils
-

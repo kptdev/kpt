@@ -237,13 +237,13 @@ npm run kpt:docker-build -- --tag=latest
 - Take a look at [these example functions][demo-funcs] to better understand how to use the typescript SDK.
 
 [demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
-[catalog]: ../../../../consumer/function/catalog
+[catalog]: ../../../../consumer/function/catalog/
 [api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html
 [vscode]: https://code.visualstudio.com/
 [download-node]: https://nodejs.org/en/download/
 [download-kind]: https://github.com/kubernetes-sigs/kind
 [install-node]: https://github.com/nodejs/help/wiki/Installation
-[install-docker]: https://docs.docker.com/v17.09/engine/installation
+[install-docker]: https://docs.docker.com/v17.09/engine/installation/
 [crd-openapi]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing
 [run functions]: ../../../../consumer/function/
 [functions concepts]: ../../../../../concepts/functions/

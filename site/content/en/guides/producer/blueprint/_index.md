@@ -8,7 +8,9 @@ description: >
 ---
 
 {{% pageinfo color="warning" %}}
-# Notice: Under Development
+
+### Notice: Under Development
+
 {{% /pageinfo %}}
 
 *Reusable, customizable components can be built and shared as blueprints.*
@@ -31,8 +33,8 @@ can pull in changes to a blueprint after fetching it.
 - **Platforms**: Kubeflow, Spark
 - **Applications / Stacks**:
   - Rails Backend + Node Frontend + Prometheus
-  - Spring Cloud Microservices (discovery-server, config-server, api-gateway, 
-    admin-server, hystrix, various backends) 
+  - Spring Cloud Microservices (discovery-server, config-server, api-gateway,
+    admin-server, hystrix, various backends)
 - **Infrastructure Stacks**: CloudSQL + Pubsub + GKE
 
 {{< svg src="images/blueprint" >}}
@@ -124,7 +126,7 @@ publisher?
   volumes.
 
 Flags and arguments may be factored into publisher and consumer focused pieces
-by **specifying the `command` in the `upstream` base dir and the `args` in the 
+by **specifying the `command` in the `upstream` base dir and the `args` in the
 `instance` dir**.  This allows consumers to set and add flags using `args`
 without erasing those defined by the publisher in the `command`.
 
@@ -297,5 +299,5 @@ may be ok -- changes to fields will overwrite user changes to those same
 fields, whereas adds will only conflict if the user added the same field.
 
 [kustomize]: https://github.com/kubernetes-sigs/kustomize
-[setter]: ../setters
-[substitution]: ../substitutions
+[setter]: ../setters/
+[substitution]: ../substitutions/

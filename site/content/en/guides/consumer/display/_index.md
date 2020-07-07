@@ -28,7 +28,7 @@ Packages are fetched from remote git repository subdirectories with
 [kpt pkg get](/reference/pkg/get).  In this guide we will use the [kubernetes examples] repository
 as a public package catalogue.
 
-##### Command
+### Fetch Command
 
 ```sh
 kpt pkg get https://github.com/kubernetes/examples/staging/ examples
@@ -37,13 +37,13 @@ kpt pkg get https://github.com/kubernetes/examples/staging/ examples
 Fetch the entire examples/staging directory as a kpt package under `examples`.
 This will contain many resources.
 
-##### Command
+### List Command
 
 ```sh
 tree examples
 ```
 
-##### Output
+### List Output
 
 ```sh
 examples/
@@ -62,7 +62,7 @@ to work with using tools such as `less`.
 
 ## Summarize resource counts
 
-##### Command
+### Count Example Command 1
 
 ```sh
 kpt cfg count examples/
@@ -71,7 +71,7 @@ kpt cfg count examples/
 The `kpt cfg count` command summarizes the resource counts to show the shape of a
 package.
 
-##### Output
+### Count Example Output 1
 
 ```sh
 ...
@@ -83,7 +83,7 @@ Pod: 45
 ...
 ```
 
-##### Command
+### Count Example Command 2
 
 ```sh
 kpt cfg count examples/cockroachdb/
@@ -92,7 +92,7 @@ kpt cfg count examples/cockroachdb/
 Running `count` on a subdirectory will summarize that directory even if
 it doesn't have a Kptfile.
 
-##### Output
+### Count Example Output 2
 
 ```sh
 PodDisruptionBudget: 1
@@ -100,8 +100,7 @@ Service: 2
 StatefulSet: 1
 ```
 
-
-##### Command
+### Count Example Command 3
 
 ```sh
 kpt cfg count examples/ --kind=false
@@ -109,7 +108,7 @@ kpt cfg count examples/ --kind=false
 
 The total aggregate resource count can be shown with `--kind=false`
 
-##### Output
+### Count Example Output 3
 
 ```sh
 201
@@ -117,17 +116,17 @@ The total aggregate resource count can be shown with `--kind=false`
 
 ## Display resources as a tree
 
-##### Command
+### Display Command
 
 ```sh
-kpt cfg tree examples/cockroachdb/ --image --replicas 
+kpt cfg tree examples/cockroachdb/ --image --replicas
 ```
 
 Because the raw YAML configuration may be difficult for humans to easily
 view and understand, kpt provides a command for rendering configuration
 as a tree.  Flags may be provided to print specific fields under the resources.
 
-##### Output
+### Display Output
 
 ```sh
 examples/cockroachdb
@@ -146,7 +145,7 @@ arbitrary fields by providing the `--field` flag.
 
 ## Filter resources
 
-##### Command
+### Filter Command
 
 ```sh
 kpt cfg grep "spec.replicas>3" examples | kpt cfg tree --replicas
@@ -156,7 +155,7 @@ Grep can be used to filter resources by field values.  The output of
 `kpt cfg grep` is the matching full resource configuration, which
 may be piped to tree for rendering.
 
-##### Output
+### Filter Output
 
 ```sh
 .
@@ -173,7 +172,7 @@ may be piped to tree for rendering.
 
 ## Dump all resources
 
-##### Command
+### Dump Command
 
 ```sh
 kpt cfg cat examples/cockroachdb
@@ -182,7 +181,7 @@ kpt cfg cat examples/cockroachdb
 The raw YAML configuration may be dumped using `kpt cfg cat`.  This will
 print only the YAML for Kubernetes resources.
 
-##### Output
+### Dump Output
 
 ```sh
 apiVersion: v1
@@ -197,7 +196,7 @@ metadata:
 ```
 
 [kubernetes examples]: https://github.com/kubernetes/examples
-[kpt cfg count]: ../../../reference/pkg/count
-[kpt cfg tree]: ../../../reference/pkg/get
-[kpt cfg grep]: ../../../reference/pkg/count
-[kpt cfg cat]: ../../../reference/pkg/count
+[kpt cfg count]: ../../reference/pkg/count/
+[kpt cfg tree]: ../../reference/pkg/get/
+[kpt cfg grep]: ../../reference/pkg/grep/
+[kpt cfg cat]: ../../reference/pkg/cat/

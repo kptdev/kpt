@@ -67,9 +67,9 @@ The [catalog] documents config functions implemented using different toolchains 
 | Language   | Documentation               | Examples                    |
 |------------|-----------------------------|-----------------------------|
 | Typescript | [Typescript SDK][sdk-ts]    | [examples][sdk-ts-examples] |
-| Go         | [Golang SDK][sdk-go]        | [example][golang-example]   |
+| Go         | [Golang Libraries][libs-go] | [example][golang-example]   |
 | Shell      | Use builtin shell functions | [example][shell-example]    |
-| Starlark   | [Starlark SDK][sdk-starlark]| Example coming soon!        |
+| Starlark   | [Starlark SDK][rt-starlark] | [example][starlark-example] |
 
 ## Next Steps
 
@@ -77,12 +77,13 @@ The [catalog] documents config functions implemented using different toolchains 
 * Find out how to structure a pipeline of functions from the [functions concepts] page.
 * See more examples of functions in the functions [catalog].
 
-[sdk-ts]: ../../guides/producer/functions/ts
+[sdk-ts]: ../../guides/producer/functions/ts/
 [sdk-ts-examples]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
-[catalog]: ../../guides/consumer/function/catalog
-[sdk-go]: ../../guides/producer/functions/golang
-[sdk-starlark]: ../../guides/producer/functions/starlark
+[catalog]: ../../guides/consumer/function/catalog/
+[libs-go]: ../../guides/producer/functions/golang/
+[rt-starlark]: ../../guides/producer/functions/starlark/
 [golang-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-go-nginx/image/main.go
 [shell-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-heredoc-cockroachdb/image/cockroachdb-template.sh
+[starlark-example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/starlark/set_namespace.star
 [run functions]: ../../guides/consumer/function/
 [functions concepts]: ../../concepts/functions/

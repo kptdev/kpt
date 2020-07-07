@@ -95,15 +95,15 @@ A: [Please reach out!][contact]
 - Consult the [command reference] for how to use kpt.
 - Read kpt [guides] for how to produce and consume packages and integrate with a wider ecosystem of tools.
 
-[updating]: ../reference/pkg/update
-[functions]: ../reference/fn/run
-[setters]: ../reference/cfg/set
+[updating]: ../reference/pkg/update/
+[functions]: ../reference/fn/run/
+[setters]: ../reference/cfg/set/
 [gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
-[contact]: ../contact
+[contact]: ../contact/
 [kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
-[architecture]: ../concepts/architecture
+[architecture]: ../concepts/architecture/
 [source functions]: ../guides/consumer/function/catalog/#sources
 [functions pipeline]: ../guides/consumer/function/pipeline/
-[command reference]: ../reference
-[guides]: ../guides
+[command reference]: ../reference/
+[guides]: ../guides/

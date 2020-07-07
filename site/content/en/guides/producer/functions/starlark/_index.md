@@ -1,6 +1,6 @@
 ---
-title: "Starlark Runtime and SDK"
-linkTitle: "Starlark Runtime and SDK"
+title: "Starlark Runtime"
+linkTitle: "Starlark Runtime"
 weight: 3
 type: docs
 description: >

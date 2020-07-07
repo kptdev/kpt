@@ -30,13 +30,13 @@ are defined in a Kptfile.
 kpt cfg list-setters hello-world/
 
   NAME     VALUE    SET BY    DESCRIPTION   COUNT  
-replicas   4       isabella   good value    1   
+replicas   4       isabella   good value    1
 ```
 <!--mdtogo-->
 
 ### Synopsis
 <!--mdtogo:Long-->
-```
+```sh
 kpt cfg list-setters DIR [NAME]
 
 DIR
@@ -47,5 +47,5 @@ NAME
 ```
 <!--mdtogo-->
 
-[create-setter]: ../create-setter
-[create-subst]: ../create-subst
+[create-setter]: ../create-setter/
+[create-subst]: ../create-subst/

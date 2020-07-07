@@ -98,12 +98,12 @@ Currently supported platforms: amd64 Linux/Mac
 - Learn how to [run functions].
 
 [download-node]: https://nodejs.org/en/download/
-[install-docker]: https://docs.docker.com/v17.09/engine/installation
+[install-docker]: https://docs.docker.com/v17.09/engine/installation/
 [download-kpt]: ../../../../installation/
 [demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
 [api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html
 [Typescript Developer Guide]: develop/
 [run functions]: ../../../consumer/function/
-[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/label_namespace.ts
-[suggest-psp]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/suggest_psp.ts
-[validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/validate_rolebinding.ts
+[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
+[suggest-psp]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/suggest_psp.ts
+[validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts

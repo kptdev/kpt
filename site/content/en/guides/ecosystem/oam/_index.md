@@ -11,7 +11,7 @@ This guidance will demonstrate how to use kpt to manage custom Kubernetes applic
 
 We will use [Open Application Model](https://github.com/oam-dev/spec)(OAM) to describe the app for standardization and portability consideration. But you are free to use any Custom Resource to describe your application as well. [Crossplane](https://github.com/crossplane/crossplane) will be installed as the OAM runtime for Kubernetes.
 
-## What is kpt and what is OAM?
+## What is kpt and what is OAM
 
 Both kpt and OAM are outcomes of "Configuration-as-Data (or, Infrastructure-as-Data, IaD)".
 
@@ -195,7 +195,7 @@ So in the sampleapp, we have one ApplicationConfiguration and one Component.
 
 ### Live apply
 
-kpt includes the next-generation **apply** commands developed out of the Kubernetes [cli-utils](https://github.com/kubernetes-sigs/cli-utils) repository as the [`kpt live apply`](https://googlecontainertools.github.io/kpt/reference/live/apply) command.
+kpt includes the next-generation **apply** commands developed out of the Kubernetes [cli-utils](https://github.com/kubernetes-sigs/cli-utils) repository as the [`kpt live apply`](https://googlecontainertools.github.io/kpt/reference/live/apply/) command.
 
 This means with `kpt live apply` command, we could wait for the controller reconcile.
 
