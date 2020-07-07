@@ -575,7 +575,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsstarlark">
@@ -598,7 +598,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsgolang">
@@ -626,6 +626,29 @@ if (!doNotTrack) {
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsquickstart">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
       
@@ -893,7 +916,7 @@ if (!doNotTrack) {
 
 <nav id="TableOfContents">
   <ul>
-    <li><a href="#what-is-kpt-and-what-is-oam">What is kpt and what is OAM?</a></li>
+    <li><a href="#what-is-kpt-and-what-is-oam">What is kpt and what is OAM</a></li>
     <li><a href="#pre-requisites">Pre-requisites</a></li>
     <li><a href="#create-app-repository-for-kpt">Create App Repository for kpt</a>
       <ul>
@@ -956,7 +979,7 @@ if (!doNotTrack) {
 	<div class="lead">Using kpt to manage custom Kubernetes applications defined by Open Application Model (OAM)</div>
 	<p>This guidance will demonstrate how to use kpt to manage custom Kubernetes applications (i.e. apps defined by CRDs instead of raw Kubernetes workloads).</p>
 <p>We will use <a href="https://github.com/oam-dev/spec">Open Application Model</a>(OAM) to describe the app for standardization and portability consideration. But you are free to use any Custom Resource to describe your application as well. <a href="https://github.com/crossplane/crossplane">Crossplane</a> will be installed as the OAM runtime for Kubernetes.</p>
-<h2 id="what-is-kpt-and-what-is-oam">What is kpt and what is OAM?</h2>
+<h2 id="what-is-kpt-and-what-is-oam">What is kpt and what is OAM</h2>
 <p>Both kpt and OAM are outcomes of &ldquo;Configuration-as-Data (or, Infrastructure-as-Data, IaD)&quot;.</p>
 <p>Pioneered by <a href="https://twitter.com/bgrant0607/status/1221485437153243137">Kubernetes community</a>, Configuration-as-Data emphasizes that &ldquo;configuration should be treated as data and leverage pipelines for manipulation and policy enforcement&rdquo;. In Kubernetes, Configuration-as-Data approach builds upon the design of the <a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md">Kubernetes resource model (KRM)</a>. As a result, today any resource we applied to Kubernetes is a piece of data that represents the desired state for certain part of application or infrastructure in the real system.</p>
 <p>With the heart of Configuration-as-Data, a typical Kubernetes native application management workflow just looks like a &ldquo;pipeline&rdquo;. See the picture below:</p>
@@ -1060,7 +1083,7 @@ ApplicationConfiguration: <span style="color:#0000cf;font-weight:bold">1</span>
 Component: <span style="color:#0000cf;font-weight:bold">1</span>
 </code></pre></div><p>So in the sampleapp, we have one ApplicationConfiguration and one Component.</p>
 <h3 id="live-apply">Live apply</h3>
-<p>kpt includes the next-generation <strong>apply</strong> commands developed out of the Kubernetes <a href="https://github.com/kubernetes-sigs/cli-utils">cli-utils</a> repository as the <a href="https://googlecontainertools.github.io/kpt/reference/live/apply"><code>kpt live apply</code></a> command.</p>
+<p>kpt includes the next-generation <strong>apply</strong> commands developed out of the Kubernetes <a href="https://github.com/kubernetes-sigs/cli-utils">cli-utils</a> repository as the <a href="https://googlecontainertools.github.io/kpt/reference/live/apply/"><code>kpt live apply</code></a> command.</p>
 <p>This means with <code>kpt live apply</code> command, we could wait for the controller reconcile.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ kpt live init sampleapp
 Initialized: ../sampleapp/grouping-object-template.yaml
@@ -1147,12 +1170,14 @@ all resources has reached the Current status
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e97fd3815e38a1a9c6fc33db1936b6a027063acd">Clarify links, add functions to catalog (e97fd381)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1170,7 +1195,7 @@ all resources has reached the Current status
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

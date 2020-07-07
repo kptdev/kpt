@@ -14,6 +14,126 @@
     
     
     <item>
+      <title>Guides: TypeScript Quickstart</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/quickstart/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/quickstart/</guid>
+      <description>
+        
+        
+        &lt;h2 id=&#34;developer-quickstart&#34;&gt;Developer Quickstart&lt;/h2&gt;
+&lt;p&gt;This quickstart will get you started developing a config function with the TypeScript SDK,
+using an existing Hello World package.&lt;/p&gt;
+&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
+&lt;h4 id=&#34;system-requirements&#34;&gt;System Requirements&lt;/h4&gt;
+&lt;p&gt;Currently supported platforms: amd64 Linux/Mac&lt;/p&gt;
+&lt;h4 id=&#34;setting-up-your-local-environment&#34;&gt;Setting Up Your Local Environment&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Install &lt;a href=&#34;https://nodejs.org/en/download/&#34;&gt;node&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/v17.09/engine/installation/&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Install &lt;a href=&#34;../../../../installation/&#34;&gt;kpt&lt;/a&gt; and add it to $PATH&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;hello-world-package&#34;&gt;Hello World Package&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Get the &lt;code&gt;hello-world&lt;/code&gt; package:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git clone --depth &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; https://github.com/GoogleContainerTools/kpt-functions-sdk.git
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All subsequent commands are run from the &lt;code&gt;hello-world&lt;/code&gt; directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; kpt-functions-sdk/ts/hello-world
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install all dependencies:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm install
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Run the following in a separate terminal to continuously build your function as you make changes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run watch
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Run the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts&#34;&gt;&lt;code&gt;label_namespace&lt;/code&gt;&lt;/a&gt; function:&lt;/p&gt;
+
+
+&lt;pre class=&#34;language-markup&#34;&gt;
+  &lt;code class=&#34;language-ts&#34;&gt;
+      
+   /**
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { addLabel, Configs } from &#39;kpt-functions&#39;;
+import { isNamespace } from &#39;./gen/io.k8s.api.core.v1&#39;;
+
+export const LABEL_NAME = &#39;label_name&#39;;
+export const LABEL_VALUE = &#39;label_value&#39;;
+
+export async function labelNamespace(configs: Configs) {
+  const labelName = configs.getFunctionConfigValueOrThrow(LABEL_NAME);
+  const labelValue = configs.getFunctionConfigValueOrThrow(LABEL_VALUE);
+  configs.get(isNamespace).forEach(n =&gt; addLabel(n, labelName, labelValue));
+}
+
+labelNamespace.usage = `
+Adds a label to all Namespaces.
+
+Configured using a ConfigMap with the following keys:
+
+${LABEL_NAME}: Label name to add to Namespaces.
+${LABEL_VALUE}: Label value to add to Namespaces.
+
+Example:
+
+To add a label &#39;color: orange&#39; to Namespaces:
+
+apiVersion: v1
+kind: ConfigMap
+data:
+  ${LABEL_NAME}: color
+  ${LABEL_VALUE}: orange
+metadata:
+  name: my-config
+`;
+   
+  &lt;/code&gt;
+&lt;/pre&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;CONFIGS&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;../../example-configs
+
+kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+node dist/label_namespace_run.js -d &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color -d &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As the name suggests, this function added the given label to all &lt;code&gt;Namespace&lt;/code&gt; objects
+in the &lt;code&gt;example-configs&lt;/code&gt; directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Try modifying the function in &lt;code&gt;src/label_namespace.ts&lt;/code&gt; to perform other operations
+on &lt;code&gt;example-configs&lt;/code&gt;, then repeat step 4. You can also explore other functions such as &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/suggest_psp.ts&#34;&gt;suggest-psp&lt;/a&gt; or &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts&#34;&gt;validate-rolebinding&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The function should implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use the typescript SDK.&lt;/li&gt;
+&lt;li&gt;Read the complete &lt;a href=&#34;develop/&#34;&gt;Typescript Developer Guide&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Learn how to &lt;a href=&#34;../../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+      </description>
+    </item>
+    
+    <item>
       <title>Guides: TypeScript Developer Guide</title>
       <link>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/develop/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -35,7 +155,7 @@
 &lt;a href=&#34;https://github.com/nodejs/help/wiki/Installation&#34;&gt;installation instructions&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/v17.09/engine/installation&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/v17.09/engine/installation/&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;your-kubernetes-cluster&#34;&gt;Your Kubernetes Cluster&lt;/h3&gt;
 &lt;p&gt;For the type generation functionality to work, you need a Kubernetes cluster with the &lt;a href=&#34;https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing&#34;&gt;CRD OpenAPI Publishing&lt;/a&gt; feature which is beta with Kubernetes 1.15.&lt;/p&gt;
@@ -127,7 +247,7 @@ including the &lt;code&gt;create-kpt-functions&lt;/code&gt; CLI discussed later 
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;code .
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In &lt;code&gt;src/my_func.ts&lt;/code&gt;, implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use
-the typescript library. These functions are available as container images documented in the &lt;a href=&#34;../../../../consumer/function/catalog&#34;&gt;catalog&lt;/a&gt;.&lt;/p&gt;
+the typescript library. These functions are available as container images documented in the &lt;a href=&#34;../../../../consumer/function/catalog/&#34;&gt;catalog&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Once you&amp;rsquo;ve written some code, build the package with:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run build
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alternatively, run the following in a separate terminal. It will continuously build your function

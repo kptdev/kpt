@@ -185,7 +185,7 @@ files. Kpt provides the &lt;code&gt;--results-dir&lt;/code&gt; flag for users to
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;See more examples of functions in the &lt;a href=&#34;../../../guides/consumer/function/catalog&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;See more examples of functions in the &lt;a href=&#34;../../../guides/consumer/function/catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../../guides/producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
 &lt;/ul&gt;

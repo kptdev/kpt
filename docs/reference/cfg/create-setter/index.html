@@ -477,6 +477,29 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/delete-setter/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">delete-setter</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgdelete-setter">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/reference/cfg/fmt/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fmt</a>
   </li>
   <ul>
@@ -986,7 +1009,7 @@ if (!doNotTrack) {
 values through package metadata (OpenAPI).  They are a safer alternative to
 other substitution techniques which do not have the context of the
 structured data &ndash; e.g. using <code>sed</code> to replace values.</p>
-<p>See the <a href="../../../guides/producer/setters">creating setters</a> guide for more info on creating setters.</p>
+<p>See the <a href="../../../guides/producer/setters/">creating setters</a> guide for more info on creating setters.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># create a setter called replicas for fields matching value &#34;3&#34;</span>
@@ -1006,7 +1029,7 @@ kpt cfg create-setter DIR/ app nginx --field <span style="color:#4e9a06">&#34;an
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
-<pre><code>kpt cfg create-setter DIR NAME VALUE
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-setter DIR NAME VALUE
 
 DIR:
   Path to a package directory
@@ -1017,19 +1040,19 @@ NAME:
   e.g. replicas
 
 VALUE
-  The value of the filed for which setter reference must be added.
-  e.g. 3
-</code></pre><h4 id="flags">Flags</h4>
-<pre><code>--description
+  The value of the filed <span style="color:#204a87;font-weight:bold">for</span> which setter reference must be added.
+  e.g. <span style="color:#0000cf;font-weight:bold">3</span>
+</code></pre></div><h4 id="flags">Flags</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--description
   Optional description about the value.
 
 --set-by
-  Optional record of who set the value.
+  Optional record of who <span style="color:#204a87">set</span> the value.
 
---value   
+--value
   Optional flag, alternative to specifying the value as an argument
-  e.g. used to specify values that start with '-'
-</code></pre><!--mdtogo-->
+  e.g. used to specify values that start with <span style="color:#4e9a06">&#39;-&#39;</span>
+</code></pre></div><!--mdtogo-->
 
         <div class="section-index">
     
@@ -1098,12 +1121,14 @@ VALUE
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/488fac19b256ce64424bc7b8e6e39efac0997d47">Update setters docs (488fac19)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1121,7 +1146,7 @@ VALUE
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

@@ -25,7 +25,7 @@
         &lt;p&gt;&lt;em&gt;Any git directory containing configuration files may be used by kpt
 as a package.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;../../..//reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../../..//reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;kpt-pkg-get-explained&#34;&gt;&lt;code&gt;kpt pkg get&lt;/code&gt; explained&lt;/h2&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
@@ -33,7 +33,7 @@ in this guide.&lt;/p&gt;
 &lt;li&gt;Get copies the &lt;code&gt;staging/cockroachdb&lt;/code&gt; subdirectory from the
 &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; git repo
 &lt;ul&gt;
-&lt;li&gt;Since a &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt; is not included with the package, a new one is created
+&lt;li&gt;Since a &lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt; is not included with the package, a new one is created
 for the local package&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
@@ -60,13 +60,13 @@ for the local package&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
 &lt;p&gt;Packages are &lt;strong&gt;fetched from remote git repository subdirectories&lt;/strong&gt; using
-&lt;a href=&#34;../../..//reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;.  This guide will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
+&lt;a href=&#34;../../..//reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;.  This guide will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
 as a public package catalogue.&lt;/p&gt;
-&lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;fetch-command&#34;&gt;Fetch Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
-&lt;pre&gt;&lt;code&gt;fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The contents of the &lt;code&gt;staging/cockroachdb&lt;/code&gt; subdirectory in the
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;fetch-output&#34;&gt;Fetch Output&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The contents of the &lt;code&gt;staging/cockroachdb&lt;/code&gt; subdirectory in the
 &lt;code&gt;https://github.com/kubernetes/examples&lt;/code&gt; were copied to the local folder
 &lt;code&gt;cockroachdb&lt;/code&gt;.&lt;/p&gt;
 
@@ -88,30 +88,30 @@ would be interpreted by kpt as version &lt;code&gt;v1.2.3&lt;/code&gt; of the co
 &lt;/div&gt;
 
 &lt;h2 id=&#34;view-the-kptfile&#34;&gt;View the Kptfile&lt;/h2&gt;
-&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;kptfile-command&#34;&gt;Kptfile Command&lt;/h3&gt;
 &lt;p&gt;The upstream commit and branch / tag reference are stored in the package&amp;rsquo;s
-&lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;.  These are used by &lt;code&gt;kpt pkg update&lt;/code&gt;.&lt;/p&gt;
+&lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt;.  These are used by &lt;code&gt;kpt pkg update&lt;/code&gt;.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;cat cockroachdb/Kptfile
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Print the &lt;code&gt;Kptfile&lt;/code&gt; written by &lt;code&gt;kpt pkg get&lt;/code&gt; to see the upstream package data.&lt;/p&gt;
-&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
-&lt;pre&gt;&lt;code&gt;apiVersion: kpt.dev/v1alpha1
-kind: Kptfile
-metadata:
-    name: cockroachdb
-upstream:
-    type: git
-    git:
-        commit: 629c9459a9f25e468cce8af28350a03e62c5f67d
-        repo: https://github.com/kubernetes/examples
-        directory: staging/cockroachdb
-        ref: master
-&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;view-the-package-contents&#34;&gt;View the package contents&lt;/h2&gt;
+&lt;h3 id=&#34;kptfile-output&#34;&gt;Kptfile Output&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt.dev/v1alpha1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Kptfile&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;cockroachdb&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;upstream&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;git&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;git&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;commit&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;629c9459a9f25e468cce8af28350a03e62c5f67d&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;repo&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;https&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;//github.com/kubernetes/examples&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;directory&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;staging/cockroachdb&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;ref&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;master&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;view-the-package-contents&#34;&gt;View the package contents&lt;/h2&gt;
 &lt;p&gt;The primary package artifacts are Kubernetes &lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/overview/#general-configuration-tips&#34;&gt;resource configuration&lt;/a&gt;
 (e.g. YAML files), however packages may also include supporting
 artifacts such as documentation.&lt;/p&gt;
-&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;package-contents-command&#34;&gt;Package Contents Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;tree cockroachdb/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;package-contents-output&#34;&gt;Package Contents Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;cockroachdb/
 ├── Kptfile
 ├── OWNERS
@@ -134,29 +134,29 @@ upstream rather than replacing it.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h5 id=&#34;command-3&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;command&#34;&gt;Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;head cockroachdb/cockroachdb-statefulset.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-3&#34;&gt;Output&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;apiVersion: v1
-kind: Service
-metadata:
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a&lt;/span&gt;
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# ClusterIP that will automatically load balance connections to the different&lt;/span&gt;
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# database pods.&lt;/span&gt;
-  name: cockroachdb-public
-  labels:
-    app: cockroachdb
-spec:
-  ports:
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This package contains &lt;code&gt;cockroachdb/cockroachdb-statefulset.yaml&lt;/code&gt; as plain old
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;output&#34;&gt;Output&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Service&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# ClusterIP that will automatically load balance connections to the different&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# database pods.&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;cockroachdb-public&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;labels&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;app&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;cockroachdb&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;ports&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This package contains &lt;code&gt;cockroachdb/cockroachdb-statefulset.yaml&lt;/code&gt; as plain old
 resource configuration (e.g. YAML) &amp;ndash; nothing special here.  Other kpt packages
 may have configuration which uses comments to attach metadata to
 specific resources or fields.&lt;/p&gt;
 &lt;h2 id=&#34;apply-the-package-to-a-cluster&#34;&gt;Apply the package to a cluster&lt;/h2&gt;
 &lt;p&gt;Use &lt;code&gt;kubectl apply&lt;/code&gt; to deploy the local package to a remote cluster.&lt;/p&gt;
-&lt;h5 id=&#34;command-4&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;apply-command&#34;&gt;Apply Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl apply -R -f cockroachdb
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-4&#34;&gt;Output&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;apply-output&#34;&gt;Apply Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;service/cockroachdb-public created
 service/cockroachdb created
 poddisruptionbudget.policy/cockroachdb-budget unchanged
@@ -174,9 +174,9 @@ the [kpt live] command.&lt;/p&gt;
 &lt;h2 id=&#34;view-the-applied-package&#34;&gt;View the applied package&lt;/h2&gt;
 &lt;p&gt;Once applied to the cluster, the remote resources can be displayed using
 the common tools such as &lt;code&gt;kubectl get&lt;/code&gt;.&lt;/p&gt;
-&lt;h5 id=&#34;command-5&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;applied-package-command&#34;&gt;Applied Package Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl get all
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-5&#34;&gt;Output&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;applied-package-output&#34;&gt;Applied Package Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;NAME                READY   STATUS    RESTARTS   AGE
 pod/cockroachdb-0   1/1     Running   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt;          54s
 pod/cockroachdb-1   1/1     Running   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt;          41s
@@ -218,13 +218,13 @@ statefulset.apps/cockroachdb   3/3     54s
 &lt;p&gt;Packages are fetched from remote git repository subdirectories with
 &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/pkg/get&#34;&gt;kpt pkg get&lt;/a&gt;.  In this guide we will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
 as a public package catalogue.&lt;/p&gt;
-&lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;fetch-command&#34;&gt;Fetch Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/kubernetes/examples/staging/ examples
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Fetch the entire examples/staging directory as a kpt package under &lt;code&gt;examples&lt;/code&gt;.
 This will contain many resources.&lt;/p&gt;
-&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;list-command&#34;&gt;List Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;tree examples
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;list-output&#34;&gt;List Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;examples/
 ├── Kptfile
 ├── cloud-controller-manager
@@ -237,11 +237,11 @@ This will contain many resources.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The package is composed of 79 directories and, 329 files.  This is too many
 to work with using tools such as &lt;code&gt;less&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 id=&#34;summarize-resource-counts&#34;&gt;Summarize resource counts&lt;/h2&gt;
-&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;count-example-command-1&#34;&gt;Count Example Command 1&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;kpt cfg count&lt;/code&gt; command summarizes the resource counts to show the shape of a
 package.&lt;/p&gt;
-&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;count-example-output-1&#34;&gt;Count Example Output 1&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;...
 Deployment: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;10&lt;/span&gt;
 Endpoints: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
@@ -249,26 +249,26 @@ InitializerConfiguration: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34
 Namespace: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;
 Pod: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;45&lt;/span&gt;
 ...
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-3&#34;&gt;Command&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;count-example-command-2&#34;&gt;Count Example Command 2&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/cockroachdb/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running &lt;code&gt;count&lt;/code&gt; on a subdirectory will summarize that directory even if
 it doesn&amp;rsquo;t have a Kptfile.&lt;/p&gt;
-&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;count-example-output-2&#34;&gt;Count Example Output 2&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;PodDisruptionBudget: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
 Service: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt;
 StatefulSet: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-4&#34;&gt;Command&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;count-example-command-3&#34;&gt;Count Example Command 3&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/ --kind&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;false&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The total aggregate resource count can be shown with &lt;code&gt;--kind=false&lt;/code&gt;&lt;/p&gt;
-&lt;h5 id=&#34;output-3&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;count-example-output-3&#34;&gt;Count Example Output 3&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;201&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;display-resources-as-a-tree&#34;&gt;Display resources as a tree&lt;/h2&gt;
-&lt;h5 id=&#34;command-5&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree examples/cockroachdb/ --image --replicas 
+&lt;h3 id=&#34;display-command&#34;&gt;Display Command&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree examples/cockroachdb/ --image --replicas
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Because the raw YAML configuration may be difficult for humans to easily
 view and understand, kpt provides a command for rendering configuration
 as a tree.  Flags may be provided to print specific fields under the resources.&lt;/p&gt;
-&lt;h5 id=&#34;output-4&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;display-output&#34;&gt;Display Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;examples/cockroachdb
 ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb
 ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet cockroachdb
@@ -281,12 +281,12 @@ as a tree.  Flags may be provided to print specific fields under the resources.&
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In addition to the built-in printable fields, &lt;code&gt;kpt cfg tree&lt;/code&gt; will print
 arbitrary fields by providing the &lt;code&gt;--field&lt;/code&gt; flag.&lt;/p&gt;
 &lt;h2 id=&#34;filter-resources&#34;&gt;Filter resources&lt;/h2&gt;
-&lt;h5 id=&#34;command-6&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;filter-command&#34;&gt;Filter Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.replicas&amp;gt;3&amp;#34;&lt;/span&gt; examples &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree --replicas
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grep can be used to filter resources by field values.  The output of
 &lt;code&gt;kpt cfg grep&lt;/code&gt; is the matching full resource configuration, which
 may be piped to tree for rendering.&lt;/p&gt;
-&lt;h5 id=&#34;output-5&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;filter-output&#34;&gt;Filter Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;.
 ├── storage/minio
 │   └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;minio-distributed-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet minio
@@ -298,11 +298,11 @@ may be piped to tree for rendering.&lt;/p&gt;
     └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;simple-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet web
         └── spec.replicas: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;14&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;dump-all-resources&#34;&gt;Dump all resources&lt;/h2&gt;
-&lt;h5 id=&#34;command-7&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;dump-command&#34;&gt;Dump Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg cat examples/cockroachdb
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The raw YAML configuration may be dumped using &lt;code&gt;kpt cfg cat&lt;/code&gt;.  This will
 print only the YAML for Kubernetes resources.&lt;/p&gt;
-&lt;h5 id=&#34;output-6&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;dump-output&#34;&gt;Dump Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;apiVersion: v1
 kind: Service
 metadata:
@@ -328,7 +328,7 @@ metadata:
         &lt;p&gt;&lt;em&gt;Dynamic needs for packages are built into tools which read and write
 configuration data.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set/&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter/&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Kpt packages can be modified using existing tools and workflows such as
 manually modifying the configuration in an editor, however these workflows
 can be labor intensive and error prone.&lt;/p&gt;
@@ -349,7 +349,7 @@ which are part of the package metadata &amp;ndash; i.e. the [Kptfile].&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;p&gt;To see more on how to create a setter: &lt;a href=&#34;../../producer/setters&#34;&gt;create setter guide&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;To see more on how to create a setter: &lt;a href=&#34;../../producer/setters/&#34;&gt;create setter guide&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;setters-explained&#34;&gt;Setters explained&lt;/h2&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
@@ -384,12 +384,12 @@ kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$SRC_REPO&lt;/span&gt;/packag
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;output&#34;&gt;Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;list-the-setters&#34;&gt;List the setters&lt;/h2&gt;
-&lt;p&gt;The &lt;code&gt;helloworld-set&lt;/code&gt; package contains &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; which can be used to
+&lt;p&gt;The &lt;code&gt;helloworld-set&lt;/code&gt; package contains &lt;a href=&#34;../../../reference/cfg/create-setter/&#34;&gt;setters&lt;/a&gt; which can be used to
 &lt;strong&gt;set configuration values from the commandline.&lt;/strong&gt;&lt;/p&gt;
-&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters helloworld/ 
+&lt;h3 id=&#34;list-command&#34;&gt;List Command&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters helloworld/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Print the list of setters included in the package.&lt;/p&gt;
-&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;list-output&#34;&gt;List Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;    NAME      VALUE        SET BY            DESCRIPTION        COUNT
   http-port   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;80&lt;/span&gt;       package-default   helloworld port        &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
   image-tag   v0.1.0   package-default   helloworld image tag   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
@@ -401,7 +401,7 @@ using &lt;code&gt;kpt set&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 id=&#34;set-a-field&#34;&gt;Set a field&lt;/h2&gt;
 &lt;p&gt;Setters &lt;strong&gt;modify the resource configuration in place by reading the resources,
 changing values, and writing them back.&lt;/strong&gt;&lt;/p&gt;
-&lt;h5 id=&#34;package-contents&#34;&gt;Package contents&lt;/h5&gt;
+&lt;h3 id=&#34;package-contents&#34;&gt;Package contents&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -409,12 +409,12 @@ changing values, and writing them back.&lt;/strong&gt;&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;replicas&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;5&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$kpt-set&amp;#34;:&amp;#34;replicas&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;set-command&#34;&gt;Set Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; helloworld/ replicas &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Change the replicas value in the configuration from 5 to 3.&lt;/p&gt;
-&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;set-output&#34;&gt;Set Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; fields
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;updated-package-contents&#34;&gt;Updated package contents&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;updated-package-contents&#34;&gt;Updated package contents&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;helloworld-gke&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -438,7 +438,7 @@ changing values, and writing them back.&lt;/strong&gt;&lt;/p&gt;
         &lt;p&gt;&lt;em&gt;Dynamic needs for packages are built into tools which read and write
 configuration data.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../../../reference/cfg/set/&#34;&gt;kpt cfg set&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-setter/&#34;&gt;setters&lt;/a&gt;, &lt;a href=&#34;../../../reference/cfg/create-subst/&#34;&gt;substitutions&lt;/a&gt;, &lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Substitutions are like setters, but instead of setting a entire field
 value, &lt;strong&gt;they use setters to set only parts of a field value.&lt;/strong&gt; &amp;ndash; e.g.
 only set the &lt;em&gt;tag&lt;/em&gt; portion of the &lt;code&gt;image&lt;/code&gt; field.&lt;/p&gt;
@@ -456,7 +456,7 @@ for an instance of a package&lt;/strong&gt; without modifying kpt.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;p&gt;To see more on how to create a substitution: &lt;a href=&#34;../../producer/substitutions&#34;&gt;create substitution guide&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;To see more on how to create a substitution: &lt;a href=&#34;../../producer/substitutions/&#34;&gt;create substitution guide&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;substitutions-explained&#34;&gt;Substitutions explained&lt;/h2&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
@@ -490,14 +490,14 @@ the pattern.&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#substitute-a-value&#34;&gt;Substitute a value&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
-&lt;h3 id=&#34;command&#34;&gt;Command&lt;/h3&gt;
+&lt;h3 id=&#34;fetch-command&#34;&gt;Fetch Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;SRC_REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$SRC_REPO&lt;/span&gt;/package-examples/helloworld-set@v0.3.0 helloworld
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grab the setters package, which contains setters and substitutions.&lt;/p&gt;
-&lt;h3 id=&#34;output&#34;&gt;Output&lt;/h3&gt;
+&lt;h3 id=&#34;fetch-output&#34;&gt;Fetch Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;list-the-setters&#34;&gt;List the setters&lt;/h2&gt;
-&lt;p&gt;List the &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; &amp;ndash; find the &lt;strong&gt;image-tag setter&lt;/strong&gt;.  When set it will perform
+&lt;p&gt;List the &lt;a href=&#34;../../../reference/cfg/create-setter/&#34;&gt;setters&lt;/a&gt; &amp;ndash; find the &lt;strong&gt;image-tag setter&lt;/strong&gt;.  When set it will perform
 a substitution.&lt;/p&gt;
 
 
@@ -513,15 +513,15 @@ is not required, and substitutions may have multiple setters.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters helloworld/ 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;list-command&#34;&gt;List Command&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters helloworld/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;list-output&#34;&gt;List Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-  http-port   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;80&lt;/span&gt;      package-default   helloworld port         &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;      
-  image-tag   0.1.0   package-default   hello-world image tag   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;      
-  replicas    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;5&lt;/span&gt;       package-default   helloworld replicas     &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;     
+  http-port   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;80&lt;/span&gt;      package-default   helloworld port         &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
+  image-tag   0.1.0   package-default   hello-world image tag   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+  replicas    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;5&lt;/span&gt;       package-default   helloworld replicas     &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;substitute-a-value&#34;&gt;Substitute a value&lt;/h2&gt;
-&lt;h5 id=&#34;package-contents&#34;&gt;Package contents&lt;/h5&gt;
+&lt;h3 id=&#34;package-contents&#34;&gt;Package contents&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -532,12 +532,12 @@ is not required, and substitutions may have multiple setters.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;helloworld-gke&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$kpt-set&amp;#34;:&amp;#34;image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;command&#34;&gt;Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt; kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; helloworld/ image-tag v0.2.0
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Change the tag portion of the image field using the &lt;code&gt;image-tag&lt;/code&gt; setter.&lt;/p&gt;
-&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;output&#34;&gt;Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; fields
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;updated-package-contents&#34;&gt;Updated package contents&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;updated-package-contents&#34;&gt;Updated package contents&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;helloworld-gke&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -547,9 +547,9 @@ is not required, and substitutions may have multiple setters.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;helloworld-gke&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.2.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$kpt-set&amp;#34;:&amp;#34;image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;customizing-setters&#34;&gt;Customizing setters&lt;/h3&gt;
-&lt;p&gt;See &lt;a href=&#34;../../../reference/cfg/create-setter&#34;&gt;setters&lt;/a&gt; and &lt;a href=&#34;../../../reference/cfg/create-subst&#34;&gt;substitutions&lt;/a&gt; for how to add or update them in the
-package &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;.&lt;/p&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;customizing-setters&#34;&gt;Customizing setters&lt;/h2&gt;
+&lt;p&gt;See &lt;a href=&#34;../../../reference/cfg/create-setter/&#34;&gt;setters&lt;/a&gt; and &lt;a href=&#34;../../../reference/cfg/create-subst/&#34;&gt;substitutions&lt;/a&gt; for how to add or update them in the
+package &lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt;.&lt;/p&gt;
 
       </description>
     </item>
@@ -564,11 +564,11 @@ package &lt;a href=&#34;../../../api-reference/kptfile&#34;&gt;Kptfile&lt;/a&gt;
         
         
         &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;../../../reference/live/apply&#34;&gt;kpt live apply&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../../../reference/live/apply/&#34;&gt;kpt live apply&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Because kpt packages are composed of resource configuration can be applied with
 &lt;code&gt;kubectl apply -R -f DIR&lt;/code&gt;, however kpt includes the next-generation &lt;strong&gt;apply&lt;/strong&gt;
 commands developed out of the Kubernetes &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-utils&#34;&gt;cli-utils&lt;/a&gt; repository as the
-&lt;a href=&#34;../../../reference/live/apply&#34;&gt;kpt live apply&lt;/a&gt; command.&lt;/p&gt;
+&lt;a href=&#34;../../../reference/live/apply/&#34;&gt;kpt live apply&lt;/a&gt; command.&lt;/p&gt;
 &lt;p&gt;Kpt live apply provides additional functionality beyond what is provided by
 &lt;code&gt;kubectl apply&lt;/code&gt;, such as communicating back resource status and pruning
 resources for deleted configuration.&lt;/p&gt;
@@ -578,13 +578,44 @@ resources for deleted configuration.&lt;/p&gt;
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/apply.svg&#34; /&gt;
 
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#initialize-the-package-inventory-template&#34;&gt;Initialize the package inventory template&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#apply-to-a-cluster&#34;&gt;Apply to a cluster&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#print-the-live-resources&#34;&gt;Print the live resources&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#prune-resources&#34;&gt;Prune resources&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#topics&#34;&gt;Topics&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#steps&#34;&gt;Steps&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#command&#34;&gt;Command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#output&#34;&gt;Output&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#initialize-the-package-inventory-template&#34;&gt;Initialize the package inventory template&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#init-command&#34;&gt;Init Command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#init-output&#34;&gt;Init Output&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#inventory-template&#34;&gt;Inventory template&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#apply-to-a-cluster&#34;&gt;Apply to a cluster&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#apply-command&#34;&gt;Apply Command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#apply-output&#34;&gt;Apply Output&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#print-the-live-resources&#34;&gt;Print the live resources&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#print-command&#34;&gt;Print Command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#print-output&#34;&gt;Print Output&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#command-tree&#34;&gt;Command: &lt;code&gt;tree&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#output-tree&#34;&gt;Output: &lt;code&gt;tree&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#prune-resources&#34;&gt;Prune resources&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#prune-command&#34;&gt;Prune Command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#prune-output&#34;&gt;Prune Output&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#print-the-live-resources-after-pruning&#34;&gt;Print the live resources after pruning&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
 &lt;h3 id=&#34;command&#34;&gt;Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;SRC_REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
@@ -595,9 +626,9 @@ kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$SRC_REPO&lt;/span&gt;/packag
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;initialize-the-package-inventory-template&#34;&gt;Initialize the package inventory template&lt;/h2&gt;
 &lt;p&gt;The kpt version of apply uses a ConfigMap map to keep track of previously
 applied resources so they can be pruned later if the configuration for
-them is deleted. The &lt;a href=&#34;../../../reference/live/init&#34;&gt;kpt live init&lt;/a&gt; command will generate an inventory template
+them is deleted. The &lt;a href=&#34;../../../reference/live/init/&#34;&gt;kpt live init&lt;/a&gt; command will generate an inventory template
 (which is just a normal ConfigMap manifest with a special annotation) used by
-&lt;a href=&#34;../../../reference/live/apply&#34;&gt;kpt live apply&lt;/a&gt; to generate an actual ConfigMap in the cluster which we refer
+&lt;a href=&#34;../../../reference/live/apply/&#34;&gt;kpt live apply&lt;/a&gt; to generate an actual ConfigMap in the cluster which we refer
 to as an inventory object.&lt;/p&gt;
 
 
@@ -607,11 +638,11 @@ to as an inventory object.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;init-command&#34;&gt;Init Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt live init helloworld
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;init-output&#34;&gt;Init Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;Initialized: helloworld/inventory-template.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;inventory-template&#34;&gt;Inventory template&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;inventory-template&#34;&gt;Inventory template&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ConfigMap&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -628,11 +659,11 @@ created, and will be used by apply to generate a history of previously
 applied resources.  This file should be checked into &lt;code&gt;git&lt;/code&gt; along with the
 rest of the package, but otherwise ignored by users.&lt;/p&gt;
 &lt;h2 id=&#34;apply-to-a-cluster&#34;&gt;Apply to a cluster&lt;/h2&gt;
-&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;apply-command&#34;&gt;Apply Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt live apply helloworld --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;2m
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Apply the resources to the cluster and block until the changes have
 been fully rolled out &amp;ndash; e.g. until the Pods are running.&lt;/p&gt;
-&lt;h5 id=&#34;output-2&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;apply-output&#34;&gt;Apply Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;configmap/inventory-17c4dd3c created
 service/helloworld-gke created
 deployment.apps/helloworld-gke created
@@ -648,9 +679,9 @@ resources failed to the reached Current status
 be rolled out.&lt;/p&gt;
 &lt;h2 id=&#34;print-the-live-resources&#34;&gt;Print the live resources&lt;/h2&gt;
 &lt;p&gt;Display the resources in the cluster using kubectl.&lt;/p&gt;
-&lt;h5 id=&#34;command-3&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;print-command&#34;&gt;Print Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl get configmaps,deploy,services
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-3&#34;&gt;Output&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;print-output&#34;&gt;Print Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;NAME                                 DATA   AGE
 configmap/inventory-28c4kc3c         &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt;      2m47s
 
@@ -660,11 +691,11 @@ deployment.apps/helloworld-gke   5/5     &lt;span style=&#34;color:#0000cf;font-
 NAME                     TYPE        CLUSTER-IP    EXTERNAL-IP   PORT&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;S&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;        AGE
 service/helloworld-gke   NodePort    10.48.2.143   &amp;lt;none&amp;gt;        80:32442/TCP   2m47s
 service/kubernetes       ClusterIP   10.48.0.1     &amp;lt;none&amp;gt;        443/TCP        19m
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-tree&#34;&gt;Command: &lt;code&gt;tree&lt;/code&gt;&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;command-tree&#34;&gt;Command: &lt;code&gt;tree&lt;/code&gt;&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl get all -o yaml &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The output of kubectl can also be piped to &lt;a href=&#34;../../../reference/cfg/tree&#34;&gt;kpt cfg tree&lt;/a&gt; to summarize
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The output of kubectl can also be piped to &lt;a href=&#34;../../../reference/cfg/tree/&#34;&gt;kpt cfg tree&lt;/a&gt; to summarize
 the resources.&lt;/p&gt;
-&lt;h5 id=&#34;output-tree&#34;&gt;Output: &lt;code&gt;tree&lt;/code&gt;&lt;/h5&gt;
+&lt;h3 id=&#34;output-tree&#34;&gt;Output: &lt;code&gt;tree&lt;/code&gt;&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;.
 ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Resource&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Deployment default/helloworld-gke
 │   └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Resource&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  ReplicaSet default/helloworld-gke-5bf95f8869
@@ -678,19 +709,19 @@ the resources.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;prune-resources&#34;&gt;Prune resources&lt;/h2&gt;
 &lt;p&gt;Resources can be deleted from the cluster by deleting them from the
 resource configuration.sh&lt;/p&gt;
-&lt;h5 id=&#34;command-4&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;prune-command&#34;&gt;Prune Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;rm helloworld/deploy.yaml
 kpt live apply helloworld/ --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;2m
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Apply uses the previously created inventory objects (ConfigMaps) to calculate
 the set of resources to prune (delete) after applying.  In this case the
 Deployment.&lt;/p&gt;
-&lt;h5 id=&#34;output-4&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;prune-output&#34;&gt;Prune Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;service/helloworld-gke is Current: Service is ready
 resources failed to the reached Current status
 deployment.apps/helloworld-gke pruned
 configmap/inventory-2911da3b pruned
 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt; resource&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;s&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt; pruned
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;print-the-live-resources-1&#34;&gt;Print the live resources&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;print-the-live-resources-after-pruning&#34;&gt;Print the live resources after pruning&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl get deploy
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;No resources found in default namespace.
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
@@ -709,7 +740,7 @@ configmap/inventory-2911da3b pruned
         &lt;p&gt;&lt;em&gt;Packages can be arbitrarily customized and later merge updates from
 upstream.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&#34;../../../reference/pkg/update&#34;&gt;kpt pkg update&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../../../reference/pkg/update/&#34;&gt;kpt pkg update&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Because kpt package contents are resource configuration (data) rather
 than templates or DSLs (code), it is possible to merge different versions
 of the package together using the structure of the resources to compute
@@ -742,23 +773,42 @@ in this guide.&lt;/p&gt;
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/update-command.svg&#34; /&gt;
 
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#edit-the-contents&#34;&gt;Edit the contents&lt;/a&gt;&lt;/li&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#topics&#34;&gt;Topics&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#kpt-pkg-update-explained&#34;&gt;&lt;code&gt;kpt pkg update&lt;/code&gt; explained&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#steps&#34;&gt;Steps&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-command&#34;&gt;Fetch Command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-output&#34;&gt;Fetch Output&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#edit-the-contents&#34;&gt;Edit the contents&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#old-local-configuration&#34;&gt;Old local configuration&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#new-local-configuration&#34;&gt;New local configuration&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#commit-local-changes&#34;&gt;Commit local changes&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#merge-command&#34;&gt;Merge Command&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#merge-output&#34;&gt;Merge Output&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#merge-changes&#34;&gt;Merge Changes&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#view-new-package-contents&#34;&gt;View new package contents&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
+&lt;/ul&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
 &lt;p&gt;Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.&lt;/p&gt;
-&lt;h5 id=&#34;command&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;fetch-command&#34;&gt;Fetch Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$REPO&lt;/span&gt;/package-examples/helloworld-set@v0.3.0 helloworld
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Fetch the &lt;code&gt;helloworld-set&lt;/code&gt; package at version &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
-&lt;h5 id=&#34;output&#34;&gt;Output&lt;/h5&gt;
-&lt;pre&gt;&lt;code&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
-&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;fetch-output&#34;&gt;Fetch Output&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
 &lt;p&gt;Each subdirectory within a git repo may be tagged with its own version
@@ -772,7 +822,7 @@ resolved to the tag &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
 
 &lt;h2 id=&#34;edit-the-contents&#34;&gt;Edit the contents&lt;/h2&gt;
 &lt;p&gt;Edit the contents of the package by making changes to it.&lt;/p&gt;
-&lt;h5 id=&#34;old-local-configuration&#34;&gt;Old local configuration&lt;/h5&gt;
+&lt;h3 id=&#34;old-local-configuration&#34;&gt;Old local configuration&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (upstream)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -783,7 +833,7 @@ resolved to the tag &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The old package contents without local modifications.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;vi helloworld/deploy.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;new-local-configuration&#34;&gt;New local configuration&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;new-local-configuration&#34;&gt;New local configuration&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (locally modified)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;...&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/helloworld-gke&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;v0&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;.1.0&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.substitutions.image-tag&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -812,14 +862,14 @@ git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;add helloworld 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/h2&gt;
 &lt;p&gt;Package updates are performed by fetching the upstream package at the
 specified version and applying the upstream changes to the local package.&lt;/p&gt;
-&lt;h5 id=&#34;command-1&#34;&gt;Command&lt;/h5&gt;
+&lt;h3 id=&#34;merge-command&#34;&gt;Merge Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg update helloworld@v0.5.0 --strategy&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;resource-merge
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Update the local package to the upstream version v0.5.0 by doing a 3-way
 merge between 1) the original upstream commit, 2) the local (customized)
 package, 3) the new upstream reference.&lt;/p&gt;
-&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
+&lt;h3 id=&#34;merge-output&#34;&gt;Merge Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;updating package helloworld to v0.5.0
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;changes&#34;&gt;Changes&lt;/h5&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;merge-changes&#34;&gt;Merge Changes&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--- a/helloworld/deploy.yaml
 +++ b/helloworld/deploy.yaml
 @@ -31,7 +31,7 @@ spec:

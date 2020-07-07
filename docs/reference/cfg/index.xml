@@ -271,7 +271,7 @@ DIR:
 values through package metadata (OpenAPI).  They are a safer alternative to
 other substitution techniques which do not have the context of the
 structured data &amp;ndash; e.g. using &lt;code&gt;sed&lt;/code&gt; to replace values.&lt;/p&gt;
-&lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters&#34;&gt;creating setters&lt;/a&gt; guide for more info on creating setters.&lt;/p&gt;
+&lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters/&#34;&gt;creating setters&lt;/a&gt; guide for more info on creating setters.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
 &lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# create a setter called replicas for fields matching value &amp;#34;3&amp;#34;&lt;/span&gt;
@@ -291,7 +291,7 @@ kpt cfg create-setter DIR/ app nginx --field &lt;span style=&#34;color:#4e9a06&#
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt cfg create-setter DIR NAME VALUE
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-setter DIR NAME VALUE
 
 DIR:
   Path to a package directory
@@ -302,19 +302,19 @@ NAME:
   e.g. replicas
 
 VALUE
-  The value of the filed for which setter reference must be added.
-  e.g. 3
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
-&lt;pre&gt;&lt;code&gt;--description
+  The value of the filed &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; which setter reference must be added.
+  e.g. &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--description
   Optional description about the value.
 
 --set-by
-  Optional record of who set the value.
+  Optional record of who &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; the value.
 
---value   
+--value
   Optional flag, alternative to specifying the value as an argument
-  e.g. used to specify values that start with &#39;-&#39;
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+  e.g. used to specify values that start with &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -364,9 +364,9 @@ VALUE
 &lt;/p&gt;
 
 &lt;p&gt;Substitutions provide a solution for template-free substitution of field values
-built on top of &lt;a href=&#34;../create-setter&#34;&gt;setters&lt;/a&gt;.  They enable substituting values into part of a
+built on top of &lt;a href=&#34;../create-setter/&#34;&gt;setters&lt;/a&gt;.  They enable substituting values into part of a
 field, including combining multiple setters into a single value.&lt;/p&gt;
-&lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/substitutions&#34;&gt;creating substitutions&lt;/a&gt; guide for more info on creating
+&lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/substitutions/&#34;&gt;creating substitutions&lt;/a&gt; guide for more info on creating
 substitutions.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
 &lt;!--mdtogo:Examples--&gt;
@@ -406,7 +406,7 @@ kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; . tag-setter 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt cfg create-subst DIR NAME --field-value VALUE --pattern PATTERN
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-subst DIR NAME --field-value VALUE --pattern PATTERN
 
 DIR
   Path to a package directory
@@ -422,10 +422,79 @@ VALUE
 
 PATTERN
   A string containing one or more MARKER substrings which will be
-  substituted for setter values.  The pattern may contain multiple
+  substituted &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; setter values.  The pattern may contain multiple
   different MARKERS, the same MARKER multiple times, and non-MARKER
   substrings.
-  e.g. ${image-setter}:${tag-setter}
+  e.g. &lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;-setter&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;-setter&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Delete-setter</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/cfg/delete-setter/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/cfg/delete-setter/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Delete a setter for one field
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/cfg-delete-setter.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Setters provide a solution for template-free setting or substitution of field
+values through package metadata (OpenAPI).  They are a safer alternative to
+other substitution techniques which do not have the context of the
+structured data &amp;ndash; e.g. using &lt;code&gt;sed&lt;/code&gt; to replace values.&lt;/p&gt;
+&lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters&#34;&gt;deleting setters&lt;/a&gt; guide for more info on creating setters.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# delete a setter replicas&lt;/span&gt;
+kpt cfg delete-setter DIR/ replicas
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt cfg delete-setter DIR NAME VALUE
+
+DIR:
+  Path to a package directory
+
+NAME:
+  The name of the setter to delete. e.g. replicas
+
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
@@ -651,7 +720,7 @@ It also displays:&lt;/p&gt;
 &lt;li&gt;A description of the value or setter&lt;/li&gt;
 &lt;li&gt;The name of fields that would be updated by calling set&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;See &lt;a href=&#34;../create-setter&#34;&gt;create-setter&lt;/a&gt; and &lt;a href=&#34;../create-subst&#34;&gt;create-subst&lt;/a&gt; for how setters and substitutions
+&lt;p&gt;See &lt;a href=&#34;../create-setter/&#34;&gt;create-setter&lt;/a&gt; and &lt;a href=&#34;../create-subst/&#34;&gt;create-subst&lt;/a&gt; for how setters and substitutions
 are defined in a Kptfile.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
 &lt;!--mdtogo:Examples--&gt;
@@ -659,18 +728,18 @@ are defined in a Kptfile.&lt;/p&gt;
 kpt cfg list-setters hello-world/
 
   NAME     VALUE    SET BY    DESCRIPTION   COUNT  
-replicas   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;       isabella   good value    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;   
+replicas   &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;       isabella   good value    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt cfg list-setters DIR [NAME]
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters DIR &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;NAME&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
 
 DIR
   Path to a package directory
 
 NAME
   Optional.  The name of the setter to display.
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>
@@ -725,10 +794,10 @@ have values substituted is configured by line comments on the configuration
 fields.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Calling set may change multiple fields at once.&lt;/li&gt;
-&lt;li&gt;To see the list of setters for a package run &lt;a href=&#34;../list-setters&#34;&gt;list-setters&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;To see the list of setters for a package run &lt;a href=&#34;../list-setters/&#34;&gt;list-setters&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;The &lt;em&gt;set&lt;/em&gt; command may only be run on a directory containing a Kptfile.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;See &lt;a href=&#34;../create-setter&#34;&gt;create-setter&lt;/a&gt; and &lt;a href=&#34;../create-subst&#34;&gt;create-subst&lt;/a&gt; for more on how setters and substitutions
+&lt;p&gt;See &lt;a href=&#34;../create-setter/&#34;&gt;create-setter&lt;/a&gt; and &lt;a href=&#34;../create-subst/&#34;&gt;create-subst&lt;/a&gt; for more on how setters and substitutions
 are defined in a Kptfile.&lt;/p&gt;
 &lt;p&gt;Example setter referenced from a field in a configuration file:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Deployment&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -737,9 +806,8 @@ are defined in a Kptfile.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;replicas&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# {&amp;#34;$ref&amp;#34;:&amp;#34;#/definitions/io.k8s.cli.setters.replicas&amp;#34;}&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;One could the replicas field to 4 by running&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;kpt cfg set hello-world/ replicas 4
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h4 id=&#34;description&#34;&gt;Description&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; hello-world/ replicas &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;description&#34;&gt;Description&lt;/h4&gt;
 &lt;p&gt;Setters may have a description of the current value.  This may be defined
 along with the value by specifying the &lt;code&gt;--description&lt;/code&gt; flag.&lt;/p&gt;
 &lt;h4 id=&#34;setby&#34;&gt;SetBy&lt;/h4&gt;
@@ -766,28 +834,28 @@ kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; hello-world/ 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt cfg set DIR NAME VALUE
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
-&lt;pre&gt;&lt;code&gt;DIR
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; DIR NAME VALUE
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;DIR
   Path to a package directory. e.g. hello-world/
 
 NAME
   The name of the setter. e.g. replicas
 
 VALUE
-  The new value to set on fields. e.g. 3
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
-&lt;pre&gt;&lt;code&gt;--description
+  The new value to &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; on fields. e.g. &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--description
   Optional description about the value.
 
 --set-by
-  Optional record of who set the value.  Clears the last set-by
-  value if unset.
+  Optional record of who &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; the value.  Clears the last set-by
+  value &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; unset.
 
---values   
-  Optional flag, the values of the setter to be set to
-  e.g. used to specify values that start with &#39;-&#39;
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+--values
+  Optional flag, the values of the setter to be &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; to
+  e.g. used to specify values that start with &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>

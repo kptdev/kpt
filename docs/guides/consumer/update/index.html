@@ -575,7 +575,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsstarlark">
@@ -598,7 +598,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsgolang">
@@ -626,6 +626,29 @@ if (!doNotTrack) {
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsquickstart">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
       
@@ -898,18 +921,22 @@ if (!doNotTrack) {
     <li><a href="#steps">Steps</a></li>
     <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
-        <li></li>
+        <li><a href="#fetch-command">Fetch Command</a></li>
+        <li><a href="#fetch-output">Fetch Output</a></li>
       </ul>
     </li>
     <li><a href="#edit-the-contents">Edit the contents</a>
       <ul>
-        <li></li>
+        <li><a href="#old-local-configuration">Old local configuration</a></li>
+        <li><a href="#new-local-configuration">New local configuration</a></li>
       </ul>
     </li>
     <li><a href="#commit-local-changes">Commit local changes</a></li>
     <li><a href="#merge-upstream-changes">Merge upstream changes</a>
       <ul>
-        <li></li>
+        <li><a href="#merge-command">Merge Command</a></li>
+        <li><a href="#merge-output">Merge Output</a></li>
+        <li><a href="#merge-changes">Merge Changes</a></li>
       </ul>
     </li>
     <li><a href="#view-new-package-contents">View new package contents</a></li>
@@ -964,7 +991,7 @@ if (!doNotTrack) {
 	<p><em>Packages can be arbitrarily customized and later merge updates from
 upstream.</em></p>
 <h2 id="topics">Topics</h2>
-<p><a href="../../../reference/pkg/update">kpt pkg update</a></p>
+<p><a href="../../../reference/pkg/update/">kpt pkg update</a></p>
 <p>Because kpt package contents are resource configuration (data) rather
 than templates or DSLs (code), it is possible to merge different versions
 of the package together using the structure of the resources to compute
@@ -997,23 +1024,42 @@ in this guide.</p>
 <img src="https://googlecontainertools.github.io/kpt//images/update-command.svg" />
 
 <h2 id="steps">Steps</h2>
-<ol>
-<li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
-<li><a href="#edit-the-contents">Edit the contents</a></li>
+<ul>
+<li><a href="#topics">Topics</a></li>
+<li><a href="#kpt-pkg-update-explained"><code>kpt pkg update</code> explained</a></li>
+<li><a href="#steps">Steps</a></li>
+<li><a href="#fetch-a-remote-package">Fetch a remote package</a>
+<ul>
+<li><a href="#fetch-command">Fetch Command</a></li>
+<li><a href="#fetch-output">Fetch Output</a></li>
+</ul>
+</li>
+<li><a href="#edit-the-contents">Edit the contents</a>
+<ul>
+<li><a href="#old-local-configuration">Old local configuration</a></li>
+<li><a href="#new-local-configuration">New local configuration</a></li>
+</ul>
+</li>
 <li><a href="#commit-local-changes">Commit local changes</a></li>
-<li><a href="#merge-upstream-changes">Merge upstream changes</a></li>
+<li><a href="#merge-upstream-changes">Merge upstream changes</a>
+<ul>
+<li><a href="#merge-command">Merge Command</a></li>
+<li><a href="#merge-output">Merge Output</a></li>
+<li><a href="#merge-changes">Merge Changes</a></li>
+</ul>
+</li>
 <li><a href="#view-new-package-contents">View new package contents</a></li>
-</ol>
+</ul>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <p>Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.</p>
-<h5 id="command">Command</h5>
+<h3 id="fetch-command">Fetch Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get <span style="color:#000">$REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
 </code></pre></div><p>Fetch the <code>helloworld-set</code> package at version <code>v0.3.0</code>.</p>
-<h5 id="output">Output</h5>
-<pre><code>fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
-</code></pre>
+<h3 id="fetch-output">Fetch Output</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
+</code></pre></div>
 
 <div class="pageinfo pageinfo-info">
 <p>Each subdirectory within a git repo may be tagged with its own version
@@ -1027,7 +1073,7 @@ resolved to the tag <code>v0.3.0</code>.</p>
 
 <h2 id="edit-the-contents">Edit the contents</h2>
 <p>Edit the contents of the package by making changes to it.</p>
-<h5 id="old-local-configuration">Old local configuration</h5>
+<h3 id="old-local-configuration">Old local configuration</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># helloworld/deploy.yaml (upstream)</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/helloworld-gke<span style="color:#000;font-weight:bold">:</span>v0<span style="color:#0000cf;font-weight:bold">.1.0</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.image-tag&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1038,7 +1084,7 @@ resolved to the tag <code>v0.3.0</code>.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><p>The old package contents without local modifications.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">vi helloworld/deploy.yaml
-</code></pre></div><h5 id="new-local-configuration">New local configuration</h5>
+</code></pre></div><h3 id="new-local-configuration">New local configuration</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># helloworld/deploy.yaml (locally modified)</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/helloworld-gke<span style="color:#000;font-weight:bold">:</span>v0<span style="color:#0000cf;font-weight:bold">.1.0</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$ref&#34;:&#34;#/definitions/io.k8s.cli.substitutions.image-tag&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1067,14 +1113,14 @@ git commit -m <span style="color:#4e9a06">&#34;add helloworld package at v0.3.0&
 </code></pre></div><h2 id="merge-upstream-changes">Merge upstream changes</h2>
 <p>Package updates are performed by fetching the upstream package at the
 specified version and applying the upstream changes to the local package.</p>
-<h5 id="command-1">Command</h5>
+<h3 id="merge-command">Merge Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg update helloworld@v0.5.0 --strategy<span style="color:#ce5c00;font-weight:bold">=</span>resource-merge
 </code></pre></div><p>Update the local package to the upstream version v0.5.0 by doing a 3-way
 merge between 1) the original upstream commit, 2) the local (customized)
 package, 3) the new upstream reference.</p>
-<h5 id="output-1">Output</h5>
+<h3 id="merge-output">Merge Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">updating package helloworld to v0.5.0
-</code></pre></div><h5 id="changes">Changes</h5>
+</code></pre></div><h3 id="merge-changes">Merge Changes</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--- a/helloworld/deploy.yaml
 +++ b/helloworld/deploy.yaml
 @@ -31,7 +31,7 @@ spec:
@@ -1204,12 +1250,14 @@ and local modifications (additional environment variable).</p>
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 3, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4c9e64de7e255bbed3221a3ab42b505e82e52bf8">Small improvements to the consumer guides (4c9e64de)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1227,7 +1275,7 @@ and local modifications (additional environment variable).</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

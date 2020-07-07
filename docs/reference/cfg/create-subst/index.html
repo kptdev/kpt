@@ -477,6 +477,29 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/delete-setter/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">delete-setter</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgdelete-setter">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/reference/cfg/fmt/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fmt</a>
   </li>
   <ul>
@@ -983,9 +1006,9 @@ if (!doNotTrack) {
 </p>
 
 <p>Substitutions provide a solution for template-free substitution of field values
-built on top of <a href="../create-setter">setters</a>.  They enable substituting values into part of a
+built on top of <a href="../create-setter/">setters</a>.  They enable substituting values into part of a
 field, including combining multiple setters into a single value.</p>
-<p>See the <a href="../../../guides/producer/substitutions">creating substitutions</a> guide for more info on creating
+<p>See the <a href="../../../guides/producer/substitutions/">creating substitutions</a> guide for more info on creating
 substitutions.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
@@ -1025,7 +1048,7 @@ kpt cfg <span style="color:#204a87">set</span> . tag-setter v1.8.0
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
-<pre><code>kpt cfg create-subst DIR NAME --field-value VALUE --pattern PATTERN
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-subst DIR NAME --field-value VALUE --pattern PATTERN
 
 DIR
   Path to a package directory
@@ -1041,11 +1064,11 @@ VALUE
 
 PATTERN
   A string containing one or more MARKER substrings which will be
-  substituted for setter values.  The pattern may contain multiple
+  substituted <span style="color:#204a87;font-weight:bold">for</span> setter values.  The pattern may contain multiple
   different MARKERS, the same MARKER multiple times, and non-MARKER
   substrings.
-  e.g. ${image-setter}:${tag-setter}
-</code></pre><!--mdtogo-->
+  e.g. <span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#000;font-weight:bold">-setter</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#000;font-weight:bold">-setter</span><span style="color:#4e9a06">}</span>
+</code></pre></div><!--mdtogo-->
 
         <div class="section-index">
     
@@ -1114,12 +1137,14 @@ PATTERN
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified April 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9147a0a72a3a65856e85d65aacdfb314413cc3e5">Update docs for create-subst (9147a0a7)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1137,7 +1162,7 @@ PATTERN
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

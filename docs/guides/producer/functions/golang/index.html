@@ -32,16 +32,16 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Go Function SDK | Kpt</title><meta property="og:title" content="Go Function SDK" />
+<title>Go Function Libraries | Kpt</title><meta property="og:title" content="Go Function Libraries" />
 <meta property="og:description" content="Writing exec and container functions in Golang.
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Go Function SDK">
+<meta itemprop="name" content="Go Function Libraries">
 <meta itemprop="description" content="Writing exec and container functions in Golang.
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Go Function SDK"/>
+<meta name="twitter:title" content="Go Function Libraries"/>
 <meta name="twitter:description" content="Writing exec and container functions in Golang.
 "/>
 
@@ -75,7 +75,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Go Function SDK | Kpt</title>
+    <title>Go Function Libraries | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -575,7 +575,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsstarlark">
@@ -598,7 +598,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
   </li>
   <ul>
     <li class="collapse show" id="kptguidesproducerfunctionsgolang">
@@ -626,6 +626,29 @@ if (!doNotTrack) {
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsquickstart">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
       
@@ -879,7 +902,7 @@ if (!doNotTrack) {
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/golang/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Go%20Function%20SDK" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Go%20Function%20Libraries" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -951,7 +974,7 @@ if (!doNotTrack) {
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/">Go Function SDK</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/">Go Function Libraries</a>
 </li>
 
 	</ol>
@@ -959,7 +982,7 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Go Function SDK</h1>
+	<h1>Go Function Libraries</h1>
 	<div class="lead">Writing exec and container functions in Golang.</div>
 	<p>Writing exec and container functions in Golang.</p>
 <h3 id="hello-world-go-function">Hello World Go Function</h3>
@@ -990,32 +1013,32 @@ go get sigs.k8s.io/kustomize/kyaml
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
 
 <span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">(</span>
-	<span style="color:#4e9a06">&#34;os&#34;</span>
+ <span style="color:#4e9a06">&#34;os&#34;</span>
 
-	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/fn/framework&#34;</span>
-	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/yaml&#34;</span>
+ <span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/fn/framework&#34;</span>
+ <span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/yaml&#34;</span>
 <span style="color:#000;font-weight:bold">)</span>
 
 <span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">value</span> <span style="color:#204a87;font-weight:bold">string</span>
 
 <span style="color:#204a87;font-weight:bold">func</span> <span style="color:#000">main</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#000">resourceList</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">ResourceList</span><span style="color:#000;font-weight:bold">{}</span>
-	<span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
+ <span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
         <span style="color:#8f5902;font-style:italic">// cmd.Execute() will parse the ResourceList.functionConfig into cmd.Flags from
-</span><span style="color:#8f5902;font-style:italic"></span>		<span style="color:#8f5902;font-style:italic">// the ResourceList.functionConfig.data field.
-</span><span style="color:#8f5902;font-style:italic"></span>		<span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span> <span style="color:#000;font-weight:bold">{</span>
+</span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#8f5902;font-style:italic">// the ResourceList.functionConfig.data field.
+</span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span> <span style="color:#000;font-weight:bold">{</span>
             <span style="color:#8f5902;font-style:italic">// modify the resources using the kyaml/yaml library:
 </span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#8f5902;font-style:italic">// https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml
-</span><span style="color:#8f5902;font-style:italic"></span>			<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">SetAnnotation</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">value</span><span style="color:#000;font-weight:bold">));</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
-				<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">err</span>
-			<span style="color:#000;font-weight:bold">}</span>
-		<span style="color:#000;font-weight:bold">}</span>
-		<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>
-	<span style="color:#000;font-weight:bold">})</span>
-	<span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Flags</span><span style="color:#000;font-weight:bold">().</span><span style="color:#000">StringVar</span><span style="color:#000;font-weight:bold">(</span><span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">value</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;flag value&#34;</span><span style="color:#000;font-weight:bold">)</span>
-	<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Execute</span><span style="color:#000;font-weight:bold">();</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
-		<span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
-	<span style="color:#000;font-weight:bold">}</span>
+</span><span style="color:#8f5902;font-style:italic"></span>   <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">SetAnnotation</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">value</span><span style="color:#000;font-weight:bold">));</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
+    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">err</span>
+   <span style="color:#000;font-weight:bold">}</span>
+  <span style="color:#000;font-weight:bold">}</span>
+  <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>
+ <span style="color:#000;font-weight:bold">})</span>
+ <span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Flags</span><span style="color:#000;font-weight:bold">().</span><span style="color:#000">StringVar</span><span style="color:#000;font-weight:bold">(</span><span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">value</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;flag value&#34;</span><span style="color:#000;font-weight:bold">)</span>
+ <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Execute</span><span style="color:#000;font-weight:bold">();</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
+  <span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
+ <span style="color:#000;font-weight:bold">}</span>
 <span style="color:#000;font-weight:bold">}</span>
 </code></pre></div><h3 id="build-and-test-the-function">Build and test the function</h3>
 <p>Build the go binary and test it by running it as an executable function.</p>
@@ -1067,17 +1090,17 @@ implicitly.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
 
 <span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">(</span>
-	<span style="color:#4e9a06">&#34;os&#34;</span>
+ <span style="color:#4e9a06">&#34;os&#34;</span>
 
-	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/fn/framework&#34;</span>
-	<span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/yaml&#34;</span>
+ <span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/fn/framework&#34;</span>
+ <span style="color:#4e9a06">&#34;sigs.k8s.io/kustomize/kyaml/yaml&#34;</span>
 <span style="color:#000;font-weight:bold">)</span>
 
 <span style="color:#204a87;font-weight:bold">func</span> <span style="color:#000">main</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000;font-weight:bold">{</span>
-	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Data</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+ <span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Data</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
         <span style="color:#000">Value</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;value,omitempty&#34;`</span>
-	<span style="color:#000;font-weight:bold">}</span>
-	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Example</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+ <span style="color:#000;font-weight:bold">}</span>
+ <span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Example</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
         <span style="color:#8f5902;font-style:italic">// Data contains the function configuration (e.g. client-side CRD).  Using &#34;data&#34;
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// as the field name to contain key-value pairs enables the function to be invoked
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// imperatively via `kpt fn run DIR/ --image img:tag -- key=value` and the
@@ -1085,44 +1108,44 @@ implicitly.</p>
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// If the function does not need to be invoked imperatively, other field names
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// may be used.
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">Data</span> <span style="color:#000">Data</span> <span style="color:#4e9a06">`yaml:&#34;data,omitempty&#34;`</span>
-	<span style="color:#000;font-weight:bold">}</span>
-	<span style="color:#000">functionConfig</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">Example</span><span style="color:#000;font-weight:bold">{}</span>
+ <span style="color:#000;font-weight:bold">}</span>
+ <span style="color:#000">functionConfig</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">Example</span><span style="color:#000;font-weight:bold">{}</span>
     <span style="color:#000">resourceList</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">ResourceList</span><span style="color:#000;font-weight:bold">{</span><span style="color:#000">FunctionConfig</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">functionConfig</span><span style="color:#000;font-weight:bold">}</span>
 
-	<span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
-		<span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span> <span style="color:#000;font-weight:bold">{</span>
+ <span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
+  <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span> <span style="color:#000;font-weight:bold">{</span>
             <span style="color:#8f5902;font-style:italic">// use the kyaml libraries to modify each resource by applying transformations
-</span><span style="color:#8f5902;font-style:italic"></span>			<span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span>
+</span><span style="color:#8f5902;font-style:italic"></span>   <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span>
                 <span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">SetAnnotation</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">functionConfig</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Data</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Value</span><span style="color:#000;font-weight:bold">),</span>
             <span style="color:#000;font-weight:bold">)</span>
             <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
-				<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">err</span>
-			<span style="color:#000;font-weight:bold">}</span>
-		<span style="color:#000;font-weight:bold">}</span>
-		<span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">items</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">nil</span>
-	<span style="color:#000;font-weight:bold">})</span>
+    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">err</span>
+   <span style="color:#000;font-weight:bold">}</span>
+  <span style="color:#000;font-weight:bold">}</span>
+  <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">items</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">nil</span>
+ <span style="color:#000;font-weight:bold">})</span>
 
-	<span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Execute</span><span style="color:#000;font-weight:bold">();</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
-		<span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
-	<span style="color:#000;font-weight:bold">}</span>
+ <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">cmd</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Execute</span><span style="color:#000;font-weight:bold">();</span> <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">!=</span> <span style="color:#204a87;font-weight:bold">nil</span> <span style="color:#000;font-weight:bold">{</span>
+  <span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
+ <span style="color:#000;font-weight:bold">}</span>
 <span style="color:#000;font-weight:bold">}</span>
 </code></pre></div><p>Note: functionConfig need not read from the <code>data</code> field if it is not going to be run
 imperatively with <code>kpt fn run DIR/ --image gcr.io/some/image -- foo=bar</code> or
 <code>kpt fn run DIR/ --exec-path /some/bin --enable-exec -- foo=bar</code>.  This is more appropriate
 for functions implementing abstractions (e.g. client-side CRD equivalents).</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ce5c00;font-weight:bold">...</span>
-	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">NestedValue</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
-		<span style="color:#000">Value</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;value,omitempty&#34;`</span>
-	<span style="color:#000;font-weight:bold">}</span>
-	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Spec</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+ <span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">NestedValue</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+  <span style="color:#000">Value</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;value,omitempty&#34;`</span>
+ <span style="color:#000;font-weight:bold">}</span>
+ <span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Spec</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
         <span style="color:#000">NestedValue</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;nestedValue,omitempty&#34;`</span>
         <span style="color:#000">MapValues</span> <span style="color:#204a87;font-weight:bold">map</span><span style="color:#000;font-weight:bold">[</span><span style="color:#204a87;font-weight:bold">string</span><span style="color:#000;font-weight:bold">]</span><span style="color:#204a87;font-weight:bold">string</span>  <span style="color:#4e9a06">`yaml:&#34;mapValues,omitempty&#34;`</span>
         <span style="color:#000">ListItems</span> <span style="color:#000;font-weight:bold">[]</span><span style="color:#204a87;font-weight:bold">string</span>  <span style="color:#4e9a06">`yaml:&#34;listItems,omitempty&#34;`</span>
-	<span style="color:#000;font-weight:bold">}</span>
-	<span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Example</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
+ <span style="color:#000;font-weight:bold">}</span>
+ <span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Example</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
         <span style="color:#000">Spec</span> <span style="color:#000">Spec</span> <span style="color:#4e9a06">`yaml:&#34;spec,omitempty&#34;`</span>
-	<span style="color:#000;font-weight:bold">}</span>
-	<span style="color:#000">functionConfig</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">Example</span><span style="color:#000;font-weight:bold">{}</span>
+ <span style="color:#000;font-weight:bold">}</span>
+ <span style="color:#000">functionConfig</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">Example</span><span style="color:#000;font-weight:bold">{}</span>
 <span style="color:#ce5c00;font-weight:bold">...</span>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># PACKAGE_DIR/example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
@@ -1160,7 +1183,7 @@ yaml configuration, while retaining comments and structure.</p>
 </li>
 </ul>
 <h4 id="workflow">Workflow</h4>
-<p>To modify a *yaml.RNode call PipeE() on the *RNode, passing in the operations to be performed.</p>
+<p>To modify a <code>*yaml.RNode</code> call PipeE() on the <code>*RNode</code>, passing in the operations to be performed.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Set the spec.replicas field to 3 if it exists
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">node</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span>
 <span style="color:#ce5c00;font-weight:bold">...</span>
@@ -1190,12 +1213,12 @@ elements.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Visit each of the elements in a Sequence (i.e. a List)
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">VisitElements</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">elem</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#8f5902;font-style:italic">// do something with each element in the list
-</span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>	
+</span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>
 <span style="color:#000;font-weight:bold">})</span>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Visit each of the fields in a Map (i.e. an Object)
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">VisitFields</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">n</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">MapNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#8f5902;font-style:italic">// do something with each field in the map / object
-</span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>	
+</span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>
 <span style="color:#000;font-weight:bold">})</span>
 </code></pre></div><h3 id="validation">Validation</h3>
 <p>Go functions can implement high fidelity validation results by setting a <code>framework.Result</code>
@@ -1208,7 +1231,7 @@ will exit non-0.  Otherwise it will exit 0.</p>
     <span style="color:#ce5c00;font-weight:bold">...</span>
     <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#ce5c00;font-weight:bold">...</span> <span style="color:#000;font-weight:bold">{</span>
         <span style="color:#8f5902;font-style:italic">// return validation results to be written under the results dir
-</span><span style="color:#8f5902;font-style:italic"></span>    	<span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span><span style="color:#000;font-weight:bold">{</span><span style="color:#ce5c00;font-weight:bold">...</span><span style="color:#000;font-weight:bold">}</span>
+</span><span style="color:#8f5902;font-style:italic"></span>     <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span><span style="color:#000;font-weight:bold">{</span><span style="color:#ce5c00;font-weight:bold">...</span><span style="color:#000;font-weight:bold">}</span>
 
         <span style="color:#8f5902;font-style:italic">// return the results as an error if desireds
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Result</span>
@@ -1286,12 +1309,14 @@ will exit non-0.  Otherwise it will exit 0.</p>
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 8, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/912c10029e06d1bd1d41f7210527c0d251bd80ba">Docs go sdk tweaks (912c1002)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1309,7 +1334,7 @@ will exit non-0.  Otherwise it will exit 0.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>
