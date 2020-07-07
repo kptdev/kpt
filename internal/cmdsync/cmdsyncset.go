@@ -37,7 +37,7 @@ func NewSetRunner(parent string) *SetRunner {
 		PreRunE: r.preRunE,
 	}
 
-	c.Flags().StringVar(&r.Strategy, "strategy", "", "update strategy to use.")
+	c.Flags().StringVar(&r.Dependency.Strategy, "strategy", "", "update strategy to use.")
 	c.Flags().BoolVar(&r.Dependency.EnsureNotExists, "prune", false,
 		"prune the dependency when it is synced.")
 	cmdutil.FixDocs("kpt", parent, c)
@@ -52,7 +52,6 @@ func NewSetCommand(parent string) *cobra.Command {
 type SetRunner struct {
 	Dependency kptfile.Dependency
 	Command    *cobra.Command
-	Strategy   string
 }
 
 func (r *SetRunner) preRunE(_ *cobra.Command, args []string) error {
