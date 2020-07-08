@@ -50,7 +50,7 @@ Currently supported platforms: amd64 Linux/Mac
    npm run watch
    ```
 
-1. Run the [`label_namespace`][label-namespace] function:
+1. Run the [`label_namespace`][label-namespace] transformer function:
 
    {{< code type="ts" >}}
    {{< readfile file="static/ts/label_namespace.ts" >}}
@@ -71,10 +71,17 @@ Currently supported platforms: amd64 Linux/Mac
    git diff $CONFIGS
    ```
 
-2. Try modifying the function in `src/label_namespace.ts` to perform other operations
-   on `example-configs`, then repeat step 4. You can also explore other functions such as [suggest-psp] or [validate-rolebinding].
+1. Try modifying the function in `src/label_namespace.ts` to perform other operations
+   and rerun the function on `example-configs` to see the changes.
 
-   The function should implement the `KptFunc` interface [documented here][api-kptfunc].
+1. Explore validation functions like [validate-rolebinding]. Instead of transforming configuration,
+   this function searches RoleBindings and returns a results field containing details about invalid
+   subject names.
+
+1. Explore generator functions like [expand-team-cr]. This function generates a per-environment
+   Namespace and RoleBinding object for each custom resource (CR) of type Team.
+
+Config functions should implement the `KptFunc` interface [documented here][api-kptfunc].
 
 ## Next Steps
 
@@ -84,11 +91,11 @@ Currently supported platforms: amd64 Linux/Mac
 
 [download-node]: https://nodejs.org/en/download/
 [install-docker]: https://docs.docker.com/v17.09/engine/installation/
-[download-kpt]: ../../../../installation/
+[download-kpt]: ../../../../../installation/
 [demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
 [api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html
-[Typescript Developer Guide]: develop/
-[run functions]: ../../../consumer/function/
+[Typescript Developer Guide]: ../develop/
+[run functions]: ../../../../consumer/function/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
-[suggest-psp]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/suggest_psp.ts
+[expand-team-cr]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
 [validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts

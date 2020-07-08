@@ -1001,7 +1001,7 @@ using an existing Hello World package.</p>
 <ul>
 <li>Install <a href="https://nodejs.org/en/download/">node</a></li>
 <li>Install <a href="https://docs.docker.com/v17.09/engine/installation/">docker</a></li>
-<li>Install <a href="../../../../installation/">kpt</a> and add it to $PATH</li>
+<li>Install <a href="../../../../../installation/">kpt</a> and add it to $PATH</li>
 </ul>
 <h3 id="hello-world-package">Hello World Package</h3>
 <ol>
@@ -1020,7 +1020,7 @@ using an existing Hello World package.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run watch
 </code></pre></div></li>
 <li>
-<p>Run the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts"><code>label_namespace</code></a> function:</p>
+<p>Run the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts"><code>label_namespace</code></a> transformer function:</p>
 
 
 <pre class="language-markup">
@@ -1088,15 +1088,24 @@ in the <code>example-configs</code> directory:</p>
 </code></pre></div></li>
 <li>
 <p>Try modifying the function in <code>src/label_namespace.ts</code> to perform other operations
-on <code>example-configs</code>, then repeat step 4. You can also explore other functions such as <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/suggest_psp.ts">suggest-psp</a> or <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts">validate-rolebinding</a>.</p>
-<p>The function should implement the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html">documented here</a>.</p>
+and rerun the function on <code>example-configs</code> to see the changes.</p>
+</li>
+<li>
+<p>Explore validation functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts">validate-rolebinding</a>. Instead of transforming configuration,
+this function searches RoleBindings and returns a results field containing details about invalid
+subject names.</p>
+</li>
+<li>
+<p>Explore generator functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts">expand-team-cr</a>. This function generates a per-environment
+Namespace and RoleBinding object for each custom resource (CR) of type Team.</p>
 </li>
 </ol>
+<p>Config functions should implement the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html">documented here</a>.</p>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Take a look at <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">these example functions</a> to better understand how to use the typescript SDK.</li>
-<li>Read the complete <a href="develop/">Typescript Developer Guide</a>.</li>
-<li>Learn how to <a href="../../../consumer/function/">run functions</a>.</li>
+<li>Read the complete <a href="../develop/">Typescript Developer Guide</a>.</li>
+<li>Learn how to <a href="../../../../consumer/function/">run functions</a>.</li>
 </ul>
 
         <div class="section-index">

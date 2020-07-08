@@ -32,7 +32,7 @@ using an existing Hello World package.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Install &lt;a href=&#34;https://nodejs.org/en/download/&#34;&gt;node&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/v17.09/engine/installation/&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Install &lt;a href=&#34;../../../../installation/&#34;&gt;kpt&lt;/a&gt; and add it to $PATH&lt;/li&gt;
+&lt;li&gt;Install &lt;a href=&#34;../../../../../installation/&#34;&gt;kpt&lt;/a&gt; and add it to $PATH&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;hello-world-package&#34;&gt;Hello World Package&lt;/h3&gt;
 &lt;ol&gt;
@@ -51,7 +51,7 @@ using an existing Hello World package.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run watch
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Run the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts&#34;&gt;&lt;code&gt;label_namespace&lt;/code&gt;&lt;/a&gt; function:&lt;/p&gt;
+&lt;p&gt;Run the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts&#34;&gt;&lt;code&gt;label_namespace&lt;/code&gt;&lt;/a&gt; transformer function:&lt;/p&gt;
 
 
 &lt;pre class=&#34;language-markup&#34;&gt;
@@ -119,15 +119,24 @@ in the &lt;code&gt;example-configs&lt;/code&gt; directory:&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Try modifying the function in &lt;code&gt;src/label_namespace.ts&lt;/code&gt; to perform other operations
-on &lt;code&gt;example-configs&lt;/code&gt;, then repeat step 4. You can also explore other functions such as &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/suggest_psp.ts&#34;&gt;suggest-psp&lt;/a&gt; or &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts&#34;&gt;validate-rolebinding&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;The function should implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
+and rerun the function on &lt;code&gt;example-configs&lt;/code&gt; to see the changes.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Explore validation functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts&#34;&gt;validate-rolebinding&lt;/a&gt;. Instead of transforming configuration,
+this function searches RoleBindings and returns a results field containing details about invalid
+subject names.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Explore generator functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts&#34;&gt;expand-team-cr&lt;/a&gt;. This function generates a per-environment
+Namespace and RoleBinding object for each custom resource (CR) of type Team.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
+&lt;p&gt;Config functions should implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use the typescript SDK.&lt;/li&gt;
-&lt;li&gt;Read the complete &lt;a href=&#34;develop/&#34;&gt;Typescript Developer Guide&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;Learn how to &lt;a href=&#34;../../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Read the complete &lt;a href=&#34;../develop/&#34;&gt;Typescript Developer Guide&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Learn how to &lt;a href=&#34;../../../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 
       </description>
