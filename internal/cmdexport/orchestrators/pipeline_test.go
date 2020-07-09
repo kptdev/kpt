@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/testutil"
 	"gotest.tools/assert"
 )
 
@@ -38,6 +39,7 @@ func TestPipeline(t *testing.T) {
 		githubActionsTestSuite,
 		cloudBuildTestSuite,
 		gitlabCITestSuite,
+		jenkinsTestSuite,
 	}
 
 	for _, testSuite := range testSuites {
@@ -48,7 +50,8 @@ func TestPipeline(t *testing.T) {
 			testCase := testCases[i]
 
 			t.Run(testCase.description, func(t *testing.T) {
-				pipeline, _ := pipeline.Init(testCase.config).Generate()
+				pipeline, err := pipeline.Init(testCase.config).Generate()
+				testutil.AssertNoError(t, err)
 
 				actual := string(pipeline)
 				expected := strings.TrimLeft(testCase.expected, "\n")
