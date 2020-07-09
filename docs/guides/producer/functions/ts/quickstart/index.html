@@ -1094,10 +1094,180 @@ and rerun the function on <code>example-configs</code> to see the changes.</p>
 <p>Explore validation functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts">validate-rolebinding</a>. Instead of transforming configuration,
 this function searches RoleBindings and returns a results field containing details about invalid
 subject names.</p>
+
+
+<pre class="language-markup">
+  <code class="language-ts">
+      
+   /**
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Configs, kubernetesObjectResult } from 'kpt-functions';
+import { isRoleBinding } from './gen/io.k8s.api.rbac.v1';
+
+const SUBJECT_NAME = 'subject_name';
+
+export async function validateRolebinding(configs: Configs) {
+  // Get the subject name parameter.
+  const subjectName = configs.getFunctionConfigValueOrThrow(SUBJECT_NAME);
+
+  // Iterate over all RoleBinding objects in the input, and filter those that have a subject
+  // we're looking for.
+  const results = configs
+    .get(isRoleBinding)
+    .filter(
+      (rb) =>
+        rb && rb.subjects && rb.subjects.find((s) => s.name === subjectName)
+    )
+    .map((rb) =>
+      kubernetesObjectResult(`Found banned subject '${subjectName}'`, rb)
+    );
+
+  configs.addResults(...results);
+}
+
+validateRolebinding.usage = `
+Disallows RBAC RoleBinding objects with the given subject name.
+
+Configured using a ConfigMap with the following key:
+
+${SUBJECT_NAME}: RoleBinding subjects.name to disallow.
+
+Example:
+
+apiVersion: v1
+kind: ConfigMap
+data:
+  ${SUBJECT_NAME}: alice
+metadata:
+  name: my-config
+`;
+
+   
+  </code>
+</pre>
 </li>
 <li>
 <p>Explore generator functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts">expand-team-cr</a>. This function generates a per-environment
 Namespace and RoleBinding object for each custom resource (CR) of type Team.</p>
+
+
+<pre class="language-markup">
+  <code class="language-ts">
+      
+   /**
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Configs } from 'kpt-functions';
+import { isTeam, Team } from './gen/dev.cft.anthos.v1alpha1';
+import { Namespace } from './gen/io.k8s.api.core.v1';
+import { RoleBinding, Subject } from './gen/io.k8s.api.rbac.v1';
+
+const ENVIRONMENTS = ['dev', 'prod'];
+
+export async function expandTeamCr(configs: Configs) {
+  // For each 'Team' custom resource in the input:
+  // 1. Generate a per-enviroment Namespace.
+  // 2. Generate RoleBindings in each Namespace.
+  configs.get(isTeam).forEach((team) => {
+    const name = team.metadata.name;
+
+    ENVIRONMENTS.forEach((suffix) => {
+      const ns = `${name}-${suffix}`;
+      configs.insert(Namespace.named(ns));
+      configs.insert(...createRoleBindings(team, ns));
+    });
+  });
+}
+
+function createRoleBindings(team: Team, namespace: string): RoleBinding[] {
+  return (team.spec.roles || []).map((item) => {
+    return new RoleBinding({
+      metadata: {
+        name: item.role,
+        namespace,
+      },
+      subjects: roleSubjects(item),
+      roleRef: {
+        kind: 'ClusterRole',
+        name: item.role,
+        apiGroup: 'rbac.authorization.k8s.io',
+      },
+    });
+  });
+}
+
+function roleSubjects(item: Team.Spec.Item): Subject[] {
+  const userSubjects: Subject[] = (item.users || []).map(
+    (user) =>
+      new Subject({
+        kind: 'User',
+        name: user,
+      })
+  );
+  const groupSubjects: Subject[] = (item.groups || []).map(
+    (group) =>
+      new Subject({
+        kind: 'Group',
+        name: group,
+      })
+  );
+  return userSubjects.concat(groupSubjects);
+}
+
+expandTeamCr.usage = `
+Generates per-environment Namespaces and RoleBindings from the 'Team' custom resource.
+
+Configured using a custom resource of kind Team, e.g.:
+
+apiVersion: anthos.cft.dev/v1alpha1
+kind: Team
+metadata:
+  name: payments
+spec:
+  roles:
+  - role: sre
+    users:
+    - jane@clearify.co
+  - groups:
+    - payments-developers@clearify.co
+    role: developer
+    users:
+    - basic@clearify.co
+
+This configuration creates 2 Namespaces (payments-prod, payments-dev)
+and corresponding Rolebinding objects in each of these Namespaces.
+`;
+
+   
+  </code>
+</pre>
 </li>
 </ol>
 <p>Config functions should implement the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html">documented here</a>.</p>
@@ -1184,7 +1354,7 @@ Namespace and RoleBinding object for each custom resource (CR) of type Team.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/da5284458255dfef57dffe05181a4c9d2c39eae7">Docs: Separate quickstart and include ts source code (da528445)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 8, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c25d76e8b1975dd7d3c348f35744879f469a8c7f">Address review comments (c25d76e8)</a>
 </div>
 </div>
 

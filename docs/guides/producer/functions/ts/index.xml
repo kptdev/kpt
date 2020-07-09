@@ -125,10 +125,180 @@ and rerun the function on &lt;code&gt;example-configs&lt;/code&gt; to see the ch
 &lt;p&gt;Explore validation functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts&#34;&gt;validate-rolebinding&lt;/a&gt;. Instead of transforming configuration,
 this function searches RoleBindings and returns a results field containing details about invalid
 subject names.&lt;/p&gt;
+
+
+&lt;pre class=&#34;language-markup&#34;&gt;
+  &lt;code class=&#34;language-ts&#34;&gt;
+      
+   /**
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Configs, kubernetesObjectResult } from &#39;kpt-functions&#39;;
+import { isRoleBinding } from &#39;./gen/io.k8s.api.rbac.v1&#39;;
+
+const SUBJECT_NAME = &#39;subject_name&#39;;
+
+export async function validateRolebinding(configs: Configs) {
+  // Get the subject name parameter.
+  const subjectName = configs.getFunctionConfigValueOrThrow(SUBJECT_NAME);
+
+  // Iterate over all RoleBinding objects in the input, and filter those that have a subject
+  // we&#39;re looking for.
+  const results = configs
+    .get(isRoleBinding)
+    .filter(
+      (rb) =&gt;
+        rb &amp;&amp; rb.subjects &amp;&amp; rb.subjects.find((s) =&gt; s.name === subjectName)
+    )
+    .map((rb) =&gt;
+      kubernetesObjectResult(`Found banned subject &#39;${subjectName}&#39;`, rb)
+    );
+
+  configs.addResults(...results);
+}
+
+validateRolebinding.usage = `
+Disallows RBAC RoleBinding objects with the given subject name.
+
+Configured using a ConfigMap with the following key:
+
+${SUBJECT_NAME}: RoleBinding subjects.name to disallow.
+
+Example:
+
+apiVersion: v1
+kind: ConfigMap
+data:
+  ${SUBJECT_NAME}: alice
+metadata:
+  name: my-config
+`;
+
+   
+  &lt;/code&gt;
+&lt;/pre&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Explore generator functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts&#34;&gt;expand-team-cr&lt;/a&gt;. This function generates a per-environment
 Namespace and RoleBinding object for each custom resource (CR) of type Team.&lt;/p&gt;
+
+
+&lt;pre class=&#34;language-markup&#34;&gt;
+  &lt;code class=&#34;language-ts&#34;&gt;
+      
+   /**
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Configs } from &#39;kpt-functions&#39;;
+import { isTeam, Team } from &#39;./gen/dev.cft.anthos.v1alpha1&#39;;
+import { Namespace } from &#39;./gen/io.k8s.api.core.v1&#39;;
+import { RoleBinding, Subject } from &#39;./gen/io.k8s.api.rbac.v1&#39;;
+
+const ENVIRONMENTS = [&#39;dev&#39;, &#39;prod&#39;];
+
+export async function expandTeamCr(configs: Configs) {
+  // For each &#39;Team&#39; custom resource in the input:
+  // 1. Generate a per-enviroment Namespace.
+  // 2. Generate RoleBindings in each Namespace.
+  configs.get(isTeam).forEach((team) =&gt; {
+    const name = team.metadata.name;
+
+    ENVIRONMENTS.forEach((suffix) =&gt; {
+      const ns = `${name}-${suffix}`;
+      configs.insert(Namespace.named(ns));
+      configs.insert(...createRoleBindings(team, ns));
+    });
+  });
+}
+
+function createRoleBindings(team: Team, namespace: string): RoleBinding[] {
+  return (team.spec.roles || []).map((item) =&gt; {
+    return new RoleBinding({
+      metadata: {
+        name: item.role,
+        namespace,
+      },
+      subjects: roleSubjects(item),
+      roleRef: {
+        kind: &#39;ClusterRole&#39;,
+        name: item.role,
+        apiGroup: &#39;rbac.authorization.k8s.io&#39;,
+      },
+    });
+  });
+}
+
+function roleSubjects(item: Team.Spec.Item): Subject[] {
+  const userSubjects: Subject[] = (item.users || []).map(
+    (user) =&gt;
+      new Subject({
+        kind: &#39;User&#39;,
+        name: user,
+      })
+  );
+  const groupSubjects: Subject[] = (item.groups || []).map(
+    (group) =&gt;
+      new Subject({
+        kind: &#39;Group&#39;,
+        name: group,
+      })
+  );
+  return userSubjects.concat(groupSubjects);
+}
+
+expandTeamCr.usage = `
+Generates per-environment Namespaces and RoleBindings from the &#39;Team&#39; custom resource.
+
+Configured using a custom resource of kind Team, e.g.:
+
+apiVersion: anthos.cft.dev/v1alpha1
+kind: Team
+metadata:
+  name: payments
+spec:
+  roles:
+  - role: sre
+    users:
+    - jane@clearify.co
+  - groups:
+    - payments-developers@clearify.co
+    role: developer
+    users:
+    - basic@clearify.co
+
+This configuration creates 2 Namespaces (payments-prod, payments-dev)
+and corresponding Rolebinding objects in each of these Namespaces.
+`;
+
+   
+  &lt;/code&gt;
+&lt;/pre&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Config functions should implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;

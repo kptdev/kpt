@@ -78,8 +78,16 @@ Currently supported platforms: amd64 Linux/Mac
    this function searches RoleBindings and returns a results field containing details about invalid
    subject names.
 
+   {{< code type="ts" >}}
+   {{< readfile file="static/ts/validate_rolebinding.ts" >}}
+   {{< /code >}}
+
 1. Explore generator functions like [expand-team-cr]. This function generates a per-environment
    Namespace and RoleBinding object for each custom resource (CR) of type Team.
+
+   {{< code type="ts" >}}
+   {{< readfile file="static/ts/expand_team_cr.ts" >}}
+   {{< /code >}}
 
 Config functions should implement the `KptFunc` interface [documented here][api-kptfunc].
 
