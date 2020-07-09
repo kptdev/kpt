@@ -38,18 +38,23 @@ type TestCase struct {
 
 var testCases = []TestCase{
 	{
-		description: "fails on not providing enough args",
-		params:      []string{"github-actions"},
-		err:         "accepts 2 args, received 1",
+		description: "fails on providing too many args",
+		params:      []string{"dir", "extra"},
+		err:         "accepts 1 arg(s), received 2",
 	},
 	{
-		description: "fails on an unsupported orchestrator",
-		params:      []string{"random-orchestrator", "."},
-		err:         "unsupported orchestrator random-orchestrator",
+		description: "fails on not providing working orchestrator",
+		params:      []string{"dir"},
+		err:         "--workflow flag is required. It must be one of cloud-build, github-actions, gitlab-ci",
+	},
+	{
+		description: "fails on an unsupported workflow orchestrator",
+		params:      []string{".", "--workflow", "random-orchestrator"},
+		err:         "unsupported orchestrator random-orchestrator. It must be one of cloud-build, github-actions, gitlab-ci",
 	},
 	{
 		description: "exports a GitHub Actions pipeline",
-		params:      []string{"github-actions", "."},
+		params:      []string{".", "--workflow", "github-actions"},
 		expected: `
 name: kpt
 on:
@@ -69,8 +74,9 @@ jobs:
 	{
 		description: "exports a GitHub Actions pipeline with --output",
 		params: []string{
-			"github-actions",
 			".",
+			"-w",
+			"github-actions",
 			"--output",
 			"main.yaml",
 		},
@@ -95,7 +101,7 @@ jobs:
 		files: map[string]string{
 			"function.yaml": "",
 		},
-		params: []string{"github-actions", ".", "--fn-path", "function.yaml"},
+		params: []string{".", "--fn-path", "function.yaml", "-w", "github-actions"},
 		expected: `
 name: kpt
 on:
@@ -118,12 +124,13 @@ jobs:
 			"functions/function.yaml": "",
 		},
 		params: []string{
-			"cloud-build",
 			".",
 			"--fn-path",
 			"functions/",
 			"--output",
 			"cloudbuild.yaml",
+			"-w",
+			"cloud-build",
 		},
 		expected: `
 steps:
@@ -139,12 +146,13 @@ steps:
 	{
 		description: "fails to export a Cloud Build pipeline with outside function paths",
 		params: []string{
-			"cloud-build",
 			".",
 			"--fn-path",
 			"../functions/functions.yaml",
 			"--fn-path",
 			"../functions/functions2.yaml",
+			"-w",
+			"cloud-build",
 			"--output",
 			"cloudbuild.yaml",
 		},
@@ -159,9 +167,10 @@ function paths are not within the current working directory:
 			"functions/function.yaml": "",
 		},
 		params: []string{
-			"cloud-build",
 			// NOTE: `{DIR}` is a macro variable and will be replaced with cwd before test cases are executed.
 			"{DIR}",
+			"-w",
+			"cloud-build",
 			"--fn-path",
 			"{DIR}/functions/",
 			"--output",
@@ -185,10 +194,11 @@ steps:
 			"functions/function.yaml": "",
 		},
 		params: []string{
-			"gitlab-ci",
 			"resources",
 			"--fn-path",
 			"functions",
+			"-w",
+			"gitlab-ci",
 			"--output",
 			".gitlab-ci.yml",
 		},
