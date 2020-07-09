@@ -18,6 +18,8 @@ package cmdexport
 import (
 	"fmt"
 	"os"
+	"sort"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/orchestrators"
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
@@ -34,47 +36,30 @@ func ExportCommand() *cobra.Command {
 func GetExportRunner() *ExportRunner {
 	r := &ExportRunner{PipelineConfig: &types.PipelineConfig{}}
 	c := &cobra.Command{
-		Use:     "export orchestrator DIR/",
+		Use:     "export DIR/",
 		Short:   fndocs.ExportShort,
 		Long:    fndocs.ExportLong,
 		Example: fndocs.ExportExamples,
-		// Validate and parse args.
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 2 {
-				return fmt.Errorf("accepts %d args, received %d", 2, len(args))
-			}
-
-			r.Orchestrator, r.Dir = args[0], args[1]
-
-			switch r.Orchestrator {
-			case "github-actions":
-				{
-					r.Pipeline = new(orchestrators.GitHubActions)
-				}
-			case "cloud-build":
-				{
-					r.Pipeline = new(orchestrators.CloudBuild)
-				}
-			case "gitlab-ci":
-				{
-					r.Pipeline = new(orchestrators.GitLabCI)
-				}
-			default:
-				return fmt.Errorf("unsupported orchestrator %v", r.Orchestrator)
-			}
-
-			return nil
-		},
+		Args:    cobra.ExactArgs(1),
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
 
+	c.Flags().StringVarP(
+		&r.WorkflowOrchestrator, "workflow", "w", "",
+		fmt.Sprintf(
+			"specify the workflow orchestrator that the pipeline is generated for. Supported workflow orchestrators are %s.",
+			listSupportedOrchestrators()),
+	)
+	_ = c.MarkFlagRequired("workflow")
 	c.Flags().StringSliceVar(
 		&r.FnPaths, "fn-path", []string{},
-		"read functions from these directories instead of the configuration directory.")
+		"read functions from these directories instead of the configuration directory.",
+	)
 	c.Flags().StringVar(
 		&r.OutputFilePath, "output", "",
-		"specify the filename of the generated pipeline. If omitted, the default output is stdout")
+		"specify the filename of the generated pipeline. If omitted, the default output is stdout.",
+	)
 
 	r.Command = c
 
@@ -83,14 +68,32 @@ func GetExportRunner() *ExportRunner {
 
 // The ExportRunner wraps the user's input and runs the command.
 type ExportRunner struct {
-	Orchestrator   string
-	OutputFilePath string
-	Command        *cobra.Command
+	WorkflowOrchestrator string
+	OutputFilePath       string
+	Command              *cobra.Command
 	*types.PipelineConfig
 	Pipeline orchestrators.Pipeline
 }
 
 func (r *ExportRunner) preRunE(cmd *cobra.Command, args []string) (err error) {
+	r.Dir = args[0]
+
+	if len(r.WorkflowOrchestrator) == 0 {
+		return fmt.Errorf(
+			"--workflow flag is required. It must be one of %s",
+			listSupportedOrchestrators(),
+		)
+	}
+
+	r.Pipeline = supportedOrchestrators()[r.WorkflowOrchestrator]
+	if r.Pipeline == nil {
+		return fmt.Errorf(
+			"unsupported orchestrator %v. It must be one of %s",
+			r.WorkflowOrchestrator,
+			listSupportedOrchestrators(),
+		)
+	}
+
 	r.CWD, err = os.Getwd()
 	if err != nil {
 		return
@@ -101,9 +104,7 @@ func (r *ExportRunner) preRunE(cmd *cobra.Command, args []string) (err error) {
 		return
 	}
 
-	err = r.PipelineConfig.UseRelativePaths()
-
-	return
+	return r.PipelineConfig.UseRelativePaths()
 }
 
 // runE generates the pipeline and writes it into a file or stdout.
@@ -129,3 +130,22 @@ func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
 	return err
 }
 
+func supportedOrchestrators() map[string]orchestrators.Pipeline {
+	return map[string]orchestrators.Pipeline{
+		"github-actions": new(orchestrators.GitHubActions),
+		"cloud-build":    new(orchestrators.CloudBuild),
+		"gitlab-ci":      new(orchestrators.GitLabCI),
+	}
+}
+
+func listSupportedOrchestrators() string {
+	var names []string
+
+	for key := range supportedOrchestrators() {
+		names = append(names, key)
+	}
+
+	sort.Strings(names)
+
+	return strings.Join(names, ", ")
+}
