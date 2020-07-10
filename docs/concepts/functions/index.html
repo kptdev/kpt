@@ -386,7 +386,7 @@ if (!doNotTrack) {
 <li><strong>Configuration Transformation:</strong> e.g. Update all <code>PodSecurityPolicy</code> configurations to improve the
 security posture.</li>
 </ul>
-<img src="https://storage.googleapis.com/kpt-functions/docs/run.gif">
+<p><img src="%22https://storage.googleapis.com/kpt-functions/docs/run.gif%22" alt="Functions Demo"></p>
 <p>Config functions can be run locally or as part of a CI/CD pipeline.</p>
 <p>In GitOps workflows, config functions read and write configuration files from a Git repo. Changes
 to the system authored by humans and mutating config functions are reviewed before being committed to the repo. Config functions
@@ -395,7 +395,7 @@ can be run as pre-commit or post-commit steps to validate configurations before 
 <p>We build functions using the same <a href="../architecture/#influences">architecture influences</a> as the rest of kpt, specifically:</p>
 <ul>
 <li><strong>Configuration as data:</strong> enables us to programmatically manipulate configurations using stateless programs called <em>functions</em>.</li>
-<li><strong>Unix philosophy:</strong> inspires us to develop a <a href="../../guides/consumer/function/catalog">catalog</a> of useful, interoperable functions which implement the <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md">Configuration Functions Specification</a>.</li>
+<li><strong>Unix philosophy:</strong> inspires us to develop a <a href="../../guides/consumer/function/catalog/">catalog</a> of useful, interoperable functions which implement the <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md">Configuration Functions Specification</a>.</li>
 </ul>
 <h2 id="functions-concepts">Functions Concepts</h2>
 <p>At a high level, a function can be conceptualized like so:</p>
@@ -440,7 +440,7 @@ system (e.g. reading files from a filesystem).</p>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Get a quickstart on writing functions from the <a href="../../guides/producer/functions/">function producer docs</a>.</li>
-<li>See more examples of functions in the functions <a href="../../guides/consumer/function/catalog">catalog</a>.</li>
+<li>See more examples of functions in the functions <a href="../../guides/consumer/function/catalog/">catalog</a>.</li>
 <li>Learn more ways of using the <code>kpt fn</code> command from the <a href="../../reference/fn/run/">reference</a> doc.</li>
 </ul>
 
@@ -466,7 +466,7 @@ system (e.g. reading files from a filesystem).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/58c7dec1dea573854cc74942007cc7106045de62">Rename kpt function to config function (58c7dec1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -484,7 +484,7 @@ system (e.g. reading files from a filesystem).</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

@@ -575,7 +575,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsstarlark">
@@ -598,7 +598,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsgolang">
@@ -626,6 +626,29 @@ if (!doNotTrack) {
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsquickstart">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
       
@@ -903,21 +926,25 @@ if (!doNotTrack) {
     <li><a href="#steps">Steps</a></li>
     <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
-        <li><a href="#command">Command</a></li>
-        <li><a href="#output">Output</a></li>
+        <li><a href="#fetch-command">Fetch Command</a></li>
+        <li><a href="#fetch-output">Fetch Output</a></li>
       </ul>
     </li>
     <li><a href="#list-the-setters">List the setters</a>
       <ul>
-        <li></li>
+        <li><a href="#list-command">List Command</a></li>
+        <li><a href="#list-output">List Output</a></li>
       </ul>
     </li>
     <li><a href="#substitute-a-value">Substitute a value</a>
       <ul>
-        <li></li>
-        <li><a href="#customizing-setters">Customizing setters</a></li>
+        <li><a href="#package-contents">Package contents</a></li>
+        <li><a href="#command">Command</a></li>
+        <li><a href="#output">Output</a></li>
+        <li><a href="#updated-package-contents">Updated package contents</a></li>
       </ul>
     </li>
+    <li><a href="#customizing-setters">Customizing setters</a></li>
   </ul>
 </nav>
 
@@ -969,7 +996,7 @@ if (!doNotTrack) {
 	<p><em>Dynamic needs for packages are built into tools which read and write
 configuration data.</em></p>
 <h2 id="topics">Topics</h2>
-<p><a href="../../../reference/cfg/set">kpt cfg set</a>, <a href="../../../reference/cfg/create-setter">setters</a>, <a href="../../../reference/cfg/create-subst">substitutions</a>, <a href="../../../api-reference/kptfile">Kptfile</a></p>
+<p><a href="../../../reference/cfg/set/">kpt cfg set</a>, <a href="../../../reference/cfg/create-setter/">setters</a>, <a href="../../../reference/cfg/create-subst/">substitutions</a>, <a href="../../../api-reference/kptfile/">Kptfile</a></p>
 <p>Substitutions are like setters, but instead of setting a entire field
 value, <strong>they use setters to set only parts of a field value.</strong> &ndash; e.g.
 only set the <em>tag</em> portion of the <code>image</code> field.</p>
@@ -987,7 +1014,7 @@ for an instance of a package</strong> without modifying kpt.</p>
 
 </div>
 
-<p>To see more on how to create a substitution: <a href="../../producer/substitutions">create substitution guide</a></p>
+<p>To see more on how to create a substitution: <a href="../../producer/substitutions/">create substitution guide</a></p>
 <h2 id="substitutions-explained">Substitutions explained</h2>
 <p>Following is a short explanation of the command that will be demonstrated
 in this guide.</p>
@@ -1021,14 +1048,14 @@ the pattern.</li>
 <li><a href="#substitute-a-value">Substitute a value</a></li>
 </ol>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
-<h3 id="command">Command</h3>
+<h3 id="fetch-command">Fetch Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
 </code></pre></div><p>Grab the setters package, which contains setters and substitutions.</p>
-<h3 id="output">Output</h3>
+<h3 id="fetch-output">Fetch Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 </code></pre></div><h2 id="list-the-setters">List the setters</h2>
-<p>List the <a href="../../../reference/cfg/create-setter">setters</a> &ndash; find the <strong>image-tag setter</strong>.  When set it will perform
+<p>List the <a href="../../../reference/cfg/create-setter/">setters</a> &ndash; find the <strong>image-tag setter</strong>.  When set it will perform
 a substitution.</p>
 
 
@@ -1044,15 +1071,15 @@ is not required, and substitutions may have multiple setters.</p>
 
 </div>
 
-<h5 id="command-1">Command</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters helloworld/ 
-</code></pre></div><h5 id="output-1">Output</h5>
+<h3 id="list-command">List Command</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters helloworld/
+</code></pre></div><h3 id="list-output">List Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-  http-port   <span style="color:#0000cf;font-weight:bold">80</span>      package-default   helloworld port         <span style="color:#0000cf;font-weight:bold">3</span>      
-  image-tag   0.1.0   package-default   hello-world image tag   <span style="color:#0000cf;font-weight:bold">1</span>      
-  replicas    <span style="color:#0000cf;font-weight:bold">5</span>       package-default   helloworld replicas     <span style="color:#0000cf;font-weight:bold">1</span>     
+  http-port   <span style="color:#0000cf;font-weight:bold">80</span>      package-default   helloworld port         <span style="color:#0000cf;font-weight:bold">3</span>
+  image-tag   0.1.0   package-default   hello-world image tag   <span style="color:#0000cf;font-weight:bold">1</span>
+  replicas    <span style="color:#0000cf;font-weight:bold">5</span>       package-default   helloworld replicas     <span style="color:#0000cf;font-weight:bold">1</span>
 </code></pre></div><h2 id="substitute-a-value">Substitute a value</h2>
-<h5 id="package-contents">Package contents</h5>
+<h3 id="package-contents">Package contents</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># helloworld/deploy.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1063,12 +1090,12 @@ is not required, and substitutions may have multiple setters.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/helloworld-gke<span style="color:#000;font-weight:bold">:</span>v0<span style="color:#0000cf;font-weight:bold">.1.0</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$kpt-set&#34;:&#34;image-tag&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h5 id="command-2">Command</h5>
+</span></code></pre></div><h3 id="command">Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"> kpt cfg <span style="color:#204a87">set</span> helloworld/ image-tag v0.2.0
 </code></pre></div><p>Change the tag portion of the image field using the <code>image-tag</code> setter.</p>
-<h5 id="output-2">Output</h5>
+<h3 id="output">Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
-</code></pre></div><h5 id="updated-package-contents">Updated package contents</h5>
+</code></pre></div><h3 id="updated-package-contents">Updated package contents</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
@@ -1078,9 +1105,9 @@ is not required, and substitutions may have multiple setters.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>helloworld-gke<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/helloworld-gke<span style="color:#000;font-weight:bold">:</span>v0<span style="color:#0000cf;font-weight:bold">.2.0</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$kpt-set&#34;:&#34;image-tag&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h3 id="customizing-setters">Customizing setters</h3>
-<p>See <a href="../../../reference/cfg/create-setter">setters</a> and <a href="../../../reference/cfg/create-subst">substitutions</a> for how to add or update them in the
-package <a href="../../../api-reference/kptfile">Kptfile</a>.</p>
+</span></code></pre></div><h2 id="customizing-setters">Customizing setters</h2>
+<p>See <a href="../../../reference/cfg/create-setter/">setters</a> and <a href="../../../reference/cfg/create-subst/">substitutions</a> for how to add or update them in the
+package <a href="../../../api-reference/kptfile/">Kptfile</a>.</p>
 
         <div class="section-index">
     
@@ -1151,12 +1178,14 @@ package <a href="../../../api-reference/kptfile">Kptfile</a>.</p>
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d7cc5dcaba3542b6e462899d446b7c584621cf8f">Update docs (d7cc5dca)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1174,7 +1203,7 @@ package <a href="../../../api-reference/kptfile">Kptfile</a>.</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

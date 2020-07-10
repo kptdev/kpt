@@ -36,7 +36,9 @@ spec:
 
 One could the replicas field to 4 by running
 
-    kpt cfg set hello-world/ replicas 4
+``` sh
+kpt cfg set hello-world/ replicas 4
+```
 
 #### Description
 
@@ -84,12 +86,13 @@ kpt cfg set hello-world/ tag 1.8.1
 
 ### Synopsis
 <!--mdtogo:Long-->
-```
+```sh
 kpt cfg set DIR NAME VALUE
 ```
 
 #### Args
-```
+
+```sh
 DIR
   Path to a package directory. e.g. hello-world/
 
@@ -101,7 +104,8 @@ VALUE
 ```
 
 #### Flags
-```
+
+```sh
 --description
   Optional description about the value.
 
@@ -109,12 +113,12 @@ VALUE
   Optional record of who set the value.  Clears the last set-by
   value if unset.
 
---values   
+--values
   Optional flag, the values of the setter to be set to
   e.g. used to specify values that start with '-'
 ```
 <!--mdtogo-->
 
-[create-setter]: ../create-setter
-[create-subst]: ../create-subst
-[list-setters]: ../list-setters
+[create-setter]: ../create-setter/
+[create-subst]: ../create-subst/
+[list-setters]: ../list-setters/

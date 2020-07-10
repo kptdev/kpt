@@ -575,7 +575,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsstarlark">
@@ -598,7 +598,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsgolang">
@@ -626,6 +626,29 @@ if (!doNotTrack) {
   <ul>
     <li class="collapse show" id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsquickstart">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
       
@@ -987,7 +1010,7 @@ if (!doNotTrack) {
 <a href="https://github.com/nodejs/help/wiki/Installation">installation instructions</a>.</li>
 </ul>
 </li>
-<li>Install <a href="https://docs.docker.com/v17.09/engine/installation">docker</a></li>
+<li>Install <a href="https://docs.docker.com/v17.09/engine/installation/">docker</a></li>
 </ul>
 <h3 id="your-kubernetes-cluster">Your Kubernetes Cluster</h3>
 <p>For the type generation functionality to work, you need a Kubernetes cluster with the <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing">CRD OpenAPI Publishing</a> feature which is beta with Kubernetes 1.15.</p>
@@ -1079,7 +1102,7 @@ including the <code>create-kpt-functions</code> CLI discussed later in the <code
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">code .
 </code></pre></div><p>In <code>src/my_func.ts</code>, implement the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html">documented here</a>.</p>
 <p>Take a look at <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">these example functions</a> to better understand how to use
-the typescript library. These functions are available as container images documented in the <a href="../../../../consumer/function/catalog">catalog</a>.</p>
+the typescript library. These functions are available as container images documented in the <a href="../../../../consumer/function/catalog/">catalog</a>.</p>
 <p>Once you&rsquo;ve written some code, build the package with:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run build
 </code></pre></div><p>Alternatively, run the following in a separate terminal. It will continuously build your function
@@ -1195,12 +1218,14 @@ when building a container image:</p>
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/58c7dec1dea573854cc74942007cc7106045de62">Rename kpt function to config function (58c7dec1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/da5284458255dfef57dffe05181a4c9d2c39eae7">Docs: Separate quickstart and include ts source code (da528445)</a>
 </div>
 </div>
 
@@ -1218,7 +1243,7 @@ when building a container image:</p>
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

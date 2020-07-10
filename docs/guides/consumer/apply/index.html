@@ -575,7 +575,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsstarlark">
@@ -598,7 +598,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsgolang">
@@ -626,6 +626,29 @@ if (!doNotTrack) {
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsquickstart">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
       
@@ -903,22 +926,30 @@ if (!doNotTrack) {
     </li>
     <li><a href="#initialize-the-package-inventory-template">Initialize the package inventory template</a>
       <ul>
-        <li></li>
+        <li><a href="#init-command">Init Command</a></li>
+        <li><a href="#init-output">Init Output</a></li>
+        <li><a href="#inventory-template">Inventory template</a></li>
       </ul>
     </li>
     <li><a href="#apply-to-a-cluster">Apply to a cluster</a>
       <ul>
-        <li></li>
+        <li><a href="#apply-command">Apply Command</a></li>
+        <li><a href="#apply-output">Apply Output</a></li>
       </ul>
     </li>
     <li><a href="#print-the-live-resources">Print the live resources</a>
       <ul>
-        <li></li>
+        <li><a href="#print-command">Print Command</a></li>
+        <li><a href="#print-output">Print Output</a></li>
+        <li><a href="#command-tree">Command: <code>tree</code></a></li>
+        <li><a href="#output-tree">Output: <code>tree</code></a></li>
       </ul>
     </li>
     <li><a href="#prune-resources">Prune resources</a>
       <ul>
-        <li></li>
+        <li><a href="#prune-command">Prune Command</a></li>
+        <li><a href="#prune-output">Prune Output</a></li>
+        <li><a href="#print-the-live-resources-after-pruning">Print the live resources after pruning</a></li>
       </ul>
     </li>
   </ul>
@@ -970,11 +1001,11 @@ if (!doNotTrack) {
 	<h1>Apply a local package</h1>
 	<div class="lead">Apply the contents of a local package to a remote cluster.</div>
 	<h2 id="topics">Topics</h2>
-<p><a href="../../../reference/live/apply">kpt live apply</a></p>
+<p><a href="../../../reference/live/apply/">kpt live apply</a></p>
 <p>Because kpt packages are composed of resource configuration can be applied with
 <code>kubectl apply -R -f DIR</code>, however kpt includes the next-generation <strong>apply</strong>
 commands developed out of the Kubernetes <a href="https://github.com/kubernetes-sigs/cli-utils">cli-utils</a> repository as the
-<a href="../../../reference/live/apply">kpt live apply</a> command.</p>
+<a href="../../../reference/live/apply/">kpt live apply</a> command.</p>
 <p>Kpt live apply provides additional functionality beyond what is provided by
 <code>kubectl apply</code>, such as communicating back resource status and pruning
 resources for deleted configuration.</p>
@@ -984,13 +1015,44 @@ resources for deleted configuration.</p>
 <img src="https://googlecontainertools.github.io/kpt//images/apply.svg" />
 
 <h2 id="steps">Steps</h2>
-<ol>
-<li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
-<li><a href="#initialize-the-package-inventory-template">Initialize the package inventory template</a></li>
-<li><a href="#apply-to-a-cluster">Apply to a cluster</a></li>
-<li><a href="#print-the-live-resources">Print the live resources</a></li>
-<li><a href="#prune-resources">Prune resources</a></li>
-</ol>
+<ul>
+<li><a href="#topics">Topics</a></li>
+<li><a href="#steps">Steps</a></li>
+<li><a href="#fetch-a-remote-package">Fetch a remote package</a>
+<ul>
+<li><a href="#command">Command</a></li>
+<li><a href="#output">Output</a></li>
+</ul>
+</li>
+<li><a href="#initialize-the-package-inventory-template">Initialize the package inventory template</a>
+<ul>
+<li><a href="#init-command">Init Command</a></li>
+<li><a href="#init-output">Init Output</a></li>
+<li><a href="#inventory-template">Inventory template</a></li>
+</ul>
+</li>
+<li><a href="#apply-to-a-cluster">Apply to a cluster</a>
+<ul>
+<li><a href="#apply-command">Apply Command</a></li>
+<li><a href="#apply-output">Apply Output</a></li>
+</ul>
+</li>
+<li><a href="#print-the-live-resources">Print the live resources</a>
+<ul>
+<li><a href="#print-command">Print Command</a></li>
+<li><a href="#print-output">Print Output</a></li>
+<li><a href="#command-tree">Command: <code>tree</code></a></li>
+<li><a href="#output-tree">Output: <code>tree</code></a></li>
+</ul>
+</li>
+<li><a href="#prune-resources">Prune resources</a>
+<ul>
+<li><a href="#prune-command">Prune Command</a></li>
+<li><a href="#prune-output">Prune Output</a></li>
+<li><a href="#print-the-live-resources-after-pruning">Print the live resources after pruning</a></li>
+</ul>
+</li>
+</ul>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <h3 id="command">Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
@@ -1001,9 +1063,9 @@ kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworl
 </code></pre></div><h2 id="initialize-the-package-inventory-template">Initialize the package inventory template</h2>
 <p>The kpt version of apply uses a ConfigMap map to keep track of previously
 applied resources so they can be pruned later if the configuration for
-them is deleted. The <a href="../../../reference/live/init">kpt live init</a> command will generate an inventory template
+them is deleted. The <a href="../../../reference/live/init/">kpt live init</a> command will generate an inventory template
 (which is just a normal ConfigMap manifest with a special annotation) used by
-<a href="../../../reference/live/apply">kpt live apply</a> to generate an actual ConfigMap in the cluster which we refer
+<a href="../../../reference/live/apply/">kpt live apply</a> to generate an actual ConfigMap in the cluster which we refer
 to as an inventory object.</p>
 
 
@@ -1013,11 +1075,11 @@ to as an inventory object.</p>
 
 </div>
 
-<h5 id="command-1">Command</h5>
+<h3 id="init-command">Init Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt live init helloworld
-</code></pre></div><h5 id="output-1">Output</h5>
+</code></pre></div><h3 id="init-output">Init Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">Initialized: helloworld/inventory-template.yaml
-</code></pre></div><h5 id="inventory-template">Inventory template</h5>
+</code></pre></div><h3 id="inventory-template">Inventory template</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1034,11 +1096,11 @@ created, and will be used by apply to generate a history of previously
 applied resources.  This file should be checked into <code>git</code> along with the
 rest of the package, but otherwise ignored by users.</p>
 <h2 id="apply-to-a-cluster">Apply to a cluster</h2>
-<h5 id="command-2">Command</h5>
+<h3 id="apply-command">Apply Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt live apply helloworld --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>2m
 </code></pre></div><p>Apply the resources to the cluster and block until the changes have
 been fully rolled out &ndash; e.g. until the Pods are running.</p>
-<h5 id="output-2">Output</h5>
+<h3 id="apply-output">Apply Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">configmap/inventory-17c4dd3c created
 service/helloworld-gke created
 deployment.apps/helloworld-gke created
@@ -1054,9 +1116,9 @@ resources failed to the reached Current status
 be rolled out.</p>
 <h2 id="print-the-live-resources">Print the live resources</h2>
 <p>Display the resources in the cluster using kubectl.</p>
-<h5 id="command-3">Command</h5>
+<h3 id="print-command">Print Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get configmaps,deploy,services
-</code></pre></div><h5 id="output-3">Output</h5>
+</code></pre></div><h3 id="print-output">Print Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">NAME                                 DATA   AGE
 configmap/inventory-28c4kc3c         <span style="color:#0000cf;font-weight:bold">2</span>      2m47s
 
@@ -1066,11 +1128,11 @@ deployment.apps/helloworld-gke   5/5     <span style="color:#0000cf;font-weight:
 NAME                     TYPE        CLUSTER-IP    EXTERNAL-IP   PORT<span style="color:#ce5c00;font-weight:bold">(</span>S<span style="color:#ce5c00;font-weight:bold">)</span>        AGE
 service/helloworld-gke   NodePort    10.48.2.143   &lt;none&gt;        80:32442/TCP   2m47s
 service/kubernetes       ClusterIP   10.48.0.1     &lt;none&gt;        443/TCP        19m
-</code></pre></div><h5 id="command-tree">Command: <code>tree</code></h5>
+</code></pre></div><h3 id="command-tree">Command: <code>tree</code></h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get all -o yaml <span style="color:#000;font-weight:bold">|</span> kpt cfg tree
-</code></pre></div><p>The output of kubectl can also be piped to <a href="../../../reference/cfg/tree">kpt cfg tree</a> to summarize
+</code></pre></div><p>The output of kubectl can also be piped to <a href="../../../reference/cfg/tree/">kpt cfg tree</a> to summarize
 the resources.</p>
-<h5 id="output-tree">Output: <code>tree</code></h5>
+<h3 id="output-tree">Output: <code>tree</code></h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">.
 ├── <span style="color:#ce5c00;font-weight:bold">[</span>Resource<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment default/helloworld-gke
 │   └── <span style="color:#ce5c00;font-weight:bold">[</span>Resource<span style="color:#ce5c00;font-weight:bold">]</span>  ReplicaSet default/helloworld-gke-5bf95f8869
@@ -1084,19 +1146,19 @@ the resources.</p>
 </code></pre></div><h2 id="prune-resources">Prune resources</h2>
 <p>Resources can be deleted from the cluster by deleting them from the
 resource configuration.sh</p>
-<h5 id="command-4">Command</h5>
+<h3 id="prune-command">Prune Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">rm helloworld/deploy.yaml
 kpt live apply helloworld/ --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>2m
 </code></pre></div><p>Apply uses the previously created inventory objects (ConfigMaps) to calculate
 the set of resources to prune (delete) after applying.  In this case the
 Deployment.</p>
-<h5 id="output-4">Output</h5>
+<h3 id="prune-output">Prune Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">service/helloworld-gke is Current: Service is ready
 resources failed to the reached Current status
 deployment.apps/helloworld-gke pruned
 configmap/inventory-2911da3b pruned
 <span style="color:#0000cf;font-weight:bold">2</span> resource<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span> pruned
-</code></pre></div><h5 id="print-the-live-resources-1">Print the live resources</h5>
+</code></pre></div><h3 id="print-the-live-resources-after-pruning">Print the live resources after pruning</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get deploy
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">No resources found in default namespace.
 </code></pre></div>
@@ -1169,12 +1231,14 @@ configmap/inventory-2911da3b pruned
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified May 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0fa5d0aab08bc2cd0bb5f2988c899e6e8dfac031">Fix errors in the apply guide (0fa5d0aa)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1192,7 +1256,7 @@ configmap/inventory-2911da3b pruned
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

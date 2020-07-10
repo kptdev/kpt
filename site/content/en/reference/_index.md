@@ -90,6 +90,6 @@ to using the builtin schema.
 [cfg]: cfg/
 [fn]: fn/
 [live]: live/
-[architecture]: ../concepts/architecture
-[guides]: ../guides
-[FAQ]: ../faq
+[architecture]: ../concepts/architecture/
+[guides]: ../guides/
+[FAQ]: ../faq/

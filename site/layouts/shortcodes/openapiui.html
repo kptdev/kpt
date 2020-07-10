@@ -15,12 +15,12 @@
 -->
 
 {{ $original := .Get "src" }}
-<div id="ohpen_swagger_ui"></div>
+<div id="open_swagger_ui"></div>
 <script>
     window.onload = function() {
         const ui = SwaggerUIBundle({
             url: {{ $original }},
-            dom_id: '#ohpen_swagger_ui',
+            dom_id: '#open_swagger_ui',
             presets: [
                 SwaggerUIBundle.presets.apis,
                 SwaggerUIStandalonePreset

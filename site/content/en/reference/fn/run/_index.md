@@ -218,6 +218,6 @@ kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
 - Find out how to structure a pipeline of functions from the [functions concepts] page.
 
 [typescript result]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/kpt-functions/src/types.ts
-[functions catalog]: ../../../guides/consumer/function/catalog
+[functions catalog]: ../../../guides/consumer/function/catalog/
 [function producer docs]: ../../../guides/producer/functions/
 [functions concepts]: ../../../concepts/functions/

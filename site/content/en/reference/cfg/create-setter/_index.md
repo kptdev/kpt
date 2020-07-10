@@ -53,7 +53,7 @@ kpt cfg create-setter DIR/ app nginx --field "annotations.app" --type string
 
 ### Synopsis
 <!--mdtogo:Long-->
-```
+```sh
 kpt cfg create-setter DIR NAME VALUE
 
 DIR:
@@ -70,17 +70,18 @@ VALUE
 ```
 
 #### Flags
-```
+
+```sh
 --description
   Optional description about the value.
 
 --set-by
   Optional record of who set the value.
 
---value   
+--value
   Optional flag, alternative to specifying the value as an argument
   e.g. used to specify values that start with '-'
 ```
 <!--mdtogo-->
 
-[creating setters]: ../../../guides/producer/setters
+[creating setters]: ../../../guides/producer/setters/

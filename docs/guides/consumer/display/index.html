@@ -575,7 +575,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime and SDK</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsstarlark">
@@ -598,7 +598,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function SDK</a>
+    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
   </li>
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsgolang">
@@ -626,6 +626,29 @@ if (!doNotTrack) {
   <ul>
     <li class="collapse " id="kptguidesproducerfunctionsts">
       
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesproducerfunctionstsquickstart">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
       
       
       
@@ -897,27 +920,37 @@ if (!doNotTrack) {
     <li><a href="#steps">Steps</a></li>
     <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
-        <li></li>
+        <li><a href="#fetch-command">Fetch Command</a></li>
+        <li><a href="#list-command">List Command</a></li>
+        <li><a href="#list-output">List Output</a></li>
       </ul>
     </li>
     <li><a href="#summarize-resource-counts">Summarize resource counts</a>
       <ul>
-        <li></li>
+        <li><a href="#count-example-command-1">Count Example Command 1</a></li>
+        <li><a href="#count-example-output-1">Count Example Output 1</a></li>
+        <li><a href="#count-example-command-2">Count Example Command 2</a></li>
+        <li><a href="#count-example-output-2">Count Example Output 2</a></li>
+        <li><a href="#count-example-command-3">Count Example Command 3</a></li>
+        <li><a href="#count-example-output-3">Count Example Output 3</a></li>
       </ul>
     </li>
     <li><a href="#display-resources-as-a-tree">Display resources as a tree</a>
       <ul>
-        <li></li>
+        <li><a href="#display-command">Display Command</a></li>
+        <li><a href="#display-output">Display Output</a></li>
       </ul>
     </li>
     <li><a href="#filter-resources">Filter resources</a>
       <ul>
-        <li></li>
+        <li><a href="#filter-command">Filter Command</a></li>
+        <li><a href="#filter-output">Filter Output</a></li>
       </ul>
     </li>
     <li><a href="#dump-all-resources">Dump all resources</a>
       <ul>
-        <li></li>
+        <li><a href="#dump-command">Dump Command</a></li>
+        <li><a href="#dump-output">Dump Output</a></li>
       </ul>
     </li>
   </ul>
@@ -984,13 +1017,13 @@ if (!doNotTrack) {
 <p>Packages are fetched from remote git repository subdirectories with
 <a href="/reference/pkg/get">kpt pkg get</a>.  In this guide we will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
 as a public package catalogue.</p>
-<h5 id="command">Command</h5>
+<h3 id="fetch-command">Fetch Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/kubernetes/examples/staging/ examples
 </code></pre></div><p>Fetch the entire examples/staging directory as a kpt package under <code>examples</code>.
 This will contain many resources.</p>
-<h5 id="command-1">Command</h5>
+<h3 id="list-command">List Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">tree examples
-</code></pre></div><h5 id="output">Output</h5>
+</code></pre></div><h3 id="list-output">List Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">examples/
 ├── Kptfile
 ├── cloud-controller-manager
@@ -1003,11 +1036,11 @@ This will contain many resources.</p>
 </code></pre></div><p>The package is composed of 79 directories and, 329 files.  This is too many
 to work with using tools such as <code>less</code>.</p>
 <h2 id="summarize-resource-counts">Summarize resource counts</h2>
-<h5 id="command-2">Command</h5>
+<h3 id="count-example-command-1">Count Example Command 1</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/
 </code></pre></div><p>The <code>kpt cfg count</code> command summarizes the resource counts to show the shape of a
 package.</p>
-<h5 id="output-1">Output</h5>
+<h3 id="count-example-output-1">Count Example Output 1</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">...
 Deployment: <span style="color:#0000cf;font-weight:bold">10</span>
 Endpoints: <span style="color:#0000cf;font-weight:bold">1</span>
@@ -1015,26 +1048,26 @@ InitializerConfiguration: <span style="color:#0000cf;font-weight:bold">1</span>
 Namespace: <span style="color:#0000cf;font-weight:bold">4</span>
 Pod: <span style="color:#0000cf;font-weight:bold">45</span>
 ...
-</code></pre></div><h5 id="command-3">Command</h5>
+</code></pre></div><h3 id="count-example-command-2">Count Example Command 2</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/cockroachdb/
 </code></pre></div><p>Running <code>count</code> on a subdirectory will summarize that directory even if
 it doesn&rsquo;t have a Kptfile.</p>
-<h5 id="output-2">Output</h5>
+<h3 id="count-example-output-2">Count Example Output 2</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">PodDisruptionBudget: <span style="color:#0000cf;font-weight:bold">1</span>
 Service: <span style="color:#0000cf;font-weight:bold">2</span>
 StatefulSet: <span style="color:#0000cf;font-weight:bold">1</span>
-</code></pre></div><h5 id="command-4">Command</h5>
+</code></pre></div><h3 id="count-example-command-3">Count Example Command 3</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/ --kind<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">false</span>
 </code></pre></div><p>The total aggregate resource count can be shown with <code>--kind=false</code></p>
-<h5 id="output-3">Output</h5>
+<h3 id="count-example-output-3">Count Example Output 3</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#0000cf;font-weight:bold">201</span>
 </code></pre></div><h2 id="display-resources-as-a-tree">Display resources as a tree</h2>
-<h5 id="command-5">Command</h5>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree examples/cockroachdb/ --image --replicas 
+<h3 id="display-command">Display Command</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree examples/cockroachdb/ --image --replicas
 </code></pre></div><p>Because the raw YAML configuration may be difficult for humans to easily
 view and understand, kpt provides a command for rendering configuration
 as a tree.  Flags may be provided to print specific fields under the resources.</p>
-<h5 id="output-4">Output</h5>
+<h3 id="display-output">Display Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">examples/cockroachdb
 ├── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Service cockroachdb
 ├── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  StatefulSet cockroachdb
@@ -1047,12 +1080,12 @@ as a tree.  Flags may be provided to print specific fields under the resources.<
 </code></pre></div><p>In addition to the built-in printable fields, <code>kpt cfg tree</code> will print
 arbitrary fields by providing the <code>--field</code> flag.</p>
 <h2 id="filter-resources">Filter resources</h2>
-<h5 id="command-6">Command</h5>
+<h3 id="filter-command">Filter Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg grep <span style="color:#4e9a06">&#34;spec.replicas&gt;3&#34;</span> examples <span style="color:#000;font-weight:bold">|</span> kpt cfg tree --replicas
 </code></pre></div><p>Grep can be used to filter resources by field values.  The output of
 <code>kpt cfg grep</code> is the matching full resource configuration, which
 may be piped to tree for rendering.</p>
-<h5 id="output-5">Output</h5>
+<h3 id="filter-output">Filter Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">.
 ├── storage/minio
 │   └── <span style="color:#ce5c00;font-weight:bold">[</span>minio-distributed-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  StatefulSet minio
@@ -1064,11 +1097,11 @@ may be piped to tree for rendering.</p>
     └── <span style="color:#ce5c00;font-weight:bold">[</span>simple-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  StatefulSet web
         └── spec.replicas: <span style="color:#0000cf;font-weight:bold">14</span>
 </code></pre></div><h2 id="dump-all-resources">Dump all resources</h2>
-<h5 id="command-7">Command</h5>
+<h3 id="dump-command">Dump Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg cat examples/cockroachdb
 </code></pre></div><p>The raw YAML configuration may be dumped using <code>kpt cfg cat</code>.  This will
 print only the YAML for Kubernetes resources.</p>
-<h5 id="output-6">Output</h5>
+<h3 id="dump-output">Dump Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">apiVersion: v1
 kind: Service
 metadata:
@@ -1148,12 +1181,14 @@ metadata:
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 3, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4c9e64de7e255bbed3221a3ab42b505e82e52bf8">Small improvements to the consumer guides (4c9e64de)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
 </div>
 </div>
 
@@ -1171,7 +1206,7 @@ metadata:
 <ul class="list-inline mb-0">
   
   <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
-    <a class="text-white" target="_blank" href="https://groups.google.com/g/kpt-users">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
       <i class="fa fa-envelope"></i>
     </a>
   </li>

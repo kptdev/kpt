@@ -120,7 +120,7 @@ or otherwise modified.&lt;/p&gt;
         
         &lt;p&gt;This guidance will demonstrate how to use kpt to manage custom Kubernetes applications (i.e. apps defined by CRDs instead of raw Kubernetes workloads).&lt;/p&gt;
 &lt;p&gt;We will use &lt;a href=&#34;https://github.com/oam-dev/spec&#34;&gt;Open Application Model&lt;/a&gt;(OAM) to describe the app for standardization and portability consideration. But you are free to use any Custom Resource to describe your application as well. &lt;a href=&#34;https://github.com/crossplane/crossplane&#34;&gt;Crossplane&lt;/a&gt; will be installed as the OAM runtime for Kubernetes.&lt;/p&gt;
-&lt;h2 id=&#34;what-is-kpt-and-what-is-oam&#34;&gt;What is kpt and what is OAM?&lt;/h2&gt;
+&lt;h2 id=&#34;what-is-kpt-and-what-is-oam&#34;&gt;What is kpt and what is OAM&lt;/h2&gt;
 &lt;p&gt;Both kpt and OAM are outcomes of &amp;ldquo;Configuration-as-Data (or, Infrastructure-as-Data, IaD)&amp;quot;.&lt;/p&gt;
 &lt;p&gt;Pioneered by &lt;a href=&#34;https://twitter.com/bgrant0607/status/1221485437153243137&#34;&gt;Kubernetes community&lt;/a&gt;, Configuration-as-Data emphasizes that &amp;ldquo;configuration should be treated as data and leverage pipelines for manipulation and policy enforcement&amp;rdquo;. In Kubernetes, Configuration-as-Data approach builds upon the design of the &lt;a href=&#34;https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md&#34;&gt;Kubernetes resource model (KRM)&lt;/a&gt;. As a result, today any resource we applied to Kubernetes is a piece of data that represents the desired state for certain part of application or infrastructure in the real system.&lt;/p&gt;
 &lt;p&gt;With the heart of Configuration-as-Data, a typical Kubernetes native application management workflow just looks like a &amp;ldquo;pipeline&amp;rdquo;. See the picture below:&lt;/p&gt;
@@ -224,7 +224,7 @@ ApplicationConfiguration: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34
 Component: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So in the sampleapp, we have one ApplicationConfiguration and one Component.&lt;/p&gt;
 &lt;h3 id=&#34;live-apply&#34;&gt;Live apply&lt;/h3&gt;
-&lt;p&gt;kpt includes the next-generation &lt;strong&gt;apply&lt;/strong&gt; commands developed out of the Kubernetes &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-utils&#34;&gt;cli-utils&lt;/a&gt; repository as the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/live/apply&#34;&gt;&lt;code&gt;kpt live apply&lt;/code&gt;&lt;/a&gt; command.&lt;/p&gt;
+&lt;p&gt;kpt includes the next-generation &lt;strong&gt;apply&lt;/strong&gt; commands developed out of the Kubernetes &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-utils&#34;&gt;cli-utils&lt;/a&gt; repository as the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/live/apply/&#34;&gt;&lt;code&gt;kpt live apply&lt;/code&gt;&lt;/a&gt; command.&lt;/p&gt;
 &lt;p&gt;This means with &lt;code&gt;kpt live apply&lt;/code&gt; command, we could wait for the controller reconcile.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;$ kpt live init sampleapp
 Initialized: ../sampleapp/grouping-object-template.yaml

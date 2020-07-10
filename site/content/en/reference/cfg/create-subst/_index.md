@@ -60,7 +60,7 @@ kpt cfg set . tag-setter v1.8.0
 
 ### Synopsis
 <!--mdtogo:Long-->
-```
+```sh
 kpt cfg create-subst DIR NAME --field-value VALUE --pattern PATTERN
 
 DIR
@@ -84,5 +84,5 @@ PATTERN
 ```
 <!--mdtogo-->
 
-[setters]: ../create-setter
-[creating substitutions]: ../../../guides/producer/substitutions
+[setters]: ../create-setter/
+[creating substitutions]: ../../../guides/producer/substitutions/

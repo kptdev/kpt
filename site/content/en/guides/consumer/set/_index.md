@@ -83,15 +83,15 @@ fetching package /package-examples/helloworld-set from https://github.com/Google
 The `helloworld-set` package contains [setters] which can be used to
 **set configuration values from the commandline.**
 
-##### Command
+### List Command
 
 ```sh
-kpt cfg list-setters helloworld/ 
+kpt cfg list-setters helloworld/
 ```
 
 Print the list of setters included in the package.
 
-##### Output
+### List Output
 
 ```sh
     NAME      VALUE        SET BY            DESCRIPTION        COUNT
@@ -110,7 +110,7 @@ using `kpt set`.
 Setters **modify the resource configuration in place by reading the resources,
 changing values, and writing them back.**
 
-##### Package contents
+### Package contents
 
 ```yaml
 # helloworld/deploy.yaml
@@ -122,7 +122,7 @@ spec:
  replicas: 5 # {"$kpt-set":"replicas"}
 ```
 
-##### Command
+### Set Command
 
 ```sh
 kpt cfg set helloworld/ replicas 3
@@ -130,13 +130,13 @@ kpt cfg set helloworld/ replicas 3
 
 Change the replicas value in the configuration from 5 to 3.
 
-##### Output
+### Set Output
 
 ```sh
 set 1 fields
 ```
 
-##### Updated package contents
+### Updated package contents
 
 ```yaml
 kind: Deployment
@@ -148,7 +148,7 @@ spec:
 ...
 ```
 
-[Kptfile]: ../../../api-reference/kptfile
-[kpt cfg set]: ../../../reference/cfg/set
-[setters]: ../../../reference/cfg/create-setter
-[create setter guide]: ../../producer/setters
+[Kptfile]: ../../../api-reference/kptfile/
+[kpt cfg set]: ../../../reference/cfg/set/
+[setters]: ../../../reference/cfg/create-setter/
+[create setter guide]: ../../producer/setters/

@@ -18,7 +18,7 @@ Use cases:
 - **Configuration Transformation:** e.g. Update all `PodSecurityPolicy` configurations to improve the
   security posture.
 
-<img src="https://storage.googleapis.com/kpt-functions/docs/run.gif">
+![Functions Demo]("https://storage.googleapis.com/kpt-functions/docs/run.gif")
 
 Config functions can be run locally or as part of a CI/CD pipeline.
 
@@ -80,6 +80,6 @@ Functions can be composed into a pipeline:
 
 [architecture influences]: ../architecture/#influences
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
-[catalog]: ../../guides/consumer/function/catalog
+[catalog]: ../../guides/consumer/function/catalog/
 [function producer docs]: ../../guides/producer/functions/
 [reference]: ../../reference/fn/run/

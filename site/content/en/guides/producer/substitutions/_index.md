@@ -49,7 +49,7 @@ in this guide.
 
 1. Read the package Kptfile and resources.
 2. Change the setter OpenAPI value in the Kptfile
-3. Locate all fields which reference the setter indirectly through a 
+3. Locate all fields which reference the setter indirectly through a
    substitution.
 4. Compute the new substitution value by substituting the setter values into
    the pattern.
@@ -318,5 +318,4 @@ are used *not* the name of the substitution.  The name of the substitution is
 *only used in the configuration field references*.
 {{% /pageinfo %}}
 
-
-[setters]: ../setters
+[setters]: ../setters/
