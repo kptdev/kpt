@@ -135,6 +135,7 @@ func supportedOrchestrators() map[string]orchestrators.Pipeline {
 		"github-actions": new(orchestrators.GitHubActions),
 		"cloud-build":    new(orchestrators.CloudBuild),
 		"gitlab-ci":      new(orchestrators.GitLabCI),
+		"jenkins":        new(orchestrators.Jenkins),
 	}
 }
 

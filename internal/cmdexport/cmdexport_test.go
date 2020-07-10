@@ -45,12 +45,12 @@ var testCases = []TestCase{
 	{
 		description: "fails on not providing working orchestrator",
 		params:      []string{"dir"},
-		err:         "--workflow flag is required. It must be one of cloud-build, github-actions, gitlab-ci",
+		err:         "--workflow flag is required. It must be one of cloud-build, github-actions, gitlab-ci, jenkins",
 	},
 	{
 		description: "fails on an unsupported workflow orchestrator",
 		params:      []string{".", "--workflow", "random-orchestrator"},
-		err:         "unsupported orchestrator random-orchestrator. It must be one of cloud-build, github-actions, gitlab-ci",
+		err:         "unsupported orchestrator random-orchestrator. It must be one of cloud-build, github-actions, gitlab-ci, jenkins",
 	},
 	{
 		description: "exports a GitHub Actions pipeline",
@@ -212,6 +212,70 @@ kpt:
       - docker:dind
     script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gongpu/kpt:latest
         fn run /app/resources --fn-path /app/functions
+`,
+	},
+	{
+		description: "exports a Jenkinsfile",
+		params: []string{
+			"resources",
+			"-w",
+			"jenkins",
+		},
+		expected: `
+pipeline {
+    agent any
+
+    stages {
+        stage('Run kpt functions') {
+            steps {
+                // This requires that docker is installed on the agent.
+                // And your user, which is usually "jenkins", should be added to the "docker" group to access "docker.sock".
+                sh '''
+                    docker run \
+                    -v $PWD:/app \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    gongpu/kpt:latest \
+                    fn run /app/resources
+                '''
+            }
+        }
+    }
+}
+`,
+	},
+	{
+		description: "exports a Jenkinsfile with --fn-path",
+		params: []string{
+			"resources",
+			"-w",
+			"jenkins",
+			"--fn-path",
+			"functions/label-namespace.yaml",
+			"--fn-path",
+			"functions/gate-keeper.yaml",
+		},
+		expected: `
+pipeline {
+    agent any
+
+    stages {
+        stage('Run kpt functions') {
+            steps {
+                // This requires that docker is installed on the agent.
+                // And your user, which is usually "jenkins", should be added to the "docker" group to access "docker.sock".
+                sh '''
+                    docker run \
+                    -v $PWD:/app \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    gongpu/kpt:latest \
+                    fn run /app/resources \
+                    --fn-path /app/functions/label-namespace.yaml \
+                    --fn-path /app/functions/gate-keeper.yaml
+                '''
+            }
+        }
+    }
+}
 `,
 	},
 }
