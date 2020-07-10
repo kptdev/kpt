@@ -24,7 +24,8 @@
         
         &lt;h2 id=&#34;developer-quickstart&#34;&gt;Developer Quickstart&lt;/h2&gt;
 &lt;p&gt;This quickstart will get you started developing a config function with the TypeScript SDK,
-using an existing Hello World package.&lt;/p&gt;
+using an existing kpt-functions package. Config functions are any functions which implement
+the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
 &lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
 &lt;h4 id=&#34;system-requirements&#34;&gt;System Requirements&lt;/h4&gt;
 &lt;p&gt;Currently supported platforms: amd64 Linux/Mac&lt;/p&gt;
@@ -32,15 +33,15 @@ using an existing Hello World package.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Install &lt;a href=&#34;https://nodejs.org/en/download/&#34;&gt;node&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/v17.09/engine/installation/&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Install &lt;a href=&#34;../../../../../installation/&#34;&gt;kpt&lt;/a&gt; and add it to $PATH&lt;/li&gt;
+&lt;li&gt;Install &lt;a href=&#34;../../../../../installation/&#34;&gt;kpt&lt;/a&gt; and add it to your $PATH&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;hello-world-package&#34;&gt;Hello World Package&lt;/h3&gt;
+&lt;h3 id=&#34;explore-the-demo-functions-package&#34;&gt;Explore the Demo Functions Package&lt;/h3&gt;
 &lt;ol&gt;
 &lt;li&gt;
-&lt;p&gt;Get the &lt;code&gt;hello-world&lt;/code&gt; package:&lt;/p&gt;
+&lt;p&gt;Get the &lt;code&gt;demo-functions&lt;/code&gt; package:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git clone --depth &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; https://github.com/GoogleContainerTools/kpt-functions-sdk.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All subsequent commands are run from the &lt;code&gt;hello-world&lt;/code&gt; directory:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; kpt-functions-sdk/ts/hello-world
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All subsequent commands are run from the &lt;code&gt;demo-functions&lt;/code&gt; directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; kpt-functions-sdk/ts/demo-functions
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Install all dependencies:&lt;/p&gt;
@@ -51,7 +52,9 @@ using an existing Hello World package.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run watch
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Run the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts&#34;&gt;&lt;code&gt;label_namespace&lt;/code&gt;&lt;/a&gt; transformer function:&lt;/p&gt;
+&lt;p&gt;Explore the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts&#34;&gt;&lt;code&gt;label_namespace&lt;/code&gt;&lt;/a&gt; transformer function. This function takes a
+given &lt;code&gt;label_name&lt;/code&gt; and &lt;code&gt;label_value&lt;/code&gt; to add the appropriate label to &lt;code&gt;Namespace&lt;/code&gt; objects using
+the SDK&amp;rsquo;s &lt;code&gt;addLabel&lt;/code&gt; function.&lt;/p&gt;
 
 
 &lt;pre class=&#34;language-markup&#34;&gt;
@@ -108,6 +111,9 @@ metadata:
    
   &lt;/code&gt;
 &lt;/pre&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Run the &lt;code&gt;label_namespace&lt;/code&gt; function on the &lt;code&gt;example-configs&lt;/code&gt; directory:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;CONFIGS&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;../../example-configs
 
 kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
@@ -191,6 +197,13 @@ metadata:
   &lt;/code&gt;
 &lt;/pre&gt;
 &lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Run &lt;code&gt;validate-rolebinding&lt;/code&gt; on &lt;code&gt;example-configs&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+node dist/validate_rolebinding_run.js -d &lt;span style=&#34;color:#000&#34;&gt;subject_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;alice@foo-corp.com &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Explore generator functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts&#34;&gt;expand-team-cr&lt;/a&gt;. This function generates a per-environment
 Namespace and RoleBinding object for each custom resource (CR) of type Team.&lt;/p&gt;
@@ -300,8 +313,14 @@ and corresponding Rolebinding objects in each of these Namespaces.
   &lt;/code&gt;
 &lt;/pre&gt;
 &lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Run &lt;code&gt;expand-team-cr&lt;/code&gt; on &lt;code&gt;example-configs&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+node dist/expand_team_cr_run.js &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;Config functions should implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use the typescript SDK.&lt;/li&gt;

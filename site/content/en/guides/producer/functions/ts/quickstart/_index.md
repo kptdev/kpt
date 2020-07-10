@@ -4,13 +4,14 @@ linkTitle: "TypeScript Quickstart"
 weight: 6
 type: docs
 description: >
-   Quickstart for developing Typescript functions.
+   Quickstart for Developing Config Functions
 ---
 
 ## Developer Quickstart
 
 This quickstart will get you started developing a config function with the TypeScript SDK,
-using an existing Hello World package.
+using an existing kpt-functions package. Config functions are any functions which implement
+the `KptFunc` interface [documented here][api-kptfunc].
 
 ### Prerequisites
 
@@ -22,20 +23,20 @@ Currently supported platforms: amd64 Linux/Mac
 
 - Install [node][download-node]
 - Install [docker][install-docker]
-- Install [kpt][download-kpt] and add it to \$PATH
+- Install [kpt][download-kpt] and add it to your $PATH
 
-### Hello World Package
+### Explore the Demo Functions Package
 
-1. Get the `hello-world` package:
+1. Get the `demo-functions` package:
 
    ```sh
    git clone --depth 1 https://github.com/GoogleContainerTools/kpt-functions-sdk.git
    ```
 
-   All subsequent commands are run from the `hello-world` directory:
+   All subsequent commands are run from the `demo-functions` directory:
 
    ```sh
-   cd kpt-functions-sdk/ts/hello-world
+   cd kpt-functions-sdk/ts/demo-functions
    ```
 
 1. Install all dependencies:
@@ -50,11 +51,15 @@ Currently supported platforms: amd64 Linux/Mac
    npm run watch
    ```
 
-1. Run the [`label_namespace`][label-namespace] transformer function:
+1. Explore the [`label_namespace`][label-namespace] transformer function. This function takes a
+   given `label_name` and `label_value` to add the appropriate label to `Namespace` objects using
+   the SDK's `addLabel` function.
 
    {{< code type="ts" >}}
    {{< readfile file="static/ts/label_namespace.ts" >}}
    {{< /code >}}
+
+1. Run the `label_namespace` function on the `example-configs` directory:
 
    ```sh
    export CONFIGS=../../example-configs
@@ -82,6 +87,15 @@ Currently supported platforms: amd64 Linux/Mac
    {{< readfile file="static/ts/validate_rolebinding.ts" >}}
    {{< /code >}}
 
+1. Run `validate-rolebinding` on `example-configs`.
+
+   ```sh
+   kpt fn source $CONFIGS |
+   node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com |
+   kpt fn sink $CONFIGS
+   git diff $CONFIGS
+   ```
+
 1. Explore generator functions like [expand-team-cr]. This function generates a per-environment
    Namespace and RoleBinding object for each custom resource (CR) of type Team.
 
@@ -89,7 +103,14 @@ Currently supported platforms: amd64 Linux/Mac
    {{< readfile file="static/ts/expand_team_cr.ts" >}}
    {{< /code >}}
 
-Config functions should implement the `KptFunc` interface [documented here][api-kptfunc].
+1. Run `expand-team-cr` on `example-configs`.
+
+   ```sh
+   kpt fn source $CONFIGS |
+   node dist/expand_team_cr_run.js |
+   kpt fn sink $CONFIGS
+   git diff $CONFIGS
+   ```
 
 ## Next Steps
 
@@ -101,7 +122,7 @@ Config functions should implement the `KptFunc` interface [documented here][api-
 [install-docker]: https://docs.docker.com/v17.09/engine/installation/
 [download-kpt]: ../../../../../installation/
 [demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
-[api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html
+[api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
 [Typescript Developer Guide]: ../develop/
 [run functions]: ../../../../consumer/function/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts

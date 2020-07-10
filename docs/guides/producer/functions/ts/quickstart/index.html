@@ -33,16 +33,16 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
 <title>TypeScript Quickstart | Kpt</title><meta property="og:title" content="TypeScript Quickstart" />
-<meta property="og:description" content="Quickstart for developing Typescript functions.
+<meta property="og:description" content="Quickstart for Developing Config Functions
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/quickstart/" />
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="TypeScript Quickstart">
-<meta itemprop="description" content="Quickstart for developing Typescript functions.
+<meta itemprop="description" content="Quickstart for Developing Config Functions
 "><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="TypeScript Quickstart"/>
-<meta name="twitter:description" content="Quickstart for developing Typescript functions.
+<meta name="twitter:description" content="Quickstart for Developing Config Functions
 "/>
 
 
@@ -919,7 +919,7 @@ if (!doNotTrack) {
     <li><a href="#developer-quickstart">Developer Quickstart</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#hello-world-package">Hello World Package</a></li>
+        <li><a href="#explore-the-demo-functions-package">Explore the Demo Functions Package</a></li>
       </ul>
     </li>
     <li><a href="#next-steps">Next Steps</a></li>
@@ -990,10 +990,11 @@ if (!doNotTrack) {
             
 <div class="td-content">
 	<h1>TypeScript Quickstart</h1>
-	<div class="lead">Quickstart for developing Typescript functions.</div>
+	<div class="lead">Quickstart for Developing Config Functions</div>
 	<h2 id="developer-quickstart">Developer Quickstart</h2>
 <p>This quickstart will get you started developing a config function with the TypeScript SDK,
-using an existing Hello World package.</p>
+using an existing kpt-functions package. Config functions are any functions which implement
+the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/">documented here</a>.</p>
 <h3 id="prerequisites">Prerequisites</h3>
 <h4 id="system-requirements">System Requirements</h4>
 <p>Currently supported platforms: amd64 Linux/Mac</p>
@@ -1001,15 +1002,15 @@ using an existing Hello World package.</p>
 <ul>
 <li>Install <a href="https://nodejs.org/en/download/">node</a></li>
 <li>Install <a href="https://docs.docker.com/v17.09/engine/installation/">docker</a></li>
-<li>Install <a href="../../../../../installation/">kpt</a> and add it to $PATH</li>
+<li>Install <a href="../../../../../installation/">kpt</a> and add it to your $PATH</li>
 </ul>
-<h3 id="hello-world-package">Hello World Package</h3>
+<h3 id="explore-the-demo-functions-package">Explore the Demo Functions Package</h3>
 <ol>
 <li>
-<p>Get the <code>hello-world</code> package:</p>
+<p>Get the <code>demo-functions</code> package:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone --depth <span style="color:#0000cf;font-weight:bold">1</span> https://github.com/GoogleContainerTools/kpt-functions-sdk.git
-</code></pre></div><p>All subsequent commands are run from the <code>hello-world</code> directory:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> kpt-functions-sdk/ts/hello-world
+</code></pre></div><p>All subsequent commands are run from the <code>demo-functions</code> directory:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> kpt-functions-sdk/ts/demo-functions
 </code></pre></div></li>
 <li>
 <p>Install all dependencies:</p>
@@ -1020,7 +1021,9 @@ using an existing Hello World package.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run watch
 </code></pre></div></li>
 <li>
-<p>Run the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts"><code>label_namespace</code></a> transformer function:</p>
+<p>Explore the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts"><code>label_namespace</code></a> transformer function. This function takes a
+given <code>label_name</code> and <code>label_value</code> to add the appropriate label to <code>Namespace</code> objects using
+the SDK&rsquo;s <code>addLabel</code> function.</p>
 
 
 <pre class="language-markup">
@@ -1077,6 +1080,9 @@ metadata:
    
   </code>
 </pre>
+</li>
+<li>
+<p>Run the <code>label_namespace</code> function on the <code>example-configs</code> directory:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">CONFIGS</span><span style="color:#ce5c00;font-weight:bold">=</span>../../example-configs
 
 kpt fn <span style="color:#204a87">source</span> <span style="color:#000">$CONFIGS</span> <span style="color:#000;font-weight:bold">|</span>
@@ -1160,6 +1166,13 @@ metadata:
   </code>
 </pre>
 </li>
+<li>
+<p>Run <code>validate-rolebinding</code> on <code>example-configs</code>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">source</span> <span style="color:#000">$CONFIGS</span> <span style="color:#000;font-weight:bold">|</span>
+node dist/validate_rolebinding_run.js -d <span style="color:#000">subject_name</span><span style="color:#ce5c00;font-weight:bold">=</span>alice@foo-corp.com <span style="color:#000;font-weight:bold">|</span>
+kpt fn sink <span style="color:#000">$CONFIGS</span>
+git diff <span style="color:#000">$CONFIGS</span>
+</code></pre></div></li>
 <li>
 <p>Explore generator functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts">expand-team-cr</a>. This function generates a per-environment
 Namespace and RoleBinding object for each custom resource (CR) of type Team.</p>
@@ -1269,8 +1282,14 @@ and corresponding Rolebinding objects in each of these Namespaces.
   </code>
 </pre>
 </li>
+<li>
+<p>Run <code>expand-team-cr</code> on <code>example-configs</code>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">source</span> <span style="color:#000">$CONFIGS</span> <span style="color:#000;font-weight:bold">|</span>
+node dist/expand_team_cr_run.js <span style="color:#000;font-weight:bold">|</span>
+kpt fn sink <span style="color:#000">$CONFIGS</span>
+git diff <span style="color:#000">$CONFIGS</span>
+</code></pre></div></li>
 </ol>
-<p>Config functions should implement the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html">documented here</a>.</p>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Take a look at <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">these example functions</a> to better understand how to use the typescript SDK.</li>
@@ -1354,7 +1373,7 @@ and corresponding Rolebinding objects in each of these Namespaces.
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 8, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c25d76e8b1975dd7d3c348f35744879f469a8c7f">Address review comments (c25d76e8)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/28c3a7d06e946ec5c888b8de44601f923cc599a4">Inline multiple kpt functions in quickstart (28c3a7d0)</a>
 </div>
 </div>
 
