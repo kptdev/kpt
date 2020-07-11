@@ -67,12 +67,17 @@ type Runner struct {
 	URL         string
 }
 
-func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		args = []string{"."}
-	}
+func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if r.Name == "" {
-		r.Name = filepath.Base(args[0])
+		if len(args) == 0 || args[0] == "." {
+			path, err := os.Getwd()
+			if err != nil {
+				return errors.Errorf("can't lookup current directory: %v", err)
+			}
+			r.Name = filepath.Base(path)
+		} else {
+			r.Name = filepath.Base(args[0])
+		}
 	}
 	return nil
 }

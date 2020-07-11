@@ -71,6 +71,46 @@ my description
 `, string(b))
 }
 
+func TestCmd_currentDir(t *testing.T) {
+	d, err := ioutil.TempDir("", "kpt")
+	assert.NoError(t, err)
+	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
+
+	packageDir := filepath.Join(d, "my-pkg")
+	currentDir, err := os.Getwd()
+	assert.NoError(t, err)
+	err = func() error {
+		nestedErr := os.Chdir(packageDir)
+		if nestedErr != nil {
+			return nestedErr
+		}
+		defer func() {
+			deferErr := os.Chdir(currentDir)
+			if deferErr != nil {
+				panic(deferErr)
+			}
+		}()
+
+		r := cmdinit.NewRunner("kpt")
+		r.Command.SetArgs([]string{".", "--description", "my description", "--tag", "app.kpt.dev/cockroachdb"})
+		return r.Command.Execute()
+	}()
+	assert.NoError(t, err)
+
+	// verify the contents
+	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: my-pkg
+packageMetadata:
+  tags:
+  - app.kpt.dev/cockroachdb
+  shortDescription: my description
+`, string(b))
+}
+
 // TestCmd_failExists verifies the command throws and error if the directory exists
 func TestCmd_failNotExists(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
