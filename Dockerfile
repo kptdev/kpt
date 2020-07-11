@@ -16,12 +16,14 @@ FROM golang:1.13-stretch
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
 
+ARG KPT_VERSION=unknown
+
 WORKDIR /go/src/
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN go build -v -o /usr/local/bin/kpt ./
+RUN go build -v -o /usr/local/bin/kpt -ldflags="-s -w -X github.com/GoogleContainerTools/kpt/run.version=$KPT_VERSION" ./
 
 FROM alpine:3.11
 RUN apk update && apk upgrade && \

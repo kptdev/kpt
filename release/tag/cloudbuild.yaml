@@ -141,7 +141,7 @@ steps:
   # build docker image
   - name: 'gcr.io/cloud-builders/docker'
     dir: 'kpt'
-    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}', '.' ]
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}', '.', '--build-arg', 'KPT_VERSION=${_VERSION}']
 
   - name: 'gcr.io/cloud-builders/docker'
     dir: 'kpt'
