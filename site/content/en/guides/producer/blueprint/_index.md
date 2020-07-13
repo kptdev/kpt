@@ -175,7 +175,7 @@ configMapGenerator:
   behavior: merge
   literals:
   # for bootstrapping the root table grants -- set to false after bootstrapped
-  - "skip-grant-tables=true" # {"$ref":"#/definitions/io.k8s.cli.substitutions.skip-grant-tables"}
+  - "skip-grant-tables=true" # {"$kpt-set":"skip-grant-tables"}
 ```
 
 ### Generating ConfigMaps and Secrets
@@ -209,9 +209,9 @@ configMapGenerator:
 - name: mysql
   behavior: merge
   literals:
-  - "skip-grant-tables=true" # {"$ref":"#/definitions/io.k8s.cli.substitutions.skip-grant-tables"}
-  - "mysql-user=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-user"}
-  - "mysql-database=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-database"}
+  - "skip-grant-tables=true" # {"$kpt-set":"skip-grant-tables"}
+  - "mysql-user=" # {"$kpt-set":"mysql-user"}
+  - "mysql-database=" # {"$kpt-set":"mysql-database"}
 ```
 
 ## Setters and Substitutions
@@ -240,15 +240,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 #
 # namespace is the namespace the mysql instance is run in
-namespace: "" # {"$ref":"#/definitions/io.k8s.cli.setters.namespace"}
+namespace: "" # {"$kpt-set":"namespace"}
 configMapGenerator:
 - name: mysql
   behavior: merge
   literals:
   # for bootstrapping the root table grants -- set to false after bootstrapped
-  - "skip-grant-tables=true" # {"$ref":"#/definitions/io.k8s.cli.substitutions.skip-grant-tables"}
-  - "mysql-user=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-user"}
-  - "mysql-database=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-database"}
+  - "skip-grant-tables=true" # {"$kpt-set":"skip-grant-tables"}
+  - "mysql-user=" # {"$kpt-set":"mysql-user"}
+  - "mysql-database=" # {"$kpt-set":"mysql-database"}
 ...
 ```
 
@@ -266,11 +266,11 @@ spec:
 ...
         ports:
         - name: mysql
-          containerPort: 3306 # {"$ref":"#/definitions/io.k8s.cli.setters.port"}
+          containerPort: 3306 # {"$kpt-set":"port"}
         resources:
           requests:
-            cpu: 100m # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}
-            memory: 256Mi # {"$ref":"#/definitions/io.k8s.cli.setters.memory"}
+            cpu: 100m # {"$kpt-set":"cpu"}
+            memory: 256Mi # {"$kpt-set":"memory"}
 ```
 
 ```yaml
@@ -281,7 +281,7 @@ kind: Service
 spec:
   ports:
   - name: mysql
-    port: 3306 # {"$ref":"#/definitions/io.k8s.cli.setters.port"}
+    port: 3306 # {"$kpt-set":"port"}
     targetPort: mysql
 ```
 
