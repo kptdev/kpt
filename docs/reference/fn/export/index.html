@@ -14,7 +14,7 @@
   gtag('config', 'UA-171557011-1');
 </script>
 
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.74.0" />
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
@@ -976,18 +976,17 @@ if (!doNotTrack) {
 <p>Auto-generating function pipelines for different workflow orchestrators.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># read functions from DIR, run them against it as one step</span>
-<span style="color:#8f5902;font-style:italic"># write the generated GitHub Actions pipeline to main.yaml</span>
-kpt fn <span style="color:#204a87">export</span> github-actions DIR/ --output main.yaml
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># discover functions in FUNCTIONS_DIR and run them against Resource in DIR.</span>
-kpt fn <span style="color:#204a87">export</span> github-actions DIR/ --fn-path FUNCTIONS_DIR/
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># read functions from DIR, run them against it as one step.</span>
+<span style="color:#8f5902;font-style:italic"># write the generated GitHub Actions pipeline to main.yaml.</span>
+kpt fn <span style="color:#204a87">export</span> DIR/ --output main.yaml --workflow github-actions
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># discover functions in FUNCTIONS_DIR and run them against resource in DIR.</span>
+<span style="color:#8f5902;font-style:italic"># write the generated Cloud Build pipeline to stdout.</span>
+kpt fn <span style="color:#204a87">export</span> DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
-<pre><code>kpt fn export ORCHESTRATOR DIR/ [--fn-path FUNCTIONS_DIR/] [--output OUTPUT_FILENAME]
+<pre><code>kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
 
-ORCHESTRATOR:
-  Supported orchestrators are github-actions, and cloud-build.
 DIR:
   Path to a package directory. If you do not specify the --fn-path flag, this command will discover functions in DIR and run them against resources in it.
 </code></pre><!--mdtogo-->
@@ -1066,7 +1065,7 @@ DIR:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 30, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/945bdc4b9b347074203d4f2f609685423abf4fde">Support exporting Cloud Build pipelines (945bdc4b)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9859af2ba631b507a1314b649d1eb2aa4770c99e">Add --workflow flag to kpt fn export (9859af2b)</a>
 </div>
 </div>
 
