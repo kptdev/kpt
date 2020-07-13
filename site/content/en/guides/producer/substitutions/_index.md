@@ -69,12 +69,6 @@ or programmatically (with `create-subst`).  The `create-subst` command will:
 ### Example
 
 ```yaml
-# Kptfile -- original
-openAPI:
-  definitions: {}
-```
-
-```yaml
 # deployment.yaml -- original
 kind: Deployment
 metadata:
