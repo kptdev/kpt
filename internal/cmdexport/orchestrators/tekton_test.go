@@ -156,3 +156,158 @@ func TestTektonTask(t *testing.T) {
 		})
 	}
 }
+
+// TODO: TektonPipeline
+var tektonPipelineTestCases = []testCase{
+	{
+		description: "generate a tekton pipeline with a task",
+		config: &types.PipelineConfig{
+			Dir: "local-resources/",
+		},
+		expected: `
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+    name: run-kpt-functions
+spec:
+    workspaces:
+      - name: source
+        mountPath: /source
+    steps:
+      - name: run-kpt-functions
+        image: gongpu/kpt:latest
+        args:
+          - fn
+          - run
+          - $(workspaces.source.path)/local-resources
+        volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+    volumes:
+      - name: docker-socket
+        hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+    name: run-kpt-functions
+spec:
+    workspaces:
+      - name: shared-workspace
+    tasks:
+      - name: kpt
+        taskRef:
+            name: run-kpt-functions
+        workspaces:
+          - name: source
+            workspace: shared-workspace
+`,
+	},
+	{
+		description: "generate a tekton pipeline with --fn-path",
+		config: &types.PipelineConfig{
+			Dir:     "local-resources",
+			FnPaths: []string{"config/"},
+		},
+		expected: `
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+    name: run-kpt-functions
+spec:
+    workspaces:
+      - name: source
+        mountPath: /source
+    steps:
+      - name: run-kpt-functions
+        image: gongpu/kpt:latest
+        args:
+          - fn
+          - run
+          - $(workspaces.source.path)/local-resources
+          - --fn-path
+          - $(workspaces.source.path)/config
+        volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+    volumes:
+      - name: docker-socket
+        hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+    name: run-kpt-functions
+spec:
+    workspaces:
+      - name: shared-workspace
+    tasks:
+      - name: kpt
+        taskRef:
+            name: run-kpt-functions
+        workspaces:
+          - name: source
+            workspace: shared-workspace
+`,
+	},
+	{
+		description: "generate a tekton task with multiple --fn-path",
+		config: &types.PipelineConfig{
+			Dir:     "local-resources",
+			FnPaths: []string{"config/gate-keeper.yaml", "config/label-namespace.yaml"},
+		},
+		expected: `
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+    name: run-kpt-functions
+spec:
+    workspaces:
+      - name: source
+        mountPath: /source
+    steps:
+      - name: run-kpt-functions
+        image: gongpu/kpt:latest
+        args:
+          - fn
+          - run
+          - $(workspaces.source.path)/local-resources
+          - --fn-path
+          - $(workspaces.source.path)/config/gate-keeper.yaml
+          - --fn-path
+          - $(workspaces.source.path)/config/label-namespace.yaml
+        volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+    volumes:
+      - name: docker-socket
+        hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+    name: run-kpt-functions
+spec:
+    workspaces:
+      - name: shared-workspace
+    tasks:
+      - name: kpt
+        taskRef:
+            name: run-kpt-functions
+        workspaces:
+          - name: source
+            workspace: shared-workspace
+`,
+	},
+}
+
+var tektonPipelineTestSuite = testSuite{
+	pipeline:  new(TektonPipeline),
+	testCases: tektonPipelineTestCases,
+}

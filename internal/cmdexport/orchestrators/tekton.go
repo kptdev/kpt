@@ -15,12 +15,100 @@
 package orchestrators
 
 import (
+	"bytes"
 	"path"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
 )
+
+// TektonPipeline wraps a Pipeline object in Tekton.
+// @see https://github.com/tektoncd/pipeline/blob/master/docs/pipelines.md
+type TektonPipeline struct {
+	APIVersion string              `yaml:"apiVersion,omitempty"`
+	Kind       string              `yaml:",omitempty"`
+	Metadata   *TektonMetadata     `yaml:",omitempty"`
+	Spec       *TektonPipelineSpec `yaml:",omitempty"`
+	task       *TektonTask
+}
+
+func (p *TektonPipeline) Init(config *types.PipelineConfig) Pipeline {
+	taskName := "run-kpt-functions"
+
+	p.APIVersion = "tekton.dev/v1beta1"
+	p.Kind = "Pipeline"
+	p.Metadata = &TektonMetadata{Name: taskName}
+
+	workspaceName := "shared-workspace"
+	pipelineWorkspace := &TektonWorkspace{
+		Name: workspaceName,
+	}
+
+	taskConfig := &TektonTaskConfig{PipelineConfig: config, Name: taskName}
+	task := new(TektonTask).Init(taskConfig)
+
+	pipelineTaskWorkspace := &TektonWorkspace{
+		Name:      "source",
+		Workspace: workspaceName,
+	}
+	pipelineTask := &TektonPipelineTask{
+		Name:       "kpt",
+		TaskRef:    &TektonPipelineTaskRef{Name: taskName},
+		Workspaces: []*TektonWorkspace{pipelineTaskWorkspace},
+	}
+
+	p.task = task
+	p.Spec = &TektonPipelineSpec{
+		Workspaces: []*TektonWorkspace{pipelineWorkspace},
+		Tasks:      []*TektonPipelineTask{pipelineTask},
+	}
+
+	return p
+}
+
+// Generate outputs a multi-doc yaml that contains Tekton Pipeline Object and a Tekton Task object.
+func (p *TektonPipeline) Generate() (out []byte, err error) {
+	task, err := p.task.Generate()
+
+	if err != nil {
+		return
+	}
+
+	pipeline, err := yaml.Marshal(p)
+
+	if err != nil {
+		return
+	}
+
+	// Concat the two yaml docs.
+	b := &bytes.Buffer{}
+
+	b.Write(task)
+	b.WriteString("---\n")
+	b.Write(pipeline)
+
+	return b.Bytes(), nil
+}
+
+// TektonPipelineSpec describes the spec of a Pipeline.
+type TektonPipelineSpec struct {
+	Workspaces []*TektonWorkspace    `yaml:",omitempty"`
+	Tasks      []*TektonPipelineTask `yaml:",omitempty"`
+}
+
+// // TektonPipelineTaskRef represents a task in a Tekton Pipeline object.
+type TektonPipelineTask struct {
+	Name       string                 `yaml:",omitempty"`
+	TaskRef    *TektonPipelineTaskRef `yaml:"taskRef,omitempty"`
+	RunAfter   []string               `yaml:"runAfter,omitempty"`
+	Workspaces []*TektonWorkspace     `yaml:",omitempty"`
+}
+
+// TektonPipelineTaskRef represents a taskRef field in a task of a Tekton Pipeline object.
+type TektonPipelineTaskRef struct {
+	Name string `yaml:",omitempty"`
+}
 
 // TektonMetadata contains metadata to describe a resource object.
 type TektonMetadata struct {
@@ -31,6 +119,8 @@ type TektonMetadata struct {
 type TektonWorkspace struct {
 	Name      string `yaml:",omitempty"`
 	MountPath string `yaml:"mountPath,omitempty"`
+	// Workspace references another workspace declared elsewhere.
+	Workspace string `yaml:",omitempty"`
 }
 
 // TektonTaskConfig contains necessary configurations of the TektonTask class.

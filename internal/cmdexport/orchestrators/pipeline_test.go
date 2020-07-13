@@ -41,6 +41,7 @@ func TestPipeline(t *testing.T) {
 		cloudBuildTestSuite,
 		gitlabCITestSuite,
 		jenkinsTestSuite,
+		tektonPipelineTestSuite,
 	}
 
 	for _, testSuite := range testSuites {
