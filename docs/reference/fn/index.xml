@@ -14,39 +14,6 @@
     
     
     <item>
-      <title>Reference: Export</title>
-      <link>https://googlecontainertools.github.io/kpt/reference/fn/export/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://googlecontainertools.github.io/kpt/reference/fn/export/</guid>
-      <description>
-        
-        
-        &lt;!--mdtogo:Short
-   Auto-generating function pipelines for different workflow orchestrators
---&gt;
-&lt;p&gt;Auto-generating function pipelines for different workflow orchestrators.&lt;/p&gt;
-&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
-&lt;!--mdtogo:Examples--&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# read functions from DIR, run them against it as one step.&lt;/span&gt;
-&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# write the generated GitHub Actions pipeline to main.yaml.&lt;/span&gt;
-kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; DIR/ --output main.yaml --workflow github-actions
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# discover functions in FUNCTIONS_DIR and run them against resource in DIR.&lt;/span&gt;
-&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# write the generated Cloud Build pipeline to stdout.&lt;/span&gt;
-kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
-&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
-&lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
-
-DIR:
-  Path to a package directory. If you do not specify the --fn-path flag, this command will discover functions in DIR and run them against resources in it.
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
-
-      </description>
-    </item>
-    
-    <item>
       <title>Reference: Run</title>
       <link>https://googlecontainertools.github.io/kpt/reference/fn/run/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

@@ -343,11 +343,6 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/reference/fn/export/</loc>
-    <lastmod>2020-07-09T17:46:02+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/fetch-k8s-schema/</loc>
     <lastmod>2020-05-20T19:55:06-07:00</lastmod>
   </url>
