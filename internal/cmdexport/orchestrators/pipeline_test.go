@@ -18,9 +18,10 @@ import (
 	"strings"
 	"testing"
 
+	"gotest.tools/assert"
+
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/testutil"
-	"gotest.tools/assert"
 )
 
 type testCase struct {
@@ -40,6 +41,7 @@ func TestPipeline(t *testing.T) {
 		cloudBuildTestSuite,
 		gitlabCITestSuite,
 		jenkinsTestSuite,
+		tektonPipelineTestSuite,
 	}
 
 	for _, testSuite := range testSuites {

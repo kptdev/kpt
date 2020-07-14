@@ -45,12 +45,12 @@ var testCases = []TestCase{
 	{
 		description: "fails on not providing working orchestrator",
 		params:      []string{"dir"},
-		err:         "--workflow flag is required. It must be one of cloud-build, github-actions, gitlab-ci, jenkins",
+		err:         "--workflow flag is required. It must be one of cloud-build, github-actions, gitlab-ci, jenkins, tekton",
 	},
 	{
 		description: "fails on an unsupported workflow orchestrator",
 		params:      []string{".", "--workflow", "random-orchestrator"},
-		err:         "unsupported orchestrator random-orchestrator. It must be one of cloud-build, github-actions, gitlab-ci, jenkins",
+		err:         "unsupported orchestrator random-orchestrator. It must be one of cloud-build, github-actions, gitlab-ci, jenkins, tekton",
 	},
 	{
 		description: "exports a GitHub Actions pipeline",

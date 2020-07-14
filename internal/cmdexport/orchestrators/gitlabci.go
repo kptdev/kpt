@@ -19,8 +19,9 @@ import (
 	"path"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
-	"gopkg.in/yaml.v3"
 )
 
 // GitLabCi is a simplified representation of GitLab CI/CD Configuration.
