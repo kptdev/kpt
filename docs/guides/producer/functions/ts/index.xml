@@ -313,7 +313,7 @@ including the &lt;code&gt;create-kpt-functions&lt;/code&gt; CLI discussed later 
 &lt;h2 id=&#34;implement-the-function&#34;&gt;Implement the function&lt;/h2&gt;
 &lt;p&gt;You can now start implementing the function using your favorite IDE, e.g. &lt;a href=&#34;https://code.visualstudio.com/&#34;&gt;VSCode&lt;/a&gt;:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;code .
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In &lt;code&gt;src/my_func.ts&lt;/code&gt;, implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In &lt;code&gt;src/my_func.ts&lt;/code&gt;, implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use
 the typescript library. These functions are available as container images documented in the &lt;a href=&#34;../../../../consumer/function/catalog/&#34;&gt;catalog&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Once you&amp;rsquo;ve written some code, build the package with:&lt;/p&gt;
