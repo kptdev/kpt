@@ -55,9 +55,19 @@ Currently supported platforms: amd64 Linux/Mac
    given `label_name` and `label_value` to add the appropriate label to `Namespace` objects using
    the SDK's `addLabel` function.
 
-   {{< code type="ts" >}}
-   {{< readfile file="static/ts/label_namespace.ts" >}}
-   {{< /code >}}
+  ```typescript
+  import { addLabel, Configs } from 'kpt-functions';
+  import { isNamespace } from './gen/io.k8s.api.core.v1';
+
+  export const LABEL_NAME = 'label_name';
+  export const LABEL_VALUE = 'label_value';
+
+  export async function labelNamespace(configs: Configs) {
+    const labelName = configs.getFunctionConfigValueOrThrow(LABEL_NAME);
+    const labelValue = configs.getFunctionConfigValueOrThrow(LABEL_VALUE);
+    configs.get(isNamespace).forEach(n => addLabel(n, labelName, labelValue));
+  }
+  ```
 
 1. Run the `label_namespace` function on the `example-configs` directory:
 
@@ -83,9 +93,31 @@ Currently supported platforms: amd64 Linux/Mac
    this function searches RoleBindings and returns a results field containing details about invalid
    subject names.
 
-   {{< code type="ts" >}}
-   {{< readfile file="static/ts/validate_rolebinding.ts" >}}
-   {{< /code >}}
+  ```typescript
+  import { Configs, kubernetesObjectResult } from 'kpt-functions';
+  import { isRoleBinding } from './gen/io.k8s.api.rbac.v1';
+
+  const SUBJECT_NAME = 'subject_name';
+
+  export async function validateRolebinding(configs: Configs) {
+    // Get the subject name parameter.
+    const subjectName = configs.getFunctionConfigValueOrThrow(SUBJECT_NAME);
+
+    // Iterate over all RoleBinding objects in the input, and filter those that have a subject
+    // we're looking for.
+    const results = configs
+      .get(isRoleBinding)
+      .filter(
+        (rb) =>
+          rb && rb.subjects && rb.subjects.find((s) => s.name === subjectName)
+      )
+      .map((rb) =>
+        kubernetesObjectResult(`Found banned subject '${subjectName}'`, rb)
+      );
+
+    configs.addResults(...results);
+  }
+  ```
 
 1. Run `validate-rolebinding` on `example-configs`.
 
@@ -99,9 +131,64 @@ Currently supported platforms: amd64 Linux/Mac
 1. Explore generator functions like [expand-team-cr]. This function generates a per-environment
    Namespace and RoleBinding object for each custom resource (CR) of type Team.
 
-   {{< code type="ts" >}}
-   {{< readfile file="static/ts/expand_team_cr.ts" >}}
-   {{< /code >}}
+  ```typescript
+  import { Configs } from 'kpt-functions';
+  import { isTeam, Team } from './gen/dev.cft.anthos.v1alpha1';
+  import { Namespace } from './gen/io.k8s.api.core.v1';
+  import { RoleBinding, Subject } from './gen/io.k8s.api.rbac.v1';
+
+  const ENVIRONMENTS = ['dev', 'prod'];
+
+  export async function expandTeamCr(configs: Configs) {
+    // For each 'Team' custom resource in the input:
+    // 1. Generate a per-enviroment Namespace.
+    // 2. Generate RoleBindings in each Namespace.
+    configs.get(isTeam).forEach((team) => {
+      const name = team.metadata.name;
+
+      ENVIRONMENTS.forEach((suffix) => {
+        const ns = `${name}-${suffix}`;
+        configs.insert(Namespace.named(ns));
+        configs.insert(...createRoleBindings(team, ns));
+      });
+    });
+  }
+
+  function createRoleBindings(team: Team, namespace: string): RoleBinding[] {
+    return (team.spec.roles || []).map((item) => {
+      return new RoleBinding({
+        metadata: {
+          name: item.role,
+          namespace,
+        },
+        subjects: roleSubjects(item),
+        roleRef: {
+          kind: 'ClusterRole',
+          name: item.role,
+          apiGroup: 'rbac.authorization.k8s.io',
+        },
+      });
+    });
+  }
+
+  function roleSubjects(item: Team.Spec.Item): Subject[] {
+    const userSubjects: Subject[] = (item.users || []).map(
+      (user) =>
+        new Subject({
+          kind: 'User',
+          name: user,
+        })
+    );
+    const groupSubjects: Subject[] = (item.groups || []).map(
+      (group) =>
+        new Subject({
+          kind: 'Group',
+          name: group,
+        })
+    );
+    return userSubjects.concat(groupSubjects);
+  }
+  ```
 
 1. Run `expand-team-cr` on `example-configs`.
 
@@ -119,7 +206,7 @@ Currently supported platforms: amd64 Linux/Mac
 - Learn how to [run functions].
 
 [download-node]: https://nodejs.org/en/download/
-[install-docker]: https://docs.docker.com/v17.09/engine/installation/
+[install-docker]: https://docs.docker.com/engine/installation/
 [download-kpt]: ../../../../../installation/
 [demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
 [api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/

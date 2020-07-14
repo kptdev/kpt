@@ -11,8 +11,8 @@ description: >
 
 ## Topics
 
-[kpt cfg count](/reference/pkg/count), [kpt cfg tree](/reference/pkg/get),
-[kpt cfg grep](/reference/pkg/count), [kpt cfg cat](/reference/pkg/count)
+[kpt cfg count], [kpt cfg tree],
+[kpt cfg grep], [kpt cfg cat]
 
 ## Steps
 
@@ -25,7 +25,7 @@ description: >
 ## Fetch a remote package
 
 Packages are fetched from remote git repository subdirectories with
-[kpt pkg get](/reference/pkg/get).  In this guide we will use the [kubernetes examples] repository
+[kpt pkg get].  In this guide we will use the [kubernetes examples] repository
 as a public package catalogue.
 
 ### Fetch Command
@@ -68,7 +68,7 @@ to work with using tools such as `less`.
 kpt cfg count examples/
 ```
 
-The `kpt cfg count` command summarizes the resource counts to show the shape of a
+The [`kpt cfg count`][kpt cfg count] command summarizes the resource counts to show the shape of a
 package.
 
 ### Count Example Output 1
@@ -89,7 +89,7 @@ Pod: 45
 kpt cfg count examples/cockroachdb/
 ```
 
-Running `count` on a subdirectory will summarize that directory even if
+Running [`count`][kpt cfg count] on a subdirectory will summarize that directory even if
 it doesn't have a Kptfile.
 
 ### Count Example Output 2
@@ -140,7 +140,7 @@ examples/cockroachdb
 └── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
 ```
 
-In addition to the built-in printable fields, `kpt cfg tree` will print
+In addition to the built-in printable fields, [`kpt cfg tree`][kpt cfg tree] will print
 arbitrary fields by providing the `--field` flag.
 
 ## Filter resources
@@ -152,7 +152,7 @@ kpt cfg grep "spec.replicas>3" examples | kpt cfg tree --replicas
 ```
 
 Grep can be used to filter resources by field values.  The output of
-`kpt cfg grep` is the matching full resource configuration, which
+[`kpt cfg grep`][kpt cfg grep] is the matching full resource configuration, which
 may be piped to tree for rendering.
 
 ### Filter Output
@@ -178,7 +178,7 @@ may be piped to tree for rendering.
 kpt cfg cat examples/cockroachdb
 ```
 
-The raw YAML configuration may be dumped using `kpt cfg cat`.  This will
+The raw YAML configuration may be dumped using [`kpt cfg cat`][kpt cfg cat].  This will
 print only the YAML for Kubernetes resources.
 
 ### Dump Output
@@ -196,7 +196,8 @@ metadata:
 ```
 
 [kubernetes examples]: https://github.com/kubernetes/examples
-[kpt cfg count]: ../../reference/pkg/count/
-[kpt cfg tree]: ../../reference/pkg/get/
-[kpt cfg grep]: ../../reference/pkg/grep/
-[kpt cfg cat]: ../../reference/pkg/cat/
+[kpt cfg count]: ../../../reference/cfg/count/
+[kpt cfg tree]: ../../../reference/cfg/tree/
+[kpt cfg grep]: ../../../reference/cfg/grep/
+[kpt cfg cat]: ../../../reference/cfg/cat/
+[kpt pkg get]: ../../../reference/pkg/get/
