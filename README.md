@@ -26,20 +26,9 @@ brew tap GoogleContainerTools/kpt https://github.com/GoogleContainerTools/kpt.gi
 brew install kpt
 ```
 
-### Install from binaries
+### Download latest release
 
-| Platform
-| ------------------------
-| [Linux (x64)][linux]
-| [macOS (x64)][darwin]
-| [Windows (x64)][windows]
-
-```sh
-# For linux/mac
-chmod +x kpt
-
-./kpt version
-```
+[Latest release][release]
 
 ### Install from source
 
@@ -57,3 +46,4 @@ See the [docs] for more information on how to use `kpt`.
 [darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
 [windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
 [docs]: https://googlecontainertools.github.io/kpt
+[release]: https://github.com/GoogleContainerTools/kpt/releases/latest
