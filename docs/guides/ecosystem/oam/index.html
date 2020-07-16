@@ -14,7 +14,7 @@
   gtag('config', 'UA-171557011-1');
 </script>
 
-<meta name="generator" content="Hugo 0.74.0" />
+<meta name="generator" content="Hugo 0.68.3" />
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
@@ -980,7 +980,7 @@ if (!doNotTrack) {
 	<p>This guidance will demonstrate how to use kpt to manage custom Kubernetes applications (i.e. apps defined by CRDs instead of raw Kubernetes workloads).</p>
 <p>We will use <a href="https://github.com/oam-dev/spec">Open Application Model</a>(OAM) to describe the app for standardization and portability consideration. But you are free to use any Custom Resource to describe your application as well. <a href="https://github.com/crossplane/crossplane">Crossplane</a> will be installed as the OAM runtime for Kubernetes.</p>
 <h2 id="what-is-kpt-and-what-is-oam">What is kpt and what is OAM</h2>
-<p>Both kpt and OAM are outcomes of &ldquo;Configuration-as-Data (or, Infrastructure-as-Data, IaD)&rdquo;.</p>
+<p>Both kpt and OAM are outcomes of &ldquo;Configuration-as-Data (or, Infrastructure-as-Data, IaD)&quot;.</p>
 <p>Pioneered by <a href="https://twitter.com/bgrant0607/status/1221485437153243137">Kubernetes community</a>, Configuration-as-Data emphasizes that &ldquo;configuration should be treated as data and leverage pipelines for manipulation and policy enforcement&rdquo;. In Kubernetes, Configuration-as-Data approach builds upon the design of the <a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md">Kubernetes resource model (KRM)</a>. As a result, today any resource we applied to Kubernetes is a piece of data that represents the desired state for certain part of application or infrastructure in the real system.</p>
 <p>With the heart of Configuration-as-Data, a typical Kubernetes native application management workflow just looks like a &ldquo;pipeline&rdquo;. See the picture below:</p>
 <p><img src="./resource/kpt_oam.png" alt="img"></p>

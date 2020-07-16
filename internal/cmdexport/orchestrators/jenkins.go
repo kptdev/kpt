@@ -148,9 +148,9 @@ func indent(spaces int, multilineString string) string {
 // Starting empty new lines in the template will be trimmed.
 // The indent function is supported in the template.
 func renderTemplate(
-		templateName string,
-		templateString string,
-		data interface{},
+	templateName string,
+	templateString string,
+	data interface{},
 ) (result string, err error) {
 	templateString = strings.TrimLeft(templateString, "\n")
 

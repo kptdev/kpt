@@ -479,7 +479,7 @@ PATTERN
 values through package metadata (OpenAPI).  They are a safer alternative to
 other substitution techniques which do not have the context of the
 structured data &amp;ndash; e.g. using &lt;code&gt;sed&lt;/code&gt; to replace values.&lt;/p&gt;
-&lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters&#34;&gt;deleting setters&lt;/a&gt; guide for more info on creating setters.&lt;/p&gt;
+&lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters/#deleting-a-setter&#34;&gt;setters&lt;/a&gt; guide for more info on creating and deleting setters.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
 &lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# delete a setter replicas&lt;/span&gt;
@@ -487,7 +487,7 @@ kpt cfg delete-setter DIR/ replicas
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
-&lt;pre&gt;&lt;code&gt;kpt cfg delete-setter DIR NAME VALUE
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg delete-setter DIR NAME VALUE
 
 DIR:
   Path to a package directory
@@ -495,7 +495,7 @@ DIR:
 NAME:
   The name of the setter to delete. e.g. replicas
 
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 
       </description>
     </item>

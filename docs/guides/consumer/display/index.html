@@ -14,7 +14,7 @@
   gtag('config', 'UA-171557011-1');
 </script>
 
-<meta name="generator" content="Hugo 0.74.0" />
+<meta name="generator" content="Hugo 0.68.3" />
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
@@ -1003,8 +1003,8 @@ if (!doNotTrack) {
 	<div class="lead">Display the contents of a local package using kpt cfg for rendering.</div>
 	<p><em>Tools can parse and render configuration so it is easier for humans to read.</em></p>
 <h2 id="topics">Topics</h2>
-<p><a href="/reference/pkg/count">kpt cfg count</a>, <a href="/reference/pkg/get">kpt cfg tree</a>,
-<a href="/reference/pkg/count">kpt cfg grep</a>, <a href="/reference/pkg/count">kpt cfg cat</a></p>
+<p><a href="../../../reference/cfg/count/">kpt cfg count</a>, <a href="../../../reference/cfg/tree/">kpt cfg tree</a>,
+<a href="../../../reference/cfg/grep/">kpt cfg grep</a>, <a href="../../../reference/cfg/cat/">kpt cfg cat</a></p>
 <h2 id="steps">Steps</h2>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
@@ -1015,7 +1015,7 @@ if (!doNotTrack) {
 </ol>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <p>Packages are fetched from remote git repository subdirectories with
-<a href="/reference/pkg/get">kpt pkg get</a>.  In this guide we will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
+<a href="../../../reference/pkg/get/">kpt pkg get</a>.  In this guide we will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
 as a public package catalogue.</p>
 <h3 id="fetch-command">Fetch Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/kubernetes/examples/staging/ examples
@@ -1038,7 +1038,7 @@ to work with using tools such as <code>less</code>.</p>
 <h2 id="summarize-resource-counts">Summarize resource counts</h2>
 <h3 id="count-example-command-1">Count Example Command 1</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/
-</code></pre></div><p>The <code>kpt cfg count</code> command summarizes the resource counts to show the shape of a
+</code></pre></div><p>The <a href="../../../reference/cfg/count/"><code>kpt cfg count</code></a> command summarizes the resource counts to show the shape of a
 package.</p>
 <h3 id="count-example-output-1">Count Example Output 1</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">...
@@ -1050,7 +1050,7 @@ Pod: <span style="color:#0000cf;font-weight:bold">45</span>
 ...
 </code></pre></div><h3 id="count-example-command-2">Count Example Command 2</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/cockroachdb/
-</code></pre></div><p>Running <code>count</code> on a subdirectory will summarize that directory even if
+</code></pre></div><p>Running <a href="../../../reference/cfg/count/"><code>count</code></a> on a subdirectory will summarize that directory even if
 it doesn&rsquo;t have a Kptfile.</p>
 <h3 id="count-example-output-2">Count Example Output 2</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">PodDisruptionBudget: <span style="color:#0000cf;font-weight:bold">1</span>
@@ -1077,13 +1077,13 @@ as a tree.  Flags may be provided to print specific fields under the resources.<
 │           └── image: cockroachdb/cockroach:v1.1.0
 ├── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  PodDisruptionBudget cockroachdb-budget
 └── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Service cockroachdb-public
-</code></pre></div><p>In addition to the built-in printable fields, <code>kpt cfg tree</code> will print
+</code></pre></div><p>In addition to the built-in printable fields, <a href="../../../reference/cfg/tree/"><code>kpt cfg tree</code></a> will print
 arbitrary fields by providing the <code>--field</code> flag.</p>
 <h2 id="filter-resources">Filter resources</h2>
 <h3 id="filter-command">Filter Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg grep <span style="color:#4e9a06">&#34;spec.replicas&gt;3&#34;</span> examples <span style="color:#000;font-weight:bold">|</span> kpt cfg tree --replicas
 </code></pre></div><p>Grep can be used to filter resources by field values.  The output of
-<code>kpt cfg grep</code> is the matching full resource configuration, which
+<a href="../../../reference/cfg/grep/"><code>kpt cfg grep</code></a> is the matching full resource configuration, which
 may be piped to tree for rendering.</p>
 <h3 id="filter-output">Filter Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">.
@@ -1099,7 +1099,7 @@ may be piped to tree for rendering.</p>
 </code></pre></div><h2 id="dump-all-resources">Dump all resources</h2>
 <h3 id="dump-command">Dump Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg cat examples/cockroachdb
-</code></pre></div><p>The raw YAML configuration may be dumped using <code>kpt cfg cat</code>.  This will
+</code></pre></div><p>The raw YAML configuration may be dumped using <a href="../../../reference/cfg/cat/"><code>kpt cfg cat</code></a>.  This will
 print only the YAML for Kubernetes resources.</p>
 <h3 id="dump-output">Dump Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">apiVersion: v1
@@ -1188,7 +1188,7 @@ metadata:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/78b63437cf484c33f968344c6be647a22b252e7a">Docs: Inline typescript functions with syntax highlighting (78b63437)</a>
 </div>
 </div>
 
