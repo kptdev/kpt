@@ -94,7 +94,7 @@ VERSION:
   The type of changes to view (local by default). Following types are
   supported:
 
-  local: shows changes in local package relative to upstream source package 
+  local: shows changes in local package relative to upstream source package
          at original version
   remote: shows changes in upstream source package at target version
           relative to original version
