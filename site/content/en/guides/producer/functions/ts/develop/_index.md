@@ -28,7 +28,7 @@ Currently supported platforms: amd64 Linux/Mac
 For the type generation functionality to work, you need a Kubernetes cluster with the [CRD OpenAPI Publishing][crd-openapi] feature which is beta with Kubernetes 1.15.
 
 Alternatively, you can use an existing NPM package with pre-generated types such as the `hello-world`
-package discussed in the [Quickstart](../#developer-quickstart) and skip to [implementing the function](#implement-the-function).
+package discussed in the [Quickstart](../quickstart) and skip to [implementing the function](#implement-the-function).
 
 #### Using a `kind` Cluster
 
@@ -238,12 +238,12 @@ npm run kpt:docker-build -- --tag=latest
 
 [demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
 [catalog]: ../../../../consumer/function/catalog/
-[api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/interfaces/_types_.kptfunc.html
+[api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
 [vscode]: https://code.visualstudio.com/
 [download-node]: https://nodejs.org/en/download/
 [download-kind]: https://github.com/kubernetes-sigs/kind
 [install-node]: https://github.com/nodejs/help/wiki/Installation
-[install-docker]: https://docs.docker.com/v17.09/engine/installation/
+[install-docker]: https://docs.docker.com/engine/installation/
 [crd-openapi]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing
 [run functions]: ../../../../consumer/function/
 [functions concepts]: ../../../../../concepts/functions/

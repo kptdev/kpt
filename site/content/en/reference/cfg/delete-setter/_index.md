@@ -17,7 +17,7 @@ values through package metadata (OpenAPI).  They are a safer alternative to
 other substitution techniques which do not have the context of the
 structured data -- e.g. using `sed` to replace values.
 
-See the [deleting setters] guide for more info on creating setters.
+See the [setters] guide for more info on creating and deleting setters.
 
 ### Examples
 <!--mdtogo:Examples-->
@@ -30,7 +30,7 @@ kpt cfg delete-setter DIR/ replicas
 
 ### Synopsis
 <!--mdtogo:Long-->
-```
+```sh
 kpt cfg delete-setter DIR NAME VALUE
 
 DIR:
@@ -43,4 +43,4 @@ NAME:
 
 <!--mdtogo-->
 
-[deleting setters]: ../../../guides/producer/setters
+[setters]: ../../../guides/producer/setters/#deleting-a-setter
