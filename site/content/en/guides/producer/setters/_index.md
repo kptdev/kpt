@@ -117,11 +117,12 @@ spec:
 ```
 
 #### OpenAPI Validations
+
 Users can input any additional validation constraints during `create-setter`
 operation in the form of openAPI schema. Relevant openAPI specification
 constraints can be provided in json file format. The `set` operation validates
 the input value against provided schema during setter creation and throws an
-error if the input value doesn't meet any of the constraints. 
+error if the input value doesn't meet any of the constraints.
 
 ```sh
 $ cat /path/to/file.json
@@ -351,7 +352,7 @@ openAPI:
 ```
 
 ```sh
-# if you live apply/preview without setting the value 
+# if you live apply/preview without setting the value
 kpt live apply hello-world/
 
 error: setter replicas is required but not set, please set it and try again
@@ -365,19 +366,17 @@ kpt live apply hello-world/
 # Success
 ```
 
-
-
 #### Modifying a Setter
 
-Setters are uniquely identified by their name. create-setter command can be leveraged 
+Setters are uniquely identified by their name. create-setter command can be leveraged
 to modify an existing setter definition. Users may choose to modify setters in following
 scenarios.
 
 1. Add new features to existing setters, such as openAPI validations, marking setter
 as required setter etc.
-2. Add existing setter references to new resources that are added to package. 
+2. Add existing setter references to new resources that are added to package.
 
-Consider an existing package with deployment-foo.yaml and Kptfile as follows. 
+Consider an existing package with deployment-foo.yaml and Kptfile as follows.
 
 ```yaml
 # deployment-foo.yaml
@@ -483,6 +482,7 @@ spec:
 # delete a setter named "replicas"
 kpt cfg delete-setter replicas
 ```
+
 ```yaml
 # Kptfile -- updated
 openAPI:
@@ -494,7 +494,7 @@ kind: Deployment
 metadata:
   name: foo
 spec:
-  replicas: 3 
+  replicas: 3
 ```
 
 [OpenAPI types]: https://swagger.io/docs/specification/data-models/data-types/

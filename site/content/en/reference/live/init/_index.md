@@ -38,6 +38,7 @@ kpt live init DIRECTORY [flags]
 ```
 
 #### Args
+
 ```
 DIR:
   Path to a package directory.  The directory must contain exactly
@@ -45,6 +46,7 @@ DIR:
 ```
 
 #### Flags
+
 ```
 --group-name:
   String name to group applied resources. Must be composed of valid

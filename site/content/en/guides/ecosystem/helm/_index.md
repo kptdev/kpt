@@ -13,7 +13,6 @@ description: >
 Helm charts may be used to generate kpt packages which can then be further
 customized directly.
 
-
 ## Steps
 
 1. [Fetch a Helm chart](#fetch-a-helm-chart)
@@ -56,7 +55,7 @@ wrote ./mysql/templates/deployment.yaml
 ##### Command
 
 ```sh
-$ tree mysql/
+tree mysql/
 ```
 
 ##### Output

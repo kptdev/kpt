@@ -46,6 +46,7 @@ kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 ```
 
 #### Args
+
 ```
 LOCAL_PKG_DIR:
   Local package to update.  Directory must exist and contain a Kptfile
@@ -63,6 +64,7 @@ VERSION:
 ```
 
 #### Flags
+
 ```
 --strategy:
   Controls how changes to the local package are handled.  Defaults to fast-forward.
@@ -87,6 +89,7 @@ VERSION:
 ```
 
 #### Env Vars
+
 ```
 KPT_CACHE_DIR:
   Controls where to cache remote packages when fetching them to update

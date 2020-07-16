@@ -11,9 +11,9 @@ description: >
 
 {{< asciinema key="live-preview" rows="10" preload="1" >}}
 
-The preview command will run through the same steps as apply, but 
+The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
-live cluster state. 
+live cluster state.
 
 ### Examples
 <!--mdtogo:Examples-->
@@ -35,6 +35,7 @@ kpt live preview DIRECTORY [flags]
 ```
 
 #### Args
+
 ```
 DIRECTORY:
   One directory that contain k8s manifests. The directory
@@ -42,6 +43,7 @@ DIRECTORY:
 ```
 
 #### Flags
+
 ```
 --destroy:
   If true, dry-run deletion of all resources.

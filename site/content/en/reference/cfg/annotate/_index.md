@@ -47,12 +47,14 @@ kpt cfg annotate DIR --kv KEY=VALUE...
 ```
 
 #### Args
+
 ```
 DIR:
   Path to a package directory
 ```
 
 #### Flags
+
 ```
 --apiVersion
   Only set annotations on resources with this apiVersion.

@@ -9,11 +9,11 @@ description: >
 
 Download pre-compiled binaries.
 
-| Platform                 
-| ------------------------ 
-| [Linux (x64)][linux]     
-| [macOS (x64)][darwin]    
-| [Windows (x64)][windows] 
+| Platform
+| ------------------------
+| [Linux (x64)][linux]
+| [macOS (x64)][darwin]
+| [Windows (x64)][windows]
 
 ```sh
 # For linux/mac

@@ -53,7 +53,7 @@ REPO_URI:
   URI of a git repository containing 1 or more packages as subdirectories.
   In most cases the .git suffix should be specified to delimit the REPO_URI
   from the PKG_PATH, but this is not required for widely recognized repo
-  prefixes.  If get cannot parse the repo for the directory and version, 
+  prefixes.  If get cannot parse the repo for the directory and version,
   then it will print an error asking for '.git' to be specified as part of
   the argument.
   e.g. https://github.com/kubernetes/examples.git
@@ -82,6 +82,7 @@ LOCAL_DEST_DIRECTORY:
 ```
 
 #### Flags
+
 ```
 --strategy:
   Controls how changes to the local package are handled.

@@ -35,12 +35,14 @@ available in your path will be run with "-u" (unicode) and "-N" (treat new files
 ```
 
 #### Args
+
 ```
 DIR:
   Path to a package directory.  The directory must contain exactly one ConfigMap with the inventory annotation.
 ```
 
 #### Exit Status
+
 ```
 The following exit values shall be returned:
 
