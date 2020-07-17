@@ -18,7 +18,7 @@ Use cases:
 - **Configuration Transformation:** e.g. Update all `PodSecurityPolicy` configurations to improve the
   security posture.
 
-![Functions Demo](/kpt/gif/run.gif)
+![Functions Demo](https://storage.googleapis.com/kpt-functions/docs/run.gif)
 
 Config functions can be run locally or as part of a CI/CD pipeline.
 
