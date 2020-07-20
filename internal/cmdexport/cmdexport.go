@@ -21,10 +21,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/orchestrators"
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/spf13/cobra"
 )
 
 // The `kpt fn export` command.
@@ -137,6 +138,7 @@ func supportedOrchestrators() map[string]orchestrators.Pipeline {
 		"gitlab-ci":      new(orchestrators.GitLabCI),
 		"jenkins":        new(orchestrators.Jenkins),
 		"tekton":         new(orchestrators.TektonPipeline),
+		"circleci":       new(orchestrators.CircleCI),
 	}
 }
 

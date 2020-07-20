@@ -45,12 +45,12 @@ var testCases = []TestCase{
 	{
 		description: "fails on not providing working orchestrator",
 		params:      []string{"dir"},
-		err:         "--workflow flag is required. It must be one of cloud-build, github-actions, gitlab-ci, jenkins, tekton",
+		err:         "--workflow flag is required. It must be one of circleci, cloud-build, github-actions, gitlab-ci, jenkins, tekton",
 	},
 	{
 		description: "fails on an unsupported workflow orchestrator",
 		params:      []string{".", "--workflow", "random-orchestrator"},
-		err:         "unsupported orchestrator random-orchestrator. It must be one of cloud-build, github-actions, gitlab-ci, jenkins, tekton",
+		err:         "unsupported orchestrator random-orchestrator. It must be one of circleci, cloud-build, github-actions, gitlab-ci, jenkins, tekton",
 	},
 	{
 		description: "exports a GitHub Actions pipeline",
@@ -276,6 +276,70 @@ pipeline {
         }
     }
 }
+`,
+	},
+	{
+		description: "exports a CircleCI workflow",
+		params: []string{
+			"resources",
+			"-w",
+			"circleci",
+		},
+		expected: `
+version: "2.1"
+orbs:
+    kpt:
+        executors:
+            kpt-container:
+                docker:
+                  - image: gongpu/kpt:latest
+        commands:
+            kpt-fn-run:
+                steps:
+                  - run: kpt fn run resources
+        jobs:
+            run-functions:
+                executor: kpt-container
+                steps:
+                  - setup_remote_docker
+                  - kpt-fn-run
+workflows:
+    main:
+        jobs:
+          - kpt/run-functions
+`,
+	},
+	{
+		description: "exports a CircleCI workflow with fn-path",
+		params: []string{
+			"resources",
+			"--fn-path",
+			"config/functions.yaml",
+			"-w",
+			"circleci",
+		},
+		expected: `
+version: "2.1"
+orbs:
+    kpt:
+        executors:
+            kpt-container:
+                docker:
+                  - image: gongpu/kpt:latest
+        commands:
+            kpt-fn-run:
+                steps:
+                  - run: kpt fn run resources --fn-path config/functions.yaml
+        jobs:
+            run-functions:
+                executor: kpt-container
+                steps:
+                  - setup_remote_docker
+                  - kpt-fn-run
+workflows:
+    main:
+        jobs:
+          - kpt/run-functions
 `,
 	},
 }
