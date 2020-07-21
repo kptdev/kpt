@@ -128,7 +128,7 @@ func GetGuideCommand(name string) *cobra.Command {
 		Use:   "guide [NAME]",
 		Short: `Print kpt guides`,
 		Long:  getLongDescription(),
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Example: `
   # Print the Apply tutorial
   kpt guide Apply`,
