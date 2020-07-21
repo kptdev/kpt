@@ -77,6 +77,7 @@ LOCAL_PKG_DIR:
 ```
 
 #### Env Vars
+
 ```
 KPT_CACHE_DIR:
   Controls where to cache remote packages during updates.
@@ -129,4 +130,3 @@ Dependencies maybe be updated by updating their `git.ref` field and running `kpt
 against the directory.
 
 [sync-set]: set
-

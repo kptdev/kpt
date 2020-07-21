@@ -57,6 +57,7 @@ kpt pkg diff [DIR@VERSION]
 ```
 
 #### Args
+
 ```
 DIR:
   Local package to compare. Command will fail if the directory doesn't exist, or does not
@@ -68,12 +69,13 @@ VERSION:
 ```
 
 #### Flags
+
 ```
 --diff-type:
   The type of changes to view (local by default). Following types are
   supported:
 
-  local: shows changes in local package relative to upstream source package 
+  local: shows changes in local package relative to upstream source package
          at original version
   remote: shows changes in upstream source package at target version
           relative to original version
@@ -97,6 +99,7 @@ VERSION:
 ```
 
 #### Environment Variables
+
 ```
 KPT_EXTERNAL_DIFF:
    Commandline diffing tool (diff by default) that will be used to show

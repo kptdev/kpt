@@ -81,7 +81,7 @@ wrote ./mysql/templates/svc.yaml
 wrote ./mysql/templates/tests/test.yaml
 wrote ./mysql/templates/deployment.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;command-2&#34;&gt;Command&lt;/h5&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ tree mysql/
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;tree mysql/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;output-1&#34;&gt;Output&lt;/h5&gt;
 &lt;pre&gt;&lt;code&gt;mysql
 └── templates

@@ -30,6 +30,7 @@ kpt live fetch-k8s-schema [flags]
 ```
 
 #### Flags
+
 ```
 --pretty-print
   Format the output before printing

@@ -110,7 +110,7 @@ kpt cfg list-setters helloworld/ --include-subst
   http-port   80      package-default   helloworld port         3
   image-tag   0.1.0   package-default   hello-world image tag   1
   replicas    5       package-default   helloworld replicas     1
-  ------------   ------------------------------------------   ----------                  
+  ------------   ------------------------------------------   ----------
   SUBSTITUTION                    PATTERN                     REFERENCES
   image          gcr.io/kpt-dev/helloworld-gke:${image-tag}   [image-tag]
 ```

@@ -62,7 +62,6 @@ config-map-2 (ConfigMap)
 When the updated package is applied, `config-map-1` is automatically
 deleted (pruned) since it is omitted.
 
-
 In order to take advantage of this automatic clean-up, a package must contain
 a **grouping object template**, which is a ConfigMap with a special label. An example is:
 
@@ -94,7 +93,7 @@ test-grouping-object-17b4dba8
 
 ### Status (reconcile-timeout=<DURATION>)
 
-kpt live apply also has support for computing status for resources. This is 
+kpt live apply also has support for computing status for resources. This is
 useful during apply for making sure that not only are the set of resources applied
 into the cluster, but also that the desired state expressed in the resource are
 fully reconciled in the cluster. An example of this could be applying a deployment. Without
@@ -106,12 +105,13 @@ Status is computed through a set of rules for the built-in types, and
 functionality for polling a set of resources and computing the aggregate status
 for the set. For CRDs, the status computation make a set of assumptions about
 the fields in the status object of the resource and the conditions that
-are set by the custom controller. If CRDs follow the recommendations below, 
+are set by the custom controller. If CRDs follow the recommendations below,
 kpt live apply will be able to correctly compute status
 
 #### Recommendations for CRDs
+
 The custom controller should use the following conditions to signal whether
-a resource has been fully reconciled, and whether it has encountered any 
+a resource has been fully reconciled, and whether it has encountered any
 problems:
 
 **Reconciling**: Indicates that the resource does not yet match its spec. i.e.
@@ -131,16 +131,16 @@ retry forever, so this should not be considered a terminal state.
 
 These conditions adhere to the [Kubernetes design principles]
 which include expressing conditions using abnormal-true polarity. There is
-currently a [proposal] to change to guidance for conditions. If this is 
-accepted, the recommended conditions for kpt might also change, but we will 
+currently a [proposal] to change to guidance for conditions. If this is
+accepted, the recommended conditions for kpt might also change, but we will
 continue to support the current set of conditions.
 
-CRDs should also set the `observedGeneration` field in the status object, a 
+CRDs should also set the `observedGeneration` field in the status object, a
 pattern already common in the built-in types. The controller should update
 this field every time it sees a new generation of the resource. This allows
 the kpt library to distinguish between resources that do not have any
 conditions set because they are fully reconciled, from resources that have no
-conditions set because they have just been created. 
+conditions set because they have just been created.
 
 An example of a resource where the latest change has been observed by
 the controller which is currently in the process of reconciling would be:
@@ -168,8 +168,8 @@ status:
     type: Stalled
 ```
 
-The status for this resource state will be InProgress. So if the 
-`--reconcile-timeout` flag is set, kpt live apply will wait until 
+The status for this resource state will be InProgress. So if the
+`--reconcile-timeout` flag is set, kpt live apply will wait until
 the `Reconciling` condition is `False` before pruning and exiting.
 
 ### Examples
@@ -197,16 +197,18 @@ kpt live apply DIR [flags]
 ```
 
 #### Args
+
 ```
 DIR:
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
 ```
 
-#### Flags:
+#### Flags
+
 ```
 --poll-period:
-  The frequency with which the cluster will be polled to determine 
+  The frequency with which the cluster will be polled to determine
   the status of the applied resources. The default value is every 2 seconds.
 
 --reconcile-timeout:
@@ -215,9 +217,9 @@ DIR:
   resources to reconcile.
 
 --prune-timeout:
-  The threshold for how long to wait for all pruned resources to be 
+  The threshold for how long to wait for all pruned resources to be
   deleted before giving up. If this flag is not set, kpt live apply will not
-  wait. In most cases, it would also make sense to set the 
+  wait. In most cases, it would also make sense to set the
   --prune-propagation-policy to Foreground when this flag is set.
 
 --prune-propagation-policy:
@@ -225,8 +227,8 @@ DIR:
   default value here is Background. The other options are Foreground and Orphan.
 
 --output:
-  This determines the output format of the command. The default value is 
-  events, which will print the events as they happen. The other option is 
+  This determines the output format of the command. The default value is
+  events, which will print the events as they happen. The other option is
   table, which will show the output in a table format.
 ```
 <!--mdtogo-->

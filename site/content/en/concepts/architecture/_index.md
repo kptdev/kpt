@@ -42,7 +42,7 @@ We do this by keeping resources serialized as either JSON or YAML configuration.
 
 - [link](https://changelog.com/gotime/114#t=00:12:09.18)
 
-#### kpt vs kubernetes:
+#### kpt vs kubernetes
 
 - While the Kubernetes control-plane reads / writes configuration data stored by the apiserver
   (e.g. in etcd or some other database), kpt reads / writes configuration data stored as local
@@ -105,7 +105,7 @@ Additionally, kpt offers *functions* as an extension mechanism to simplify publi
 and to provide deeper integration with kpt -- e.g. invoking functions automatically
 after kpt commands.
 
-#### kpt vs kubernetes:
+#### kpt vs kubernetes
 
 - kpt: resource configuration is read, modified and written back to its source (or another destination)
   - resources may be updated using 3-way merge (kpt pkg update)
@@ -127,7 +127,7 @@ generating and transforming it given some context.
 Since all tools read and write configuration data, multiple tools may be composed by
 invoking them against the same configuration data and pipelining their commands.
 
-#### kpt vs kubernetes:
+#### kpt vs kubernetes
 
 - kpt:
   - read / write files, http, ...
@@ -156,7 +156,7 @@ changes to the tool itself.
   that specific instance
   - e.g. an nginx Deployment's `image` may be restricted to the regular expression `^nginx:.*$`
 
-#### kpt vs kubernetes:
+#### kpt vs kubernetes
 
 - kpt: OpenAPI read from multiple sources -- can also be inlined into individual
   configuration objects as comments

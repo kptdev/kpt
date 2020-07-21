@@ -216,9 +216,9 @@ kpt live apply --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:
 &lt;pre&gt;&lt;code&gt;DIR:
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags:&lt;/h4&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--poll-period:
-  The frequency with which the cluster will be polled to determine 
+  The frequency with which the cluster will be polled to determine
   the status of the applied resources. The default value is every 2 seconds.
 
 --reconcile-timeout:
@@ -227,9 +227,9 @@ kpt live apply --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:
   resources to reconcile.
 
 --prune-timeout:
-  The threshold for how long to wait for all pruned resources to be 
+  The threshold for how long to wait for all pruned resources to be
   deleted before giving up. If this flag is not set, kpt live apply will not
-  wait. In most cases, it would also make sense to set the 
+  wait. In most cases, it would also make sense to set the
   --prune-propagation-policy to Foreground when this flag is set.
 
 --prune-propagation-policy:
@@ -237,8 +237,8 @@ kpt live apply --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:
   default value here is Background. The other options are Foreground and Orphan.
 
 --output:
-  This determines the output format of the command. The default value is 
-  events, which will print the events as they happen. The other option is 
+  This determines the output format of the command. The default value is
+  events, which will print the events as they happen. The other option is
   table, which will show the output in a table format.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 

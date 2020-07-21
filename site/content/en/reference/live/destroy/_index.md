@@ -28,6 +28,7 @@ kpt live destroy DIR
 ```
 
 #### Args
+
 ```
 DIR:
   Path to a package directory.  The directory must contain exactly

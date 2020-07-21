@@ -74,12 +74,14 @@ kpt cfg tree [DIR] [flags]
 ```
 
 #### Args
+
 ```
 DIR:
   Path to a package directory.  Defaults to STDIN if not specified.
 ```
 
 #### Flags
+
 ```
 --args:
   if true, print the container args field

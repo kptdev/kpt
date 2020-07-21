@@ -46,12 +46,14 @@ kpt pkg init DIR [flags]
 ```
 
 #### Args
+
 ```
 DIR:
   Init fails if DIR does not already exist
 ```
 
 #### Flags
+
 ```
 --description
   short description of the package. (default "sample description")

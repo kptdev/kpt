@@ -49,6 +49,7 @@ kpt cfg grep QUERY DIR
 ```
 
 #### Args
+
 ```
     QUERY:
       Query to match expressed as 'path.to.field=value'.
@@ -62,6 +63,7 @@ kpt cfg grep QUERY DIR
 ```
 
 #### Flags
+
 ```
     --invert-match, -v
       keep resources NOT matching the specified pattern
