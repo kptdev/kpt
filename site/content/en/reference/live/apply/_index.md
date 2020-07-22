@@ -91,7 +91,7 @@ is added to the name. Example:
 test-grouping-object-17b4dba8
 ```
 
-### Status (reconcile-timeout=<DURATION>)
+### Status (reconcile-timeout=\<DURATION\>)
 
 kpt live apply also has support for computing status for resources. This is
 useful during apply for making sure that not only are the set of resources applied
