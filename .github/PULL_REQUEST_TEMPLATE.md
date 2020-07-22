@@ -10,9 +10,12 @@ but should be mostly understandable without following the links (e.g. when
 reading the git commit log).
 
 If you are updating the documentation, please do it in separate PRs from
-code changes. And use the following structure for your documentation PR:
-* The first commit in the PR should include the changes to the markdown files and the name of the commit should start with `docs:`.
-* The second commit should be the generated content from running `make docs`. The commit message should be `regenerate docs`.
+code changes. Use the following structure for your documentation PR:
+
+* The first commit in the PR should include the changes to the files under site/
+  and the name of the commit should start with `Docs:`.
+* The second commit should be the generated content from running `make docs`.
+  The commit message should be `Regenerate docs`.
 
 **PLEASE REMOVE THIS COMMENT BLOCK BEFORE SUBMITTING THE PR** (the bits
 between the arrows)
