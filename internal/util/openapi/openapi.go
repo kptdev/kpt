@@ -23,34 +23,31 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
 )
 
+const (
+	SchemaSourceBuiltin = "builtin"
+	SchemaSourceFile    = "file"
+	SchemaSourceCluster = "cluster"
+)
+
 // ConfigureOpenAPI sets the openAPI schema in kyaml. It can either
 // fetch the schema from a cluster, read it from file, or just the
 // schema built into kyaml.
 func ConfigureOpenAPI(factory util.Factory, k8sSchemaSource, k8sSchemaPath string) error {
 	switch k8sSchemaSource {
-	case "":
-		openAPISchema, err := FetchOpenAPISchemaFromCluster(factory)
-		if err != nil {
-			// The default behavior is to try to fetch the schema from the
-			// cluster, but fall back on using the builtin one if that doesn't
-			// work
-			return nil
-		}
-		return ConfigureOpenAPISchema(openAPISchema)
-	case "cluster":
+	case SchemaSourceCluster:
 		openAPISchema, err := FetchOpenAPISchemaFromCluster(factory)
 		if err != nil {
 			return fmt.Errorf("error fetching schema from cluster: %v", err)
 		}
 		return ConfigureOpenAPISchema(openAPISchema)
-	case "file":
+	case SchemaSourceFile:
 		openAPISchema, err := ReadOpenAPISchemaFromDisk(k8sSchemaPath)
 		if err != nil {
 			return fmt.Errorf("error reading file at path %s: %v",
 				k8sSchemaPath, err)
 		}
 		return ConfigureOpenAPISchema(openAPISchema)
-	case "builtin":
+	case SchemaSourceBuiltin:
 		return nil
 	default:
 		return fmt.Errorf("unknown schema source %s. Must be one of file, cluster, builtin",
