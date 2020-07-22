@@ -74,6 +74,12 @@ functions-examples-docker:
 	docker build . -f functions/examples/Dockerfile -t gcr.io/kpt-dev/example-functions:v0.1.0
 	docker push gcr.io/kpt-dev/example-functions:v0.1.0
 
+lintdocs:
+	git clone git@github.com:igorshubovych/markdownlint-cli.git
+	(cd markdownlint-cli && npm i)
+	node markdownlint-cli/markdownlint.js --fix site/content || true
+	rm -rf markdownlint-cli
+
 gencatalog:
 	rm site/content/en/guides/consumer/function/catalog/_index.md
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)

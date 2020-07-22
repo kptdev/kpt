@@ -18,14 +18,13 @@ again.
 ## Code reviews
 
 All submissions, including submissions by project members, require review. We
-use GitHub pull requests for this purpose. Consult
-[GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
+use GitHub pull requests for this purpose. Consult [GitHub Help] for more
 information on using pull requests.
 
 ## Community Guidelines
 
-This project follows
-[Google's Open Source Community Guidelines](https://opensource.google.com/conduct/).
+This project follows [Google's Open Source Community Guidelines]
+and a [Code of Conduct].
 
 ## Building the Source
 
@@ -50,39 +49,79 @@ This project follows
 
 ## Contributing to docs
 
+If you are updating the documentation, please do it in separate PRs from
+code changes. Use the following structure for your documentation PR:
+
+* The first commit in the PR should include the changes to the files under [site/]
+  and the name of the commit should start with `Docs:`.
+* The second commit should be the generated content from running `make docs`.
+  The commit message should be `Regenerate docs`.
+
 ### Run the docs locally
 
-- install hugo
-- `make servedocs`
+Make docs changes and test them by using hugo to run the kpt site locally.
+Hugo continuously builds your website as you make changes.
+
+* install hugo
+* `make servedocs`
+
+It's usually a good idea to test locally for the following:
+
+* Broken links
+* Rendering static content
+* Ordering of new pages using the "weight" key in the header
 
 ### Update docs
 
-- `make docs`
-- `git add .`
-- `git commit`
+Docs are under [site/] and use the [docsy] theme for hugo.  Learn more
+about docsy from [docsy docs]. Regenerate the docs with:
 
-### Adding or updating docs
+`make docs`
 
-Docs are under `site/` and use the
-[docsy](https://github.com/google/docsy) theme for hugo.  Learn more
-about docsy [here](https://www.docsy.dev/docs/).
+### Adding or updating catalog functions
+
+The config functions catalog is auto-generated using [this node package].
+Update the catalog.json file with the appropriate information for your function
+like its type (source, sink, validator, transformer, or generator). Regenerate
+the catalog page with:
+
+`make gencatalog`
 
 ### Adding or updating diagrams
 
-- Diagrams are created using Omnigraffle
-- Open site/diagrams/diagrams.graffle in omnigraffle
-- Change the diagram you want (or add a new canvas)
-- **Convert text to shapes!!!** -> Edit -> Objects -> Convert Text to Shapes
-- Export the canvas as an svg to `site/static/images` 
-- **Undo convert text to shapes!!!** with command-z
-  - This is important
-- Reference the image using the `svg` shortcode
+* Diagrams are created using Omnigraffle
+* Open site/diagrams/diagrams.graffle in omnigraffle
+* Change the diagram you want (or add a new canvas)
+* **Convert text to shapes!!!** -> Edit -> Objects -> Convert Text to Shapes
+* Export the canvas as an svg to `site/static/images`
+* **Undo convert text to shapes!!!** with command-z
+  * This is important
+* Reference the image using the `svg` shortcode
 
-## Adding or updating asciinema
+### Adding or updating asciinema
 
-- asciinema casts are under `site/static/casts`
-- add or modify a `*.sh*` script which will run the commands that will
+* asciinema casts are under `site/static/casts`
+* add or modify a `*.sh*` script which will run the commands that will
   be recorded
-- run `make-gif.sh` with the script name (without extension) as the argument
-- add the updated cast to git
-- Reference the cast using the `asciinema` shortcode
+* run `make-gif.sh` with the script name (without extension) as the argument
+* add the updated cast to git
+* Reference the cast using the `asciinema` shortcode
+
+### Docs Hygiene
+
+There are various components to keeping the kpt website updated which can be run when necessary.
+
+This includes:
+
+* Lint docs with markdown lint to standardize them and make them easier to update.
+  `make lintdocs`
+* Run the kpt website through the [W3 Link Checker] in recursive mode and fix warnings and errors.
+
+[GitHub Help]: https://help.github.com/articles/about-pull-requests/
+[Google's Open Source Community Guidelines]: https://opensource.google.com/conduct/
+[Code of Conduct]: CODE_OF_CONDUCT.md
+[docsy]: https://github.com/google/docsy/
+[docsy docs]: https://www.docsy.dev/docs/
+[site/]: site/
+[W3 Link Checker]: https://validator.w3.org/checklink/
+[this node package]: site/content/en/guides/consumer/function/catalog/catalog/
