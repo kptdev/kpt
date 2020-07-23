@@ -157,7 +157,6 @@ func TestTektonTask(t *testing.T) {
 	}
 }
 
-// TODO: TektonPipeline
 var tektonPipelineTestCases = []testCase{
 	{
 		description: "generate a tekton pipeline with a task",
