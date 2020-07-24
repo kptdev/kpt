@@ -15,9 +15,11 @@
 package commands
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
+
+	"github.com/GoogleContainerTools/kpt/internal/cmdexport"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 )
 
 func GetFnCommand(name string) *cobra.Command {
@@ -54,6 +56,6 @@ func GetFnCommand(name string) *cobra.Command {
 	sink.Long = fndocs.SinkShort + "\n" + fndocs.SinkLong
 	sink.Example = fndocs.SinkExamples
 
-	functions.AddCommand(run, source, sink)
+	functions.AddCommand(run, source, sink, cmdexport.ExportCommand())
 	return functions
 }
