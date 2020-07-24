@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config.k8s.io/function: |
+      container:
+        image: gcr.io/kpt-functions/label-namespace
+data:
+  label_name: color
+  label_value: blue
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config.k8s.io/function: |
+      container:
+        image: gcr.io/kpt-functions/gatekeeper-validate
