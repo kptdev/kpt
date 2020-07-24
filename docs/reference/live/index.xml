@@ -133,7 +133,7 @@ then query the grouping object, and calculate the omitted objects, cleaning up
 accordingly. When a grouping object is created in the cluster, a hash suffix
 is added to the name. Example:&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;test-grouping-object-17b4dba8
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;status-reconcile-timeoutduration&#34;&gt;Status (reconcile-timeout=&lt;DURATION&gt;)&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;status-reconcile-timeoutduration&#34;&gt;Status (reconcile-timeout=&amp;lt;DURATION&amp;gt;)&lt;/h3&gt;
 &lt;p&gt;kpt live apply also has support for computing status for resources. This is
 useful during apply for making sure that not only are the set of resources applied
 into the cluster, but also that the desired state expressed in the resource are

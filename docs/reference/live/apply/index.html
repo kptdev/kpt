@@ -14,7 +14,7 @@
   gtag('config', 'UA-171557011-1');
 </script>
 
-<meta name="generator" content="Hugo 0.68.3" />
+<meta name="generator" content="Hugo 0.74.0" />
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
@@ -799,6 +799,29 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">export</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnexport">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/reference/fn/run/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">run</a>
   </li>
   <ul>
@@ -908,7 +931,7 @@ if (!doNotTrack) {
       <ul>
         <li></li>
         <li><a href="#prune">Prune</a></li>
-        <li><a href="#status-reconcile-timeoutduration">Status (reconcile-timeout=<DURATION>)</a></li>
+        <li><a href="#status-reconcile-timeoutduration">Status (reconcile-timeout=&lt;DURATION&gt;)</a></li>
         <li><a href="#examples">Examples</a></li>
         <li><a href="#synopsis">Synopsis</a></li>
       </ul>
@@ -1072,7 +1095,7 @@ then query the grouping object, and calculate the omitted objects, cleaning up
 accordingly. When a grouping object is created in the cluster, a hash suffix
 is added to the name. Example:</p>
 <pre><code>test-grouping-object-17b4dba8
-</code></pre><h3 id="status-reconcile-timeoutduration">Status (reconcile-timeout=<DURATION>)</h3>
+</code></pre><h3 id="status-reconcile-timeoutduration">Status (reconcile-timeout=&lt;DURATION&gt;)</h3>
 <p>kpt live apply also has support for computing status for resources. This is
 useful during apply for making sure that not only are the set of resources applied
 into the cluster, but also that the desired state expressed in the resource are
@@ -1248,12 +1271,14 @@ kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9fee402604a997997b7c7e823366249f2d1c36ff">Updates the kpt generated docs with new flag info (9fee4026)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 21, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8dcfc39b5bad9b4f70427dd157de211dfb569ab4">Fix a doc formatting issue for kpt live apply (8dcfc39b)</a>
 </div>
 </div>
 

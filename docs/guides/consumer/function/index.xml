@@ -85,6 +85,31 @@ git status
     </item>
     
     <item>
+      <title>Guides: Exporting Workflow Config Files</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/</guid>
+      <description>
+        
+        
+        &lt;p&gt;&lt;code&gt;kpt fn export&lt;/code&gt; reduces the work to run kpt functions in workflow orchestrators. It allows to export a workflow pipeline that runs kpt functions alongside necessary configurations. The generated pipeline files can be easily integrated into the existing one manually.&lt;/p&gt;
+&lt;h2 id=&#34;examples&#34;&gt;Examples&lt;/h2&gt;
+&lt;p&gt;These quickstarts cover how to exporting workflow config files for different orchestrators:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;./circleci&#34;&gt;CircleCI&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;./cloud-build&#34;&gt;Cloud Build&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;./github-actions&#34;&gt;GitHub Actions&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;./gitlab-ci&#34;&gt;GitLab CI&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;./jenkins&#34;&gt;Jenkins&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;./tekton&#34;&gt;Tekton&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;em&gt;Unable to find support for your orchestrator? Please file an &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt/issues&#34;&gt;Issue&lt;/a&gt;/&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt/pulls&#34;&gt;Pull Request&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+
+      </description>
+    </item>
+    
+    <item>
       <title>Guides: Functions Catalog</title>
       <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

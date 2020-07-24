@@ -1,0 +1,17 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kpt – Exporting a GitHub Actions Workflow</title>
+    <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/github-actions/</link>
+    <description>Recent content in Exporting a GitHub Actions Workflow on Kpt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://googlecontainertools.github.io/kpt/guides/consumer/function/export/github-actions/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+  </channel>
+</rss>
