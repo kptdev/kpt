@@ -49,7 +49,7 @@ spec:
         mountPath: /source
     steps:
       - name: run-kpt-functions
-        image: gongpu/kpt:latest
+        image: gcr.io/kpt-dev/kpt:latest
         args:
           - fn
           - run
@@ -84,7 +84,7 @@ spec:
         mountPath: /source
     steps:
       - name: run-kpt-functions
-        image: gongpu/kpt:latest
+        image: gcr.io/kpt-dev/kpt:latest
         args:
           - fn
           - run
@@ -121,7 +121,7 @@ spec:
         mountPath: /source
     steps:
       - name: run-kpt-functions
-        image: gongpu/kpt:latest
+        image: gcr.io/kpt-dev/kpt:latest
         args:
           - fn
           - run
@@ -174,7 +174,7 @@ spec:
         mountPath: /source
     steps:
       - name: run-kpt-functions
-        image: gongpu/kpt:latest
+        image: gcr.io/kpt-dev/kpt:latest
         args:
           - fn
           - run
@@ -221,7 +221,7 @@ spec:
         mountPath: /source
     steps:
       - name: run-kpt-functions
-        image: gongpu/kpt:latest
+        image: gcr.io/kpt-dev/kpt:latest
         args:
           - fn
           - run
@@ -270,7 +270,7 @@ spec:
         mountPath: /source
     steps:
       - name: run-kpt-functions
-        image: gongpu/kpt:latest
+        image: gcr.io/kpt-dev/kpt:latest
         args:
           - fn
           - run

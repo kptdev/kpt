@@ -33,7 +33,7 @@ func TestGenerateJenkinsStageStep(t *testing.T) {
 docker run \
 -v $PWD:/app \
 -v /var/run/docker.sock:/var/run/docker.sock \
-gongpu/kpt:latest \
+gcr.io/kpt-dev/kpt:latest \
 fn run /app/resources \
 --fn-path /app/function1.yaml \
 --fn-path /app/function2.yaml`
@@ -61,7 +61,7 @@ pipeline {
                     docker run \
                     -v $PWD:/app \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    gongpu/kpt:latest \
+                    gcr.io/kpt-dev/kpt:latest \
                     fn run /app/resources
                 '''
             }
@@ -89,7 +89,7 @@ pipeline {
                     docker run \
                     -v $PWD:/app \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    gongpu/kpt:latest \
+                    gcr.io/kpt-dev/kpt:latest \
                     fn run /app/resources \
                     --fn-path /app/functions.yaml
                 '''

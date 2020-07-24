@@ -16,8 +16,7 @@ package orchestrators
 
 import "github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
 
-// TODO: update
-const KptImage = "gongpu/kpt:latest"
+const KptImage = "gcr.io/kpt-dev/kpt:latest"
 
 // Pipeline is an abstraction of different workflow orchestrators.
 type Pipeline interface {

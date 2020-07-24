@@ -47,7 +47,7 @@ var circleCIOrbTestCases = []circleCIOrbTestCase{
 executors:
     kpt-container:
         docker:
-          - image: gongpu/kpt:latest
+          - image: gcr.io/kpt-dev/kpt:latest
 commands:
     run-functions:
         steps:
@@ -78,7 +78,7 @@ jobs:
 executors:
     kpt-container:
         docker:
-          - image: gongpu/kpt:latest
+          - image: gcr.io/kpt-dev/kpt:latest
 commands:
     run-functions:
         steps:
@@ -124,7 +124,7 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gongpu/kpt:latest
+                  - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:
@@ -154,7 +154,7 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gongpu/kpt:latest
+                  - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:

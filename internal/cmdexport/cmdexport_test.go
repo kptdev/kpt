@@ -66,7 +66,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Run all kpt functions
-            uses: docker://gongpu/kpt:latest
+            uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
                 args: fn run .
 `,
@@ -91,7 +91,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Run all kpt functions
-            uses: docker://gongpu/kpt:latest
+            uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
                 args: fn run .
 `,
@@ -113,7 +113,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Run all kpt functions
-            uses: docker://gongpu/kpt:latest
+            uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
                 args: fn run . --fn-path function.yaml
 `,
@@ -134,7 +134,7 @@ jobs:
 		},
 		expected: `
 steps:
-  - name: gongpu/kpt:latest
+  - name: gcr.io/kpt-dev/kpt:latest
     args:
       - fn
       - run
@@ -178,7 +178,7 @@ function paths are not within the current working directory:
 		},
 		expected: `
 steps:
-  - name: gongpu/kpt:latest
+  - name: gcr.io/kpt-dev/kpt:latest
     args:
       - fn
       - run
@@ -210,7 +210,7 @@ kpt:
     image: docker
     services:
       - docker:dind
-    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gongpu/kpt:latest
+    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest
         fn run /app/resources --fn-path /app/functions
 `,
 	},
@@ -234,7 +234,7 @@ pipeline {
                     docker run \
                     -v $PWD:/app \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    gongpu/kpt:latest \
+                    gcr.io/kpt-dev/kpt:latest \
                     fn run /app/resources
                 '''
             }
@@ -267,7 +267,7 @@ pipeline {
                     docker run \
                     -v $PWD:/app \
                     -v /var/run/docker.sock:/var/run/docker.sock \
-                    gongpu/kpt:latest \
+                    gcr.io/kpt-dev/kpt:latest \
                     fn run /app/resources \
                     --fn-path /app/functions/label-namespace.yaml \
                     --fn-path /app/functions/gate-keeper.yaml
@@ -292,7 +292,7 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gongpu/kpt:latest
+                  - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:
@@ -325,7 +325,7 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gongpu/kpt:latest
+                  - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:

@@ -25,7 +25,7 @@ var cloudBuildTestCases = []testCase{
 		},
 		expected: `
 steps:
-  - name: gongpu/kpt:latest
+  - name: gcr.io/kpt-dev/kpt:latest
     args:
       - fn
       - run
@@ -40,7 +40,7 @@ steps:
 		},
 		expected: `
 steps:
-  - name: gongpu/kpt:latest
+  - name: gcr.io/kpt-dev/kpt:latest
     args:
       - fn
       - run
@@ -57,7 +57,7 @@ steps:
 		},
 		expected: `
 steps:
-  - name: gongpu/kpt:latest
+  - name: gcr.io/kpt-dev/kpt:latest
     args:
       - fn
       - run
