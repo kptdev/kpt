@@ -35,7 +35,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Run all kpt functions
-            uses: docker://gongpu/kpt:latest
+            uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
                 args: fn run .
 `,
@@ -57,7 +57,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Run all kpt functions
-            uses: docker://gongpu/kpt:latest
+            uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
                 args: fn run . --fn-path functions/
 `,
@@ -79,7 +79,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Run all kpt functions
-            uses: docker://gongpu/kpt:latest
+            uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
                 args: fn run . --fn-path functions1/ functions2/
 `,
