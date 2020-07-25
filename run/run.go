@@ -141,9 +141,8 @@ func GetMain() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
 		"print a stack-trace on failure")
 
-	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaSource, "k8s-schema-source", "",
-		"source for the kubernetes openAPI schema. Default is to first try to fetch "+
-			"it from the cluster given by the context and fall back to the builtin schema")
+	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaSource, "k8s-schema-source",
+		kptopenapi.SchemaSourceBuiltin, "source for the kubernetes openAPI schema")
 	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaPath, "k8s-schema-path",
 		"./openapi.json", "path to the kubernetes openAPI schema file")
 

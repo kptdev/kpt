@@ -41,20 +41,10 @@ func TestSomething(t *testing.T) {
 		expectError          bool
 	}{
 		{
-			name:         "no schemaSource provided with fallback to builtin",
-			schemaSource: "",
-			response: &http.Response{StatusCode: http.StatusNotFound,
-				Header: cmdtesting.DefaultHeader(), Body: cmdtesting.StringBody("")},
+			name:              "no schemaSource provided should lead to error",
+			schemaSource:      "",
 			includesRefString: "#/definitions/io.k8s.api.core.v1.PodSpec",
-			expectError:       false,
-		},
-		{
-			name:         "no schemaSource provided with cluster available",
-			schemaSource: "",
-			response: &http.Response{StatusCode: http.StatusOK,
-				Header: cmdtesting.DefaultHeader(), Body: getSchema(t, "clusterschema.json")},
-			includesRefString: "#/definitions/io.k8s.clusterSchema",
-			expectError:       false,
+			expectError:       true,
 		},
 		{
 			name:         "schemaSource cluster with successful fetch",
