@@ -1211,15 +1211,14 @@ sudo sh get-docker.sh
     stages {
         stage('Run kpt functions') {
             steps {
-                // This requires that docker is installed on the agent. 
-                // And your user, which is usually `jenkins`, should be added to the `docker` group to access `docker.sock`.
+                // This requires that docker is installed on the agent.
+                // And your user, which is usually &quot;jenkins&quot;, should be added to the &quot;docker&quot; group to access &quot;docker.sock&quot;.
                 sh '''
                     docker run \
                     -v $PWD:/app \
                     -v /var/run/docker.sock:/var/run/docker.sock \
                     gcr.io/kpt-dev/kpt:latest \
-                    fn run \
-                    /app/resources \
+                    fn run /app/resources \
                     --fn-path /app/functions.yaml
                 '''
             }
@@ -1247,7 +1246,7 @@ sudo sh get-docker.sh
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 23, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a02fa1031ef57d5a6238da3af43f4c2c4ee8b6f8">Doc: add user guides of kpt fn export (a02fa103)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0b11bd2481364ace2d347d145c54deba8694d419">Docs: update kpt fn export guides (0b11bd24)</a>
 </div>
 </div>
 
