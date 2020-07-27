@@ -72,6 +72,27 @@ of the function:
 kpt fn run DIR/ --image gcr.io/example.com/my-fn -- foo=bar
 ```
 
+### Caveats to running imperatively
+
+#### Arguments interpreted as flags
+
+Some functions like `helm-template`, `istioctl-analyze`, and `kustomize-build` take
+arbitrary command line flags as arguments. Passing arguments such as `--use-kube=false`
+imperatively results in parsing issues. See more details
+[here](https://github.com/GoogleContainerTools/kpt/issues/823/) and
+[here](https://github.com/GoogleContainerTools/kpt/issues/824/).
+
+When passing flags as arguments, it's recommended to run functions declaratively so they
+can be run across various orchestrators.
+
+#### Functions expecting spec field
+
+`kpt fn run` provides any arguments passed imperatively to the container image in a
+`ConfigMap` containing a `data` field. Some config functions may expect arguemnts passed in
+a `spec` field instead. It's recommended to run such functions declaratively by passing a
+`ConfigMap` with a `spec` field. See more details
+[here](https://github.com/GoogleContainerTools/kpt/issues/757).
+
 ## Declaratively run one or more functions
 
 Functions and their input configuration may be declared in files rather than directly
@@ -211,6 +232,31 @@ files. Kpt provides the `--results-dir` flag for users to specify a destination 
 kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
 ```
 
+## Mounting Directories
+
+You can mount a local directory to the container image using the `--mount` flag
+passing the same arguments as for `docker run`. See the [docker docs] for more
+details on the `--mount` flag.
+
+```sh
+kpt fn source helloWorld |
+  kpt fn run --mount type=bind,src="$(pwd)/helloWorld",dst=/source --image gcr.io/kpt-functions/kustomize-build -- path=/source |
+  kpt fn sink .
+```
+
+Kpt provides mounts as read-only by default. Explicitly pass `rw=true` to
+provide a read-write mount. See the example command below.
+
+```sh
+kpt fn source helloWorld |
+  kpt fn run --mount type=bind,src="$(pwd)/helloWorld",dst=/source,rw=true --image gcr.io/kpt-functions/kustomize-build -- path=/source |
+  kpt fn sink .
+```
+
+Depending on the container image, the configuration function may not have
+permissions to access mounted volumes. Check how the function is running inside
+the container in case of permissions issues.
+
 ## Next Steps
 
 - See more examples of functions in the [functions catalog].
@@ -221,3 +267,4 @@ kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
 [functions catalog]: ../../../guides/consumer/function/catalog/
 [function producer docs]: ../../../guides/producer/functions/
 [functions concepts]: ../../../concepts/functions/
+[docker docs]: https://docs.docker.com/engine/reference/commandline/run/#add-bind-mounts-or-volumes-using-the---mount-flag
