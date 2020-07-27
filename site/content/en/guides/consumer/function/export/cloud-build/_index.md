@@ -1,9 +1,9 @@
 ---
-title: "Exporting a Cloud Build Pipeline"
-linkTitle: "Cloud Build"
+title: 'Exporting a Cloud Build Pipeline'
+linkTitle: 'Cloud Build'
 type: docs
 description: >
-    Export a Cloud Build config file that runs kpt functions 
+  Export a Cloud Build config file that runs kpt functions
 ---
 
 In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on [Cloud Build](https://cloud.google.com/cloud-build). This tutorial takes about 5 minutes.
@@ -23,6 +23,7 @@ git remote add origin https://github.com/<USER>/<REPO>.git
 ```
 
 Then you will get a `function-export-example` directory:
+
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
 - `functions.yaml`: runs two functions from [Kpt Functions Catalog](../../catalog) declaratively:
@@ -51,7 +52,7 @@ steps:
       - run
       - resources
       - --fn-path
-      - functions
+      - functions.yaml
 ```
 
 ## Integrating with your existing pipeline

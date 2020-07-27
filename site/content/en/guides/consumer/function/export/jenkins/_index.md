@@ -1,10 +1,10 @@
 ---
-title: "Exporting a Jenkins Pipeline"
-linkTitle: "Jenkins"
+title: 'Exporting a Jenkins Pipeline'
+linkTitle: 'Jenkins'
 type: docs
 no_list: true
 description: >
-    Export a Jenkinsfile that runs kpt functions on Jenkins
+  Export a Jenkinsfile that runs kpt functions on Jenkins
 ---
 
 In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on [Jenkins](https://www.jenkins.io/). To make the generated pipeline work, extra steps that you may need is covered in the tutorial. This tutorial takes about 20~25 minutes.
@@ -24,6 +24,7 @@ git remote add origin https://github.com/<USER>/<REPO>.git
 ```
 
 Then you will get a `function-export-example` directory:
+
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
 - `functions.yaml`: runs two functions from [Kpt Functions Catalog](../../catalog) declaratively:
@@ -82,15 +83,14 @@ pipeline {
     stages {
         stage('Run kpt functions') {
             steps {
-                // This requires that docker is installed on the agent. 
-                // And your user, which is usually `jenkins`, should be added to the `docker` group to access `docker.sock`.
+                // This requires that docker is installed on the agent.
+                // And your user, which is usually "jenkins", should be added to the "docker" group to access "docker.sock".
                 sh '''
                     docker run \
                     -v $PWD:/app \
                     -v /var/run/docker.sock:/var/run/docker.sock \
                     gcr.io/kpt-dev/kpt:latest \
-                    fn run \
-                    /app/resources \
+                    fn run /app/resources \
                     --fn-path /app/functions.yaml
                 '''
             }

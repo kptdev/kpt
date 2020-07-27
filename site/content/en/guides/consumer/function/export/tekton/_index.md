@@ -1,9 +1,9 @@
 ---
-title: "Exporting a Tekton Pipeline"
-linkTitle: "Tekton"
+title: 'Exporting a Tekton Pipeline'
+linkTitle: 'Tekton'
 type: docs
 description: >
-    Export a Tekton pipeline that runs kpt functions 
+  Export a Tekton pipeline that runs kpt functions
 ---
 
 In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on [Tekton](https://tekton.dev/) and modify it to make it fully functional. How to setting up Tekton is also included if you don't have one running yet. This tutorial takes about 20 minutes.
@@ -23,6 +23,7 @@ git remote add origin https://github.com/<USER>/<REPO>.git
 ```
 
 Then you will get a `function-export-example` directory:
+
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
 - `functions.yaml`: runs two functions from [Kpt Functions Catalog](../../catalog) declaratively:
@@ -95,43 +96,43 @@ Running this command will get a `pipeline.yaml` like this:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: run-kpt-functions
+    name: run-kpt-functions
 spec:
-  workspaces:
-    - name: source
-      mountPath: /source
-  steps:
-    - name: run-kpt-functions
-      image: gcr.io/kpt-dev/kpt:latest
-      args:
-        - fn
-        - run
-        - $(workspaces.source.path)/resources
-        - --fn-path
-        - $(workspaces.source.path)/functions.yaml
-      volumeMounts:
-        - name: docker-socket
-          mountPath: /var/run/docker.sock
-  volumes:
-    - name: docker-socket
-      hostPath:
-        path: /var/run/docker.sock
-        type: Socket
+    workspaces:
+      - name: source
+        mountPath: /source
+    steps:
+      - name: run-kpt-functions
+        image: gcr.io/kpt-dev/kpt:latest
+        args:
+          - fn
+          - run
+          - $(workspaces.source.path)/resources
+          - --fn-path
+          - $(workspaces.source.path)/functions.yaml
+        volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+    volumes:
+      - name: docker-socket
+        hostPath:
+            path: /var/run/docker.sock
+            type: Socket
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: run-kpt-functions
+    name: run-kpt-functions
 spec:
-  workspaces:
-    - name: shared-workspace
-  tasks:
-    - name: kpt
-      taskRef:
-        name: run-kpt-functions
-      workspaces:
-        - name: source
-          workspace: shared-workspace
+    workspaces:
+      - name: shared-workspace
+    tasks:
+      - name: kpt
+        taskRef:
+            name: run-kpt-functions
+        workspaces:
+          - name: source
+            workspace: shared-workspace
 ```
 
 ## Integrating with your existing pipeline
@@ -144,57 +145,54 @@ If you do not have one, you can copy the exported `pipeline.yaml` into your proj
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: run-kpt-functions
+    name: run-kpt-functions
 spec:
-  workspaces:
-    - name: source
-      mountPath: /source
-  steps:
-    - name: run-kpt-functions
-      image: gcr.io/kpt-dev/kpt:latest
-      args:
-        - fn
-        - run
-        - $(workspaces.source.path)/resources
-        - --fn-path
-        - $(workspaces.source.path)/functions.yaml
-      volumeMounts:
-        - name: docker-socket
-          mountPath: /var/run/docker.sock
-  volumes:
-    - name: docker-socket
-      hostPath:
-        path: /var/run/docker.sock
-        type: Socket
+    workspaces:
+      - name: source
+        mountPath: /source
+    steps:
+      - name: run-kpt-functions
+        image: gcr.io/kpt-dev/kpt:latest
+        args:
+          - fn
+          - run
+          - $(workspaces.source.path)/resources
+          - --fn-path
+          - $(workspaces.source.path)/functions.yaml
+        volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+    volumes:
+      - name: docker-socket
+        hostPath:
+            path: /var/run/docker.sock
+            type: Socket
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: run-kpt-functions
+    name: run-kpt-functions
 spec:
-  workspaces:
-    - name: shared-workspace
-  tasks:
-    - name: fetch-repository
-      taskRef:
-        name: git-clone
-      workspaces:
-        - name: output
-          workspace: shared-workspace
-      params:
-        - name: url
-          value: "https://github.com/<USER>/<REPO>.git"
-        - name: deleteExisting
-          value: "true"
-
-    - name: kpt
-      taskRef:
-        name: run-kpt-functions
-      runAfter:
-        - fetch-repository
-      workspaces:
-        - name: source
-          workspace: shared-workspace
+    workspaces:
+      - name: shared-workspace
+    tasks:
+      - name: fetch-repository
+        taskRef:
+          name: git-clone
+        workspaces:
+          - name: output
+            workspace: shared-workspace
+        params:
+          - name: url
+            value: "https://github.com/<USER>/<REPO>.git"
+          - name: deleteExisting
+            value: "true"
+      - name: kpt
+        taskRef:
+            name: run-kpt-functions
+        workspaces:
+          - name: source
+            workspace: shared-workspace
 ```
 
 ## Run the pipeline via Tekton CLI
