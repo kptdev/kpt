@@ -2,13 +2,14 @@ const data = require('./catalog.json');
 const table = require('markdown-table');
 
 function tableByType(type) {
-    let t = [['Image', 'Args', 'Description', 'Source', 'Toolchain']];
+    let t = [['Image', 'Args', 'Description', 'Example', 'Source', 'Toolchain']];
     data.filter(r => r.type === type).forEach(r => {
         let desc = r.description;
         if (r.demo === true) {
             desc = '[Demo] ' + desc;
         }
-        const source = `[Link](${r.source})`;
+        const example = `[Example](${r.example})`;
+        const source = `[Source](${r.source})`;
         let toolchain = ``;
         if (r.toolchain === "../../../producer/functions/golang/") {
           toolchain = `[Go Library](${r.toolchain})`;
@@ -17,7 +18,7 @@ function tableByType(type) {
         } else if (r.toolchain === "../../../producer/functions/starlark/") {
           toolchain = `[Starlark Runtime](${r.toolchain})`;
         }
-        t.push([r.image, r.args, desc, source, toolchain]);
+        t.push([r.image, r.args, desc, example, source, toolchain]);
     });
     return table(t);
 }
@@ -25,7 +26,7 @@ function tableByType(type) {
 const README = `---
 title: "Functions Catalog"
 linkTitle: "Functions Catalog"
-weight: 8
+weight: 6
 type: docs
 description: >
     Catalog of Config Functions.

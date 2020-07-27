@@ -233,6 +233,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
+    <lastmod>2020-07-26T12:30:45-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/quickstart/</loc>
     <lastmod>2020-07-13T18:10:44-07:00</lastmod>
   </url>
@@ -270,11 +275,6 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/</loc>
     <lastmod>2020-07-23T03:53:36+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
-    <lastmod>2020-07-08T13:58:53-04:00</lastmod>
   </url>
   
   <url>
