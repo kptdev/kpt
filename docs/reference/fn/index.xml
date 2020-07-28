@@ -107,7 +107,22 @@ kpt sink DIR/
 &lt;code&gt;ConfigMap&lt;/code&gt; containing &lt;code&gt;data: {foo: bar}&lt;/code&gt;. This is used to parameterize the behavior
 of the function:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/ --image gcr.io/example.com/my-fn -- &lt;span style=&#34;color:#000&#34;&gt;foo&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;bar
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;declaratively-run-one-or-more-functions&#34;&gt;Declaratively run one or more functions&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;caveats-to-running-imperatively&#34;&gt;Caveats to running imperatively&lt;/h3&gt;
+&lt;h4 id=&#34;arguments-interpreted-as-flags&#34;&gt;Arguments interpreted as flags&lt;/h4&gt;
+&lt;p&gt;Some functions like &lt;code&gt;helm-template&lt;/code&gt;, &lt;code&gt;istioctl-analyze&lt;/code&gt;, and &lt;code&gt;kustomize-build&lt;/code&gt; take
+arbitrary command line flags as arguments. Passing arguments such as &lt;code&gt;--use-kube=false&lt;/code&gt;
+imperatively results in parsing issues. See more details
+&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt/issues/823/&#34;&gt;here&lt;/a&gt; and
+&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt/issues/824/&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;When passing flags as arguments, it&amp;rsquo;s recommended to run functions declaratively so they
+can be run across various orchestrators.&lt;/p&gt;
+&lt;h4 id=&#34;functions-expecting-spec-field&#34;&gt;Functions expecting spec field&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;kpt fn run&lt;/code&gt; provides any arguments passed imperatively to the container image in a
+&lt;code&gt;ConfigMap&lt;/code&gt; containing a &lt;code&gt;data&lt;/code&gt; field. Some config functions may expect arguemnts passed in
+a &lt;code&gt;spec&lt;/code&gt; field instead. It&amp;rsquo;s recommended to run such functions declaratively by passing a
+&lt;code&gt;ConfigMap&lt;/code&gt; with a &lt;code&gt;spec&lt;/code&gt; field. See more details
+&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt/issues/757&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;declaratively-run-one-or-more-functions&#34;&gt;Declaratively run one or more functions&lt;/h2&gt;
 &lt;p&gt;Functions and their input configuration may be declared in files rather than directly
 on the command line.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt; This is equivalent to the preceding example:&lt;/p&gt;
@@ -198,7 +213,22 @@ container &lt;code&gt;STDERR&lt;/code&gt;.&lt;/p&gt;
 exiting with a non-zero status code. Users may want to store these results separately from configuration
 files. Kpt provides the &lt;code&gt;--results-dir&lt;/code&gt; flag for users to specify a destination to write results to.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;mounting-directories&#34;&gt;Mounting Directories&lt;/h2&gt;
+&lt;p&gt;You can mount a local directory to the container image using the &lt;code&gt;--mount&lt;/code&gt; flag
+passing the same arguments as for &lt;code&gt;docker run&lt;/code&gt;. See the &lt;a href=&#34;https://docs.docker.com/engine/reference/commandline/run/#add-bind-mounts-or-volumes-using-the---mount-flag&#34;&gt;docker docs&lt;/a&gt; for more
+details on the &lt;code&gt;--mount&lt;/code&gt; flag.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; helloWorld &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+  kpt fn run --mount &lt;span style=&#34;color:#000&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;bind,src&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;$(&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;pwd&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;/helloWorld&amp;#34;&lt;/span&gt;,dst&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;/source --image gcr.io/kpt-functions/kustomize-build -- &lt;span style=&#34;color:#000&#34;&gt;path&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;/source &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+  kpt fn sink .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt provides mounts as read-only by default. Explicitly pass &lt;code&gt;rw=true&lt;/code&gt; to
+provide a read-write mount. See the example command below.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; helloWorld &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+  kpt fn run --mount &lt;span style=&#34;color:#000&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;bind,src&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;$(&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;pwd&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;/helloWorld&amp;#34;&lt;/span&gt;,dst&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;/source,rw&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;true&lt;/span&gt; --image gcr.io/kpt-functions/kustomize-build -- &lt;span style=&#34;color:#000&#34;&gt;path&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;/source &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+  kpt fn sink .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Depending on the container image, the configuration function may not have
+permissions to access mounted volumes. Check how the function is running inside
+the container in case of permissions issues.&lt;/p&gt;
+&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;See more examples of functions in the &lt;a href=&#34;../../../guides/consumer/function/catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../../guides/producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;

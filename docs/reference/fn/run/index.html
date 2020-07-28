@@ -929,13 +929,18 @@ if (!doNotTrack) {
 <nav id="TableOfContents">
   <ul>
     <li><a href="#examples">Examples</a></li>
-    <li><a href="#imperatively-run-a-single-function">Imperatively run a single function</a></li>
+    <li><a href="#imperatively-run-a-single-function">Imperatively run a single function</a>
+      <ul>
+        <li><a href="#caveats-to-running-imperatively">Caveats to running imperatively</a></li>
+      </ul>
+    </li>
     <li><a href="#declaratively-run-one-or-more-functions">Declaratively run one or more functions</a></li>
     <li><a href="#scoping-rules">Scoping Rules</a></li>
     <li><a href="#declaring-multiple-functions">Declaring Multiple Functions</a></li>
     <li><a href="#custom-functionconfig">Custom <code>functionConfig</code></a></li>
     <li><a href="#synopsis">Synopsis</a></li>
     <li><a href="#structured-results">Structured Results</a></li>
+    <li><a href="#mounting-directories">Mounting Directories</a></li>
     <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
@@ -1021,7 +1026,22 @@ kpt sink DIR/
 <code>ConfigMap</code> containing <code>data: {foo: bar}</code>. This is used to parameterize the behavior
 of the function:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --image gcr.io/example.com/my-fn -- <span style="color:#000">foo</span><span style="color:#ce5c00;font-weight:bold">=</span>bar
-</code></pre></div><h2 id="declaratively-run-one-or-more-functions">Declaratively run one or more functions</h2>
+</code></pre></div><h3 id="caveats-to-running-imperatively">Caveats to running imperatively</h3>
+<h4 id="arguments-interpreted-as-flags">Arguments interpreted as flags</h4>
+<p>Some functions like <code>helm-template</code>, <code>istioctl-analyze</code>, and <code>kustomize-build</code> take
+arbitrary command line flags as arguments. Passing arguments such as <code>--use-kube=false</code>
+imperatively results in parsing issues. See more details
+<a href="https://github.com/GoogleContainerTools/kpt/issues/823/">here</a> and
+<a href="https://github.com/GoogleContainerTools/kpt/issues/824/">here</a>.</p>
+<p>When passing flags as arguments, it&rsquo;s recommended to run functions declaratively so they
+can be run across various orchestrators.</p>
+<h4 id="functions-expecting-spec-field">Functions expecting spec field</h4>
+<p><code>kpt fn run</code> provides any arguments passed imperatively to the container image in a
+<code>ConfigMap</code> containing a <code>data</code> field. Some config functions may expect arguemnts passed in
+a <code>spec</code> field instead. It&rsquo;s recommended to run such functions declaratively by passing a
+<code>ConfigMap</code> with a <code>spec</code> field. See more details
+<a href="https://github.com/GoogleContainerTools/kpt/issues/757">here</a>.</p>
+<h2 id="declaratively-run-one-or-more-functions">Declaratively run one or more functions</h2>
 <p>Functions and their input configuration may be declared in files rather than directly
 on the command line.</p>
 <p><strong>Example:</strong> This is equivalent to the preceding example:</p>
@@ -1112,7 +1132,22 @@ container <code>STDERR</code>.</p>
 exiting with a non-zero status code. Users may want to store these results separately from configuration
 files. Kpt provides the <code>--results-dir</code> flag for users to specify a destination to write results to.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR --results-dir RESULTS_DIR --fn-path FUNCTIONS_DIR/
-</code></pre></div><h2 id="next-steps">Next Steps</h2>
+</code></pre></div><h2 id="mounting-directories">Mounting Directories</h2>
+<p>You can mount a local directory to the container image using the <code>--mount</code> flag
+passing the same arguments as for <code>docker run</code>. See the <a href="https://docs.docker.com/engine/reference/commandline/run/#add-bind-mounts-or-volumes-using-the---mount-flag">docker docs</a> for more
+details on the <code>--mount</code> flag.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">source</span> helloWorld <span style="color:#000;font-weight:bold">|</span>
+  kpt fn run --mount <span style="color:#000">type</span><span style="color:#ce5c00;font-weight:bold">=</span>bind,src<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#204a87;font-weight:bold">$(</span><span style="color:#204a87">pwd</span><span style="color:#204a87;font-weight:bold">)</span><span style="color:#4e9a06">/helloWorld&#34;</span>,dst<span style="color:#ce5c00;font-weight:bold">=</span>/source --image gcr.io/kpt-functions/kustomize-build -- <span style="color:#000">path</span><span style="color:#ce5c00;font-weight:bold">=</span>/source <span style="color:#000;font-weight:bold">|</span>
+  kpt fn sink .
+</code></pre></div><p>Kpt provides mounts as read-only by default. Explicitly pass <code>rw=true</code> to
+provide a read-write mount. See the example command below.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">source</span> helloWorld <span style="color:#000;font-weight:bold">|</span>
+  kpt fn run --mount <span style="color:#000">type</span><span style="color:#ce5c00;font-weight:bold">=</span>bind,src<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;</span><span style="color:#204a87;font-weight:bold">$(</span><span style="color:#204a87">pwd</span><span style="color:#204a87;font-weight:bold">)</span><span style="color:#4e9a06">/helloWorld&#34;</span>,dst<span style="color:#ce5c00;font-weight:bold">=</span>/source,rw<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">true</span> --image gcr.io/kpt-functions/kustomize-build -- <span style="color:#000">path</span><span style="color:#ce5c00;font-weight:bold">=</span>/source <span style="color:#000;font-weight:bold">|</span>
+  kpt fn sink .
+</code></pre></div><p>Depending on the container image, the configuration function may not have
+permissions to access mounted volumes. Check how the function is running inside
+the container in case of permissions issues.</p>
+<h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>See more examples of functions in the <a href="../../../guides/consumer/function/catalog/">functions catalog</a>.</li>
 <li>Get a quickstart on writing functions from the <a href="../../../guides/producer/functions/">function producer docs</a>.</li>
@@ -1193,7 +1228,7 @@ files. Kpt provides the <code>--results-dir</code> flag for users to specify a d
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/f28edb096721821a1fee9158c7887487b059ce13">Docs: Mounting volumes to kpt fn run (f28edb09)</a>
 </div>
 </div>
 
