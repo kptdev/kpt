@@ -68,8 +68,8 @@ to work with using tools such as `less`.
 kpt cfg count examples/
 ```
 
-The [`kpt cfg count`][kpt cfg count] command summarizes the resource counts to show the shape of a
-package.
+The [`kpt cfg count`][kpt cfg count] command summarizes the resource counts to
+show the shape of a package.
 
 ### Count Example Output 1
 
@@ -89,8 +89,8 @@ Pod: 45
 kpt cfg count examples/cockroachdb/
 ```
 
-Running [`count`][kpt cfg count] on a subdirectory will summarize that directory even if
-it doesn't have a Kptfile.
+Running [`count`][kpt cfg count] on a subdirectory will summarize that
+directory even if it doesn't have a Kptfile.
 
 ### Count Example Output 2
 
@@ -140,8 +140,8 @@ examples/cockroachdb
 └── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
 ```
 
-In addition to the built-in printable fields, [`kpt cfg tree`][kpt cfg tree] will print
-arbitrary fields by providing the `--field` flag.
+In addition to the built-in printable fields, [`kpt cfg tree`][kpt cfg tree]
+will print arbitrary fields by providing the `--field` flag.
 
 ## Filter resources
 
@@ -178,8 +178,8 @@ may be piped to tree for rendering.
 kpt cfg cat examples/cockroachdb
 ```
 
-The raw YAML configuration may be dumped using [`kpt cfg cat`][kpt cfg cat].  This will
-print only the YAML for Kubernetes resources.
+The raw YAML configuration may be dumped using [`kpt cfg cat`][kpt cfg cat].
+This will print only the YAML for Kubernetes resources.
 
 ### Dump Output
 
@@ -187,8 +187,9 @@ print only the YAML for Kubernetes resources.
 apiVersion: v1
 kind: Service
 metadata:
-  # This service is meant to be used by clients of the database. It exposes a ClusterIP that will
-  # automatically load balance connections to the different database pods.
+  # This service is meant to be used by clients of the database. It exposes a
+  # ClusterIP that will automatically load balance connections to the different
+  # database pods.
   name: cockroachdb-public
   labels:
     app: cockroachdb

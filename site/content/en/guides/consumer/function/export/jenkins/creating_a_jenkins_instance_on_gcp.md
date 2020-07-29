@@ -26,9 +26,9 @@ type: docs
         ```shell script
         sudo apt update
         sudo apt install openjdk-8-jdk
-        ```     
-    
-    1.  Then install Jenkins.
+        ```
+
+    1. Then install Jenkins.
 
         ```shell script
         wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
@@ -38,4 +38,4 @@ type: docs
         sudo apt-get install jenkins
         ```
 
-1.  Go to `<instance ip>:8080` to set up Jenkins.
+1. Go to `<instance ip>:8080` to set up Jenkins.

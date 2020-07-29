@@ -57,14 +57,14 @@ If you do not have a Jenkins instance yet, you can refer to this [page] to creat
 
 The exported pipeline leverages docker to run the kpt container, so you also need to [install docker] on the Jenkins agents.
 
-1.  Install docker using the convenience script.
+1. Install docker using the convenience script.
 
     ```shell script
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     ```
 
-1.  Add the `jenkins` user to the `docker` group so that docker commands can be run in Jenkins pipelines.
+1. Add the `jenkins` user to the `docker` group so that docker commands can be run in Jenkins pipelines.
 
     ```shell script
     sudo usermod -aG docker jenkins
@@ -74,11 +74,11 @@ The exported pipeline leverages docker to run the kpt container, so you also nee
 
 ## Create a project on Jenkins
 
-1.  Go to `<instance ip>: 8080`, click `New Item` on the left sidebar to create a new project.
-1.  Enter `function-export-example` as name, select `Pipeline`, and click `OK`.
-1.  In the newly created project, click `Configure` to set up.
-1.  In the `Pipeline` section, select `Pipeline script from SCM` as `Definition`, `Git` as `SCM`, and your repo url as `Repository URL`.
-1.  Click `Save` at the bottom.
+1. Go to `<instance ip>: 8080`, click `New Item` on the left sidebar to create a new project.
+1. Enter `function-export-example` as name, select `Pipeline`, and click `OK`.
+1. In the newly created project, click `Configure` to set up.
+1. In the `Pipeline` section, select `Pipeline script from SCM` as `Definition`, `Git` as `SCM`, and your repo url as `Repository URL`.
+1. Click `Save` at the bottom.
 
 ## Exporting a pipeline
 

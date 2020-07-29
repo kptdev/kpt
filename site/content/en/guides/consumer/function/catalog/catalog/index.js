@@ -8,7 +8,10 @@ function tableByType(type) {
         if (r.demo === true) {
             desc = '[Demo] ' + desc;
         }
-        const example = `[Example](${r.example})`;
+        let example = ``;
+        if (r.example != undefined) {
+          example = `[Example](${r.example})`;
+        }
         const source = `[Source](${r.source})`;
         let toolchain = ``;
         if (r.toolchain === "../../../producer/functions/golang/") {

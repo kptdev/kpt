@@ -59,13 +59,13 @@ Follow the instructions in the [Getting Started] guide of Tekton.
     gcloud container clusters create tekton-cluster --cluster-version=1.15
     ```
 
-1.  Install Tekton to the cluster.
+1. Install Tekton to the cluster.
 
     ```shell script
     kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
     ```
 
-1.  Verify every component listed in the following command has the status `Running`.
+1. Verify every component listed in the following command has the status `Running`.
 
     ```shell script
     kubectl get pods --namespace tekton-pipelines
@@ -80,7 +80,7 @@ To make the exported pipeline fully functional, you probably need to do the foll
     kubectl apply -f git/git-clone.yaml
     ```
 
-1.  Provide a Persistent Volume for storage purposes.
+1. Provide a Persistent Volume for storage purposes.
 
     ```shell script
     cat <<EOF | kubectl apply -f -

@@ -60,7 +60,8 @@ kpt fn run DIR/
 
 #### Functions Catalog
 
-The [catalog] documents config functions implemented using different toolchains like starlark, typescript, and golang.
+The [catalog] documents config functions implemented using different toolchains
+like starlark, typescript, and golang.
 
 #### Developing Functions
 
@@ -74,7 +75,8 @@ The [catalog] documents config functions implemented using different toolchains 
 ## Next Steps
 
 * Learn how to [run functions].
-* Find out how to structure a pipeline of functions from the [functions concepts] page.
+* Find out how to structure a pipeline of functions from the
+  [functions concepts] page.
 * See more examples of functions in the functions [catalog].
 
 [sdk-ts]: ../../guides/producer/functions/ts/

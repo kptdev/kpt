@@ -36,6 +36,14 @@ brew install kpt
 GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 ```
 
+## Run using Docker image
+
+[gcr.io/kpt-dev/kpt]
+
+```sh
+docker run gcr.io/kpt-dev/kpt version
+```
+
 ### [Documentation][docs]
 
 See the [docs] for more information on how to use `kpt`.
@@ -47,3 +55,4 @@ See the [docs] for more information on how to use `kpt`.
 [windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
 [docs]: https://googlecontainertools.github.io/kpt
 [release]: https://github.com/GoogleContainerTools/kpt/releases/latest
+[gcr.io/kpt-dev/kpt]: https://pantheon.corp.google.com/gcr/images/kpt-dev/GLOBAL/kpt/

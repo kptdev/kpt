@@ -88,7 +88,7 @@ gendocs:
 	rm -rf docs/
 	(cd site && env HUGO_ENV="production" hugo)
 
-docs: gencatalog gendocs license
+docs: gencatalog lintdocs gendocs license
 
 servedocs:
 	(cd site && go run github.com/gohugoio/hugo server)
