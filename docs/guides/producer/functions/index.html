@@ -390,12 +390,6 @@ if (!doNotTrack) {
       
       
       
-      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
-      
-      
-      
-      
-      
       <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
       
       
@@ -1150,12 +1144,13 @@ if (!doNotTrack) {
 	<h1>Functions</h1>
 	<div class="lead">Writing config functions to generated, transform, and validate resources.</div>
 	<h2 id="functions-developer-guide">Functions Developer Guide</h2>
-<p>Config functions are conceptually similar to Kubernetes <em>controllers</em> and <em>validating webhooks</em> &ndash;
-they are programs which read resources as input, then write resources as output (creating,
-modifying, deleting, or validating resources).</p>
-<p>Unlike controllers and validating webhooks, config functions can be run outside of the Kubernetes
-control plane.  This allows them to run in more contexts or embedded in other systems.
-For example, functions could be:</p>
+<p>Config functions are conceptually similar to Kubernetes <em>controllers</em> and
+<em>validating webhooks</em> &ndash; they are programs which read resources as input, then
+write resources as output (creating, modifying, deleting, or validating
+resources).</p>
+<p>Unlike controllers and validating webhooks, config functions can be run outside
+of the Kubernetes control plane.  This allows them to run in more contexts or
+embedded in other systems. For example, functions could be:</p>
 <ul>
 <li>manually run locally</li>
 <li>automatically run locally as part of <em>make</em>, <em>mvn</em>, <em>go generate</em>, etc</li>
@@ -1170,14 +1165,15 @@ For example, functions could be:</p>
 
 
 <div class="pageinfo pageinfo-primary">
-<p>Unlikely pure-templating and DSL approaches, functions must be able to both <em>read</em> and <em>write</em>
-resources, and specifically should be able to read resources they have previously written &ndash;
-updating the inputs rather generating new resources.</p>
-<p>This mirrors the level-triggered controller architecture used in the Kubernetes control plane.
-A function reconciles the desired state of the resource configuration to match the declared state
-specified by the functionConfig.</p>
-<p>Functions that implement abstractions should update resources they have generated in the past
-by reading them from the input.</p>
+<p>Unlikely pure-templating and DSL approaches, functions must be able to both
+<em>read</em> and <em>write</em> resources, and specifically should be able to read resources
+they have previously written &ndash; updating the inputs rather generating new
+resources.</p>
+<p>This mirrors the level-triggered controller architecture used in the Kubernetes
+control plane. A function reconciles the desired state of the resource
+configuration to match the declared state specified by the functionConfig.</p>
+<p>Functions that implement abstractions should update resources they have
+generated in the past by reading them from the input.</p>
 
 </div>
 
@@ -1222,8 +1218,8 @@ by reading them from the input.</p>
 <li>(output) validation results</li>
 </ul>
 <p>Items are resources read from some source &ndash; such as a package directory.</p>
-<p>After a function adds, deletes or modifies items, the items will be written to a sink.
-In most cases the sink will be the same as the source (directory).</p>
+<p>After a function adds, deletes or modifies items, the items will be written to
+a sink. In most cases the sink will be the same as the source (directory).</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
@@ -1236,10 +1232,10 @@ In most cases the sink will be the same as the source (directory).</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h3 id="resourcelistfunctionconfig">ResourceList.functionConfig</h3>
 <p>Functions may optionally be configured using the <code>ResourceList.functionConfig</code>
-field.  <code>functionConfig</code> is analogous to a Deployment, and <code>items</code>
-is analogous to the set of all resources in the Deployment controller in-memory cache
-(e.g. all the resources in the cluster) &ndash; this includes the ReplicaSets created, updated
-and deleted for that Deployment.</p>
+field. <code>functionConfig</code> is analogous to a Deployment, and <code>items</code> is analogous
+to the set of all resources in the Deployment controller in-memory cache (e.g.
+all the resources in the cluster) &ndash; this includes the ReplicaSets created,
+updated and deleted for that Deployment.</p>
 <p><em>Functions are responsible for identifying which resources from the <code>items</code> that they own.</em></p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1253,21 +1249,22 @@ and deleted for that Deployment.</p>
 </span></code></pre></div>
 
 <div class="pageinfo pageinfo-primary">
-<p>Some functions use a ConfigMap as the functionConfig instead of introducing a new resource type
-bespoke to the function.</p>
+<p>Some functions use a ConfigMap as the functionConfig instead of introducing a
+new resource type bespoke to the function.</p>
 
 </div>
 
 <h2 id="running-functions">Running Functions</h2>
-<p>Functions may be run either imperatively using the form <code>kpt fn run DIR/ --image fn</code>, or they
-may be run declaratively using the form <code>kpt fn run DIR/</code>.</p>
+<p>Functions may be run either imperatively using the form
+<code>kpt fn run DIR/ --image fn</code>, or they may be run declaratively using the form
+<code>kpt fn run DIR/</code>.</p>
 <p>Either way, <code>kpt fn run</code> will</p>
 <ol>
 <li>read the package directory as input</li>
 <li>encapsulate the package resources in a <code>ResourceList</code></li>
 <li>run the function(s), providing the ResourceList as input</li>
-<li>write the function(s) output back to the package directory; creating, deleting, or updating
-resources</li>
+<li>write the function(s) output back to the package directory; creating,
+deleting, or updating resources</li>
 </ol>
 <h3 id="imperative-run">Imperative Run</h3>
 <p>Functions can be run imperatively by specifying the <code>--image</code> flag.</p>
@@ -1284,23 +1281,24 @@ kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/
 </code></pre></div>
 
 <div class="pageinfo pageinfo-primary">
-<p>If key-value pairs are provided after a <code>--</code> argument, then a ConfigMap will be generated
-with these values as <code>data</code> elements, and the ConfigMap will be set as the functionConfig
-field.</p>
+<p>If key-value pairs are provided after a <code>--</code> argument, then a ConfigMap will be
+generated with these values as <code>data</code> elements, and the ConfigMap will be set
+as the functionConfig field.</p>
 
 </div>
 
 <h3 id="declarative-run">Declarative Run</h3>
-<p>Functions can be specified declaratively using the <code>config.kubernetes.io/function</code>
-annotation on a resource serving as the functionConfig.</p>
+<p>Functions can be specified declaratively using the
+<code>config.kubernetes.io/function</code> annotation on a resource serving as the
+functionConfig.</p>
 <p><code>kpt fn run DIR/</code> (without <code>--image</code>) will:</p>
 <ul>
 <li>read all resources from the package directory</li>
-<li>for each resource with this annotation, kpt will run the specified function (using the resource as
-the functionConfig)
+<li>for each resource with this annotation, kpt will run the specified function
+(using the resource as the functionConfig)
 <ul>
-<li>functions are run sequentially, with the output of each function provided as input
-to the next</li>
+<li>functions are run sequentially, with the output of each function provided
+as input to the next</li>
 </ul>
 </li>
 <li>write the output items back to the package directory</li>
@@ -1308,15 +1306,17 @@ to the next</li>
 
 
 <div class="pageinfo pageinfo-primary">
-<p>If multiple functions are specified in the same yaml file (e.g. separated by <code>---</code>),
-then they are run in the order they are specified.</p>
+<p>If multiple functions are specified in the same yaml file (e.g. separated by
+<code>---</code>), then they are run in the order they are specified.</p>
 
 </div>
 
 <h2 id="declaring-functions">Declaring Functions</h2>
-<p>Functions may be run by declaratively through the <code>config.kubernetes.io/function</code> annotation.</p>
+<p>Functions may be run by declaratively through the
+<code>config.kubernetes.io/function</code> annotation.</p>
 <p>The following is a declaration to run the function implemented by the
-<code>gcr.io/example.com/image:v1.0.0</code> image, and to provide this ExampleFunction as the functionConfig.</p>
+<code>gcr.io/example.com/image:v1.0.0</code> image, and to provide this ExampleFunction as
+the functionConfig.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleFunction<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1325,15 +1325,15 @@ then they are run in the order they are specified.</p>
 </span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/example.com/image<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#0000cf;font-weight:bold">.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="function-scoping">Function Scoping</h2>
-<p>Functions are scoped to resources that live in their same directory, or subdirectories of their
-directory.</p>
-<p><code>kpt fn run DIR/</code> will recursively traverse DIR/ looking for declared functions and invoking
-them &ndash; passing in only those resources scoped to the function.</p>
+<p>Functions are scoped to resources that live in their same directory, or
+subdirectories of their directory.</p>
+<p><code>kpt fn run DIR/</code> will recursively traverse DIR/ looking for declared functions
+and invoking them &ndash; passing in only those resources scoped to the function.</p>
 <h2 id="validation">Validation</h2>
 <h3 id="resourcelistresults">ResourceList.results</h3>
-<p>Functions may define validation results through the <code>results</code> field.
-When functions are run using the <code>--results-dir</code>, each function&rsquo;s results field will be written
-to a file under the specified directory.</p>
+<p>Functions may define validation results through the <code>results</code> field. When
+functions are run using the <code>--results-dir</code>, each function&rsquo;s results field will
+be written to a file under the specified directory.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
@@ -1369,10 +1369,10 @@ to a file under the specified directory.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#204a87;font-weight:bold">severity</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>info<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">     </span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="deferring-failure">Deferring Failure</h2>
-<p>When running multiple validation functions, it may be desired to defer failures until all functions
-have been run so that the results of all functions are written to the results directory.
-Functions can specify that failures should be deferred by specifying <code>deferFailure</code> in the
-declaration.</p>
+<p>When running multiple validation functions, it may be desired to defer failures
+until all functions have been run so that the results of all functions are
+written to the results directory. Functions can specify that failures should be
+deferred by specifying <code>deferFailure</code> in the declaration.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleFunction<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1382,9 +1382,11 @@ declaration.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/example.com/image<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#0000cf;font-weight:bold">.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">deferFailure</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># continue running functions if this fails, and fail at the end</span><span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="functionconfig-for-imperative-runs">FunctionConfig for imperative runs</h2>
-<p>When functions are run imperatively, the functionConfig may be generated from commandline arguments.</p>
-<p>When functions are run using the form <code>kpt fn run DIR/ --image foo:v1 -- a=b c=d</code>, the arguments
-following <code>--</code> are parsed into a ConfigMap which is set as the functionConfig.</p>
+<p>When functions are run imperatively, the functionConfig may be generated from
+commandline arguments.</p>
+<p>When functions are run using the form
+<code>kpt fn run DIR/ --image foo:v1 -- a=b c=d</code>, the arguments following <code>--</code> are
+parsed into a ConfigMap which is set as the functionConfig.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
@@ -1394,8 +1396,8 @@ following <code>--</code> are parsed into a ConfigMap which is set as the functi
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>If the first argument after <code>--</code> is <em>not</em> a key=value pair, it will be used as the
-functionConfig type.</p>
+</span></code></pre></div><p>If the first argument after <code>--</code> is <em>not</em> a key=value pair, it will be used as
+the functionConfig type.</p>
 <p><code>kpt fn run DIR/ --image foo:v1 -- Foo a=b c=d</code></p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1408,7 +1410,8 @@ functionConfig type.</p>
 </span></code></pre></div><h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Learn how to <a href="../../consumer/function/">run functions</a>.</li>
-<li>Find out how to structure a pipeline of functions from the <a href="../../../concepts/functions/">functions concepts</a> page.</li>
+<li>Find out how to structure a pipeline of functions from the
+<a href="../../../concepts/functions/">functions concepts</a> page.</li>
 <li>Consult the <a href="../../../reference/fn/">fn command reference</a>.</li>
 </ul>
 
@@ -1532,14 +1535,12 @@ functionConfig type.</p>
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/58c7dec1dea573854cc74942007cc7106045de62">Rename kpt function to config function (58c7dec1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
 </div>
 </div>
 

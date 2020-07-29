@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/installation/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/installation/docker/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,16 +32,19 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Installation | Kpt</title><meta property="og:title" content="Installation" />
-<meta property="og:description" content="Kubernetes configuration package management" />
+<title>docker | Kpt</title><meta property="og:title" content="docker" />
+<meta property="og:description" content="Run kpt in a docker container.
+" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/installation/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/installation/docker/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Installation">
-<meta itemprop="description" content="Kubernetes configuration package management">
+<meta itemprop="name" content="docker">
+<meta itemprop="description" content="Run kpt in a docker container.
+">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Installation"/>
-<meta name="twitter:description" content="Kubernetes configuration package management"/>
+<meta name="twitter:title" content="docker"/>
+<meta name="twitter:description" content="Run kpt in a docker container.
+"/>
 
 
 <script type="application/javascript">
@@ -73,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Installation | Kpt</title>
+    <title>docker | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -188,7 +191,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/installation/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Installation</a>
+    <a  href="/kpt/installation/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Installation</a>
   </li>
   <ul>
     <li class="collapse show" id="kptinstallation">
@@ -205,10 +208,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/installation/gcloud/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">gcloud</a>
+    <a  href="/kpt/installation/gcloud/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">gcloud</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptinstallationgcloud">
+    <li class="collapse " id="kptinstallationgcloud">
       
       
       
@@ -228,10 +231,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/installation/homebrew/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">homebrew</a>
+    <a  href="/kpt/installation/homebrew/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">homebrew</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptinstallationhomebrew">
+    <li class="collapse " id="kptinstallationhomebrew">
       
       
       
@@ -251,10 +254,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/installation/binaries/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">binaries</a>
+    <a  href="/kpt/installation/binaries/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">binaries</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptinstallationbinaries">
+    <li class="collapse " id="kptinstallationbinaries">
       
       
       
@@ -274,7 +277,7 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/installation/docker/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">docker</a>
+    <a  href="/kpt/installation/docker/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">docker</a>
   </li>
   <ul>
     <li class="collapse show" id="kptinstallationdocker">
@@ -297,10 +300,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/installation/source/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">source code</a>
+    <a  href="/kpt/installation/source/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">source code</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptinstallationsource">
+    <li class="collapse " id="kptinstallationsource">
       
       
       
@@ -335,8 +338,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/installation/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Installation" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/installation/docker/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=docker" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -362,8 +365,18 @@ if (!doNotTrack) {
 
 
 
-<li class="breadcrumb-item active" aria-current="page">
+
+
+
+<li class="breadcrumb-item" >
 	<a href="https://googlecontainertools.github.io/kpt/installation/">Installation</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://googlecontainertools.github.io/kpt/installation/docker/">docker</a>
 </li>
 
 	</ol>
@@ -371,9 +384,12 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Installation</h1>
-	
-	
+	<h1>docker</h1>
+	<div class="lead">Run kpt in a docker container.</div>
+	<p>Use the docker image.</p>
+<p><a href="https://pantheon.corp.google.com/gcr/images/kpt-dev/GLOBAL/kpt/">gcr.io/kpt-dev/kpt</a></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker run gcr.io/kpt-dev/kpt version
+</code></pre></div>
         <div class="section-index">
     
     
@@ -382,48 +398,13 @@ if (!doNotTrack) {
     <hr class="panel-line">
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/installation/gcloud/">gcloud</a>
-                    </h5>
-                    <p>Install as a gcloud component.</p>
-                </div>
+        
             
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/installation/homebrew/">homebrew</a>
-                    </h5>
-                    <p>Install as a brew tap.</p>
-                </div>
-            
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/installation/binaries/">binaries</a>
-                    </h5>
-                    <p>Download and run statically compiled go binaries.</p>
-                </div>
-            
         
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/installation/docker/">docker</a>
-                    </h5>
-                    <p>Run kpt in a docker container.</p>
-                </div>
-            
-        
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/installation/source/">source code</a>
-                    </h5>
-                    <p>Dust off your go compiler and install from source.</p>
-                </div>
             
         
             
@@ -433,7 +414,7 @@ if (!doNotTrack) {
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
 </div>
 </div>
 

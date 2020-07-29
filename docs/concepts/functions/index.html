@@ -379,24 +379,34 @@ if (!doNotTrack) {
 	<h1>Functions</h1>
 	<div class="lead">Functions goals and specification</div>
 	<h2 id="introduction">Introduction</h2>
-<p>Config Functions are client-side programs that make it easy to operate on a repository of Kubernetes configuration files.</p>
+<p>Config Functions are client-side programs that make it easy to operate on a
+repository of Kubernetes configuration files.</p>
 <p>Use cases:</p>
 <ul>
-<li><strong>Configuration Validation:</strong> e.g. Require all <code>Namespace</code> configurations to have a <code>cost-center</code> label.</li>
-<li><strong>Configuration Generation:</strong> e.g. Provide a blueprint for new services by generating a <code>Namespace</code> with organization-mandated defaults for <code>RBAC</code>, <code>ResourceQuota</code>, etc.</li>
-<li><strong>Configuration Transformation:</strong> e.g. Update all <code>PodSecurityPolicy</code> configurations to improve the
-security posture.</li>
+<li><strong>Configuration Validation:</strong> e.g. Require all <code>Namespace</code> configurations to
+have a <code>cost-center</code> label.</li>
+<li><strong>Configuration Generation:</strong> e.g. Provide a blueprint for new services by
+generating a <code>Namespace</code> with organization-mandated defaults for <code>RBAC</code>,
+<code>ResourceQuota</code>, etc.</li>
+<li><strong>Configuration Transformation:</strong> e.g. Update all <code>PodSecurityPolicy</code>
+configurations to improve the security posture.</li>
 </ul>
 <p><img src="https://storage.googleapis.com/kpt-functions/docs/run.gif" alt="Functions Demo"></p>
 <p>Config functions can be run locally or as part of a CI/CD pipeline.</p>
-<p>In GitOps workflows, config functions read and write configuration files from a Git repo. Changes
-to the system authored by humans and mutating config functions are reviewed before being committed to the repo. Config functions
-can be run as pre-commit or post-commit steps to validate configurations before they are applied to a cluster.</p>
+<p>In GitOps workflows, config functions read and write configuration files from a
+Git repo. Changes to the system authored by humans and mutating config
+functions are reviewed before being committed to the repo. Config functions can
+be run as pre-commit or post-commit steps to validate configurations before
+they are applied to a cluster.</p>
 <h2 id="why-functions">Why Functions</h2>
-<p>We build functions using the same <a href="../architecture/#influences">architecture influences</a> as the rest of kpt, specifically:</p>
+<p>We build functions using the same <a href="../architecture/#influences">architecture influences</a> as the rest of kpt,
+specifically:</p>
 <ul>
-<li><strong>Configuration as data:</strong> enables us to programmatically manipulate configurations using stateless programs called <em>functions</em>.</li>
-<li><strong>Unix philosophy:</strong> inspires us to develop a <a href="../../guides/consumer/function/catalog/">catalog</a> of useful, interoperable functions which implement the <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md">Configuration Functions Specification</a>.</li>
+<li><strong>Configuration as data:</strong> enables us to programmatically manipulate
+configurations using stateless programs called <em>functions</em>.</li>
+<li><strong>Unix philosophy:</strong> inspires us to develop a <a href="../../guides/consumer/function/catalog/">catalog</a> of useful,
+interoperable functions which implement the
+<a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md">Configuration Functions Specification</a>.</li>
 </ul>
 <h2 id="functions-concepts">Functions Concepts</h2>
 <p>At a high level, a function can be conceptualized like so:</p>
@@ -406,11 +416,12 @@ can be run as pre-commit or post-commit steps to validate configurations before 
 <img src="https://googlecontainertools.github.io/kpt//images/func.png" />
 
 <ul>
-<li><code>FUNC</code>: A program, packaged as a container, that performs CRUD (Create, Read, Update,
-Delete) operations on the input.</li>
+<li><code>FUNC</code>: A program, packaged as a container, that performs CRUD (Create, Read,
+Update, Delete) operations on the input.</li>
 <li><code>input</code>: A Kubernetes List type containing objects to operate on.</li>
 <li><code>output</code>: A Kubernetes List type containing the resultant Kubernetes objects.</li>
-<li><code>functionConfig</code>: An optional Kubernetes object used to parameterize the function&rsquo;s behavior.</li>
+<li><code>functionConfig</code>: An optional Kubernetes object used to parameterize the
+function&rsquo;s behavior.</li>
 </ul>
 <p>See <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md">Configuration Functions Specification</a> for further details.</p>
 <p>There are two special-case functions: source functions and sink functions.</p>
@@ -421,8 +432,8 @@ Delete) operations on the input.</li>
 
 <img src="https://googlecontainertools.github.io/kpt//images/source.png" />
 
-<p>Instead, the function typically produces the <code>output</code> by reading configurations from an external
-system (e.g. reading files from a filesystem).</p>
+<p>Instead, the function typically produces the <code>output</code> by reading configurations
+from an external system (e.g. reading files from a filesystem).</p>
 <p>Note: Source functions are <em>function</em>. They are invoked by command <code>kpt fn run</code> instead of <code>kpt fn source</code>.</p>
 <h3 id="sink-function">Sink Function</h3>
 <p>A Sink Function produces no <code>output</code>:</p>
@@ -431,7 +442,8 @@ system (e.g. reading files from a filesystem).</p>
 
 <img src="https://googlecontainertools.github.io/kpt//images/sink.png" />
 
-<p>Instead, the function typically writes configurations to an external system (e.g. writing files to a filesystem).</p>
+<p>Instead, the function typically writes configurations to an external system
+(e.g. writing files to a filesystem).</p>
 <p>Note: Sink functions are <em>function</em>. They are invoked by command <code>kpt fn run</code> instead of <code>kpt fn sink</code>.</p>
 <h3 id="pipeline">Pipeline</h3>
 <p>Functions can be composed into a pipeline:</p>
@@ -469,7 +481,7 @@ system (e.g. reading files from a filesystem).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d134d5bcca9977592eebdbb99fdf91040ccd9ccc">Docs: Update doc for source and sink functions (d134d5bc)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
 </div>
 </div>
 

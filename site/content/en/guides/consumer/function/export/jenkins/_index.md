@@ -70,7 +70,7 @@ The exported pipeline leverages docker to run the kpt container, so you also nee
     sudo usermod -aG docker jenkins
     ```
 
-1.  Reboot the VM to let it take effect.
+1. Reboot the VM to let it take effect.
 
 ## Create a project on Jenkins
 
