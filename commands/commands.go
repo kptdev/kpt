@@ -19,6 +19,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
+	"github.com/GoogleContainerTools/kpt/internal/cmdfix"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
@@ -33,6 +34,7 @@ func GetAnthosCommands(name string) []*cobra.Command {
 		cmdget.NewCommand(name), cmdinit.NewCommand(name),
 		cmdsync.NewCommand(name),
 		cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
+		cmdfix.NewCommand(name),
 	}
 
 	// apply cross-cutting issues to commands
