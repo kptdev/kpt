@@ -10,19 +10,27 @@ In this tutorial, you will pull an example blueprint that declares Kubernetes re
 
 ## Before you begin
 
-Before diving into the following tutorial, you need to create a public repo on GitHub, e.g. `function-export-example`.
+Before diving into the following tutorial, you may need to create a public repo on GitHub if you don't have one yet, e.g. `function-export-example`.
 
-On your local machine, use `kpt pkg get` to fetch source files of this tutorial:
+On your local machine, create an empty directory:
 
 ```shell script
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint function-export-example
+mkdir function-export-example
 cd function-export-example
+```
+
+All commands must be run at the root of this directory.
+
+Use `kpt pkg get` to fetch source files of this tutorial:
+
+```shell script
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 # Init git
 git init
 git remote add origin https://github.com/<USER>/<REPO>.git
 ```
 
-Then you will get a `function-export-example` directory:
+Then you will get an `exmaple-package` directory:
 
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
@@ -30,16 +38,10 @@ Then you will get a `function-export-example` directory:
   - `gatekeeper-validate` enforces constraints over all resources.
   - `label-namespace` adds a label to all Namespaces.
 
-All commands must be run at the root of this directory.
-
 ## Exporting a workflow
 
 ```shell script
-kpt fn export \
-    resources \
-    --fn-path functions.yaml \
-    --workflow github-actions \
-    --output main.yaml
+kpt fn export exmaple-package --workflow github-actions --output main.yaml
 ```
 
 Running the command above will produce a `main.yaml` file that looks like this:
@@ -57,7 +59,7 @@ jobs:
           - name: Run all kpt functions
             uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
-                args: fn run resources --fn-path functions.yaml
+                args: fn run exmaple-package
 ```
 
 ## Integrating with your existing pipeline
@@ -80,7 +82,7 @@ jobs:
           - name: Run all kpt functions
             uses: docker://gcr.io/kpt-dev/kpt:latest
             with:
-                args: fn run resources --fn-path functions.yaml
+                args: fn run exmaple-package
 ```
 
 ## Viewing the result on GitHub Actions

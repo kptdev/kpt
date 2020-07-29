@@ -24,14 +24,17 @@
         
         &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on &lt;a href=&#34;https://circleci.com/&#34;&gt;CircleCI&lt;/a&gt; and merge it manually to your existing pipeline. This tutorial takes about 10 minutes.&lt;/p&gt;
 &lt;h2 id=&#34;before-you-begin&#34;&gt;Before you begin&lt;/h2&gt;
-&lt;p&gt;Before diving into the following tutorial, you need to create a public repo on GitHub, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;On your local machine, use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;p&gt;Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&amp;rsquo;t have one yet, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;On your local machine, create an empty directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;mkdir &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
+&lt;p&gt;Use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Init git&lt;/span&gt;
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get a &lt;code&gt;function-export-example&lt;/code&gt; directory:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;exmaple-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
@@ -42,35 +45,30 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
 &lt;h2 id=&#34;exporting-a-pipeline&#34;&gt;Exporting a pipeline&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    resources &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --fn-path functions.yaml &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --workflow circleci &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --output config.yml
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; exmaple-package --workflow circleci --output config.yml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running this command will get a &lt;code&gt;config.yml&lt;/code&gt; like this:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;version&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;2.1&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;orbs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;     &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;         &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;executors&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;             &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt-container&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                 &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;docker&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                   &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/kpt&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;latest&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;         &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;commands&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;             &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt-fn-run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                 &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;steps&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                   &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;--fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;         &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;jobs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;             &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;run-functions&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                 &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;executor&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt-container&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                 &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;steps&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                   &lt;/span&gt;- setup_remote_docker&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                   &lt;/span&gt;- kpt-fn-run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;workflows&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;     &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;main&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;         &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;jobs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;           &lt;/span&gt;- kpt/run-functions&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;orbs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;executors&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt-container&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;docker&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                  &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/kpt&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;latest&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;commands&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt-fn-run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;steps&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                  &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;jobs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;run-functions&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;executor&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt-container&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;steps&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                  &lt;/span&gt;- setup_remote_docker&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                  &lt;/span&gt;- kpt-fn-run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;workflows&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;main&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;jobs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- kpt/run-functions&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;integrating-with-your-existing-pipeline&#34;&gt;Integrating with your existing pipeline&lt;/h2&gt;
 &lt;p&gt;To merge the exported file with your existing pipeline, you can:&lt;/p&gt;
 &lt;ol&gt;
@@ -89,7 +87,7 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;commands&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt-fn-run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;steps&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                  &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;--fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                  &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;run&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;jobs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;run-functions&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;executor&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt-container&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -131,14 +129,17 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
         
         &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://cloud.google.com/cloud-build&#34;&gt;Cloud Build&lt;/a&gt;. This tutorial takes about 5 minutes.&lt;/p&gt;
 &lt;h2 id=&#34;before-you-begin&#34;&gt;Before you begin&lt;/h2&gt;
-&lt;p&gt;Before diving into the following tutorial, you need to create a public repo on GitHub, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;On your local machine, use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;p&gt;Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&amp;rsquo;t have one yet, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;On your local machine, create an empty directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;mkdir &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
+&lt;p&gt;Use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Init git&lt;/span&gt;
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get a &lt;code&gt;function-export-example&lt;/code&gt; directory:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;exmaple-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
@@ -149,28 +150,21 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
 &lt;h2 id=&#34;exporting-a-pipeline&#34;&gt;Exporting a pipeline&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    resources &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --fn-path functions.yaml &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --workflow cloud-build &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --output cloudbuild.yaml
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; exmaple-package --workflow cloud-build --output cloudbuild.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running this command will generate a &lt;code&gt;cloudbuild.yaml&lt;/code&gt; like this:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;steps&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/kpt&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;latest&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;args&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- --fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;integrating-with-your-existing-pipeline&#34;&gt;Integrating with your existing pipeline&lt;/h2&gt;
 &lt;p&gt;Now you can manually copy and paste the generated content into your existing build config file.&lt;/p&gt;
 &lt;p&gt;If you do not have one yet, you can simply put the file in the root of your project. It is fully functional.&lt;/p&gt;
 &lt;h2 id=&#34;viewing-the-result-on-cloud-build&#34;&gt;Viewing the result on Cloud Build&lt;/h2&gt;
 &lt;p&gt;Run this command will trigger a build:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;gcloud builds submit --config cloudbuild.yaml
+&lt;pre&gt;&lt;code&gt;gcloud builds submit .
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Then you can view the result on &lt;a href=&#34;https://console.cloud.google.com/cloud-build/builds&#34;&gt;Cloud Build&lt;/a&gt;.&lt;/p&gt;
 
       </description>
@@ -187,14 +181,17 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
         
         &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on &lt;a href=&#34;https://github.com/features/actions&#34;&gt;GitHub Actions&lt;/a&gt; and modify it manually to make it fully functional. This tutorial takes about 10 minutes.&lt;/p&gt;
 &lt;h2 id=&#34;before-you-begin&#34;&gt;Before you begin&lt;/h2&gt;
-&lt;p&gt;Before diving into the following tutorial, you need to create a public repo on GitHub, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;On your local machine, use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;p&gt;Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&amp;rsquo;t have one yet, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;On your local machine, create an empty directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;mkdir &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
+&lt;p&gt;Use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Init git&lt;/span&gt;
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get a &lt;code&gt;function-export-example&lt;/code&gt; directory:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;exmaple-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
@@ -205,13 +202,8 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
 &lt;h2 id=&#34;exporting-a-workflow&#34;&gt;Exporting a workflow&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    resources &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --fn-path functions.yaml &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --workflow github-actions &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --output main.yaml
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; exmaple-package --workflow github-actions --output main.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running the command above will produce a &lt;code&gt;main.yaml&lt;/code&gt; file that looks like this:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;on&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -225,7 +217,7 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;all&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;functions&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;uses&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;docker&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;//gcr.io/kpt-dev/kpt&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;latest&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;with&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;args&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;--fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;args&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;integrating-with-your-existing-pipeline&#34;&gt;Integrating with your existing pipeline&lt;/h2&gt;
 &lt;p&gt;Now you can manually copy and paste the content of the &lt;code&gt;main.yaml&lt;/code&gt; file into your existing GitHub Actions workflow.
 If you do not have one, you can copy the content of the exported &lt;code&gt;main.yaml&lt;/code&gt; file into &lt;code&gt;.github/workflows/main.yaml&lt;/code&gt; in your project root. To make it fully functional, you may add a &lt;code&gt;checkout&lt;/code&gt; step before the &lt;code&gt;Run all kpt functions&lt;/code&gt; step to pull source files from your repo:&lt;/p&gt;
@@ -243,7 +235,7 @@ If you do not have one, you can copy the content of the exported &lt;code&gt;mai
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;all&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;kpt&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;functions&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;uses&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;docker&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;//gcr.io/kpt-dev/kpt&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;latest&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;with&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;args&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;--fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;                &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;args&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;viewing-the-result-on-github-actions&#34;&gt;Viewing the result on GitHub Actions&lt;/h2&gt;
 &lt;p&gt;Once the changes are committed and pushed, you can see the latest job on GitHub Actions like this:&lt;/p&gt;
 
@@ -266,14 +258,17 @@ If you do not have one, you can copy the content of the exported &lt;code&gt;mai
         
         &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://docs.gitlab.com/ee/ci/&#34;&gt;GitLab CI&lt;/a&gt;. This tutorial takes about 5 minutes.&lt;/p&gt;
 &lt;h2 id=&#34;before-you-begin&#34;&gt;Before you begin&lt;/h2&gt;
-&lt;p&gt;Before diving into the following tutorial, you need to create a public repo on GitLab, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;On your local machine, use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;p&gt;Before diving into the following tutorial, you may need to create a public repo on GitLab if you don&amp;rsquo;t have one yet, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;On your local machine, create an empty directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;mkdir &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
+&lt;p&gt;Use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Init git&lt;/span&gt;
 git init
 git remote add origin https://gitlab.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get a &lt;code&gt;function-export-example&lt;/code&gt; directory:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;exmaple-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
@@ -284,13 +279,8 @@ git remote add origin https://gitlab.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
 &lt;h2 id=&#34;exporting-a-pipeline&#34;&gt;Exporting a pipeline&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    resources &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --fn-path functions.yaml &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --workflow gitlab-ci &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --output .gitlab-ci.yml
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; exmaple-package --workflow gitlab-ci --output .gitlab-ci.yml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running this command will get a .gitlab-ci.yml like this:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;stages&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- run-kpt-functions&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -300,7 +290,7 @@ git remote add origin https://gitlab.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;services&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- docker&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;dind&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;script&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;docker&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;-v&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;$PWD&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;/app&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;-v&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;/var/run/docker.sock&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;/var/run/docker.sock&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;gcr.io/kpt-dev/kpt&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;latest&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;/app/resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;--fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;/app/functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;/app/exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;integrating-with-your-existing-pipeline&#34;&gt;Integrating with your existing pipeline&lt;/h2&gt;
 &lt;p&gt;Now you can manually copy and paste the &lt;code&gt;kpt&lt;/code&gt; field in the &lt;code&gt;.gitlab-ci.yml&lt;/code&gt; file into your existing GitLab CI config file, and merge the &lt;code&gt;stages&lt;/code&gt; field.&lt;/p&gt;
 &lt;p&gt;If you don’t have one yet, you can simply copy and paste the file to the root of your repo. It is fully functional.&lt;/p&gt;
@@ -326,14 +316,17 @@ git remote add origin https://gitlab.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
         
         &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://www.jenkins.io/&#34;&gt;Jenkins&lt;/a&gt;. To make the generated pipeline work, extra steps that you may need is covered in the tutorial. This tutorial takes about 20~25 minutes.&lt;/p&gt;
 &lt;h2 id=&#34;before-you-begin&#34;&gt;Before you begin&lt;/h2&gt;
-&lt;p&gt;Before diving into the following tutorial, you need to create a public repo on GitHub, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;On your local machine, use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;p&gt;Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&amp;rsquo;t have one yet, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;On your local machine, create an empty directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;mkdir &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
+&lt;p&gt;Use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Init git&lt;/span&gt;
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get a &lt;code&gt;function-export-example&lt;/code&gt; directory:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;exmaple-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
@@ -344,7 +337,6 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
 &lt;h2 id=&#34;creating-a-jenkins-instance&#34;&gt;Creating a Jenkins instance&lt;/h2&gt;
 &lt;p&gt;If you do not have a Jenkins instance yet, you can refer to this &lt;a href=&#34;./creating_a_jenkins_instance_on_gcp&#34;&gt;page&lt;/a&gt; to create one on GCP.&lt;/p&gt;
 &lt;h2 id=&#34;installing-docker-on-the-jenkins-agents&#34;&gt;Installing Docker on the Jenkins Agents&lt;/h2&gt;
@@ -370,11 +362,7 @@ sudo sh get-docker.sh
 &lt;li&gt;Click &lt;code&gt;Save&lt;/code&gt; at the bottom.&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;exporting-a-pipeline&#34;&gt;Exporting a pipeline&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    resources &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --fn-path functions.yaml &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --workflow jenkins &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --output Jenkinsfile
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; exmaple-package --workflow jenkins --output Jenkinsfile
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running this command on your local machine will get a Jenkinsfile like this:&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;pipeline {
     agent any
@@ -389,8 +377,7 @@ sudo sh get-docker.sh
                     -v $PWD:/app \
                     -v /var/run/docker.sock:/var/run/docker.sock \
                     gcr.io/kpt-dev/kpt:latest \
-                    fn run /app/resources \
-                    --fn-path /app/functions.yaml
+                    fn run /app/exmaple-package
                 &#39;&#39;&#39;
             }
         }
@@ -421,14 +408,17 @@ sudo sh get-docker.sh
         
         &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://tekton.dev/&#34;&gt;Tekton&lt;/a&gt; and modify it to make it fully functional. How to setting up Tekton is also included if you don&amp;rsquo;t have one running yet. This tutorial takes about 20 minutes.&lt;/p&gt;
 &lt;h2 id=&#34;before-you-begin&#34;&gt;Before you begin&lt;/h2&gt;
-&lt;p&gt;Before diving into the following tutorial, you need to create a public repo on GitHub, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;On your local machine, use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;p&gt;Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&amp;rsquo;t have one yet, e.g. &lt;code&gt;function-export-example&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;On your local machine, create an empty directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;mkdir &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt;-export-example
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
+&lt;p&gt;Use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Init git&lt;/span&gt;
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get a &lt;code&gt;function-export-example&lt;/code&gt; directory:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;exmaple-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
@@ -439,7 +429,6 @@ git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;g
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;All commands must be run at the root of this directory.&lt;/p&gt;
 &lt;h2 id=&#34;setting-up-tekton-on-gcp&#34;&gt;Setting up Tekton on GCP&lt;/h2&gt;
 &lt;p&gt;Follow the instructions in the &lt;a href=&#34;https://tekton.dev/docs/getting-started/&#34;&gt;Getting Started&lt;/a&gt; guide of Tekton.&lt;/p&gt;
 &lt;ol&gt;
@@ -480,11 +469,7 @@ kubectl apply -f git/git-clone.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;exporting-a-pipeline&#34;&gt;Exporting a pipeline&lt;/h2&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    resources &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --fn-path functions.yaml &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --workflow tekton &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;    --output pipeline.yaml
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; exmaple-package --workflow tekton --output pipeline.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running this command will get a &lt;code&gt;pipeline.yaml&lt;/code&gt; like this:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;tekton.dev/v1beta1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Task&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -500,9 +485,7 @@ kubectl apply -f git/git-clone.yaml
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;args&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- $(workspaces.source.path)/resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- --fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- $(workspaces.source.path)/functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- $(workspaces.source.path)/exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;volumeMounts&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;docker-socket&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;mountPath&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;/var/run/docker.sock&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -543,9 +526,7 @@ kubectl apply -f git/git-clone.yaml
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;args&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- fn&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- run&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- $(workspaces.source.path)/resources&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- --fn-path&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- $(workspaces.source.path)/functions.yaml&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- $(workspaces.source.path)/exmaple-package&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;volumeMounts&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;          &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;docker-socket&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;            &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;mountPath&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;/var/run/docker.sock&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;

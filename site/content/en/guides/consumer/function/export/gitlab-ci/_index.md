@@ -10,19 +10,27 @@ In this tutorial, you will pull an example blueprint that declares Kubernetes re
 
 ## Before you begin
 
-Before diving into the following tutorial, you need to create a public repo on GitLab, e.g. `function-export-example`.
+Before diving into the following tutorial, you may need to create a public repo on GitLab if you don't have one yet, e.g. `function-export-example`.
 
-On your local machine, use `kpt pkg get` to fetch source files of this tutorial:
+On your local machine, create an empty directory:
 
 ```shell script
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint function-export-example
+mkdir function-export-example
 cd function-export-example
+```
+
+All commands must be run at the root of this directory.
+
+Use `kpt pkg get` to fetch source files of this tutorial:
+
+```shell script
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 # Init git
 git init
 git remote add origin https://gitlab.com/<USER>/<REPO>.git
 ```
 
-Then you will get a `function-export-example` directory:
+Then you will get an `exmaple-package` directory:
 
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
@@ -30,16 +38,10 @@ Then you will get a `function-export-example` directory:
   - `gatekeeper-validate` enforces constraints over all resources.
   - `label-namespace` adds a label to all Namespaces.
 
-All commands must be run at the root of this directory.
-
 ## Exporting a pipeline
 
 ```shell script
-kpt fn export \
-    resources \
-    --fn-path functions.yaml \
-    --workflow gitlab-ci \
-    --output .gitlab-ci.yml
+kpt fn export exmaple-package --workflow gitlab-ci --output .gitlab-ci.yml
 ```
 
 Running this command will get a .gitlab-ci.yml like this:
@@ -53,7 +55,7 @@ kpt:
     services:
       - docker:dind
     script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest
-        fn run /app/resources --fn-path /app/functions.yaml
+        fn run /app/exmaple-package
 ```
 
 ## Integrating with your existing pipeline

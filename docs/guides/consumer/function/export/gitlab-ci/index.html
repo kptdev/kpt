@@ -1152,14 +1152,17 @@ if (!doNotTrack) {
 	<div class="lead">Export a GitLab CI config file that runs kpt functions</div>
 	<p>In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on <a href="https://docs.gitlab.com/ee/ci/">GitLab CI</a>. This tutorial takes about 5 minutes.</p>
 <h2 id="before-you-begin">Before you begin</h2>
-<p>Before diving into the following tutorial, you need to create a public repo on GitLab, e.g. <code>function-export-example</code>.</p>
-<p>On your local machine, use <code>kpt pkg get</code> to fetch source files of this tutorial:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint <span style="color:#204a87;font-weight:bold">function</span>-export-example
+<p>Before diving into the following tutorial, you may need to create a public repo on GitLab if you don&rsquo;t have one yet, e.g. <code>function-export-example</code>.</p>
+<p>On your local machine, create an empty directory:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mkdir <span style="color:#204a87;font-weight:bold">function</span>-export-example
 <span style="color:#204a87">cd</span> <span style="color:#204a87;font-weight:bold">function</span>-export-example
+</code></pre></div><p>All commands must be run at the root of this directory.</p>
+<p>Use <code>kpt pkg get</code> to fetch source files of this tutorial:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 <span style="color:#8f5902;font-style:italic"># Init git</span>
 git init
 git remote add origin https://gitlab.com/&lt;USER&gt;/&lt;REPO&gt;.git
-</code></pre></div><p>Then you will get a <code>function-export-example</code> directory:</p>
+</code></pre></div><p>Then you will get an <code>exmaple-package</code> directory:</p>
 <ul>
 <li><code>resources/resources.yaml</code>: declares a <code>Deployment</code> and a <code>Namespace</code>.</li>
 <li><code>resources/constraints/</code>: declares constraints used by the <code>gatekeeper-validate</code> function.</li>
@@ -1170,13 +1173,8 @@ git remote add origin https://gitlab.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </ul>
 </li>
 </ul>
-<p>All commands must be run at the root of this directory.</p>
 <h2 id="exporting-a-pipeline">Exporting a pipeline</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    resources <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    --fn-path functions.yaml <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    --workflow gitlab-ci <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    --output .gitlab-ci.yml
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> exmaple-package --workflow gitlab-ci --output .gitlab-ci.yml
 </code></pre></div><p>Running this command will get a .gitlab-ci.yml like this:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">stages</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- run-kpt-functions<span style="color:#f8f8f8;text-decoration:underline">
@@ -1186,7 +1184,7 @@ git remote add origin https://gitlab.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">services</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span>- docker<span style="color:#000;font-weight:bold">:</span>dind<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">script</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>docker<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>-v<span style="color:#f8f8f8;text-decoration:underline"> </span>$PWD<span style="color:#000;font-weight:bold">:</span>/app<span style="color:#f8f8f8;text-decoration:underline"> </span>-v<span style="color:#f8f8f8;text-decoration:underline"> </span>/var/run/docker.sock<span style="color:#000;font-weight:bold">:</span>/var/run/docker.sock<span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/kpt<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>/app/resources<span style="color:#f8f8f8;text-decoration:underline"> </span>--fn-path<span style="color:#f8f8f8;text-decoration:underline"> </span>/app/functions.yaml<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>/app/exmaple-package<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="integrating-with-your-existing-pipeline">Integrating with your existing pipeline</h2>
 <p>Now you can manually copy and paste the <code>kpt</code> field in the <code>.gitlab-ci.yml</code> file into your existing GitLab CI config file, and merge the <code>stages</code> field.</p>
 <p>If you don’t have one yet, you can simply copy and paste the file to the root of your repo. It is fully functional.</p>
@@ -1290,7 +1288,7 @@ git remote add origin https://gitlab.com/&lt;USER&gt;/&lt;REPO&gt;.git
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0b11bd2481364ace2d347d145c54deba8694d419">Docs: update kpt fn export guides (0b11bd24)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/092e2171c7f29155873e85b8af68e1008bdfd61a">Docs: update kpt fn export guides (092e2171)</a>
 </div>
 </div>
 
