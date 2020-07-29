@@ -1152,14 +1152,17 @@ if (!doNotTrack) {
 	<div class="lead">Export a GitHub Actions workflow that runs kpt functions</div>
 	<p>In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on <a href="https://github.com/features/actions">GitHub Actions</a> and modify it manually to make it fully functional. This tutorial takes about 10 minutes.</p>
 <h2 id="before-you-begin">Before you begin</h2>
-<p>Before diving into the following tutorial, you need to create a public repo on GitHub, e.g. <code>function-export-example</code>.</p>
-<p>On your local machine, use <code>kpt pkg get</code> to fetch source files of this tutorial:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint <span style="color:#204a87;font-weight:bold">function</span>-export-example
+<p>Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&rsquo;t have one yet, e.g. <code>function-export-example</code>.</p>
+<p>On your local machine, create an empty directory:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mkdir <span style="color:#204a87;font-weight:bold">function</span>-export-example
 <span style="color:#204a87">cd</span> <span style="color:#204a87;font-weight:bold">function</span>-export-example
+</code></pre></div><p>All commands must be run at the root of this directory.</p>
+<p>Use <code>kpt pkg get</code> to fetch source files of this tutorial:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
 <span style="color:#8f5902;font-style:italic"># Init git</span>
 git init
 git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
-</code></pre></div><p>Then you will get a <code>function-export-example</code> directory:</p>
+</code></pre></div><p>Then you will get an <code>exmaple-package</code> directory:</p>
 <ul>
 <li><code>resources/resources.yaml</code>: declares a <code>Deployment</code> and a <code>Namespace</code>.</li>
 <li><code>resources/constraints/</code>: declares constraints used by the <code>gatekeeper-validate</code> function.</li>
@@ -1170,13 +1173,8 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </ul>
 </li>
 </ul>
-<p>All commands must be run at the root of this directory.</p>
 <h2 id="exporting-a-workflow">Exporting a workflow</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    resources <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    --fn-path functions.yaml <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    --workflow github-actions <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>    --output main.yaml
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> exmaple-package --workflow github-actions --output main.yaml
 </code></pre></div><p>Running the command above will produce a <code>main.yaml</code> file that looks like this:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">on</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1190,7 +1188,7 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Run<span style="color:#f8f8f8;text-decoration:underline"> </span>all<span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline"> </span>functions<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">uses</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>docker<span style="color:#000;font-weight:bold">:</span>//gcr.io/kpt-dev/kpt<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">with</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>resources<span style="color:#f8f8f8;text-decoration:underline"> </span>--fn-path<span style="color:#f8f8f8;text-decoration:underline"> </span>functions.yaml<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>exmaple-package<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="integrating-with-your-existing-pipeline">Integrating with your existing pipeline</h2>
 <p>Now you can manually copy and paste the content of the <code>main.yaml</code> file into your existing GitHub Actions workflow.
 If you do not have one, you can copy the content of the exported <code>main.yaml</code> file into <code>.github/workflows/main.yaml</code> in your project root. To make it fully functional, you may add a <code>checkout</code> step before the <code>Run all kpt functions</code> step to pull source files from your repo:</p>
@@ -1208,7 +1206,7 @@ If you do not have one, you can copy the content of the exported <code>main.yaml
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Run<span style="color:#f8f8f8;text-decoration:underline"> </span>all<span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline"> </span>functions<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">uses</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>docker<span style="color:#000;font-weight:bold">:</span>//gcr.io/kpt-dev/kpt<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">with</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>resources<span style="color:#f8f8f8;text-decoration:underline"> </span>--fn-path<span style="color:#f8f8f8;text-decoration:underline"> </span>functions.yaml<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>exmaple-package<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="viewing-the-result-on-github-actions">Viewing the result on GitHub Actions</h2>
 <p>Once the changes are committed and pushed, you can see the latest job on GitHub Actions like this:</p>
 
@@ -1309,7 +1307,7 @@ If you do not have one, you can copy the content of the exported <code>main.yaml
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0b11bd2481364ace2d347d145c54deba8694d419">Docs: update kpt fn export guides (0b11bd24)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/092e2171c7f29155873e85b8af68e1008bdfd61a">Docs: update kpt fn export guides (092e2171)</a>
 </div>
 </div>
 
