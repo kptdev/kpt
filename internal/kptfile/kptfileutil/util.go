@@ -58,8 +58,20 @@ func WriteFile(dir string, k kptfile.KptFile) error {
 		return err
 	}
 
+	// convert to rNode and back to string to make indentation consistent
+	// with rest of the yaml serialization to avoid unwanted diffs
+	rNode, err := yaml.Parse(string(b))
+	if err != nil {
+		return err
+	}
+
+	kptFileStr, err := rNode.String()
+	if err != nil {
+		return err
+	}
+
 	// fyi: perm is ignored if the file already exists
-	return ioutil.WriteFile(filepath.Join(dir, kptfile.KptFileName), b, 0600)
+	return ioutil.WriteFile(filepath.Join(dir, kptfile.KptFileName), []byte(kptFileStr), 0600)
 }
 
 // ReadFileStrict reads a Kptfile for a package and validates that it contains required
