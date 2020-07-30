@@ -15,6 +15,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: label-namespace
   annotations:
     config.k8s.io/function: |
       container:
@@ -26,6 +27,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: gatekeeper
   annotations:
     config.k8s.io/function: |
       container:
