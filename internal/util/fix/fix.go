@@ -45,9 +45,9 @@ func (c Command) Run() error {
 func (c Command) fixV1Setters() error {
 	printFunc := printFunc(c.StdOut, c.DryRun)
 	f := &fixsetters.SetterFixer{
-		PkgPath: c.PkgPath,
+		PkgPath:     c.PkgPath,
 		OpenAPIPath: filepath.Join(c.PkgPath, "Kptfile"),
-		DryRun:  c.DryRun,
+		DryRun:      c.DryRun,
 	}
 	sfr, err := f.FixV1Setters()
 	if err != nil {

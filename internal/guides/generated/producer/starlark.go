@@ -20,7 +20,7 @@ var StarlarkGuide = `
 The Starlark runtime is Alpha, and must be enabled with the ` + "`" + `--enable-star` + "`" + ` flag.
 {{% /pageinfo %}}
 
-Functions may be written as Starlark scripts which modify a ResourceList provided as
+Functions may be written as [Starlark] scripts which modify a ResourceList provided as
 a variable.
 
 #### Imperative Run
@@ -113,4 +113,5 @@ This may contain metadata about the resources and their types.
 While Starlark programs are unable to retain comments on resources, kpt will
 attempt to retain comments by copying them from the function inputs to the function outputs.
 
-It is not possible at this time to add, modify or delete comments from Starlark scripts.`
+It is not possible at this time to add, modify or delete comments from Starlark scripts.
+`

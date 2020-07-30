@@ -22,7 +22,6 @@ var HelmGuide = `
 Helm charts may be used to generate kpt packages which can then be further
 customized directly.
 
-
 ## Steps
 
 1. [Fetch a Helm chart](#fetch-a-helm-chart)
@@ -58,7 +57,7 @@ provided on the commandline or through a ` + "`" + `value.yaml` + "`" + `
 
 ##### Command
 
-  $ tree mysql/
+  tree mysql/
 
 ##### Output
 

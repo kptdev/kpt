@@ -52,8 +52,8 @@ func NewCommand(parent string) *cobra.Command {
 
 // Runner contains the run function
 type Runner struct {
-	Command         *cobra.Command
-	Fix             fix.Command
+	Command *cobra.Command
+	Fix     fix.Command
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {

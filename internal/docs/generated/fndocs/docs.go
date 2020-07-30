@@ -42,7 +42,19 @@ var ExportLong = `
   kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
   
   DIR:
-    Path to a package directory. If you do not specify the --fn-path flag, this command will discover functions in DIR and run them against resources in it.
+    Path to a package directory. 
+  FUNCTIONS_DIR:
+    Read functions from the directory instead of the DIR/.
+  ORCHESTRATOR:
+    Supported orchestrators are:
+      - github-actions
+      - cloud-build
+      - gitlab-ci
+      - jenkins
+      - tekton
+      - circleci
+  OUTPUT_FILENAME:
+    Specifies the filename of the generated pipeline. If omitted, the default output is stdout
 `
 var ExportExamples = `
   # read functions from DIR, run them against it as one step.

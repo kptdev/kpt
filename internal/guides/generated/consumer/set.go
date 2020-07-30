@@ -77,7 +77,7 @@ in this guide.
 ### Command
 
   export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-  kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.3.0 helloworld
+  kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.6.0 helloworld
 
 ### Output
 
@@ -88,18 +88,18 @@ in this guide.
 The ` + "`" + `helloworld-set` + "`" + ` package contains [setters] which can be used to
 **set configuration values from the commandline.**
 
-##### Command
+### List Command
 
-  kpt cfg list-setters helloworld/ 
+  kpt cfg list-setters helloworld/
 
 Print the list of setters included in the package.
 
-##### Output
+### List Output
 
-      NAME      VALUE       SET BY             DESCRIPTION        COUNT  
-    http-port   80      package-default   helloworld port         3      
-    image-tag   0.1.0   package-default   hello-world image tag   1      
-    replicas    5       package-default   helloworld replicas     1     
+      NAME      VALUE        SET BY            DESCRIPTION        COUNT
+    http-port   80       package-default   helloworld port        3
+    image-tag   v0.1.0   package-default   helloworld image tag   1
+    replicas    5        package-default   helloworld replicas    1
 
 The package contains 3 setters which may be used to modify the configuration
 using ` + "`" + `kpt set` + "`" + `.
@@ -109,7 +109,7 @@ using ` + "`" + `kpt set` + "`" + `.
 Setters **modify the resource configuration in place by reading the resources,
 changing values, and writing them back.**
 
-##### Package contents
+### Package contents
 
   # helloworld/deploy.yaml
   kind: Deployment
@@ -119,17 +119,17 @@ changing values, and writing them back.**
   spec:
    replicas: 5 # {"$kpt-set":"replicas"}
 
-##### Command
+### Set Command
 
   kpt cfg set helloworld/ replicas 3
 
 Change the replicas value in the configuration from 5 to 3.
 
-##### Output
+### Set Output
 
   set 1 fields
 
-##### Updated package contents
+### Updated package contents
 
   kind: Deployment
   metadata:

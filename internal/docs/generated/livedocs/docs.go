@@ -31,13 +31,15 @@ var ApplyLong = `
   kpt live apply DIR [flags]
 
 Args:
+
   DIR:
     Path to a package directory.  The directory must contain exactly
     one ConfigMap with the grouping object annotation.
 
-Flags::
+Flags:
+
   --poll-period:
-    The frequency with which the cluster will be polled to determine 
+    The frequency with which the cluster will be polled to determine
     the status of the applied resources. The default value is every 2 seconds.
   
   --reconcile-timeout:
@@ -46,9 +48,9 @@ Flags::
     resources to reconcile.
   
   --prune-timeout:
-    The threshold for how long to wait for all pruned resources to be 
+    The threshold for how long to wait for all pruned resources to be
     deleted before giving up. If this flag is not set, kpt live apply will not
-    wait. In most cases, it would also make sense to set the 
+    wait. In most cases, it would also make sense to set the
     --prune-propagation-policy to Foreground when this flag is set.
   
   --prune-propagation-policy:
@@ -56,8 +58,8 @@ Flags::
     default value here is Background. The other options are Foreground and Orphan.
   
   --output:
-    This determines the output format of the command. The default value is 
-    events, which will print the events as they happen. The other option is 
+    This determines the output format of the command. The default value is
+    events, which will print the events as they happen. The other option is
     table, which will show the output in a table format.
 `
 var ApplyExamples = `
@@ -76,6 +78,7 @@ var DestroyLong = `
   kpt live destroy DIR
 
 Args:
+
   DIR:
     Path to a package directory.  The directory must contain exactly
     one ConfigMap with the grouping object annotation.
@@ -95,10 +98,12 @@ var DiffLong = `
   available in your path will be run with "-u" (unicode) and "-N" (treat new files as empty) options.
 
 Args:
+
   DIR:
     Path to a package directory.  The directory must contain exactly one ConfigMap with the inventory annotation.
 
 Exit Status:
+
   The following exit values shall be returned:
   
   0 No differences were found. 1 Differences were found. >1 kpt live or diff failed with an error.
@@ -118,6 +123,7 @@ var FetchK8sSchemaLong = `
   kpt live fetch-k8s-schema [flags]
 
 Flags:
+
   --pretty-print
     Format the output before printing
 `
@@ -134,11 +140,13 @@ var InitLong = `
   kpt live init DIRECTORY [flags]
 
 Args:
+
   DIR:
     Path to a package directory.  The directory must contain exactly
     one ConfigMap with the grouping object annotation.
 
 Flags:
+
   --group-name:
     String name to group applied resources. Must be composed of valid
     label value characters. If not specified, the default group name
@@ -157,11 +165,13 @@ var PreviewLong = `
   kpt live preview DIRECTORY [flags]
 
 Args:
+
   DIRECTORY:
     One directory that contain k8s manifests. The directory
     must contain exactly one ConfigMap with the grouping object annotation.
 
 Flags:
+
   --destroy:
     If true, dry-run deletion of all resources.
 `

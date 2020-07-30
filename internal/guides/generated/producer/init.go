@@ -32,7 +32,7 @@ Packages may be nested -- both parent (composite) and child
 A package is versioned by tagging the git repo as one of:
 
 - ` + "`" + `package-subdirectory/package-version` + "`" + ` (directory scoped versioning)
--  ` + "`" + `package-version` + "`" + ` (repo scoped versioning)
+- ` + "`" + `package-version` + "`" + ` (repo scoped versioning)
 {{% /pageinfo %}}
 
 {{< svg src="images/producer-guide" >}}
@@ -43,7 +43,6 @@ A package is versioned by tagging the git repo as one of:
 2. [Create the package contents](#create-the-package)
 2. [Create configuration](#create-configuration)
 3. [Publish package to git](#publish-package-to-git)
-
 
 ## Create a git repo
 
@@ -60,7 +59,7 @@ Recommended: initialize the package with metadata
 
 ## Create configuration
 
-  $ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
+  curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
 
 ## Publish package to git
 

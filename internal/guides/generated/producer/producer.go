@@ -16,8 +16,9 @@
 package producer
 
 var ProducerGuide = `{{% pageinfo color="warning" %}}
-# Notice: Under Development
-{{% /pageinfo %}}
 
+# Notice: Under Development
+
+{{% /pageinfo %}}
 
 {{< svg src="images/producer-guide" >}}`
