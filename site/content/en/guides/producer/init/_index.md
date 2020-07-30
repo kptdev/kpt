@@ -8,11 +8,11 @@ description: >
 ---
 
 A kpt package is published as a git subdirectory containing configuration
-files (YAML). Publishes of kpt packages can create or generate YAML files
+files (YAML). Publishers of kpt packages can create or generate YAML files
 however they like using the tool of their choice.
 
 Publishing a package is done by pushing the git directory
-(and optionally tagging it with a version).
+(and optionally [tagging] it with a version).
 
 {{% pageinfo color="primary" %}}
 Multiple packages may exist in a single repo under separate subdirectories.
@@ -24,6 +24,10 @@ A package is versioned by tagging the git repo as one of:
 
 - `package-subdirectory/package-version` (directory scoped versioning)
 - `package-version` (repo scoped versioning)
+
+So package example that exists in the example folder of the repo, can
+be individually versioned (as version v1.0.2) by creating the tag `example/v1.0.2`.
+
 {{% /pageinfo %}}
 
 {{< svg src="images/producer-guide" >}}
@@ -32,8 +36,9 @@ A package is versioned by tagging the git repo as one of:
 
 1. [Create a git repo](#create-a-git-repo)
 2. [Create the package contents](#create-the-package)
-2. [Create configuration](#create-configuration)
-3. [Publish package to git](#publish-package-to-git)
+3. [Create configuration](#create-configuration)
+4. [Publish package to git](#publish-package-to-git)
+5. [Fetch the released package](#fetch-the-released-package)
 
 ## Create a git repo
 
@@ -74,3 +79,11 @@ Recommended: tag the commit as a release
 git tag nginx/v0.1.0
 git push nginx/v0.1.0
 ```
+
+## Fetch the released package
+
+```sh
+kpt pkg get https://<REPO>/nginx@v0.1.0 nginx
+```
+
+[tagging]: https://git-scm.com/book/en/v2/Git-Basics-Tagging
