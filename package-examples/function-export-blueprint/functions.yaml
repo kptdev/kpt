@@ -15,10 +15,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: label-namespace
   annotations:
     config.k8s.io/function: |
       container:
         image: gcr.io/kpt-functions/label-namespace
+    config.kubernetes.io/local-config: "true"
 data:
   label_name: color
   label_value: blue
@@ -26,7 +28,9 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: gatekeeper
   annotations:
     config.k8s.io/function: |
       container:
         image: gcr.io/kpt-functions/gatekeeper-validate
+    config.kubernetes.io/local-config: "true"
