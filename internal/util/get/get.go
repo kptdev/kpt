@@ -277,11 +277,5 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 		Git:  c.Git,
 	}
 	kpgfile.Upstream.Git.Commit = commit
-
-	// update the KptFile with the new values
-	contents, err := yaml.Marshal(kpgfile)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(filepath.Join(c.Destination, kptfile.KptFileName), contents, 0600)
+	return kptfileutil.WriteFile(c.Destination, kpgfile)
 }

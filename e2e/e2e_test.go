@@ -49,10 +49,10 @@ func TestKptGetSet(t *testing.T) {
 			replacements: map[string][]string{
 				"deploy.yaml": {"replicas: 5", "replicas: 7"},
 				"Kptfile": {
-					`                    setBy: package-default
-                    value: "5"`,
-					`                    value: "7"
-                    isSet: true`,
+					`          setBy: package-default
+          value: "5"`,
+					`          value: "7"
+          isSet: true`,
 				},
 			},
 		},
@@ -61,10 +61,10 @@ func TestKptGetSet(t *testing.T) {
 			replacements: map[string][]string{
 				"deploy.yaml": {"replicas: 5", "replicas: 7"},
 				"Kptfile": {
-					`                    setBy: package-default
-                    value: "5"`,
-					`                    value: "7"
-                    isSet: true`,
+					`          setBy: package-default
+          value: "5"`,
+					`          value: "7"
+          isSet: true`,
 				},
 			},
 		},
@@ -72,10 +72,10 @@ func TestKptGetSet(t *testing.T) {
 			replacements: map[string][]string{
 				"deploy.yaml": {"replicas: 5", "replicas: 7"},
 				"Kptfile": {
-					`                    setBy: package-default
-                    value: "5"`,
-					`                    value: "7"
-                    isSet: true`,
+					`          setBy: package-default
+          value: "5"`,
+					`          value: "7"
+          isSet: true`,
 				},
 			},
 		},
@@ -84,10 +84,10 @@ func TestKptGetSet(t *testing.T) {
 			replacements: map[string][]string{
 				"deploy.yaml": {"replicas: 5", "replicas: 7"},
 				"Kptfile": {
-					`                    setBy: package-default
-                    value: "5"`,
-					`                    value: "7"
-                    isSet: true`,
+					`          setBy: package-default
+          value: "5"`,
+					`          value: "7"
+          isSet: true`,
 				},
 			},
 		},
@@ -96,11 +96,11 @@ func TestKptGetSet(t *testing.T) {
 			replacements: map[string][]string{
 				"deploy.yaml": {"replicas: 5", "replicas: 7"},
 				"Kptfile": {
-					`                    setBy: package-default
-                    value: "5"`,
-					`                    setBy: foo
-                    value: "7"
-                    isSet: true`,
+					`          setBy: package-default
+          value: "5"`,
+					`          setBy: foo
+          value: "7"
+          isSet: true`,
 				},
 			},
 		},
@@ -116,10 +116,10 @@ func TestKptGetSet(t *testing.T) {
 					`    app: hello
     foo: bar`},
 				"Kptfile": {
-					`                    setBy: package-default
-                    value: "5"`,
-					`                    value: "7"
-                    isSet: true`,
+					`          setBy: package-default
+          value: "5"`,
+					`          value: "7"
+          isSet: true`,
 				},
 			},
 		},
