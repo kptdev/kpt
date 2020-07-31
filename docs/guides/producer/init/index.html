@@ -1083,6 +1083,7 @@ if (!doNotTrack) {
     <li><a href="#create-the-package">Create the package</a></li>
     <li><a href="#create-configuration">Create configuration</a></li>
     <li><a href="#publish-package-to-git">Publish package to git</a></li>
+    <li><a href="#fetch-the-released-package">Fetch the released package</a></li>
   </ul>
 </nav>
 
@@ -1132,10 +1133,10 @@ if (!doNotTrack) {
 	<h1>Init</h1>
 	<div class="lead">Initialize and publish a new package</div>
 	<p>A kpt package is published as a git subdirectory containing configuration
-files (YAML). Publishes of kpt packages can create or generate YAML files
+files (YAML). Publishers of kpt packages can create or generate YAML files
 however they like using the tool of their choice.</p>
 <p>Publishing a package is done by pushing the git directory
-(and optionally tagging it with a version).</p>
+(and optionally <a href="https://git-scm.com/book/en/v2/Git-Basics-Tagging">tagging</a> it with a version).</p>
 
 
 <div class="pageinfo pageinfo-primary">
@@ -1147,6 +1148,8 @@ however they like using the tool of their choice.</p>
 <li><code>package-subdirectory/package-version</code> (directory scoped versioning)</li>
 <li><code>package-version</code> (repo scoped versioning)</li>
 </ul>
+<p>So package example that exists in the example folder of the repo, can
+be individually versioned (as version v1.0.2) by creating the tag <code>example/v1.0.2</code>.</p>
 
 </div>
 
@@ -1161,6 +1164,7 @@ however they like using the tool of their choice.</p>
 <li><a href="#create-the-package">Create the package contents</a></li>
 <li><a href="#create-configuration">Create configuration</a></li>
 <li><a href="#publish-package-to-git">Publish package to git</a></li>
+<li><a href="#fetch-the-released-package">Fetch the released package</a></li>
 </ol>
 <h2 id="create-a-git-repo">Create a git repo</h2>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone REPO_URL <span style="color:#8f5902;font-style:italic"># or create a new repo with `git init`</span>
@@ -1178,6 +1182,8 @@ git commit -m <span style="color:#4e9a06">&#34;Add nginx package&#34;</span>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># tag as DIR/VERSION for per-directory versioning</span>
 git tag nginx/v0.1.0
 git push nginx/v0.1.0
+</code></pre></div><h2 id="fetch-the-released-package">Fetch the released package</h2>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://&lt;REPO&gt;/nginx@v0.1.0 nginx
 </code></pre></div>
         <div class="section-index">
     
@@ -1271,7 +1277,7 @@ git push nginx/v0.1.0
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 30, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/28e0b1660aac4bd59cf1993b2ebfd353d824e07e">docs: Improve the publisher init guide (28e0b166)</a>
 </div>
 </div>
 

@@ -23,10 +23,10 @@
         
         
         &lt;p&gt;A kpt package is published as a git subdirectory containing configuration
-files (YAML). Publishes of kpt packages can create or generate YAML files
+files (YAML). Publishers of kpt packages can create or generate YAML files
 however they like using the tool of their choice.&lt;/p&gt;
 &lt;p&gt;Publishing a package is done by pushing the git directory
-(and optionally tagging it with a version).&lt;/p&gt;
+(and optionally &lt;a href=&#34;https://git-scm.com/book/en/v2/Git-Basics-Tagging&#34;&gt;tagging&lt;/a&gt; it with a version).&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
@@ -38,6 +38,8 @@ however they like using the tool of their choice.&lt;/p&gt;
 &lt;li&gt;&lt;code&gt;package-subdirectory/package-version&lt;/code&gt; (directory scoped versioning)&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;package-version&lt;/code&gt; (repo scoped versioning)&lt;/li&gt;
 &lt;/ul&gt;
+&lt;p&gt;So package example that exists in the example folder of the repo, can
+be individually versioned (as version v1.0.2) by creating the tag &lt;code&gt;example/v1.0.2&lt;/code&gt;.&lt;/p&gt;
 
 &lt;/div&gt;
 
@@ -52,6 +54,7 @@ however they like using the tool of their choice.&lt;/p&gt;
 &lt;li&gt;&lt;a href=&#34;#create-the-package&#34;&gt;Create the package contents&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#create-configuration&#34;&gt;Create configuration&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#publish-package-to-git&#34;&gt;Publish package to git&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-the-released-package&#34;&gt;Fetch the released package&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;create-a-git-repo&#34;&gt;Create a git repo&lt;/h2&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git clone REPO_URL &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# or create a new repo with `git init`&lt;/span&gt;
@@ -69,6 +72,8 @@ git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;Add nginx packa
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# tag as DIR/VERSION for per-directory versioning&lt;/span&gt;
 git tag nginx/v0.1.0
 git push nginx/v0.1.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;fetch-the-released-package&#34;&gt;Fetch the released package&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://&amp;lt;REPO&amp;gt;/nginx@v0.1.0 nginx
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
