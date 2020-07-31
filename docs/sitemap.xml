@@ -23,6 +23,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/github-actions/</loc>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/init/</loc>
     <lastmod>2020-07-16T12:34:28-07:00</lastmod>
   </url>
@@ -68,6 +73,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/gitlab-ci/</loc>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/helm/</loc>
     <lastmod>2020-07-16T12:34:28-07:00</lastmod>
   </url>
@@ -95,6 +105,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/ecosystem/</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/jenkins/</loc>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
   </url>
   
   <url>
@@ -130,6 +145,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/cat/</loc>
     <lastmod>2020-04-24T16:02:15-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/cloud-build/</loc>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
   </url>
   
   <url>
@@ -169,7 +189,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/concepts/functions/</loc>
-    <lastmod>2020-07-31T12:02:30-07:00</lastmod>
+    <lastmod>2020-07-31T11:22:57-07:00</lastmod>
   </url>
   
   <url>
@@ -228,13 +248,23 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/circleci/</loc>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/</loc>
     <lastmod>2020-07-07T14:31:14-04:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
-    <lastmod>2020-07-31T11:22:57-07:00</lastmod>
+    <lastmod>2020-07-31T11:40:15-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/tekton/</loc>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
   </url>
   
   <url>
@@ -274,7 +304,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/</loc>
-    <lastmod>2020-07-23T03:53:36+00:00</lastmod>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
   </url>
   
   <url>
@@ -289,7 +319,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/faq/</loc>
-    <lastmod>2020-07-31T12:02:30-07:00</lastmod>
+    <lastmod>2020-07-31T11:22:57-07:00</lastmod>
   </url>
   
   <url>
@@ -328,18 +358,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/circleci/</loc>
-    <lastmod>2020-07-29T00:16:40+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/cloud-build/</loc>
-    <lastmod>2020-07-29T00:16:40+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/jenkins/creating_a_jenkins_instance_on_gcp/</loc>
-    <lastmod>2020-07-23T03:53:36+00:00</lastmod>
+    <lastmod>2020-07-31T21:07:28+00:00</lastmod>
   </url>
   
   <url>
@@ -378,16 +398,6 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/github-actions/</loc>
-    <lastmod>2020-07-29T00:16:40+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/gitlab-ci/</loc>
-    <lastmod>2020-07-29T00:16:40+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/init/</loc>
     <lastmod>2020-07-16T12:34:28-07:00</lastmod>
   </url>
@@ -395,11 +405,6 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/pkg/init/</loc>
     <lastmod>2020-07-16T12:34:28-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/jenkins/</loc>
-    <lastmod>2020-07-29T00:16:40+00:00</lastmod>
   </url>
   
   <url>
@@ -430,11 +435,6 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/source/</loc>
     <lastmod>2020-06-24T17:55:03-05:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/export/tekton/</loc>
-    <lastmod>2020-07-29T00:16:40+00:00</lastmod>
   </url>
   
   <url>

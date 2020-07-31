@@ -39,7 +39,12 @@
 &lt;li&gt;
 &lt;p&gt;&lt;a href=&#34;https://cloud.google.com/compute/docs/instances/create-start-instance&#34;&gt;Create a new VM instance&lt;/a&gt; of Ubuntu 18.04 LTS on GCP.&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;Choose &lt;code&gt;Ubuntu 18.04 LTS&lt;/code&gt; as image in &lt;code&gt;Boot disk&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Choose &lt;code&gt;Ubuntu 18.04 LTS&lt;/code&gt; as image in &lt;code&gt;Boot disk&lt;/code&gt;.
+&lt;ol&gt;
+&lt;li&gt;Click &lt;code&gt;change&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Scroll through the &lt;code&gt;version&lt;/code&gt; dropdown to find the right one.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
 &lt;li&gt;Expand &lt;code&gt;Management, security, disk, networking, sole tenancy&lt;/code&gt;, click the &lt;code&gt;Networking&lt;/code&gt; tab, enter the name of the firewall rule you created,  e.g. &lt;code&gt;allow-http-8080&lt;/code&gt;.&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/li&gt;

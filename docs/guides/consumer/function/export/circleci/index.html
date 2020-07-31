@@ -455,52 +455,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/circleci/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">CircleCI</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesconsumerfunctionexportcircleci">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/cloud-build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Cloud Build</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportcloud-build">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/github-actions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">GitHub Actions</a>
   </li>
   <ul>
@@ -551,6 +505,52 @@ if (!doNotTrack) {
   </li>
   <ul>
     <li class="collapse " id="kptguidesconsumerfunctionexportjenkins">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/export/cloud-build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Cloud Build</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionexportcloud-build">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/export/circleci/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">CircleCI</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesconsumerfunctionexportcircleci">
       
       
       
@@ -1082,6 +1082,7 @@ if (!doNotTrack) {
     <li><a href="#exporting-a-pipeline">Exporting a pipeline</a></li>
     <li><a href="#integrating-with-your-existing-pipeline">Integrating with your existing pipeline</a></li>
     <li><a href="#viewing-the-result-on-circleci">Viewing the result on CircleCI</a></li>
+    <li><a href="#next-step">Next step</a></li>
   </ul>
 </nav>
 
@@ -1151,18 +1152,33 @@ if (!doNotTrack) {
 	<h1>Exporting a CircleCI Workflow</h1>
 	<div class="lead">Export a CircleCI config file that runs kpt functions</div>
 	<p>In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on <a href="https://circleci.com/">CircleCI</a> and merge it manually to your existing pipeline. This tutorial takes about 10 minutes.</p>
+
+
+<div class="pageinfo pageinfo-info">
+<p>A kpt version <code>v0.32.0</code> or higher is required.</p>
+
+</div>
+
 <h2 id="before-you-begin">Before you begin</h2>
-<p>Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&rsquo;t have one yet, e.g. <code>function-export-example</code>.</p>
+<p><em>Unfamiliar with CircleCI? Read <a href="https://circleci.com/docs/2.0/getting-started/#section=getting-started">Getting Started Introduction</a> first</em>.</p>
+<p>Before diving into the following tutorial, you need to create a public repo on GitHub if you don&rsquo;t have one yet, e.g. <code>function-export-example</code>.</p>
 <p>On your local machine, create an empty directory:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mkdir <span style="color:#204a87;font-weight:bold">function</span>-export-example
 <span style="color:#204a87">cd</span> <span style="color:#204a87;font-weight:bold">function</span>-export-example
-</code></pre></div><p>All commands must be run at the root of this directory.</p>
+</code></pre></div>
+
+<div class="pageinfo pageinfo-warning">
+<p>All commands must be run at the root of this directory.</p>
+
+</div>
+
 <p>Use <code>kpt pkg get</code> to fetch source files of this tutorial:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
-<span style="color:#8f5902;font-style:italic"># Init git</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#8f5902;font-style:italic"># Init git</span>
 git init
 git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
-</code></pre></div><p>Then you will get an <code>exmaple-package</code> directory:</p>
+<span style="color:#8f5902;font-style:italic"># Fetch source files</span>
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+</code></pre></div><p>Then you will get an <code>example-package</code> directory:</p>
 <ul>
 <li><code>resources/resources.yaml</code>: declares a <code>Deployment</code> and a <code>Namespace</code>.</li>
 <li><code>resources/constraints/</code>: declares constraints used by the <code>gatekeeper-validate</code> function.</li>
@@ -1174,7 +1190,7 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </li>
 </ul>
 <h2 id="exporting-a-pipeline">Exporting a pipeline</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> exmaple-package --workflow circleci --output config.yml
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> example-package --workflow circleci --output config.yml
 </code></pre></div><p>Running this command will get a <code>config.yml</code> like this:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">version</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;2.1&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">orbs</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1186,7 +1202,7 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">commands</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">kpt-fn-run</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">steps</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">                  </span>- <span style="color:#204a87;font-weight:bold">run</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>exmaple-package<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">                  </span>- <span style="color:#204a87;font-weight:bold">run</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>example-package<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">jobs</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">run-functions</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">executor</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt-container<span style="color:#f8f8f8;text-decoration:underline">
@@ -1202,6 +1218,7 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 <ol>
 <li>Copy and paste the <code>orbs</code> field</li>
 <li>Insert a <code>checkout</code> step as the first step in the <code>run-functions</code> job.</li>
+<li>If you want to see the diff after running kpt functions, append a <code>run: git -no-pager diff</code> step in the <code>kpt-fn-run</code> command.</li>
 <li>Add <code>kpt/run-functions</code> to your workflow jobs.</li>
 </ol>
 <p>Your final workflow may looks like this:</p>
@@ -1215,7 +1232,8 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">commands</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">kpt-fn-run</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">steps</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">                  </span>- <span style="color:#204a87;font-weight:bold">run</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>exmaple-package<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">                  </span>- <span style="color:#204a87;font-weight:bold">run</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline"> </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>example-package<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">                  </span>- <span style="color:#204a87;font-weight:bold">run</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>git<span style="color:#f8f8f8;text-decoration:underline"> </span>--no-pager<span style="color:#f8f8f8;text-decoration:underline"> </span>diff<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">jobs</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">run-functions</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">                </span><span style="color:#204a87;font-weight:bold">executor</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt-container<span style="color:#f8f8f8;text-decoration:underline">
@@ -1227,21 +1245,32 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">main</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">jobs</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- kpt/run-functions<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>If you don’t have one yet, you can just copy the exported <code>config.yml</code> file into <code>.circleci/config.yml</code> in your project root. Then do the steps above to make the pipeline fully functional. Once all changes are pushed into GitHub, you can do the following steps to setting up your project on CircleCI:</p>
+</span></code></pre></div><p>If you don’t have one yet, you can do the following steps:</p>
+<ol>
+<li>Copy the exported <code>config.yml</code> file into <code>.circleci/config.yml</code> in your project root.</li>
+<li>Do the steps above to make the pipeline fully functional.</li>
+</ol>
+<p>Once all changes are pushed into GitHub, you can do the following steps to setting up your project on CircleCI:</p>
 <ol>
 <li>Log into <a href="https://circleci.com/">CircleCI</a> and choose <code>Log In with GitHub</code>.</li>
-<li>Select an organization if prompted.</li>
+<li>Select your own account as an organization if prompted.</li>
 <li>Choose your newly created repo and click <code>Set Up Project</code>.</li>
-<li>Click <code>Add Manually</code> since you have already added <code>.circleci/config.yml</code>.</li>
+<li>Click <code>Use Existing Config</code> since you have already added <code>.circleci/config.yml</code>.</li>
 <li>Click <code>Start Building</code>.</li>
 </ol>
 <h2 id="viewing-the-result-on-circleci">Viewing the result on CircleCI</h2>
-<p>Once local changes have been pushed, you can see a latest build running on CircleCI like this:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">git add .
+git commit -am <span style="color:#4e9a06">&#39;Init pipeline&#39;</span>
+git push --set-upstream origin master
+</code></pre></div><p>Once local changes have been pushed, you can see a latest build running on CircleCI like this:</p>
 
 
 
 <img src="https://googlecontainertools.github.io/kpt//images/fn-export/circleci-result.png" />
 
+<h2 id="next-step">Next step</h2>
+<p>Try to remove the <code>owner: alice</code> line in <code>example-package/resources/resources.yaml</code>.</p>
+<p>Once local changes are pushed, you can see how the pipeline fails on CircleCI.</p>
 
         <div class="section-index">
     
@@ -1335,7 +1364,7 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/092e2171c7f29155873e85b8af68e1008bdfd61a">Docs: update kpt fn export guides (092e2171)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/045424554c1d17a4affd2b8b028fb99be4945a84">Docs: update guides of kpt fn export (04542455)</a>
 </div>
 </div>
 
