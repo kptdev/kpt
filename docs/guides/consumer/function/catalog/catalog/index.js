@@ -48,11 +48,15 @@ See [definition of source functions][source].
 
 ${tableByType('source')}
 
+Note: Source functions are *function*. They are invoked by command \`kpt fn run\` instead of \`kpt fn source\`.
+
 ## Sinks
 
 See [definition of sink functions][sink].
 
 ${tableByType('sink')}
+
+Note: Sink functions are *function*. They are invoked by command \`kpt fn run\` instead of \`kpt fn sink\`.
 
 ## Validators
 

@@ -423,6 +423,7 @@ Delete) operations on the input.</li>
 
 <p>Instead, the function typically produces the <code>output</code> by reading configurations from an external
 system (e.g. reading files from a filesystem).</p>
+<p>Note: Source functions are <em>function</em>. They are invoked by command <code>kpt fn run</code> instead of <code>kpt fn source</code>.</p>
 <h3 id="sink-function">Sink Function</h3>
 <p>A Sink Function produces no <code>output</code>:</p>
 
@@ -431,6 +432,7 @@ system (e.g. reading files from a filesystem).</p>
 <img src="https://googlecontainertools.github.io/kpt//images/sink.png" />
 
 <p>Instead, the function typically writes configurations to an external system (e.g. writing files to a filesystem).</p>
+<p>Note: Sink functions are <em>function</em>. They are invoked by command <code>kpt fn run</code> instead of <code>kpt fn sink</code>.</p>
 <h3 id="pipeline">Pipeline</h3>
 <p>Functions can be composed into a pipeline:</p>
 
@@ -467,7 +469,7 @@ system (e.g. reading files from a filesystem).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8ded6900ca9a0f26939f8fd08523f0c72e9311ba">Update _index.md (8ded6900)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/5cbb490ccf794b1ad3ae986a5ef6c9502d33c30c">Docs: code review (5cbb490c)</a>
 </div>
 </div>
 
