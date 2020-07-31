@@ -331,6 +331,9 @@ configuration. See the <a href="../guides/consumer/function/pipeline/">functions
 channels with <a href="../reference/fn/run/">functions</a>, or 2) <a href="../reference/pkg/update/">updating</a> packages.</p>
 <h4 id="q-is-there-a-container-image-that-contains-kpt"><strong>Q: Is there a container image that contains kpt?</strong></h4>
 <p>A: Yes. <a href="https://gcr.io/kpt-dev/kpt">gcr.io/kpt-dev/kpt</a> contains the <code>kpt</code> binary.</p>
+<h4 id="q-how-to-run-sourcesink-functions-should-i-use-kpt-fn-source-and-kpt-fn-sink"><strong>Q: How to run source/sink functions? Should I use <code>kpt fn source</code> and <code>kpt fn sink</code>?</strong></h4>
+<p>A: No. All source and sink functions should be run by <code>kpt fn run</code>. <code>kpt fn sink</code> and <code>kpt fn source</code> are commands which
+can only specified builtin functions.</p>
 <h4 id="q-i-still-have-questions-how-do-i-contact-you"><strong>Q: I still have questions. How do I contact you?</strong></h4>
 <p>A: <a href="../contact/">Please reach out!</a></p>
 <h3 id="next-steps">Next Steps</h3>
@@ -354,7 +357,7 @@ channels with <a href="../reference/fn/run/">functions</a>, or 2) <a href="../re
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/5cbb490ccf794b1ad3ae986a5ef6c9502d33c30c">Docs: code review (5cbb490c)</a>
 </div>
 </div>
 
