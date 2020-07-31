@@ -15,6 +15,8 @@ type: docs
     1.  Click the `Create` button.
 1.  [Create a new VM instance](https://cloud.google.com/compute/docs/instances/create-start-instance) of Ubuntu 18.04 LTS on GCP.
     1.  Choose `Ubuntu 18.04 LTS` as image in `Boot disk`.
+        1. Click `change`.
+        2. Scroll through the `version` dropdown to find the right one.
     1.  Expand `Management, security, disk, networking, sole tenancy`, click the `Networking` tab, enter the name of the firewall rule you created,  e.g. `allow-http-8080`.
 1.  SSH into the VM instance you just created.
 1.  [Install Jenkins](https://www.jenkins.io/doc/book/installing/#linux) on the VM.

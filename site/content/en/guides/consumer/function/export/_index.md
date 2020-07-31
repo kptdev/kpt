@@ -13,12 +13,21 @@ description: >
 ## Examples
 
 These quickstarts cover how to exporting workflow config files for different orchestrators:
- 
-- [CircleCI](./circleci)
-- [Cloud Build](./cloud-build)
-- [GitHub Actions](./github-actions)
-- [GitLab CI](./gitlab-ci)
-- [Jenkins](./jenkins)
-- [Tekton](./tekton)
 
-*Unable to find support for your orchestrator? Please file an [Issue](https://github.com/GoogleContainerTools/kpt/issues)/[Pull Request](https://github.com/GoogleContainerTools/kpt/pulls).*
+- [GitHub Actions]
+- [GitLab CI]
+- [Jenkins]
+- [Cloud Build]
+- [CircleCI]
+- [Tekton]
+
+*Unable to find support for your orchestrator? Please file an [Issue]/[Pull Request].*
+
+[GitHub Actions]: ./github-actions
+[GitLab CI]: ./gitlab-ci
+[Jenkins]: ./jenkins
+[Cloud Build]: ./cloud-build
+[CircleCI]: ./circleci
+[Tekton]: ./tekton
+[Issue]: https://github.com/GoogleContainerTools/kpt/issues
+[Pull Request]: https://github.com/GoogleContainerTools/kpt/pulls
