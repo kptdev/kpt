@@ -85,6 +85,11 @@ channels with [functions], or 2) [updating] packages.
 
 A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` binary.
 
+#### **Q: How to run source/sink functions? Should I use `kpt fn source` and `kpt fn sink`?**
+
+A: No. All source and sink functions should be run by `kpt fn run`. `kpt fn sink` and `kpt fn source` are commands which 
+can only specified builtin functions.
+
 #### **Q: I still have questions. How do I contact you?**
 
 A: [Please reach out!][contact]
