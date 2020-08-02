@@ -14,7 +14,7 @@
   gtag('config', 'UA-171557011-1');
 </script>
 
-<meta name="generator" content="Hugo 0.74.2" />
+<meta name="generator" content="Hugo 0.74.3" />
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
@@ -40,7 +40,8 @@
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="Init">
 <meta itemprop="description" content="Initialize a package with a object to track previously applied resources
-"><meta name="twitter:card" content="summary"/>
+">
+<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Init"/>
 <meta name="twitter:description" content="Initialize a package with a object to track previously applied resources
 "/>
@@ -1038,7 +1039,7 @@ such as apply, preview and destroy.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># initialize a package</span>
 kpt live init my-dir/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># initialize a package with a specific name for the group of resources</span>
-kpt live init --group-name<span style="color:#ce5c00;font-weight:bold">=</span>foo my-dir/
+kpt live init --inventory-namespace<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">test</span> my-dir/
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
@@ -1048,10 +1049,10 @@ kpt live init --group-name<span style="color:#ce5c00;font-weight:bold">=</span>f
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
 </code></pre><h4 id="flags">Flags</h4>
-<pre><code>--group-name:
-  String name to group applied resources. Must be composed of valid
-  label value characters. If not specified, the default group name
-  is generated from the package directory name.
+<pre><code>--inventory-id:
+  Identifier for group of applied resources. Must be composed of valid label characters.
+--inventory-namespace:
+  namespace for the inventory object. If no namespace is provided, namespace &quot;default&quot; will be used.
 </code></pre><!--mdtogo-->
 
         <div class="section-index">
@@ -1130,7 +1131,7 @@ kpt live init --group-name<span style="color:#ce5c00;font-weight:bold">=</span>f
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 1, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9995464b3a70aaa035d0482194eca5671dafcfb5">Docs: update kpt live init docs (9995464b)</a>
 </div>
 </div>
 
