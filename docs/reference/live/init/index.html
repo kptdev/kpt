@@ -931,7 +931,7 @@ such as apply, preview and destroy.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># initialize a package</span>
 kpt live init my-dir/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># initialize a package with a specific name for the group of resources</span>
-kpt live init --group-name<span style="color:#ce5c00;font-weight:bold">=</span>foo my-dir/
+kpt live init --inventory-namespace<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">test</span> my-dir/
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
@@ -941,10 +941,10 @@ kpt live init --group-name<span style="color:#ce5c00;font-weight:bold">=</span>f
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
 </code></pre><h4 id="flags">Flags</h4>
-<pre><code>--group-name:
-  String name to group applied resources. Must be composed of valid
-  label value characters. If not specified, the default group name
-  is generated from the package directory name.
+<pre><code>--inventory-id:
+  Identifier for group of applied resources. Must be composed of valid label characters.
+--inventory-namespace:
+  namespace for the inventory object.
 </code></pre><!--mdtogo-->
 
         <div class="section-index">

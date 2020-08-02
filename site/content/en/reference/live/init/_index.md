@@ -27,7 +27,7 @@ kpt live init my-dir/
 
 ```sh
 # initialize a package with a specific name for the group of resources
-kpt live init --group-name=foo my-dir/
+kpt live init --inventory-namespace=test my-dir/
 ```
 <!--mdtogo-->
 
@@ -46,9 +46,9 @@ DIR:
 
 #### Flags
 ```
---group-name:
-  String name to group applied resources. Must be composed of valid
-  label value characters. If not specified, the default group name
-  is generated from the package directory name.
+--inventory-id:
+  Identifier for group of applied resources. Must be composed of valid label characters.
+--inventory-namespace:
+  namespace for the inventory object.
 ```
 <!--mdtogo-->

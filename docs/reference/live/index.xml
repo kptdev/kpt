@@ -440,7 +440,7 @@ such as apply, preview and destroy.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package&lt;/span&gt;
 kpt live init my-dir/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package with a specific name for the group of resources&lt;/span&gt;
-kpt live init --group-name&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;foo my-dir/
+kpt live init --inventory-namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;test&lt;/span&gt; my-dir/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
 &lt;!--mdtogo:Long--&gt;
@@ -450,10 +450,10 @@ kpt live init --group-name&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34
   Path to a package directory.  The directory must contain exactly
   one ConfigMap with the grouping object annotation.
 &lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
-&lt;pre&gt;&lt;code&gt;--group-name:
-  String name to group applied resources. Must be composed of valid
-  label value characters. If not specified, the default group name
-  is generated from the package directory name.
+&lt;pre&gt;&lt;code&gt;--inventory-id:
+  Identifier for group of applied resources. Must be composed of valid label characters.
+--inventory-namespace:
+  namespace for the inventory object.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
