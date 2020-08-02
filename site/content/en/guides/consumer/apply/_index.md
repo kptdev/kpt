@@ -86,6 +86,7 @@ kpt live init helloworld
 ### Init Output
 
 ```sh
+namespace: default is used for inventory object
 Initialized: helloworld/inventory-template.yaml
 ```
 
