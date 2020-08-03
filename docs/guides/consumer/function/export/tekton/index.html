@@ -455,52 +455,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/circleci/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">CircleCI</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportcircleci">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/cloud-build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Cloud Build</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportcloud-build">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/github-actions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">GitHub Actions</a>
   </li>
   <ul>
@@ -551,6 +505,52 @@ if (!doNotTrack) {
   </li>
   <ul>
     <li class="collapse " id="kptguidesconsumerfunctionexportjenkins">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/export/cloud-build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Cloud Build</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionexportcloud-build">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/export/circleci/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">CircleCI</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionexportcircleci">
       
       
       
@@ -1083,6 +1083,7 @@ if (!doNotTrack) {
     <li><a href="#exporting-a-pipeline">Exporting a pipeline</a></li>
     <li><a href="#integrating-with-your-existing-pipeline">Integrating with your existing pipeline</a></li>
     <li><a href="#run-the-pipeline-via-tekton-cli">Run the pipeline via Tekton CLI</a></li>
+    <li><a href="#next-step">Next step</a></li>
   </ul>
 </nav>
 
@@ -1152,18 +1153,33 @@ if (!doNotTrack) {
 	<h1>Exporting a Tekton Pipeline</h1>
 	<div class="lead">Export a Tekton pipeline that runs kpt functions</div>
 	<p>In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on <a href="https://tekton.dev/">Tekton</a> and modify it to make it fully functional. How to setting up Tekton is also included if you don&rsquo;t have one running yet. This tutorial takes about 20 minutes.</p>
+
+
+<div class="pageinfo pageinfo-info">
+<p>A kpt version <code>v0.32.0</code> or higher is required.</p>
+
+</div>
+
 <h2 id="before-you-begin">Before you begin</h2>
-<p>Before diving into the following tutorial, you may need to create a public repo on GitHub if you don&rsquo;t have one yet, e.g. <code>function-export-example</code>.</p>
+<p><em>New to Tekton? Here is a <a href="https://tekton.dev/docs/getting-started/">Getting Started</a></em>.</p>
+<p>Before diving into the following tutorial, you need to create a public repo on GitHub if you don&rsquo;t have one yet, e.g. <code>function-export-example</code>.</p>
 <p>On your local machine, create an empty directory:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mkdir <span style="color:#204a87;font-weight:bold">function</span>-export-example
 <span style="color:#204a87">cd</span> <span style="color:#204a87;font-weight:bold">function</span>-export-example
-</code></pre></div><p>All commands must be run at the root of this directory.</p>
+</code></pre></div>
+
+<div class="pageinfo pageinfo-warning">
+<p>All commands must be run at the root of this directory.</p>
+
+</div>
+
 <p>Use <code>kpt pkg get</code> to fetch source files of this tutorial:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint exmaple-package
-<span style="color:#8f5902;font-style:italic"># Init git</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#8f5902;font-style:italic"># Init git</span>
 git init
 git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
-</code></pre></div><p>Then you will get an <code>exmaple-package</code> directory:</p>
+<span style="color:#8f5902;font-style:italic"># Fetch source files</span>
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+</code></pre></div><p>Then you will get an <code>example-package</code> directory:</p>
 <ul>
 <li><code>resources/resources.yaml</code>: declares a <code>Deployment</code> and a <code>Namespace</code>.</li>
 <li><code>resources/constraints/</code>: declares constraints used by the <code>gatekeeper-validate</code> function.</li>
@@ -1178,8 +1194,11 @@ git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 <p>Follow the instructions in the <a href="https://tekton.dev/docs/getting-started/">Getting Started</a> guide of Tekton.</p>
 <ol>
 <li>
+<p>Check the <a href="https://tekton.dev/docs/getting-started#prerequisites">prerequisites</a>.</p>
+</li>
+<li>
 <p><a href="https://cloud.google.com/kubernetes-engine/docs/quickstart">Create a Kubernetes cluster</a> of version 1.15 or higher on Google Cloud.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">gcloud container clusters create tekton-cluster --cluster-version<span style="color:#ce5c00;font-weight:bold">=</span>1.15.11-gke.15
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">gcloud container clusters create tekton-cluster --cluster-version<span style="color:#ce5c00;font-weight:bold">=</span>1.15
 </code></pre></div></li>
 <li>
 <p>Install Tekton to the cluster.</p>
@@ -1214,7 +1233,7 @@ kubectl apply -f git/git-clone.yaml
 </code></pre></div></li>
 </ol>
 <h2 id="exporting-a-pipeline">Exporting a pipeline</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> exmaple-package --workflow tekton --output pipeline.yaml
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn <span style="color:#204a87">export</span> example-package --workflow tekton --output pipeline.yaml
 </code></pre></div><p>Running this command will get a <code>pipeline.yaml</code> like this:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>tekton.dev/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Task<span style="color:#f8f8f8;text-decoration:underline">
@@ -1230,7 +1249,7 @@ kubectl apply -f git/git-clone.yaml
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- fn<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- run<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- $(workspaces.source.path)/exmaple-package<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- $(workspaces.source.path)/example-package<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">volumeMounts</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>docker-socket<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">mountPath</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>/var/run/docker.sock<span style="color:#f8f8f8;text-decoration:underline">
@@ -1256,7 +1275,9 @@ kubectl apply -f git/git-clone.yaml
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">workspace</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>shared-workspace<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="integrating-with-your-existing-pipeline">Integrating with your existing pipeline</h2>
 <p>Now you can manually copy and paste the content of the <code>pipeline.yaml</code> into your existing pipeline.</p>
-<p>If you do not have one, you can copy the exported <code>pipeline.yaml</code> into your project root. To make it fully functional, you may need to add a <code>fetch-repository</code> as the first task in the pipeline.This task clones your github repo to the Tekton workspace. And make sure <code>run-kpt-functions</code> runs after it.</p>
+<p>If you do not have one, you can copy the exported <code>pipeline.yaml</code> into your project root. To make it fully functional, you may need to add a <code>fetch-repository</code> as the first task in the pipeline. This task clones your github repo to the Tekton workspace. Make sure <code>run-kpt-functions</code> runs after it.</p>
+<p><em>Remember to update the <code>https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git</code> placeholder with your repo in the following pipeline file</em>.</p>
+<p>If you want to see the diff after running kpt functions, append a <code>show-diff</code> step in the <code>run-kpt-functions</code> Task.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>tekton.dev/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Task<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1271,10 +1292,20 @@ kubectl apply -f git/git-clone.yaml
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- fn<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- run<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- $(workspaces.source.path)/exmaple-package<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- $(workspaces.source.path)/example-package<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">volumeMounts</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>docker-socket<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">mountPath</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>/var/run/docker.sock<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>show-diff<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/kpt<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">args</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- pkg<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- diff<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- $(workspaces.source.path)/example-package<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- --diff-tool<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- git<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- --diff-tool-opts<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">          </span>- <span style="color:#4e9a06">&#34;--no-pager diff&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">volumes</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>docker-socket<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">hostPath</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1307,7 +1338,10 @@ kubectl apply -f git/git-clone.yaml
 </span><span style="color:#f8f8f8;text-decoration:underline">          </span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>source<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">            </span><span style="color:#204a87;font-weight:bold">workspace</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>shared-workspace<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="run-the-pipeline-via-tekton-cli">Run the pipeline via Tekton CLI</h2>
-<p>To start the pipeline, run:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">git add .
+git commit -am <span style="color:#4e9a06">&#39;Init pipeline&#39;</span>
+git push --set-upstream origin master
+</code></pre></div><p>Once local changes are committed and pushed. Start the pipeline:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kubectl apply -f pipeline.yaml
 tkn pipeline start run-kpt-functions
 </code></pre></div><p>In the prompt, enter <code>shared-workspace</code> as workspace name, leave <code>Value of the Sub Path</code> blank, select <code>pvc</code> as <code>Type of the Workspace</code>, enter <code>workspace-pvc</code> as <code>Value of Claim Name</code>.</p>
@@ -1318,7 +1352,10 @@ tkn pipeline start run-kpt-functions
 
 <p>To view the output, run</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">tkn pipeline logs
-</code></pre></div>
+</code></pre></div><h2 id="next-step">Next step</h2>
+<p>Try to remove the <code>owner: alice</code> line in <code>example-package/resources/resources.yaml</code>.</p>
+<p>Once local changes are pushed, run the pipeline again, then you can see how it fails.</p>
+
         <div class="section-index">
     
     
@@ -1411,7 +1448,7 @@ tkn pipeline start run-kpt-functions
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/092e2171c7f29155873e85b8af68e1008bdfd61a">Docs: update kpt fn export guides (092e2171)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/045424554c1d17a4affd2b8b028fb99be4945a84">Docs: update guides of kpt fn export (04542455)</a>
 </div>
 </div>
 

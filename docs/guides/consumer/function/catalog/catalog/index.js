@@ -42,6 +42,9 @@ Run functions either imperatively or declaratively by following the [Functions U
 
 Implement configuration functions using any toolchain such as the [Typescript SDK][ts sdk] or [Golang Libraries][go libs].
 
+Note: Source functions and sink functions are *functions*. They are invoked by command \`kpt fn run\` instead of \`kpt fn source\` or \`kpt fn sink\`.
+\`kpt fn source\` and \`kpt fn sink\` commands are running specified builtin functions.
+
 ## Sources
 
 See [definition of source functions][source].

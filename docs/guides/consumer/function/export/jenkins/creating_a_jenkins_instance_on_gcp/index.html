@@ -36,12 +36,12 @@
  Go to the Firewall page. Click Create Firewall Rule. Specify a Name for your firewall rule, e.g. allow-http-8080. Select All instances in the network as Targets. Select IP ranges in the Source filter. Enter 0.0.0.0/0 as Source IP ranges. In Protocols and ports, use Specified protocols and ports, check tcp and input 8080. Click the Create button." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/function/export/jenkins/creating_a_jenkins_instance_on_gcp/" />
-<meta property="article:modified_time" content="2020-07-23T03:53:36+00:00" /><meta property="og:site_name" content="Kpt" />
+<meta property="article:modified_time" content="2020-07-31T21:07:28+00:00" /><meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="Creating a Jenkins Instance on GCP">
 <meta itemprop="description" content="Create a Firewall Rule that allows TCP connections to port 8080, which Jenkins uses.
  Go to the Firewall page. Click Create Firewall Rule. Specify a Name for your firewall rule, e.g. allow-http-8080. Select All instances in the network as Targets. Select IP ranges in the Source filter. Enter 0.0.0.0/0 as Source IP ranges. In Protocols and ports, use Specified protocols and ports, check tcp and input 8080. Click the Create button.">
-<meta itemprop="dateModified" content="2020-07-23T03:53:36+00:00" />
-<meta itemprop="wordCount" content="174">
+<meta itemprop="dateModified" content="2020-07-31T21:07:28+00:00" />
+<meta itemprop="wordCount" content="186">
 
 
 
@@ -460,52 +460,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/circleci/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">CircleCI</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportcircleci">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/cloud-build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Cloud Build</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportcloud-build">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/github-actions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">GitHub Actions</a>
   </li>
   <ul>
@@ -556,6 +510,52 @@ if (!doNotTrack) {
   </li>
   <ul>
     <li class="collapse show" id="kptguidesconsumerfunctionexportjenkins">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/export/cloud-build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Cloud Build</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionexportcloud-build">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/export/circleci/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">CircleCI</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionexportcircleci">
       
       
       
@@ -1173,7 +1173,12 @@ if (!doNotTrack) {
 <li>
 <p><a href="https://cloud.google.com/compute/docs/instances/create-start-instance">Create a new VM instance</a> of Ubuntu 18.04 LTS on GCP.</p>
 <ol>
-<li>Choose <code>Ubuntu 18.04 LTS</code> as image in <code>Boot disk</code>.</li>
+<li>Choose <code>Ubuntu 18.04 LTS</code> as image in <code>Boot disk</code>.
+<ol>
+<li>Click <code>change</code>.</li>
+<li>Scroll through the <code>version</code> dropdown to find the right one.</li>
+</ol>
+</li>
 <li>Expand <code>Management, security, disk, networking, sole tenancy</code>, click the <code>Networking</code> tab, enter the name of the firewall rule you created,  e.g. <code>allow-http-8080</code>.</li>
 </ol>
 </li>
@@ -1205,7 +1210,7 @@ sudo apt-get install jenkins
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 23, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a02fa1031ef57d5a6238da3af43f4c2c4ee8b6f8">Doc: add user guides of kpt fn export (a02fa103)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/045424554c1d17a4affd2b8b028fb99be4945a84">Docs: update guides of kpt fn export (04542455)</a>
 </div>
 </div>
 
