@@ -56,10 +56,12 @@ var AnnotateLong = `
   kpt cfg annotate DIR --kv KEY=VALUE...
 
 Args:
+
   DIR:
     Path to a package directory
 
 Flags:
+
   --apiVersion
     Only set annotations on resources with this apiVersion.
   
@@ -134,13 +136,14 @@ var CreateSetterLong = `
     e.g. 3
 
 Flags:
+
   --description
     Optional description about the value.
   
   --set-by
     Optional record of who set the value.
   
-  --value   
+  --value
     Optional flag, alternative to specifying the value as an argument
     e.g. used to specify values that start with '-'
 `
@@ -237,7 +240,7 @@ var DeleteSetterLong = `
 `
 var DeleteSetterExamples = `
   # delete a setter replicas
-  kpt cfg create-setter DIR/ replicas
+  kpt cfg delete-setter DIR/ replicas
 `
 
 var FmtShort = `Format configuration files`
@@ -266,6 +269,7 @@ var GrepLong = `
   kpt cfg grep QUERY DIR
 
 Args:
+
       QUERY:
         Query to match expressed as 'path.to.field=value'.
         Maps and fields are matched as '.field-name' or '.map-key'
@@ -277,6 +281,7 @@ Args:
         Path to a package directory
 
 Flags:
+
       --invert-match, -v
         keep resources NOT matching the specified pattern
 `
@@ -310,7 +315,7 @@ var ListSettersExamples = `
   kpt cfg list-setters hello-world/
   
     NAME     VALUE    SET BY    DESCRIPTION   COUNT  
-  replicas   4       isabella   good value    1   
+  replicas   4       isabella   good value    1
 `
 
 var SetShort = `Set one or more field values`
@@ -318,6 +323,7 @@ var SetLong = `
   kpt cfg set DIR NAME VALUE
 
 Args:
+
   DIR
     Path to a package directory. e.g. hello-world/
   
@@ -328,6 +334,7 @@ Args:
     The new value to set on fields. e.g. 3
 
 Flags:
+
   --description
     Optional description about the value.
   
@@ -335,7 +342,7 @@ Flags:
     Optional record of who set the value.  Clears the last set-by
     value if unset.
   
-  --values   
+  --values
     Optional flag, the values of the setter to be set to
     e.g. used to specify values that start with '-'
 `
@@ -359,10 +366,12 @@ var TreeLong = `
   kpt cfg tree [DIR] [flags]
 
 Args:
+
   DIR:
     Path to a package directory.  Defaults to STDIN if not specified.
 
 Flags:
+
   --args:
     if true, print the container args field
   

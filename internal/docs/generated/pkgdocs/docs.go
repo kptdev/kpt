@@ -62,6 +62,7 @@ var DiffLong = `
   kpt pkg diff [DIR@VERSION]
 
 Args:
+
   DIR:
     Local package to compare. Command will fail if the directory doesn't exist, or does not
     contain a Kptfile.  Defaults to the current working directory.
@@ -71,11 +72,12 @@ Args:
     Defaults to the local package version that was last fetched.
 
 Flags:
+
   --diff-type:
     The type of changes to view (local by default). Following types are
     supported:
   
-    local: shows changes in local package relative to upstream source package 
+    local: shows changes in local package relative to upstream source package
            at original version
     remote: shows changes in upstream source package at target version
             relative to original version
@@ -98,6 +100,7 @@ Flags:
     kpt pkg diff @master --diff-tool meld --diff-opts "-r"
 
 Environment Variables:
+
   KPT_EXTERNAL_DIFF:
      Commandline diffing tool (diff by default) that will be used to show
      changes.
@@ -127,6 +130,30 @@ var DiffExamples = `
   # Show 3way changes between the local package, upstream package at original
   # version and upstream package at target version using meld
   kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
+`
+
+var FixShort = `Fix a local package which is using deprecated features.`
+var FixLong = `
+  kpt pkg fix LOCAL_PKG_DIRECTORY [flags]
+  
+  Args:
+    LOCAL_PKG_DIRECTORY:
+      Local directory with kpt package. Directory must exist and
+      contain a Kptfile.
+  
+  Flags:
+    --dry-run
+      if set, the fix command shall only print the fixes which will be made to the
+      package without actually fixing/modifying the resources.
+  
+`
+var FixExamples = `
+  # print the fixes which will be made to the package without actually modifying 
+  # resources
+  kpt pkg fix . --dry-run
+
+  # fix the package if it is using deprecated features
+  kpt pkg fix .
 `
 
 var GetShort = `Fetch a package from a git repo.`
@@ -185,10 +212,12 @@ var InitLong = `
   kpt pkg init DIR [flags]
 
 Args:
+
   DIR:
     Init fails if DIR does not already exist
 
 Flags:
+
   --description
     short description of the package. (default "sample description")
   
@@ -217,6 +246,7 @@ var SyncLong = `
     contain a Kptfile.
 
 Env Vars:
+
   KPT_CACHE_DIR:
     Controls where to cache remote packages during updates.
     Defaults to ~/.kpt/repos/
@@ -237,7 +267,7 @@ var SetLong = `
     URI of a git repository containing 1 or more packages as subdirectories.
     In most cases the .git suffix should be specified to delimit the REPO_URI
     from the PKG_PATH, but this is not required for widely recognized repo
-    prefixes.  If get cannot parse the repo for the directory and version, 
+    prefixes.  If get cannot parse the repo for the directory and version,
     then it will print an error asking for '.git' to be specified as part of
     the argument.
     e.g. https://github.com/kubernetes/examples.git
@@ -265,6 +295,7 @@ var SetLong = `
         of the one that would be created: fail
 
 Flags:
+
   --strategy:
     Controls how changes to the local package are handled.
     Defaults to fast-forward.
@@ -307,6 +338,7 @@ var UpdateLong = `
   kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
 
 Args:
+
   LOCAL_PKG_DIR:
     Local package to update.  Directory must exist and contain a Kptfile
     to be updated.
@@ -322,6 +354,7 @@ Args:
       * commit: update the local contents to the remote commit
 
 Flags:
+
   --strategy:
     Controls how changes to the local package are handled.  Defaults to fast-forward.
   
@@ -344,6 +377,7 @@ Flags:
     Print the 'alpha-git-patch' strategy patch rather than merging it.
 
 Env Vars:
+
   KPT_CACHE_DIR:
     Controls where to cache remote packages when fetching them to update
     local packages.

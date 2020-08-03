@@ -65,4 +65,46 @@ the example.
 
 Note: if the ` + "`" + `--enable-exec` + "`" + ` flag is not provided, ` + "`" + `kpt fn run DIR/` + "`" + ` will ignore the exec
 function and exit 0.
+
+## Typescript Function Example
+
+You may want to run a function developed with one of the config function SDKs using the exec
+runtime in order to avoid the overhead associated with running a container. To run your function
+in the exec runtime, you will first need to package your function as an executable.
+
+We walk through an example of running a typescript function using the kpt exec runtime.
+
+### Prerequisites
+
+* Install the pkg CLI.
+
+    ` + "`" + `` + "`" + `` + "`" + `sh
+    npm install -g pkg
+    ` + "`" + `` + "`" + `` + "`" + `
+
+* Install your kpt-functions package module to create your function's distributable file.
+
+    ` + "`" + `` + "`" + `` + "`" + `sh
+    npm i
+    ` + "`" + `` + "`" + `` + "`" + `
+
+### Steps
+
+1. Use the pkg CLI to create an executable from your function's distributable file. For a my_func
+   function built using the typescript SDK, this is ` + "`" + `dist/my_func_run.js` + "`" + `.
+
+    ` + "`" + `` + "`" + `` + "`" + `sh
+    npx pkg dist/my_func_run.js
+    ` + "`" + `` + "`" + `` + "`" + `
+
+2. Pass the path to the appropriate executable for your OS when running kpt using the exec runtime.
+
+    ` + "`" + `` + "`" + `` + "`" + `sh
+    kpt fn run DIR/ --enable-exec --exec-path /path/to/my_func_run-macos -- foo=bar baz=qux
+    ` + "`" + `` + "`" + `` + "`" + `
+
+## Next Steps
+
+* Find out how to structure a pipeline of functions from the [functions concepts] page.
+* Consult the [fn command reference].
 `

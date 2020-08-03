@@ -17,7 +17,9 @@ package producer
 
 var BlueprintGuide = `
 {{% pageinfo color="warning" %}}
-# Notice: Under Development
+
+### Notice: Under Development
+
 {{% /pageinfo %}}
 
 *Reusable, customizable components can be built and shared as blueprints.*
@@ -40,8 +42,8 @@ can pull in changes to a blueprint after fetching it.
 - **Platforms**: Kubeflow, Spark
 - **Applications / Stacks**:
   - Rails Backend + Node Frontend + Prometheus
-  - Spring Cloud Microservices (discovery-server, config-server, api-gateway, 
-    admin-server, hystrix, various backends) 
+  - Spring Cloud Microservices (discovery-server, config-server, api-gateway,
+    admin-server, hystrix, various backends)
 - **Infrastructure Stacks**: CloudSQL + Pubsub + GKE
 
 {{< svg src="images/blueprint" >}}
@@ -129,7 +131,7 @@ publisher?
   volumes.
 
 Flags and arguments may be factored into publisher and consumer focused pieces
-by **specifying the ` + "`" + `command` + "`" + ` in the ` + "`" + `upstream` + "`" + ` base dir and the ` + "`" + `args` + "`" + ` in the 
+by **specifying the ` + "`" + `command` + "`" + ` in the ` + "`" + `upstream` + "`" + ` base dir and the ` + "`" + `args` + "`" + ` in the
 ` + "`" + `instance` + "`" + ` dir**.  This allows consumers to set and add flags using ` + "`" + `args` + "`" + `
 without erasing those defined by the publisher in the ` + "`" + `command` + "`" + `.
 
@@ -175,7 +177,7 @@ Example: Enable setting ` + "`" + `--skip-grant-tables` + "`" + ` as a flag on m
     behavior: merge
     literals:
     # for bootstrapping the root table grants -- set to false after bootstrapped
-    - "skip-grant-tables=true" # {"$ref":"#/definitions/io.k8s.cli.substitutions.skip-grant-tables"}
+    - "skip-grant-tables=true" # {"$kpt-set":"skip-grant-tables"}
 
 ### Generating ConfigMaps and Secrets
 
@@ -205,9 +207,9 @@ Example Instance:
   - name: mysql
     behavior: merge
     literals:
-    - "skip-grant-tables=true" # {"$ref":"#/definitions/io.k8s.cli.substitutions.skip-grant-tables"}
-    - "mysql-user=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-user"}
-    - "mysql-database=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-database"}
+    - "skip-grant-tables=true" # {"$kpt-set":"skip-grant-tables"}
+    - "mysql-user=" # {"$kpt-set":"mysql-user"}
+    - "mysql-database=" # {"$kpt-set":"mysql-database"}
 
 ## Setters and Substitutions
 
@@ -234,15 +236,15 @@ See the [setter] and [substitution] guides for details.
   kind: Kustomization
   #
   # namespace is the namespace the mysql instance is run in
-  namespace: "" # {"$ref":"#/definitions/io.k8s.cli.setters.namespace"}
+  namespace: "" # {"$kpt-set":"namespace"}
   configMapGenerator:
   - name: mysql
     behavior: merge
     literals:
     # for bootstrapping the root table grants -- set to false after bootstrapped
-    - "skip-grant-tables=true" # {"$ref":"#/definitions/io.k8s.cli.substitutions.skip-grant-tables"}
-    - "mysql-user=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-user"}
-    - "mysql-database=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-database"}
+    - "skip-grant-tables=true" # {"$kpt-set":"skip-grant-tables"}
+    - "mysql-user=" # {"$kpt-set":"mysql-user"}
+    - "mysql-database=" # {"$kpt-set":"mysql-database"}
   ...
 
   # mysql/instance/statefulset.yaml
@@ -258,11 +260,11 @@ See the [setter] and [substitution] guides for details.
   ...
           ports:
           - name: mysql
-            containerPort: 3306 # {"$ref":"#/definitions/io.k8s.cli.setters.port"}
+            containerPort: 3306 # {"$kpt-set":"port"}
           resources:
             requests:
-              cpu: 100m # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}
-              memory: 256Mi # {"$ref":"#/definitions/io.k8s.cli.setters.memory"}
+              cpu: 100m # {"$kpt-set":"cpu"}
+              memory: 256Mi # {"$kpt-set":"memory"}
 
   # mysql/instance/service.yaml
   apiVersion: v1
@@ -271,7 +273,7 @@ See the [setter] and [substitution] guides for details.
   spec:
     ports:
     - name: mysql
-      port: 3306 # {"$ref":"#/definitions/io.k8s.cli.setters.port"}
+      port: 3306 # {"$kpt-set":"port"}
       targetPort: mysql
 
 ## Updates

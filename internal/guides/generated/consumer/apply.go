@@ -33,11 +33,27 @@ resources for deleted configuration.
 
 ## Steps
 
-1. [Fetch a remote package](#fetch-a-remote-package)
-2. [Initialize the package inventory template](#initialize-the-package-inventory-template)
-3. [Apply to a cluster](#apply-to-a-cluster)
-4. [Print the live resources](#print-the-live-resources)
-4. [Prune resources](#prune-resources)
+- [Topics](#topics)
+- [Steps](#steps)
+- [Fetch a remote package](#fetch-a-remote-package)
+  - [Command](#command)
+  - [Output](#output)
+- [Initialize the package inventory template](#initialize-the-package-inventory-template)
+  - [Init Command](#init-command)
+  - [Init Output](#init-output)
+  - [Inventory template](#inventory-template)
+- [Apply to a cluster](#apply-to-a-cluster)
+  - [Apply Command](#apply-command)
+  - [Apply Output](#apply-output)
+- [Print the live resources](#print-the-live-resources)
+  - [Print Command](#print-command)
+  - [Print Output](#print-output)
+  - [Command: ` + "`" + `tree` + "`" + `](#command-tree)
+  - [Output: ` + "`" + `tree` + "`" + `](#output-tree)
+- [Prune resources](#prune-resources)
+  - [Prune Command](#prune-command)
+  - [Prune Output](#prune-output)
+  - [Print the live resources after pruning](#print-the-live-resources-after-pruning)
 
 ## Fetch a remote package
 
@@ -57,7 +73,7 @@ Grab a remote package to apply to a cluster.
 The kpt version of apply uses a ConfigMap map to keep track of previously
 applied resources so they can be pruned later if the configuration for
 them is deleted. The [kpt live init] command will generate an inventory template
-(which is just a normal ConfigMap manifest with a special annotation) used by 
+(which is just a normal ConfigMap manifest with a special annotation) used by
 [kpt live apply] to generate an actual ConfigMap in the cluster which we refer
 to as an inventory object.
 
@@ -66,15 +82,15 @@ The inventory template must be created for a package to be applied using
 ` + "`" + `kpt live apply` + "`" + `.
 {{% /pageinfo %}}
 
-##### Command
+### Init Command
 
   kpt live init helloworld
 
-##### Output
+### Init Output
 
   Initialized: helloworld/inventory-template.yaml
 
-##### Inventory template
+### Inventory template
 
   apiVersion: v1
   kind: ConfigMap
@@ -95,14 +111,14 @@ rest of the package, but otherwise ignored by users.
 
 ## Apply to a cluster
 
-##### Command
+### Apply Command
 
   kpt live apply helloworld --reconcile-timeout=2m
 
 Apply the resources to the cluster and block until the changes have
 been fully rolled out -- e.g. until the Pods are running.
 
-##### Output
+### Apply Output
 
   configmap/inventory-17c4dd3c created
   service/helloworld-gke created
@@ -123,11 +139,11 @@ be rolled out.
 
 Display the resources in the cluster using kubectl.
 
-##### Command
+### Print Command
 
   kubectl get configmaps,deploy,services
 
-##### Output
+### Print Output
 
   NAME                                 DATA   AGE
   configmap/inventory-28c4kc3c         2      2m47s
@@ -139,14 +155,14 @@ Display the resources in the cluster using kubectl.
   service/helloworld-gke   NodePort    10.48.2.143   <none>        80:32442/TCP   2m47s
   service/kubernetes       ClusterIP   10.48.0.1     <none>        443/TCP        19m
 
-##### Command: ` + "`" + `tree` + "`" + `
+### Command: ` + "`" + `tree` + "`" + `
 
   kubectl get all -o yaml | kpt cfg tree
 
 The output of kubectl can also be piped to [kpt cfg tree] to summarize
 the resources.
 
-##### Output: ` + "`" + `tree` + "`" + `
+### Output: ` + "`" + `tree` + "`" + `
 
   .
   ├── [Resource]  Deployment default/helloworld-gke
@@ -164,7 +180,7 @@ the resources.
 Resources can be deleted from the cluster by deleting them from the
 resource configuration.sh
 
-##### Command
+### Prune Command
 
   rm helloworld/deploy.yaml
   kpt live apply helloworld/ --reconcile-timeout=2m
@@ -173,7 +189,7 @@ Apply uses the previously created inventory objects (ConfigMaps) to calculate
 the set of resources to prune (delete) after applying.  In this case the
 Deployment.
 
-##### Output 
+### Prune Output
 
   service/helloworld-gke is Current: Service is ready
   resources failed to the reached Current status
@@ -181,10 +197,9 @@ Deployment.
   configmap/inventory-2911da3b pruned
   2 resource(s) pruned
 
-##### Print the live resources
+### Print the live resources after pruning
 
   kubectl get deploy
 
   No resources found in default namespace.
-
 `

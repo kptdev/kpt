@@ -35,7 +35,7 @@ from upstream.
 The technique of merging fields to perform updates is also how ` + "`" + `kubectl apply` + "`" + `
 updates remote cluster resources with local file changes, without overwriting
 changes to the resources made by the cluster control-plane (e.g. an autoscaler
-can set replicas without apply overwriting them). 
+can set replicas without apply overwriting them).
 
 See [update strategies] for more choices on how to merge upstream changes.
 {{% /pageinfo %}}
@@ -54,25 +54,35 @@ in this guide.
 
 ## Steps
 
-1. [Fetch a remote package](#fetch-a-remote-package)
-2. [Edit the contents](#edit-the-contents)
-3. [Commit local changes](#commit-local-changes)
-4. [Merge upstream changes](#merge-upstream-changes)
-5. [View new package contents](#view-new-package-contents)
+- [Topics](#topics)
+- [` + "`" + `kpt pkg update` + "`" + ` explained](#kpt-pkg-update-explained)
+- [Steps](#steps)
+- [Fetch a remote package](#fetch-a-remote-package)
+  - [Fetch Command](#fetch-command)
+  - [Fetch Output](#fetch-output)
+- [Edit the contents](#edit-the-contents)
+  - [Old local configuration](#old-local-configuration)
+  - [New local configuration](#new-local-configuration)
+- [Commit local changes](#commit-local-changes)
+- [Merge upstream changes](#merge-upstream-changes)
+  - [Merge Command](#merge-command)
+  - [Merge Output](#merge-output)
+  - [Merge Changes](#merge-changes)
+- [View new package contents](#view-new-package-contents)
 
 ## Fetch a remote package
 
 Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.
 
-##### Command
+### Fetch Command
 
   export REPO=https://github.com/GoogleContainerTools/kpt.git
   kpt pkg get $REPO/package-examples/helloworld-set@v0.3.0 helloworld
 
 Fetch the ` + "`" + `helloworld-set` + "`" + ` package at version ` + "`" + `v0.3.0` + "`" + `.
 
-##### Output
+### Fetch Output
 
   fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 
@@ -90,7 +100,7 @@ resolved to the tag ` + "`" + `v0.3.0` + "`" + `.
 
 Edit the contents of the package by making changes to it.
 
-##### Old local configuration
+### Old local configuration
 
   # helloworld/deploy.yaml (upstream)
   ...
@@ -105,7 +115,7 @@ The old package contents without local modifications.
 
   vi helloworld/deploy.yaml
 
-#####  New local configuration
+### New local configuration
 
   # helloworld/deploy.yaml (locally modified)
   ...
@@ -139,7 +149,7 @@ has uncommitted changes.
 Package updates are performed by fetching the upstream package at the
 specified version and applying the upstream changes to the local package.
 
-##### Command
+### Merge Command
 
   kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 
@@ -147,11 +157,11 @@ Update the local package to the upstream version v0.5.0 by doing a 3-way
 merge between 1) the original upstream commit, 2) the local (customized)
 package, 3) the new upstream reference.
 
-##### Output
+### Merge Output
 
   updating package helloworld to v0.5.0
 
-##### Changes
+### Merge Changes
 
   +++ b/helloworld/service.yaml
   @@ -22,7 +22,7 @@ metadata:

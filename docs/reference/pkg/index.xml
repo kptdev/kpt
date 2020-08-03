@@ -132,6 +132,48 @@ KPT_EXTERNAL_DIFF_OPTS:
     </item>
     
     <item>
+      <title>Reference: Fix</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/pkg/fix/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/pkg/fix/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Fix a local package which is using deprecated features.
+--&gt;
+&lt;p&gt;Fix reads the local package, modifies the package to use the latest kpt features
+and fixes any deprecated feature traces.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;h4 id=&#34;example-fix-commands&#34;&gt;Example fix commands&lt;/h4&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print the fixes which will be made to the package without actually modifying&lt;/span&gt; 
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# resources&lt;/span&gt;
+kpt pkg fix . --dry-run
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# fix the package if it is using deprecated features&lt;/span&gt;
+kpt pkg fix .
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt pkg fix LOCAL_PKG_DIRECTORY [flags]
+
+Args:
+  LOCAL_PKG_DIRECTORY:
+    Local directory with kpt package. Directory must exist and
+    contain a Kptfile.
+
+Flags:
+  --dry-run
+    if set, the fix command shall only print the fixes which will be made to the
+    package without actually fixing/modifying the resources.
+
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
       <title>Reference: Get</title>
       <link>https://googlecontainertools.github.io/kpt/reference/pkg/get/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

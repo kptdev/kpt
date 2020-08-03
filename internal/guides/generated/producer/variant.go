@@ -17,5 +17,7 @@ package producer
 
 var VariantGuide = `
 {{% pageinfo color="warning" %}}
+
 # Notice: Under Development
+
 {{% /pageinfo %}}`

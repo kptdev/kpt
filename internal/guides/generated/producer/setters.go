@@ -111,11 +111,12 @@ command will:
    replicas: 5 # {"$kpt-set":"replicas"}
 
 #### OpenAPI Validations
+
 Users can input any additional validation constraints during ` + "`" + `create-setter` + "`" + `
 operation in the form of openAPI schema. Relevant openAPI specification
 constraints can be provided in json file format. The ` + "`" + `set` + "`" + ` operation validates
 the input value against provided schema during setter creation and throws an
-error if the input value doesn't meet any of the constraints. 
+error if the input value doesn't meet any of the constraints.
 
   $ cat /path/to/file.json
   {"maximum": 10, "type": "integer"}
@@ -286,6 +287,112 @@ Set would change the configuration like this:
         requests:
           cpu: "0.5" # {"$kpt-set":"cpu"}
 
+#### Marking a field as required
+
+Package publisher can mark a setter as required to convey the consumer that the
+setter value must be set before triggering live apply/preview operation
+on the package.
+
+  # create a setter named "replicas" and mark it as required
+  kpt cfg create-setter hello-world/ replicas 3 --required
+
+  # deployment-foo.yaml
+  kind: Deployment
+  metadata:
+    name: foo
+  spec:
+    replicas: 3 # {"$kpt-set":"replicas"}
+
+  # Kptfile
+  openAPI:
+    definitions:
+      io.k8s.cli.setters.replicas:
+        x-k8s-cli:
+          setter:
+            name: "replicas"
+            value: "3"
+            required: true
+
+  # if you live apply/preview without setting the value
+  kpt live apply hello-world/
+  
+  error: setter replicas is required but not set, please set it and try again
+
+  # set the replicas value
+  kpt cfg set hello-world/ replicas 4
+  
+  kpt live apply hello-world/
+  # Success
+
+#### Modifying a Setter
+
+Setters are uniquely identified by their name. create-setter command can be leveraged
+to modify an existing setter definition. Users may choose to modify setters in following
+scenarios.
+
+1. Add new features to existing setters, such as openAPI validations, marking setter
+as required setter etc.
+2. Add existing setter references to new resources that are added to package.
+
+Consider an existing package with deployment-foo.yaml and Kptfile as follows.
+
+  # deployment-foo.yaml
+  kind: Deployment
+  metadata:
+    name: foo
+  spec:
+    replicas: 3 # {"$kpt-set":"replicas"}
+
+  # Kptfile
+  openAPI:
+    definitions:
+      io.k8s.cli.setters.replicas:
+        x-k8s-cli:
+          setter:
+            name: "replicas"
+            value: "3"
+
+Add new resource to the package
+
+  # deployment-bar.yaml
+  kind: Deployment
+  metadata:
+    name: bar
+  spec:
+    replicas: 3
+
+  $ cat /path/to/file.json
+  {"maximum": 10, "type": "integer"}
+  
+  # modify existing setter replicas with openAPI property constraints and required flag
+  kpt cfg create-setter DIR/ replicas 3 --schema-path /path/to/file.json --required
+
+  # Kptfile -- updated
+  openAPI:
+    definitions:
+      io.k8s.cli.setters.replicas:
+        maximum: 10
+        type: integer
+        x-k8s-cli:
+          setter:
+            name: replicas
+            value: "3"
+            required: true
+
+  # deployment-foo.yaml -- remains unchanged
+  kind: Deployment
+  metadata:
+    name: foo
+  spec:
+    replicas: 3 # {"$kpt-set":"replicas"}
+
+  # deployment-bar.yaml -- setter ref added
+  kind: Deployment
+  metadata:
+    name: bar
+  spec:
+    replicas: 3 # {"$kpt-set":"replicas"}
+
 #### Deleting a Setter
 
 Setters may be deleted either manually (by editing the Kptfile directly), or
@@ -313,6 +420,7 @@ command will:
 
   # delete a setter named "replicas"
   kpt cfg delete-setter replicas
+
   # Kptfile -- updated
   openAPI:
 
@@ -321,5 +429,5 @@ command will:
   metadata:
     name: foo
   spec:
-    replicas: 3 
+    replicas: 3
 `

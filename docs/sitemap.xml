@@ -259,7 +259,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
-    <lastmod>2020-07-31T11:40:15-07:00</lastmod>
+    <lastmod>2020-07-31T21:43:27+00:00</lastmod>
   </url>
   
   <url>
@@ -390,6 +390,11 @@
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/live/fetch-k8s-schema/</loc>
     <lastmod>2020-07-16T12:34:28-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/reference/pkg/fix/</loc>
+    <lastmod>2020-07-28T23:29:07-07:00</lastmod>
   </url>
   
   <url>

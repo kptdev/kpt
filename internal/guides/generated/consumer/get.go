@@ -53,11 +53,11 @@ Packages are **fetched from remote git repository subdirectories** using
 [kpt pkg get].  This guide will use the [kubernetes examples] repository
 as a public package catalogue.
 
-##### Command
+### Fetch Command
 
   kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
 
-##### Output
+### Fetch Output
 
   fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
 
@@ -66,21 +66,22 @@ The contents of the ` + "`" + `staging/cockroachdb` + "`" + ` subdirectory in th
 ` + "`" + `cockroachdb` + "`" + `.
 
 {{% pageinfo color="info" %}}
+
 - Any git subdirectory containing configuration (e.g. ` + "`" + `deploy.yaml` + "`" + `) may be
   fetched and used as a package
 - The local directory name that the package is copied to does NOT need to
   match the upstream directory name it is copied from
 - including ` + "`" + `.git` + "`" + ` as part of the repo name is optional but good practice to
   ensure the repo + subdirectory are parsed correctly by the tool.
-- Packages inside the same repo can be versioned individually by creating tags 
+- Packages inside the same repo can be versioned individually by creating tags
   with the format ` + "`" + `<path to package in repo>/<version>` + "`" + `, similar to how go
-  modules are versioned. For example, a tag named ` + "`" + `staging/cockroachdb/v1.2.3` + "`" + ` 
+  modules are versioned. For example, a tag named ` + "`" + `staging/cockroachdb/v1.2.3` + "`" + `
   would be interpreted by kpt as version ` + "`" + `v1.2.3` + "`" + ` of the cockroachdb package.
 {{% /pageinfo %}}
 
 ## View the Kptfile
 
-##### Command
+### Kptfile Command
 
 The upstream commit and branch / tag reference are stored in the package's
 [Kptfile].  These are used by ` + "`" + `kpt pkg update` + "`" + `.
@@ -89,7 +90,7 @@ The upstream commit and branch / tag reference are stored in the package's
 
 Print the ` + "`" + `Kptfile` + "`" + ` written by ` + "`" + `kpt pkg get` + "`" + ` to see the upstream package data.
 
-##### Output
+### Kptfile Output
 
   apiVersion: kpt.dev/v1alpha1
   kind: Kptfile
@@ -109,11 +110,11 @@ The primary package artifacts are Kubernetes [resource configuration]
 (e.g. YAML files), however packages may also include supporting
 artifacts such as documentation.
 
-##### Command
+### Package Contents Command
 
   tree cockroachdb/
 
-##### Output
+### Package Contents Output
 
   cockroachdb/
   ├── Kptfile
@@ -136,11 +137,11 @@ as other files included in the directory.
 upstream rather than replacing it.
 {{% /pageinfo %}}
 
-##### Command
+### Command
 
   head cockroachdb/cockroachdb-statefulset.yaml
 
-##### Output
+### Output
 
   apiVersion: v1
   kind: Service
@@ -163,11 +164,11 @@ specific resources or fields.
 
 Use ` + "`" + `kubectl apply` + "`" + ` to deploy the local package to a remote cluster.
 
-##### Command
+### Apply Command
 
   kubectl apply -R -f cockroachdb
 
-##### Output
+### Apply Output
 
   service/cockroachdb-public created
   service/cockroachdb created
@@ -182,17 +183,16 @@ Kpt also provides the next-generation set of Kubernetes apply commands under
 the [kpt live] command.
 {{% /pageinfo %}}
 
-
 ## View the applied package
 
 Once applied to the cluster, the remote resources can be displayed using
 the common tools such as ` + "`" + `kubectl get` + "`" + `.
 
-##### Command
+### Applied Package Command
 
   kubectl get all
 
-##### Output
+### Applied Package Output
 
   NAME                READY   STATUS    RESTARTS   AGE
   pod/cockroachdb-0   1/1     Running   0          54s
