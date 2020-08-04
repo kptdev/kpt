@@ -58,17 +58,17 @@ created setter with name cluster
 created setter with name profile
 created setter with name project
 created 3 setters in total
-created substitution with name subst-project-cluster
+created substitution with name project-cluster-54235872
 created 1 substitution in total
 `,
 
 			expectedOutput: `apiVersion: install.istio.io/v1alpha2
 kind: IstioControlPlane
 metadata:
-  cluster: "someproj/someclus" # {"$kpt-set":"subst-project-cluster"}
+  cluster: "someproj/someclus" # {"$kpt-set":"project-cluster-54235872"}
 spec:
-  profile: asm # {"$openapi":"profile"}
-  cluster: "someproj/someclus" # {"$kpt-set":"subst-project-cluster"}
+  profile: asm # {"$kpt-set":"profile"}
+  cluster: "someproj/someclus" # {"$kpt-set":"project-cluster-54235872"}
 `,
 
 			expectedOpenAPI: `apiVersion: kustomization.dev/v1alpha1
@@ -93,10 +93,10 @@ openAPI:
         setter:
           name: project
           value: someproj
-    io.k8s.cli.substitutions.subst-project-cluster:
+    io.k8s.cli.substitutions.project-cluster-54235872:
       x-k8s-cli:
         substitution:
-          name: subst-project-cluster
+          name: project-cluster-54235872
           pattern: ${project}/${cluster}
           values:
           - marker: ${project}
@@ -124,7 +124,7 @@ created setter with name cluster (dry-run)
 created setter with name profile (dry-run)
 created setter with name project (dry-run)
 created 3 setters in total (dry-run)
-created substitution with name subst-project-cluster (dry-run)
+created substitution with name project-cluster-54235872 (dry-run)
 created 1 substitution in total (dry-run)
 `,
 			expectedOutput: `apiVersion: install.istio.io/v1alpha2
@@ -219,6 +219,12 @@ spec:
 				}
 				return
 			}
+
+			actualOutput, err := ioutil.ReadFile(filepath.Join(dir, "deploy.yaml"))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			assert.Equal(t, test.expectedOutput, string(actualOutput))
 
 			if test.expectedOpenAPI != "" {
 				actualOpenAPI, err := ioutil.ReadFile(filepath.Join(dir, openAPIFileName))

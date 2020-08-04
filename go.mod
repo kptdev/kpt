@@ -25,5 +25,5 @@ require (
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
 	sigs.k8s.io/cli-utils v0.17.0
 	sigs.k8s.io/kustomize/cmd/config v0.4.3-0.20200730200907-17f935452fb9
-	sigs.k8s.io/kustomize/kyaml v0.4.3-0.20200730200907-17f935452fb9
+	sigs.k8s.io/kustomize/kyaml v0.4.3-0.20200804211140-436c688bd077
 )

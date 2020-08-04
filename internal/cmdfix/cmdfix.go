@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/fix"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 )
 
 // NewRunner returns a command runner
@@ -74,5 +75,6 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	fieldmeta.SetShortHandRef("$kpt-set")
 	return r.Fix.Run()
 }
