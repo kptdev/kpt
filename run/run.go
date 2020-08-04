@@ -157,6 +157,7 @@ func GetMain() *cobra.Command {
 	replace(cmd)
 
 	cmd.AddCommand(versionCmd)
+	hideFlags(cmd)
 	return cmd
 }
 
@@ -230,4 +231,37 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s\n", version)
 	},
+}
+
+// hideFlags hides any cobra flags that are unlikely to be used by
+// customers.
+func hideFlags(cmd *cobra.Command) {
+	flags := []string{
+		// Flags related to logging
+		"add_dir_header",
+		"alsologtostderr",
+		"log_backtrace_at",
+		"log_dir",
+		"log_file",
+		"log_file_max_size",
+		"skip_headers",
+		"skip_log_headers",
+		"vmodule",
+
+		// Flags related to apiserver
+		"as",
+		"as-group",
+		"cache-dir",
+		"certificate-authority",
+		"client-certificate",
+		"client-key",
+		"insecure-skip-tls-verify",
+		"match-server-version",
+		"password",
+		"token",
+		"username",
+	}
+	for _, f := range flags {
+		_ = cmd.PersistentFlags().MarkHidden(f)
+	}
 }
