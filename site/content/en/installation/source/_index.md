@@ -1,7 +1,7 @@
 ---
 title: "source code"
 linkTitle: "source code"
-weight: 4
+weight: 5
 type: docs
 description: >
     Dust off your go compiler and install from source.

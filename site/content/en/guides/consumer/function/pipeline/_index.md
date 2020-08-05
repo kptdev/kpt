@@ -9,10 +9,12 @@ description: >
 
 ## Composing a Pipeline
 
-In order do something useful with a function, we need to compose a [Pipeline][concept-pipeline] with a
-source and a sink function.
+In order do something useful with a function, we need to compose a
+[Pipeline][concept-pipeline] with a source and a sink function.
 
-This guide covers how to use `kpt fn` to run a pipeline of functions. You can also use a container-based workflow orchestrator like [Cloud Build][cloud-build], [Tekton][tekton], or [Argo Workflows][argo].
+This guide covers how to use `kpt fn` to run a pipeline of functions. You can
+also use a container-based workflow orchestrator like
+[Cloud Build][cloud-build], [Tekton][tekton], or [Argo Workflows][argo].
 
 ### Example
 
@@ -68,7 +70,8 @@ kpt fn run .
 git status
 ```
 
-You can have multiple function declarations in a directory. Let's add a second function:
+You can have multiple function declarations in a directory. Let's add a second
+function:
 
 ```sh
 cat << EOF > kpt-func2.yaml
@@ -92,7 +95,8 @@ EOF
 kpt fn run .
 ```
 
-In this case, `validate-rolebinding` will find policy violations and fail with a non-zero exit code.
+In this case, `validate-rolebinding` will find policy violations and fail with
+a non-zero exit code.
 
 Refer to help pages for more details on how to use `kpt fn`
 

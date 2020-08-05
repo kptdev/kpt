@@ -262,33 +262,35 @@ if (!doNotTrack) {
 	<h1>FAQ</h1>
 	<div class="lead">Frequently asked questions</div>
 	<h4 id="q-whats-with-the-name"><strong>Q: What&rsquo;s with the name?</strong></h4>
-<p>A: <code>kpt</code> was inspired by <code>apt</code>, but with a Kubernetes focus. We wanted to uphold the tradition
-of naming tools to start with <code>k</code>, and also be short enough that you don&rsquo;t have to alias it.
-It is pronounced &ldquo;kept&rdquo;.</p>
+<p>A: <code>kpt</code> was inspired by <code>apt</code>, but with a Kubernetes focus. We wanted to
+uphold the tradition of naming tools to start with <code>k</code>, and also be short
+enough that you don&rsquo;t have to alias it. It is pronounced &ldquo;kept&rdquo;.</p>
 <h4 id="q-what-does-kpt-provide-that-git-clone-doesnt"><strong>Q: What does kpt provide that git clone doesn&rsquo;t</strong></h4>
 <p>A: <code>kpt</code> enables out-of-the-box workflows that <code>git clone</code> does not such as:
 cloning and versioning git subdirectories, updating from upstream by
 performing structured merges on resources, programmatically editing
 configuration (rather than with an editor), etc</p>
 <h4 id="q-how-is-kpt-different-from-other-solutions"><strong>Q: How is <code>kpt</code> different from other solutions?</strong></h4>
-<p>A: Rather than expressing configuration as code, <code>kpt</code> represents configuration packages as data,
-in particular as YAML or JSON objects adhering to the <a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md">kubernetes resource model</a></p>
+<p>A: Rather than expressing configuration as code, <code>kpt</code> represents configuration
+packages as data, in particular as YAML or JSON objects adhering to the
+<a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md">kubernetes resource model</a></p>
 <h4 id="q-why-resource-configuration-as-the-artifact-rather-than-templates-or-configuration-dsls"><strong>Q: Why resource configuration as the artifact rather than templates or configuration DSLs?</strong></h4>
 <p>A: As explained in <a href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md">Declarative application management in Kubernetes</a>,
 using resource configuration provides a number of desirable properties:</p>
 <ol>
 <li>
-<p>it clearly <strong>represents the intended state</strong> of the infrastructure &ndash; no for loops, http calls,
-etc to interpret</p>
+<p>it clearly <strong>represents the intended state</strong> of the infrastructure &ndash; no for
+loops, http calls, etc to interpret</p>
 </li>
 <li>
-<p>it <strong>aligns with how tools developed by the Kubernetes project are written</strong> &ndash;
-<code>kubectl</code>, <code>kustomize</code>, etc</p>
+<p>it <strong>aligns with how tools developed by the Kubernetes project are written</strong>
+&ndash; <code>kubectl</code>, <code>kustomize</code>, etc</p>
 </li>
 <li>
 <p>it enables <strong>composition of different types of tools written in different languages</strong></p>
 <ul>
-<li>any modern language can manipulate YAML / JSON structures, no need to adopt <code>go</code></li>
+<li>any modern language can manipulate YAML / JSON structures, no need to
+adopt <code>go</code></li>
 </ul>
 </li>
 <li>
@@ -300,35 +302,40 @@ etc to interpret</p>
 <li>
 <p>it <strong>supports programmatic modification</strong></p>
 <ul>
-<li>develop CLIs and UIs for working with configuration rather than using <code>vim</code></li>
+<li>develop CLIs and UIs for working with configuration rather than using
+<code>vim</code></li>
 </ul>
 </li>
 <li>
-<p>it <strong>supports customizing generated resources</strong> so the templates don&rsquo;t need to be modified</p>
+<p>it <strong>supports customizing generated resources</strong> so the templates don&rsquo;t need
+to be modified</p>
 <ul>
-<li>artifacts generated from templates or DSLs may be modified directly, and then merged
-when they are regenerated to keep the modifications.</li>
+<li>artifacts generated from templates or DSLs may be modified directly, and
+then merged when they are regenerated to keep the modifications.</li>
 </ul>
 </li>
 <li>
-<p>it <strong>supports display in UI and tools</strong> which use either OpenAPI or the YAML/JSON directly.</p>
+<p>it <strong>supports display in UI and tools</strong> which use either OpenAPI or the
+YAML/JSON directly.</p>
 </li>
 </ol>
 <h4 id="q-isnt-writing-yaml-hard"><strong>Q: Isn&rsquo;t writing YAML hard?</strong></h4>
-<p>A: <code>kpt</code> offers a collection of utilities which enable working with configuration
-programmatically to simplify the experience. Using <code>vi</code> to edit YAML should be
-necessary only for bootstrapping, and the common cases should use <a href="../reference/cfg/set/">setters</a>
-or <a href="../reference/fn/run/">functions</a> to generate or modify YAML configuration.</p>
+<p>A: <code>kpt</code> offers a collection of utilities which enable working with
+configuration programmatically to simplify the experience. Using <code>vi</code> to edit
+YAML should be necessary only for bootstrapping, and the common cases should
+use <a href="../reference/cfg/set/">setters</a> or <a href="../reference/fn/run/">functions</a> to generate or modify YAML configuration.</p>
 <h4 id="q-i-really-like-dsl--templating-solution-x-can-i-use-it-with-kpt"><strong>Q: I really like DSL / templating solution X. Can I use it with <code>kpt</code>?</strong></h4>
-<p>A: Yes. <code>kpt</code> supports plugging in solutions which generate or manipulate configuration, e.g. from
-DSLs and templates. This may be performed using <a href="../guides/consumer/function/catalog/#sources">source functions</a> from our catalog. The generated
-output may be modified directly, and merged when regenerated.</p>
+<p>A: Yes. <code>kpt</code> supports plugging in solutions which generate or manipulate
+configuration, e.g. from DSLs and templates. This may be performed using
+<a href="../guides/consumer/function/catalog/#sources">source functions</a> from our catalog. The generated output may be modified
+directly, and merged when regenerated.</p>
 <h4 id="q-i-want-to-write-high-level-abstractions-like-crds-but-on-the-client-side-can-i-do-this-with-kpt"><strong>Q: I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with <code>kpt</code>?</strong></h4>
-<p>A: Yes. <code>kpt</code>'s architecture facilitates the developing programs which may generate or modify
-configuration. See the <a href="../guides/consumer/function/pipeline/">functions pipeline</a> page for how to compose multiple programs together.</p>
+<p>A: Yes. <code>kpt</code>'s architecture facilitates the developing programs which may
+generate or modify configuration. See the <a href="../guides/consumer/function/pipeline/">functions pipeline</a> page for how to
+compose multiple programs together.</p>
 <h4 id="q-how-do-i-roll-out-changes-throughout-my-organization-using-kpt"><strong>Q: How do I roll out changes throughout my organization using <code>kpt</code>?</strong></h4>
-<p>A: This can be done one of several ways, including: 1) using semantic versioning or release
-channels with <a href="../reference/fn/run/">functions</a>, or 2) <a href="../reference/pkg/update/">updating</a> packages.</p>
+<p>A: This can be done one of several ways, including: 1) using semantic
+versioning or release channels with <a href="../reference/fn/run/">functions</a>, or 2) <a href="../reference/pkg/update/">updating</a> packages.</p>
 <h4 id="q-is-there-a-container-image-that-contains-kpt"><strong>Q: Is there a container image that contains kpt?</strong></h4>
 <p>A: Yes. <a href="https://gcr.io/kpt-dev/kpt">gcr.io/kpt-dev/kpt</a> contains the <code>kpt</code> binary.</p>
 <h4 id="q-how-to-run-sourcesink-functions-should-i-use-kpt-fn-source-and-kpt-fn-sink"><strong>Q: How to run source/sink functions? Should I use <code>kpt fn source</code> and <code>kpt fn sink</code>?</strong></h4>
@@ -338,9 +345,11 @@ can only specified builtin functions.</p>
 <p>A: <a href="../contact/">Please reach out!</a></p>
 <h3 id="next-steps">Next Steps</h3>
 <ul>
-<li>Learn about kpt <a href="../concepts/architecture/">architecture</a> including major influences and a high-level comparison with kustomize.</li>
+<li>Learn about kpt <a href="../concepts/architecture/">architecture</a> including major influences and a high-level
+comparison with kustomize.</li>
 <li>Consult the <a href="../reference/">command reference</a> for how to use kpt.</li>
-<li>Read kpt <a href="../guides/">guides</a> for how to produce and consume packages and integrate with a wider ecosystem of tools.</li>
+<li>Read kpt <a href="../guides/">guides</a> for how to produce and consume packages and integrate with
+a wider ecosystem of tools.</li>
 </ul>
 
         <div class="section-index">
@@ -357,7 +366,7 @@ can only specified builtin functions.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d134d5bcca9977592eebdbb99fdf91040ccd9ccc">Docs: Update doc for source and sink functions (d134d5bc)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
 </div>
 </div>
 

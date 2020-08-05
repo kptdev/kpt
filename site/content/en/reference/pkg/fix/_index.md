@@ -9,7 +9,7 @@ description: >
     Fix a local package which is using deprecated features.
 -->
 
-Fix reads the local package, modifies the package to use the latest kpt features 
+Fix reads the local package, modifies the package to use the latest kpt features
 and fixes any deprecated feature traces.
 
 ### Examples
@@ -17,7 +17,7 @@ and fixes any deprecated feature traces.
 #### Example fix commands
 <!--mdtogo:Examples-->
 ```sh
-# print the fixes which will be made to the package without actually modifying 
+# print the fixes which will be made to the package without actually modifying
 # resources
 kpt pkg fix . --dry-run
 ```

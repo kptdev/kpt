@@ -53,19 +53,19 @@ Then you will get an `example-package` directory:
 Follow the instructions in the [Getting Started] guide of Tekton.
 
 1. Check the [prerequisites].
-1.  [Create a Kubernetes cluster] of version 1.15 or higher on Google Cloud.
+1. [Create a Kubernetes cluster] of version 1.15 or higher on Google Cloud.
 
     ```shell script
     gcloud container clusters create tekton-cluster --cluster-version=1.15
     ```
 
-1.  Install Tekton to the cluster.
+1. Install Tekton to the cluster.
 
     ```shell script
     kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
     ```
 
-1.  Verify every component listed in the following command has the status `Running`.
+1. Verify every component listed in the following command has the status `Running`.
 
     ```shell script
     kubectl get pods --namespace tekton-pipelines
@@ -73,14 +73,14 @@ Follow the instructions in the [Getting Started] guide of Tekton.
 
 To make the exported pipeline fully functional, you probably need to do the following steps
 
-1.  Install [Git Tasks] from Tekton Catalog.
+1. Install [Git Tasks] from Tekton Catalog.
 
     ```shell script
     kpt pkg get https://github.com/tektoncd/catalog/git@v1beta1 git
     kubectl apply -f git/git-clone.yaml
     ```
 
-1.  Provide a Persistent Volume for storage purposes.
+1. Provide a Persistent Volume for storage purposes.
 
     ```shell script
     cat <<EOF | kubectl apply -f -
@@ -150,7 +150,7 @@ spec:
 
 Now you can manually copy and paste the content of the `pipeline.yaml` into your existing pipeline.
 
-If you do not have one, you can copy the exported `pipeline.yaml` into your project root. To make it fully functional, you may need to add a `fetch-repository` as the first task in the pipeline. This task clones your github repo to the Tekton workspace. Make sure `run-kpt-functions` runs after it. 
+If you do not have one, you can copy the exported `pipeline.yaml` into your project root. To make it fully functional, you may need to add a `fetch-repository` as the first task in the pipeline. This task clones your github repo to the Tekton workspace. Make sure `run-kpt-functions` runs after it.
 
 *Remember to update the `https://github.com/<USER>/<REPO>.git` placeholder with your repo in the following pipeline file*.
 

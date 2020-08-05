@@ -40,7 +40,7 @@ kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; DIR/ --fn-p
 &lt;pre&gt;&lt;code&gt;kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
 
 DIR:
-  Path to a package directory. 
+  Path to a package directory.
 FUNCTIONS_DIR:
   Read functions from the directory instead of the DIR/.
 ORCHESTRATOR:

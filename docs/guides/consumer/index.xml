@@ -239,8 +239,8 @@ to work with using tools such as &lt;code&gt;less&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 id=&#34;summarize-resource-counts&#34;&gt;Summarize resource counts&lt;/h2&gt;
 &lt;h3 id=&#34;count-example-command-1&#34;&gt;Count Example Command 1&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;a href=&#34;../../../reference/cfg/count/&#34;&gt;&lt;code&gt;kpt cfg count&lt;/code&gt;&lt;/a&gt; command summarizes the resource counts to show the shape of a
-package.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;a href=&#34;../../../reference/cfg/count/&#34;&gt;&lt;code&gt;kpt cfg count&lt;/code&gt;&lt;/a&gt; command summarizes the resource counts to
+show the shape of a package.&lt;/p&gt;
 &lt;h3 id=&#34;count-example-output-1&#34;&gt;Count Example Output 1&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;...
 Deployment: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;10&lt;/span&gt;
@@ -251,8 +251,8 @@ Pod: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;45&lt;/span&gt;
 ...
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;count-example-command-2&#34;&gt;Count Example Command 2&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg count examples/cockroachdb/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running &lt;a href=&#34;../../../reference/cfg/count/&#34;&gt;&lt;code&gt;count&lt;/code&gt;&lt;/a&gt; on a subdirectory will summarize that directory even if
-it doesn&amp;rsquo;t have a Kptfile.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Running &lt;a href=&#34;../../../reference/cfg/count/&#34;&gt;&lt;code&gt;count&lt;/code&gt;&lt;/a&gt; on a subdirectory will summarize that
+directory even if it doesn&amp;rsquo;t have a Kptfile.&lt;/p&gt;
 &lt;h3 id=&#34;count-example-output-2&#34;&gt;Count Example Output 2&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;PodDisruptionBudget: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
 Service: &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt;
@@ -278,8 +278,8 @@ as a tree.  Flags may be provided to print specific fields under the resources.&
 │           └── image: cockroachdb/cockroach:v1.1.0
 ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  PodDisruptionBudget cockroachdb-budget
 └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb-public
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In addition to the built-in printable fields, &lt;a href=&#34;../../../reference/cfg/tree/&#34;&gt;&lt;code&gt;kpt cfg tree&lt;/code&gt;&lt;/a&gt; will print
-arbitrary fields by providing the &lt;code&gt;--field&lt;/code&gt; flag.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In addition to the built-in printable fields, &lt;a href=&#34;../../../reference/cfg/tree/&#34;&gt;&lt;code&gt;kpt cfg tree&lt;/code&gt;&lt;/a&gt;
+will print arbitrary fields by providing the &lt;code&gt;--field&lt;/code&gt; flag.&lt;/p&gt;
 &lt;h2 id=&#34;filter-resources&#34;&gt;Filter resources&lt;/h2&gt;
 &lt;h3 id=&#34;filter-command&#34;&gt;Filter Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.replicas&amp;gt;3&amp;#34;&lt;/span&gt; examples &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree --replicas
@@ -300,14 +300,15 @@ may be piped to tree for rendering.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;dump-all-resources&#34;&gt;Dump all resources&lt;/h2&gt;
 &lt;h3 id=&#34;dump-command&#34;&gt;Dump Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg cat examples/cockroachdb
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The raw YAML configuration may be dumped using &lt;a href=&#34;../../../reference/cfg/cat/&#34;&gt;&lt;code&gt;kpt cfg cat&lt;/code&gt;&lt;/a&gt;.  This will
-print only the YAML for Kubernetes resources.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The raw YAML configuration may be dumped using &lt;a href=&#34;../../../reference/cfg/cat/&#34;&gt;&lt;code&gt;kpt cfg cat&lt;/code&gt;&lt;/a&gt;.
+This will print only the YAML for Kubernetes resources.&lt;/p&gt;
 &lt;h3 id=&#34;dump-output&#34;&gt;Dump Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;apiVersion: v1
 kind: Service
 metadata:
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a ClusterIP that will&lt;/span&gt;
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# automatically load balance connections to the different database pods.&lt;/span&gt;
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# This service is meant to be used by clients of the database. It exposes a&lt;/span&gt;
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# ClusterIP that will automatically load balance connections to the different&lt;/span&gt;
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# database pods.&lt;/span&gt;
   name: cockroachdb-public
   labels:
     app: cockroachdb
@@ -967,29 +968,34 @@ language, or simply wrap other existing programs.&lt;/p&gt;
 &lt;p&gt;Functions can address many types of workflows, including:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Generating resources from some inputs (like client-side CRDs)&lt;/li&gt;
-&lt;li&gt;Applying cross-cutting transformations (e.g., set a field on all resources that
-look like this)&lt;/li&gt;
+&lt;li&gt;Applying cross-cutting transformations (e.g., set a field on all resources
+that look like this)&lt;/li&gt;
 &lt;li&gt;Validating resources conform to best practices defined by the organization
 (e.g., must specify tag as part of the image)&lt;/li&gt;
-&lt;li&gt;Sending resources to a destination (e.g., saving them locally or deploying them to a cluster)&lt;/li&gt;
+&lt;li&gt;Sending resources to a destination (e.g., saving them locally or deploying
+them to a cluster)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id=&#34;calling-functions-imperatively&#34;&gt;Calling Functions Imperatively&lt;/h2&gt;
 &lt;p&gt;Let’s look at the example of imperatively running a function to set a label
-value.  The (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) image contains a program which adds a label to all Namespace resources
-provided to it.&lt;/p&gt;
+value.  The (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt;) image contains a program which adds a label to
+all Namespace resources provided to it.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run --image gcr.io/kpt-functions/label-namespace . -- &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt read the configs from the package at “.” to generate input resources. Behind the scenes, it also
-parsed the arguments and provided them through a functionConfig field along with the input. It passed
-this information to a container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the resources
-back to the package.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt read the configs from the package at “.” to generate input resources.
+Behind the scenes, it also parsed the arguments and provided them through a
+functionConfig field along with the input. It passed this information to a
+container running &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt;, and wrote the
+resources back to the package.&lt;/p&gt;
 &lt;h2 id=&#34;calling-functions-declaratively&#34;&gt;Calling Functions Declaratively&lt;/h2&gt;
-&lt;p&gt;The most common way of invoking config functions in production will be the &lt;a href=&#34;../../../reference/fn/run/#declaratively-run-one-or-more-functions&#34;&gt;declarative method&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Let&amp;rsquo;s run the same &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt; function declaratively, which means we make a reusable function
-configuration resource which contains all information necessary to run the function, from container
-image to argument values. Once we create file with this information we can check it into &lt;a href=&#34;https://en.wikipedia.org/wiki/Version_control&#34;&gt;VCS&lt;/a&gt; and
-run the function in a repeatable fashion, making it incredibly powerful for production use.&lt;/p&gt;
-&lt;p&gt;First create a function configuration file in the directory you want to apply the function
-e.g. &lt;code&gt;label-ns-fc.yaml&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;The most common way of invoking config functions in production will be the
+&lt;a href=&#34;../../../reference/fn/run/#declaratively-run-one-or-more-functions&#34;&gt;declarative method&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s run the same &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts&#34;&gt;label-namespace&lt;/a&gt; function declaratively, which means we
+make a reusable function configuration resource which contains all information
+necessary to run the function, from container image to argument values. Once we
+create file with this information we can check it into &lt;a href=&#34;https://en.wikipedia.org/wiki/Version_control&#34;&gt;VCS&lt;/a&gt; and run the
+function in a repeatable fashion, making it incredibly powerful for production
+use.&lt;/p&gt;
+&lt;p&gt;First create a function configuration file in the directory you want to apply
+the function e.g. &lt;code&gt;label-ns-fc.yaml&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ConfigMap&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -1000,21 +1006,24 @@ e.g. &lt;code&gt;label-ns-fc.yaml&lt;/code&gt;:&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;data&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;&amp;#34;label_name&amp;#34;: &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;color&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;&amp;#34;label_value&amp;#34;: &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;orange&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This file contains a &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation specifying the docker image to use for
-the config as well as a data field containing a key-value map of the &amp;ldquo;label_name&amp;rdquo; and &amp;ldquo;label_value&amp;rdquo;
-arguments specified earlier. Using a map also makes it easier to pass more complex arguments values like
-a list of strings.&lt;/p&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This file contains a &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation specifying the
+docker image to use for the config as well as a data field containing a
+key-value map of the &amp;ldquo;label_name&amp;rdquo; and &amp;ldquo;label_value&amp;rdquo; arguments specified
+earlier. Using a map also makes it easier to pass more complex arguments values
+like a list of strings.&lt;/p&gt;
 &lt;p&gt;Next, run the function.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run .
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt used configs from the package at “.” to generate input resources. It recognized that the
-&lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation denoted  &lt;code&gt;label-ns-fc.yaml&lt;/code&gt; as a function config file and ran
-a container using the &lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt; image, passing in the function config
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kpt used configs from the package at “.” to generate input resources. It
+recognized that the &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation denoted
+&lt;code&gt;label-ns-fc.yaml&lt;/code&gt; as a function config file and ran a container using the
+&lt;code&gt;gcr.io/kpt-functions/label-namespace&lt;/code&gt; image, passing in the function config
 resource as well as all other input resources.&lt;/p&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;See more examples of functions in the &lt;a href=&#34;catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;li&gt;Find out how to structure a pipeline of functions from the
+&lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
 &lt;li&gt;Learn more ways of using the &lt;code&gt;kpt fn&lt;/code&gt; command from the &lt;a href=&#34;../../../reference/fn/run/&#34;&gt;reference&lt;/a&gt; doc.&lt;/li&gt;
 &lt;/ul&gt;
 

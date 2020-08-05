@@ -119,8 +119,8 @@ workflows:
 
 If you don’t have one yet, you can do the following steps:
 
-1. Copy the exported `config.yml` file into `.circleci/config.yml` in your project root. 
-1. Do the steps above to make the pipeline fully functional. 
+1. Copy the exported `config.yml` file into `.circleci/config.yml` in your project root.
+1. Do the steps above to make the pipeline fully functional.
 
 Once all changes are pushed into GitHub, you can do the following steps to setting up your project on CircleCI:
 

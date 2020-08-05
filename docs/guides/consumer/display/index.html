@@ -390,12 +390,6 @@ if (!doNotTrack) {
       
       
       
-      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
-      
-      
-      
-      
-      
       <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
       
       
@@ -1200,8 +1194,8 @@ to work with using tools such as <code>less</code>.</p>
 <h2 id="summarize-resource-counts">Summarize resource counts</h2>
 <h3 id="count-example-command-1">Count Example Command 1</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/
-</code></pre></div><p>The <a href="../../../reference/cfg/count/"><code>kpt cfg count</code></a> command summarizes the resource counts to show the shape of a
-package.</p>
+</code></pre></div><p>The <a href="../../../reference/cfg/count/"><code>kpt cfg count</code></a> command summarizes the resource counts to
+show the shape of a package.</p>
 <h3 id="count-example-output-1">Count Example Output 1</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">...
 Deployment: <span style="color:#0000cf;font-weight:bold">10</span>
@@ -1212,8 +1206,8 @@ Pod: <span style="color:#0000cf;font-weight:bold">45</span>
 ...
 </code></pre></div><h3 id="count-example-command-2">Count Example Command 2</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/cockroachdb/
-</code></pre></div><p>Running <a href="../../../reference/cfg/count/"><code>count</code></a> on a subdirectory will summarize that directory even if
-it doesn&rsquo;t have a Kptfile.</p>
+</code></pre></div><p>Running <a href="../../../reference/cfg/count/"><code>count</code></a> on a subdirectory will summarize that
+directory even if it doesn&rsquo;t have a Kptfile.</p>
 <h3 id="count-example-output-2">Count Example Output 2</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">PodDisruptionBudget: <span style="color:#0000cf;font-weight:bold">1</span>
 Service: <span style="color:#0000cf;font-weight:bold">2</span>
@@ -1239,8 +1233,8 @@ as a tree.  Flags may be provided to print specific fields under the resources.<
 │           └── image: cockroachdb/cockroach:v1.1.0
 ├── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  PodDisruptionBudget cockroachdb-budget
 └── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Service cockroachdb-public
-</code></pre></div><p>In addition to the built-in printable fields, <a href="../../../reference/cfg/tree/"><code>kpt cfg tree</code></a> will print
-arbitrary fields by providing the <code>--field</code> flag.</p>
+</code></pre></div><p>In addition to the built-in printable fields, <a href="../../../reference/cfg/tree/"><code>kpt cfg tree</code></a>
+will print arbitrary fields by providing the <code>--field</code> flag.</p>
 <h2 id="filter-resources">Filter resources</h2>
 <h3 id="filter-command">Filter Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg grep <span style="color:#4e9a06">&#34;spec.replicas&gt;3&#34;</span> examples <span style="color:#000;font-weight:bold">|</span> kpt cfg tree --replicas
@@ -1261,14 +1255,15 @@ may be piped to tree for rendering.</p>
 </code></pre></div><h2 id="dump-all-resources">Dump all resources</h2>
 <h3 id="dump-command">Dump Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg cat examples/cockroachdb
-</code></pre></div><p>The raw YAML configuration may be dumped using <a href="../../../reference/cfg/cat/"><code>kpt cfg cat</code></a>.  This will
-print only the YAML for Kubernetes resources.</p>
+</code></pre></div><p>The raw YAML configuration may be dumped using <a href="../../../reference/cfg/cat/"><code>kpt cfg cat</code></a>.
+This will print only the YAML for Kubernetes resources.</p>
 <h3 id="dump-output">Dump Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">apiVersion: v1
 kind: Service
 metadata:
-  <span style="color:#8f5902;font-style:italic"># This service is meant to be used by clients of the database. It exposes a ClusterIP that will</span>
-  <span style="color:#8f5902;font-style:italic"># automatically load balance connections to the different database pods.</span>
+  <span style="color:#8f5902;font-style:italic"># This service is meant to be used by clients of the database. It exposes a</span>
+  <span style="color:#8f5902;font-style:italic"># ClusterIP that will automatically load balance connections to the different</span>
+  <span style="color:#8f5902;font-style:italic"># database pods.</span>
   name: cockroachdb-public
   labels:
     app: cockroachdb
@@ -1359,14 +1354,12 @@ metadata:
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/78b63437cf484c33f968344c6be647a22b252e7a">Docs: Inline typescript functions with syntax highlighting (78b63437)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
 </div>
 </div>
 

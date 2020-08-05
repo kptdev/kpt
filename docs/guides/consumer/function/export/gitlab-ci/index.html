@@ -390,12 +390,6 @@ if (!doNotTrack) {
       
       
       
-      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
-      
-      
-      
-      
-      
       <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
       
       
@@ -1214,7 +1208,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span>- docker<span style="color:#000;font-weight:bold">:</span>dind<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">script</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>docker<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>-v<span style="color:#f8f8f8;text-decoration:underline"> </span>$PWD<span style="color:#000;font-weight:bold">:</span>/app<span style="color:#f8f8f8;text-decoration:underline"> </span>-v<span style="color:#f8f8f8;text-decoration:underline"> </span>/var/run/docker.sock<span style="color:#000;font-weight:bold">:</span>/var/run/docker.sock<span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/kpt<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span>fn<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>/app/example-package<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">after_script</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> 
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">after_script</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span>- docker<span style="color:#f8f8f8;text-decoration:underline"> </span>run<span style="color:#f8f8f8;text-decoration:underline"> </span>-v<span style="color:#f8f8f8;text-decoration:underline"> </span>$PWD<span style="color:#000;font-weight:bold">:</span>/app<span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-dev/kpt<span style="color:#000;font-weight:bold">:</span>latest<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span>pkg<span style="color:#f8f8f8;text-decoration:underline"> </span>diff<span style="color:#f8f8f8;text-decoration:underline"> </span>/app/example-package<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span>--diff-tool<span style="color:#f8f8f8;text-decoration:underline"> </span>git<span style="color:#f8f8f8;text-decoration:underline"> </span>--diff-tool-opts<span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;--no-pager diff&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1238,8 +1232,6 @@ git push --set-upstream origin master
     
     
     <hr class="panel-line">
-        
-            
         
             
         

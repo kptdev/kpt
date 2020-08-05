@@ -390,12 +390,6 @@ if (!doNotTrack) {
       
       
       
-      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogdocshelm-templateusage" href="/kpt/guides/consumer/function/catalog/docs/helm-template/usage/">Helm-template Usage</a>
-      
-      
-      
-      
-      
       <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
       
       
@@ -1143,9 +1137,11 @@ if (!doNotTrack) {
 	<h1>Running a functions pipeline</h1>
 	<div class="lead">Compose functions into a pipeline.</div>
 	<h2 id="composing-a-pipeline">Composing a Pipeline</h2>
-<p>In order do something useful with a function, we need to compose a <a href="../../../../concepts/functions/#pipeline">Pipeline</a> with a
-source and a sink function.</p>
-<p>This guide covers how to use <code>kpt fn</code> to run a pipeline of functions. You can also use a container-based workflow orchestrator like <a href="https://cloud.google.com/cloud-build/">Cloud Build</a>, <a href="https://cloud.google.com/tekton/">Tekton</a>, or <a href="https://github.com/argoproj/argo">Argo Workflows</a>.</p>
+<p>In order do something useful with a function, we need to compose a
+<a href="../../../../concepts/functions/#pipeline">Pipeline</a> with a source and a sink function.</p>
+<p>This guide covers how to use <code>kpt fn</code> to run a pipeline of functions. You can
+also use a container-based workflow orchestrator like
+<a href="https://cloud.google.com/cloud-build/">Cloud Build</a>, <a href="https://cloud.google.com/tekton/">Tekton</a>, or <a href="https://github.com/argoproj/argo">Argo Workflows</a>.</p>
 <h3 id="example">Example</h3>
 <p>First, initialize a git repo if necessary:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git init
@@ -1175,7 +1171,8 @@ git add . <span style="color:#ce5c00;font-weight:bold">&amp;&amp;</span> git com
 </code></pre></div><p>You should see the same results as in the previous examples:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run .
 git status
-</code></pre></div><p>You can have multiple function declarations in a directory. Let&rsquo;s add a second function:</p>
+</code></pre></div><p>You can have multiple function declarations in a directory. Let&rsquo;s add a second
+function:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat <span style="color:#4e9a06">&lt;&lt; EOF &gt; kpt-func2.yaml
 </span><span style="color:#4e9a06">apiVersion: v1
 </span><span style="color:#4e9a06">kind: ConfigMap
@@ -1191,7 +1188,8 @@ git status
 </span><span style="color:#4e9a06">EOF</span>
 </code></pre></div><p><code>fn run</code> executes both functions:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run .
-</code></pre></div><p>In this case, <code>validate-rolebinding</code> will find policy violations and fail with a non-zero exit code.</p>
+</code></pre></div><p>In this case, <code>validate-rolebinding</code> will find policy violations and fail with
+a non-zero exit code.</p>
 <p>Refer to help pages for more details on how to use <code>kpt fn</code></p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run --help
 </code></pre></div><h2 id="next-steps">Next Steps</h2>
@@ -1286,14 +1284,12 @@ git status
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e97fd3815e38a1a9c6fc33db1936b6a027063acd">Clarify links, add functions to catalog (e97fd381)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
 </div>
 </div>
 

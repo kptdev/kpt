@@ -32,7 +32,7 @@ kpt fn export DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
 kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
 
 DIR:
-  Path to a package directory. 
+  Path to a package directory.
 FUNCTIONS_DIR:
   Read functions from the directory instead of the DIR/.
 ORCHESTRATOR:

@@ -4,8 +4,7 @@
     "args": "fn source",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/internal/commands/source.go",
     "description": "Reads a directory of Kubernetes configuration recursively.",
-    "type": "source",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L170"
+    "type": "source"
   },
   {
     "image": "gcr.io/kpt-functions/read-yaml",
@@ -13,8 +12,7 @@
     "description": "Reads a directory of Kubernetes configuration recursively.",
     "type": "source",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L151"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/cloud-builders/kubectl",
@@ -37,15 +35,14 @@
     "description": "Run kustomize to build configuration",
     "type": "source",
     "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/tests/kustomize_build.sh"
+    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/kustomize-build/"
   },
   {
     "image": "gcr.io/kpt-dev/kpt",
     "args": "fn sink",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/internal/commands/sink.go",
     "description": "Writes a directory of Kubernetes configuration. It maintains the original directory structure as read by source functions.",
-    "type": "sink",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L172"
+    "type": "sink"
   },
   {
     "image": "gcr.io/kpt-functions/write-yaml",
@@ -53,24 +50,21 @@
     "description": "Writes a directory of Kubernetes configuration. It maintains the original directory structure as read by source functions.",
     "type": "sink",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L160"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kpt-functions/istioctl-analyze",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/istioctl_analyze.ts",
     "description": "Istioctl analyze is a diagnostic tool that can detect potential issues with Istio configuration and output errors to the results field.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/tests/istioctl_analyze.sh"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kpt-functions/gatekeeper-validate",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/go/pkg/functions/gatekeeper/validate.go",
     "description": "Enforces OPA constraints on input objects. The constraints are also passed as part of the input to the function.",
     "type": "validator",
-    "toolchain": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/go/pkg/framework",
-    "example": "https://github.com/GoogleCloudPlatform/solutions-modern-cicd-anthos/blob/master/starter-repos/anthos-config-management/.gitlab-ci.yml#L103"
+    "toolchain": "https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/go/pkg/framework"
   },
   {
     "image": "gcr.io/kpt-functions/validate-rolebinding",
@@ -78,16 +72,14 @@
     "description": "Enforces a blacklist of subjects in RoleBinding objects.",
     "type": "validator",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L159"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kpt-functions/kubeval",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/kubeval.ts",
     "description": "Validates configuration using kubeval.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/tests/kubeval.sh"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kustomize-functions/example-validator-kubeval",
@@ -112,8 +104,7 @@
     "description": "Lints PodSecurityPolicy by suggesting 'spec.allowPrivilegeEscalation' field be set to 'false'.",
     "type": "validator",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/tests/suggest_psp.sh"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kpt-functions/mutate-psp",
@@ -121,32 +112,28 @@
     "description": "Mutates PodSecurityPolicy objects by setting spec.allowPrivilegeEscalation to false.",
     "type": "transformer",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L157"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "N/A",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/starlark/set_namespace.star",
     "description": "Sets the namespace field of all configs passed in.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/starlark/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/tests/set_namespace_starlark.sh"
+    "toolchain": "../../../producer/functions/starlark/"
   },
   {
     "image": "gcr.io/kpt-functions/set-namespace",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/go/set-namespace/main.go",
     "description": "Sets the namespace field of all configs passed in.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/golang/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/tests/set_namespace_go.sh"
+    "toolchain": "../../../producer/functions/golang/"
   },
   {
     "image": "gcr.io/kubeflow-images-public/kustomize-fns/remove-namespace",
     "source": "https://github.com/kubeflow/kfctl/blob/master/kustomize-fns/remove-namespace/main.go",
     "description": "Removes the namespace field of cluster-scoped configs.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/golang/",
-    "example": "https://github.com/kubeflow/kfctl/blob/master/kustomize-fns/remove-namespace/skaffold.yaml"
+    "toolchain": "../../../producer/functions/golang/"
   },
   {
     "image": "gcr.io/kpt-functions/label-namespace",
@@ -154,13 +141,12 @@
     "description": "Adds a label to all Namespaces.",
     "type": "transformer",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L169"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kpt-functions/helm-template",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/helm_template.ts",
-    "description": "Render chart templates locally using helm template. (See [usage](docs/helm-template/usage/index.html)).",
+    "description": "Render chart templates locally using helm template.",
     "type": "transformer",
     "toolchain": "../../../producer/functions/ts/",
     "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/helm-template/"
@@ -179,8 +165,7 @@
     "description": "Adds an annotation to all configs.",
     "type": "transformer",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/tests/annotate_config.sh"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kpt-functions/expand-team-cr",
@@ -188,13 +173,12 @@
     "description": "Reads custom resources of type Team and generates multiple Namespace and RoleBinding objects.",
     "type": "generator",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L155"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kpt-functions/helm-template",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/helm_template.ts",
-    "description": "Render chart templates locally using helm template. (See [usage](docs/helm-template/usage/index.html)).",
+    "description": "Render chart templates locally using helm template.",
     "type": "generator",
     "toolchain": "../../../producer/functions/ts/",
     "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/helm-template/"
@@ -220,7 +204,6 @@
     "description": "No Op function for testing purposes",
     "type": "misc",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/tests/e2e.sh#L139"
+    "toolchain": "../../../producer/functions/ts/"
   }
 ]

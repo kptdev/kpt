@@ -148,7 +148,7 @@ and fixes any deprecated feature traces.&lt;/p&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
 &lt;h4 id=&#34;example-fix-commands&#34;&gt;Example fix commands&lt;/h4&gt;
 &lt;!--mdtogo:Examples--&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print the fixes which will be made to the package without actually modifying&lt;/span&gt; 
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print the fixes which will be made to the package without actually modifying&lt;/span&gt;
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# resources&lt;/span&gt;
 kpt pkg fix . --dry-run
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# fix the package if it is using deprecated features&lt;/span&gt;
