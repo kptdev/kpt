@@ -15,4 +15,4 @@ Use the docker image.
 docker run gcr.io/kpt-dev/kpt version
 ```
 
-[gcr.io/kpt-dev/kpt]: https://pantheon.corp.google.com/gcr/images/kpt-dev/GLOBAL/kpt/
+[gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30

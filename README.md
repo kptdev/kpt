@@ -55,4 +55,4 @@ See the [docs] for more information on how to use `kpt`.
 [windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
 [docs]: https://googlecontainertools.github.io/kpt
 [release]: https://github.com/GoogleContainerTools/kpt/releases/latest
-[gcr.io/kpt-dev/kpt]: https://pantheon.corp.google.com/gcr/images/kpt-dev/GLOBAL/kpt/
+[gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
