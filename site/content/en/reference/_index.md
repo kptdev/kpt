@@ -75,10 +75,10 @@ to using the builtin schema.
 
 ### Global flags
 
-Kpt exposes many global flags in addition to the ones listed above to allow 
-customization of how kpt works. This is primarily around logging and how kpt 
-connects to your kubernetes cluster. Some flags that are unlikely to be useful 
-to most users are hidden in the cli, but this section lists all flags accepted 
+Kpt exposes many global flags in addition to the ones listed above to allow
+customization of how kpt works. This is primarily around logging and how kpt
+connects to your kubernetes cluster. Some flags that are unlikely to be useful
+to most users are hidden in the cli, but this section lists all flags accepted
 by kpt.
 
 ```
@@ -89,7 +89,7 @@ by kpt.
 --as string
   Username to impersonate for the operation
 --as-group stringArray
-  Group to impersonate for the operation, this flag can be repeated to 
+  Group to impersonate for the operation, this flag can be repeated to
   specify multiple groups.
 --cache-dir string
   Default HTTP cache directory (default "/Users/<user>/.kube/http-cache")
@@ -106,7 +106,7 @@ by kpt.
 -h, --help
   Help for kpt
 --insecure-skip-tls-verify
-  If true, the servers certificate will not be checked for validity. 
+  If true, the servers certificate will not be checked for validity.
   This will make your HTTPS connections insecure
 --install-completion
   Install shell completion
@@ -125,7 +125,7 @@ by kpt.
 --log_file string
   If non-empty, use this log file
 --log_file_max_size uint
-  Defines the maximum size a log file can grow to. Unit is megabytes. 
+  Defines the maximum size a log file can grow to. Unit is megabytes.
   If the value is 0, the maximum file size is unlimited. (default 1800)
 --logtostderr
   Log to standard error instead of files (default true)
@@ -136,8 +136,8 @@ by kpt.
 --password string
   Password for basic authentication to the API server
 --request-timeout string
-  The length of time to wait before giving up on a single server request. 
-  Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h). 
+  The length of time to wait before giving up on a single server request.
+  Non-zero values should contain a corresponding time unit (e.g. 1s, 2m, 3h).
   A value of zero means don't timeout requests. (default "0")
 -s, --server string
   The address and port of the Kubernetes API server
@@ -160,7 +160,6 @@ by kpt.
 --vmodule moduleSpec
   Comma-separated list of pattern=N settings for file-filtered logging
 ```
-
 
 | Command Group | Description                                                                     |  Reads From     | Writes To       |
 |---------------|---------------------------------------------------------------------------------|-----------------|-----------------|
