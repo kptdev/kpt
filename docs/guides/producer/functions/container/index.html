@@ -409,29 +409,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -1074,7 +1051,7 @@ if (!doNotTrack) {
   <ul>
     <li><a href="#imperative-run">Imperative Run</a></li>
     <li><a href="#declarative-run">Declarative Run</a></li>
-    <li><a href="#network">Network</a></li>
+    <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
 
@@ -1133,25 +1110,31 @@ if (!doNotTrack) {
 <div class="td-content">
 	<h1>Container Runtime</h1>
 	<div class="lead">Writing and running functions as containers</div>
-	<p>Functions may be written as container images.  The container must run a program which:</p>
+	<p>Functions may be written as container images. The container must run a program
+which:</p>
 <ul>
 <li>Reads a ResourceList from STDIN</li>
 <li>Writes a ResourceList to STDOUT</li>
 <li>Exits non-0 on failure</li>
 <li>Writes error messages to users on STDERR</li>
 </ul>
-<p>By default containers are run without network access, and without the ability to write to volumes
-outside the container.</p>
-<p>While container functions may be written in any language so long as they adhere to the io
-specification (read / write ResourceList), the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk">kpt-functions-sdk</a> provides a solution for
-writing functions using typescript.</p>
+<p>By default containers are run without network access, and without the ability
+to write to volumes outside the container. All local environment variables
+except the <code>TMPDIR</code> variable are loaded into the container by default.</p>
+<p>While container functions may be written in any language so long as they
+adhere to the <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md">io specification</a> (read / write ResourceList), the
+<a href="https://github.com/GoogleContainerTools/kpt-functions-sdk">kpt-functions-sdk</a> provides a solution for writing functions using typescript
+and the <a href="../golang/">go libraries</a> provide utilities for writing them in golang.</p>
 <h2 id="imperative-run">Imperative Run</h2>
-<p>Container functions may be run imperatively using the <code>--image</code> flag with <code>kpt fn run</code>.  This
-will create a container from the image, then write to its STDIN a ResourceList and read from
-it&rsquo;s STDOUT a ResourceList.</p>
-<h2 id="declarative-run">Declarative Run</h2>
-<p>Container functions may be run by declaring the function in a resource using the
-<code>config.kubernetes.io/function</code> annotation.</p>
+<p>Container functions may be run imperatively using the <code>--image</code> flag with
+<code>kpt fn run</code>. This will create a container from the image, then write to its
+STDIN a ResourceList created from the contents of the package directory, and
+finally read from it&rsquo;s STDOUT a ResourceList used to write resource back to
+the package directory.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --image gcr.io/a/b:v1
+</code></pre></div><h2 id="declarative-run">Declarative Run</h2>
+<p>Container functions may be run by declaring the function in a resource using
+the <code>config.kubernetes.io/function</code> annotation.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1160,22 +1143,16 @@ it&rsquo;s STDOUT a ResourceList.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
 </span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/a/b<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>To run the declared function use <code>kpt fn run DIR/</code> on the directory containing the example.</p>
-<h2 id="network">Network</h2>
-<p>By default, container functions cannot access network or volumes.  Functions may enable network
-access using the <code>--network</code> flag, and specifying that a network is required in the functionConfig.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>function-input<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
-</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/a/b<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">network</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">          </span><span style="color:#204a87;font-weight:bold">required</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn run DIR/ --network
-</code></pre></div>
+</span></code></pre></div><p>To run the declared function use <code>kpt fn run DIR/</code> on the directory containing
+the example.</p>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>Explore other ways to run functions, such as using the <a href="../exec/">exec runtime</a>.</li>
+<li>Find out how to structure a pipeline of functions from the
+<a href="../../../../../concepts/functions/">functions concepts</a> page.</li>
+<li>Consult the <a href="../../../../reference/fn/">fn command reference</a>.</li>
+</ul>
+
         <div class="section-index">
     
     
@@ -1259,14 +1236,12 @@ access using the <code>--network</code> flag, and specifying that a network is r
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
 </div>
 </div>
 

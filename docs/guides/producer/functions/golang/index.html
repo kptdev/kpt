@@ -409,29 +409,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -1072,16 +1049,23 @@ if (!doNotTrack) {
 
 <nav id="TableOfContents">
   <ul>
-    <li>
+    <li><a href="#hello-world-go-function">Hello World Go Function</a>
       <ul>
-        <li><a href="#hello-world-go-function">Hello World Go Function</a></li>
+        <li><a href="#create-the-go-module">Create the go module</a></li>
+        <li><a href="#create-the-maingo">Create the <code>main.go</code></a></li>
         <li><a href="#build-and-test-the-function">Build and test the function</a></li>
         <li><a href="#publish-the-function">Publish the function</a></li>
-        <li><a href="#declarative-function-configuration">Declarative function configuration</a></li>
-        <li><a href="#kyaml">kyaml</a></li>
-        <li><a href="#validation">Validation</a></li>
       </ul>
     </li>
+    <li><a href="#advanced-go-function">Advanced Go Function</a></li>
+    <li><a href="#kyaml-libraries-reference">kyaml Libraries Reference</a>
+      <ul>
+        <li><a href="#workflow">Workflow</a></li>
+        <li><a href="#visiting-fields-and-elements">Visiting Fields and Elements</a></li>
+        <li><a href="#validation-results">Validation Results</a></li>
+      </ul>
+    </li>
+    <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
 
@@ -1140,9 +1124,8 @@ if (!doNotTrack) {
 <div class="td-content">
 	<h1>Go Function Libraries</h1>
 	<div class="lead">Writing exec and container functions in Golang.</div>
-	<p>Writing exec and container functions in Golang.</p>
-<h3 id="hello-world-go-function">Hello World Go Function</h3>
-<p>Go libraries:</p>
+	<p>Function developers can write exec and container functions in Golang using the
+following libraries:</p>
 <table>
 <thead>
 <tr>
@@ -1152,19 +1135,22 @@ if (!doNotTrack) {
 </thead>
 <tbody>
 <tr>
-<td><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/fn/framework?tab=doc">sigs.k8s.io/kustomize/kyaml/fn/framework</a></td>
+<td><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/fn/framework/">sigs.k8s.io/kustomize/kyaml/fn/framework</a></td>
 <td>Setup function command</td>
 </tr>
 <tr>
-<td><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc">sigs.k8s.io/kustomize/kyaml/yaml</a></td>
+<td><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/">sigs.k8s.io/kustomize/kyaml/yaml</a></td>
 <td>Modify resources</td>
 </tr>
 </tbody>
 </table>
-<h4 id="create-the-go-module">Create the go module</h4>
+<p>Develop using the two examples of writing functions in Go or consult the
+kyaml libraries&rsquo; reference below.</p>
+<h2 id="hello-world-go-function">Hello World Go Function</h2>
+<h3 id="create-the-go-module">Create the go module</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go mod init github.com/user/repo
 go get sigs.k8s.io/kustomize/kyaml
-</code></pre></div><h4 id="create-the-maingo">Create the <code>main.go</code></h4>
+</code></pre></div><h3 id="create-the-maingo">Create the <code>main.go</code></h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// main.go
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
 
@@ -1180,8 +1166,8 @@ go get sigs.k8s.io/kustomize/kyaml
 <span style="color:#204a87;font-weight:bold">func</span> <span style="color:#000">main</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#000">resourceList</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">ResourceList</span><span style="color:#000;font-weight:bold">{}</span>
  <span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
-        <span style="color:#8f5902;font-style:italic">// cmd.Execute() will parse the ResourceList.functionConfig into cmd.Flags from
-</span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#8f5902;font-style:italic">// the ResourceList.functionConfig.data field.
+        <span style="color:#8f5902;font-style:italic">// cmd.Execute() will parse the ResourceList.functionConfig into
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// cmd.Flags from the ResourceList.functionConfig.data field.
 </span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span> <span style="color:#000;font-weight:bold">{</span>
             <span style="color:#8f5902;font-style:italic">// modify the resources using the kyaml/yaml library:
 </span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#8f5902;font-style:italic">// https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml
@@ -1197,39 +1183,15 @@ go get sigs.k8s.io/kustomize/kyaml
  <span style="color:#000;font-weight:bold">}</span>
 <span style="color:#000;font-weight:bold">}</span>
 </code></pre></div><h3 id="build-and-test-the-function">Build and test the function</h3>
-<p>Build the go binary and test it by running it as an executable function.</p>
+<p>Build the go binary:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go build -o my-fn .
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run the my-fn function against the configuration in PACKAGE_DIR/</span>
+</code></pre></div><p>Test it by running imperatively as an executable function:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run the my-fn function against the configuration in PACKAGE_DIR/</span>
 kpt fn run PACKAGE_DIR/ --enable-exec --exec-path ./my-fn -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>foo
-</code></pre></div><h3 id="publish-the-function">Publish the function</h3>
-<p>Build the function into a container image.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># optional: generate a Dockerfile to contain the function</span>
-go run ./main.go gen ./
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># build the function into an image</span>
-docker build . -t gcr.io/project/fn-name:tag
-<span style="color:#8f5902;font-style:italic"># optional: push the image to a container registry</span>
-docker push gcr.io/project/fn-name:tag
-</code></pre></div><p>Run the function as a container</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>foo
-</code></pre></div><h3 id="declarative-function-configuration">Declarative function configuration</h3>
-<h4 id="run-the-function-declaratively">Run the function declaratively</h4>
-<p>Run as a container function:</p>
+</code></pre></div><p>Or declaratively as an executable function:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># PACKAGE_DIR/example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Example<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
-</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/project/fn-name<span style="color:#000;font-weight:bold">:</span>tag<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>a<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/
-</code></pre></div><p>Or as an exec function:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># PACKAGE_DIR/example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Example<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1237,12 +1199,35 @@ docker push gcr.io/project/fn-name:tag
 </span><span style="color:#8f5902;font-style:italic">      exec:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>/path/to/my-fn<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>a<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/ --enable-exec
-</code></pre></div><h4 id="implement-the-function-using-declarative-input">Implement the function using declarative input</h4>
-<p>Functions may alternatively be written using a struct for parsing the functionConfig rather than
-flags.  The example shown below explicitly implements what the preceding example implements
-implicitly.</p>
+</code></pre></div><h3 id="publish-the-function">Publish the function</h3>
+<p>Build the function into a container image:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># optional: generate a Dockerfile to contain the function</span>
+go run ./main.go gen ./
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># build the function into an image</span>
+docker build . -t gcr.io/project/fn-name:tag
+<span style="color:#8f5902;font-style:italic"># optional: push the image to a container registry</span>
+docker push gcr.io/project/fn-name:tag
+</code></pre></div><p>Run the function imperatively as a container function:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>foo
+</code></pre></div><p>Or run declaratively as a container function:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># PACKAGE_DIR/example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/project/fn-name<span style="color:#000;font-weight:bold">:</span>tag<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run PACKAGE_DIR/
+</code></pre></div><h2 id="advanced-go-function">Advanced Go Function</h2>
+<p>Functions may alternatively be written using a struct for parsing the
+functionConfig rather than flags. The example shown below explicitly
+implements what the preceding example implements implicitly.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
 
 <span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">(</span>
@@ -1257,12 +1242,14 @@ implicitly.</p>
         <span style="color:#000">Value</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;value,omitempty&#34;`</span>
  <span style="color:#000;font-weight:bold">}</span>
  <span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">Example</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
-        <span style="color:#8f5902;font-style:italic">// Data contains the function configuration (e.g. client-side CRD).  Using &#34;data&#34;
-</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// as the field name to contain key-value pairs enables the function to be invoked
-</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// imperatively via `kpt fn run DIR/ --image img:tag -- key=value` and the
-</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// key=value arguments will be parsed into the functionConfig.data field.
-</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// If the function does not need to be invoked imperatively, other field names
-</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// may be used.
+        <span style="color:#8f5902;font-style:italic">// Data contains the function configuration (e.g. client-side CRD).
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// Using &#34;data&#34; as the field name to contain key-value pairs enables
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// the function to be invoked imperatively via
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// `kpt fn run DIR/ --image img:tag -- key=value` and the
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// key=value arguments will be parsed into the functionConfig.data
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// field.
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// If the function does not need to be invoked imperatively, other
+</span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#8f5902;font-style:italic">// field names may be used.
 </span><span style="color:#8f5902;font-style:italic"></span>        <span style="color:#000">Data</span> <span style="color:#000">Data</span> <span style="color:#4e9a06">`yaml:&#34;data,omitempty&#34;`</span>
  <span style="color:#000;font-weight:bold">}</span>
  <span style="color:#000">functionConfig</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#ce5c00;font-weight:bold">&amp;</span><span style="color:#000">Example</span><span style="color:#000;font-weight:bold">{}</span>
@@ -1270,7 +1257,8 @@ implicitly.</p>
 
  <span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
   <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">i</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#204a87;font-weight:bold">range</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span> <span style="color:#000;font-weight:bold">{</span>
-            <span style="color:#8f5902;font-style:italic">// use the kyaml libraries to modify each resource by applying transformations
+            <span style="color:#8f5902;font-style:italic">// use the kyaml libraries to modify each resource by applying
+</span><span style="color:#8f5902;font-style:italic"></span>            <span style="color:#8f5902;font-style:italic">// transformations
 </span><span style="color:#8f5902;font-style:italic"></span>   <span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Items</span><span style="color:#000;font-weight:bold">[</span><span style="color:#000">i</span><span style="color:#000;font-weight:bold">].</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span>
                 <span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">SetAnnotation</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">functionConfig</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Data</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Value</span><span style="color:#000;font-weight:bold">),</span>
             <span style="color:#000;font-weight:bold">)</span>
@@ -1285,10 +1273,12 @@ implicitly.</p>
   <span style="color:#000">os</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Exit</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">)</span>
  <span style="color:#000;font-weight:bold">}</span>
 <span style="color:#000;font-weight:bold">}</span>
-</code></pre></div><p>Note: functionConfig need not read from the <code>data</code> field if it is not going to be run
-imperatively with <code>kpt fn run DIR/ --image gcr.io/some/image -- foo=bar</code> or
-<code>kpt fn run DIR/ --exec-path /some/bin --enable-exec -- foo=bar</code>.  This is more appropriate
-for functions implementing abstractions (e.g. client-side CRD equivalents).</p>
+</code></pre></div><p>Note: functionConfig need not read from the <code>data</code> field if it is not going to
+be run imperatively with
+<code>kpt fn run DIR/ --image gcr.io/some/image -- foo=bar</code> or
+<code>kpt fn run DIR/ --exec-path /some/bin --enable-exec -- foo=bar</code>. This is more
+appropriate for functions implementing abstractions (e.g. client-side CRD
+equivalents).</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ce5c00;font-weight:bold">...</span>
  <span style="color:#204a87;font-weight:bold">type</span> <span style="color:#000">NestedValue</span> <span style="color:#204a87;font-weight:bold">struct</span> <span style="color:#000;font-weight:bold">{</span>
   <span style="color:#000">Value</span> <span style="color:#204a87;font-weight:bold">string</span> <span style="color:#4e9a06">`yaml:&#34;value,omitempty&#34;`</span>
@@ -1318,28 +1308,30 @@ for functions implementing abstractions (e.g. client-side CRD equivalents).</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">mapValues</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">key</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>value<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">listItems</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- a<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span>- b<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h3 id="kyaml">kyaml</h3>
-<p>Functions written in go should use the <a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml?tab=doc">sigs.k8s.io/kustomize/kyaml</a> libraries for modifying
-resource configuration.</p>
-<p>The <a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc">sigs.k8s.io/kustomize/kyaml/yaml</a> library offers utilities for reading and modifying
-yaml configuration, while retaining comments and structure.</p>
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>- a<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span>- b<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h2 id="kyaml-libraries-reference">kyaml Libraries Reference</h2>
+<p>Functions written in go should use the <a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/">sigs.k8s.io/kustomize/kyaml</a> libraries
+for modifying resource configuration.</p>
+<p>The <a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/">sigs.k8s.io/kustomize/kyaml/yaml</a> library offers utilities for reading
+and modifying yaml configuration, while retaining comments and structure.</p>
 <p>To use the kyaml/yaml library, become familiar with:</p>
 <ul>
 <li>The <code>*yaml.RNode</code> type, which represents a configuration object or field
 <ul>
-<li><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc#RNode">link</a></li>
+<li><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/#RNode">RNode link</a></li>
 </ul>
 </li>
-<li>The <code>Pipe</code> and <code>PipeE</code> functions, which apply a series of pipelined operations to the <code>*RNode</code>.
+<li>The <code>Pipe</code> and <code>PipeE</code> functions, which apply a series of pipelined
+operations to the <code>*RNode</code>.
 <ul>
-<li><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml?tab=doc#RNode.Pipe">link</a></li>
+<li><a href="https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/#RNode.Pipe">Pipe link</a></li>
 </ul>
 </li>
 </ul>
-<h4 id="workflow">Workflow</h4>
-<p>To modify a <code>*yaml.RNode</code> call PipeE() on the <code>*RNode</code>, passing in the operations to be performed.</p>
+<h3 id="workflow">Workflow</h3>
+<p>To modify a <code>*yaml.RNode</code> call PipeE() on the <code>*RNode</code>, passing in the
+operations to be performed.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Set the spec.replicas field to 3 if it exists
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">node</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span>
 <span style="color:#ce5c00;font-weight:bold">...</span>
@@ -1347,10 +1339,11 @@ yaml configuration, while retaining comments and structure.</p>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Set the spec.replicas field to 3, creating it if it doesn&#39;t exist
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">node</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span>
 <span style="color:#ce5c00;font-weight:bold">...</span>
-<span style="color:#8f5902;font-style:italic">// pass in the type of the node to create if it doesn&#39;t exist (e.g. Sequence, Map, Scalar)
+<span style="color:#8f5902;font-style:italic">// pass in the type of the node to create if it doesn&#39;t exist
+</span><span style="color:#8f5902;font-style:italic">// (e.g. Sequence, Map, Scalar)
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">PipeE</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">LookupCreate</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">ScalarNode</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;spec&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;replicas&#34;</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">FieldSetter</span><span style="color:#000;font-weight:bold">{</span><span style="color:#000">StringValue</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#4e9a06">&#34;3&#34;</span><span style="color:#000;font-weight:bold">})</span>
-</code></pre></div><p>To read a value from a *yaml.RNode call Pipe() on the RNode, passing in the operations to
-lookup a field.</p>
+</code></pre></div><p>To read a value from a *yaml.RNode call Pipe() on the RNode, passing in the
+operations to lookup a field.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Read the spec.replicas field
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">var</span> <span style="color:#000">node</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span>
 <span style="color:#ce5c00;font-weight:bold">...</span>
@@ -1358,14 +1351,15 @@ lookup a field.</p>
 </code></pre></div>
 
 <div class="pageinfo pageinfo-info">
-<p>Operations are any types implementing the <code>yaml.Filter</code> interface, so it is simple to
-define custom operations and provide them to <code>Pipe</code>, combining them with the built-in operations.</p>
+<p>Operations are any types implementing the <code>yaml.Filter</code> interface, so it is
+simple to define custom operations and provide them to <code>Pipe</code>, combining them
+with the built-in operations.</p>
 
 </div>
 
-<h4 id="visiting-fields-and-elements">Visiting Fields and Elements</h4>
-<p>Maps (i.e. Objects) and Sequences (i.e. Lists) support functions for visiting their fields and
-elements.</p>
+<h3 id="visiting-fields-and-elements">Visiting Fields and Elements</h3>
+<p>Maps (i.e. Objects) and Sequences (i.e. Lists) support functions for visiting
+their fields and elements.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// Visit each of the elements in a Sequence (i.e. a List)
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#000">err</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">node</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">VisitElements</span><span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">elem</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000">yaml</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">RNode</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#8f5902;font-style:italic">// do something with each element in the list
@@ -1376,13 +1370,13 @@ elements.</p>
     <span style="color:#8f5902;font-style:italic">// do something with each field in the map / object
 </span><span style="color:#8f5902;font-style:italic"></span>    <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#204a87;font-weight:bold">nil</span>
 <span style="color:#000;font-weight:bold">})</span>
-</code></pre></div><h3 id="validation">Validation</h3>
-<p>Go functions can implement high fidelity validation results by setting a <code>framework.Result</code>
-on the <code>ResourceList</code>.</p>
-<p>If run using <code>kpt fn run --results-dir SOME_DIR/</code>, the result will be written to a file
-in the specified directory.</p>
-<p>If the result is returned and contains an item with severity of <code>framework.Error</code>, the function
-will exit non-0.  Otherwise it will exit 0.</p>
+</code></pre></div><h3 id="validation-results">Validation Results</h3>
+<p>Go functions can implement high fidelity validation results by setting a
+<code>framework.Result</code> on the <code>ResourceList</code>.</p>
+<p>If run using <code>kpt fn run --results-dir SOME_DIR/</code>, the result will be written
+to a file in the specified directory.</p>
+<p>If the result is returned and contains an item with severity of
+<code>framework.Error</code>, the function will exit non-0. Otherwise it will exit 0.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#000">cmd</span> <span style="color:#ce5c00;font-weight:bold">:=</span> <span style="color:#000">framework</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">Command</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">resourceList</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#204a87;font-weight:bold">func</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#204a87;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">{</span>
     <span style="color:#ce5c00;font-weight:bold">...</span>
     <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#ce5c00;font-weight:bold">...</span> <span style="color:#000;font-weight:bold">{</span>
@@ -1395,7 +1389,14 @@ will exit non-0.  Otherwise it will exit 0.</p>
     <span style="color:#ce5c00;font-weight:bold">...</span>
 <span style="color:#000;font-weight:bold">})</span>
 
-</code></pre></div>
+</code></pre></div><h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>Learn how to <a href="../../../consumer/function/">run functions</a>.</li>
+<li>Consult the <a href="../../../reference/fn/">fn command reference</a>.</li>
+<li>Find out how to structure a pipeline of functions from the
+<a href="../../../concepts/functions/">functions concepts</a> page.</li>
+</ul>
+
         <div class="section-index">
     
     
@@ -1479,14 +1480,12 @@ will exit non-0.  Otherwise it will exit 0.</p>
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
 </div>
 </div>
 

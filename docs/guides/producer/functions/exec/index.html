@@ -409,29 +409,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -1139,34 +1116,44 @@ if (!doNotTrack) {
 <div class="td-content">
 	<h1>Exec Runtime</h1>
 	<div class="lead">Writing and running functions as executables</div>
-	<p>Functions may alternatively be run as executables outside of containers.  Exec
-functions read input and write output the same as container functions, but are
-run outside of a container.</p>
+	
+
+<div class="pageinfo pageinfo-warning">
+<p>The Exec runtime is Alpha. It is disabled by default, and must be enabled with
+the <code>--enable-exec</code> flag.</p>
+
+</div>
+
+<p>Config functions may be run as executables outside of containers. Exec
+functions read input and write output like container functions, but are run
+outside of a container.</p>
 <p>Running functions as executables can be useful for function development, or for
 running trusted executables.</p>
-<p>Exec functions are disabled by default, and must be enabled with <code>--enable-exec</code>.</p>
 
 
 <div class="pageinfo pageinfo-info">
-<p>Exec functions may be converted to container functions by building the executable
-into a container and invoking it as the container <code>CMD</code>.</p>
+<p>Exec functions may be converted to container functions by building the
+executable into a container and invoking it as the container&rsquo;s <code>CMD</code> or
+<code>ENTRYPOINT</code>.</p>
 
 </div>
 
 <h2 id="imperative-run">Imperative Run</h2>
-<p>Exec functions may be run imperatively using the <code>--exec-path</code> flag with <code>kpt fn run</code>.</p>
+<p>Exec functions may be run imperatively using the <code>--exec-path</code> flag with
+<code>kpt fn run</code>.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --enable-exec --exec-path /path/to/executable
 </code></pre></div><p>This is similar to building <code>/path/to/executable</code> into the container image
 <code>gcr.io/project/image:tag</code> and running &ndash; except that the executable has access
 to the local machine.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --image gcr.io/project/image:tag
-</code></pre></div><p>Just like container functions, exec functions accept input as arguments after <code>--</code></p>
+</code></pre></div><p>Just like container functions, exec functions accept input as arguments after
+<code>--</code>.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --enable-exec --exec-path /path/to/executable -- <span style="color:#000">foo</span><span style="color:#ce5c00;font-weight:bold">=</span>bar
 </code></pre></div><h2 id="declarative-run">Declarative Run</h2>
-<p>Exec functions may also be run by declaring the function in a resource using the
-<code>config.kubernetes.io/function</code> annotation.</p>
-<p>To run the declared function use <code>kpt fn run DIR/ --enable-exec</code> on the directory containing
-the example.</p>
+<p>Exec functions may also be run by declaring the function in a resource using
+the <code>config.kubernetes.io/function</code> annotation.</p>
+<p>To run the declared function use <code>kpt fn run DIR/ --enable-exec</code> on the
+directory containing the example.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1175,13 +1162,15 @@ the example.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
 </span><span style="color:#8f5902;font-style:italic">      exec:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>/path/to/executable<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Note: if the <code>--enable-exec</code> flag is not provided, <code>kpt fn run DIR/</code> will ignore the exec
-function and exit 0.</p>
+</span></code></pre></div><p>Note: if the <code>--enable-exec</code> flag is not provided, <code>kpt fn run DIR/</code> will
+ignore the exec function and exit 0.</p>
 <h2 id="typescript-function-example">Typescript Function Example</h2>
-<p>You may want to run a function developed with one of the config function SDKs using the exec
-runtime in order to avoid the overhead associated with running a container. To run your function
-in the exec runtime, you will first need to package your function as an executable.</p>
-<p>We walk through an example of running a typescript function using the kpt exec runtime.</p>
+<p>You may want to run a function developed with one of the config function SDKs
+using the exec runtime in order to avoid the overhead associated with running
+a container. To run your function in the exec runtime, you will first need to
+package your function as an executable.</p>
+<p>We walk through an example of running a typescript function using the kpt exec
+runtime.</p>
 <h3 id="prerequisites">Prerequisites</h3>
 <ul>
 <li>
@@ -1189,25 +1178,30 @@ in the exec runtime, you will first need to package your function as an executab
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm install -g pkg
 </code></pre></div></li>
 <li>
-<p>Install your kpt-functions package module to create your function&rsquo;s distributable file.</p>
+<p>Install your kpt-functions package module to create your function&rsquo;s
+distributable file.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm i
 </code></pre></div></li>
 </ul>
 <h3 id="steps">Steps</h3>
 <ol>
 <li>
-<p>Use the pkg CLI to create an executable from your function&rsquo;s distributable file. For a my_func
-function built using the typescript SDK, this is <code>dist/my_func_run.js</code>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npx pkg dist/my_func_run.js
+<p>Use the pkg CLI to create an executable from your function&rsquo;s distributable
+file. For a <code>my_fn</code> function built using the typescript SDK, this is
+<code>dist/my_fn_run.js</code>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npx pkg dist/my_fn_run.js
 </code></pre></div></li>
 <li>
-<p>Pass the path to the appropriate executable for your OS when running kpt using the exec runtime.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --enable-exec --exec-path /path/to/my_func_run-macos -- <span style="color:#000">foo</span><span style="color:#ce5c00;font-weight:bold">=</span>bar <span style="color:#000">baz</span><span style="color:#ce5c00;font-weight:bold">=</span>qux
+<p>Pass the path to the appropriate executable for your OS when running kpt
+using the exec runtime.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- <span style="color:#000">a</span><span style="color:#ce5c00;font-weight:bold">=</span>b
 </code></pre></div></li>
 </ol>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
-<li>Find out how to structure a pipeline of functions from the <a href="../../../../concepts/functions/">functions concepts</a> page.</li>
+<li>Explore other ways to run functions, such as using the <a href="../starlark/">starlark runtime</a>.</li>
+<li>Find out how to structure a pipeline of functions from the
+<a href="../../../../concepts/functions/">functions concepts</a> page.</li>
 <li>Consult the <a href="../../../../reference/fn/">fn command reference</a>.</li>
 </ul>
 
@@ -1294,14 +1288,12 @@ function built using the typescript SDK, this is <code>dist/my_func_run.js</code
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
 </div>
 </div>
 

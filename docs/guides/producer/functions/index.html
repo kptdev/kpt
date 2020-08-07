@@ -409,29 +409,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -1077,23 +1054,9 @@ if (!doNotTrack) {
       <ul>
         <li><a href="#resourcelistitems">ResourceList.items</a></li>
         <li><a href="#resourcelistfunctionconfig">ResourceList.functionConfig</a></li>
-      </ul>
-    </li>
-    <li><a href="#running-functions">Running Functions</a>
-      <ul>
-        <li><a href="#imperative-run">Imperative Run</a></li>
-        <li><a href="#declarative-run">Declarative Run</a></li>
-      </ul>
-    </li>
-    <li><a href="#declaring-functions">Declaring Functions</a></li>
-    <li><a href="#function-scoping">Function Scoping</a></li>
-    <li><a href="#validation">Validation</a>
-      <ul>
         <li><a href="#resourcelistresults">ResourceList.results</a></li>
       </ul>
     </li>
-    <li><a href="#deferring-failure">Deferring Failure</a></li>
-    <li><a href="#functionconfig-for-imperative-runs">FunctionConfig for imperative runs</a></li>
     <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
@@ -1149,7 +1112,7 @@ if (!doNotTrack) {
 write resources as output (creating, modifying, deleting, or validating
 resources).</p>
 <p>Unlike controllers and validating webhooks, config functions can be run outside
-of the Kubernetes control plane.  This allows them to run in more contexts or
+of the Kubernetes control plane. This allows them to run in more contexts or
 embedded in other systems. For example, functions could be:</p>
 <ul>
 <li>manually run locally</li>
@@ -1191,7 +1154,7 @@ generated in the past by reading them from the input.</p>
 </thead>
 <tbody>
 <tr>
-<td>Containers</td>
+<td><a href="./container">Containers</a></td>
 <td>STDIN</td>
 <td>STDOUT</td>
 <td>STDERR</td>
@@ -1199,7 +1162,15 @@ generated in the past by reading them from the input.</p>
 <td>Beta</td>
 </tr>
 <tr>
-<td>Starlark</td>
+<td><a href="./exec">Exec</a></td>
+<td>STDIN</td>
+<td>STDOUT</td>
+<td>STDERR</td>
+<td>Exit Code</td>
+<td>Alpha</td>
+</tr>
+<tr>
+<td><a href="./starlark">Starlark</a></td>
 <td><code>ctx.resource_list</code></td>
 <td><code>ctx.resource_list</code></td>
 <td><code>log</code></td>
@@ -1208,18 +1179,39 @@ generated in the past by reading them from the input.</p>
 </tr>
 </tbody>
 </table>
+<p>Additionally, the following libraries are available to create config functions:</p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Golang</td>
+<td><a href="./golang/">Go Fn Lib</a></td>
+</tr>
+<tr>
+<td>Typescript</td>
+<td><a href="./ts/">TS SDK</a></td>
+</tr>
+</tbody>
+</table>
 <h2 id="input--output">Input / Output</h2>
-<p>Functions read a <code>ResourceList</code>, modify it, and write it back out.</p>
-<h3 id="resourcelistitems">ResourceList.items</h3>
-<p>The ResourceList contains:</p>
+<p>Functions read a <code>ResourceList</code>, modify it, and write it back out. The
+<code>ResourceList</code> contains:</p>
 <ul>
 <li>(input+output) a list of resource <code>items</code></li>
 <li>(input) configuration for the function</li>
 <li>(output) validation results</li>
 </ul>
-<p>Items are resources read from some source &ndash; such as a package directory.</p>
+<h3 id="resourcelistitems">ResourceList.items</h3>
+<p>Items are resources read from some source &ndash; such as a package directory &ndash;
+using a source function &ndash; such as <a href="../../../reference/fn/source/"><code>kpt fn source</code></a> or <a href="gcr.io/kpt-functions/helm-template/"><code>helm-template</code></a>.</p>
 <p>After a function adds, deletes or modifies items, the items will be written to
-a sink. In most cases the sink will be the same as the source (directory).</p>
+a sink directory using a sink function &ndash; such as <a href="../../../refernce/fn/sink/"><code>kpt fn sink</code></a>. In most
+cases the sink directory will be the same as the source directory.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>apps/v1<span style="color:#f8f8f8;text-decoration:underline">
@@ -1236,7 +1228,6 @@ field. <code>functionConfig</code> is analogous to a Deployment, and <code>items
 to the set of all resources in the Deployment controller in-memory cache (e.g.
 all the resources in the cluster) &ndash; this includes the ReplicaSets created,
 updated and deleted for that Deployment.</p>
-<p><em>Functions are responsible for identifying which resources from the <code>items</code> that they own.</em></p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
@@ -1249,87 +1240,11 @@ updated and deleted for that Deployment.</p>
 </span></code></pre></div>
 
 <div class="pageinfo pageinfo-primary">
-<p>Some functions use a ConfigMap as the functionConfig instead of introducing a
-new resource type bespoke to the function.</p>
+<p>Some functions introduce a new resource type bespoke to the function instead of
+using a ConfigMap as the functionConfig kind.</p>
 
 </div>
 
-<h2 id="running-functions">Running Functions</h2>
-<p>Functions may be run either imperatively using the form
-<code>kpt fn run DIR/ --image fn</code>, or they may be run declaratively using the form
-<code>kpt fn run DIR/</code>.</p>
-<p>Either way, <code>kpt fn run</code> will</p>
-<ol>
-<li>read the package directory as input</li>
-<li>encapsulate the package resources in a <code>ResourceList</code></li>
-<li>run the function(s), providing the ResourceList as input</li>
-<li>write the function(s) output back to the package directory; creating,
-deleting, or updating resources</li>
-</ol>
-<h3 id="imperative-run">Imperative Run</h3>
-<p>Functions can be run imperatively by specifying the <code>--image</code> flag.</p>
-<p><code>kpt fn run DIR/ --image some-image:version</code> will:</p>
-<ul>
-<li>create a container from the image</li>
-<li>read all resources from the package directory</li>
-<li>provide the resources as input to the function (container)</li>
-<li>write the output items back to the package directory</li>
-</ul>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
-mkdir results/
-kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- <span style="color:#000">subject_name</span><span style="color:#ce5c00;font-weight:bold">=</span>bob@foo-corp.com
-</code></pre></div>
-
-<div class="pageinfo pageinfo-primary">
-<p>If key-value pairs are provided after a <code>--</code> argument, then a ConfigMap will be
-generated with these values as <code>data</code> elements, and the ConfigMap will be set
-as the functionConfig field.</p>
-
-</div>
-
-<h3 id="declarative-run">Declarative Run</h3>
-<p>Functions can be specified declaratively using the
-<code>config.kubernetes.io/function</code> annotation on a resource serving as the
-functionConfig.</p>
-<p><code>kpt fn run DIR/</code> (without <code>--image</code>) will:</p>
-<ul>
-<li>read all resources from the package directory</li>
-<li>for each resource with this annotation, kpt will run the specified function
-(using the resource as the functionConfig)
-<ul>
-<li>functions are run sequentially, with the output of each function provided
-as input to the next</li>
-</ul>
-</li>
-<li>write the output items back to the package directory</li>
-</ul>
-
-
-<div class="pageinfo pageinfo-primary">
-<p>If multiple functions are specified in the same yaml file (e.g. separated by
-<code>---</code>), then they are run in the order they are specified.</p>
-
-</div>
-
-<h2 id="declaring-functions">Declaring Functions</h2>
-<p>Functions may be run by declaratively through the
-<code>config.kubernetes.io/function</code> annotation.</p>
-<p>The following is a declaration to run the function implemented by the
-<code>gcr.io/example.com/image:v1.0.0</code> image, and to provide this ExampleFunction as
-the functionConfig.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleFunction<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
-</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/example.com/image<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#0000cf;font-weight:bold">.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h2 id="function-scoping">Function Scoping</h2>
-<p>Functions are scoped to resources that live in their same directory, or
-subdirectories of their directory.</p>
-<p><code>kpt fn run DIR/</code> will recursively traverse DIR/ looking for declared functions
-and invoking them &ndash; passing in only those resources scoped to the function.</p>
-<h2 id="validation">Validation</h2>
 <h3 id="resourcelistresults">ResourceList.results</h3>
 <p>Functions may define validation results through the <code>results</code> field. When
 functions are run using the <code>--results-dir</code>, each function&rsquo;s results field will
@@ -1343,7 +1258,7 @@ be written to a file under the specified directory.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">results</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;kubeval&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">  
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#204a87;font-weight:bold">severity</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>error<span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># one of [&#34;error&#34;, &#34;warn&#34;, &#34;info&#34;] -- error code should be non-0 if there are 1 or more errors</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">tags</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># arbitrary metadata about the result</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">error-type</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;field&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1368,45 +1283,6 @@ be written to a file under the specified directory.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- <span style="color:#204a87;font-weight:bold">severity</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>info<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">     </span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h2 id="deferring-failure">Deferring Failure</h2>
-<p>When running multiple validation functions, it may be desired to defer failures
-until all functions have been run so that the results of all functions are
-written to the results directory. Functions can specify that failures should be
-deferred by specifying <code>deferFailure</code> in the declaration.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleFunction<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
-</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/example.com/image<span style="color:#000;font-weight:bold">:</span>v1<span style="color:#0000cf;font-weight:bold">.0.0</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">      </span><span style="color:#204a87;font-weight:bold">deferFailure</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># continue running functions if this fails, and fail at the end</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h2 id="functionconfig-for-imperative-runs">FunctionConfig for imperative runs</h2>
-<p>When functions are run imperatively, the functionConfig may be generated from
-commandline arguments.</p>
-<p>When functions are run using the form
-<code>kpt fn run DIR/ --image foo:v1 -- a=b c=d</code>, the arguments following <code>--</code> are
-parsed into a ConfigMap which is set as the functionConfig.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">a</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>b<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>If the first argument after <code>--</code> is <em>not</em> a key=value pair, it will be used as
-the functionConfig type.</p>
-<p><code>kpt fn run DIR/ --image foo:v1 -- Foo a=b c=d</code></p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ResourceList<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">functionConfig</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Foo<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">a</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>b<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span>...<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">items</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span>...<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Learn how to <a href="../../consumer/function/">run functions</a>.</li>
@@ -1533,14 +1409,12 @@ the functionConfig type.</p>
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
 </div>
 </div>
 

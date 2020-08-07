@@ -949,6 +949,18 @@ if (!doNotTrack) {
 
 
 
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#examples">Examples</a></li>
+        <li><a href="#synopsis">Synopsis</a></li>
+      </ul>
+    </li>
+    <li><a href="#next-steps">Next Steps</a></li>
+  </ul>
+</nav>
+
 
 
           </div>
@@ -997,7 +1009,8 @@ if (!doNotTrack) {
 	<!--mdtogo:Short
    Auto-generating function pipelines for different workflow orchestrators
 -->
-<p>Exports a workflow pipeline that runs kpt functions alongside necessary configurations.</p>
+<p>Exports a workflow pipeline that runs kpt functions alongside necessary
+configurations.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># read functions from DIR, run them against it as one step.</span>
@@ -1009,7 +1022,7 @@ kpt fn <span style="color:#204a87">export</span> DIR/ --fn-path FUNCTIONS_DIR/ -
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
-<pre><code>kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">export</span> DIR/ <span style="color:#ce5c00;font-weight:bold">[</span>--fn-path FUNCTIONS_DIR/<span style="color:#ce5c00;font-weight:bold">]</span> --workflow ORCHESTRATOR <span style="color:#ce5c00;font-weight:bold">[</span>--output OUTPUT_FILENAME<span style="color:#ce5c00;font-weight:bold">]</span>
 
 DIR:
   Path to a package directory.
@@ -1024,11 +1037,13 @@ ORCHESTRATOR:
     - tekton
     - circleci
 OUTPUT_FILENAME:
-  Specifies the filename of the generated pipeline. If omitted, the default output is stdout
-</code></pre><!--mdtogo-->
-<h1 id="next-steps">Next Steps</h1>
+  Specifies the filename of the generated pipeline. If omitted, the default
+  output is stdout
+</code></pre></div><!--mdtogo-->
+<h2 id="next-steps">Next Steps</h2>
 <ul>
-<li>Get detailed tutorials on how to use <code>kpt fn export</code> from the <a href="../../../guides/consumer/function/export">Export a Workflow</a> guide.</li>
+<li>Get detailed tutorials on how to use <code>kpt fn export</code> from the
+<a href="../../../guides/consumer/function/export/">Export a Workflow</a> guide.</li>
 </ul>
 
         <div class="section-index">
@@ -1107,7 +1122,7 @@ OUTPUT_FILENAME:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
 </div>
 </div>
 

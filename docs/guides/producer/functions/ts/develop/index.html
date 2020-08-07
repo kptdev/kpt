@@ -409,29 +409,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -1153,7 +1130,8 @@ if (!doNotTrack) {
 <div class="td-content">
 	<h1>TypeScript Developer Guide</h1>
 	<div class="lead">Developing functions in TypeScript.</div>
-	<p>This guide will walk you through developing a config function using the Typescript SDK.</p>
+	<p>This guide will walk you through developing a config function using the
+Typescript SDK.</p>
 <h2 id="setup">Setup</h2>
 <h3 id="system-requirements">System Requirements</h3>
 <p>Currently supported platforms: amd64 Linux/Mac</p>
@@ -1162,21 +1140,25 @@ if (!doNotTrack) {
 <li>Install <a href="https://nodejs.org/en/download/">node</a>
 <ul>
 <li>The SDK requires <code>npm</code> version 6 or higher.</li>
-<li>If installing node from binaries (i.e. without a package manager), follow these
-<a href="https://github.com/nodejs/help/wiki/Installation">installation instructions</a>.</li>
+<li>If installing node from binaries (i.e. without a package manager), follow
+these <a href="https://github.com/nodejs/help/wiki/Installation/">installation instructions</a>.</li>
 </ul>
 </li>
 <li>Install <a href="https://docs.docker.com/engine/installation/">docker</a></li>
 </ul>
 <h3 id="your-kubernetes-cluster">Your Kubernetes Cluster</h3>
-<p>For the type generation functionality to work, you need a Kubernetes cluster with the <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing">CRD OpenAPI Publishing</a> feature which is beta with Kubernetes 1.15.</p>
-<p>Alternatively, you can use an existing NPM package with pre-generated types such as the <code>hello-world</code>
-package discussed in the <a href="../quickstart">Quickstart</a> and skip to <a href="#implement-the-function">implementing the function</a>.</p>
+<p>For the type generation functionality to work, you need a Kubernetes cluster
+with the <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing">CRD OpenAPI Publishing</a> feature which is beta with
+Kubernetes 1.15.</p>
+<p>Alternatively, you can use an existing NPM package with pre-generated types
+such as the <code>hello-world</code> package discussed in the <a href="../quickstart/">Quickstart</a> and skip to
+<a href="#implement-the-function">implementing the function</a>.</p>
 <h4 id="using-a-kind-cluster">Using a <code>kind</code> Cluster</h4>
-<p>The easiest way to get developing is to use <code>kind</code> to bring up a cluster running in a local container.</p>
+<p>The easiest way to get developing is to use <code>kind</code> to bring up a cluster
+running in a local container.</p>
 <ol>
 <li>
-<p>Download the <a href="https://github.com/kubernetes-sigs/kind">kind binary</a> version 0.5.1 or higher</p>
+<p>Download the <a href="https://github.com/kubernetes-sigs/kind/">kind binary</a> version 0.5.1 or higher</p>
 </li>
 <li>
 <p>Use this config file:</p>
@@ -1203,14 +1185,14 @@ package discussed in the <a href="../quickstart">Quickstart</a> and skip to <a h
 </code></pre></div></li>
 </ol>
 <h4 id="using-a-gke-cluster">Using a GKE cluster</h4>
-<p>You can also use a deployed cluster in GKE. The beta k8s feature is avilable only when using GKE&rsquo;s
-<code>--enable-kubernetes-alpha</code> flag, as seen here:</p>
+<p>You can also use a deployed cluster in GKE. The beta k8s feature is avilable
+only when using GKE&rsquo;s <code>--enable-kubernetes-alpha</code> flag, as seen here:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud container clusters create <span style="color:#000">$USER</span>-1-15 --cluster-version<span style="color:#ce5c00;font-weight:bold">=</span>latest --region<span style="color:#ce5c00;font-weight:bold">=</span>us-central1-a --project &lt;PROJECT&gt;
 gcloud container clusters get-credentials <span style="color:#000">$USER</span>-1-15 --zone us-central1-a --project &lt;PROJECT&gt;
 </code></pre></div><h3 id="working-with-crds">Working with CRDs</h3>
-<p>The SDK uses the k8s server to generate the typescript classes.
-If your function uses a Custom Resource Definition, make sure you apply it to the cluster used
-for type generation:</p>
+<p>The SDK uses the k8s server to generate the typescript classes. If your
+function uses a Custom Resource Definition, make sure you apply it to the
+cluster used for type generation:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f /path/to/my/crd.yaml
 </code></pre></div><h2 id="create-the-npm-package">Create the NPM package</h2>
 <p>To initialize a new NPM package, first create a package directory:</p>
@@ -1224,24 +1206,20 @@ for type generation:</p>
 </code></pre></div><p>Follow the instructions and respond to all prompts.</p>
 <p>This process will create the following:</p>
 <ol>
-<li>
-<p><code>package.json</code>: The <code>kpt-functions</code> framework library is the only item declared in <code>dependencies</code>.
-Everything required to compile and test your config function is declared as <code>devDependencies</code>,
-including the <code>create-kpt-functions</code> CLI discussed later in the <code>README</code>.</p>
-</li>
-<li>
-<p><code>src/</code>: Directory containing the source files for all your functions, e.g.:</p>
+<li><code>package.json</code>: The <code>kpt-functions</code> framework library is the only item
+declared in <code>dependencies</code>. Everything required to compile and test your
+config function is declared as <code>devDependencies</code>, including the
+<code>create-kpt-functions</code> CLI discussed later in the <code>README</code>.</li>
+<li><code>src/</code>: Directory containing the source files for all your functions, e.g.:
 <ul>
 <li><code>my_func.ts</code>: Implement your function&rsquo;s interface here.</li>
 <li><code>my_func_test.ts</code>: Unit tests for your function.</li>
 <li><code>my_func_run.ts</code>: The entry point from which your function is run.</li>
 </ul>
 </li>
-<li>
-<p><code>src/gen/</code>: Contains Kubernetes core and CRD types generated from the OpenAPI spec published by the cluster you selected.</p>
-</li>
-<li>
-<p><code>build/</code>: Contains Dockerfile for each function, e.g.:</p>
+<li><code>src/gen/</code>: Contains Kubernetes core and CRD types generated from the
+OpenAPI spec published by the cluster you selected.</li>
+<li><code>build/</code>: Contains Dockerfile for each function, e.g.:
 <ul>
 <li><code>my_func.Dockerfile</code></li>
 </ul>
@@ -1249,26 +1227,30 @@ including the <code>create-kpt-functions</code> CLI discussed later in the <code
 </ol>
 <p>Next, install all package dependencies:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm install
-</code></pre></div><p>In addition to installation, <code>install</code> compiles your function into the <code>dist/</code> directory.</p>
+</code></pre></div><p>In addition to installation, <code>install</code> compiles your function into the <code>dist/</code>
+directory.</p>
 <p>You can run your function directly:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">node dist/my_func_run.js --help
-</code></pre></div><p>Currently, it simply passes through the input configuration data. Let&rsquo;s remedy this.</p>
+</code></pre></div><p>Currently, it simply passes through the input configuration data. Let&rsquo;s remedy
+this.</p>
 <h2 id="implement-the-function">Implement the function</h2>
-<p>You can now start implementing the function using your favorite IDE, e.g. <a href="https://code.visualstudio.com/">VSCode</a>:</p>
+<p>You can now start implementing the function using your favorite IDE, e.g.
+<a href="https://code.visualstudio.com/">VSCode</a>:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">code .
-</code></pre></div><p>In <code>src/my_func.ts</code>, implement the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/">documented here</a>.</p>
-<p>Take a look at <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">these example functions</a> to better understand how to use
-the typescript library. These functions are available as container images documented in the <a href="../../../../consumer/function/catalog/">catalog</a>.</p>
+</code></pre></div><p>In <code>src/my_func.ts</code>, implement the <code>KptFunc</code> interface from the <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/">TS SDK API</a>.</p>
+<p>Take a look at these <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/">demo functions</a> to better understand how
+to use the typescript library. These functions are available as container
+images documented in the <a href="../../../../consumer/function/catalog/">catalog</a>.</p>
 <p>Once you&rsquo;ve written some code, build the package with:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run build
-</code></pre></div><p>Alternatively, run the following in a separate terminal. It will continuously build your function
-as you make changes:</p>
+</code></pre></div><p>Alternatively, run the following in a separate terminal. It will continuously
+build your function as you make changes:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run watch
 </code></pre></div><p>To run the tests, use:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm <span style="color:#204a87">test</span>
 </code></pre></div><h2 id="build-and-push-container-images">Build and push container images</h2>
-<p>With your working function in-hand, it&rsquo;s time to package your function into an executable container
-image.</p>
+<p>With your working function in-hand, it&rsquo;s time to package your function into an
+executable container image.</p>
 <p>To build the docker image:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run kpt:docker-build
 </code></pre></div><p>You can now run the function container, e.g.:</p>
@@ -1276,33 +1258,38 @@ image.</p>
 </code></pre></div><p>To push the image to your container registry of choice:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run kpt:docker-push
 </code></pre></div><p>You&rsquo;ll need proper authentication/authorization to push to your registry.</p>
-<p><code>kpt:docker-push</code> pushes to the registry specified in the <code>kpt.docker_repo_base</code> field in <code>package.json</code>.
-You can manually edit this field at any time.</p>
-<p>The default value for the container image tag is <code>dev</code>. This can be overridden using<code>--tag</code> flag:</p>
+<p><code>kpt:docker-push</code> pushes to the registry specified in the
+<code>kpt.docker_repo_base</code> field in <code>package.json</code>. You can manually edit this
+field at any time.</p>
+<p>The default value for the container image tag is <code>dev</code>. This can be overridden
+using<code>--tag</code> flag:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run kpt:docker-build -- --tag<span style="color:#ce5c00;font-weight:bold">=</span>latest
 npm run kpt:docker-push -- --tag<span style="color:#ce5c00;font-weight:bold">=</span>latest
 </code></pre></div><h2 id="use-the-sdk-cli">Use the SDK CLI</h2>
-<p>The <code>create-kpt-functions</code> package (installed as <code>devDependencies</code>), provides a CLI for managing
-the NPM package you created above. The CLI sub-commands can be invoked via <code>npm run</code>. For example,
-to add a new function to the package:</p>
+<p>The <code>create-kpt-functions</code> package (installed as <code>devDependencies</code>), provides
+a CLI for managing the NPM package you created above. The CLI sub-commands can
+be invoked via <code>npm run</code>. For example, to add a new function to the package:</p>
 <pre><code class="language-console" data-lang="console">npm run kpt:function-create
 </code></pre><p>These sub-commands are available:</p>
 <pre><code class="language-console" data-lang="console">kpt:docker-create       Generate Dockerfiles for all functions. Overwrite
                         files if they exist.
 kpt:docker-build        Build container images for all functions.
-kpt:docker-push         Push container images to the registry for all functions.
+kpt:docker-push         Push container images to the registry for all
+                        functions.
 kpt:function-create     Generate stubs for a new function. Overwrites files
                         if they exist.
 kpt:type-create         Generate classes for core and CRD types. Overwrite
                         files if they exist.
-</code></pre><p>Flags are passed to the CLI after the <code>--</code> separator. For example, to pass a tag
-when building a container image:</p>
+</code></pre><p>Flags are passed to the CLI after the <code>--</code> separator. For example, to pass a
+tag when building a container image:</p>
 <pre><code class="language-console" data-lang="console">npm run kpt:docker-build -- --tag=latest
 </code></pre><h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Learn how to <a href="../../../../consumer/function/">run functions</a>.</li>
-<li>Find out how to structure a pipeline of functions from the <a href="../../../../../concepts/functions/">functions concepts</a> page.</li>
-<li>Take a look at <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">these example functions</a> to better understand how to use the typescript SDK.</li>
+<li>Find out how to structure a pipeline of functions from the
+<a href="../../../../../concepts/functions/">functions concepts</a> page.</li>
+<li>Take a look at these <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/">demo functions</a> to better understand how to use the
+typescript SDK.</li>
 </ul>
 
         <div class="section-index">
@@ -1388,14 +1375,12 @@ when building a container image:</p>
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/78b63437cf484c33f968344c6be647a22b252e7a">Docs: Inline typescript functions with syntax highlighting (78b63437)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
 </div>
 </div>
 

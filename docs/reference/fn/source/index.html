@@ -33,17 +33,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
 <title>Source | Kpt</title><meta property="og:title" content="Source" />
-<meta property="og:description" content="Explicitly specify an input source for a function
+<meta property="og:description" content="Specify a directory as an input source package
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/reference/fn/source/" />
 <meta property="og:site_name" content="Kpt" />
 <meta itemprop="name" content="Source">
-<meta itemprop="description" content="Explicitly specify an input source for a function
+<meta itemprop="description" content="Specify a directory as an input source package
 ">
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Source"/>
-<meta name="twitter:description" content="Explicitly specify an input source for a function
+<meta name="twitter:description" content="Specify a directory as an input source package
 "/>
 
 
@@ -1005,17 +1005,19 @@ if (!doNotTrack) {
             
 <div class="td-content">
 	<h1>Source</h1>
-	<div class="lead">Explicitly specify an input source for a function</div>
+	<div class="lead">Specify a directory as an input source package</div>
 	<!--mdtogo:Short
-    Explicitly specify an input source for a function
+    Specify a directory as an input source package
 -->
-<p>Implements a Source by reading configuration and writing to command stdout.</p>
+<p>Implements a <a href="../../../concepts/functions/#source-function">source function</a> by reading configuration and writing to STDOUT.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print to stdout configuration formatted as an input source</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print to stdout configuration from DIR/ formatted as an input source</span>
 kpt fn <span style="color:#204a87">source</span> DIR/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run a function using explicit sources and sinks</span>
-kpt fn <span style="color:#204a87">source</span> DIR/ <span style="color:#000;font-weight:bold">|</span> kpt fn run --image gcr.io/example.com/my-fn <span style="color:#000;font-weight:bold">|</span> kpt fn sink DIR/
+kpt fn <span style="color:#204a87">source</span> DIR/ <span style="color:#000;font-weight:bold">|</span>
+  kpt fn run --image gcr.io/example.com/my-fn <span style="color:#000;font-weight:bold">|</span>
+  kpt fn sink DIR/
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
@@ -1027,6 +1029,7 @@ DIR:
 <h3 id="next-steps">Next Steps</h3>
 <ul>
 <li>Learn about <a href="../../../concepts/functions/">functions concepts</a> like sources, sinks, and pipelines.</li>
+<li>See more examples of source functions in the functions <a href="../../guides/consumer/function/catalog/">catalog</a>.</li>
 </ul>
 
         <div class="section-index">
@@ -1105,7 +1108,7 @@ DIR:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e97fd3815e38a1a9c6fc33db1936b6a027063acd">Clarify links, add functions to catalog (e97fd381)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
 </div>
 </div>
 
