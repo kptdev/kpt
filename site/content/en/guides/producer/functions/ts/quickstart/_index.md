@@ -9,9 +9,10 @@ description: >
 
 ## Developer Quickstart
 
-This quickstart will get you started developing a config function with the TypeScript SDK,
-using an existing kpt-functions package. Config functions are any functions which implement
-the `KptFunc` interface [documented here][api-kptfunc].
+This quickstart will get you started developing a config function with the
+TypeScript SDK, using an existing kpt-functions package. Config functions are
+any functions which implement the `KptFunc` interface documented in the
+[TS SDK API].
 
 ### Prerequisites
 
@@ -45,15 +46,17 @@ Currently supported platforms: amd64 Linux/Mac
    npm install
    ```
 
-1. Run the following in a separate terminal to continuously build your function as you make changes:
+1. Run the following in a separate terminal to continuously build your
+   function as you make changes:
 
    ```sh
    npm run watch
    ```
 
-1. Explore the [`label_namespace`][label-namespace] transformer function. This function takes a
-   given `label_name` and `label_value` to add the appropriate label to `Namespace` objects using
-   the SDK's `addLabel` function.
+1. Explore the [`label_namespace`][label-namespace] transformer function. This
+   function takes a given `label_name` and `label_value` to add the
+   appropriate label to `Namespace` objects using the SDK's `addLabel`
+   function.
 
   ```typescript
   import { addLabel, Configs } from 'kpt-functions';
@@ -75,23 +78,23 @@ Currently supported platforms: amd64 Linux/Mac
    export CONFIGS=../../example-configs
 
    kpt fn source $CONFIGS |
-   node dist/label_namespace_run.js -d label_name=color -d label_value=orange |
-   kpt fn sink $CONFIGS
+     node dist/label_namespace_run.js -d label_name=color -d label_value=orange |
+     kpt fn sink $CONFIGS
    ```
 
-   As the name suggests, this function added the given label to all `Namespace` objects
-   in the `example-configs` directory:
+   As the name suggests, this function added the given label to all
+   `Namespace` objects in the `example-configs` directory:
 
    ```sh
    git diff $CONFIGS
    ```
 
-1. Try modifying the function in `src/label_namespace.ts` to perform other operations
-   and rerun the function on `example-configs` to see the changes.
+1. Try modifying the function in `src/label_namespace.ts` to perform other
+   operations and rerun the function on `example-configs` to see the changes.
 
-1. Explore validation functions like [validate-rolebinding]. Instead of transforming configuration,
-   this function searches RoleBindings and returns a results field containing details about invalid
-   subject names.
+1. Explore validation functions like [validate-rolebinding]. Instead of
+   transforming configuration, this function searches RoleBindings and returns
+   a results field containing details about invalid subject names.
 
   ```typescript
   import { Configs, kubernetesObjectResult } from 'kpt-functions';
@@ -103,8 +106,8 @@ Currently supported platforms: amd64 Linux/Mac
     // Get the subject name parameter.
     const subjectName = configs.getFunctionConfigValueOrThrow(SUBJECT_NAME);
 
-    // Iterate over all RoleBinding objects in the input, and filter those that have a subject
-    // we're looking for.
+    // Iterate over all RoleBinding objects in the input
+    // Filter those that have a subject we're looking for.
     const results = configs
       .get(isRoleBinding)
       .filter(
@@ -123,13 +126,14 @@ Currently supported platforms: amd64 Linux/Mac
 
    ```sh
    kpt fn source $CONFIGS |
-   node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com |
-   kpt fn sink $CONFIGS
+     node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com |
+     kpt fn sink $CONFIGS
    git diff $CONFIGS
    ```
 
-1. Explore generator functions like [expand-team-cr]. This function generates a per-environment
-   Namespace and RoleBinding object for each custom resource (CR) of type Team.
+1. Explore generator functions like [expand-team-cr]. This function generates
+   a per-environment Namespace and RoleBinding object for each custom resource
+   (CR) of type Team.
 
   ```typescript
   import { Configs } from 'kpt-functions';
@@ -194,24 +198,25 @@ Currently supported platforms: amd64 Linux/Mac
 
    ```sh
    kpt fn source $CONFIGS |
-   node dist/expand_team_cr_run.js |
-   kpt fn sink $CONFIGS
+     node dist/expand_team_cr_run.js |
+     kpt fn sink $CONFIGS
    git diff $CONFIGS
    ```
 
 ## Next Steps
 
-- Take a look at [these example functions][demo-funcs] to better understand how to use the typescript SDK.
+- Take a look at these [demo functions] to better understand
+  how to use the typescript SDK.
 - Read the complete [Typescript Developer Guide].
 - Learn how to [run functions].
 
+[TS SDK API]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
 [download-node]: https://nodejs.org/en/download/
 [install-docker]: https://docs.docker.com/engine/installation/
 [download-kpt]: ../../../../../installation/
-[demo-funcs]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src
-[api-kptfunc]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
+[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
+[validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts
+[expand-team-cr]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
+[demo functions]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
 [Typescript Developer Guide]: ../develop/
 [run functions]: ../../../../consumer/function/
-[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
-[expand-team-cr]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
-[validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts

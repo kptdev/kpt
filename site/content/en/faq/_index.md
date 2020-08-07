@@ -80,7 +80,7 @@ directly, and merged when regenerated.
 #### **Q: I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with `kpt`?**
 
 A: Yes. `kpt`'s architecture facilitates the developing programs which may
-generate or modify configuration. See the [functions pipeline] page for how to
+generate or modify configuration. See the [Functions User Guide] for how to
 compose multiple programs together.
 
 #### **Q: How do I roll out changes throughout my organization using `kpt`?**
@@ -92,10 +92,11 @@ versioning or release channels with [functions], or 2) [updating] packages.
 
 A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` binary.
 
-#### **Q: How to run source/sink functions? Should I use `kpt fn source` and `kpt fn sink`?**
+#### **Q: How do I run source or sink functions?**
 
-A: No. All source and sink functions should be run by `kpt fn run`. `kpt fn sink` and `kpt fn source` are commands which
-can only specified builtin functions.
+A: No. All kpt functions, including source and sink functions, should be run by
+`kpt fn run`. `kpt fn sink` and `kpt fn source` are commands which can only run
+specified builtin functions.
 
 #### **Q: I still have questions. How do I contact you?**
 
@@ -109,15 +110,15 @@ A: [Please reach out!][contact]
 - Read kpt [guides] for how to produce and consume packages and integrate with
   a wider ecosystem of tools.
 
-[updating]: ../reference/pkg/update/
-[functions]: ../reference/fn/run/
-[setters]: ../reference/cfg/set/
-[gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
-[contact]: ../contact/
 [kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
-[architecture]: ../concepts/architecture/
+[setters]: ../reference/cfg/set/
+[functions]: ../reference/fn/run/
 [source functions]: ../guides/consumer/function/catalog/#sources
-[functions pipeline]: ../guides/consumer/function/pipeline/
+[Functions User Guide]: ../guides/consumer/function/
+[updating]: ../reference/pkg/update/
+[gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
+[contact]: ../contact/
+[architecture]: ../concepts/architecture/
 [command reference]: ../reference/
 [guides]: ../guides/
