@@ -16,8 +16,17 @@ Download pre-compiled binaries.
 | [Windows (x64)][windows]
 
 ```sh
-# For linux/mac
+# Download binaries using gsutil:
+# Linux (x64)
+gsutil cp gs://kpt-dev/latest/linux_amd64/kpt .
+# macOS (x64)
+gsutil cp gs://kpt-dev/latest/darwin_amd64/kpt .
+# Windows (x64)
+gsutil cp gs://kpt-dev/latest/windows_amd64/kpt.exe .
+
+# For Linux/macOS
 chmod +x kpt
+sudo mv kpt /usr/local/bin/
 ```
 
 **Note:** to run on **MacOS** the first time, it may be necessary to open the
