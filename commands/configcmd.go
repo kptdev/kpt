@@ -94,9 +94,6 @@ func GetConfigCommand(name string) *cobra.Command {
 	listSetters.Example = cfgdocs.ListSettersExamples
 
 	set := SetCommand(name)
-	set.Short = cfgdocs.SetShort
-	set.Long = cfgdocs.SetShort + "\n" + cfgdocs.SetLong
-	set.Example = cfgdocs.SetExamples
 
 	tree := configcobra.Tree(name)
 	tree.Short = cfgdocs.TreeShort
@@ -129,6 +126,10 @@ func SetCommand(parent string) *cobra.Command {
 	fieldmeta.SetShortHandRef(ShortHandRef)
 	kustomizeCmd := configcobra.Set(parent)
 	setCmd := *kustomizeCmd
+	kustomizeCmd.Short = cfgdocs.SetShort
+	kustomizeCmd.Long = cfgdocs.SetShort + "\n" + cfgdocs.SetLong
+	kustomizeCmd.Example = cfgdocs.SetExamples
+	kustomizeCmd.SilenceUsage = true
 	var autoRun bool
 	setCmd.Flags().BoolVar(&autoRun, "auto-run", true,
 		`Automatically run functions after setting (if enabled for the package)`)

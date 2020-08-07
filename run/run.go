@@ -158,6 +158,7 @@ func GetMain() *cobra.Command {
 
 	cmd.AddCommand(versionCmd)
 	hideFlags(cmd)
+	silenceUsage(cmd)
 	return cmd
 }
 
@@ -231,6 +232,15 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s\n", version)
 	},
+}
+
+// silenceUsage silences the usage for all the sub commands recursively
+// so that we don't display long usage messages for all errors
+func silenceUsage(cmd *cobra.Command) {
+	for _, subCmd := range cmd.Commands() {
+		subCmd.SilenceUsage = true
+		silenceUsage(subCmd)
+	}
 }
 
 // hideFlags hides any cobra flags that are unlikely to be used by
