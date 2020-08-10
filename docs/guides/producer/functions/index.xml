@@ -59,7 +59,7 @@ the &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation.&lt;/p&gt;
 the example.&lt;/p&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;Explore other ways to run functions, such as using the &lt;a href=&#34;../exec/&#34;&gt;exec runtime&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Explore other ways to run functions from the &lt;a href=&#34;../&#34;&gt;Functions Developer Guide&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the
 &lt;a href=&#34;../../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
 &lt;li&gt;Consult the &lt;a href=&#34;../../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt;.&lt;/li&gt;
@@ -125,42 +125,9 @@ directory containing the example.&lt;/p&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;        &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;path&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;/path/to/executable&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Note: if the &lt;code&gt;--enable-exec&lt;/code&gt; flag is not provided, &lt;code&gt;kpt fn run DIR/&lt;/code&gt; will
 ignore the exec function and exit 0.&lt;/p&gt;
-&lt;h2 id=&#34;typescript-function-example&#34;&gt;Typescript Function Example&lt;/h2&gt;
-&lt;p&gt;You may want to run a function developed with one of the config function SDKs
-using the exec runtime in order to avoid the overhead associated with running
-a container. To run your function in the exec runtime, you will first need to
-package your function as an executable.&lt;/p&gt;
-&lt;p&gt;We walk through an example of running a typescript function using the kpt exec
-runtime.&lt;/p&gt;
-&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;Install the pkg CLI.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm install -g pkg
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Install your kpt-functions package module to create your function&amp;rsquo;s
-distributable file.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm i
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3 id=&#34;steps&#34;&gt;Steps&lt;/h3&gt;
-&lt;ol&gt;
-&lt;li&gt;
-&lt;p&gt;Use the pkg CLI to create an executable from your function&amp;rsquo;s distributable
-file. For a &lt;code&gt;my_fn&lt;/code&gt; function built using the typescript SDK, this is
-&lt;code&gt;dist/my_fn_run.js&lt;/code&gt;.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npx pkg dist/my_fn_run.js
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Pass the path to the appropriate executable for your OS when running kpt
-using the exec runtime.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- &lt;span style=&#34;color:#000&#34;&gt;a&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;b
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;/ol&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;Explore other ways to run functions, such as using the &lt;a href=&#34;../starlark/&#34;&gt;starlark runtime&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Explore other ways to run functions from the &lt;a href=&#34;../&#34;&gt;Functions Developer Guide&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the
 &lt;a href=&#34;../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
 &lt;li&gt;Consult the &lt;a href=&#34;../../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt;.&lt;/li&gt;
@@ -263,7 +230,7 @@ function outputs.&lt;/p&gt;
 Starlark scripts.&lt;/p&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;Explore other ways to run functions, such as using the &lt;a href=&#34;../container/&#34;&gt;container runtime&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Explore other ways to run functions from the &lt;a href=&#34;../&#34;&gt;Functions Developer Guide&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the
 &lt;a href=&#34;../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
 &lt;li&gt;Consult the &lt;a href=&#34;../../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt;.&lt;/li&gt;

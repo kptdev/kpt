@@ -1051,12 +1051,6 @@ if (!doNotTrack) {
   <ul>
     <li><a href="#imperative-run">Imperative Run</a></li>
     <li><a href="#declarative-run">Declarative Run</a></li>
-    <li><a href="#typescript-function-example">Typescript Function Example</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#steps">Steps</a></li>
-      </ul>
-    </li>
     <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
@@ -1164,42 +1158,9 @@ directory containing the example.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>/path/to/executable<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><p>Note: if the <code>--enable-exec</code> flag is not provided, <code>kpt fn run DIR/</code> will
 ignore the exec function and exit 0.</p>
-<h2 id="typescript-function-example">Typescript Function Example</h2>
-<p>You may want to run a function developed with one of the config function SDKs
-using the exec runtime in order to avoid the overhead associated with running
-a container. To run your function in the exec runtime, you will first need to
-package your function as an executable.</p>
-<p>We walk through an example of running a typescript function using the kpt exec
-runtime.</p>
-<h3 id="prerequisites">Prerequisites</h3>
-<ul>
-<li>
-<p>Install the pkg CLI.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm install -g pkg
-</code></pre></div></li>
-<li>
-<p>Install your kpt-functions package module to create your function&rsquo;s
-distributable file.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm i
-</code></pre></div></li>
-</ul>
-<h3 id="steps">Steps</h3>
-<ol>
-<li>
-<p>Use the pkg CLI to create an executable from your function&rsquo;s distributable
-file. For a <code>my_fn</code> function built using the typescript SDK, this is
-<code>dist/my_fn_run.js</code>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npx pkg dist/my_fn_run.js
-</code></pre></div></li>
-<li>
-<p>Pass the path to the appropriate executable for your OS when running kpt
-using the exec runtime.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- <span style="color:#000">a</span><span style="color:#ce5c00;font-weight:bold">=</span>b
-</code></pre></div></li>
-</ol>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
-<li>Explore other ways to run functions, such as using the <a href="../starlark/">starlark runtime</a>.</li>
+<li>Explore other ways to run functions from the <a href="../">Functions Developer Guide</a>.</li>
 <li>Find out how to structure a pipeline of functions from the
 <a href="../../../../concepts/functions/">functions concepts</a> page.</li>
 <li>Consult the <a href="../../../../reference/fn/">fn command reference</a>.</li>
@@ -1293,7 +1254,7 @@ using the exec runtime.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a12bcb280d6d9aac3bfc984f4958c2b0b22b21b5">Docs: Address review comments on kpt function docs (a12bcb28)</a>
 </div>
 </div>
 

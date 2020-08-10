@@ -435,8 +435,6 @@ function&rsquo;s behavior.</li>
 
 <p>Instead, the function typically produces the <code>output</code> by reading configurations
 from an external system (e.g. reading files from a filesystem).</p>
-<p>Note: Source functions are <em>functions</em>. They are invoked by command
-<code>kpt fn run</code> instead of <code>kpt fn source</code>.</p>
 <h3 id="sink-function">Sink Function</h3>
 <p>A Sink Function produces no <code>output</code>:</p>
 
@@ -446,8 +444,6 @@ from an external system (e.g. reading files from a filesystem).</p>
 
 <p>Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem).</p>
-<p>Note: Sink functions are <em>functions</em>. They are invoked by command
-<code>kpt fn run</code> instead of <code>kpt fn sink</code>.</p>
 <h3 id="pipeline">Pipeline</h3>
 <p>In order do something useful with a function, we need to compose a pipeline
 with a source and a sink function.</p>
@@ -488,7 +484,7 @@ pipeline. Get detailed tutorials on how to use <code>kpt fn export</code> from t
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a12bcb280d6d9aac3bfc984f4958c2b0b22b21b5">Docs: Address review comments on kpt function docs (a12bcb28)</a>
 </div>
 </div>
 

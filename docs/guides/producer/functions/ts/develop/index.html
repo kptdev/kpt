@@ -1057,8 +1057,14 @@ if (!doNotTrack) {
         <li><a href="#working-with-crds">Working with CRDs</a></li>
       </ul>
     </li>
-    <li><a href="#create-the-npm-package">Create the NPM package</a></li>
-    <li><a href="#implement-the-function">Implement the function</a></li>
+    <li><a href="#create-the-npm-package">Create the NPM Package</a></li>
+    <li><a href="#implement-the-function">Implement the Function</a></li>
+    <li><a href="#debug-and-test-the-function">Debug and Test the Function</a>
+      <ul>
+        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#steps">Steps</a></li>
+      </ul>
+    </li>
     <li><a href="#build-and-push-container-images">Build and push container images</a></li>
     <li><a href="#use-the-sdk-cli">Use the SDK CLI</a></li>
     <li><a href="#next-steps">Next Steps</a></li>
@@ -1184,7 +1190,7 @@ running in a local container.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kind create cluster --name<span style="color:#ce5c00;font-weight:bold">=</span>kpt-functions --config<span style="color:#ce5c00;font-weight:bold">=</span>kind.yaml --image<span style="color:#ce5c00;font-weight:bold">=</span>kindest/node:v1.15.7
 </code></pre></div></li>
 </ol>
-<h4 id="using-a-gke-cluster">Using a GKE cluster</h4>
+<h4 id="using-a-gke-cluster">Using a GKE Cluster</h4>
 <p>You can also use a deployed cluster in GKE. The beta k8s feature is avilable
 only when using GKE&rsquo;s <code>--enable-kubernetes-alpha</code> flag, as seen here:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud container clusters create <span style="color:#000">$USER</span>-1-15 --cluster-version<span style="color:#ce5c00;font-weight:bold">=</span>latest --region<span style="color:#ce5c00;font-weight:bold">=</span>us-central1-a --project &lt;PROJECT&gt;
@@ -1194,7 +1200,7 @@ gcloud container clusters get-credentials <span style="color:#000">$USER</span>-
 function uses a Custom Resource Definition, make sure you apply it to the
 cluster used for type generation:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f /path/to/my/crd.yaml
-</code></pre></div><h2 id="create-the-npm-package">Create the NPM package</h2>
+</code></pre></div><h2 id="create-the-npm-package">Create the NPM Package</h2>
 <p>To initialize a new NPM package, first create a package directory:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir my-package
 <span style="color:#204a87">cd</span> my-package
@@ -1233,7 +1239,7 @@ directory.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">node dist/my_func_run.js --help
 </code></pre></div><p>Currently, it simply passes through the input configuration data. Let&rsquo;s remedy
 this.</p>
-<h2 id="implement-the-function">Implement the function</h2>
+<h2 id="implement-the-function">Implement the Function</h2>
 <p>You can now start implementing the function using your favorite IDE, e.g.
 <a href="https://code.visualstudio.com/">VSCode</a>:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">code .
@@ -1248,7 +1254,40 @@ build your function as you make changes:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run watch
 </code></pre></div><p>To run the tests, use:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm <span style="color:#204a87">test</span>
-</code></pre></div><h2 id="build-and-push-container-images">Build and push container images</h2>
+</code></pre></div><h2 id="debug-and-test-the-function">Debug and Test the Function</h2>
+<p>You may want to run a function developed with one of the config function SDKs
+using the exec runtime in order to avoid the overhead associated with running
+a container. To run your function in the exec runtime, you will first need to
+package your function as an executable.</p>
+<p>The below example shows how to run a typescript function using the kpt exec
+runtime.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>
+<p>Install the pkg CLI.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm install -g pkg
+</code></pre></div></li>
+<li>
+<p>Install your kpt-functions package module to create your function&rsquo;s
+distributable file.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm i
+</code></pre></div></li>
+</ul>
+<h3 id="steps">Steps</h3>
+<ol>
+<li>
+<p>Use the pkg CLI to create an executable from your function&rsquo;s distributable
+file. For a <code>my_fn</code> function built using the typescript SDK, this is
+<code>dist/my_fn_run.js</code>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npx pkg dist/my_fn_run.js
+</code></pre></div></li>
+<li>
+<p>Pass the path to the appropriate executable for your OS when running kpt
+using the exec runtime.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- <span style="color:#000">a</span><span style="color:#ce5c00;font-weight:bold">=</span>b
+</code></pre></div></li>
+</ol>
+<h2 id="build-and-push-container-images">Build and push container images</h2>
 <p>With your working function in-hand, it&rsquo;s time to package your function into an
 executable container image.</p>
 <p>To build the docker image:</p>
@@ -1380,7 +1419,7 @@ typescript SDK.</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a12bcb280d6d9aac3bfc984f4958c2b0b22b21b5">Docs: Address review comments on kpt function docs (a12bcb28)</a>
 </div>
 </div>
 

@@ -269,7 +269,7 @@ running in a local container.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kind create cluster --name&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;kpt-functions --config&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;kind.yaml --image&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;kindest/node:v1.15.7
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h4 id=&#34;using-a-gke-cluster&#34;&gt;Using a GKE cluster&lt;/h4&gt;
+&lt;h4 id=&#34;using-a-gke-cluster&#34;&gt;Using a GKE Cluster&lt;/h4&gt;
 &lt;p&gt;You can also use a deployed cluster in GKE. The beta k8s feature is avilable
 only when using GKE&amp;rsquo;s &lt;code&gt;--enable-kubernetes-alpha&lt;/code&gt; flag, as seen here:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;gcloud container clusters create &lt;span style=&#34;color:#000&#34;&gt;$USER&lt;/span&gt;-1-15 --cluster-version&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;latest --region&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;us-central1-a --project &amp;lt;PROJECT&amp;gt;
@@ -279,7 +279,7 @@ gcloud container clusters get-credentials &lt;span style=&#34;color:#000&#34;&gt
 function uses a Custom Resource Definition, make sure you apply it to the
 cluster used for type generation:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl apply -f /path/to/my/crd.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;create-the-npm-package&#34;&gt;Create the NPM package&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;create-the-npm-package&#34;&gt;Create the NPM Package&lt;/h2&gt;
 &lt;p&gt;To initialize a new NPM package, first create a package directory:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mkdir my-package
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; my-package
@@ -318,7 +318,7 @@ directory.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;node dist/my_func_run.js --help
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Currently, it simply passes through the input configuration data. Let&amp;rsquo;s remedy
 this.&lt;/p&gt;
-&lt;h2 id=&#34;implement-the-function&#34;&gt;Implement the function&lt;/h2&gt;
+&lt;h2 id=&#34;implement-the-function&#34;&gt;Implement the Function&lt;/h2&gt;
 &lt;p&gt;You can now start implementing the function using your favorite IDE, e.g.
 &lt;a href=&#34;https://code.visualstudio.com/&#34;&gt;VSCode&lt;/a&gt;:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;code .
@@ -333,7 +333,40 @@ build your function as you make changes:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run watch
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To run the tests, use:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm &lt;span style=&#34;color:#204a87&#34;&gt;test&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;build-and-push-container-images&#34;&gt;Build and push container images&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;debug-and-test-the-function&#34;&gt;Debug and Test the Function&lt;/h2&gt;
+&lt;p&gt;You may want to run a function developed with one of the config function SDKs
+using the exec runtime in order to avoid the overhead associated with running
+a container. To run your function in the exec runtime, you will first need to
+package your function as an executable.&lt;/p&gt;
+&lt;p&gt;The below example shows how to run a typescript function using the kpt exec
+runtime.&lt;/p&gt;
+&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Install the pkg CLI.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm install -g pkg
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install your kpt-functions package module to create your function&amp;rsquo;s
+distributable file.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm i
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;steps&#34;&gt;Steps&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Use the pkg CLI to create an executable from your function&amp;rsquo;s distributable
+file. For a &lt;code&gt;my_fn&lt;/code&gt; function built using the typescript SDK, this is
+&lt;code&gt;dist/my_fn_run.js&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npx pkg dist/my_fn_run.js
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Pass the path to the appropriate executable for your OS when running kpt
+using the exec runtime.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- &lt;span style=&#34;color:#000&#34;&gt;a&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;b
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;build-and-push-container-images&#34;&gt;Build and push container images&lt;/h2&gt;
 &lt;p&gt;With your working function in-hand, it&amp;rsquo;s time to package your function into an
 executable container image.&lt;/p&gt;
 &lt;p&gt;To build the docker image:&lt;/p&gt;

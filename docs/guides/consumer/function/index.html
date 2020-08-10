@@ -1106,16 +1106,15 @@ if (!doNotTrack) {
 	<h1>Running Functions</h1>
 	<div class="lead">Modify or validate the contents of a package by calling a function.</div>
 	<h2 id="functions-explained">Functions Explained</h2>
-<p>Kpt offers a <a href="../../../reference/cfg/set/"><code>kpt cfg set</code></a> command that allows users to set resource fields
-to a user provided value, but there are many instances when you want to
-generate or validate configuration, or apply more complex modifications than
-setting fields.</p>
 <p>When an operation requires more than just the schema, and data is necessary,
-the dynamic logic can be built into a separate tool. Functions bundle dynamic
-logic and apply that logic to the contents of a package &ndash; modifying and
-validating package contents.</p>
-<p>By default kpt runs configuration functions in a container runtime, but it also
-provides runtimes for functions packaged as executables or starlark scripts.</p>
+the logic for the operation can be built into a configuration function using
+general purpose programming languages. Functions bundle the operation logic and
+can apply that logic to the contents of a package &ndash; modifying and validating
+package contents.</p>
+<p>Kpt offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default kpt runs configuration functions in a
+container runtime, but it also provides runtimes for functions packaged as
+executables or starlark scripts.</p>
 
 
 <div class="pageinfo pageinfo-primary">
@@ -1337,7 +1336,7 @@ as input to the next</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3168be811ea3e4a08ec0cdd96b6486430cbcbd47">Deduplicate function docs (3168be81)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a12bcb280d6d9aac3bfc984f4958c2b0b22b21b5">Docs: Address review comments on kpt function docs (a12bcb28)</a>
 </div>
 </div>
 
