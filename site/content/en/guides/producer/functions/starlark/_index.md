@@ -131,12 +131,12 @@ Starlark scripts.
 
 ## Next Steps
 
-- Explore other ways to run functions, such as using the [container runtime].
+- Explore other ways to run functions from the [Functions Developer Guide].
 - Find out how to structure a pipeline of functions from the
   [functions concepts] page.
 - Consult the [fn command reference].
 
 [Starlark]: https://github.com/bazelbuild/starlark
-[container runtime]: ../container/
+[Functions Developer Guide]: ../
 [functions concepts]: ../../../../concepts/functions/
 [fn command reference]: ../../../../reference/fn/

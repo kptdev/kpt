@@ -70,9 +70,6 @@ A Source Function takes no `input`:
 Instead, the function typically produces the `output` by reading configurations
 from an external system (e.g. reading files from a filesystem).
 
-Note: Source functions are _functions_. They are invoked by command
-`kpt fn run` instead of `kpt fn source`.
-
 ### Sink Function
 
 A Sink Function produces no `output`:
@@ -81,9 +78,6 @@ A Sink Function produces no `output`:
 
 Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem).
-
-Note: Sink functions are _functions_. They are invoked by command
-`kpt fn run` instead of `kpt fn sink`.
 
 ### Pipeline
 

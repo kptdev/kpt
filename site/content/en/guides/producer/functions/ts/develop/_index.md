@@ -68,7 +68,7 @@ running in a local container.
    kind create cluster --name=kpt-functions --config=kind.yaml --image=kindest/node:v1.15.7
    ```
 
-#### Using a GKE cluster
+#### Using a GKE Cluster
 
 You can also use a deployed cluster in GKE. The beta k8s feature is avilable
 only when using GKE's `--enable-kubernetes-alpha` flag, as seen here:
@@ -88,7 +88,7 @@ cluster used for type generation:
 kubectl apply -f /path/to/my/crd.yaml
 ```
 
-## Create the NPM package
+## Create the NPM Package
 
 To initialize a new NPM package, first create a package directory:
 
@@ -140,7 +140,7 @@ node dist/my_func_run.js --help
 Currently, it simply passes through the input configuration data. Let's remedy
 this.
 
-## Implement the function
+## Implement the Function
 
 You can now start implementing the function using your favorite IDE, e.g.
 [VSCode]:
@@ -173,6 +173,48 @@ To run the tests, use:
 ```sh
 npm test
 ```
+
+## Debug and Test the Function
+
+You may want to run a function developed with one of the config function SDKs
+using the exec runtime in order to avoid the overhead associated with running
+a container. To run your function in the exec runtime, you will first need to
+package your function as an executable.
+
+The below example shows how to run a typescript function using the kpt exec
+runtime.
+
+### Prerequisites
+
+- Install the pkg CLI.
+
+  ```sh
+  npm install -g pkg
+  ```
+
+- Install your kpt-functions package module to create your function's
+  distributable file.
+
+  ```sh
+  npm i
+  ```
+
+### Steps
+
+1. Use the pkg CLI to create an executable from your function's distributable
+   file. For a `my_fn` function built using the typescript SDK, this is
+   `dist/my_fn_run.js`.
+
+   ```sh
+   npx pkg dist/my_fn_run.js
+   ```
+
+1. Pass the path to the appropriate executable for your OS when running kpt
+   using the exec runtime.
+
+   ```sh
+   kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- a=b
+   ```
 
 ## Build and push container images
 

@@ -32,9 +32,6 @@ See [definition of source functions][source].
 | gcr.io/kustomize-functions/create-application |                   | Add an Application CR to a group of resources.                    | [Example](https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/application-cr/)         | [Source](https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/application-cr/image/main.go)      | [Go Library](../../../producer/functions/golang/) |
 | gcr.io/kpt-functions/kustomize-build          |                   | Run kustomize to build configuration                              | [Example](https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/kustomize-build/) | [Source](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/kustomize_build.ts) | [Typescript SDK](../../../producer/functions/ts/) |
 
-Note: Source functions are _functions_. They are invoked using `kpt fn run`
-instead of `kpt fn source`.
-
 ## Sinks
 
 See [definition of sink functions][sink].
@@ -43,9 +40,6 @@ See [definition of sink functions][sink].
 | ------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | gcr.io/kpt-dev/kpt              | fn sink | Writes a directory of Kubernetes configuration. It maintains the original directory structure as read by source functions.        |         | [Source](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/internal/commands/sink.go)             |                                                   |
 | gcr.io/kpt-functions/write-yaml |         | [Demo] Writes a directory of Kubernetes configuration. It maintains the original directory structure as read by source functions. |         | [Source](https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/write_yaml.ts) | [Typescript SDK](../../../producer/functions/ts/) |
-
-Note: Sink functions are _functions_. They are invoked using `kpt fn run`
-instead of `kpt fn sink`.
 
 ## Validators
 

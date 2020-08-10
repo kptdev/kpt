@@ -9,18 +9,16 @@ description: >
 
 ## Functions Explained
 
-Kpt offers a [`kpt cfg set`] command that allows users to set resource fields
-to a user provided value, but there are many instances when you want to
-generate or validate configuration, or apply more complex modifications than
-setting fields.
-
 When an operation requires more than just the schema, and data is necessary,
-the dynamic logic can be built into a separate tool. Functions bundle dynamic
-logic and apply that logic to the contents of a package -- modifying and
-validating package contents.
+the logic for the operation can be built into a configuration function using
+general purpose programming languages. Functions bundle the operation logic and
+can apply that logic to the contents of a package -- modifying and validating
+package contents.
 
-By default kpt runs configuration functions in a container runtime, but it also
-provides runtimes for functions packaged as executables or starlark scripts.
+Kpt offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default kpt runs configuration functions in a
+container runtime, but it also provides runtimes for functions packaged as
+executables or starlark scripts.
 
 {{% pageinfo color="primary" %}}
 Functions provide a common interface for writing programs to read and write

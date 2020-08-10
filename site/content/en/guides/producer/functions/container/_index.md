@@ -57,7 +57,7 @@ the example.
 
 ## Next Steps
 
-- Explore other ways to run functions, such as using the [exec runtime].
+- Explore other ways to run functions from the [Functions Developer Guide].
 - Find out how to structure a pipeline of functions from the
   [functions concepts] page.
 - Consult the [fn command reference].
@@ -65,6 +65,6 @@ the example.
 [io specification]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [kpt-functions-sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
 [go libraries]: ../golang/
-[exec runtime]: ../exec/
+[Functions Developer Guide]: ../
 [functions concepts]: ../../../../../concepts/functions/
 [fn command reference]: ../../../../reference/fn/
