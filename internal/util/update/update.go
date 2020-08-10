@@ -152,8 +152,8 @@ func (u Command) Run() error {
 	}
 
 	// require package is checked into git before trying to update it
-	g := gitutil.NewLocalGitRunner("./")
-	if err := g.Run("status", "-s", u.Path); err != nil {
+	g := gitutil.NewLocalGitRunner("./" + u.Path)
+	if err := g.Run("status", "-s"); err != nil {
 		return errors.Errorf(
 			"kpt packages must be checked into a git repo before they are updated: %v", err)
 	}
