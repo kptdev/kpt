@@ -2,7 +2,6 @@
 title: "Sync"
 linkTitle: "sync"
 type: docs
-draft: true
 description: >
    Fetch and update packages declaratively
 ---

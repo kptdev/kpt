@@ -2,7 +2,6 @@
 title: "Set"
 linkTitle: "set"
 type: docs
-draft: true
 description: >
    Add a sync dependency to a Kptfile
 ---
