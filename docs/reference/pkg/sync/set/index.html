@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/reference/pkg/fix/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/reference/pkg/sync/set/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,17 +32,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Fix | Kpt</title><meta property="og:title" content="Fix" />
-<meta property="og:description" content="Fix a local package which is using deprecated features.
+<title>Set | Kpt</title><meta property="og:title" content="Set" />
+<meta property="og:description" content="Add a sync dependency to a Kptfile
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/reference/pkg/fix/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/reference/pkg/sync/set/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Fix">
-<meta itemprop="description" content="Fix a local package which is using deprecated features.
+<meta itemprop="name" content="Set">
+<meta itemprop="description" content="Add a sync dependency to a Kptfile
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Fix"/>
-<meta name="twitter:description" content="Fix a local package which is using deprecated features.
+<meta name="twitter:title" content="Set"/>
+<meta name="twitter:description" content="Add a sync dependency to a Kptfile
 "/>
 
 
@@ -75,7 +75,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Fix | Kpt</title>
+    <title>Set | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -270,10 +270,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/reference/pkg/fix/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">fix</a>
+    <a  href="/kpt/reference/pkg/fix/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fix</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptreferencepkgfix">
+    <li class="collapse " id="kptreferencepkgfix">
       
       
       
@@ -339,10 +339,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/reference/pkg/sync/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">sync</a>
+    <a  href="/kpt/reference/pkg/sync/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">sync</a>
   </li>
   <ul>
-    <li class="collapse " id="kptreferencepkgsync">
+    <li class="collapse show" id="kptreferencepkgsync">
       
       
       
@@ -356,10 +356,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/reference/pkg/sync/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">set</a>
+    <a  href="/kpt/reference/pkg/sync/set/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">set</a>
   </li>
   <ul>
-    <li class="collapse " id="kptreferencepkgsyncset">
+    <li class="collapse show" id="kptreferencepkgsyncset">
       
       
       
@@ -981,8 +981,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/reference/pkg/fix/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Fix" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/reference/pkg/sync/set/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Set" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1014,6 +1014,9 @@ if (!doNotTrack) {
 
 
 
+
+
+
 <li class="breadcrumb-item" >
 	<a href="https://googlecontainertools.github.io/kpt/reference/">Command Reference</a>
 </li>
@@ -1028,8 +1031,15 @@ if (!doNotTrack) {
 
 
 
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/reference/pkg/sync/">sync</a>
+</li>
+
+
+
+
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/reference/pkg/fix/">fix</a>
+	<a href="https://googlecontainertools.github.io/kpt/reference/pkg/sync/set/">set</a>
 </li>
 
 	</ol>
@@ -1037,36 +1047,89 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Fix</h1>
-	<div class="lead">Fix a local package which is using deprecated features.</div>
+	<h1>Set</h1>
+	<div class="lead">Add a sync dependency to a Kptfile</div>
 	<!--mdtogo:Short
-    Fix a local package which is using deprecated features.
+    Add a sync dependency to a Kptfile
 -->
-<p>Fix reads the local package, modifies the package to use the latest kpt features
-and fixes any deprecated feature traces.</p>
+<p><code>kpt pkg sync set</code> can be used to add or update Kptfile dependencies
+programmatically.</p>
+
+
+<div class="pageinfo pageinfo-primary">
+<p>Note: command must be run from within the directory containing Kptfile
+to be updated.</p>
+
+</div>
+
 <h3 id="examples">Examples</h3>
-<h4 id="example-fix-commands">Example fix commands</h4>
 <!--mdtogo:Examples-->
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print the fixes which will be made to the package without actually modifying</span>
-<span style="color:#8f5902;font-style:italic"># resources</span>
-kpt pkg fix . --dry-run
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># fix the package if it is using deprecated features</span>
-kpt pkg fix .
+<h4 id="create-a-new-package-and-add-a-dependency-to-it">Create a new package and add a dependency to it</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># init a package so it can be synced</span>
+kpt pkg init
+
+<span style="color:#8f5902;font-style:italic"># add a dependency to the package</span>
+kpt pkg sync <span style="color:#204a87">set</span> https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    hello-world
+
+<span style="color:#8f5902;font-style:italic"># sync the dependencies</span>
+kpt pkg sync .
+</code></pre></div><h4 id="update-an-existing-package-dependency">Update an existing package dependency</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># add a dependency to an existing package</span>
+kpt pkg sync <span style="color:#204a87">set</span> https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    hello-world --strategy<span style="color:#ce5c00;font-weight:bold">=</span>resource-merge
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
-<pre><code>kpt pkg fix LOCAL_PKG_DIRECTORY [flags]
+<pre><code>kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
 
-Args:
-  LOCAL_PKG_DIRECTORY:
-    Local directory with kpt package. Directory must exist and
-    contain a Kptfile.
+REPO_URI:
+  URI of a git repository containing 1 or more packages as subdirectories.
+  In most cases the .git suffix should be specified to delimit the REPO_URI
+  from the PKG_PATH, but this is not required for widely recognized repo
+  prefixes.  If get cannot parse the repo for the directory and version,
+  then it will print an error asking for '.git' to be specified as part of
+  the argument.
+  e.g. https://github.com/kubernetes/examples.git
+  Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
 
-Flags:
-  --dry-run
-    if set, the fix command shall only print the fixes which will be made to the
-    package without actually fixing/modifying the resources.
+PKG_PATH:
+  Path to remote subdirectory containing Kubernetes Resource configuration
+  files or directories.  Defaults to the root directory.
+  Uses '/' as the path separator (regardless of OS).
+  e.g. staging/cockroachdb
 
+VERSION:
+  A git tag, branch, ref or commit for the remote version of the package to
+  fetch.  Defaults to the repository master branch.
+  e.g. @master
+
+LOCAL_DEST_DIRECTORY:
+  The local directory to write the package to. e.g. ./my-cockroachdb-copy
+
+    * If the directory does NOT exist: create the specified directory and write
+      the package contents to it
+    * If the directory DOES exist: create a NEW directory under the specified one,
+      defaulting the name to the Base of REPO/PKG_PATH
+    * If the directory DOES exist and already contains a directory with the same name
+      of the one that would be created: fail
+</code></pre><h4 id="flags">Flags</h4>
+<pre><code>--strategy:
+  Controls how changes to the local package are handled.
+  Defaults to fast-forward.
+
+    * resource-merge: perform a structural comparison of the original /
+      updated Resources, and merge the changes into the local package.
+      See `kpt help apis merge3` for details on merge.
+    * fast-forward: fail without updating if the local package was modified
+      since it was fetched.
+    * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
+      patch of the changes between the source version and destination
+      version.
+      REQUIRES THE LOCAL PACKAGE TO HAVE BEEN COMMITTED TO A LOCAL GIT REPO.
+    * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
+      THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace
+      it with the remote version.
 </code></pre><!--mdtogo-->
 
         <div class="section-index">
@@ -1149,7 +1212,7 @@ Flags:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3a694b8a45d1c23da9e8354d83a533b3e9cbdb3e">Regenerate docs (3a694b8a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
 </div>
 </div>
 

@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/reference/pkg/fix/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/reference/pkg/sync/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,17 +32,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Fix | Kpt</title><meta property="og:title" content="Fix" />
-<meta property="og:description" content="Fix a local package which is using deprecated features.
+<title>Sync | Kpt</title><meta property="og:title" content="Sync" />
+<meta property="og:description" content="Fetch and update packages declaratively
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/reference/pkg/fix/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/reference/pkg/sync/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Fix">
-<meta itemprop="description" content="Fix a local package which is using deprecated features.
+<meta itemprop="name" content="Sync">
+<meta itemprop="description" content="Fetch and update packages declaratively
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Fix"/>
-<meta name="twitter:description" content="Fix a local package which is using deprecated features.
+<meta name="twitter:title" content="Sync"/>
+<meta name="twitter:description" content="Fetch and update packages declaratively
 "/>
 
 
@@ -75,7 +75,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Fix | Kpt</title>
+    <title>Sync | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -270,10 +270,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/reference/pkg/fix/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">fix</a>
+    <a  href="/kpt/reference/pkg/fix/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fix</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptreferencepkgfix">
+    <li class="collapse " id="kptreferencepkgfix">
       
       
       
@@ -339,10 +339,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/reference/pkg/sync/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">sync</a>
+    <a  href="/kpt/reference/pkg/sync/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">sync</a>
   </li>
   <ul>
-    <li class="collapse " id="kptreferencepkgsync">
+    <li class="collapse show" id="kptreferencepkgsync">
       
       
       
@@ -356,10 +356,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/reference/pkg/sync/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">set</a>
+    <a  href="/kpt/reference/pkg/sync/set/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">set</a>
   </li>
   <ul>
-    <li class="collapse " id="kptreferencepkgsyncset">
+    <li class="collapse show" id="kptreferencepkgsyncset">
       
       
       
@@ -981,8 +981,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/reference/pkg/fix/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Fix" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/reference/pkg/sync/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Sync" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1029,7 +1029,7 @@ if (!doNotTrack) {
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/reference/pkg/fix/">fix</a>
+	<a href="https://googlecontainertools.github.io/kpt/reference/pkg/sync/">sync</a>
 </li>
 
 	</ol>
@@ -1037,37 +1037,123 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Fix</h1>
-	<div class="lead">Fix a local package which is using deprecated features.</div>
+	<h1>Sync</h1>
+	<div class="lead">Fetch and update packages declaratively</div>
 	<!--mdtogo:Short
-    Fix a local package which is using deprecated features.
+    Fetch and update packages declaratively
 -->
-<p>Fix reads the local package, modifies the package to use the latest kpt features
-and fixes any deprecated feature traces.</p>
+
+
+<p>
+    
+    <asciinema-player
+            src="https://googlecontainertools.github.io/kpt//casts/pkg-sync.cast"
+            
+            preload="1"
+            
+            start-at="0"
+            speed="1"
+            
+            
+            
+            
+            
+            
+            
+            
+    ></asciinema-player>
+        <script>
+        let c=document.getElementsByClassName("td-content")
+        if (c && c.length > 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName('asciinema-player')
+            if (p && p.length > 0) {
+                p.cols = w
+            }
+        }
+    </script>
+</p>
+
+<p>Sync gets and updates packages using a manifest to manage a collection
+of dependencies.</p>
+<p>The manifest declares <em>all</em> direct dependencies of a package in a Kptfile.
+When <code>sync</code> is run, it will ensure each dependency has been fetched at the
+specified ref.</p>
+<p>This is an alternative to managing package dependencies individually using
+the <code>get</code> and <code>update</code> commands.</p>
 <h3 id="examples">Examples</h3>
-<h4 id="example-fix-commands">Example fix commands</h4>
+<h4 id="example-sync-commands">Example sync commands</h4>
 <!--mdtogo:Examples-->
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print the fixes which will be made to the package without actually modifying</span>
-<span style="color:#8f5902;font-style:italic"># resources</span>
-kpt pkg fix . --dry-run
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># fix the package if it is using deprecated features</span>
-kpt pkg fix .
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># print the dependencies that would be modified</span>
+kpt pkg sync . --dry-run
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># sync the dependencies</span>
+kpt pkg sync .
 </code></pre></div><!--mdtogo-->
-<h3 id="synopsis">Synopsis</h3>
+<h4 id="example-kptfile-with-dependencies">Example Kptfile with dependencies</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># file: Kptfile</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt.dev/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kptfile<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#8f5902;font-style:italic"># list of dependencies to sync</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">dependencies</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>local/destination/dir<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">git</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># repo is the git respository</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">repo</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;https://github.com/pwittrock/examples&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># directory is the git subdirectory</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">directory</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;staging/cockroachdb&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#8f5902;font-style:italic"># ref is the ref to fetch</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">ref</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;v1.0.0&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>local/destination/dir1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">git</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">repo</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;https://github.com/pwittrock/examples&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">directory</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;staging/javaee&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">ref</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;v1.0.0&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#8f5902;font-style:italic"># set the strategy for applying package updates</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">updateStrategy</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;resource-merge&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>app2<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">path</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>local/destination/dir2<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#8f5902;font-style:italic"># declaratively delete this dependency</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">ensureNotExists</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
-<pre><code>kpt pkg fix LOCAL_PKG_DIRECTORY [flags]
+<pre><code>kpt pkg sync LOCAL_PKG_DIR [flags]
 
-Args:
-  LOCAL_PKG_DIRECTORY:
-    Local directory with kpt package. Directory must exist and
-    contain a Kptfile.
-
-Flags:
-  --dry-run
-    if set, the fix command shall only print the fixes which will be made to the
-    package without actually fixing/modifying the resources.
-
+LOCAL_PKG_DIR:
+  Local package with dependencies to sync.  Directory must exist and
+  contain a Kptfile.
+</code></pre><h4 id="env-vars">Env Vars</h4>
+<pre><code>KPT_CACHE_DIR:
+  Controls where to cache remote packages during updates.
+  Defaults to ~/.kpt/repos/
 </code></pre><!--mdtogo-->
+<h4 id="dependencies">Dependencies</h4>
+<p>For each dependency in the Kptfile, <code>sync</code> will ensure that it exists
+locally with the matching repo and ref.</p>
+<p>Dependencies are specified in the Kptfile <code>dependencies</code> field and can be
+added or updated with <code>kpt pkg sync set</code>.  e.g.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg sync <span style="color:#204a87">set</span> https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>    hello-world
+</code></pre></div><p>The <a href="set">sync-set</a> command must be run from within the local package directory and the
+last argument specifies the local destination directory for the dependency.</p>
+<p>Or edit the Kptfile directly:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>kpt.dev/v1alpha1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Kptfile<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">dependencies</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span>- <span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>hello-world<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">git</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">repo</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;https://github.com/GoogleContainerTools/kpt.git&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">directory</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;/package-examples/helloworld-set&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">ref</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;master&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><p>Dependencies have following schema:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>&lt;local<span style="color:#f8f8f8;text-decoration:underline"> </span>path<span style="color:#f8f8f8;text-decoration:underline"> </span>(relative<span style="color:#f8f8f8;text-decoration:underline"> </span>to<span style="color:#f8f8f8;text-decoration:underline"> </span>the<span style="color:#f8f8f8;text-decoration:underline"> </span>Kptfile)<span style="color:#f8f8f8;text-decoration:underline"> </span>to<span style="color:#f8f8f8;text-decoration:underline"> </span>fetch<span style="color:#f8f8f8;text-decoration:underline"> </span>the<span style="color:#f8f8f8;text-decoration:underline"> </span>dependency<span style="color:#f8f8f8;text-decoration:underline"> </span>to&gt;<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">git</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">repo</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>&lt;git<span style="color:#f8f8f8;text-decoration:underline"> </span>repository<span style="color:#8f5902;font-style:italic">&gt;
+</span><span style="color:#8f5902;font-style:italic">  directory: &lt;sub-directory under the git repository&gt;</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">ref</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>&lt;git<span style="color:#f8f8f8;text-decoration:underline"> </span>reference<span style="color:#f8f8f8;text-decoration:underline"> </span>-- e.g.<span style="color:#f8f8f8;text-decoration:underline"> </span>tag<span style="color:#000;font-weight:bold">,</span><span style="color:#f8f8f8;text-decoration:underline"> </span>branch<span style="color:#000;font-weight:bold">,</span><span style="color:#f8f8f8;text-decoration:underline"> </span>commit<span style="color:#000;font-weight:bold">,</span><span style="color:#f8f8f8;text-decoration:underline"> </span>etc&gt;<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">updateStrategy</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>&lt;strategy<span style="color:#f8f8f8;text-decoration:underline"> </span>to<span style="color:#f8f8f8;text-decoration:underline"> </span>use<span style="color:#f8f8f8;text-decoration:underline"> </span>when<span style="color:#f8f8f8;text-decoration:underline"> </span>updating<span style="color:#f8f8f8;text-decoration:underline"> </span>the<span style="color:#f8f8f8;text-decoration:underline"> </span>dependency<span style="color:#f8f8f8;text-decoration:underline"> </span>-- see<span style="color:#f8f8f8;text-decoration:underline"> </span>kpt<span style="color:#f8f8f8;text-decoration:underline"> </span>help<span style="color:#f8f8f8;text-decoration:underline"> </span>update<span style="color:#f8f8f8;text-decoration:underline"> </span>for<span style="color:#f8f8f8;text-decoration:underline"> </span>more<span style="color:#f8f8f8;text-decoration:underline"> </span>details&gt;<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">ensureNotExists</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>&lt;remove<span style="color:#f8f8f8;text-decoration:underline"> </span>the<span style="color:#f8f8f8;text-decoration:underline"> </span>dependency<span style="color:#000;font-weight:bold">,</span><span style="color:#f8f8f8;text-decoration:underline"> </span>mutually<span style="color:#f8f8f8;text-decoration:underline"> </span>exclusive<span style="color:#f8f8f8;text-decoration:underline"> </span>with<span style="color:#f8f8f8;text-decoration:underline"> </span>git&gt;<span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><p>Dependencies maybe be updated by updating their <code>git.ref</code> field and running <code>kpt pkg sync</code>
+against the directory.</p>
 
         <div class="section-index">
     
@@ -1135,6 +1221,13 @@ Flags:
             
         
             
+                <div class="entry">
+                    <h5>
+                        <a href="/kpt/reference/pkg/sync/set/">Set</a>
+                    </h5>
+                    <p>Add a sync dependency to a Kptfile</p>
+                </div>
+            
         
             
         
@@ -1149,7 +1242,7 @@ Flags:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3a694b8a45d1c23da9e8354d83a533b3e9cbdb3e">Regenerate docs (3a694b8a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
 </div>
 </div>
 
