@@ -87,6 +87,57 @@ spec:
   replicas: 3 # {"$kpt-set":"replicas"}
 ```
 
+#### Targeting fields using the path
+
+The basic way to create a setter only matches fields based on the value. But
+in some situations there might be several fields with the same value, but not all
+of them should be targeted by the setter. In these situations, use the `--field`
+flag to provide either the name of the field, the full path to the field, or a
+partial (suffix) path to the field. Only fields that match both the path and
+the value will be targeted by the setter.
+
+```sh
+# create a setter named "replicas" and but only target the field name replicas in the spec
+kpt cfg create-setter hello-world/ replicas 3 --field="spec.replicas"
+```
+
+```yaml
+# deployment-foo.yaml
+kind: Deployment
+metadata:
+  name: foo
+  annotations:
+    replicas: 3
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}
+```
+
+The path is always just the names of the properties on the path to the field,
+regardless whether the field is nested inside a sequence. Targeting specific
+elements inside a sequence is not supported.
+
+```sh
+# create a setter named "mountName" and only target the name of the volume mount
+kpt cfg create-setter hello-world/ mountName nginx --field="spec.containers.volumeMounts.name"
+```
+
+```yaml
+# deployment-nginx.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    volumeMounts:
+    - name: nginx # {"$kpt-set":"mountName"}
+      mountPath: /usr/share/nginx
+    - name: temp
+      mountPath: /tmp
+```
+
 #### Auto setters
 
 Some setters are automatically set deriving the values from the output of `gcloud config list`
