@@ -94,9 +94,9 @@ A: Yes. [gcr.io/kpt-dev/kpt] contains the `kpt` binary.
 
 #### **Q: How do I run source or sink functions?**
 
-A: All kpt functions, including source and sink functions, should be run by
-`kpt fn run`. `kpt fn sink` and `kpt fn source` are commands which can only run
-specified builtin functions.
+A: All kpt functions, including source and sink functions, should be run using
+`kpt fn run`. The `kpt fn source` and `kpt fn sink` commands run builtin source
+and sink functions.
 
 #### **Q: I still have questions. How do I contact you?**
 

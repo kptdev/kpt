@@ -9,35 +9,32 @@ description: >
 
 ## Functions Explained
 
-When an operation requires more than just the schema, and data is necessary,
-the logic for the operation can be built into a configuration function using
-general purpose programming languages. Functions bundle the operation logic and
-can apply that logic to the contents of a package -- modifying and validating
-package contents.
+KRM Config Functions are client-side programs that make it easy to operate on a
+package of Kubernetes configuration files.
+
+In GitOps workflows, KPT functions read and write configuration files from a
+Git repo. Changes to the system authored by humans and mutating KPT functions
+are reviewed before being committed to the repo. They can be run locally or as
+part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
+configurations before they are applied to a cluster.
 
 Kpt offers multiple runtimes for configuration functions to run arbitrary
 actions on configuration. By default kpt runs configuration functions in a
-container runtime, but it also provides runtimes for functions packaged as
-executables or starlark scripts.
+[container runtime], but it also provides runtimes for functions packaged as
+[executables] or [starlark scripts].
 
-{{% pageinfo color="primary" %}}
-Functions provide a common interface for writing programs to read and write
-resources as data. This enables greater reuse and composition than when
-configuration is itself represented as code. Functions may be written in any
-language, or simply wrap other existing programs.
-{{% /pageinfo %}}
+The image below details how a function adds the label `color: pink` to a
+package.
 
 {{< svg src="images/fn" >}}
 
-Functions can address many types of workflows, including:
+Functions can address many types of use cases, including:
 
-- Generating resources from some inputs (like client-side CRDs)
-- Applying cross-cutting transformations (e.g., set a field on all resources
-  that look like this)
-- Validating resources conform to best practices defined by the organization
-  (e.g., must specify tag as part of the image)
-- Sending resources to a destination (e.g., saving them locally or deploying
-  them to a cluster)
+- **Configuration Validation:** e.g. Lint Kubernetes resources using `kubeval`.
+- **Configuration Generation:** e.g. Generate configuration using `kustomize`.
+- **Configuration Transformation:** e.g. Upsert Helm chart configuration to an
+  existing package of hydrated helm configs using the latest version of the
+  chart.
 
 ## Running Functions
 
@@ -134,7 +131,7 @@ like a list of strings.
 Run the function:
 
 ```sh
-kpt fn run . # without `--image`
+kpt fn run .
 ```
 
 The example command will:
@@ -159,6 +156,9 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
   [functions concepts] page.
 - Learn more ways of using the `kpt fn` command from the [reference] doc.
 
+[container runtime]: ../../producer/functions/container/
+[executables]: ../../producer/functions/exec/
+[starlark scripts]: ../../producer/functions/starlark/
 [`kpt cfg set`]: ../../../reference/cfg/set/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
 [VCS]: https://en.wikipedia.org/wiki/Version_control

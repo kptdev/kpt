@@ -17,7 +17,8 @@ which:
 
 By default containers are run without network access, and without the ability
 to write to volumes outside the container. All local environment variables
-except the `TMPDIR` variable are loaded into the container by default.
+except the `TMPDIR` variable are loaded into the container by default. See the
+[fn command reference] for more details.
 
 While container functions may be written in any language so long as they
 adhere to the [io specification] (read / write ResourceList), the
