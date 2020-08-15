@@ -1106,39 +1106,31 @@ if (!doNotTrack) {
 	<h1>Running Functions</h1>
 	<div class="lead">Modify or validate the contents of a package by calling a function.</div>
 	<h2 id="functions-explained">Functions Explained</h2>
-<p>When an operation requires more than just the schema, and data is necessary,
-the logic for the operation can be built into a configuration function using
-general purpose programming languages. Functions bundle the operation logic and
-can apply that logic to the contents of a package &ndash; modifying and validating
-package contents.</p>
+<p>KRM Config Functions are client-side programs that make it easy to operate on a
+package of Kubernetes configuration files.</p>
+<p>In GitOps workflows, KPT functions read and write configuration files from a
+Git repo. Changes to the system authored by humans and mutating KPT functions
+are reviewed before being committed to the repo. They can be run locally or as
+part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
+configurations before they are applied to a cluster.</p>
 <p>Kpt offers multiple runtimes for configuration functions to run arbitrary
 actions on configuration. By default kpt runs configuration functions in a
-container runtime, but it also provides runtimes for functions packaged as
-executables or starlark scripts.</p>
-
-
-<div class="pageinfo pageinfo-primary">
-<p>Functions provide a common interface for writing programs to read and write
-resources as data. This enables greater reuse and composition than when
-configuration is itself represented as code. Functions may be written in any
-language, or simply wrap other existing programs.</p>
-
-</div>
-
+<a href="../../producer/functions/container/">container runtime</a>, but it also provides runtimes for functions packaged as
+<a href="../../producer/functions/exec/">executables</a> or <a href="../../producer/functions/starlark/">starlark scripts</a>.</p>
+<p>The image below details how a function adds the label <code>color: pink</code> to a
+package.</p>
 
 
 
 <img src="https://googlecontainertools.github.io/kpt//images/fn.svg" />
 
-<p>Functions can address many types of workflows, including:</p>
+<p>Functions can address many types of use cases, including:</p>
 <ul>
-<li>Generating resources from some inputs (like client-side CRDs)</li>
-<li>Applying cross-cutting transformations (e.g., set a field on all resources
-that look like this)</li>
-<li>Validating resources conform to best practices defined by the organization
-(e.g., must specify tag as part of the image)</li>
-<li>Sending resources to a destination (e.g., saving them locally or deploying
-them to a cluster)</li>
+<li><strong>Configuration Validation:</strong> e.g. Lint Kubernetes resources using <code>kubeval</code>.</li>
+<li><strong>Configuration Generation:</strong> e.g. Generate configuration using <code>kustomize</code>.</li>
+<li><strong>Configuration Transformation:</strong> e.g. Upsert Helm chart configuration to an
+existing package of hydrated helm configs using the latest version of the
+chart.</li>
 </ul>
 <h2 id="running-functions">Running Functions</h2>
 <p>Functions may be run either imperatively using the form
@@ -1208,7 +1200,7 @@ key-value map with the &ldquo;label_name&rdquo; and &ldquo;label_value&rdquo; ar
 earlier. Using a map also makes it easier to pass more complex arguments values
 like a list of strings.</p>
 <p>Run the function:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . <span style="color:#8f5902;font-style:italic"># without `--image`</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run .
 </code></pre></div><p>The example command will:</p>
 <ul>
 <li>read all resources from the package directory <code>.</code> to generate input resources</li>
@@ -1336,7 +1328,7 @@ as input to the next</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a12bcb280d6d9aac3bfc984f4958c2b0b22b21b5">Docs: Address review comments on kpt function docs (a12bcb28)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 14, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7426c4c76569c20da445705b1421d801dec019fa">Docs: Further review comments (7426c4c7)</a>
 </div>
 </div>
 

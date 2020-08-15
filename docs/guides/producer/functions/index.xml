@@ -32,7 +32,8 @@ which:&lt;/p&gt;
 &lt;/ul&gt;
 &lt;p&gt;By default containers are run without network access, and without the ability
 to write to volumes outside the container. All local environment variables
-except the &lt;code&gt;TMPDIR&lt;/code&gt; variable are loaded into the container by default.&lt;/p&gt;
+except the &lt;code&gt;TMPDIR&lt;/code&gt; variable are loaded into the container by default. See the
+&lt;a href=&#34;../../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt; for more details.&lt;/p&gt;
 &lt;p&gt;While container functions may be written in any language so long as they
 adhere to the &lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md&#34;&gt;io specification&lt;/a&gt; (read / write ResourceList), the
 &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk&#34;&gt;kpt-functions-sdk&lt;/a&gt; provides a solution for writing functions using typescript

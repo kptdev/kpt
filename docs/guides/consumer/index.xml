@@ -946,39 +946,31 @@ and local modifications (additional environment variable).&lt;/p&gt;
         
         
         &lt;h2 id=&#34;functions-explained&#34;&gt;Functions Explained&lt;/h2&gt;
-&lt;p&gt;When an operation requires more than just the schema, and data is necessary,
-the logic for the operation can be built into a configuration function using
-general purpose programming languages. Functions bundle the operation logic and
-can apply that logic to the contents of a package &amp;ndash; modifying and validating
-package contents.&lt;/p&gt;
+&lt;p&gt;KRM Config Functions are client-side programs that make it easy to operate on a
+package of Kubernetes configuration files.&lt;/p&gt;
+&lt;p&gt;In GitOps workflows, KPT functions read and write configuration files from a
+Git repo. Changes to the system authored by humans and mutating KPT functions
+are reviewed before being committed to the repo. They can be run locally or as
+part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
+configurations before they are applied to a cluster.&lt;/p&gt;
 &lt;p&gt;Kpt offers multiple runtimes for configuration functions to run arbitrary
 actions on configuration. By default kpt runs configuration functions in a
-container runtime, but it also provides runtimes for functions packaged as
-executables or starlark scripts.&lt;/p&gt;
-
-
-&lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
-&lt;p&gt;Functions provide a common interface for writing programs to read and write
-resources as data. This enables greater reuse and composition than when
-configuration is itself represented as code. Functions may be written in any
-language, or simply wrap other existing programs.&lt;/p&gt;
-
-&lt;/div&gt;
-
+&lt;a href=&#34;../../producer/functions/container/&#34;&gt;container runtime&lt;/a&gt;, but it also provides runtimes for functions packaged as
+&lt;a href=&#34;../../producer/functions/exec/&#34;&gt;executables&lt;/a&gt; or &lt;a href=&#34;../../producer/functions/starlark/&#34;&gt;starlark scripts&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The image below details how a function adds the label &lt;code&gt;color: pink&lt;/code&gt; to a
+package.&lt;/p&gt;
 
 
 
 &lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/fn.svg&#34; /&gt;
 
-&lt;p&gt;Functions can address many types of workflows, including:&lt;/p&gt;
+&lt;p&gt;Functions can address many types of use cases, including:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Generating resources from some inputs (like client-side CRDs)&lt;/li&gt;
-&lt;li&gt;Applying cross-cutting transformations (e.g., set a field on all resources
-that look like this)&lt;/li&gt;
-&lt;li&gt;Validating resources conform to best practices defined by the organization
-(e.g., must specify tag as part of the image)&lt;/li&gt;
-&lt;li&gt;Sending resources to a destination (e.g., saving them locally or deploying
-them to a cluster)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Configuration Validation:&lt;/strong&gt; e.g. Lint Kubernetes resources using &lt;code&gt;kubeval&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Configuration Generation:&lt;/strong&gt; e.g. Generate configuration using &lt;code&gt;kustomize&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Configuration Transformation:&lt;/strong&gt; e.g. Upsert Helm chart configuration to an
+existing package of hydrated helm configs using the latest version of the
+chart.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id=&#34;running-functions&#34;&gt;Running Functions&lt;/h2&gt;
 &lt;p&gt;Functions may be run either imperatively using the form
@@ -1048,7 +1040,7 @@ key-value map with the &amp;ldquo;label_name&amp;rdquo; and &amp;ldquo;label_val
 earlier. Using a map also makes it easier to pass more complex arguments values
 like a list of strings.&lt;/p&gt;
 &lt;p&gt;Run the function:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run . &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# without `--image`&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run .
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The example command will:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;read all resources from the package directory &lt;code&gt;.&lt;/code&gt; to generate input resources&lt;/li&gt;
