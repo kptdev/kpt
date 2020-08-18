@@ -1023,11 +1023,48 @@ if (!doNotTrack) {
 </p>
 
 <!--mdtogo:Long-->
-<p>kpt functionality is subdivided into command groups, each of which operates on
-a particular set of entities, with a consistent command syntax and pattern of
-inputs and outputs.</p>
+<p>kpt functionality is subdivided into the following command groups, each of
+which operates on a particular set of entities, with a consistent command
+syntax and pattern of inputs and outputs.</p>
+<table>
+<thead>
+<tr>
+<th>Command Group</th>
+<th>Description</th>
+<th>Reads From</th>
+<th>Writes To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="pkg/">pkg</a></td>
+<td>fetch, update, and sync configuration files using git</td>
+<td>remote git</td>
+<td>local directory</td>
+</tr>
+<tr>
+<td><a href="cfg/">cfg</a></td>
+<td>examine and modify configuration files</td>
+<td>local directory</td>
+<td>local directory</td>
+</tr>
+<tr>
+<td><a href="fn/">fn</a></td>
+<td>generate, transform, validate configuration files using containerized functions</td>
+<td>local directory</td>
+<td>local directory</td>
+</tr>
+<tr>
+<td><a href="live/">live</a></td>
+<td>reconcile the live state with configuration files</td>
+<td>local directory</td>
+<td>remote cluster</td>
+</tr>
+</tbody>
+</table>
 <!--mdtogo-->
 <h3 id="examples">Examples</h3>
+<p>The following are examples of running each kpt command group.</p>
 <!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># get a package</span>
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.5.0 helloworld
@@ -1042,6 +1079,10 @@ replicas    <span style="color:#4e9a06">&#39;helloworld replicas&#39;</span>    
 
 $ kpt cfg <span style="color:#204a87">set</span> helloworld replicas <span style="color:#0000cf;font-weight:bold">3</span> --set-by pwittrock  --description <span style="color:#4e9a06">&#39;reason&#39;</span>
 <span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> fields
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># get a package and run a validation function</span>
+kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
+mkdir results/
+kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- <span style="color:#000">subject_name</span><span style="color:#ce5c00;font-weight:bold">=</span>bob@foo-corp.com
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># apply the package to a cluster</span>
 $ kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>10m helloworld
 ...
@@ -1147,46 +1188,12 @@ by kpt.</p>
   Number for the log level verbosity
 --vmodule moduleSpec
   Comma-separated list of pattern=N settings for file-filtered logging
-</code></pre><table>
-<thead>
-<tr>
-<th>Command Group</th>
-<th>Description</th>
-<th>Reads From</th>
-<th>Writes To</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="pkg/">pkg</a></td>
-<td>fetch, update, and sync configuration files using git</td>
-<td>remote git</td>
-<td>local directory</td>
-</tr>
-<tr>
-<td><a href="cfg/">cfg</a></td>
-<td>examine and modify configuration files</td>
-<td>local directory</td>
-<td>local directory</td>
-</tr>
-<tr>
-<td><a href="fn/">fn</a></td>
-<td>generate, transform, validate configuration files using containerized functions</td>
-<td>local directory</td>
-<td>local directory</td>
-</tr>
-<tr>
-<td><a href="live/">live</a></td>
-<td>reconcile the live state with configuration files</td>
-<td>local directory</td>
-<td>remote cluster</td>
-</tr>
-</tbody>
-</table>
-<h3 id="next-steps">Next Steps</h3>
+</code></pre><h3 id="next-steps">Next Steps</h3>
 <ul>
-<li>Learn about kpt <a href="../concepts/architecture/">architecture</a> including major influences and a high-level comparison with kustomize.</li>
-<li>Read kpt <a href="../guides/">guides</a> for how to produce and consume packages and integrate with a wider ecosystem of tools.</li>
+<li>Learn about kpt <a href="../concepts/architecture/">architecture</a> including major influences and a high-level
+comparison with kustomize.</li>
+<li>Read kpt <a href="../guides/">guides</a> for how to produce and consume packages and integrate with
+a wider ecosystem of tools.</li>
 <li>Consult the <a href="../faq/">FAQ</a> for answers to common questions.</li>
 </ul>
 
@@ -1294,7 +1301,7 @@ by kpt.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0d71f0b3591bc32637bb8ef5ce8500e0c22bb5be">docs: Add documentation for global flags (0d71f0b3)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7c2f2433602554fa0ae37a1fd075dd9ed26ed28a">Docs: Deduplicate function docs (7c2f2433)</a>
 </div>
 </div>
 

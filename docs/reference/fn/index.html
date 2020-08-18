@@ -1002,9 +1002,11 @@ if (!doNotTrack) {
 </tr>
 </tbody>
 </table>
-<p>Functions are executables (<a href="#developing-functions">that you can write</a>)
-packaged in container images which accept a collection of Resource
-configuration as input, and emit a collection of Resource configuration as output.</p>
+<p>Functions are executables (that you can <a href="../../guides/producer/functions/">write</a>)
+which accept a collection of Resource configuration as input, and emit a
+collection of Resource configuration as output.</p>
+<p>Functions can be packaged as container images, starlark scripts, or binary
+executables.</p>
 <!--mdtogo-->
 <p>Functions may be used to:</p>
 <ul>
@@ -1035,10 +1037,11 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run the functions declared in files under DIR/</span>
 kpt fn run DIR/
 </code></pre></div><!--mdtogo-->
-<h4 id="functions-catalog">Functions Catalog</h4>
+<h4 id="using-functions">Using Functions</h4>
 <p>The <a href="../../guides/consumer/function/catalog/">catalog</a> documents config functions implemented using different toolchains
 like starlark, typescript, and golang.</p>
 <h4 id="developing-functions">Developing Functions</h4>
+<p>See the <a href="../../guides/producer/functions/">Functions Developer Guide</a> for more on producing functions.</p>
 <table>
 <thead>
 <tr>
@@ -1051,12 +1054,12 @@ like starlark, typescript, and golang.</p>
 <tr>
 <td>Typescript</td>
 <td><a href="../../guides/producer/functions/ts/">Typescript SDK</a></td>
-<td><a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">examples</a></td>
+<td><a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/">examples</a></td>
 </tr>
 <tr>
 <td>Go</td>
 <td><a href="../../guides/producer/functions/golang/">Golang Libraries</a></td>
-<td><a href="https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-go-nginx/image/main.go">example</a></td>
+<td><a href="https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/set-namespace/">example</a></td>
 </tr>
 <tr>
 <td>Shell</td>
@@ -1162,7 +1165,7 @@ like starlark, typescript, and golang.</p>
                     <h5>
                         <a href="/kpt/reference/fn/sink/">Sink</a>
                     </h5>
-                    <p>Explicitly specify an output sink for a function</p>
+                    <p>Specify a directory as an output sink package</p>
                 </div>
             
         
@@ -1171,7 +1174,7 @@ like starlark, typescript, and golang.</p>
                     <h5>
                         <a href="/kpt/reference/fn/source/">Source</a>
                     </h5>
-                    <p>Explicitly specify an input source for a function</p>
+                    <p>Specify a directory as an input source package</p>
                 </div>
             
         
@@ -1182,7 +1185,7 @@ like starlark, typescript, and golang.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7c2f2433602554fa0ae37a1fd075dd9ed26ed28a">Docs: Deduplicate function docs (7c2f2433)</a>
 </div>
 </div>
 

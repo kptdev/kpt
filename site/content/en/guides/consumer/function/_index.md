@@ -1,5 +1,5 @@
 ---
-title: "Running functions"
+title: "Running Functions"
 linkTitle: "Running Functions"
 weight: 7
 type: docs
@@ -7,62 +7,107 @@ description: >
     Modify or validate the contents of a package by calling a function.
 ---
 
-## Functions User Guide
+## Functions Explained
 
-When an operation requires more than just the schema, and data is necessary,
-the dynamic logic can be built into a separate tool.
-Functions bundle dynamic logic in container images and apply that logic to the
-contents of a package -- modifying and validating package contents.
+KRM Config Functions are client-side programs that make it easy to operate on a
+package of Kubernetes configuration files.
 
-{{% pageinfo color="primary" %}}
-Functions provide a common interface for writing programs to read and write
-resources as data. This enables greater reuse and composition than when
-configuration is itself represented as code. Functions may be written in any
-language, or simply wrap other existing programs.
-{{% /pageinfo %}}
+In GitOps workflows, KPT functions read and write configuration files from a
+Git repo. Changes to the system authored by humans and mutating KPT functions
+are reviewed before being committed to the repo. They can be run locally or as
+part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
+configurations before they are applied to a cluster.
+
+Kpt offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default kpt runs configuration functions in a
+[container runtime], but it also provides runtimes for functions packaged as
+[executables] or [starlark scripts].
+
+The image below details how a function adds the label `color: pink` to a
+package.
 
 {{< svg src="images/fn" >}}
 
-Functions can address many types of workflows, including:
+Functions can address many types of use cases, including:
 
-- Generating resources from some inputs (like client-side CRDs)
-- Applying cross-cutting transformations (e.g., set a field on all resources
-  that look like this)
-- Validating resources conform to best practices defined by the organization
-  (e.g., must specify tag as part of the image)
-- Sending resources to a destination (e.g., saving them locally or deploying
-  them to a cluster)
+- **Configuration Validation:** e.g. Lint Kubernetes resources using `kubeval`.
+- **Configuration Generation:** e.g. Generate configuration using `kustomize`.
+- **Configuration Transformation:** e.g. Upsert Helm chart configuration to an
+  existing package of hydrated helm configs using the latest version of the
+  chart.
 
-## Calling Functions Imperatively
+## Running Functions
+
+Functions may be run either imperatively using the form
+`kpt fn run DIR/ --image some-image:version`, or they may be run declaratively
+using the form `kpt fn run DIR/`.
+
+Either way, `kpt fn run` will
+
+1. read the package directory `DIR/` as input
+2. encapsulate the package resources in a `ResourceList`
+3. run the function(s), providing the ResourceList as input
+4. write the function(s) output back to the package directory; creating,
+   deleting, or updating resources
+
+### Imperative Run
+
+Functions can be run imperatively by specifying the `--image` flag.
+
+**Example:** Locally run the container image
+`gcr.io/kpt-functions/label-namespace` against the resources in `.`.
 
 Let’s look at the example of imperatively running a function to set a label
-value.  The ([label-namespace]) image contains a program which adds a label to
-all Namespace resources provided to it.
+value. The ([label-namespace]) container image contains a program which adds a
+label to all Namespace resources provided to it.
+
+Run the function:
 
 ```sh
-kpt fn run --image gcr.io/kpt-functions/label-namespace . -- label_name=color label_value=orange
+kpt fn run . --image gcr.io/kpt-functions/label-namespace -- label_name=color label_value=orange
 ```
 
-Kpt read the configs from the package at “.” to generate input resources.
-Behind the scenes, it also parsed the arguments and provided them through a
-functionConfig field along with the input. It passed this information to a
-container running `gcr.io/kpt-functions/label-namespace`, and wrote the
-resources back to the package.
+Arguments specified after `--` will be provided to the function as a
+`ConfigMap` input containing `data: {label_name: color, label_value: orange}`.
+This is used to parameterize the behavior of the function.
 
-## Calling Functions Declaratively
+If the package directory `.` is not specified, the source will default to STDIN
+and sink will default to STDOUT.
 
-The most common way of invoking config functions in production will be the
-[declarative method].
+**Example:** This is equivalent to the preceding example
 
-Let's run the same [label-namespace] function declaratively, which means we
+```sh
+kpt source . |
+  kpt fn run --image gcr.io/kpt-functions/label-namespace -- label_name=color label_value=orange |
+  kpt sink .
+```
+
+The above example commands will:
+
+- read all resources from the package directory `.` to generate input resources
+- parse the arguments into a functionConfig field along with input resources
+- create a container from the image
+- provide the input to the function (container)
+- write the output items back to the package directory `.`
+
+### Declarative Run
+
+Functions and their input configuration may be declared in files rather than
+directly on the command line. The declarative method will be the most common
+way of invoking config functions in production. Functions can be specified
+declaratively using the `config.kubernetes.io/function` annotation on a
+resource serving as the functionConfig.
+
+**Example:** Equivalent to the imperative run example
+
+We can run the same [label-namespace] example declaratively, which means we
 make a reusable function configuration resource which contains all information
 necessary to run the function, from container image to argument values. Once we
 create file with this information we can check it into [VCS] and run the
 function in a repeatable fashion, making it incredibly powerful for production
 use.
 
-First create a function configuration file in the directory you want to apply
-the function e.g. `label-ns-fc.yaml`:
+Create a file `label-ns-fc.yaml`:
 
 ```yaml
 apiVersion: v1
@@ -79,21 +124,29 @@ data:
 
 This file contains a `config.kubernetes.io/function` annotation specifying the
 docker image to use for the config as well as a data field containing a
-key-value map of the "label_name" and "label_value" arguments specified
+key-value map with the "label_name" and "label_value" arguments specified
 earlier. Using a map also makes it easier to pass more complex arguments values
 like a list of strings.
 
-Next, run the function.
+Run the function:
 
 ```sh
 kpt fn run .
 ```
 
-Kpt used configs from the package at “.” to generate input resources. It
-recognized that the `config.kubernetes.io/function` annotation denoted
-`label-ns-fc.yaml` as a function config file and ran a container using the
-`gcr.io/kpt-functions/label-namespace` image, passing in the function config
-resource as well as all other input resources.
+The example command will:
+
+- read all resources from the package directory `.` to generate input resources
+- for each resource with the `config.kubernetes.io/function` annotation, e.g.
+  `label-ns-fc.yaml`, kpt will run the specified function (using the resource
+  as the functionConfig)
+  - functions are run sequentially, with the output of each function provided
+    as input to the next
+- write the output items back to the package directory `.`
+
+Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
+`--image` flag, we specify it in a file using the
+`config.kubernetes.io/function` annotation.
 
 ## Next Steps
 
@@ -103,10 +156,13 @@ resource as well as all other input resources.
   [functions concepts] page.
 - Learn more ways of using the `kpt fn` command from the [reference] doc.
 
+[container runtime]: ../../producer/functions/container/
+[executables]: ../../producer/functions/exec/
+[starlark scripts]: ../../producer/functions/starlark/
+[`kpt cfg set`]: ../../../reference/cfg/set/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
+[VCS]: https://en.wikipedia.org/wiki/Version_control
 [functions catalog]: catalog/
 [function producer docs]: ../../producer/functions/
 [functions concepts]: ../../../concepts/functions/
-[declarative method]: ../../../reference/fn/run/#declaratively-run-one-or-more-functions
 [reference]: ../../../reference/fn/run/
-[VCS]: https://en.wikipedia.org/wiki/Version_control

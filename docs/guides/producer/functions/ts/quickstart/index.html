@@ -409,29 +409,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -1148,9 +1125,10 @@ if (!doNotTrack) {
 	<h1>TypeScript Quickstart</h1>
 	<div class="lead">Quickstart for Developing Config Functions</div>
 	<h2 id="developer-quickstart">Developer Quickstart</h2>
-<p>This quickstart will get you started developing a config function with the TypeScript SDK,
-using an existing kpt-functions package. Config functions are any functions which implement
-the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/">documented here</a>.</p>
+<p>This quickstart will get you started developing a config function with the
+TypeScript SDK, using an existing kpt-functions package. Config functions are
+any functions which implement the <code>KptFunc</code> interface documented in the
+<a href="https://googlecontainertools.github.io/kpt-functions-sdk/api/">TS SDK API</a>.</p>
 <h3 id="prerequisites">Prerequisites</h3>
 <h4 id="system-requirements">System Requirements</h4>
 <p>Currently supported platforms: amd64 Linux/Mac</p>
@@ -1173,13 +1151,15 @@ the <code>KptFunc</code> interface <a href="https://googlecontainertools.github.
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm install
 </code></pre></div></li>
 <li>
-<p>Run the following in a separate terminal to continuously build your function as you make changes:</p>
+<p>Run the following in a separate terminal to continuously build your
+function as you make changes:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">npm run watch
 </code></pre></div></li>
 <li>
-<p>Explore the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts"><code>label_namespace</code></a> transformer function. This function takes a
-given <code>label_name</code> and <code>label_value</code> to add the appropriate label to <code>Namespace</code> objects using
-the SDK&rsquo;s <code>addLabel</code> function.</p>
+<p>Explore the <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts"><code>label_namespace</code></a> transformer function. This
+function takes a given <code>label_name</code> and <code>label_value</code> to add the
+appropriate label to <code>Namespace</code> objects using the SDK&rsquo;s <code>addLabel</code>
+function.</p>
 </li>
 </ol>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span> <span style="color:#000">addLabel</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">Configs</span> <span style="color:#000;font-weight:bold">}</span> <span style="color:#000">from</span> <span style="color:#4e9a06">&#39;kpt-functions&#39;</span><span style="color:#000;font-weight:bold">;</span>
@@ -1199,20 +1179,20 @@ the SDK&rsquo;s <code>addLabel</code> function.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">CONFIGS</span><span style="color:#ce5c00;font-weight:bold">=</span>../../example-configs
 
 kpt fn <span style="color:#204a87">source</span> <span style="color:#000">$CONFIGS</span> <span style="color:#000;font-weight:bold">|</span>
-node dist/label_namespace_run.js -d <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color -d <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange <span style="color:#000;font-weight:bold">|</span>
-kpt fn sink <span style="color:#000">$CONFIGS</span>
-</code></pre></div><p>As the name suggests, this function added the given label to all <code>Namespace</code> objects
-in the <code>example-configs</code> directory:</p>
+  node dist/label_namespace_run.js -d <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color -d <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange <span style="color:#000;font-weight:bold">|</span>
+  kpt fn sink <span style="color:#000">$CONFIGS</span>
+</code></pre></div><p>As the name suggests, this function added the given label to all
+<code>Namespace</code> objects in the <code>example-configs</code> directory:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git diff <span style="color:#000">$CONFIGS</span>
 </code></pre></div></li>
 <li>
-<p>Try modifying the function in <code>src/label_namespace.ts</code> to perform other operations
-and rerun the function on <code>example-configs</code> to see the changes.</p>
+<p>Try modifying the function in <code>src/label_namespace.ts</code> to perform other
+operations and rerun the function on <code>example-configs</code> to see the changes.</p>
 </li>
 <li>
-<p>Explore validation functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts">validate-rolebinding</a>. Instead of transforming configuration,
-this function searches RoleBindings and returns a results field containing details about invalid
-subject names.</p>
+<p>Explore validation functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts">validate-rolebinding</a>. Instead of
+transforming configuration, this function searches RoleBindings and returns
+a results field containing details about invalid subject names.</p>
 </li>
 </ol>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span> <span style="color:#000">Configs</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">kubernetesObjectResult</span> <span style="color:#000;font-weight:bold">}</span> <span style="color:#000">from</span> <span style="color:#4e9a06">&#39;kpt-functions&#39;</span><span style="color:#000;font-weight:bold">;</span>
@@ -1224,8 +1204,8 @@ subject names.</p>
   <span style="color:#8f5902;font-style:italic">// Get the subject name parameter.
 </span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#204a87;font-weight:bold">const</span> <span style="color:#000">subjectName</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">configs</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">getFunctionConfigValueOrThrow</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">SUBJECT_NAME</span><span style="color:#000;font-weight:bold">);</span>
 
-  <span style="color:#8f5902;font-style:italic">// Iterate over all RoleBinding objects in the input, and filter those that have a subject
-</span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#8f5902;font-style:italic">// we&#39;re looking for.
+  <span style="color:#8f5902;font-style:italic">// Iterate over all RoleBinding objects in the input
+</span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#8f5902;font-style:italic">// Filter those that have a subject we&#39;re looking for.
 </span><span style="color:#8f5902;font-style:italic"></span>  <span style="color:#204a87;font-weight:bold">const</span> <span style="color:#000">results</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">configs</span>
     <span style="color:#000;font-weight:bold">.</span><span style="color:#000">get</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">isRoleBinding</span><span style="color:#000;font-weight:bold">)</span>
     <span style="color:#000;font-weight:bold">.</span><span style="color:#000">filter</span><span style="color:#000;font-weight:bold">(</span>
@@ -1242,13 +1222,14 @@ subject names.</p>
 <li>
 <p>Run <code>validate-rolebinding</code> on <code>example-configs</code>.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">source</span> <span style="color:#000">$CONFIGS</span> <span style="color:#000;font-weight:bold">|</span>
-node dist/validate_rolebinding_run.js -d <span style="color:#000">subject_name</span><span style="color:#ce5c00;font-weight:bold">=</span>alice@foo-corp.com <span style="color:#000;font-weight:bold">|</span>
-kpt fn sink <span style="color:#000">$CONFIGS</span>
+  node dist/validate_rolebinding_run.js -d <span style="color:#000">subject_name</span><span style="color:#ce5c00;font-weight:bold">=</span>alice@foo-corp.com <span style="color:#000;font-weight:bold">|</span>
+  kpt fn sink <span style="color:#000">$CONFIGS</span>
 git diff <span style="color:#000">$CONFIGS</span>
 </code></pre></div></li>
 <li>
-<p>Explore generator functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts">expand-team-cr</a>. This function generates a per-environment
-Namespace and RoleBinding object for each custom resource (CR) of type Team.</p>
+<p>Explore generator functions like <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts">expand-team-cr</a>. This function generates
+a per-environment Namespace and RoleBinding object for each custom resource
+(CR) of type Team.</p>
 </li>
 </ol>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#204a87;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">{</span> <span style="color:#000">Configs</span> <span style="color:#000;font-weight:bold">}</span> <span style="color:#000">from</span> <span style="color:#4e9a06">&#39;kpt-functions&#39;</span><span style="color:#000;font-weight:bold">;</span>
@@ -1311,14 +1292,15 @@ Namespace and RoleBinding object for each custom resource (CR) of type Team.</p>
 <li>
 <p>Run <code>expand-team-cr</code> on <code>example-configs</code>.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">source</span> <span style="color:#000">$CONFIGS</span> <span style="color:#000;font-weight:bold">|</span>
-node dist/expand_team_cr_run.js <span style="color:#000;font-weight:bold">|</span>
-kpt fn sink <span style="color:#000">$CONFIGS</span>
+  node dist/expand_team_cr_run.js <span style="color:#000;font-weight:bold">|</span>
+  kpt fn sink <span style="color:#000">$CONFIGS</span>
 git diff <span style="color:#000">$CONFIGS</span>
 </code></pre></div></li>
 </ol>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
-<li>Take a look at <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src">these example functions</a> to better understand how to use the typescript SDK.</li>
+<li>Take a look at these <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/">demo functions</a> to better understand
+how to use the typescript SDK.</li>
 <li>Read the complete <a href="../develop/">Typescript Developer Guide</a>.</li>
 <li>Learn how to <a href="../../../../consumer/function/">run functions</a>.</li>
 </ul>
@@ -1406,14 +1388,12 @@ git diff <span style="color:#000">$CONFIGS</span>
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/78b63437cf484c33f968344c6be647a22b252e7a">Docs: Inline typescript functions with syntax highlighting (78b63437)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7c2f2433602554fa0ae37a1fd075dd9ed26ed28a">Docs: Deduplicate function docs (7c2f2433)</a>
 </div>
 </div>
 

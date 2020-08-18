@@ -9,7 +9,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/container/</loc>
-    <lastmod>2020-07-07T13:09:02-04:00</lastmod>
+    <lastmod>2020-08-14T17:34:59-07:00</lastmod>
   </url>
   
   <url>
@@ -69,7 +69,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/exec/</loc>
-    <lastmod>2020-07-07T13:09:02-04:00</lastmod>
+    <lastmod>2020-08-09T23:17:27-07:00</lastmod>
   </url>
   
   <url>
@@ -89,7 +89,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/</loc>
-    <lastmod>2020-07-16T12:34:28-07:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
@@ -134,7 +134,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/</loc>
-    <lastmod>2020-07-07T13:09:02-04:00</lastmod>
+    <lastmod>2020-08-09T23:17:27-07:00</lastmod>
   </url>
   
   <url>
@@ -189,22 +189,22 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/</loc>
-    <lastmod>2020-07-28T18:50:33-07:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/concepts/functions/</loc>
-    <lastmod>2020-07-28T18:50:33-07:00</lastmod>
+    <lastmod>2020-08-09T23:17:27-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/</loc>
-    <lastmod>2020-07-28T18:50:33-07:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/golang/</loc>
-    <lastmod>2020-07-07T13:09:02-04:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
@@ -259,12 +259,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/</loc>
-    <lastmod>2020-07-07T14:31:14-04:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
-    <lastmod>2020-07-28T18:50:33-07:00</lastmod>
+    <lastmod>2020-08-09T23:17:27-07:00</lastmod>
   </url>
   
   <url>
@@ -274,7 +274,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/quickstart/</loc>
-    <lastmod>2020-07-13T18:10:44-07:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
@@ -293,18 +293,13 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/pipeline/</loc>
-    <lastmod>2020-07-28T18:50:33-07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
-    <lastmod>2020-07-28T18:50:33-07:00</lastmod>
+    <lastmod>2020-08-14T17:34:59-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/develop/</loc>
-    <lastmod>2020-07-13T18:10:44-07:00</lastmod>
+    <lastmod>2020-08-09T23:17:27-07:00</lastmod>
   </url>
   
   <url>
@@ -319,7 +314,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/faq/</loc>
-    <lastmod>2020-07-28T18:51:56-07:00</lastmod>
+    <lastmod>2020-08-14T17:34:59-07:00</lastmod>
   </url>
   
   <url>
@@ -339,7 +334,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/</loc>
-    <lastmod>2020-07-31T15:15:32-07:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
@@ -384,7 +379,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/export/</loc>
-    <lastmod>2020-07-28T18:50:33-07:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
@@ -424,7 +419,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/run/</loc>
-    <lastmod>2020-07-27T16:30:57-07:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
@@ -434,12 +429,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/sink/</loc>
-    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/source/</loc>
-    <lastmod>2020-06-24T17:55:03-05:00</lastmod>
+    <lastmod>2020-08-07T14:07:03-07:00</lastmod>
   </url>
   
   <url>

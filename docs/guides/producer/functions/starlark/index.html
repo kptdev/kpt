@@ -409,29 +409,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionpipeline">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -1080,6 +1057,7 @@ if (!doNotTrack) {
     <li><a href="#debugging-functions">Debugging Functions</a></li>
     <li><a href="#openapi">OpenAPI</a></li>
     <li><a href="#retaining-yaml-comments">Retaining YAML Comments</a></li>
+    <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
 
@@ -1141,16 +1119,17 @@ if (!doNotTrack) {
 	
 
 <div class="pageinfo pageinfo-warning">
-<p>The Starlark runtime is Alpha, and must be enabled with the <code>--enable-star</code> flag.</p>
+<p>The Starlark runtime is Alpha. It is disabled by default, and must be enabled
+with the <code>--enable-star</code> flag.</p>
 
 </div>
 
-<p>Functions may be written as <a href="https://github.com/bazelbuild/starlark">Starlark</a> scripts which modify a ResourceList provided as
-a variable.</p>
+<p>Functions may be written as <a href="https://github.com/bazelbuild/starlark">Starlark</a> scripts which modify a ResourceList
+provided as a variable.</p>
 <h4 id="imperative-run">Imperative Run</h4>
-<p>Starlark functions can be run imperatively by providing the Starlark script as a flag
-on <code>kpt fn run</code>.  Following is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation
-to every resource in the package.</p>
+<p>Starlark functions can be run imperatively by providing the Starlark script as
+a flag on <code>kpt fn run</code>. Following is an example of a Starlark function which
+adds a &ldquo;foo&rdquo; annotation to every resource in the package.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
 <span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
 <span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
@@ -1163,15 +1142,16 @@ to every resource in the package.</p>
 
 <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
 </code></pre></div><p>Run the Starlark function with:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run c.star as a function, generating a ConfigMap with value=bar as the functionConfig</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run c.star as a function, generating a ConfigMap with value=bar as the</span>
+<span style="color:#8f5902;font-style:italic"># functionConfig</span>
 kpt fn run . --enable-star --star-path c.star -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>bar
 </code></pre></div><p>Any resource under <code>.</code> will have the <code>foo: bar</code> annotation added.</p>
 <h4 id="declarative-run">Declarative Run</h4>
-<p>Starlark functions can also be run declaratively using the <code>config.kubernetes.io/function</code>
-annotation.  This annotation indicates that the resource is functionConfig that should
-be provided to a function.</p>
+<p>Starlark functions can also be run declaratively using the
+<code>config.kubernetes.io/function</code> annotation. This annotation indicates that the
+resource is functionConfig that should be provided to a function.</p>
 <p>Following is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation to
-each resource in its package.  The ExampleKind resource will be set as the
+each resource in its package. The ExampleKind resource will be set as the
 ResourceList.functionConfig.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
@@ -1181,17 +1161,17 @@ ResourceList.functionConfig.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
 </span><span style="color:#8f5902;font-style:italic">      starlark: {path: c.star, name: example-name}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;hello world&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Example Starlark function to which will add an annotation to each resource scoped to <code>example.yaml</code>
-(those under the directory containing <code>example.yaml</code>):</p>
+</span></code></pre></div><p>Example Starlark function to which will add an annotation to each resource
+scoped to <code>example.yaml</code> (those under the directory containing <code>example.yaml</code>):</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
 <span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
 <span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
   <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">resource</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#000">r</span><span style="color:#000;font-weight:bold">:</span>
     <span style="color:#000">resource</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;annotations&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;foo&#34;</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">an</span>
 
-<span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;spec&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
+<span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;data&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
 <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
 </code></pre></div><p>Run them on the directory containing <code>example.yaml</code> using:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn run DIR/ --enable-star
@@ -1204,8 +1184,9 @@ ResourceList.functionConfig.</p>
 <p>foo</p>
 </blockquote>
 <h2 id="openapi">OpenAPI</h2>
-<p>The OpenAPI known to kpt is provided to the Starlark program through the <code>ctx.open_api</code> variable.
-This may contain metadata about the resources and their types.</p>
+<p>The OpenAPI known to kpt is provided to the Starlark program through the
+<code>ctx.open_api</code> variable. This may contain metadata about the resources and
+their types.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic">#c.star</span>
 <span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">open_api</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;definitions&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;io.k8s.api.apps.v1.Deployment&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;description&#34;</span><span style="color:#000;font-weight:bold">])</span>
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --enable-star --star-path c.star
@@ -1214,8 +1195,17 @@ This may contain metadata about the resources and their types.</p>
 </blockquote>
 <h2 id="retaining-yaml-comments">Retaining YAML Comments</h2>
 <p>While Starlark programs are unable to retain comments on resources, kpt will
-attempt to retain comments by copying them from the function inputs to the function outputs.</p>
-<p>It is not possible at this time to add, modify or delete comments from Starlark scripts.</p>
+attempt to retain comments by copying them from the function inputs to the
+function outputs.</p>
+<p>It is not possible at this time to add, modify or delete comments from
+Starlark scripts.</p>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>Explore other ways to run functions from the <a href="../">Functions Developer Guide</a>.</li>
+<li>Find out how to structure a pipeline of functions from the
+<a href="../../../../concepts/functions/">functions concepts</a> page.</li>
+<li>Consult the <a href="../../../../reference/fn/">fn command reference</a>.</li>
+</ul>
 
         <div class="section-index">
     
@@ -1300,14 +1290,12 @@ attempt to retain comments by copying them from the function inputs to the funct
         
             
         
-            
-        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3e15696524cf11329219d82e7a7876e75b7aa984">Docs: Address review comments on kpt function docs (3e156965)</a>
 </div>
 </div>
 

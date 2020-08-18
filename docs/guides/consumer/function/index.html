@@ -32,17 +32,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Running functions | Kpt</title><meta property="og:title" content="Running functions" />
+<title>Running Functions | Kpt</title><meta property="og:title" content="Running Functions" />
 <meta property="og:description" content="Modify or validate the contents of a package by calling a function.
 " />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/function/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Running functions">
+<meta itemprop="name" content="Running Functions">
 <meta itemprop="description" content="Modify or validate the contents of a package by calling a function.
 ">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Running functions"/>
+<meta name="twitter:title" content="Running Functions"/>
 <meta name="twitter:description" content="Modify or validate the contents of a package by calling a function.
 "/>
 
@@ -76,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Running functions | Kpt</title>
+    <title>Running Functions | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -391,29 +391,6 @@ if (!doNotTrack) {
       
       
       <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/pipeline/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Running a Functions Pipeline</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesconsumerfunctionpipeline">
-      
       
       
     </li>
@@ -1058,7 +1035,7 @@ if (!doNotTrack) {
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/consumer/function/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Running%20functions" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Running%20Functions" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1072,9 +1049,13 @@ if (!doNotTrack) {
 
 <nav id="TableOfContents">
   <ul>
-    <li><a href="#functions-user-guide">Functions User Guide</a></li>
-    <li><a href="#calling-functions-imperatively">Calling Functions Imperatively</a></li>
-    <li><a href="#calling-functions-declaratively">Calling Functions Declaratively</a></li>
+    <li><a href="#functions-explained">Functions Explained</a></li>
+    <li><a href="#running-functions">Running Functions</a>
+      <ul>
+        <li><a href="#imperative-run">Imperative Run</a></li>
+        <li><a href="#declarative-run">Declarative Run</a></li>
+      </ul>
+    </li>
     <li><a href="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
@@ -1122,59 +1103,87 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Running functions</h1>
+	<h1>Running Functions</h1>
 	<div class="lead">Modify or validate the contents of a package by calling a function.</div>
-	<h2 id="functions-user-guide">Functions User Guide</h2>
-<p>When an operation requires more than just the schema, and data is necessary,
-the dynamic logic can be built into a separate tool.
-Functions bundle dynamic logic in container images and apply that logic to the
-contents of a package &ndash; modifying and validating package contents.</p>
-
-
-<div class="pageinfo pageinfo-primary">
-<p>Functions provide a common interface for writing programs to read and write
-resources as data. This enables greater reuse and composition than when
-configuration is itself represented as code. Functions may be written in any
-language, or simply wrap other existing programs.</p>
-
-</div>
-
+	<h2 id="functions-explained">Functions Explained</h2>
+<p>KRM Config Functions are client-side programs that make it easy to operate on a
+package of Kubernetes configuration files.</p>
+<p>In GitOps workflows, KPT functions read and write configuration files from a
+Git repo. Changes to the system authored by humans and mutating KPT functions
+are reviewed before being committed to the repo. They can be run locally or as
+part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
+configurations before they are applied to a cluster.</p>
+<p>Kpt offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default kpt runs configuration functions in a
+<a href="../../producer/functions/container/">container runtime</a>, but it also provides runtimes for functions packaged as
+<a href="../../producer/functions/exec/">executables</a> or <a href="../../producer/functions/starlark/">starlark scripts</a>.</p>
+<p>The image below details how a function adds the label <code>color: pink</code> to a
+package.</p>
 
 
 
 <img src="https://googlecontainertools.github.io/kpt//images/fn.svg" />
 
-<p>Functions can address many types of workflows, including:</p>
+<p>Functions can address many types of use cases, including:</p>
 <ul>
-<li>Generating resources from some inputs (like client-side CRDs)</li>
-<li>Applying cross-cutting transformations (e.g., set a field on all resources
-that look like this)</li>
-<li>Validating resources conform to best practices defined by the organization
-(e.g., must specify tag as part of the image)</li>
-<li>Sending resources to a destination (e.g., saving them locally or deploying
-them to a cluster)</li>
+<li><strong>Configuration Validation:</strong> e.g. Lint Kubernetes resources using <code>kubeval</code>.</li>
+<li><strong>Configuration Generation:</strong> e.g. Generate configuration using <code>kustomize</code>.</li>
+<li><strong>Configuration Transformation:</strong> e.g. Upsert Helm chart configuration to an
+existing package of hydrated helm configs using the latest version of the
+chart.</li>
 </ul>
-<h2 id="calling-functions-imperatively">Calling Functions Imperatively</h2>
+<h2 id="running-functions">Running Functions</h2>
+<p>Functions may be run either imperatively using the form
+<code>kpt fn run DIR/ --image some-image:version</code>, or they may be run declaratively
+using the form <code>kpt fn run DIR/</code>.</p>
+<p>Either way, <code>kpt fn run</code> will</p>
+<ol>
+<li>read the package directory <code>DIR/</code> as input</li>
+<li>encapsulate the package resources in a <code>ResourceList</code></li>
+<li>run the function(s), providing the ResourceList as input</li>
+<li>write the function(s) output back to the package directory; creating,
+deleting, or updating resources</li>
+</ol>
+<h3 id="imperative-run">Imperative Run</h3>
+<p>Functions can be run imperatively by specifying the <code>--image</code> flag.</p>
+<p><strong>Example:</strong> Locally run the container image
+<code>gcr.io/kpt-functions/label-namespace</code> against the resources in <code>.</code>.</p>
 <p>Let’s look at the example of imperatively running a function to set a label
-value.  The (<a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a>) image contains a program which adds a label to
-all Namespace resources provided to it.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run --image gcr.io/kpt-functions/label-namespace . -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange
-</code></pre></div><p>Kpt read the configs from the package at “.” to generate input resources.
-Behind the scenes, it also parsed the arguments and provided them through a
-functionConfig field along with the input. It passed this information to a
-container running <code>gcr.io/kpt-functions/label-namespace</code>, and wrote the
-resources back to the package.</p>
-<h2 id="calling-functions-declaratively">Calling Functions Declaratively</h2>
-<p>The most common way of invoking config functions in production will be the
-<a href="../../../reference/fn/run/#declaratively-run-one-or-more-functions">declarative method</a>.</p>
-<p>Let&rsquo;s run the same <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a> function declaratively, which means we
+value. The (<a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a>) container image contains a program which adds a
+label to all Namespace resources provided to it.</p>
+<p>Run the function:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --image gcr.io/kpt-functions/label-namespace -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange
+</code></pre></div><p>Arguments specified after <code>--</code> will be provided to the function as a
+<code>ConfigMap</code> input containing <code>data: {label_name: color, label_value: orange}</code>.
+This is used to parameterize the behavior of the function.</p>
+<p>If the package directory <code>.</code> is not specified, the source will default to STDIN
+and sink will default to STDOUT.</p>
+<p><strong>Example:</strong> This is equivalent to the preceding example</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt <span style="color:#204a87">source</span> . <span style="color:#000;font-weight:bold">|</span>
+  kpt fn run --image gcr.io/kpt-functions/label-namespace -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange <span style="color:#000;font-weight:bold">|</span>
+  kpt sink .
+</code></pre></div><p>The above example commands will:</p>
+<ul>
+<li>read all resources from the package directory <code>.</code> to generate input resources</li>
+<li>parse the arguments into a functionConfig field along with input resources</li>
+<li>create a container from the image</li>
+<li>provide the input to the function (container)</li>
+<li>write the output items back to the package directory <code>.</code></li>
+</ul>
+<h3 id="declarative-run">Declarative Run</h3>
+<p>Functions and their input configuration may be declared in files rather than
+directly on the command line. The declarative method will be the most common
+way of invoking config functions in production. Functions can be specified
+declaratively using the <code>config.kubernetes.io/function</code> annotation on a
+resource serving as the functionConfig.</p>
+<p><strong>Example:</strong> Equivalent to the imperative run example</p>
+<p>We can run the same <a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts">label-namespace</a> example declaratively, which means we
 make a reusable function configuration resource which contains all information
 necessary to run the function, from container image to argument values. Once we
 create file with this information we can check it into <a href="https://en.wikipedia.org/wiki/Version_control">VCS</a> and run the
 function in a repeatable fashion, making it incredibly powerful for production
 use.</p>
-<p>First create a function configuration file in the directory you want to apply
-the function e.g. <code>label-ns-fc.yaml</code>:</p>
+<p>Create a file <code>label-ns-fc.yaml</code>:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1187,16 +1196,27 @@ the function e.g. <code>label-ns-fc.yaml</code>:</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">&#34;label_value&#34;: </span><span style="color:#4e9a06">&#34;orange&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><p>This file contains a <code>config.kubernetes.io/function</code> annotation specifying the
 docker image to use for the config as well as a data field containing a
-key-value map of the &ldquo;label_name&rdquo; and &ldquo;label_value&rdquo; arguments specified
+key-value map with the &ldquo;label_name&rdquo; and &ldquo;label_value&rdquo; arguments specified
 earlier. Using a map also makes it easier to pass more complex arguments values
 like a list of strings.</p>
-<p>Next, run the function.</p>
+<p>Run the function:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run .
-</code></pre></div><p>Kpt used configs from the package at “.” to generate input resources. It
-recognized that the <code>config.kubernetes.io/function</code> annotation denoted
-<code>label-ns-fc.yaml</code> as a function config file and ran a container using the
-<code>gcr.io/kpt-functions/label-namespace</code> image, passing in the function config
-resource as well as all other input resources.</p>
+</code></pre></div><p>The example command will:</p>
+<ul>
+<li>read all resources from the package directory <code>.</code> to generate input resources</li>
+<li>for each resource with the <code>config.kubernetes.io/function</code> annotation, e.g.
+<code>label-ns-fc.yaml</code>, kpt will run the specified function (using the resource
+as the functionConfig)
+<ul>
+<li>functions are run sequentially, with the output of each function provided
+as input to the next</li>
+</ul>
+</li>
+<li>write the output items back to the package directory <code>.</code></li>
+</ul>
+<p>Here, rather than specifying <code>gcr.io/kpt-functions/label-namespace</code> using the
+<code>--image</code> flag, we specify it in a file using the
+<code>config.kubernetes.io/function</code> annotation.</p>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>See more examples of functions in the <a href="catalog/">functions catalog</a>.</li>
@@ -1285,15 +1305,6 @@ resource as well as all other input resources.</p>
             
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/consumer/function/pipeline/">Running a functions pipeline</a>
-                    </h5>
-                    <p>Compose functions into a pipeline.</p>
-                </div>
-            
-        
-            
         
             
         
@@ -1317,7 +1328,7 @@ resource as well as all other input resources.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 14, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7426c4c76569c20da445705b1421d801dec019fa">Docs: Further review comments (7426c4c7)</a>
 </div>
 </div>
 

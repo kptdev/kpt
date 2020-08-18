@@ -23,9 +23,10 @@
         
         
         &lt;h2 id=&#34;developer-quickstart&#34;&gt;Developer Quickstart&lt;/h2&gt;
-&lt;p&gt;This quickstart will get you started developing a config function with the TypeScript SDK,
-using an existing kpt-functions package. Config functions are any functions which implement
-the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;This quickstart will get you started developing a config function with the
+TypeScript SDK, using an existing kpt-functions package. Config functions are
+any functions which implement the &lt;code&gt;KptFunc&lt;/code&gt; interface documented in the
+&lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/&#34;&gt;TS SDK API&lt;/a&gt;.&lt;/p&gt;
 &lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
 &lt;h4 id=&#34;system-requirements&#34;&gt;System Requirements&lt;/h4&gt;
 &lt;p&gt;Currently supported platforms: amd64 Linux/Mac&lt;/p&gt;
@@ -48,13 +49,15 @@ the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecon
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm install
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Run the following in a separate terminal to continuously build your function as you make changes:&lt;/p&gt;
+&lt;p&gt;Run the following in a separate terminal to continuously build your
+function as you make changes:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run watch
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Explore the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts&#34;&gt;&lt;code&gt;label_namespace&lt;/code&gt;&lt;/a&gt; transformer function. This function takes a
-given &lt;code&gt;label_name&lt;/code&gt; and &lt;code&gt;label_value&lt;/code&gt; to add the appropriate label to &lt;code&gt;Namespace&lt;/code&gt; objects using
-the SDK&amp;rsquo;s &lt;code&gt;addLabel&lt;/code&gt; function.&lt;/p&gt;
+&lt;p&gt;Explore the &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts&#34;&gt;&lt;code&gt;label_namespace&lt;/code&gt;&lt;/a&gt; transformer function. This
+function takes a given &lt;code&gt;label_name&lt;/code&gt; and &lt;code&gt;label_value&lt;/code&gt; to add the
+appropriate label to &lt;code&gt;Namespace&lt;/code&gt; objects using the SDK&amp;rsquo;s &lt;code&gt;addLabel&lt;/code&gt;
+function.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;addLabel&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;Configs&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;kpt-functions&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt;
@@ -74,20 +77,20 @@ the SDK&amp;rsquo;s &lt;code&gt;addLabel&lt;/code&gt; function.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;CONFIGS&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;../../example-configs
 
 kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
-node dist/label_namespace_run.js -d &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color -d &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
-kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As the name suggests, this function added the given label to all &lt;code&gt;Namespace&lt;/code&gt; objects
-in the &lt;code&gt;example-configs&lt;/code&gt; directory:&lt;/p&gt;
+  node dist/label_namespace_run.js -d &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color -d &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+  kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As the name suggests, this function added the given label to all
+&lt;code&gt;Namespace&lt;/code&gt; objects in the &lt;code&gt;example-configs&lt;/code&gt; directory:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Try modifying the function in &lt;code&gt;src/label_namespace.ts&lt;/code&gt; to perform other operations
-and rerun the function on &lt;code&gt;example-configs&lt;/code&gt; to see the changes.&lt;/p&gt;
+&lt;p&gt;Try modifying the function in &lt;code&gt;src/label_namespace.ts&lt;/code&gt; to perform other
+operations and rerun the function on &lt;code&gt;example-configs&lt;/code&gt; to see the changes.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Explore validation functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts&#34;&gt;validate-rolebinding&lt;/a&gt;. Instead of transforming configuration,
-this function searches RoleBindings and returns a results field containing details about invalid
-subject names.&lt;/p&gt;
+&lt;p&gt;Explore validation functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts&#34;&gt;validate-rolebinding&lt;/a&gt;. Instead of
+transforming configuration, this function searches RoleBindings and returns
+a results field containing details about invalid subject names.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;Configs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;kubernetesObjectResult&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;kpt-functions&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt;
@@ -99,8 +102,8 @@ subject names.&lt;/p&gt;
   &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;// Get the subject name parameter.
 &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;subjectName&lt;/span&gt; &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;configs&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;getFunctionConfigValueOrThrow&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;SUBJECT_NAME&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;);&lt;/span&gt;
 
-  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;// Iterate over all RoleBinding objects in the input, and filter those that have a subject
-&lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;// we&amp;#39;re looking for.
+  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;// Iterate over all RoleBinding objects in the input
+&lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;// Filter those that have a subject we&amp;#39;re looking for.
 &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;results&lt;/span&gt; &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;configs&lt;/span&gt;
     &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;get&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;isRoleBinding&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;)&lt;/span&gt;
     &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;filter&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;
@@ -117,13 +120,14 @@ subject names.&lt;/p&gt;
 &lt;li&gt;
 &lt;p&gt;Run &lt;code&gt;validate-rolebinding&lt;/code&gt; on &lt;code&gt;example-configs&lt;/code&gt;.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
-node dist/validate_rolebinding_run.js -d &lt;span style=&#34;color:#000&#34;&gt;subject_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;alice@foo-corp.com &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
-kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+  node dist/validate_rolebinding_run.js -d &lt;span style=&#34;color:#000&#34;&gt;subject_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;alice@foo-corp.com &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+  kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
 git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Explore generator functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts&#34;&gt;expand-team-cr&lt;/a&gt;. This function generates a per-environment
-Namespace and RoleBinding object for each custom resource (CR) of type Team.&lt;/p&gt;
+&lt;p&gt;Explore generator functions like &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts&#34;&gt;expand-team-cr&lt;/a&gt;. This function generates
+a per-environment Namespace and RoleBinding object for each custom resource
+(CR) of type Team.&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;Configs&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;kpt-functions&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt;
@@ -186,14 +190,15 @@ Namespace and RoleBinding object for each custom resource (CR) of type Team.&lt;
 &lt;li&gt;
 &lt;p&gt;Run &lt;code&gt;expand-team-cr&lt;/code&gt; on &lt;code&gt;example-configs&lt;/code&gt;.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
-node dist/expand_team_cr_run.js &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
-kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
+  node dist/expand_team_cr_run.js &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+  kpt fn sink &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
 git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use the typescript SDK.&lt;/li&gt;
+&lt;li&gt;Take a look at these &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/&#34;&gt;demo functions&lt;/a&gt; to better understand
+how to use the typescript SDK.&lt;/li&gt;
 &lt;li&gt;Read the complete &lt;a href=&#34;../develop/&#34;&gt;Typescript Developer Guide&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Learn how to &lt;a href=&#34;../../../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
@@ -210,7 +215,8 @@ git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
       <description>
         
         
-        &lt;p&gt;This guide will walk you through developing a config function using the Typescript SDK.&lt;/p&gt;
+        &lt;p&gt;This guide will walk you through developing a config function using the
+Typescript SDK.&lt;/p&gt;
 &lt;h2 id=&#34;setup&#34;&gt;Setup&lt;/h2&gt;
 &lt;h3 id=&#34;system-requirements&#34;&gt;System Requirements&lt;/h3&gt;
 &lt;p&gt;Currently supported platforms: amd64 Linux/Mac&lt;/p&gt;
@@ -219,21 +225,25 @@ git diff &lt;span style=&#34;color:#000&#34;&gt;$CONFIGS&lt;/span&gt;
 &lt;li&gt;Install &lt;a href=&#34;https://nodejs.org/en/download/&#34;&gt;node&lt;/a&gt;
 &lt;ul&gt;
 &lt;li&gt;The SDK requires &lt;code&gt;npm&lt;/code&gt; version 6 or higher.&lt;/li&gt;
-&lt;li&gt;If installing node from binaries (i.e. without a package manager), follow these
-&lt;a href=&#34;https://github.com/nodejs/help/wiki/Installation&#34;&gt;installation instructions&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;If installing node from binaries (i.e. without a package manager), follow
+these &lt;a href=&#34;https://github.com/nodejs/help/wiki/Installation/&#34;&gt;installation instructions&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;Install &lt;a href=&#34;https://docs.docker.com/engine/installation/&#34;&gt;docker&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;your-kubernetes-cluster&#34;&gt;Your Kubernetes Cluster&lt;/h3&gt;
-&lt;p&gt;For the type generation functionality to work, you need a Kubernetes cluster with the &lt;a href=&#34;https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing&#34;&gt;CRD OpenAPI Publishing&lt;/a&gt; feature which is beta with Kubernetes 1.15.&lt;/p&gt;
-&lt;p&gt;Alternatively, you can use an existing NPM package with pre-generated types such as the &lt;code&gt;hello-world&lt;/code&gt;
-package discussed in the &lt;a href=&#34;../quickstart&#34;&gt;Quickstart&lt;/a&gt; and skip to &lt;a href=&#34;#implement-the-function&#34;&gt;implementing the function&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For the type generation functionality to work, you need a Kubernetes cluster
+with the &lt;a href=&#34;https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing&#34;&gt;CRD OpenAPI Publishing&lt;/a&gt; feature which is beta with
+Kubernetes 1.15.&lt;/p&gt;
+&lt;p&gt;Alternatively, you can use an existing NPM package with pre-generated types
+such as the &lt;code&gt;hello-world&lt;/code&gt; package discussed in the &lt;a href=&#34;../quickstart/&#34;&gt;Quickstart&lt;/a&gt; and skip to
+&lt;a href=&#34;#implement-the-function&#34;&gt;implementing the function&lt;/a&gt;.&lt;/p&gt;
 &lt;h4 id=&#34;using-a-kind-cluster&#34;&gt;Using a &lt;code&gt;kind&lt;/code&gt; Cluster&lt;/h4&gt;
-&lt;p&gt;The easiest way to get developing is to use &lt;code&gt;kind&lt;/code&gt; to bring up a cluster running in a local container.&lt;/p&gt;
+&lt;p&gt;The easiest way to get developing is to use &lt;code&gt;kind&lt;/code&gt; to bring up a cluster
+running in a local container.&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;
-&lt;p&gt;Download the &lt;a href=&#34;https://github.com/kubernetes-sigs/kind&#34;&gt;kind binary&lt;/a&gt; version 0.5.1 or higher&lt;/p&gt;
+&lt;p&gt;Download the &lt;a href=&#34;https://github.com/kubernetes-sigs/kind/&#34;&gt;kind binary&lt;/a&gt; version 0.5.1 or higher&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;Use this config file:&lt;/p&gt;
@@ -259,17 +269,17 @@ package discussed in the &lt;a href=&#34;../quickstart&#34;&gt;Quickstart&lt;/a&
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kind create cluster --name&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;kpt-functions --config&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;kind.yaml --image&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;kindest/node:v1.15.7
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h4 id=&#34;using-a-gke-cluster&#34;&gt;Using a GKE cluster&lt;/h4&gt;
-&lt;p&gt;You can also use a deployed cluster in GKE. The beta k8s feature is avilable only when using GKE&amp;rsquo;s
-&lt;code&gt;--enable-kubernetes-alpha&lt;/code&gt; flag, as seen here:&lt;/p&gt;
+&lt;h4 id=&#34;using-a-gke-cluster&#34;&gt;Using a GKE Cluster&lt;/h4&gt;
+&lt;p&gt;You can also use a deployed cluster in GKE. The beta k8s feature is avilable
+only when using GKE&amp;rsquo;s &lt;code&gt;--enable-kubernetes-alpha&lt;/code&gt; flag, as seen here:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;gcloud container clusters create &lt;span style=&#34;color:#000&#34;&gt;$USER&lt;/span&gt;-1-15 --cluster-version&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;latest --region&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;us-central1-a --project &amp;lt;PROJECT&amp;gt;
 gcloud container clusters get-credentials &lt;span style=&#34;color:#000&#34;&gt;$USER&lt;/span&gt;-1-15 --zone us-central1-a --project &amp;lt;PROJECT&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;working-with-crds&#34;&gt;Working with CRDs&lt;/h3&gt;
-&lt;p&gt;The SDK uses the k8s server to generate the typescript classes.
-If your function uses a Custom Resource Definition, make sure you apply it to the cluster used
-for type generation:&lt;/p&gt;
+&lt;p&gt;The SDK uses the k8s server to generate the typescript classes. If your
+function uses a Custom Resource Definition, make sure you apply it to the
+cluster used for type generation:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl apply -f /path/to/my/crd.yaml
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;create-the-npm-package&#34;&gt;Create the NPM package&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;create-the-npm-package&#34;&gt;Create the NPM Package&lt;/h2&gt;
 &lt;p&gt;To initialize a new NPM package, first create a package directory:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mkdir my-package
 &lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; my-package
@@ -281,24 +291,20 @@ for type generation:&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Follow the instructions and respond to all prompts.&lt;/p&gt;
 &lt;p&gt;This process will create the following:&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;code&gt;package.json&lt;/code&gt;: The &lt;code&gt;kpt-functions&lt;/code&gt; framework library is the only item declared in &lt;code&gt;dependencies&lt;/code&gt;.
-Everything required to compile and test your config function is declared as &lt;code&gt;devDependencies&lt;/code&gt;,
-including the &lt;code&gt;create-kpt-functions&lt;/code&gt; CLI discussed later in the &lt;code&gt;README&lt;/code&gt;.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;code&gt;src/&lt;/code&gt;: Directory containing the source files for all your functions, e.g.:&lt;/p&gt;
+&lt;li&gt;&lt;code&gt;package.json&lt;/code&gt;: The &lt;code&gt;kpt-functions&lt;/code&gt; framework library is the only item
+declared in &lt;code&gt;dependencies&lt;/code&gt;. Everything required to compile and test your
+config function is declared as &lt;code&gt;devDependencies&lt;/code&gt;, including the
+&lt;code&gt;create-kpt-functions&lt;/code&gt; CLI discussed later in the &lt;code&gt;README&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;src/&lt;/code&gt;: Directory containing the source files for all your functions, e.g.:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;my_func.ts&lt;/code&gt;: Implement your function&amp;rsquo;s interface here.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;my_func_test.ts&lt;/code&gt;: Unit tests for your function.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;my_func_run.ts&lt;/code&gt;: The entry point from which your function is run.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;code&gt;src/gen/&lt;/code&gt;: Contains Kubernetes core and CRD types generated from the OpenAPI spec published by the cluster you selected.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;&lt;code&gt;build/&lt;/code&gt;: Contains Dockerfile for each function, e.g.:&lt;/p&gt;
+&lt;li&gt;&lt;code&gt;src/gen/&lt;/code&gt;: Contains Kubernetes core and CRD types generated from the
+OpenAPI spec published by the cluster you selected.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;build/&lt;/code&gt;: Contains Dockerfile for each function, e.g.:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;my_func.Dockerfile&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
@@ -306,26 +312,63 @@ including the &lt;code&gt;create-kpt-functions&lt;/code&gt; CLI discussed later 
 &lt;/ol&gt;
 &lt;p&gt;Next, install all package dependencies:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm install
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In addition to installation, &lt;code&gt;install&lt;/code&gt; compiles your function into the &lt;code&gt;dist/&lt;/code&gt; directory.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In addition to installation, &lt;code&gt;install&lt;/code&gt; compiles your function into the &lt;code&gt;dist/&lt;/code&gt;
+directory.&lt;/p&gt;
 &lt;p&gt;You can run your function directly:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;node dist/my_func_run.js --help
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Currently, it simply passes through the input configuration data. Let&amp;rsquo;s remedy this.&lt;/p&gt;
-&lt;h2 id=&#34;implement-the-function&#34;&gt;Implement the function&lt;/h2&gt;
-&lt;p&gt;You can now start implementing the function using your favorite IDE, e.g. &lt;a href=&#34;https://code.visualstudio.com/&#34;&gt;VSCode&lt;/a&gt;:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Currently, it simply passes through the input configuration data. Let&amp;rsquo;s remedy
+this.&lt;/p&gt;
+&lt;h2 id=&#34;implement-the-function&#34;&gt;Implement the Function&lt;/h2&gt;
+&lt;p&gt;You can now start implementing the function using your favorite IDE, e.g.
+&lt;a href=&#34;https://code.visualstudio.com/&#34;&gt;VSCode&lt;/a&gt;:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;code .
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In &lt;code&gt;src/my_func.ts&lt;/code&gt;, implement the &lt;code&gt;KptFunc&lt;/code&gt; interface &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/&#34;&gt;documented here&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use
-the typescript library. These functions are available as container images documented in the &lt;a href=&#34;../../../../consumer/function/catalog/&#34;&gt;catalog&lt;/a&gt;.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In &lt;code&gt;src/my_func.ts&lt;/code&gt;, implement the &lt;code&gt;KptFunc&lt;/code&gt; interface from the &lt;a href=&#34;https://googlecontainertools.github.io/kpt-functions-sdk/api/&#34;&gt;TS SDK API&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Take a look at these &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/&#34;&gt;demo functions&lt;/a&gt; to better understand how
+to use the typescript library. These functions are available as container
+images documented in the &lt;a href=&#34;../../../../consumer/function/catalog/&#34;&gt;catalog&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Once you&amp;rsquo;ve written some code, build the package with:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run build
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alternatively, run the following in a separate terminal. It will continuously build your function
-as you make changes:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alternatively, run the following in a separate terminal. It will continuously
+build your function as you make changes:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run watch
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To run the tests, use:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm &lt;span style=&#34;color:#204a87&#34;&gt;test&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;build-and-push-container-images&#34;&gt;Build and push container images&lt;/h2&gt;
-&lt;p&gt;With your working function in-hand, it&amp;rsquo;s time to package your function into an executable container
-image.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;debug-and-test-the-function&#34;&gt;Debug and Test the Function&lt;/h2&gt;
+&lt;p&gt;You may want to run a function developed with one of the config function SDKs
+using the exec runtime in order to avoid the overhead associated with running
+a container. To run your function in the exec runtime, you will first need to
+package your function as an executable.&lt;/p&gt;
+&lt;p&gt;The below example shows how to run a typescript function using the kpt exec
+runtime.&lt;/p&gt;
+&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Install the pkg CLI.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm install -g pkg
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Install your kpt-functions package module to create your function&amp;rsquo;s
+distributable file.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm i
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;steps&#34;&gt;Steps&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Use the pkg CLI to create an executable from your function&amp;rsquo;s distributable
+file. For a &lt;code&gt;my_fn&lt;/code&gt; function built using the typescript SDK, this is
+&lt;code&gt;dist/my_fn_run.js&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npx pkg dist/my_fn_run.js
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Pass the path to the appropriate executable for your OS when running kpt
+using the exec runtime.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- &lt;span style=&#34;color:#000&#34;&gt;a&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;b
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;build-and-push-container-images&#34;&gt;Build and push container images&lt;/h2&gt;
+&lt;p&gt;With your working function in-hand, it&amp;rsquo;s time to package your function into an
+executable container image.&lt;/p&gt;
 &lt;p&gt;To build the docker image:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run kpt:docker-build
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can now run the function container, e.g.:&lt;/p&gt;
@@ -333,33 +376,38 @@ image.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To push the image to your container registry of choice:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run kpt:docker-push
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You&amp;rsquo;ll need proper authentication/authorization to push to your registry.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;kpt:docker-push&lt;/code&gt; pushes to the registry specified in the &lt;code&gt;kpt.docker_repo_base&lt;/code&gt; field in &lt;code&gt;package.json&lt;/code&gt;.
-You can manually edit this field at any time.&lt;/p&gt;
-&lt;p&gt;The default value for the container image tag is &lt;code&gt;dev&lt;/code&gt;. This can be overridden using&lt;code&gt;--tag&lt;/code&gt; flag:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;kpt:docker-push&lt;/code&gt; pushes to the registry specified in the
+&lt;code&gt;kpt.docker_repo_base&lt;/code&gt; field in &lt;code&gt;package.json&lt;/code&gt;. You can manually edit this
+field at any time.&lt;/p&gt;
+&lt;p&gt;The default value for the container image tag is &lt;code&gt;dev&lt;/code&gt;. This can be overridden
+using&lt;code&gt;--tag&lt;/code&gt; flag:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;npm run kpt:docker-build -- --tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;latest
 npm run kpt:docker-push -- --tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;latest
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;use-the-sdk-cli&#34;&gt;Use the SDK CLI&lt;/h2&gt;
-&lt;p&gt;The &lt;code&gt;create-kpt-functions&lt;/code&gt; package (installed as &lt;code&gt;devDependencies&lt;/code&gt;), provides a CLI for managing
-the NPM package you created above. The CLI sub-commands can be invoked via &lt;code&gt;npm run&lt;/code&gt;. For example,
-to add a new function to the package:&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;create-kpt-functions&lt;/code&gt; package (installed as &lt;code&gt;devDependencies&lt;/code&gt;), provides
+a CLI for managing the NPM package you created above. The CLI sub-commands can
+be invoked via &lt;code&gt;npm run&lt;/code&gt;. For example, to add a new function to the package:&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-console&#34; data-lang=&#34;console&#34;&gt;npm run kpt:function-create
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;These sub-commands are available:&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-console&#34; data-lang=&#34;console&#34;&gt;kpt:docker-create       Generate Dockerfiles for all functions. Overwrite
                         files if they exist.
 kpt:docker-build        Build container images for all functions.
-kpt:docker-push         Push container images to the registry for all functions.
+kpt:docker-push         Push container images to the registry for all
+                        functions.
 kpt:function-create     Generate stubs for a new function. Overwrites files
                         if they exist.
 kpt:type-create         Generate classes for core and CRD types. Overwrite
                         files if they exist.
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Flags are passed to the CLI after the &lt;code&gt;--&lt;/code&gt; separator. For example, to pass a tag
-when building a container image:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Flags are passed to the CLI after the &lt;code&gt;--&lt;/code&gt; separator. For example, to pass a
+tag when building a container image:&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-console&#34; data-lang=&#34;console&#34;&gt;npm run kpt:docker-build -- --tag=latest
 &lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Learn how to &lt;a href=&#34;../../../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;Find out how to structure a pipeline of functions from the &lt;a href=&#34;../../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
-&lt;li&gt;Take a look at &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src&#34;&gt;these example functions&lt;/a&gt; to better understand how to use the typescript SDK.&lt;/li&gt;
+&lt;li&gt;Find out how to structure a pipeline of functions from the
+&lt;a href=&#34;../../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;li&gt;Take a look at these &lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/&#34;&gt;demo functions&lt;/a&gt; to better understand how to use the
+typescript SDK.&lt;/li&gt;
 &lt;/ul&gt;
 
       </description>

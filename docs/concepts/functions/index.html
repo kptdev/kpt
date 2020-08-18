@@ -416,8 +416,9 @@ interoperable functions which implement the
 <img src="https://googlecontainertools.github.io/kpt//images/func.png" />
 
 <ul>
-<li><code>FUNC</code>: A program, packaged as a container, that performs CRUD (Create, Read,
-Update, Delete) operations on the input.</li>
+<li><code>FUNC</code>: A program that performs CRUD (Create, Read, Update, Delete)
+operations on the input. This program can be packaged as a container,
+executable, or starlark script.</li>
 <li><code>input</code>: A Kubernetes List type containing objects to operate on.</li>
 <li><code>output</code>: A Kubernetes List type containing the resultant Kubernetes objects.</li>
 <li><code>functionConfig</code>: An optional Kubernetes object used to parameterize the
@@ -434,7 +435,6 @@ function&rsquo;s behavior.</li>
 
 <p>Instead, the function typically produces the <code>output</code> by reading configurations
 from an external system (e.g. reading files from a filesystem).</p>
-<p>Note: Source functions are <em>function</em>. They are invoked by command <code>kpt fn run</code> instead of <code>kpt fn source</code>.</p>
 <h3 id="sink-function">Sink Function</h3>
 <p>A Sink Function produces no <code>output</code>:</p>
 
@@ -444,14 +444,17 @@ from an external system (e.g. reading files from a filesystem).</p>
 
 <p>Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem).</p>
-<p>Note: Sink functions are <em>function</em>. They are invoked by command <code>kpt fn run</code> instead of <code>kpt fn sink</code>.</p>
 <h3 id="pipeline">Pipeline</h3>
-<p>Functions can be composed into a pipeline:</p>
+<p>In order do something useful with a function, we need to compose a pipeline
+with a source and a sink function.</p>
 
 
 
 <img src="https://googlecontainertools.github.io/kpt//images/pipeline.png" />
 
+<p>You can also use a container-based workflow orchestrator by exporting a workflow
+pipeline. Get detailed tutorials on how to use <code>kpt fn export</code> from the
+<a href="../../guides/consumer/function/export/">Export a Workflow</a> guide.</p>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Get a quickstart on writing functions from the <a href="../../guides/producer/functions/">function producer docs</a>.</li>
@@ -481,7 +484,7 @@ from an external system (e.g. reading files from a filesystem).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3e15696524cf11329219d82e7a7876e75b7aa984">Docs: Address review comments on kpt function docs (3e156965)</a>
 </div>
 </div>
 

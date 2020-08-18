@@ -9,6 +9,7 @@ menu:
 description: >
     Overview of kpt commands
 ---
+
 <!--mdtogo:Short
     Overview of kpt commands
 -->
@@ -16,13 +17,26 @@ description: >
 {{< asciinema key="kpt" rows="10" preload="1" >}}
 
 <!--mdtogo:Long-->
-kpt functionality is subdivided into command groups, each of which operates on
-a particular set of entities, with a consistent command syntax and pattern of
-inputs and outputs.
+
+kpt functionality is subdivided into the following command groups, each of
+which operates on a particular set of entities, with a consistent command
+syntax and pattern of inputs and outputs.
+
+| Command Group | Description                                                                     | Reads From      | Writes To       |
+| ------------- | ------------------------------------------------------------------------------- | --------------- | --------------- |
+| [pkg]         | fetch, update, and sync configuration files using git                           | remote git      | local directory |
+| [cfg]         | examine and modify configuration files                                          | local directory | local directory |
+| [fn]          | generate, transform, validate configuration files using containerized functions | local directory | local directory |
+| [live]        | reconcile the live state with configuration files                               | local directory | remote cluster  |
+
 <!--mdtogo-->
 
 ### Examples
+
+The following are examples of running each kpt command group.
+
 <!--mdtogo:Examples-->
+
 ```sh
 # get a package
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.5.0 helloworld
@@ -43,11 +57,19 @@ set 1 fields
 ```
 
 ```sh
+# get a package and run a validation function
+kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
+mkdir results/
+kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- subject_name=bob@foo-corp.com
+```
+
+```sh
 # apply the package to a cluster
 $ kpt live apply --reconcile-timeout=10m helloworld
 ...
 all resources has reached the Current status
 ```
+
 <!--mdtogo-->
 
 ### OpenAPI schema
@@ -161,17 +183,12 @@ by kpt.
   Comma-separated list of pattern=N settings for file-filtered logging
 ```
 
-| Command Group | Description                                                                     |  Reads From     | Writes To       |
-|---------------|---------------------------------------------------------------------------------|-----------------|-----------------|
-| [pkg]         | fetch, update, and sync configuration files using git                           | remote git      | local directory |
-| [cfg]         | examine and modify configuration files                                          | local directory | local directory |
-| [fn]          | generate, transform, validate configuration files using containerized functions | local directory | local directory |
-| [live]        | reconcile the live state with configuration files                               | local directory | remote cluster  |
-
 ### Next Steps
 
-- Learn about kpt [architecture] including major influences and a high-level comparison with kustomize.
-- Read kpt [guides] for how to produce and consume packages and integrate with a wider ecosystem of tools.
+- Learn about kpt [architecture] including major influences and a high-level
+  comparison with kustomize.
+- Read kpt [guides] for how to produce and consume packages and integrate with
+  a wider ecosystem of tools.
 - Consult the [FAQ] for answers to common questions.
 
 [pkg]: pkg/
