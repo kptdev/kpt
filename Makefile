@@ -26,6 +26,11 @@ buildall:
 	GOOS=linux go build -o /dev/null
 	GOOS=darwin go build -o /dev/null
 
+update-deps-to-head:
+	go get sigs.k8s.io/cli-utils@master
+	go get sigs.k8s.io/kustomize/cmd/config@master
+	go get sigs.k8s.io/kustomize/kyaml@master
+
 fix:
 	go fix ./...
 
