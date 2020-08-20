@@ -1020,9 +1020,15 @@ func (g *TestSetupManager) AssertKptfile(commit, ref string) bool {
 	}
 	expectedKptfile := kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{Name: name},
-			APIVersion: kptfile.TypeMeta.APIVersion,
-			Kind:       kptfile.TypeMeta.Kind},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: name,
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfile.TypeMeta.APIVersion,
+				Kind:       kptfile.TypeMeta.Kind},
+		},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",

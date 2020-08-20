@@ -49,8 +49,13 @@ func Get(path, pattern string, input io.Reader) error {
 
 	k := kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
-			Kind:       "Kptfile",
-			ObjectMeta: yaml.ObjectMeta{Name: filepath.Base(path)},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: filepath.Base(path)},
+			},
+			TypeMeta: yaml.TypeMeta{
+				Kind: "Kptfile",
+			},
 		},
 		Upstream: kptfile.Upstream{
 			Type:  kptfile.StdinOrigin,

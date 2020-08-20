@@ -81,9 +81,15 @@ func TestCmd_execute(t *testing.T) {
 	}
 	if !g.AssertKptfile(t, dest, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{Name: g.RepoName},
-			APIVersion: kptfile.TypeMeta.APIVersion,
-			Kind:       kptfile.TypeMeta.Kind},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: g.RepoName,
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfile.TypeMeta.APIVersion,
+				Kind:       kptfile.TypeMeta.Kind},
+		},
 		PackageMeta: kptfile.PackageMeta{},
 		Upstream: kptfile.Upstream{
 			Type: "git",

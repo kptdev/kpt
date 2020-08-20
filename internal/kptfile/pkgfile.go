@@ -24,8 +24,10 @@ const KptFileName = "Kptfile"
 
 // TypeMeta is the TypeMeta for KptFile instances.
 var TypeMeta = yaml.ResourceMeta{
-	Kind:       KptFileName,
-	APIVersion: "kpt.dev/v1alpha1",
+	TypeMeta: yaml.TypeMeta{
+		APIVersion: "kpt.dev/v1alpha1",
+		Kind:       KptFileName,
+	},
 }
 
 // KptFile contains information about a package managed with kpt

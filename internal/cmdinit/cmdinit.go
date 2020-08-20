@@ -91,7 +91,13 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if _, err = os.Stat(filepath.Join(args[0], "Kptfile")); os.IsNotExist(err) {
 		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], "Kptfile"))
 		k := kptfile.KptFile{
-			ResourceMeta: yaml.ResourceMeta{ObjectMeta: yaml.ObjectMeta{Name: r.Name}},
+			ResourceMeta: yaml.ResourceMeta{
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{
+						Name: r.Name,
+					},
+				},
+			},
 			PackageMeta: kptfile.PackageMeta{
 				ShortDescription: r.Description,
 				URL:              r.URL,
