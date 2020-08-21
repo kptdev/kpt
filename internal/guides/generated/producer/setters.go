@@ -87,6 +87,17 @@ command will:
   spec:
     replicas: 3 # {"$kpt-set":"replicas"}
 
+#### Auto setters
+
+Some setters are automatically set deriving the values from the output of ` + "`" + `gcloud config list` + "`" + `
+command, when the package is fetched using ` + "`" + `kpt pkg get` + "`" + `. Package consumers need not
+invoke ` + "`" + `kpt cfg set` + "`" + ` on them explicitly. Following are the names of supported auto-setters:
+
+  gcloud.core.project
+  gcloud.project.projectNumber
+  gcloud.compute.region
+  gcloud.compute.zone
+
 #### Invoking a Setter
 
   # deployment.yaml -- original
