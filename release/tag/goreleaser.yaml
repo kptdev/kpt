@@ -25,11 +25,9 @@ builds:
     ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
 archives:
   - files:
-      - LICENSE*
-      - README*
-      - CHANGELOG*
+      - LICENSES*
       - lib.zip*
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}_{{ .Version }}"
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
