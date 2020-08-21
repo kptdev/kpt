@@ -1095,9 +1095,7 @@ OpenAPI schema, but that will obviously not include any CRDs. So in some
 situations it might be beneficial to use a schema that accurately reflects both
 the correct version of Kubernetes and the CRDs used. Kpt provides a few global
 flags to allows users to specify the schema that should be used.</p>
-<p>By default, kpt will first try to fetch the OpenAPI schema from the cluster
-given by the current context. If that doesn&rsquo;t work, it will silently fall back
-to using the builtin schema.</p>
+<p>By default, kpt will use the builtin schema.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--k8s-schema-source
   Set the <span style="color:#204a87">source</span> <span style="color:#204a87;font-weight:bold">for</span> the OpenAPI schema. Allowed values are cluster, file, or
   builtin. If an OpenAPI schema can<span style="color:#a40000">&#39;</span>t be find at the given source, kpt will
@@ -1301,7 +1299,7 @@ a wider ecosystem of tools.</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7c2f2433602554fa0ae37a1fd075dd9ed26ed28a">Docs: Deduplicate function docs (7c2f2433)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0f1412157f303598e45bb6296e0506e5ffb23056">docs: Fix outdated information about the --k8s-schema-source flag (0f141215)</a>
 </div>
 </div>
 
