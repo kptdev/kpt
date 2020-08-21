@@ -4,10 +4,10 @@ linkTitle: "delete-setter"
 weight: 4
 type: docs
 description: >
-   Delete a setter for one field
+   Delete a setter
 ---
 <!--mdtogo:Short
-    Delete a setter for one field
+    Delete a setter
 -->
 
 {{< asciinema key="cfg-delete-setter" rows="10" preload="1" >}}
@@ -31,7 +31,7 @@ kpt cfg delete-setter DIR/ replicas
 ### Synopsis
 <!--mdtogo:Long-->
 ```sh
-kpt cfg delete-setter DIR NAME VALUE
+kpt cfg delete-setter DIR NAME
 
 DIR:
   Path to a package directory
