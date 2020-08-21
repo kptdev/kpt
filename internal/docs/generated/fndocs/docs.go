@@ -18,12 +18,15 @@ package fndocs
 var FnShort = `Generate, transform, and validate configuration files.`
 var FnLong = `
 | Configuration Read From | Configuration Written To |
-|-------------------------|--------------------------|
+| ----------------------- | ------------------------ |
 | local files or stdin    | local files or stdout    |
 
-Functions are executables ([that you can write](#developing-functions))
-packaged in container images which accept a collection of Resource
-configuration as input, and emit a collection of Resource configuration as output.
+Functions are executables (that you can [write][Functions Developer Guide])
+which accept a collection of Resource configuration as input, and emit a
+collection of Resource configuration as output.
+
+Functions can be packaged as container images, starlark scripts, or binary
+executables.
 `
 var FnExamples = `
   # run the function defined by gcr.io/example.com/my-fn as a local container
@@ -42,7 +45,7 @@ var ExportLong = `
   kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
   
   DIR:
-    Path to a package directory. 
+    Path to a package directory.
   FUNCTIONS_DIR:
     Read functions from the directory instead of the DIR/.
   ORCHESTRATOR:
@@ -54,7 +57,8 @@ var ExportLong = `
       - tekton
       - circleci
   OUTPUT_FILENAME:
-    Specifies the filename of the generated pipeline. If omitted, the default output is stdout
+    Specifies the filename of the generated pipeline. If omitted, the default
+    output is stdout
 `
 var ExportExamples = `
   # read functions from DIR, run them against it as one step.
@@ -92,7 +96,7 @@ var RunExamples = `
   kpt fn run DIR/
 `
 
-var SinkShort = `Explicitly specify an output sink for a function`
+var SinkShort = `Specify a directory as an output sink package`
 var SinkLong = `
   kpt fn sink [DIR]
   
@@ -101,10 +105,12 @@ var SinkLong = `
 `
 var SinkExamples = `
   # run a function using explicit sources and sinks
-  kpt fn source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
+  kpt fn source DIR/ |
+    kpt fn run --image gcr.io/example.com/my-fn |
+    kpt fn sink DIR/
 `
 
-var SourceShort = `Explicitly specify an input source for a function`
+var SourceShort = `Specify a directory as an input source package`
 var SourceLong = `
   kpt fn source [DIR...]
   
@@ -112,9 +118,11 @@ var SourceLong = `
     Path to a package directory.  Defaults to stdin if unspecified.
 `
 var SourceExamples = `
-  # print to stdout configuration formatted as an input source
+  # print to stdout configuration from DIR/ formatted as an input source
   kpt fn source DIR/
 
   # run a function using explicit sources and sinks
-  kpt fn source DIR/ | kpt fn run --image gcr.io/example.com/my-fn | kpt fn sink DIR/
+  kpt fn source DIR/ |
+    kpt fn run --image gcr.io/example.com/my-fn |
+    kpt fn sink DIR/
 `

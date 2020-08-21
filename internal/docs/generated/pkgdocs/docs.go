@@ -148,7 +148,7 @@ var FixLong = `
   
 `
 var FixExamples = `
-  # print the fixes which will be made to the package without actually modifying 
+  # print the fixes which will be made to the package without actually modifying
   # resources
   kpt pkg fix . --dry-run
 

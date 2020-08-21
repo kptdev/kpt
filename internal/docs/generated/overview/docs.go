@@ -17,9 +17,16 @@ package overview
 
 var ReferenceShort = `Overview of kpt commands`
 var ReferenceLong = `
-kpt functionality is subdivided into command groups, each of which operates on
-a particular set of entities, with a consistent command syntax and pattern of
-inputs and outputs.
+kpt functionality is subdivided into the following command groups, each of
+which operates on a particular set of entities, with a consistent command
+syntax and pattern of inputs and outputs.
+
+| Command Group | Description                                                                     | Reads From      | Writes To       |
+| ------------- | ------------------------------------------------------------------------------- | --------------- | --------------- |
+| [pkg]         | fetch, update, and sync configuration files using git                           | remote git      | local directory |
+| [cfg]         | examine and modify configuration files                                          | local directory | local directory |
+| [fn]          | generate, transform, validate configuration files using containerized functions | local directory | local directory |
+| [live]        | reconcile the live state with configuration files                               | local directory | remote cluster  |
 `
 var ReferenceExamples = `
   # get a package
@@ -36,6 +43,11 @@ var ReferenceExamples = `
   
   $ kpt cfg set helloworld replicas 3 --set-by pwittrock  --description 'reason'
   set 1 fields
+
+  # get a package and run a validation function
+  kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
+  mkdir results/
+  kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- subject_name=bob@foo-corp.com
 
   # apply the package to a cluster
   $ kpt live apply --reconcile-timeout=10m helloworld

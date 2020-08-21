@@ -16,30 +16,38 @@
 package producer
 
 var ContainerGuide = `
-Functions may be written as container images.  The container must run a program which:
+Functions may be written as container images. The container must run a program
+which:
 
 - Reads a ResourceList from STDIN
 - Writes a ResourceList to STDOUT
 - Exits non-0 on failure
 - Writes error messages to users on STDERR
 
-By default containers are run without network access, and without the ability to write to volumes
-outside the container.
+By default containers are run without network access, and without the ability
+to write to volumes outside the container. All local environment variables
+except the ` + "`" + `TMPDIR` + "`" + ` variable are loaded into the container by default. See the
+[fn command reference] for more details.
 
-While container functions may be written in any language so long as they adhere to the io
-specification (read / write ResourceList), the [kpt-functions-sdk] provides a solution for
-writing functions using typescript.
+While container functions may be written in any language so long as they
+adhere to the [io specification] (read / write ResourceList), the
+[kpt-functions-sdk] provides a solution for writing functions using typescript
+and the [go libraries] provide utilities for writing them in golang.
 
 ## Imperative Run
 
-Container functions may be run imperatively using the ` + "`" + `--image` + "`" + ` flag with ` + "`" + `kpt fn run` + "`" + `.  This
-will create a container from the image, then write to its STDIN a ResourceList and read from
-it's STDOUT a ResourceList.
+Container functions may be run imperatively using the ` + "`" + `--image` + "`" + ` flag with
+` + "`" + `kpt fn run` + "`" + `. This will create a container from the image, then write to its
+STDIN a ResourceList created from the contents of the package directory, and
+finally read from it's STDOUT a ResourceList used to write resource back to
+the package directory.
+
+  kpt fn run DIR/ --image gcr.io/a/b:v1
 
 ## Declarative Run
 
-Container functions may be run by declaring the function in a resource using the
-` + "`" + `config.kubernetes.io/function` + "`" + ` annotation.
+Container functions may be run by declaring the function in a resource using
+the ` + "`" + `config.kubernetes.io/function` + "`" + ` annotation.
 
   apiVersion: example.com/v1beta1
   kind: ExampleKind
@@ -50,23 +58,13 @@ Container functions may be run by declaring the function in a resource using the
         container:
           image: gcr.io/a/b:v1
 
-To run the declared function use ` + "`" + `kpt fn run DIR/` + "`" + ` on the directory containing the example.
+To run the declared function use ` + "`" + `kpt fn run DIR/` + "`" + ` on the directory containing
+the example.
 
-## Network
+## Next Steps
 
-By default, container functions cannot access network or volumes.  Functions may enable network
-access using the ` + "`" + `--network` + "`" + ` flag, and specifying that a network is required in the functionConfig.
-
-  apiVersion: example.com/v1beta1
-  kind: ExampleKind
-  metadata:
-    name: function-input
-    annotations:
-      config.kubernetes.io/function: |
-        container:
-          image: gcr.io/a/b:v1
-          network:
-            required: true
-
-  kpt fn run DIR/ --network
+- Explore other ways to run functions from the [Functions Developer Guide].
+- Find out how to structure a pipeline of functions from the
+  [functions concepts] page.
+- Consult the [fn command reference].
 `

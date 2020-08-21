@@ -174,7 +174,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/delete-setter/</loc>
-    <lastmod>2020-07-13T18:10:44-07:00</lastmod>
+    <lastmod>2020-08-20T22:32:52-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/reference/cfg/delete-subst/</loc>
+    <lastmod>2020-08-20T22:32:52-07:00</lastmod>
   </url>
   
   <url>
@@ -264,7 +269,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
-    <lastmod>2020-08-18T10:12:27-07:00</lastmod>
+    <lastmod>2020-08-26T18:31:17-07:00</lastmod>
   </url>
   
   <url>
@@ -334,7 +339,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/</loc>
-    <lastmod>2020-08-20T20:16:22-07:00</lastmod>
+    <lastmod>2020-08-24T13:12:44-07:00</lastmod>
   </url>
   
   <url>

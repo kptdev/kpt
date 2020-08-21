@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/reference/cfg/delete-subst/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,17 +32,17 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>TypeScript Function SDK | Kpt</title><meta property="og:title" content="TypeScript Function SDK" />
-<meta property="og:description" content="Writing functions in TypeScript.
+<title>Delete-subst | Kpt</title><meta property="og:title" content="Delete-subst" />
+<meta property="og:description" content="Delete a substitution
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/reference/cfg/delete-subst/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="TypeScript Function SDK">
-<meta itemprop="description" content="Writing functions in TypeScript.
+<meta itemprop="name" content="Delete-subst">
+<meta itemprop="description" content="Delete a substitution
 "><meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="TypeScript Function SDK"/>
-<meta name="twitter:description" content="Writing functions in TypeScript.
+<meta name="twitter:title" content="Delete-subst"/>
+<meta name="twitter:description" content="Delete a substitution
 "/>
 
 
@@ -75,7 +75,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>TypeScript Function SDK | Kpt</title>
+    <title>Delete-subst | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -105,7 +105,7 @@ if (!doNotTrack) {
 				
 				
 				
-				<a class="nav-link active" href="/kpt/guides/" ><span class="active">Guides</span></a>
+				<a class="nav-link" href="/kpt/guides/" ><span>Guides</span></a>
 			</li>
 			
 			<li class="nav-item mr-4 mb-2 mb-lg-0">
@@ -115,7 +115,7 @@ if (!doNotTrack) {
 				
 				
 				
-				<a class="nav-link" href="/kpt/reference/" ><span>Command Reference</span></a>
+				<a class="nav-link active" href="/kpt/reference/" ><span class="active">Command Reference</span></a>
 			</li>
 			
 			<li class="nav-item mr-4 mb-2 mb-lg-0">
@@ -190,10 +190,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Guides</a>
+    <a  href="/kpt/reference/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Command Reference</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguides">
+    <li class="collapse show" id="kptreference">
       
       
       
@@ -207,10 +207,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+    <a  href="/kpt/reference/pkg/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">pkg</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumer">
+    <li class="collapse " id="kptreferencepkg">
       
       
       
@@ -224,10 +224,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/get/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Get</a>
+    <a  href="/kpt/reference/pkg/desc/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">desc</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerget">
+    <li class="collapse " id="kptreferencepkgdesc">
       
       
       
@@ -247,10 +247,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/display/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Display</a>
+    <a  href="/kpt/reference/pkg/diff/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">diff</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerdisplay">
+    <li class="collapse " id="kptreferencepkgdiff">
       
       
       
@@ -270,10 +270,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Set</a>
+    <a  href="/kpt/reference/pkg/fix/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fix</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerset">
+    <li class="collapse " id="kptreferencepkgfix">
       
       
       
@@ -293,10 +293,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/substitute/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitute</a>
+    <a  href="/kpt/reference/pkg/get/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">get</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumersubstitute">
+    <li class="collapse " id="kptreferencepkgget">
       
       
       
@@ -316,10 +316,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Apply</a>
+    <a  href="/kpt/reference/pkg/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">init</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerapply">
+    <li class="collapse " id="kptreferencepkginit">
       
       
       
@@ -339,568 +339,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Update</a>
+    <a  href="/kpt/reference/pkg/update/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">update</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumerupdate">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Running Functions</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunction">
-      
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/catalog/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions Catalog</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctioncatalog">
-      
-      
-      
-      
-      
-      
-      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexport">
-      
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/github-actions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">GitHub Actions</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportgithub-actions">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/gitlab-ci/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">GitLab CI</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportgitlab-ci">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/jenkins/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Jenkins</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportjenkins">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/cloud-build/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Cloud Build</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportcloud-build">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/circleci/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">CircleCI</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexportcircleci">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/export/tekton/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Tekton</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctionexporttekton">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Publishers</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesproducer">
-      
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Init</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducerinit">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Setters</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducersetters">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Functions</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesproducerfunctions">
-      
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/container/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Container Runtime</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducerfunctionscontainer">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/exec/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Exec Runtime</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducerfunctionsexec">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducerfunctionsstarlark">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/golang/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Go Function Libraries</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducerfunctionsgolang">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/ts/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">TypeScript Function SDK</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionsts">
-      
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/ts/quickstart/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">TypeScript Quickstart</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionstsquickstart">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/ts/develop/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">TypeScript Developer Guide</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionstsdevelop">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/substitutions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Substitutions</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducersubstitutions">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Blueprints</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducerblueprint">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/variant/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Variants</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducervariant">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/bootstrap/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Bootstrapping</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesproducerbootstrap">
+    <li class="collapse " id="kptreferencepkgupdate">
       
       
       
@@ -926,10 +368,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Ecosystem</a>
+    <a  href="/kpt/reference/cfg/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">cfg</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesecosystem">
+    <li class="collapse show" id="kptreferencecfg">
       
       
       
@@ -943,10 +385,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/kustomize/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Kustomize</a>
+    <a  href="/kpt/reference/cfg/annotate/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">annotate</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesecosystemkustomize">
+    <li class="collapse " id="kptreferencecfgannotate">
       
       
       
@@ -966,10 +408,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/helm/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Helm</a>
+    <a  href="/kpt/reference/cfg/cat/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">cat</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesecosystemhelm">
+    <li class="collapse " id="kptreferencecfgcat">
       
       
       
@@ -989,10 +431,493 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/ecosystem/oam/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Open Application Model (OAM)</a>
+    <a  href="/kpt/reference/cfg/count/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">count</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesecosystemoam">
+    <li class="collapse " id="kptreferencecfgcount">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/create-setter/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">create-setter</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgcreate-setter">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/create-subst/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">create-subst</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgcreate-subst">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/delete-setter/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">delete-setter</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgdelete-setter">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/delete-subst/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">delete-subst</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptreferencecfgdelete-subst">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/fmt/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fmt</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgfmt">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/grep/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">grep</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfggrep">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/list-setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">list-setters</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfglist-setters">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/set/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">set</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgset">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/cfg/tree/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">tree</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencecfgtree">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">live</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelive">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/apply/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">apply</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferenceliveapply">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/destroy/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">destroy</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivedestroy">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/diff/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">diff</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivediff">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/fetch-k8s-schema/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fetch-k8s-schema</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivefetch-k8s-schema">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/init/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">init</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferenceliveinit">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/preview/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">preview</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivepreview">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">fn</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefn">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/export/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">export</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnexport">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/run/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">run</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnrun">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/sink/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">sink</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnsink">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/fn/source/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">source</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencefnsource">
       
       
       
@@ -1033,8 +958,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/ts/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=TypeScript%20Function%20SDK" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/reference/cfg/delete-subst/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Delete-subst" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1066,32 +991,22 @@ if (!doNotTrack) {
 
 
 
-
-
-
 <li class="breadcrumb-item" >
-	<a href="https://googlecontainertools.github.io/kpt/guides/">Guides</a>
+	<a href="https://googlecontainertools.github.io/kpt/reference/">Command Reference</a>
 </li>
 
 
 
 
 <li class="breadcrumb-item" >
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/">Package Publishers</a>
-</li>
-
-
-
-
-<li class="breadcrumb-item" >
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/">Functions</a>
+	<a href="https://googlecontainertools.github.io/kpt/reference/cfg/">cfg</a>
 </li>
 
 
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/ts/">TypeScript Function SDK</a>
+	<a href="https://googlecontainertools.github.io/kpt/reference/cfg/delete-subst/">delete-subst</a>
 </li>
 
 	</ol>
@@ -1099,40 +1014,33 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>TypeScript Function SDK</h1>
-	<div class="lead">Writing functions in TypeScript.</div>
-	<h2 id="typescript-function-sdk">TypeScript Function SDK</h2>
-<p>We provide an opinionated Typescript SDK for implementing config functions.
-This provides various advantages:</p>
-<ul>
-<li><strong>General-purpose language:</strong> Domain-Specific Languages begin their life
-with a reasonable feature set, but often grow over time. They bloat in order
-to accommodate the tremendous variety of customer use cases. Rather than
-follow this same course, config functions employ a true, general-purpose
-programming language that provides:
-<ul>
-<li>Proper abstractions and language features</li>
-<li>A extensive ecosystem of tooling (e.g. IDE support)</li>
-<li>A comprehensive catalog of well-supported libraries</li>
-<li>Robust community support and detailed documentation</li>
-</ul>
-</li>
-<li><strong>Type-safety:</strong> Kubernetes configuration is typed, and its schema is
-defined using the OpenAPI spec. Typescript has a sophisticated type system
-that accommodates the complexity of Kubernetes resources. The SDK enables
-generating Typescript classes for core and CRD types, providing safe and
-easy interaction with Kubernetes objects.</li>
-<li><strong>Batteries-included:</strong> The SDK provides a simple, powerful API for querying
-and manipulating configuration files. It provides the scaffolding required
-to develop, build, test, and publish functions, allowing you to focus on
-implementing your business-logic.</li>
-</ul>
-<h2 id="next-steps">Next Steps</h2>
-<ul>
-<li>Try out the <a href="quickstart/">Typescript Quickstart</a>.</li>
-<li>Read the complete <a href="develop/">Typescript Developer Guide</a>.</li>
-<li>Learn how to <a href="../../../consumer/function/">run functions</a>.</li>
-</ul>
+	<h1>Delete-subst</h1>
+	<div class="lead">Delete a substitution</div>
+	<!--mdtogo:Short
+    Delete a substitution
+-->
+<p>Substitutions provide a solution for template-free substitution of field values
+built on top of <a href="../create-setter/">setters</a>. They enable substituting values into part of a
+field, including combining multiple setters into a single value.</p>
+<p>See the <a href="../../../guides/producer/substitutions/">creating substitutions</a> guide for more info on creating
+substitutions.</p>
+<p>The created substitutions can be deleted using <code>delete-subst</code> command.</p>
+<h3 id="examples">Examples</h3>
+<!--mdtogo:Examples-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># delete a substitution image-tag</span>
+kpt cfg delete-subst DIR/ image-tag
+</code></pre></div><!--mdtogo-->
+<h3 id="synopsis">Synopsis</h3>
+<!--mdtogo:Long-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg delete-subst DIR NAME
+
+DIR:
+  Path to a package directory
+
+NAME:
+  The name of the substitution to delete. e.g. image-tag
+
+</code></pre></div><!--mdtogo-->
 
         <div class="section-index">
     
@@ -1198,30 +1106,6 @@ implementing your business-logic.</li>
             
         
             
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/producer/functions/ts/quickstart/">TypeScript Quickstart</a>
-                    </h5>
-                    <p>Quickstart for Developing Config Functions</p>
-                </div>
-            
-        
-            
-        
-            
-        
-            
-        
-            
-        
-            
-                <div class="entry">
-                    <h5>
-                        <a href="/kpt/guides/producer/functions/ts/develop/">TypeScript Developer Guide</a>
-                    </h5>
-                    <p>Developing functions in TypeScript.</p>
-                </div>
-            
         
             
         
@@ -1236,7 +1120,7 @@ implementing your business-logic.</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8a9a358774f25a50bf783caa812d500a1c9cfd24">Deduplicate kpt function docs (#923) (8a9a3587)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/2598790b119c0525f03bfc393113dc2cadae9513">Include delete-subst command (2598790b)</a>
 </div>
 </div>
 
