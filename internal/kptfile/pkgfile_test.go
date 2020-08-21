@@ -51,9 +51,15 @@ upstream:
 	assert.NoError(t, err)
 	assert.Equal(t, KptFile{
 		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{Name: "cockroachdb"},
-			APIVersion: TypeMeta.APIVersion,
-			Kind:       TypeMeta.Kind},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: "cockroachdb",
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: TypeMeta.APIVersion,
+				Kind:       TypeMeta.Kind},
+		},
 		Upstream: Upstream{
 			Type: "git",
 			Git: Git{

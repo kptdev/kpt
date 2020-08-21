@@ -253,9 +253,15 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 		// no KptFile present, create a default
 		kpgfile = kptfile.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind,
-				ObjectMeta: yaml.ObjectMeta{Name: c.Name},
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: kptfile.TypeMeta.APIVersion,
+					Kind:       kptfile.TypeMeta.Kind,
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{
+						Name: c.Name,
+					},
+				},
 			},
 		}
 	}
