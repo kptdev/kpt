@@ -43,6 +43,10 @@ linters:
     - varcheck
 #    - whitespace
 
+issues:
+  exclude:
+     - Using the variable on range scope `tc` in function literal
+
 linters-settings:
   dupl:
     threshold: 400

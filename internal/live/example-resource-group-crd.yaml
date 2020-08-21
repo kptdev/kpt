@@ -1,0 +1,213 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Example ResourceGroup custom resource definition. This CRD is used
+# to keep track of the resources that are applied together by
+# storing references to the applied resources (aka inventory).
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  name: resourcegroups.configmanagement.gke.io
+spec:
+  group: configmanagement.gke.io
+  names:
+    kind: ResourceGroup
+    listKind: ResourceGroupList
+    plural: resourcegroups
+    singular: resourcegroup
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: ResourceGroup is the Schema for the resourcegroups API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ResourceGroupSpec defines the desired state of ResourceGroup
+          properties:
+            descriptor:
+              description: Descriptor regroups the information and metadata about
+                a resource group
+              properties:
+                description:
+                  description: Description is a brief description of a group of resources
+                  type: string
+                links:
+                  description: Links are a list of descriptive URLs intended to be
+                    used to surface additional information
+                  items:
+                    properties:
+                      description:
+                        description: Description explains the purpose of the link
+                        type: string
+                      url:
+                        description: Url is the URL of the link
+                        type: string
+                    required:
+                    - description
+                    - url
+                    type: object
+                  type: array
+                revision:
+                  description: Revision is an optional revision for a group of resources
+                  type: string
+                type:
+                  description: Type can contain prefix, such as Application/WordPress
+                    or Service/Spanner
+                  type: string
+              type: object
+            resources:
+              description: Resources contains a list of resources that form the resource group
+              items:
+                description: ObjMetadata organizes and stores the identifying information
+                  for an object. This struct (as a string) is stored in a grouping
+                  object to keep track of sets of applied objects.
+                properties:
+                  group:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - group
+                - kind
+                - name
+                - namespace
+                type: object
+              type: array
+          type: object
+        status:
+          description: ResourceGroupStatus defines the observed state of ResourceGroup
+          properties:
+            conditions:
+              description: Conditions lists the conditions of the current status for
+                the group
+              items:
+                properties:
+                  lastTransitionTime:
+                    description: last time the condition transit from one status to
+                      another
+                    format: date-time
+                    type: string
+                  message:
+                    description: human-readable message indicating details about last
+                      transition
+                    type: string
+                  reason:
+                    description: one-word CamelCase reason for the condition's last
+                      transition
+                    type: string
+                  status:
+                    description: Status of the condition
+                    type: string
+                  type:
+                    description: Type of the condition
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            observedGeneration:
+              description: ObservedGeneration is the most recent generation observed.
+                It corresponds to the Object's generation, which is updated on mutation
+                by the API Server. Everytime the controller does a successful reconcile,
+                it sets ObservedGeneration to match ResourceGroup.metadata.generation.
+              format: int64
+              type: integer
+            resourceStatuses:
+              description: ResourceStatuses lists the status for each resource in
+                the group
+              items:
+                description: ResourceStatus contains the status of a given resource
+                  uniquely identified by its group, kind, name and namespace.
+                properties:
+                  conditions:
+                    items:
+                      properties:
+                        lastTransitionTime:
+                          description: last time the condition transit from one status
+                            to another
+                          format: date-time
+                          type: string
+                        message:
+                          description: human-readable message indicating details about
+                            last transition
+                          type: string
+                        reason:
+                          description: one-word CamelCase reason for the condition’s
+                            last transition
+                          type: string
+                        status:
+                          description: Status of the condition
+                          type: string
+                        type:
+                          description: Type of the condition
+                          type: string
+                      required:
+                      - status
+                      - type
+                      type: object
+                    type: array
+                  group:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                  status:
+                    description: Status describes the status of a resource
+                    type: string
+                required:
+                - group
+                - kind
+                - name
+                - namespace
+                - status
+                type: object
+              type: array
+          required:
+          - observedGeneration
+          type: object
+      type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
