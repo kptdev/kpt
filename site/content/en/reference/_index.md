@@ -81,9 +81,7 @@ situations it might be beneficial to use a schema that accurately reflects both
 the correct version of Kubernetes and the CRDs used. Kpt provides a few global
 flags to allows users to specify the schema that should be used.
 
-By default, kpt will first try to fetch the OpenAPI schema from the cluster
-given by the current context. If that doesn't work, it will silently fall back
-to using the builtin schema.
+By default, kpt will use the builtin schema.
 
 ```sh
 --k8s-schema-source
