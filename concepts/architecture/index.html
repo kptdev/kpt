@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="google-site-verification" content="-2TBRWogwEMIWbmCsyMqHGwiGaO54EpmmqdpV3jpCjM" />
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-171557011-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-171557011-1');
+</script>
+
+<meta name="generator" content="Hugo 0.74.3" />
+
+<META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/concepts/architecture/index.xml">
+
+
+<link rel="shortcut icon" href="/favicons/favicon.ico" >
+<link rel="apple-touch-icon" href="/kpt/favicons/apple-touch-icon-180x180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-16x16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="/kpt/favicons/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-36x36.png" sizes="36x36">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-48x48.png" sizes="48x48">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-72x72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-96x96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
+<link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
+
+<title>Architecture | Kpt</title><meta property="og:title" content="Architecture" />
+<meta property="og:description" content="Kpt Architecture
+" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/concepts/architecture/" />
+<meta property="og:site_name" content="Kpt" />
+<meta itemprop="name" content="Architecture">
+<meta itemprop="description" content="Kpt Architecture
+">
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Architecture"/>
+<meta name="twitter:description" content="Kpt Architecture
+"/>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-171557011-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+<link rel="preload" href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" as="style">
+<link href="/kpt/scss/main.min.818a933df0186c907f1faea6730835dd5fa01c3b53af36bb68396dc80a2d3c45.css" rel="stylesheet" integrity="">
+
+
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
+
+<link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
+
+    <title>Architecture | Kpt</title>
+  </head>
+  <body class="td-section">
+    <header>
+      
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+        <a class="navbar-brand" href="/kpt/">
+		<span class="navbar-logo"></span><span class="text-uppercase font-weight-bold">Kpt</span>
+	</a>
+	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+		<ul class="navbar-nav mt-2 mt-lg-0">
+			
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/installation/" ><span>Installation</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/guides/" ><span>Guides</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/reference/" ><span>Command Reference</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link active" href="/kpt/concepts/" ><span class="active">Concepts</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/faq/" ><span>FAQ</span></a>
+			</li>
+			
+			<li class="nav-item mr-4 mb-2 mb-lg-0">
+				
+				
+				
+				
+				
+				
+				<a class="nav-link" href="/kpt/contact/" ><span>Contact</span></a>
+			</li>
+			
+			
+			
+		</ul>
+	</div>
+	<div class="navbar-nav d-none d-lg-block">
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
+</div>
+</nav>
+
+    </header>
+    <div class="container-fluid td-outer">
+      <div class="td-main">
+        <div class="row flex-xl-nowrap">
+          <div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+            
+
+
+
+
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  
+  <form class="td-sidebar__search d-flex align-items-center">
+    
+<input type="search" class="form-control td-search-input" placeholder="&#xf002 Search this site…" aria-label="Search this site…" autocomplete="off">
+
+
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-docs-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  
+  <nav class="collapse td-sidebar-nav pt-2 pl-4" id="td-section-nav">
+    
+    
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Concepts</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptconcepts">
+      
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/architecture/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Architecture</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptconceptsarchitecture">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/api-conventions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">API Conventions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptconceptsapi-conventions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/packaging/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Packaging</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptconceptspackaging">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/concepts/functions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptconceptsfunctions">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+    </li>
+  </ul>
+</ul>
+
+  </nav>
+</div>
+
+
+
+
+          </div>
+          <div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+            
+
+
+
+
+
+
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+
+
+
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/concepts/architecture/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Architecture" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+
+
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
+
+</div>
+
+
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#background">Background</a>
+      <ul>
+        <li><a href="#influences">Influences</a></li>
+      </ul>
+    </li>
+    <li><a href="#design-principles">Design Principles</a>
+      <ul>
+        <li><a href="#configuration-as-data-vs-configuration-as-code">Configuration-as-Data vs Configuration-as-Code</a></li>
+        <li><a href="#shift-left--gitops">Shift-Left &amp; GitOps</a></li>
+        <li><a href="#shift-right-vs-shift-left">Shift-Right vs Shift-Left</a></li>
+        <li><a href="#composability">Composability</a></li>
+        <li><a href="#resource-oriented">Resource oriented</a></li>
+        <li><a href="#schema-driven">Schema driven</a></li>
+        <li><a href="#layering">Layering</a></li>
+      </ul>
+    </li>
+    <li><a href="#io">IO</a>
+      <ul>
+        <li><a href="#targets">Targets</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+          </div>
+          <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+            
+  
+
+            <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+	<ol class="breadcrumb spb-1">
+		
+
+
+
+
+
+
+
+<li class="breadcrumb-item" >
+	<a href="https://googlecontainertools.github.io/kpt/concepts/">Concepts</a>
+</li>
+
+
+
+
+<li class="breadcrumb-item active" aria-current="page">
+	<a href="https://googlecontainertools.github.io/kpt/concepts/architecture/">Architecture</a>
+</li>
+
+	</ol>
+</nav	>
+
+            
+<div class="td-content">
+	<h1>Architecture</h1>
+	<div class="lead">Kpt Architecture</div>
+	<h2 id="background">Background</h2>
+<p>The kpt&rsquo;s design mirrors the Kubernetes control-plane architecture &ndash; with multiple programs
+(e.g. controllers) reading and writing shared configuration data (i.e. resources).</p>
+<h3 id="influences">Influences</h3>
+<h4 id="unix-philosophy">Unix philosophy</h4>
+<p>Packages of configuration should be small, modular, and reusable.</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Unix_philosophy">link</a></li>
+</ul>
+<h4 id="resource--controller-model">Resource / controller model</h4>
+<p>Kpt provides commands to fetch, update, modify, and apply configuration. This allows users to reuse and compose various packages of Kubernetes resources.</p>
+<ul>
+<li><a href="https://kubernetes.io/docs/concepts/architecture/controller/">link</a></li>
+</ul>
+<h4 id="gitops">GitOps</h4>
+<p>GitOps refers to using a version control system as the source of truth for configuration.</p>
+<ul>
+<li><a href="https://www.weave.works/technologies/gitops/">link</a></li>
+</ul>
+<h4 id="configuration-as-data">Configuration as data</h4>
+<p>Many configuration tools conflate data with the operations on that
+data (e.g. YAML files embedding a templating language).
+As configuration becomes complex, it becomes hard to read and understand.
+Our design philosophy is to keep configuration as data in order to manage this complexity.
+We do this by keeping resources serialized as either JSON or YAML configuration.</p>
+<ul>
+<li><a href="https://changelog.com/gotime/114#t=00:12:09.18">link</a></li>
+</ul>
+<h4 id="kpt-vs-kubernetes">kpt vs kubernetes</h4>
+<ul>
+<li>While the Kubernetes control-plane reads / writes configuration data stored by the apiserver
+(e.g. in etcd or some other database), kpt reads / writes configuration data stored as local
+files (as well as supporting other sources / destinations &ndash; http, git, etc).</li>
+<li>While in the Kubernetes control-plane controllers are implicitly triggered through watches,
+in kpt programs are explicitly triggered through invoking kpt (although this can be done by
+automation).</li>
+</ul>
+<p>Kpt provides a hybrid GitOps + resource-controller model.  It&rsquo;s architecture is designed to
+enable <strong>composing loosely coupled solutions</strong> through reading and writing to a shared data model
+(e.g. resources, controllers, OpenAPI).</p>
+<h2 id="design-principles">Design Principles</h2>
+<h3 id="configuration-as-data-vs-configuration-as-code">Configuration-as-Data vs Configuration-as-Code</h3>
+<p>kpt packages configuration as data (APIs) rather than as code (templates /  DSLs). In this model,
+the configuration is static data, which many tools may read &amp; write.</p>
+<p>This model has its roots in the Unix Philosophy:</p>
+<blockquote>
+<p>Expect the output of every program to become the input to another, as yet unknown, program</p>
+</blockquote>
+<p>As well as in the Kubernetes control-plane where resources are read and written by loosely coupled
+controllers.</p>
+<h3 id="shift-left--gitops">Shift-Left &amp; GitOps</h3>
+<p>By enabling resource-controller style systems to be built on configuration files before
+applying them to the cluster, kpt shifts the control-plane left &ndash; enabling more issues to be
+caught before they are pushed into a cluster.</p>
+<ul>
+<li>Cluster changes may be reviewed, approved, validated, audited and rolled back using git</li>
+<li>Git automation may be applied to changes to cluster state</li>
+</ul>
+<h3 id="shift-right-vs-shift-left">Shift-Right vs Shift-Left</h3>
+<ul>
+<li>Read resources from apiserver =&gt; Read resources from files</li>
+<li>Write resources to apiserver =&gt; Write resources to files</li>
+<li>Triggered by <em>watch</em> =&gt; triggered by <code>sh</code></li>
+</ul>
+<h3 id="composability">Composability</h3>
+<p>Design solutions to work together, expecting the output of each command to be read as input
+by another.</p>
+<ul>
+<li>Commands read configuration and write configuration.</li>
+<li>The inputs and outputs should be symmetric.</li>
+<li>It should be possible to pipe kpt commands together, and it should be possible to write
+the output of a kpt command back to its source (updating it in-place).</li>
+</ul>
+<p>Tools which read / write data may be developed in different languages and composed together.
+Tools which write configuration back to the same source it was read from should retain comments
+set on the input, as the comments may be used by kpt and other tools as metadata.</p>
+<p>Programs may be developed independently of one another, with commands built directly into
+the CLI &ndash; e.g. <code>kpt cfg set</code>.</p>
+<p>Additionally, kpt offers <em>functions</em> as an extension mechanism to simplify publishing logic,
+and to provide deeper integration with kpt &ndash; e.g. invoking functions automatically
+after kpt commands.</p>
+<h4 id="kpt-vs-kubernetes-1">kpt vs kubernetes</h4>
+<ul>
+<li>kpt: resource configuration is read, modified and written back to its source (or another destination)
+<ul>
+<li>resources may be updated using 3-way merge (kpt pkg update)</li>
+</ul>
+</li>
+<li>kubernetes: resources are read, modified, and written back to the apiserver
+<ul>
+<li>resources may be updated using 3-way merge (kubectl apply)</li>
+</ul>
+</li>
+</ul>
+<h3 id="resource-oriented">Resource oriented</h3>
+<p>Desired system state is expressed using Kubernetes resources &ndash; declarative, static data structures.
+The desired state is changed through modification of resources &ndash; these may be done:</p>
+<ul>
+<li>programmatically by manually invoked tools &ndash; e.g. <code>kpt cfg set</code></li>
+<li>through direct text edits &ndash; e.g. <code>vi</code></li>
+<li>through forms of automation &ndash; e.g. GitHub actions</li>
+</ul>
+<p>High-level logic should be built into programs which understand configuration and are capable of
+generating and transforming it given some context.</p>
+<p>Since all tools read and write configuration data, multiple tools may be composed by
+invoking them against the same configuration data and pipelining their commands.</p>
+<h4 id="kpt-vs-kubernetes-2">kpt vs kubernetes</h4>
+<ul>
+<li>kpt:
+<ul>
+<li>read / write files, http, &hellip;</li>
+<li>triggered explicitly (kpt invocations)</li>
+</ul>
+</li>
+<li>kubernetes:
+<ul>
+<li>read / write http</li>
+<li>triggered implicitly (watches)</li>
+</ul>
+</li>
+</ul>
+<h3 id="schema-driven">Schema driven</h3>
+<p>Type or object specific logic should NOT be built into the tool.
+Static resource modifications (e.g. <em>set</em>) should be configured using type or object
+metadata (e.g. schema).</p>
+<p>OpenAPI is used for resource schema.  Tools may support their own OpenAPI
+extensions which should co-exist with extensions owned by other tools.</p>
+<p>Support for new types should be introduced through new OpenAPI definitions rather than
+changes to the tool itself.</p>
+<ul>
+<li>
+<p>Static per-type and per-object resource transformations should use OpenAPI to tell the
+tool how to modify a given object</p>
+<ul>
+<li>e.g. where to set <code>image</code> for <code>set image</code> is defined in OpenAPI rather than hard-coded</li>
+</ul>
+</li>
+<li>
+<p>Configuration for individual objects / resources may define custom OpenAPI definitions for
+that specific instance</p>
+<ul>
+<li>e.g. an nginx Deployment&rsquo;s <code>image</code> may be restricted to the regular expression <code>^nginx:.*$</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="kpt-vs-kubernetes-3">kpt vs kubernetes</h4>
+<ul>
+<li>kpt: OpenAPI read from multiple sources &ndash; can also be inlined into individual
+configuration objects as comments</li>
+<li>kubernetes: OpenAPI read from apiserver</li>
+</ul>
+<h3 id="layering">Layering</h3>
+<p>High-level layers should exist to reduce inherent complexity and simplify simple cases.
+Lower-level layers should remain accessible, but in the background.</p>
+<p>Example:  When high-level solutions generate lower-level resources, those resources
+should be accessible to other tools to read and modify them.  If an
+nginx abstraction generates a Deployment and Service, it should be possible
+for other tools to observe and modify both.</p>
+<h2 id="io">IO</h2>
+<p>Both kpt inputs and outputs should be recognized by Kubernetes project tools, published as
+Kubernetes examples or published by the Kubernetes apiserver.</p>
+<p>Examples:</p>
+<ul>
+<li><code>kubectl get -o yaml</code></li>
+<li><code>kubectl apply -f -</code></li>
+<li><code>github.com/kubernetes/examples</code></li>
+</ul>
+<p>Much like Kubernetes controllers, kpt should be able to read its previous outputs and modify
+them, rather than generating them from scratch &ndash; e.g. read a directory of
+configuration and write it back to the same directory.</p>
+<p><strong>Note:</strong> This principle requires symmetric inputs and outputs.</p>
+<p>Dynamic logic may be written using templates or DSLs &ndash; which would not support the read-write
+workflow &ndash; by merging the newly generated template / DSL output resources with the input
+resources.</p>
+<h3 id="targets">Targets</h3>
+<p>Unlike the Kubernetes control-plane, which reads and writes from the apiserver, kpt
+reads and writes from arbitrary sources, so long as they provide resource configuration.</p>
+<ul>
+<li>Local files</li>
+<li>Files stored in git</li>
+<li>Command stdin &amp; stdout</li>
+<li>Apiserver endpoints</li>
+</ul>
+
+        <div class="section-index">
+    
+    
+    
+    
+    <hr class="panel-line">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    
+</div>
+
+	
+	
+	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
+</div>
+</div>
+
+          </main>
+        </div>
+      </div>
+      
+<footer class="bg-dark py-5 row d-print-none">
+  <div class="container-fluid mx-sm-5">
+    <div class="row">
+      <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User mailing list" aria-label="User mailing list">
+    <a class="text-white" target="_blank" href="https://groups.google.com/forum/?oldui=1#!forum/kpt-users">
+      <i class="fa fa-envelope"></i>
+    </a>
+  </li>
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="User slack channel" aria-label="User slack channel">
+    <a class="text-white" target="_blank" href="https://kubernetes.slack.com/channels/kpt">
+      <i class="fab fa-slack"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+        
+        
+        
+<ul class="list-inline mb-0">
+  
+  <li class="list-inline-item mx-2 h3" data-toggle="tooltip" data-placement="top" title="GitHub" aria-label="GitHub">
+    <a class="text-white" target="_blank" href="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md">
+      <i class="fab fa-github"></i>
+    </a>
+  </li>
+  
+</ul>
+
+        
+        
+      </div>
+      <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+        <small class="text-white">&copy; 2020 Google LLC All Rights Reserved</small>
+        <small class="ml-1"><a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></small>
+	
+		
+	
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+    </div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+
+
+
+
+
+
+<script src="/kpt/js/main.min.1b3d8778561d0b887ffb4d8c0a8daeef6dd10d0e685a6169cf95b28a3da7dd70.js" integrity="sha256-Gz2HeFYdC4h/&#43;02MCo2u723RDQ5oWmFpz5Wyij2n3XA=" crossorigin="anonymous"></script>
+
+
+
+<script src="https://googlecontainertools.github.io/kpt//js/asciinema-player.js"></script>
+
+
+  </body>
+</html>

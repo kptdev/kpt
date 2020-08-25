@@ -1,0 +1,530 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kpt – Live</title>
+    <link>https://googlecontainertools.github.io/kpt/reference/live/</link>
+    <description>Recent content in Live on Kpt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://googlecontainertools.github.io/kpt/reference/live/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Reference: Apply</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/apply/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/apply/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Apply a package to the cluster (create, update, delete)
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-apply.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Apply creates, updates and deletes resources in the cluster to make the remote
+cluster resources match the local package configuration.&lt;/p&gt;
+&lt;p&gt;Kpt apply is and extended version of kubectl apply, with added support
+for pruning and blocking on resource status.&lt;/p&gt;
+&lt;p&gt;Kpt apply has a different usage pattern (args + flags) from kubectl to make
+it consistent with other kpt commands.&lt;/p&gt;
+&lt;h4 id=&#34;kubectl-apply-vs-kpt-live-apply&#34;&gt;&lt;code&gt;kubectl apply&lt;/code&gt; vs &lt;code&gt;kpt live apply&lt;/code&gt;&lt;/h4&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;kubectl apply&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;kpt live apply&lt;/code&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Usage&lt;/td&gt;
+&lt;td&gt;kubectl apply -f /dir&lt;/td&gt;
+&lt;td&gt;kpt live apply /dir&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Applied resource set&lt;/td&gt;
+&lt;td&gt;Not tracked&lt;/td&gt;
+&lt;td&gt;Tracked&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Prune&lt;/td&gt;
+&lt;td&gt;Imperative and error prone&lt;/td&gt;
+&lt;td&gt;Declarative and reliable&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Status&lt;/td&gt;
+&lt;td&gt;Not supported&lt;/td&gt;
+&lt;td&gt;Supported&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h5 id=&#34;applied-resource-set&#34;&gt;Applied resource set&lt;/h5&gt;
+&lt;p&gt;This refers to the set of resources in the directory applied to cluster as a
+group.  &lt;code&gt;kpt live apply&lt;/code&gt; tracks the state of your applied resource set and
+related configuration. This helps &lt;code&gt;kpt&lt;/code&gt; to reliably reconcile the real world
+resources with your configuration changes.&lt;/p&gt;
+&lt;h3 id=&#34;prune&#34;&gt;Prune&lt;/h3&gt;
+&lt;p&gt;kpt live apply will automatically delete resources which have been
+previously applied, but which are no longer included. This clean-up
+functionality is called pruning. For example, consider a package
+which has been applied with the following three resources:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;service-1 (Service)
+deployment-1 (Deployment)
+config-map-1 (ConfigMap)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Then imagine the package is updated to contain the following resources,
+including a new ConfigMap named &lt;code&gt;config-map-2&lt;/code&gt; (Notice that &lt;code&gt;config-map-1&lt;/code&gt;
+is not part of the updated package):&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;service-1 (Service)
+deployment-1 (Deployment)
+config-map-2 (ConfigMap)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;When the updated package is applied, &lt;code&gt;config-map-1&lt;/code&gt; is automatically
+deleted (pruned) since it is omitted.&lt;/p&gt;
+&lt;p&gt;In order to take advantage of this automatic clean-up, a package must contain
+a &lt;strong&gt;grouping object template&lt;/strong&gt;, which is a ConfigMap with a special label. An example is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ConfigMap&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;test-grouping-object&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;labels&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;cli-utils.sigs.k8s.io/inventory-id&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;test-group&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And the special label is:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;cli-utils.sigs.k8s.io/inventory-id: *group-name*
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;kpt live apply&lt;/code&gt; recognizes this template from the special label, and based
+on this kpt will create new grouping object with the metadata of all applied
+objects in the ConfigMap&amp;rsquo;s data field. Subsequent &lt;code&gt;kpt live apply&lt;/code&gt; commands can
+then query the grouping object, and calculate the omitted objects, cleaning up
+accordingly. When a grouping object is created in the cluster, a hash suffix
+is added to the name. Example:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;test-grouping-object-17b4dba8
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;status-reconcile-timeoutduration&#34;&gt;Status (reconcile-timeout=&amp;lt;DURATION&amp;gt;)&lt;/h3&gt;
+&lt;p&gt;kpt live apply also has support for computing status for resources. This is
+useful during apply for making sure that not only are the set of resources applied
+into the cluster, but also that the desired state expressed in the resource are
+fully reconciled in the cluster. An example of this could be applying a deployment. Without
+looking at the status, the operation would be reported as successful as soon as the
+deployment resource has been created in the apiserver. With status, kpt live apply will
+wait until the desired number of pods have been created and become available.&lt;/p&gt;
+&lt;p&gt;Status is computed through a set of rules for the built-in types, and
+functionality for polling a set of resources and computing the aggregate status
+for the set. For CRDs, the status computation make a set of assumptions about
+the fields in the status object of the resource and the conditions that
+are set by the custom controller. If CRDs follow the recommendations below,
+kpt live apply will be able to correctly compute status&lt;/p&gt;
+&lt;h4 id=&#34;recommendations-for-crds&#34;&gt;Recommendations for CRDs&lt;/h4&gt;
+&lt;p&gt;The custom controller should use the following conditions to signal whether
+a resource has been fully reconciled, and whether it has encountered any
+problems:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Reconciling&lt;/strong&gt;: Indicates that the resource does not yet match its spec. i.e.
+the desired state as expressed in the resource spec object has not been
+fully realized in the cluster. A value of True means the controller
+is in the process of reconciling the resource while a value of False means
+there are no work left for the controller.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Stalled&lt;/strong&gt;: Indicates that the controller is not able to make the expected
+progress towards reconciling the resource. The cause of this status can be
+either that the controller observes an actual problem (like a pod not being
+able to start), or that something is taking longer than expected (similar
+to the &lt;code&gt;progressDeadlineSeconds&lt;/code&gt; timeout on Deployments). If this condition
+is True, it should be interpreted that something might be wrong. It does not
+mean that the resource will never be reconciled. Most process in Kubernetes
+retry forever, so this should not be considered a terminal state.&lt;/p&gt;
+&lt;p&gt;These conditions adhere to the &lt;a href=&#34;https://www.google.com/url?q=https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md%23typical-status-properties&amp;amp;sa=D&amp;amp;ust=1585160635349000&amp;amp;usg=AFQjCNE3ncANdus3xckLj3fkeupwFUoABw&#34;&gt;Kubernetes design principles&lt;/a&gt;
+which include expressing conditions using abnormal-true polarity. There is
+currently a &lt;a href=&#34;https://github.com/kubernetes/community/pull/4521&#34;&gt;proposal&lt;/a&gt; to change to guidance for conditions. If this is
+accepted, the recommended conditions for kpt might also change, but we will
+continue to support the current set of conditions.&lt;/p&gt;
+&lt;p&gt;CRDs should also set the &lt;code&gt;observedGeneration&lt;/code&gt; field in the status object, a
+pattern already common in the built-in types. The controller should update
+this field every time it sees a new generation of the resource. This allows
+the kpt library to distinguish between resources that do not have any
+conditions set because they are fully reconciled, from resources that have no
+conditions set because they have just been created.&lt;/p&gt;
+&lt;p&gt;An example of a resource where the latest change has been observed by
+the controller which is currently in the process of reconciling would be:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;example.com&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Foo&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;generation&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;12&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;bar&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;spec&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;replicas&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;status&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;observedGeneration&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;12&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;conditions&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;lastTransitionTime&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;2020-03-25T21:20:38Z&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;lastUpdateTime&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;2020-03-25T21:20:38Z&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;message&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Resource&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;is&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;reconciling&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;reason&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Reconciling&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;status&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;True&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Reconciling&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;lastTransitionTime&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;2020-03-25T21:20:27Z&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;lastUpdateTime&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;2020-03-25T21:20:39Z&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;status&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;False&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;Stalled&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The status for this resource state will be InProgress. So if the
+&lt;code&gt;--reconcile-timeout&lt;/code&gt; flag is set, kpt live apply will wait until
+the &lt;code&gt;Reconciling&lt;/code&gt; condition is &lt;code&gt;False&lt;/code&gt; before pruning and exiting.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# apply resources and prune&lt;/span&gt;
+kpt live apply my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# apply resources and wait for all the resources to be reconciled before pruning&lt;/span&gt;
+kpt live apply --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;15m my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# apply resources and specify how often to poll the cluster for resource status&lt;/span&gt;
+kpt live apply --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;15m --poll-period&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;5s my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live apply DIR [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Path to a package directory.  The directory must contain exactly
+  one ConfigMap with the grouping object annotation.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--poll-period:
+  The frequency with which the cluster will be polled to determine
+  the status of the applied resources. The default value is every 2 seconds.
+
+--reconcile-timeout:
+  The threshold for how long to wait for all resources to reconcile before
+  giving up. If this flag is not set, kpt live apply will not wait for
+  resources to reconcile.
+
+--prune-timeout:
+  The threshold for how long to wait for all pruned resources to be
+  deleted before giving up. If this flag is not set, kpt live apply will not
+  wait. In most cases, it would also make sense to set the
+  --prune-propagation-policy to Foreground when this flag is set.
+
+--prune-propagation-policy:
+  The propagation policy kpt live apply should use when pruning resources. The
+  default value here is Background. The other options are Foreground and Orphan.
+
+--output:
+  This determines the output format of the command. The default value is
+  events, which will print the events as they happen. The other option is
+  table, which will show the output in a table format.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Destroy</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/destroy/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/destroy/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Remove all previously applied resources in a package from the cluster
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-destroy.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The destroy command removes all files belonging to a package from the cluster.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# remove all resources in a package from the cluster&lt;/span&gt;
+kpt live destroy my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live destroy DIR
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Path to a package directory.  The directory must contain exactly
+  one ConfigMap with the grouping object annotation.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Diff</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/diff/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/diff/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Diff the local package config against the live cluster resources
+--&gt;
+&lt;p&gt;The diff command compares the live cluster state of each pacakge
+resource against the local package config.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# diff the config in &amp;#34;my-dir&amp;#34; against the live cluster resources&lt;/span&gt;
+kpt live diff my-dir/
+
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# specify the local diff program to use&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;KUBECTL_EXTERNAL_DIFF&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;meld&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt; kpt live diff my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live diff DIR
+
+Output is always YAML.
+
+KUBECTL_EXTERNAL_DIFF environment variable can be used to select your own diff command. By default, the &amp;quot;diff&amp;quot; command
+available in your path will be run with &amp;quot;-u&amp;quot; (unicode) and &amp;quot;-N&amp;quot; (treat new files as empty) options.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Path to a package directory.  The directory must contain exactly one ConfigMap with the inventory annotation.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;exit-status&#34;&gt;Exit Status&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;The following exit values shall be returned:
+
+0 No differences were found. 1 Differences were found. &amp;gt;1 kpt live or diff failed with an error.
+
+Note: KUBECTL_EXTERNAL_DIFF, if used, is expected to follow that convention.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Fetch-k8s-schema</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/fetch-k8s-schema/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/fetch-k8s-schema/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Fetch the OpenAPI schema from the cluster
+--&gt;
+&lt;p&gt;The fetch-k8s-schema command downloads the OpenAPI schema from the cluster
+given by the context. It prints the result to stdout.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print the schema for the cluster given by the current context&lt;/span&gt;
+kpt live fetch-k8s-schema
+
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# print the schema after formatting using a named context&lt;/span&gt;
+kpt live fetch-k8s-schema --context&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;myContext --pretty-print
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live fetch-k8s-schema [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--pretty-print
+  Format the output before printing
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Init</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/init/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/init/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Initialize a package with a object to track previously applied resources
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-init.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The init command initializes a package with a template resource which will
+be used to track previously applied resources so that they can be pruned
+when they are deleted.&lt;/p&gt;
+&lt;p&gt;The template resource is required by other live commands
+such as apply, preview and destroy.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package&lt;/span&gt;
+kpt live init my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package with a specific name for the group of resources&lt;/span&gt;
+kpt live init --inventory-namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;test&lt;/span&gt; my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live init DIRECTORY [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Path to a package directory.  The directory must contain exactly
+  one ConfigMap with the grouping object annotation.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--inventory-id:
+  Identifier for group of applied resources. Must be composed of valid label characters.
+--inventory-namespace:
+  namespace for the inventory object. If no namespace is provided, namespace &amp;quot;default&amp;quot; will be used.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Preview</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/preview/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/preview/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Preview prints the changes apply would make to the cluster
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-preview.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The preview command will run through the same steps as apply, but
+it will only print what would happen when running apply against the current
+live cluster state.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# preview apply for a package&lt;/span&gt;
+kpt live preview my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# preview destroy for a package&lt;/span&gt;
+kpt live preview --destroy my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live preview DIRECTORY [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIRECTORY:
+  One directory that contain k8s manifests. The directory
+  must contain exactly one ConfigMap with the grouping object annotation.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--destroy:
+  If true, dry-run deletion of all resources.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>

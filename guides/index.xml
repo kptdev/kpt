@@ -1,0 +1,125 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kpt – Guides</title>
+    <link>https://googlecontainertools.github.io/kpt/guides/</link>
+    <description>Recent content in Guides on Kpt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    
+	  <atom:link href="https://googlecontainertools.github.io/kpt/guides/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+      
+        
+      
+    
+    
+    <item>
+      <title>Guides: </title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/</guid>
+      <description>
+        
+        
+        &lt;h1 id=&#34;markdown-table&#34;&gt;markdown-table&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&#34;https://travis-ci.org/wooorm/markdown-table&#34;&gt;&lt;img src=&#34;https://img.shields.io/travis/wooorm/markdown-table.svg&#34; alt=&#34;Build&#34;&gt;&lt;/a&gt;
+&lt;a href=&#34;https://codecov.io/github/wooorm/markdown-table&#34;&gt;&lt;img src=&#34;https://img.shields.io/codecov/c/github/wooorm/markdown-table.svg&#34; alt=&#34;Coverage&#34;&gt;&lt;/a&gt;
+&lt;a href=&#34;https://www.npmjs.com/package/markdown-table&#34;&gt;&lt;img src=&#34;https://img.shields.io/npm/dm/markdown-table.svg&#34; alt=&#34;Downloads&#34;&gt;&lt;/a&gt;
+&lt;a href=&#34;https://bundlephobia.com/result?p=markdown-table&#34;&gt;&lt;img src=&#34;https://img.shields.io/bundlephobia/minzip/markdown-table.svg&#34; alt=&#34;Size&#34;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Generate fancy &lt;a href=&#34;https://help.github.com/articles/github-flavored-markdown/#tables&#34;&gt;Markdown&lt;/a&gt;/ASCII tables.&lt;/p&gt;
+&lt;h2 id=&#34;installation&#34;&gt;Installation&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://docs.npmjs.com/cli/install&#34;&gt;npm&lt;/a&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;npm install markdown-table
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;usage&#34;&gt;Usage&lt;/h2&gt;
+&lt;p&gt;Normal usage (defaults to left-alignment):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;require&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;markdown-table&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color:#000&#34;&gt;table&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;([&lt;/span&gt;
+  &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;Branch&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;Commit&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt;
+  &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;master&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;0123456789abcdef&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt;
+  &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;staging&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;fedcba9876543210&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;]&lt;/span&gt;
+&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Yields:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-markdown&#34; data-lang=&#34;markdown&#34;&gt;| Branch  | Commit           |
+| ------- | ---------------- |
+| master  | 0123456789abcdef |
+| staging | fedcba9876543210 |
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;With alignment:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;color:#000&#34;&gt;table&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;
+  &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;Beep&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;No.&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;Boop&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;beep&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;1024&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;xyz&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;boop&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;3388450&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;tuv&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;10106&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;qrstuv&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt;
+    &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;bar&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;45&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;lmno&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;]&lt;/span&gt;
+  &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt;
+  &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;{&lt;/span&gt;
+    &lt;span style=&#34;color:#000&#34;&gt;align&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;l&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;c&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;,&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;r&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;]&lt;/span&gt;
+  &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;}&lt;/span&gt;
+&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Yields:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-markdown&#34; data-lang=&#34;markdown&#34;&gt;| Beep |   No.   |   Boop |
+| :--- | :-----: | -----: |
+| beep |   1024  |    xyz |
+| boop | 3388450 |    tuv |
+| foo  |  10106  | qrstuv |
+| bar  |    45   |   lmno |
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alignment on dots:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;color:#000&#34;&gt;table&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;([[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;No.&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;0.1.2&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;11.22.33&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;5.6.&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;],&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;1.22222&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;]],&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;{&lt;/span&gt;
+  &lt;span style=&#34;color:#000&#34;&gt;align&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;.&amp;#39;&lt;/span&gt;
+&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Yields:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-markdown&#34; data-lang=&#34;markdown&#34;&gt;|    No.      |
+| :---------: |
+|   0.1.2     |
+| 11.22.33    |
+|   5.6.      |
+|     1.22222 |
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;api&#34;&gt;API&lt;/h2&gt;
+&lt;h3 id=&#34;markdowntabletable-options&#34;&gt;&lt;code&gt;markdownTable(table[, options])&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;Turns a given matrix of strings (an array of arrays of strings) into a table.&lt;/p&gt;
+&lt;h5 id=&#34;options&#34;&gt;&lt;code&gt;options&lt;/code&gt;&lt;/h5&gt;
+&lt;h6 id=&#34;optionsalign&#34;&gt;&lt;code&gt;options.align&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;One style for all columns, or styles for their respective columns (&lt;code&gt;string&lt;/code&gt; or
+&lt;code&gt;Array.&amp;lt;string&amp;gt;&lt;/code&gt;).  Each style is either &lt;code&gt;&#39;l&#39;&lt;/code&gt; (left), &lt;code&gt;&#39;r&#39;&lt;/code&gt; (right), &lt;code&gt;&#39;c&#39;&lt;/code&gt;
+(centre), or &lt;code&gt;&#39;.&#39;&lt;/code&gt; (dot).  Other values are treated as &lt;code&gt;&#39;&#39;&lt;/code&gt;, which doesn’t place
+the colon but does left align.  &lt;em&gt;Only the lowercased first character is used,
+so &lt;code&gt;Right&lt;/code&gt; is fine.&lt;/em&gt;&lt;/p&gt;
+&lt;h6 id=&#34;optionsdelimiter&#34;&gt;&lt;code&gt;options.delimiter&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;Value to insert between cells (&lt;code&gt;string&lt;/code&gt;, default: &lt;code&gt;&#39; | &#39;&lt;/code&gt;).  Careful, setting
+this to a non-pipe breaks GitHub Flavoured Markdown.&lt;/p&gt;
+&lt;h6 id=&#34;optionsstart&#34;&gt;&lt;code&gt;options.start&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;Value to insert at the beginning of every row (&lt;code&gt;string&lt;/code&gt;, default: &lt;code&gt;&#39;| &#39;&lt;/code&gt;).&lt;/p&gt;
+&lt;h6 id=&#34;optionsend&#34;&gt;&lt;code&gt;options.end&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;Value to insert at the end of every row (&lt;code&gt;string&lt;/code&gt;, default: &lt;code&gt;&#39; |&#39;&lt;/code&gt;).&lt;/p&gt;
+&lt;h6 id=&#34;optionsrule&#34;&gt;&lt;code&gt;options.rule&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;Whether to display a rule between the header and the body of the table
+(&lt;code&gt;boolean&lt;/code&gt;, default: &lt;code&gt;true&lt;/code&gt;).  Careful, will break GitHub Flavoured Markdown
+when &lt;code&gt;false&lt;/code&gt;.&lt;/p&gt;
+&lt;h6 id=&#34;optionsstringlength&#34;&gt;&lt;code&gt;options.stringLength&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;Method to detect the length of a cell (&lt;code&gt;Function&lt;/code&gt;, default: &lt;code&gt;s =&amp;gt; s.length&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;ANSI-sequences mess up tables on terminals.  To fix this, you have to
+pass in a &lt;code&gt;stringLength&lt;/code&gt; option to detect the “visible” length of a
+cell.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;strip&lt;/span&gt; &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;require&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;strip-ansi&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;)&lt;/span&gt;
+
+&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;stringLength&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;cell&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;{&lt;/span&gt;
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;strip&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;cell&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;).&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;length&lt;/span&gt;
+&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h6 id=&#34;optionspad&#34;&gt;&lt;code&gt;options.pad&lt;/code&gt;&lt;/h6&gt;
+&lt;p&gt;Whether to pad the markdown for table cells to make them the same width
+(&lt;code&gt;boolean&lt;/code&gt;, default: &lt;code&gt;true&lt;/code&gt;).  Setting this to false will cause the table
+rows to remain staggered.&lt;/p&gt;
+&lt;h2 id=&#34;inspiration&#34;&gt;Inspiration&lt;/h2&gt;
+&lt;p&gt;The original idea and basic implementation was inspired by James
+Halliday’s &lt;a href=&#34;https://github.com/substack/text-table&#34;&gt;text-table&lt;/a&gt; library.&lt;/p&gt;
+&lt;h2 id=&#34;license&#34;&gt;License&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;license&#34;&gt;MIT&lt;/a&gt; © &lt;a href=&#34;https://wooorm.com&#34;&gt;Titus Wormer&lt;/a&gt;&lt;/p&gt;
+&lt;!-- Definitions --&gt;
+
+      </description>
+    </item>
+    
+  </channel>
+</rss>
