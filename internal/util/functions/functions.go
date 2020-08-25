@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
@@ -38,7 +39,12 @@ func RunFunctions(path string, functions []kptfile.Function) error {
 		f := functions[i]
 		var e exec.Filter
 		e.FunctionConfig = yaml.NewRNode(&f.Config)
-		fltrs = append(fltrs, &container.Filter{Image: f.Image, Exec: e})
+		fltrs = append(fltrs, &container.Filter{
+			ContainerSpec: runtimeutil.ContainerSpec{
+				Image: f.Image,
+			},
+			Exec: e,
+		})
 	}
 	if len(fltrs) == 0 {
 		return nil

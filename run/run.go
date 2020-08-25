@@ -46,10 +46,14 @@ func GetMain() *cobra.Command {
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
 	installComp := false
 	cmd := &cobra.Command{
-		Use:     "kpt",
-		Short:   overview.ReferenceShort,
-		Long:    overview.ReferenceLong,
-		Example: overview.ReferenceExamples,
+		Use:          "kpt",
+		Short:        overview.ReferenceShort,
+		Long:         overview.ReferenceLong,
+		Example:      overview.ReferenceExamples,
+		SilenceUsage: true,
+		// We handle all errors in main after return from cobra so we can
+		// adjust the error message coming from libraries
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if installComp {
 				os.Setenv("COMP_INSTALL", "1")
@@ -151,14 +155,10 @@ func GetMain() *cobra.Command {
 		os.Exit(1)
 	}
 
-	// exit on an error
-	cmdutil.ExitOnError = true
-
 	replace(cmd)
 
 	cmd.AddCommand(versionCmd)
 	hideFlags(cmd)
-	silenceUsage(cmd)
 	return cmd
 }
 
@@ -232,15 +232,6 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("%s\n", version)
 	},
-}
-
-// silenceUsage silences the usage for all the sub commands recursively
-// so that we don't display long usage messages for all errors
-func silenceUsage(cmd *cobra.Command) {
-	for _, subCmd := range cmd.Commands() {
-		subCmd.SilenceUsage = true
-		silenceUsage(subCmd)
-	}
 }
 
 // hideFlags hides any cobra flags that are unlikely to be used by

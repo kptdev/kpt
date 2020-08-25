@@ -24,7 +24,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 	"k8s.io/kubectl/pkg/cmd/util"
 )
@@ -46,25 +45,7 @@ func GetAnthosCommands(name string) []*cobra.Command {
 func NormalizeCommand(c ...*cobra.Command) {
 	for i := range c {
 		cmd := c[i]
-		// check if silencing errors is off
-		cmdutil.SetSilenceErrors(cmd)
 		cmd.Short = strings.TrimPrefix(cmd.Short, "[Alpha] ")
-
-		// check if stack printing is on
-		if cmd.PreRunE != nil {
-			fn := cmd.PreRunE
-			cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-				err := fn(cmd, args)
-				return cmdutil.HandlePreRunError(cmd, err)
-			}
-		}
-		if cmd.RunE != nil {
-			fn := cmd.RunE
-			cmd.RunE = func(cmd *cobra.Command, args []string) error {
-				err := fn(cmd, args)
-				return cmdutil.HandleError(cmd, err)
-			}
-		}
 		NormalizeCommand(cmd.Commands()...)
 	}
 }

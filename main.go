@@ -23,11 +23,11 @@
 package main
 
 import (
-	"os"
-
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/kubectl/pkg/util/logs"
+	"sigs.k8s.io/cli-utils/pkg/errors"
 )
 
 func main() {
@@ -35,6 +35,9 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+		cmdutil.PrintErrorStacktrace(err)
+		// TODO: find a way to avoid having to provide `kpt live` as a
+		// parameter here.
+		errors.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
 	}
 }
