@@ -26,8 +26,7 @@
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/application-cr/image/main.go",
     "description": "Add an Application CR to a group of resources.",
     "type": "source",
-    "toolchain": "../../../producer/functions/golang/",
-    "example": "https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/application-cr/"
+    "toolchain": "../../../producer/functions/golang/"
   },
   {
     "image": "gcr.io/kpt-functions/kustomize-build",
@@ -57,7 +56,8 @@
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/istioctl_analyze.ts",
     "description": "Istioctl analyze is a diagnostic tool that can detect potential issues with Istio configuration and output errors to the results field.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "../../../producer/functions/ts/",
+    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/istioctl-analyze/"
   },
   {
     "image": "gcr.io/kpt-functions/gatekeeper-validate",
@@ -79,7 +79,8 @@
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/kubeval.ts",
     "description": "Validates configuration using kubeval.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "../../../producer/functions/ts/",
+    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/kubeval/"
   },
   {
     "image": "gcr.io/kustomize-functions/example-validator-kubeval",
@@ -87,16 +88,14 @@
     "description": "Validates that all containers have cpu and memory reservations set.",
     "type": "validator",
     "demo": true,
-    "toolchain": "../../../producer/functions/golang/",
-    "example": "https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/validator-kubeval/"
+    "toolchain": "../../../producer/functions/golang/"
   },
   {
     "image": "gcr.io/kustomize-functions/example-validator",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/validator-resource-requests/image/main.go",
     "description": "Validates Kubernetes configuration files using schemas from the Kubernetes OpenAPI spec.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/golang/",
-    "example": "https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/validator-resource-requests/"
+    "toolchain": "../../../producer/functions/golang/"
   },
   {
     "image": "gcr.io/kpt-functions/suggest-psp",
@@ -156,8 +155,7 @@
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go",
     "description": "Sets cpu and memory reservations on all containers for Resources annotated with tshirt size.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/golang/",
-    "example": "https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/injection-tshirt-sizes/"
+    "toolchain": "../../../producer/functions/golang/"
   },
   {
     "image": "gcr.io/kpt-functions/annotate-config",
@@ -188,15 +186,13 @@
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-go-nginx/image/main.go",
     "description": "Generate configuration from go templates using the functionConfig as the template input.",
     "type": "generator",
-    "toolchain": "../../../producer/functions/golang/",
-    "example": "https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/template-go-nginx/"
+    "toolchain": "../../../producer/functions/golang/"
   },
   {
     "image": "gcr.io/kustomize-functions/example-cockroachdb",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-heredoc-cockroachdb/image/cockroachdb-template.sh",
     "description": "Generate configuration from heredoc template using the functionConfig as the template input.",
-    "type": "generator",
-    "example": "https://github.com/kubernetes-sigs/kustomize/tree/master/functions/examples/template-heredoc-cockroachdb/"
+    "type": "generator"
   },
   {
     "image": "gcr.io/kpt-functions/no-op",
