@@ -174,7 +174,12 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/cfg/delete-setter/</loc>
-    <lastmod>2020-07-13T18:10:44-07:00</lastmod>
+    <lastmod>2020-08-20T22:32:52-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://googlecontainertools.github.io/kpt/reference/cfg/delete-subst/</loc>
+    <lastmod>2020-08-20T22:32:52-07:00</lastmod>
   </url>
   
   <url>
