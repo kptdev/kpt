@@ -86,7 +86,7 @@ If you want to see the diff after running kpt functions, append a ` + "`" + `aft
         - docker:dind
       script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest
           fn run /app/example-package
-      after_script: 
+      after_script:
         - docker run -v $PWD:/app gcr.io/kpt-dev/kpt:latest
           pkg diff /app/example-package
           --diff-tool git --diff-tool-opts "--no-pager diff"
@@ -106,5 +106,4 @@ Once the changes are committed and pushed to GitLab, you can see the latest jon 
 Try to remove the ` + "`" + `owner: alice` + "`" + ` line in ` + "`" + `example-package/resources/resources.yaml` + "`" + `.
 
 Once local changes are pushed, you can see how the pipeline fails on GitLab CI.
-
 `

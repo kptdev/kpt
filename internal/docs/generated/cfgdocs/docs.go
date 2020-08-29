@@ -227,9 +227,9 @@ var CreateSubstExamples = `
   kpt cfg set . tag-setter v1.8.0
 `
 
-var DeleteSetterShort = `Delete a setter for one field`
+var DeleteSetterShort = `Delete a setter`
 var DeleteSetterLong = `
-  kpt cfg delete-setter DIR NAME VALUE
+  kpt cfg delete-setter DIR NAME
   
   DIR:
     Path to a package directory
@@ -241,6 +241,22 @@ var DeleteSetterLong = `
 var DeleteSetterExamples = `
   # delete a setter replicas
   kpt cfg delete-setter DIR/ replicas
+`
+
+var DeleteSubstShort = `Delete a substitution`
+var DeleteSubstLong = `
+  kpt cfg delete-subst DIR NAME
+  
+  DIR:
+    Path to a package directory
+  
+  NAME:
+    The name of the substitution to delete. e.g. image-tag
+  
+`
+var DeleteSubstExamples = `
+  # delete a substitution image-tag
+  kpt cfg delete-subst DIR/ image-tag
 `
 
 var FmtShort = `Format configuration files`

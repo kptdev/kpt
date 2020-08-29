@@ -88,6 +88,7 @@ The inventory template must be created for a package to be applied using
 
 ### Init Output
 
+  namespace: default is used for inventory object
   Initialized: helloworld/inventory-template.yaml
 
 ### Inventory template
