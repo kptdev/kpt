@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
@@ -79,6 +80,58 @@ openAPI:
 			err = ioutil.WriteFile(filepath.Join(dir, "Kptfile"), []byte(test.inputKptfile), 0600)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedResult, DefExists(dir, test.setterName))
+		})
+	}
+}
+
+func TestSetV2AutoSetter(t *testing.T) {
+	var tests = []struct {
+		name            string
+		setterName      string
+		setterValue     string
+		dataset         string
+		expectedDataset string
+	}{
+		{
+			name:            "autoset-recurse-subpackages",
+			dataset:         "dataset-with-autosetters",
+			setterName:      "gcloud.core.project",
+			setterValue:     "my-project",
+			expectedDataset: "dataset-with-autosetters-set",
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+			testDataDir := filepath.Join("../../", "testutil", "testdata")
+			sourceDir := filepath.Join(testDataDir, test.dataset)
+			expectedDir := filepath.Join(testDataDir, test.expectedDataset)
+			baseDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = copyutil.CopyDir(sourceDir, baseDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			defer os.RemoveAll(baseDir)
+			GetProjectNumberFromProjectID = func(projectID string) (string, error) {
+				return "1234", nil
+			}
+			err = SetV2AutoSetter(test.setterName, test.setterValue, baseDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			diff, err := copyutil.Diff(baseDir, expectedDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, 0, diff.Len()) {
+				t.FailNow()
+			}
 		})
 	}
 }
