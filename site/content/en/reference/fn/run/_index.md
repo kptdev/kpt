@@ -319,14 +319,31 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 
 Alternatively, scoping can be disabled using `--global-scope` flag.
 
-### Declaring Multiple Functions
+### Multiple Functions Ordering
 
-You may declare multiple functions. If they are specified in the same file
+Functions execution follows a deterministic order and is based on the following set of rules:
+
+* If the functions are specified in the same file
 (multi-object YAML file separated by `---`), they will
-be run sequentially in the order that they are specified.
+be executed sequentially in the order that they are specified.
+* If the functions are specified in multiple files,
+the functions deeper in the file system tree are executed first.
+* If the functions are specified in multiple files but are at same file
+system tree depth, the function in the file
+with shorter lexical file path is executed first.
 
-If multiple functions are specified in different yaml files, there is no
-guarantee of the order in which kpt will run the functions.
+**Example:** Directory structure with multiple functions and corresponding ordering
+
+```sh
+.
+├── stuff
+│   ├── deployment.yaml
+│   ├── stuff2
+│   │     └── deployment.yaml
+│   │     └── my-function3.yaml # executed first
+└── └── my-function1.yaml # executed second
+    └── my-function2.yaml # executed third
+```
 
 ### Custom `functionConfig`
 
