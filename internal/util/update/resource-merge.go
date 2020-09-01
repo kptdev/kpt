@@ -210,9 +210,6 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	files := sets.String{}
 	dirs := sets.String{}
-	r := kio.LocalPackageReader{}
-	r.MatchFilesGlob = kio.DefaultMatch
-	r.MatchFilesGlob = append(r.MatchFilesGlob, "Kptfile")
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			if err != nil {
@@ -224,11 +221,11 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 			}
 			return nil
 		}
-		match, err := r.ShouldSkipFile(info)
+		isKrm, err := isKrmFile(path)
 		if err != nil {
 			return err
 		}
-		if !match {
+		if !isKrm {
 			path = strings.TrimPrefix(path, root)
 			if len(path) > 0 && !strings.Contains(path, ".git") {
 				files.Insert(path)
@@ -240,6 +237,21 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 		return nil, nil, err
 	}
 	return dirs, files, nil
+}
+
+var krmFilesGlob = append([]string{kptfile.KptFileName}, kio.DefaultMatch...)
+
+// isKrmFile checks if the file pointed to by the path is a yaml file (including
+// the Kptfile).
+func isKrmFile(path string) (bool, error) {
+	for _, g := range krmFilesGlob {
+		if match, err := filepath.Match(g, filepath.Base(path)); err != nil {
+			return false, errors.Wrap(err)
+		} else if match {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // compareFiles returns true if src file content is equal to dst file content

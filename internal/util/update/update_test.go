@@ -861,6 +861,10 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 				err = ioutil.WriteFile(filepath.Join(expectedLocal, "somefunction.py"), []byte("Print some other thing"), 0600)
 				assert.NoError(t, err)
 			}
+			// Add a yaml file in updated that should never be moved to
+			// expectedLocal.
+			err = ioutil.WriteFile(filepath.Join(updated, "new.yaml"), []byte("a: b"), 0600)
+			assert.NoError(t, err)
 			err = ReplaceNonKRMFiles(updated, original, local)
 			assert.NoError(t, err)
 			tg := testutil.TestGitRepo{}
