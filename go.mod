@@ -1,6 +1,6 @@
 module github.com/GoogleContainerTools/kpt
 
-go 1.13
+go 1.14
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
@@ -24,7 +24,7 @@ require (
 	// Currently, we have to import the latest version of kubectl.
 	// Once there is a 0.18 release, we can import a semver release.
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
-	sigs.k8s.io/cli-utils v0.19.1-0.20200821220340-1e5fb03eaa7d
-	sigs.k8s.io/kustomize/cmd/config v0.6.1-0.20200821211955-ff3f39d84bc8
-	sigs.k8s.io/kustomize/kyaml v0.6.1-0.20200821211955-ff3f39d84bc8
+	sigs.k8s.io/cli-utils v0.19.2
+	sigs.k8s.io/kustomize/cmd/config v0.7.0
+	sigs.k8s.io/kustomize/kyaml v0.7.1
 )
