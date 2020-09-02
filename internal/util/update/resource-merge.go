@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -57,7 +58,6 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	}
 	defer os.RemoveAll(updated.AbsPath())
 
-	// get the Kptfile to write after the merge
 	kf, err := u.updatedKptfile(updated.AbsPath(), original.AbsPath(), options)
 	if err != nil {
 		return err
@@ -68,12 +68,16 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	}
 
 	err = settersutil.SetAllSetterDefinitions(
-		filepath.Join(options.PackagePath, "Kptfile"),
+		filepath.Join(options.PackagePath, kptfile.KptFileName),
 		original.AbsPath(),
 		updated.AbsPath(),
 		options.PackagePath,
 	)
 	if err != nil {
+		return err
+	}
+
+	if err := MergeSubPackages(options.PackagePath, updated.AbsPath(), original.AbsPath()); err != nil {
 		return err
 	}
 
@@ -129,6 +133,87 @@ func (u ResourceMergeUpdater) updatedKptfile(updatedPath, originalPath string, o
 	// keep the local OpenAPI values
 	err = updatedKf.MergeOpenAPI(options.KptFile, originalKf)
 	return updatedKf, err
+}
+
+// MergeSubPackages merges the Kptfiles in the nested subdirectories of the
+// root package and also sets the setter definitions in updated to match with
+// locally set values so the the resources are correctly identified and merged
+func MergeSubPackages(localRoot, updatedRoot, originalRoot string) error {
+	localPkgPaths, err := pathutil.DirsWithFile(localRoot, kptfile.KptFileName, true)
+	if err != nil {
+		return err
+	}
+	for _, localPkgPath := range localPkgPaths {
+		// skip the top level file as it should be merged differently
+		if filepath.Clean(localPkgPath) == filepath.Clean(localRoot) {
+			continue
+		}
+
+		cleanLocalPkgPath := filepath.Clean(localPkgPath)
+		relativePkgPath, err := filepath.Rel(localRoot, cleanLocalPkgPath)
+		if err != nil {
+			return err
+		}
+
+		localKf, err := kptfileutil.ReadFile(localPkgPath)
+		if err != nil {
+			return err
+		}
+
+		var updatedKf kptfile.KptFile
+		updatedPkgPath := filepath.Join(updatedRoot, relativePkgPath)
+		if !fileExists(filepath.Join(updatedPkgPath, kptfile.KptFileName)) {
+			// if there is no Kptfile in upstream then use the local Kptfile
+			// to retain it
+			updatedKf = localKf
+		} else {
+			updatedKf, err = kptfileutil.ReadFile(updatedPkgPath)
+			if err != nil {
+				return err
+			}
+		}
+
+		var originalKf kptfile.KptFile
+		originalPkgPath := filepath.Join(originalRoot, relativePkgPath)
+		if !fileExists(filepath.Join(originalPkgPath, kptfile.KptFileName)) {
+			// if there is no Kptfile at origin then use the local Kptfile
+			// to retain it
+			originalKf = localKf
+		} else {
+			originalKf, err = kptfileutil.ReadFile(originalPkgPath)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = updatedKf.MergeOpenAPI(localKf, originalKf)
+		if err != nil {
+			return err
+		}
+
+		if err := kptfileutil.WriteFile(localPkgPath, updatedKf); err != nil {
+			return err
+		}
+
+		// make sure that the updated and original packages are set with the new values
+		// to setter parameters in local so that the resources are identified and merged
+		// correctly in subpackages
+		dirsForSettersUpdate := []string{localPkgPath}
+		if fileExists(filepath.Join(updatedPkgPath, kptfile.KptFileName)) {
+			dirsForSettersUpdate = append(dirsForSettersUpdate, updatedPkgPath)
+		}
+		if fileExists(filepath.Join(originalPkgPath, kptfile.KptFileName)) {
+			dirsForSettersUpdate = append(dirsForSettersUpdate, originalPkgPath)
+		}
+		err = settersutil.SetAllSetterDefinitions(
+			filepath.Join(localPkgPath, kptfile.KptFileName),
+			dirsForSettersUpdate...,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // replaceNonKRMFiles replaces the non KRM files in localDir with the corresponding files in updatedDir,
@@ -268,4 +353,14 @@ func compareFiles(src, dst string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// fileExists checks if a file exists and is not a directory before we
+// try using it to prevent further errors.
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
