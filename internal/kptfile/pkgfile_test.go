@@ -457,6 +457,48 @@ openAPI:
                     value: 1.8.0
 `,
 		},
+		{
+			name: "no defs in origin",
+			updated: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.1"
+`,
+			local: `
+openAPI:
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
+`,
+			original: `
+`,
+			expected: `
+openAPI:
+    definitions:
+        io.k8s.cli.setters.image:
+            x-k8s-cli:
+                setter:
+                    name: image
+                    value: nginx
+        io.k8s.cli.setters.tag:
+            x-k8s-cli:
+                setter:
+                    name: tag
+                    value: 1.8.1
+`,
+		},
 	}
 
 	for i := range tests {

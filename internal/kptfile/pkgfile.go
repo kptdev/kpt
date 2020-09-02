@@ -122,6 +122,10 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 		return nil
 	}
 	oriDef := original.Field("definitions")
+	if oriDef == nil {
+		// no definitions on the destination, fall back to local definitions
+		oriDef = localDef
+	}
 
 	// merge the definitions
 	err = mergeDef(updatedDef, localDef, oriDef)
