@@ -86,11 +86,5 @@ gencatalog:
 	rm site/content/en/guides/consumer/function/catalog/_index.md
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
-gendocs:
-	rm -rf docs/
-	(cd site && env HUGO_ENV="production" hugo)
-
-docs: gencatalog lintdocs gendocs license
-
 servedocs:
 	(cd site && go run github.com/gohugoio/hugo server)
