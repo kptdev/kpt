@@ -990,7 +990,7 @@ if (!doNotTrack) {
     <li><a href="#declarative-run-specifics">Declarative Run Specifics</a>
       <ul>
         <li><a href="#scoping-rules">Scoping Rules</a></li>
-        <li><a href="#declaring-multiple-functions">Declaring Multiple Functions</a></li>
+        <li><a href="#multiple-functions-ordering">Multiple Functions Ordering</a></li>
         <li><a href="#custom-functionconfig">Custom <code>functionConfig</code></a></li>
       </ul>
     </li>
@@ -1243,13 +1243,28 @@ directory named <code>functions</code>.</p>
 containing function configurations:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 </code></pre></div><p>Alternatively, scoping can be disabled using <code>--global-scope</code> flag.</p>
-<h3 id="declaring-multiple-functions">Declaring Multiple Functions</h3>
-<p>You may declare multiple functions. If they are specified in the same file
+<h3 id="multiple-functions-ordering">Multiple Functions Ordering</h3>
+<p>Functions execution follows a deterministic order and is based on the following set of rules:</p>
+<ul>
+<li>If the functions are specified in the same file
 (multi-object YAML file separated by <code>---</code>), they will
-be run sequentially in the order that they are specified.</p>
-<p>If multiple functions are specified in different yaml files, there is no
-guarantee of the order in which kpt will run the functions.</p>
-<h3 id="custom-functionconfig">Custom <code>functionConfig</code></h3>
+be executed sequentially in the order that they are specified.</li>
+<li>If the functions are specified in multiple files,
+the functions deeper in the file system tree are executed first.</li>
+<li>If the functions are specified in multiple files but are at same file
+system tree depth, the function in the file
+with shorter lexical file path is executed first.</li>
+</ul>
+<p><strong>Example:</strong> Directory structure with multiple functions and corresponding ordering</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">.
+├── stuff
+│   ├── deployment.yaml
+│   ├── stuff2
+│   │     └── deployment.yaml
+│   │     └── my-function3.yaml <span style="color:#8f5902;font-style:italic"># executed first</span>
+└── └── my-function1.yaml <span style="color:#8f5902;font-style:italic"># executed second</span>
+    └── my-function2.yaml <span style="color:#8f5902;font-style:italic"># executed third</span>
+</code></pre></div><h3 id="custom-functionconfig">Custom <code>functionConfig</code></h3>
 <p>Functions may define their own API input types - these may be client-side
 equivalents of CRDs:</p>
 <p><strong>Example</strong>: Declare two functions in <code>DIR/functions/my-functions.yaml</code></p>
@@ -1369,7 +1384,7 @@ because:</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8a9a358774f25a50bf783caa812d500a1c9cfd24">Deduplicate kpt function docs (#923) (8a9a3587)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6c45c9e3182cf2f17da21348899c9d884147fd1b">docs:DeclarativeFunctionsOrdering (6c45c9e3)</a>
 </div>
 </div>
 

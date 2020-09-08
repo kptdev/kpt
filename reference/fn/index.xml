@@ -274,13 +274,28 @@ directory named &lt;code&gt;functions&lt;/code&gt;.&lt;/p&gt;
 containing function configurations:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alternatively, scoping can be disabled using &lt;code&gt;--global-scope&lt;/code&gt; flag.&lt;/p&gt;
-&lt;h3 id=&#34;declaring-multiple-functions&#34;&gt;Declaring Multiple Functions&lt;/h3&gt;
-&lt;p&gt;You may declare multiple functions. If they are specified in the same file
+&lt;h3 id=&#34;multiple-functions-ordering&#34;&gt;Multiple Functions Ordering&lt;/h3&gt;
+&lt;p&gt;Functions execution follows a deterministic order and is based on the following set of rules:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;If the functions are specified in the same file
 (multi-object YAML file separated by &lt;code&gt;---&lt;/code&gt;), they will
-be run sequentially in the order that they are specified.&lt;/p&gt;
-&lt;p&gt;If multiple functions are specified in different yaml files, there is no
-guarantee of the order in which kpt will run the functions.&lt;/p&gt;
-&lt;h3 id=&#34;custom-functionconfig&#34;&gt;Custom &lt;code&gt;functionConfig&lt;/code&gt;&lt;/h3&gt;
+be executed sequentially in the order that they are specified.&lt;/li&gt;
+&lt;li&gt;If the functions are specified in multiple files,
+the functions deeper in the file system tree are executed first.&lt;/li&gt;
+&lt;li&gt;If the functions are specified in multiple files but are at same file
+system tree depth, the function in the file
+with shorter lexical file path is executed first.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt; Directory structure with multiple functions and corresponding ordering&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;.
+├── stuff
+│   ├── deployment.yaml
+│   ├── stuff2
+│   │     └── deployment.yaml
+│   │     └── my-function3.yaml &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# executed first&lt;/span&gt;
+└── └── my-function1.yaml &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# executed second&lt;/span&gt;
+    └── my-function2.yaml &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# executed third&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;custom-functionconfig&#34;&gt;Custom &lt;code&gt;functionConfig&lt;/code&gt;&lt;/h3&gt;
 &lt;p&gt;Functions may define their own API input types - these may be client-side
 equivalents of CRDs:&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example&lt;/strong&gt;: Declare two functions in &lt;code&gt;DIR/functions/my-functions.yaml&lt;/code&gt;&lt;/p&gt;
