@@ -25,7 +25,5 @@ Implement configuration functions using any toolchain such as the
 [Functions User Guide]: ../
 [ts sdk]: ../../../producer/functions/ts/
 [go libs]: ../../../producer/functions/golang/
-[source]: ../../../../concepts/functions/#source-function
-[sink]: ../../../../concepts/functions/#sink-function
 [reference]: ../../../../reference/fn/run/
 [function producer docs]: ../../../producer/functions/
