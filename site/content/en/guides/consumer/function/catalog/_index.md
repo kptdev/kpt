@@ -75,12 +75,6 @@ See [definition of sink functions][sink].
 | gcr.io/kustomize-functions/example-tshirt                    |      | Sets cpu and memory reservations on all containers for Resources annotated with tshirt size. |                                                                                                              | [Source](https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go) | [Go Library](../../../producer/functions/golang/)         |
 | gcr.io/kpt-functions/annotate-config                         |      | [Demo] Adds an annotation to all configs.                                                    |                                                                                                              | [Source](https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/annotate_config.ts)   | [Typescript SDK](../../../producer/functions/ts/)         |
 
-## Miscellaneous
-
-| Image                      | Args | Description                                | Example | Source                                                                                                         | Toolchain                                         |
-| -------------------------- | ---- | ------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| gcr.io/kpt-functions/no-op |      | [Demo] No Op function for testing purposes |         | [Source](https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/no_op.ts) | [Typescript SDK](../../../producer/functions/ts/) |
-
 ## Next Steps
 
 - Learn more ways of using the kpt fn command from the [reference] doc.
