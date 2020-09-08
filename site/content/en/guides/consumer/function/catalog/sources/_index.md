@@ -17,7 +17,6 @@ A Source Function takes no `input`:
 Instead, the function typically produces the `output` by reading configurations
 from an external system (e.g. reading files from a filesystem).
 
-
 ## Source functions
 
 | Image                                         | Args              | Description                                                       | Example                                                                                                        | Source                                                                                                                  | Toolchain                                         |
