@@ -79,8 +79,7 @@
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/kubeval.ts",
     "description": "Validates configuration using kubeval.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/kubeval/"
+    "toolchain": "../../../producer/functions/ts/"
   },
   {
     "image": "gcr.io/kustomize-functions/example-validator-kubeval",
