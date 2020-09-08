@@ -4,7 +4,9 @@
   "description": "Hugo theme for technical documentation.",
   "main": "none.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint-check": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json content",
+    "lint-fix": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json --fix content"
   },
   "repository": {
     "type": "git",
@@ -19,6 +21,7 @@
   "dependencies": {},
   "devDependencies": {
     "autoprefixer": "^9.7.4",
+    "markdownlint-cli": "^0.23.2",
     "postcss-cli": "^5.0.1"
   }
 }

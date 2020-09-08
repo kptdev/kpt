@@ -49,13 +49,8 @@ Conduct].
 
 ## Contributing to docs
 
-If you are updating the documentation, please do it in separate PRs from code
-changes. Use the following structure for your documentation PR:
-
-- The first commit in the PR should include the changes to the files under
-  [site/] and the name of the commit should start with `Docs:`.
-- The second commit should be the generated content from running `make docs`.
-  The commit message should be `Regenerate docs`.
+If you are updating the documentation, please do it in separate PRs from
+code changes and the commit message should start with `Docs:`.
 
 ### Run the docs locally
 
@@ -74,9 +69,8 @@ It's usually a good idea to test locally for the following:
 ### Update docs
 
 Docs are under [site/] and use the [docsy] theme for hugo. Learn more about
-docsy from [docsy docs]. Regenerate the docs with:
-
-`make docs`
+docsy from [docsy docs]. The site itself are generated from the markdown
+automatically after commit.
 
 ### Adding or updating catalog functions
 
