@@ -63,33 +63,30 @@ When the updated package is applied, `config-map-1` is automatically
 deleted (pruned) since it is omitted.
 
 In order to take advantage of this automatic clean-up, a package must contain
-a **grouping object template**, which is a ConfigMap with a special label. An example is:
+an **Inventory Template**, which is a ConfigMap with a special label. An example is:
 
 ```yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: test-grouping-object
+  name: inventory-78889725
+  namespace: default
   labels:
-    cli-utils.sigs.k8s.io/inventory-id: test-group
+    cli-utils.sigs.k8s.io/inventory-id: b49dd93f-28db-4626-b42d-749dd4c5ba2f
 ```
 
 And the special label is:
 
 ```
-cli-utils.sigs.k8s.io/inventory-id: *group-name*
+cli-utils.sigs.k8s.io/inventory-id: *b49dd93f-28db-4626-b42d-749dd4c5ba2f*
 ```
 
 `kpt live apply` recognizes this template from the special label, and based
-on this kpt will create new grouping object with the metadata of all applied
+on this kpt will create new inventory object with the metadata of all applied
 objects in the ConfigMap's data field. Subsequent `kpt live apply` commands can
-then query the grouping object, and calculate the omitted objects, cleaning up
-accordingly. When a grouping object is created in the cluster, a hash suffix
-is added to the name. Example:
-
-```
-test-grouping-object-17b4dba8
-```
+then query the inventory object, and calculate the omitted objects, cleaning up
+accordingly. On every subsequent apply operation, the inventory object is updated
+to reflect the current set of resources.
 
 ### Status (reconcile-timeout=\<DURATION\>)
 
@@ -201,7 +198,7 @@ kpt live apply DIR [flags]
 ```
 DIR:
   Path to a package directory.  The directory must contain exactly
-  one ConfigMap with the grouping object annotation.
+  one ConfigMap with the inventory object annotation.
 ```
 
 #### Flags

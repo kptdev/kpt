@@ -10,13 +10,19 @@ description: >
 -->
 
 The status command will print the status for all resources in the live state
-that belong to the current inventory. It will use the inventory template to
+that belong to the current inventory. It will use the [Inventory Template] to
 look up the set of resources in the inventory in the live state and poll all
 those resources for their status until either an exit criteria has been met
 or the process is cancelled.
 
 ### Examples
 <!--mdtogo:Examples-->
+```sh
+# Monitor status for a set of resources based on manifests. Wait until all
+# resources have reconciled.
+kpt live status my-app/
+```
+
 ```sh
 # Monitor status for a set of resources based on manifests. Output in table format:
 kpt live status my-app/ --poll-until=forever --output=table
@@ -72,3 +78,5 @@ DIR | STDIN:
   to wait forever.
 ```
 <!--mdtogo-->
+
+[Inventory Template]: https://googlecontainertools.github.io/kpt/reference/live/apply/#prune
