@@ -133,7 +133,45 @@ then query the grouping object, and calculate the omitted objects, cleaning up
 accordingly. When a grouping object is created in the cluster, a hash suffix
 is added to the name. Example:&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;test-grouping-object-17b4dba8
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;status-reconcile-timeoutduration&#34;&gt;Status (reconcile-timeout=&amp;lt;DURATION&amp;gt;)&lt;/h3&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;ordering&#34;&gt;Ordering&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;kpt live apply&lt;/code&gt; will sort the resources before applying them. This makes sure
+namespaces are applied before resources going into the namespace, configmaps
+are applied before Deployments and StatefulSets, and other known dependencies
+between the builtin kubernetes resource types. Kpt does not analyze the actual
+dependencies between the resources, but sorts the resources based on the Kind
+of resources. Custom ordering of resources is not supported.&lt;/p&gt;
+&lt;p&gt;During pruning, the same rules are used, but resources will be deleted in
+reverse order. Note that this does not wait for a resource to be deleted
+before continuing to delete the remaining resources.&lt;/p&gt;
+&lt;p&gt;The following resources will be applied first in this order:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Namespace&lt;/li&gt;
+&lt;li&gt;ResourceQuota&lt;/li&gt;
+&lt;li&gt;StorageClass&lt;/li&gt;
+&lt;li&gt;CustomResourceDefinition&lt;/li&gt;
+&lt;li&gt;MutatingWebhookConfiguration&lt;/li&gt;
+&lt;li&gt;ServiceAccount&lt;/li&gt;
+&lt;li&gt;PodSecurityPolicy&lt;/li&gt;
+&lt;li&gt;Role&lt;/li&gt;
+&lt;li&gt;ClusterRole&lt;/li&gt;
+&lt;li&gt;RoleBinding&lt;/li&gt;
+&lt;li&gt;ClusterRoleBinding&lt;/li&gt;
+&lt;li&gt;ConfigMap&lt;/li&gt;
+&lt;li&gt;Secret&lt;/li&gt;
+&lt;li&gt;Service&lt;/li&gt;
+&lt;li&gt;LimitRange&lt;/li&gt;
+&lt;li&gt;PriorityClass&lt;/li&gt;
+&lt;li&gt;Deployment&lt;/li&gt;
+&lt;li&gt;StatefulSet&lt;/li&gt;
+&lt;li&gt;CronJob&lt;/li&gt;
+&lt;li&gt;PodDisruptionBudget&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Following this, any resources that are not mentioned will be applied.&lt;/p&gt;
+&lt;p&gt;The following resources will be applied last in the following order:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ValidatingWebhookConfiguration&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;status-reconcile-timeoutduration&#34;&gt;Status (reconcile-timeout=&amp;lt;DURATION&amp;gt;)&lt;/h3&gt;
 &lt;p&gt;kpt live apply also has support for computing status for resources. This is
 useful during apply for making sure that not only are the set of resources applied
 into the cluster, but also that the desired state expressed in the resource are

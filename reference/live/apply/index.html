@@ -978,6 +978,7 @@ if (!doNotTrack) {
       <ul>
         <li></li>
         <li><a href="#prune">Prune</a></li>
+        <li><a href="#ordering">Ordering</a></li>
         <li><a href="#status-reconcile-timeoutduration">Status (reconcile-timeout=&lt;DURATION&gt;)</a></li>
         <li><a href="#examples">Examples</a></li>
         <li><a href="#synopsis">Synopsis</a></li>
@@ -1142,7 +1143,45 @@ then query the grouping object, and calculate the omitted objects, cleaning up
 accordingly. When a grouping object is created in the cluster, a hash suffix
 is added to the name. Example:</p>
 <pre><code>test-grouping-object-17b4dba8
-</code></pre><h3 id="status-reconcile-timeoutduration">Status (reconcile-timeout=&lt;DURATION&gt;)</h3>
+</code></pre><h3 id="ordering">Ordering</h3>
+<p><code>kpt live apply</code> will sort the resources before applying them. This makes sure
+namespaces are applied before resources going into the namespace, configmaps
+are applied before Deployments and StatefulSets, and other known dependencies
+between the builtin kubernetes resource types. Kpt does not analyze the actual
+dependencies between the resources, but sorts the resources based on the Kind
+of resources. Custom ordering of resources is not supported.</p>
+<p>During pruning, the same rules are used, but resources will be deleted in
+reverse order. Note that this does not wait for a resource to be deleted
+before continuing to delete the remaining resources.</p>
+<p>The following resources will be applied first in this order:</p>
+<ul>
+<li>Namespace</li>
+<li>ResourceQuota</li>
+<li>StorageClass</li>
+<li>CustomResourceDefinition</li>
+<li>MutatingWebhookConfiguration</li>
+<li>ServiceAccount</li>
+<li>PodSecurityPolicy</li>
+<li>Role</li>
+<li>ClusterRole</li>
+<li>RoleBinding</li>
+<li>ClusterRoleBinding</li>
+<li>ConfigMap</li>
+<li>Secret</li>
+<li>Service</li>
+<li>LimitRange</li>
+<li>PriorityClass</li>
+<li>Deployment</li>
+<li>StatefulSet</li>
+<li>CronJob</li>
+<li>PodDisruptionBudget</li>
+</ul>
+<p>Following this, any resources that are not mentioned will be applied.</p>
+<p>The following resources will be applied last in the following order:</p>
+<ul>
+<li>ValidatingWebhookConfiguration</li>
+</ul>
+<h3 id="status-reconcile-timeoutduration">Status (reconcile-timeout=&lt;DURATION&gt;)</h3>
 <p>kpt live apply also has support for computing status for resources. This is
 useful during apply for making sure that not only are the set of resources applied
 into the cluster, but also that the desired state expressed in the resource are
@@ -1329,7 +1368,7 @@ kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 21, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8dcfc39b5bad9b4f70427dd157de211dfb569ab4">Fix a doc formatting issue for kpt live apply (8dcfc39b)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3163e0c1900024c2cfa0a466c37bfc08d8849efa">docs: Document how ordering of resources works during apply and prune (3163e0c1)</a>
 </div>
 </div>
 
