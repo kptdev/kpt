@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
@@ -51,24 +52,36 @@ packageMetadata:
 
 	b, err = ioutil.ReadFile(filepath.Join(d, "my-pkg", man.ManFilename))
 	assert.NoError(t, err)
-	assert.Equal(t, `my-pkg
-==================================================
+	assert.Equal(t, strings.ReplaceAll(`# my-pkg
 
-# NAME
-
-  my-pkg
-
-# SYNOPSIS
-
-  kubectl apply --recursive -f my-pkg
-
-# Description
-
+## Description
 my description
 
-# SEE ALSO
+## Usage
 
-`, string(b))
+### Fetch the package
+'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] my-pkg'
+Details: https://googlecontainertools.github.io/kpt/reference/pkg/get/
+
+### View package content
+'kpt cfg tree my-pkg'
+Details: https://googlecontainertools.github.io/kpt/reference/cfg/tree/
+
+### List setters
+'kpt cfg list-setters my-pkg'
+Details: https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/
+
+### Set a value
+'kpt cfg set my-pkg NAME VALUE'
+Details: https://googlecontainertools.github.io/kpt/reference/cfg/set/
+
+### Apply the package
+'''
+kpt live init my-pkg
+kpt live apply my-pkg --reconcile-timeout=2m --output=table
+'''
+Details: https://googlecontainertools.github.io/kpt/reference/live/
+`, "'", "`"), string(b))
 }
 
 func TestCmd_currentDir(t *testing.T) {
