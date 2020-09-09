@@ -91,6 +91,48 @@ is added to the name. Example:
 test-grouping-object-17b4dba8
 ```
 
+### Ordering
+
+`kpt live apply` will sort the resources before applying them. This makes sure
+namespaces are applied before resources going into the namespace, configmaps
+are applied before Deployments and StatefulSets, and other known dependencies
+between the builtin kubernetes resource types. Kpt does not analyze the actual
+dependencies between the resources, but sorts the resources based on the Kind
+of resources. Custom ordering of resources is not supported.
+
+During pruning, the same rules are used, but resources will be deleted in
+reverse order. Note that this does not wait for a resource to be deleted
+before continuing to delete the remaining resources.
+
+The following resources will be applied first in this order:
+
+* Namespace
+* ResourceQuota
+* StorageClass
+* CustomResourceDefinition
+* MutatingWebhookConfiguration
+* ServiceAccount
+* PodSecurityPolicy
+* Role
+* ClusterRole
+* RoleBinding
+* ClusterRoleBinding
+* ConfigMap
+* Secret
+* Service
+* LimitRange
+* PriorityClass
+* Deployment
+* StatefulSet
+* CronJob
+* PodDisruptionBudget
+
+Following this, any resources that are not mentioned will be applied.
+
+The following resources will be applied last in the following order:
+
+* ValidatingWebhookConfiguration
+
 ### Status (reconcile-timeout=\<DURATION\>)
 
 kpt live apply also has support for computing status for resources. This is
