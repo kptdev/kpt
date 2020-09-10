@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Service
+metadata:
+  namespace: PROJECT_ID-yourspace # {"$kpt-set":"proj-namespace"}
+  name: wiab-service
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: mysql

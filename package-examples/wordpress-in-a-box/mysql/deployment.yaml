@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: PROJECT_ID-yourspace # {"$kpt-set":"proj-namespace"}
+  name: mysql
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.8 # {"$kpt-set":"image-tag"}

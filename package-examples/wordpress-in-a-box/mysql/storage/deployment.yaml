@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: PROJECT_ID-yourspace # {"$kpt-set":"proj-namespace"}
+  name: storage
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: storage
+        image: storage:1.7.7

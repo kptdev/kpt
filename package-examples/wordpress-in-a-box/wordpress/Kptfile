@@ -1,0 +1,27 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: wordpress
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: yourspace
+          required: true
+    io.k8s.cli.substitutions.proj-namespace:
+      x-k8s-cli:
+        substitution:
+          name: proj-namespace
+          pattern: ${gcloud.core.project}-${namespace}
+          values:
+          - marker: ${gcloud.core.project}
+            ref: '#/definitions/io.k8s.cli.setters.gcloud.core.project'
+          - marker: ${namespace}
+            ref: '#/definitions/io.k8s.cli.setters.namespace'
+    io.k8s.cli.setters.gcloud.core.project:
+      x-k8s-cli:
+        setter:
+          name: gcloud.core.project
+          value: PROJECT_ID
