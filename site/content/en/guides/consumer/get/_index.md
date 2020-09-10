@@ -8,6 +8,17 @@ description: >
     a cluster
 ---
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 *Any git directory containing configuration files may be used by kpt
 as a package.*
 
@@ -47,6 +58,7 @@ as a public package catalogue.
 
 ### Fetch Command
 
+<!-- @fetchPackage @verifyGuides-->
 ```sh
 kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
 ```
@@ -60,6 +72,16 @@ fetching package staging/cockroachdb from https://github.com/kubernetes/examples
 The contents of the `staging/cockroachdb` subdirectory in the
 `https://github.com/kubernetes/examples` were copied to the local folder
 `cockroachdb`.
+
+{{% hide %}}
+
+<!-- @verifyFetch @verifyGuides-->
+```
+# Verify that we downloaded the package and that it includes KRM resources.
+cat cockroachdb/cockroachdb-statefulset.yaml | grep "kind: StatefulSet"
+```
+
+{{% /hide %}}
 
 {{% pageinfo color="info" %}}
 
@@ -82,6 +104,7 @@ The contents of the `staging/cockroachdb` subdirectory in the
 The upstream commit and branch / tag reference are stored in the package's
 [Kptfile].  These are used by `kpt pkg update`.
 
+<!-- @catPackage @verifyGuides-->
 ```sh
 cat cockroachdb/Kptfile
 ```
@@ -104,6 +127,16 @@ upstream:
         ref: master
 ```
 
+{{% hide %}}
+
+<!-- @verifyKptfile @verifyGuides-->
+```
+# Verify that the Kptfile exists and points to the correct upstream repo.
+cat cockroachdb/Kptfile | grep "repo: https://github.com/kubernetes/examples"
+```
+
+{{% /hide %}}
+
 ## View the package contents
 
 The primary package artifacts are Kubernetes [resource configuration]
@@ -112,22 +145,19 @@ artifacts such as documentation.
 
 ### Package Contents Command
 
+<!-- @treePackage @verifyGuides-->
 ```sh
-tree cockroachdb/
+kpt cfg tree cockroachdb/
 ```
 
 ### Package Contents Output
 
 ```sh
-cockroachdb/
-├── Kptfile
-├── OWNERS
-├── README.md
-├── cockroachdb-statefulset.yaml
-├── demo.sh
-└── minikube.sh
-
-0 directories, 6 files
+cockroachdb
+├── [cockroachdb-statefulset.yaml]  Service cockroachdb
+├── [cockroachdb-statefulset.yaml]  StatefulSet cockroachdb
+├── [cockroachdb-statefulset.yaml]  PodDisruptionBudget cockroachdb-budget
+└── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
 ```
 
 The cockroachdb package fetched from [kubernetes examples] contains a
@@ -174,6 +204,16 @@ Use `kubectl apply` to deploy the local package to a remote cluster.
 
 ### Apply Command
 
+{{% hide %}}
+
+<!-- @createKindCluster @verifyGuides-->
+```
+kind delete cluster && kind create cluster
+```
+
+{{% /hide %}}
+
+<!-- @applyPackage @verifyGuides-->
 ```sh
 kubectl apply -R -f cockroachdb
 ```
@@ -186,6 +226,26 @@ service/cockroachdb created
 poddisruptionbudget.policy/cockroachdb-budget unchanged
 statefulset.apps/cockroachdb created
 ```
+
+{{% hide %}}
+
+<!-- @verifyApply @verifyGuides-->
+```
+# Verify that we have cockroachdb installed and that it can be reconciled.
+counter=0
+until kubectl get sts cockroachdb | grep "3/3"
+do
+  if [ $counter -gt 150 ];then
+    echo "sts has not reconciled after 5m. Exiting.."
+    exit 1
+  fi
+  echo "Waiting for sts to reconcile"
+  counter=$((counter + 1))
+  sleep 2s
+done
+```
+
+{{% /hide %}}
 
 {{% pageinfo color="info" %}}
 This guide used `kubectl apply` to demonstrate how kpt packages work out of the
