@@ -84,5 +84,23 @@ PATTERN
 ```
 <!--mdtogo-->
 
+#### Flags
+
+```sh
+
+--field string
+  name of the field to set -- e.g. --field image
+
+--field-value string
+  value of the field to create substitution for -- e.g. --field-value nginx:0.1.0
+
+--pattern string
+  substitution pattern -- e.g. --pattern \${my-image-setter}:\${my-tag-setter}
+
+--recurse-subpackages, -R
+  create substitution recursively in all the nested subpackages
+
+```
+
 [setters]: ../create-setter/
 [creating substitutions]: ../../../guides/producer/substitutions/

@@ -4,8 +4,9 @@ linkTitle: "create-setter"
 weight: 4
 type: docs
 description: >
-   Create a setter for one or more field
+  Create a setter for one or more field
 ---
+
 <!--mdtogo:Short
     Create a setter for one or more field
 -->
@@ -13,14 +14,16 @@ description: >
 {{< asciinema key="cfg-create-setter" rows="10" preload="1" >}}
 
 Setters provide a solution for template-free setting or substitution of field
-values through package metadata (OpenAPI).  They are a safer alternative to
+values through package metadata (OpenAPI). They are a safer alternative to
 other substitution techniques which do not have the context of the
 structured data -- e.g. using `sed` to replace values.
 
 See the [creating setters] guide for more info on creating setters.
 
 ### Examples
+
 <!--mdtogo:Examples-->
+
 ```sh
 # create a setter called replicas for fields matching value "3"
 kpt cfg create-setter DIR/ replicas 3
@@ -49,10 +52,13 @@ kpt cfg create-setter DIR/ replicas 3 --set-by "package-default" \
 # only the final part of the the field path is specified
 kpt cfg create-setter DIR/ app nginx --field "annotations.app" --type string
 ```
+
 <!--mdtogo-->
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```sh
 kpt cfg create-setter DIR NAME VALUE
 
@@ -69,19 +75,41 @@ VALUE
   e.g. 3
 ```
 
+<!--mdtogo-->
+
 #### Flags
 
 ```sh
---description
-  Optional description about the value.
+--description string
+  record a description for the current setter value.
 
---set-by
-  Optional record of who set the value.
+--field string
+  name of the field to set, a suffix of the path to the field, or the full path
+  to the field. Default is to match all fields.
 
 --value
   Optional flag, alternative to specifying the value as an argument
   e.g. used to specify values that start with '-'
+
+--recurse-subpackages, -R
+  create setter recursively in all the nested subpackages
+
+--required
+  indicates that this setter must be set by package consumer before live apply/preview
+
+--schema-path string
+  openAPI schema file path for setter constraints -- file content
+  e.g. {"type": "string", "maxLength": 15, "enum": ["allowedValue1", "allowedValue2"]}
+
+--set-by string
+  record who the field was default by.
+
+--type string
+  OpenAPI field type for the setter -- e.g. integer,boolean,string.
+
+--value string
+  alternative to specifying the value as an argument. e.g. used to specify values
+  that start with '-'
 ```
-<!--mdtogo-->
 
 [creating setters]: ../../../guides/producer/setters/
