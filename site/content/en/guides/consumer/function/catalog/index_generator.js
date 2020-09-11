@@ -42,6 +42,23 @@ A Sink produces no \`output\`:
 
 Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem).
+`,
+"generator": `
+Generators create blueprints for new services by building a configuration for
+a namespace with organization-mandated config defaults.
+`,
+"transformer": `
+A transformer mutates resources, by an action such as changing a namespace or
+the image used in a pod, without adding new resources.
+`,
+"validator": `
+A validator verifies that a resource satisfies certain conditions without creating
+or modifying any resources. Validator functions are managed by function authors who
+desire to verify the state (optionally) recorded in the \`--results-dir\` path
+provided by \`kpt\`.
+
+For example, a replica may be specified to be within a certain range and verified
+using a validator function.
 `
 }
 
