@@ -68,7 +68,7 @@ A Source Function takes no `input`:
 {{< png src="images/source" >}}
 
 Instead, the function typically produces the `output` by reading configurations
-from an external system (e.g. reading files from a filesystem). Find examples in 
+from an external system (e.g. reading files from a filesystem). Find examples in
 the [sources catalog].
 
 ### Sink Function
