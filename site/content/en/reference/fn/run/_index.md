@@ -266,6 +266,12 @@ details in the following:
 
 * [Issue 757]
 
+#### Don't use Imperative and Declarative in One Command
+
+If you use imperative functions (by `--image` or `--fn-path`) with declarative
+ones (by config files in `DIR`, see following section) at the same time, the
+declarative functions will be **ignored**.
+
 ## Declarative Run Specifics
 
 ### Scoping Rules
