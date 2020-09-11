@@ -28,7 +28,7 @@ function tableByType(type) {
 
 const descriptions = {
 "source": `
-A Source Function takes no \`input\`:
+A Source takes no \`input\`:
 
 {{< png src="images/source" >}}
 
@@ -36,7 +36,7 @@ Instead, the function typically produces the \`output\` by reading configuration
 from an external system (e.g. reading files from a filesystem).
 `,
 "sink": `
-A Sink Function produces no \`output\`:
+A Sink produces no \`output\`:
 
 {{< png src="images/sink" >}}
 
@@ -48,8 +48,8 @@ Instead, the function typically writes configurations to an external system
 const name = process.argv[2]
 
 const README = `---
-title: "${name} Functions Catalog"
-linkTitle: "${name} Functions Catalog"
+title: "${name} Catalog"
+linkTitle: "${name}s"
 type: docs
 description: >
     Catalog of ${name} Functions.
@@ -65,9 +65,7 @@ ${tableByType(name.toLowerCase())}
 ## Next Steps
 
 - Learn more ways of using the kpt fn command from the [reference] doc.
-- Get a quickstart on writing functions from the [function producer docs].
 
-[reference]: ../../../../reference/fn/run/
-[function producer docs]: ../../../producer/functions/`;
+[reference]: ../../../../reference/fn/run/`;
 
 console.log(README);

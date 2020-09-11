@@ -44,7 +44,7 @@ Then you will get an `example-package` directory:
 
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
-- `functions.yaml`: runs two functions from [Kpt Functions Catalog] declaratively:
+- `functions.yaml`: runs two functions declaratively:
   - `gatekeeper-validate` enforces constraints over all resources.
   - `label-namespace` adds a label to all Namespaces.
 
@@ -251,7 +251,6 @@ Once local changes are pushed, run the pipeline again, then you can see how it f
 
 [Tekton]: https://tekton.dev/
 [Getting Started]: https://tekton.dev/docs/getting-started/
-[Kpt Functions Catalog]: ../../catalog
 [prerequisites]: https://tekton.dev/docs/getting-started#prerequisites
 [Create a Kubernetes cluster]: https://cloud.google.com/kubernetes-engine/docs/quickstart
 [Git Tasks]: https://github.com/tektoncd/catalog/tree/v1beta1/git

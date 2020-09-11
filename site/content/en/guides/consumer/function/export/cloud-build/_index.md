@@ -39,7 +39,7 @@ Then you will get an `example-package` directory:
 
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
-- `functions.yaml`: runs two functions from [Kpt Functions Catalog] declaratively:
+- `functions.yaml`: runs two functions declaratively:
   - `gatekeeper-validate` enforces constraints over all resources.
   - `label-namespace` adds a label to all Namespaces.
 
@@ -104,5 +104,4 @@ Submit again, then view how the pipeline fails on Cloud Build.
 
 [Cloud Build]: https://cloud.google.com/cloud-build
 [Cloud Build Quickstarts]: https://cloud.google.com/cloud-build/docs/quickstarts
-[Kpt Functions Catalog]: ../../catalog
 [Build History]: https://console.cloud.google.com/cloud-build/builds

@@ -39,7 +39,7 @@ specifically:
 
 - **Configuration as data:** enables us to programmatically manipulate
   configurations using stateless programs called _functions_.
-- **Unix philosophy:** inspires us to develop a [catalog] of useful,
+- **Unix philosophy:** inspires us to develop a catalog of useful,
   interoperable functions which implement the
   [Configuration Functions Specification][spec].
 
@@ -68,7 +68,8 @@ A Source Function takes no `input`:
 {{< png src="images/source" >}}
 
 Instead, the function typically produces the `output` by reading configurations
-from an external system (e.g. reading files from a filesystem).
+from an external system (e.g. reading files from a filesystem). Find examples in 
+the [sources catalog].
 
 ### Sink Function
 
@@ -77,7 +78,7 @@ A Sink Function produces no `output`:
 {{< png src="images/sink" >}}
 
 Instead, the function typically writes configurations to an external system
-(e.g. writing files to a filesystem).
+(e.g. writing files to a filesystem). Find examples in the [sinks catalog].
 
 ### Pipeline
 
@@ -93,11 +94,11 @@ pipeline. Get detailed tutorials on how to use `kpt fn export` from the
 ## Next Steps
 
 - Get a quickstart on writing functions from the [function producer docs].
-- See more examples of functions in the functions [catalog].
 - Learn more ways of using the `kpt fn` command from the [reference] doc.
 
 [architecture influences]: ../architecture/#influences
-[catalog]: ../../guides/consumer/function/catalog/
+[sources catalog]: ../../guides/consumer/function/sources
+[sinks catalog]: ../../guides/consumer/function/sinks
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [Export a Workflow]: ../../guides/consumer/function/export/
 [function producer docs]: ../../guides/producer/functions/
