@@ -1,7 +1,6 @@
 ---
 title: "Sink Functions Catalog"
 linkTitle: "Sink Functions Catalog"
-weight: 7
 type: docs
 description: >
     Catalog of Sink Functions.
@@ -17,7 +16,7 @@ A Sink Function produces no `output`:
 Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem).
 
-## Sink functions
+## Sink Functions
 
 | Image                           | Args    | Description                                                                                                                       | Example | Source                                                                                                              | Toolchain                                         |
 | ------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |

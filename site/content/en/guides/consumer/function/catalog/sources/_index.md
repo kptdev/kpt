@@ -1,7 +1,6 @@
 ---
 title: "Source Functions Catalog"
 linkTitle: "Source Functions Catalog"
-weight: 7
 type: docs
 description: >
     Catalog of Source Functions.
@@ -17,7 +16,7 @@ A Source Function takes no `input`:
 Instead, the function typically produces the `output` by reading configurations
 from an external system (e.g. reading files from a filesystem).
 
-## Source functions
+## Source Functions
 
 | Image                                         | Args              | Description                                                       | Example                                                                                                        | Source                                                                                                                  | Toolchain                                         |
 | --------------------------------------------- | ----------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
