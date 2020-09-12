@@ -49,6 +49,7 @@ const (
 	HelloWorldSet         = "helloworld-set"
 	HelloWorldFn          = "helloworld-fn"
 	HelloWorldFnNoKptfile = "helloworld-fn-no-kptfile"
+	DatasetWithIgnoreFile = "dataset-with-ignorefile"
 )
 
 // TestGitRepo manages a local git repository for testing
@@ -490,9 +491,16 @@ func CopyKptfile(t *testing.T, src, dest string) {
 // SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
 // returns a cleanup function to remove the git repo and workspace.
 func SetupDefaultRepoAndWorkspace(t *testing.T) (*TestGitRepo, string, func()) {
+	return SetupRepoAndWorkspace(t, Dataset1)
+}
+
+// SetupRepoAndWorkspace handles setting up a repo to clone using the provided
+// dataset, and a workspace to clone into. Returns a cleanup function to remove
+// the git repo and workspace.
+func SetupRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, string, func()) {
 	// setup the repo to clone from
 	g := &TestGitRepo{}
-	err := g.SetupTestGitRepo(Dataset1)
+	err := g.SetupTestGitRepo(dataset)
 	assert.NoError(t, err)
 
 	// setup the directory to clone to

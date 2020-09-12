@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/get/getioreader"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
-	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
@@ -72,6 +71,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	}
 	r.Get.Git = t.Git
 	r.Get.Destination = t.Destination
+	r.Get.AutoSet = r.AutoSet
 	return nil
 }
 
@@ -82,15 +82,5 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
 		r.Get.Directory, r.Get.Repo, r.Get.Destination)
-	if err := r.Get.Run(); err != nil {
-		return err
-	}
-
-	if r.AutoSet {
-		if err := setters.PerformSetters(r.Get.Destination); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return r.Get.Run()
 }

@@ -23,6 +23,7 @@ import (
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
+	kyamlext "sigs.k8s.io/kustomize/kyaml/ext"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -659,4 +660,22 @@ func TestCommand_DefaultValues_AtVersion(t *testing.T) {
 
 	c = Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "r"}}
 	assert.EqualError(t, c.DefaultValues(), "must specify destination")
+}
+
+func TestCommand_Run_ignorefile(t *testing.T) {
+	old := kyamlext.IgnoreFileName
+	defer func() { kyamlext.IgnoreFileName = old }()
+	kyamlext.IgnoreFileName = func() string {
+		return kptfile.KptIgnoreFileName
+	}
+	dest := "my-dataset"
+	g, _, clean := testutil.SetupRepoAndWorkspace(t, testutil.DatasetWithIgnoreFile)
+	defer clean()
+
+	err := Command{
+		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
+		Destination: dest,
+		AutoSet:     true,
+	}.Run()
+	assert.NoError(t, err)
 }

@@ -1,0 +1,8 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "helloworld-chart.fullname" . }}
+  labels:
+    {{- include "helloworld-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}

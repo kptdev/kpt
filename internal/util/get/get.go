@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -47,6 +48,9 @@ type Command struct {
 
 	// Remove directory before copying to it.
 	Clean bool
+
+	// Automatically run the gcloud setters.
+	AutoSet bool
 }
 
 // Run runs the Command.
@@ -93,6 +97,12 @@ func (c Command) Run() error {
 	// create or update the KptFile with the values from git
 	if err = (&c).upsertKptfile(r); err != nil {
 		return errors.Wrap(err)
+	}
+
+	if c.AutoSet {
+		if err := setters.PerformSetters(c.Destination); err != nil {
+			return errors.Wrap(err)
+		}
 	}
 	return nil
 }

@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
+	kyamlext "sigs.k8s.io/kustomize/kyaml/ext"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
@@ -81,6 +82,9 @@ func GetMain() *cobra.Command {
 	f := newFactory(cmd)
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		kyamlext.IgnoreFileName = func() string {
+			return kptfile.KptIgnoreFileName
+		}
 		// register function to use Kptfile for OpenAPI
 		ext.KRMFileName = func() string {
 			return kptfile.KptFileName

@@ -16,6 +16,7 @@ package update_test
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -29,6 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	kyamlext "sigs.k8s.io/kustomize/kyaml/ext"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -786,6 +788,37 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 			}
 			assert.Contains(t, err.Error(), "unrecognized update strategy")
 		}()
+	}
+}
+
+func TestCommand_Run_ignorefile(t *testing.T) {
+	old := kyamlext.IgnoreFileName
+	defer func() { kyamlext.IgnoreFileName = old }()
+	kyamlext.IgnoreFileName = func() string {
+		return kptfile.KptIgnoreFileName
+	}
+	updates := []StrategyType{
+		FastForward,
+		ForceDeleteReplace,
+		AlphaGitPatch,
+		KResourceMerge,
+	}
+
+	for i := range updates {
+		update := updates[i]
+		t.Run(fmt.Sprintf("ignorefile with strategy %s", update), func(t *testing.T) {
+			g := &TestSetupManager{
+				T: t, Name: string(update),
+				UpstreamChanges: []Content{{Branch: "master", Data: testutil.DatasetWithIgnoreFile}},
+			}
+			defer g.Clean()
+			if !g.Init() {
+				return
+			}
+
+			err := Command{Path: g.RepoName, Ref: "master", Strategy: update}.Run()
+			assert.NoError(t, err)
+		})
 	}
 }
 

@@ -22,6 +22,9 @@ import (
 // KptFileName is the name of the KptFile
 const KptFileName = "Kptfile"
 
+// KptIgnoreFileName is the name of the ignore file for kpt
+const KptIgnoreFileName = ".kptignore"
+
 // TypeMeta is the TypeMeta for KptFile instances.
 var TypeMeta = yaml.ResourceMeta{
 	TypeMeta: yaml.TypeMeta{
