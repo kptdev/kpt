@@ -21,8 +21,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/olekukonko/tablewriter"
 )
 

@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"

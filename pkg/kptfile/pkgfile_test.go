@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/GoogleContainerTools/kpt/internal/kptfile"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
+	. "github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/stretchr/testify/assert"

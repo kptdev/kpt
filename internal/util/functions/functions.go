@@ -17,8 +17,8 @@ package functions
 import (
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"

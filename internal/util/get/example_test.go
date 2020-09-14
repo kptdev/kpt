@@ -17,7 +17,7 @@ package get_test
 import (
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 )

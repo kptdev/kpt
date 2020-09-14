@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 

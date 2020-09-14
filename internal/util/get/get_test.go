@@ -19,9 +19,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
