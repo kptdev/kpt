@@ -23,7 +23,7 @@ var CompositepkgsGuide = `
 {{% /pageinfo %}}
 
 This guide walks you through an example to get, view, set and apply contents of a
-kpt package which has nested subpackages in it. A kpt package is a directory of
+kpt package which has subpackages in it. A kpt package is a directory of
 resource configs with a valid ` + "`" + `Kptfile` + "`" + ` in it. A composite package is a ` + "`" + `kpt` + "`" + ` package
 with 1 or more subpackages in its directory tree.
 
@@ -34,8 +34,9 @@ Principles:
 2. If a package is present in the directory tree of parent package,
    the configs of that package are out of scope for the actions performed
    on the parent package.
-3. ` + "`" + `--recurse-subpackages(-R)` + "`" + ` flag can be leveraged to run a command
-   recursively on all the nested subpackages of a root package.
+3. To run a command recursively on all the subpackages, users can leverage
+   ` + "`" + `--recurse-subpackages(-R)` + "`" + ` flag. This is equivalent to running the same
+   command on each package path in the directory tree.
 
 ## Steps
 
@@ -46,7 +47,7 @@ Principles:
 
 ## Fetch a remote package
 
-Fetch an example package which has nested subpackages using [kpt pkg get].
+Fetch an example package which has subpackages using [kpt pkg get].
 
 ### get command
 
@@ -69,12 +70,12 @@ Output:
   hello-composite-pkg
   ├── [Kptfile]  Kptfile hello-composite-pkg
   ├── [deploy.yaml]  Deployment default/hello-composite
-  └── hello-subpkg
+  └── Pkg: hello-subpkg
       ├── [Kptfile]  Kptfile hello-subpkg
       ├── [deploy.yaml]  Deployment default/hello-sub
-      ├── hello-subpkg/hello-dir
+      ├── hello-dir
       │   └── [configmap.yaml]  ConfigMap default/hello-cm
-      └── hello-subpkg/hello-nestedpkg
+      └── Pkg: hello-nestedpkg
           ├── [Kptfile]  Kptfile hello-nestedpkg
           └── [deploy.yaml]  Deployment default/hello-nested
 
@@ -97,7 +98,7 @@ values from the commandline.
 
   kpt cfg list-setters hello-composite-pkg/
 
-Prints the list of setters included recursively in all the nested subpackages
+Prints the list of setters included recursively in all the subpackages
 
 Output:
 
@@ -124,12 +125,10 @@ Output:
 
 If you have ` + "`" + `gcloud` + "`" + ` set up on your local, you can observe that the value of the setter
 ` + "`" + `gcloud.core.project` + "`" + ` is set automatically when the package is fetched.  
-` + "`" + `gcloud` + "`" + ` config setters are automatically set deriving the values from the output of
+[Auto-setters] are automatically set deriving the values from the output of
 ` + "`" + `gcloud config list` + "`" + ` command, when the package is fetched using [kpt pkg get].
 
-## Set the setter parameters
-
-### set using -R flag
+## Provide the setter values
 
 Set operation modifies the resource configuration in place by reading the resources,
 changing parameter values, and writing them back.
