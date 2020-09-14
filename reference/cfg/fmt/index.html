@@ -1053,7 +1053,7 @@ if (!doNotTrack) {
 </p>
 
 <p>Format formats the field ordering in YAML configuration files.</p>
-<p>Inputs may be directories, files or STDIN.  Formatted resources must
+<p>Inputs may be directories, files or STDIN. Formatted resources must
 include both <code>apiVersion</code> and <code>kind</code> fields.</p>
 <ul>
 <li>Stdin inputs are formatted and written to stdout</li>
@@ -1091,7 +1091,28 @@ kustomize build <span style="color:#000;font-weight:bold">|</span> kpt cfg fmt
 DIR:
   Path to a package directory.  Reads from STDIN if not provided.
 </code></pre><!--mdtogo-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">
+--keep-annotations
+  <span style="color:#204a87;font-weight:bold">if</span> true, keep index and filename annotations <span style="color:#204a87">set</span> on Resources.
 
+--override
+  <span style="color:#204a87;font-weight:bold">if</span> true, override existing filepath annotations.
+
+--pattern string
+  pattern to use <span style="color:#204a87;font-weight:bold">for</span> generating filenames <span style="color:#204a87;font-weight:bold">for</span> resources -- may contain the following
+  formatting substitution verbs <span style="color:#ce5c00;font-weight:bold">{</span><span style="color:#4e9a06">&#39;%n&#39;</span>: <span style="color:#4e9a06">&#39;metadata.name&#39;</span>, <span style="color:#4e9a06">&#39;%s&#39;</span>: <span style="color:#4e9a06">&#39;metadata.namespace&#39;</span>, <span style="color:#4e9a06">&#39;%k&#39;</span>: <span style="color:#4e9a06">&#39;kind&#39;</span><span style="color:#ce5c00;font-weight:bold">}</span>
+  <span style="color:#ce5c00;font-weight:bold">(</span>default <span style="color:#4e9a06">&#34;%n_%k.yaml&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
+
+--recurse-subpackages, -R
+  formats resource files recursively in all the nested subpackages
+
+--set-filenames
+  <span style="color:#204a87;font-weight:bold">if</span> true, <span style="color:#204a87">set</span> default filenames on Resources without them
+
+--use-schema
+  <span style="color:#204a87;font-weight:bold">if</span> true, uses openapi resource schema to format resources.
+
+</code></pre></div>
         <div class="section-index">
     
     
@@ -1170,7 +1191,7 @@ DIR:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 22, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4397847ac7f8c642d62df6ef5123189ff5bb89e2">Fix indentation in generated Long message (4397847a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
 </div>
 </div>
 

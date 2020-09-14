@@ -1081,11 +1081,17 @@ kpt cfg grep <span style="color:#4e9a06">&#34;spec.template.spec.containers[name
 
     DIR:
       Path to a package directory
-</code></pre><h4 id="flags">Flags</h4>
-<pre><code>    --invert-match, -v
-      keep resources NOT matching the specified pattern
 </code></pre><!--mdtogo-->
+<h4 id="flags">Flags</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--annotate
+  annotate resources with their file origins. <span style="color:#ce5c00;font-weight:bold">(</span>default <span style="color:#204a87">true</span><span style="color:#ce5c00;font-weight:bold">)</span>
 
+--invert-match, -v
+  keep resources NOT matching the specified pattern
+
+--recurse-subpackages, -R
+  Grep recursively in all the nested subpackages
+</code></pre></div>
         <div class="section-index">
     
     
@@ -1164,7 +1170,7 @@ kpt cfg grep <span style="color:#4e9a06">&#34;spec.template.spec.containers[name
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
 </div>
 </div>
 

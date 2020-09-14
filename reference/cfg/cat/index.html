@@ -1067,7 +1067,40 @@ kpt cfg cat my-dir/
 DIR:
   Path to a package directory
 </code></pre><!--mdtogo-->
+<h4 id="flags">Flags</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--annotate
+  annotate resources with their file origins.
 
+--dest string
+  <span style="color:#204a87;font-weight:bold">if</span> specified, write output to a file rather than stdout
+
+--exclude-non-local
+  <span style="color:#204a87;font-weight:bold">if</span> true, exclude non-local-config in the output.
+
+--format
+  format resource config yaml before printing. <span style="color:#ce5c00;font-weight:bold">(</span>default <span style="color:#204a87">true</span><span style="color:#ce5c00;font-weight:bold">)</span>
+
+--function-config string
+  path to <span style="color:#204a87;font-weight:bold">function</span> config to put in ResourceList -- only <span style="color:#204a87;font-weight:bold">if</span> wrapped in a ResourceList.
+
+--include-local
+  <span style="color:#204a87;font-weight:bold">if</span> true, include local-config in the output.
+
+--recurse-subpackages, -R
+  print resources recursively in all the nested subpackages. <span style="color:#ce5c00;font-weight:bold">(</span>default <span style="color:#204a87">true</span><span style="color:#ce5c00;font-weight:bold">)</span>
+
+--strip-comments
+  remove comments from yaml.
+
+--style
+  yaml styles to apply.  may be <span style="color:#4e9a06">&#39;TaggedStyle&#39;</span>, <span style="color:#4e9a06">&#39;DoubleQuotedStyle&#39;</span>, <span style="color:#4e9a06">&#39;LiteralStyle&#39;</span>, <span style="color:#4e9a06">&#39;FoldedStyle&#39;</span>, <span style="color:#4e9a06">&#39;FlowStyle&#39;</span>.
+
+--wrap-kind string
+  <span style="color:#204a87;font-weight:bold">if</span> set, wrap the output in this list <span style="color:#204a87">type</span> kind.
+
+--wrap-version string
+  <span style="color:#204a87;font-weight:bold">if</span> set, wrap the output in this list <span style="color:#204a87">type</span> apiVersion.
+</code></pre></div>
         <div class="section-index">
     
     
@@ -1146,7 +1179,7 @@ DIR:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified April 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/365fcfca79b44878ad113826324d17380f779e96">Fix asciinema cast for kpt cfg cat (365fcfca)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
 </div>
 </div>
 

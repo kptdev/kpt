@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,18 +32,18 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Starlark Runtime | Kpt</title><meta property="og:title" content="Starlark Runtime" />
-<meta property="og:description" content="Writing and running functions as Starlark scripts
+<title>Get and apply a remote composite package | Kpt</title><meta property="og:title" content="Get and apply a remote composite package" />
+<meta property="og:description" content="Fetch a composite package from a remote git repository and apply its contents to a cluster
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Starlark Runtime">
-<meta itemprop="description" content="Writing and running functions as Starlark scripts
+<meta itemprop="name" content="Get and apply a remote composite package">
+<meta itemprop="description" content="Fetch a composite package from a remote git repository and apply its contents to a cluster
 ">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Starlark Runtime"/>
-<meta name="twitter:description" content="Writing and running functions as Starlark scripts
+<meta name="twitter:title" content="Get and apply a remote composite package"/>
+<meta name="twitter:description" content="Fetch a composite package from a remote git repository and apply its contents to a cluster
 "/>
 
 
@@ -76,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Starlark Runtime | Kpt</title>
+    <title>Get and apply a remote composite package | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -208,10 +208,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Consumers</a>
+    <a  href="/kpt/guides/consumer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Consumers</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumer">
+    <li class="collapse show" id="kptguidesconsumer">
       
       
       
@@ -363,10 +363,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/compositepkgs/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Composite Package</a>
+    <a  href="/kpt/guides/consumer/compositepkgs/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Composite Package</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesconsumercompositepkgs">
+    <li class="collapse show" id="kptguidesconsumercompositepkgs">
       
       
       
@@ -605,10 +605,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Package Publishers</a>
+    <a  href="/kpt/guides/producer/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Package Publishers</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducer">
+    <li class="collapse " id="kptguidesproducer">
       
       
       
@@ -668,10 +668,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Functions</a>
+    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctions">
+    <li class="collapse " id="kptguidesproducerfunctions">
       
       
       
@@ -731,10 +731,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionsstarlark">
+    <li class="collapse " id="kptguidesproducerfunctionsstarlark">
       
       
       
@@ -1080,8 +1080,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/starlark/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Starlark%20Runtime" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/consumer/compositepkgs/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Get%20and%20apply%20a%20remote%20composite%20package" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1095,15 +1095,20 @@ if (!doNotTrack) {
 
 <nav id="TableOfContents">
   <ul>
-    <li>
+    <li><a href="#steps">Steps</a></li>
+    <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
-        <li></li>
+        <li><a href="#get-command">get command</a></li>
       </ul>
     </li>
-    <li><a href="#debugging-functions">Debugging Functions</a></li>
-    <li><a href="#openapi">OpenAPI</a></li>
-    <li><a href="#retaining-yaml-comments">Retaining YAML Comments</a></li>
-    <li><a href="#next-steps">Next Steps</a></li>
+    <li><a href="#view-the-package-contents">View the package contents</a>
+      <ul>
+        <li><a href="#tree-command">tree command</a></li>
+        <li><a href="#list-setters-command">list-setters command</a></li>
+      </ul>
+    </li>
+    <li><a href="#provide-the-setter-values">Provide the setter values</a></li>
+    <li><a href="#apply-the-composite-package">Apply the composite package</a></li>
   </ul>
 </nav>
 
@@ -1127,9 +1132,6 @@ if (!doNotTrack) {
 
 
 
-
-
-
 <li class="breadcrumb-item" >
 	<a href="https://googlecontainertools.github.io/kpt/guides/">Guides</a>
 </li>
@@ -1138,21 +1140,14 @@ if (!doNotTrack) {
 
 
 <li class="breadcrumb-item" >
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/">Package Publishers</a>
-</li>
-
-
-
-
-<li class="breadcrumb-item" >
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/">Functions</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/">Package Consumers</a>
 </li>
 
 
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/">Starlark Runtime</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/">Composite Package</a>
 </li>
 
 	</ol>
@@ -1160,99 +1155,129 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Starlark Runtime</h1>
-	<div class="lead">Writing and running functions as Starlark scripts</div>
+	<h1>Get and apply a remote composite package</h1>
+	<div class="lead">Fetch a composite package from a remote git repository and apply its contents to a cluster</div>
 	
 
 <div class="pageinfo pageinfo-warning">
-<p>The Starlark runtime is Alpha. It is disabled by default, and must be enabled
-with the <code>--enable-star</code> flag.</p>
+<h4 id="notice-composite-packages-feature-support-is-in-alpha-phase">Notice: Composite packages feature support is in alpha phase</h4>
 
 </div>
 
-<p>Functions may be written as <a href="https://github.com/bazelbuild/starlark">Starlark</a> scripts which modify a ResourceList
-provided as a variable.</p>
-<h4 id="imperative-run">Imperative Run</h4>
-<p>Starlark functions can be run imperatively by providing the Starlark script as
-a flag on <code>kpt fn run</code>. Following is an example of a Starlark function which
-adds a &ldquo;foo&rdquo; annotation to every resource in the package.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
-<span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
-<span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
-  <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">resource</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#000">r</span><span style="color:#000;font-weight:bold">:</span>
-    <span style="color:#8f5902;font-style:italic"># mutate the resource</span>
-    <span style="color:#000">resource</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;annotations&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;foo&#34;</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">an</span>
+<p>This guide walks you through an example to get, view, set and apply contents of a
+kpt package which has subpackages in it. A kpt package is a directory of
+resource configs with a valid <code>Kptfile</code> in it. A composite package is a <code>kpt</code> package
+with 1 or more subpackages in its directory tree.</p>
+<p>Principles:</p>
+<ol>
+<li>Each kpt package is an independent building block and
+should contain resources(ex: setter definitions) of its own.</li>
+<li>If a package is present in the directory tree of parent package,
+the configs of that package are out of scope for the actions performed
+on the parent package.</li>
+<li>To run a command recursively on all the subpackages, users can leverage
+<code>--recurse-subpackages(-R)</code> flag. This is equivalent to running the same
+command on each package path in the directory tree.</li>
+</ol>
+<h2 id="steps">Steps</h2>
+<ol>
+<li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
+<li><a href="#view-the-package-contents">View the package contents</a></li>
+<li><a href="#set-the-setter-parameters">Set the setter parameters</a></li>
+<li><a href="#apply-the-composite-package">Apply the composite package</a></li>
+</ol>
+<h2 id="fetch-a-remote-package">Fetch a remote package</h2>
+<p>Fetch an example package which has subpackages using <a href="../../..//reference/pkg/get/">kpt pkg get</a>.</p>
+<h3 id="get-command">get command</h3>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-composite-pkg <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>hello-composite-pkg
+</code></pre></div><h2 id="view-the-package-contents">View the package contents</h2>
+<p>The primary package artifacts are Kubernetes resource configuration
+(e.g. YAML files).</p>
+<h3 id="tree-command">tree command</h3>
+<p><a href="https://googlecontainertools.github.io/kpt/reference/cfg/tree/">tree</a> command is used to list the contents of the package in a tree structure.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree hello-composite-pkg/
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg
+├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile hello-composite-pkg
+├── <span style="color:#ce5c00;font-weight:bold">[</span>deploy.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment default/hello-composite
+└── Pkg: hello-subpkg
+    ├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile hello-subpkg
+    ├── <span style="color:#ce5c00;font-weight:bold">[</span>deploy.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment default/hello-sub
+    ├── hello-dir
+    │   └── <span style="color:#ce5c00;font-weight:bold">[</span>configmap.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  ConfigMap default/hello-cm
+    └── Pkg: hello-nestedpkg
+        ├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile hello-nestedpkg
+        └── <span style="color:#ce5c00;font-weight:bold">[</span>deploy.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment default/hello-nested
+</code></pre></div><p>There are three kpt packages in the output:</p>
+<ol>
+<li>hello-composite-pkg</li>
+<li>hello-subpkg</li>
+<li>hello-nestedpkg</li>
+</ol>
+<p><code>hello-dir</code> is a subdirectory of <code>hello-subpkg</code> and is not a kpt package, as it doesn&rsquo;t
+contain a <code>Kptfile</code> in it.</p>
+<p>Optionally, users may use other commands like <a href="https://googlecontainertools.github.io/kpt/reference/cfg/count/">count</a>, <a href="https://googlecontainertools.github.io/kpt/reference/cfg/grep/">grep</a>, <a href="https://googlecontainertools.github.io/kpt/reference/cfg/cat/">cat</a> to
+further view and understand the package contents.</p>
+<h3 id="list-setters-command">list-setters command</h3>
+<p>The fetched package contains parameters called setters which can be used to set configuration
+values from the commandline.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters hello-composite-pkg/
+</code></pre></div><p>Prints the list of setters included recursively in all the subpackages</p>
+<p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
+         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
+  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
+  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
 
-<span style="color:#8f5902;font-style:italic"># get the value of the annotation to add</span>
-<span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;data&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
+hello-composite-pkg/hello-subpkg/
+         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
+  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">2</span>       Yes
+  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
 
-<span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
-</code></pre></div><p>Run the Starlark function with:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run c.star as a function, generating a ConfigMap with value=bar as the</span>
-<span style="color:#8f5902;font-style:italic"># functionConfig</span>
-kpt fn run . --enable-star --star-path c.star -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>bar
-</code></pre></div><p>Any resource under <code>.</code> will have the <code>foo: bar</code> annotation added.</p>
-<h4 id="declarative-run">Declarative Run</h4>
-<p>Starlark functions can also be run declaratively using the
-<code>config.kubernetes.io/function</code> annotation. This annotation indicates that the
-resource is functionConfig that should be provided to a function.</p>
-<p>Following is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation to
-each resource in its package. The ExampleKind resource will be set as the
-ResourceList.functionConfig.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>function-input<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
-</span><span style="color:#8f5902;font-style:italic">      starlark: {path: c.star, name: example-name}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;hello world&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Example Starlark function to which will add an annotation to each resource
-scoped to <code>example.yaml</code> (those under the directory containing <code>example.yaml</code>):</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
-<span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
-<span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
-  <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">resource</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#000">r</span><span style="color:#000;font-weight:bold">:</span>
-    <span style="color:#000">resource</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;annotations&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;foo&#34;</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">an</span>
+hello-composite-pkg/hello-subpkg/hello-nestedpkg/
+         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
+  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
+  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
+</code></pre></div><p>If you have <code>gcloud</code> set up on your local, you can observe that the value of the setter
+<code>gcloud.core.project</code> is set automatically when the package is fetched.<br>
+<a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters">Auto-setters</a> are automatically set deriving the values from the output of
+<code>gcloud config list</code> command, when the package is fetched using <a href="../../..//reference/pkg/get/">kpt pkg get</a>.</p>
+<h2 id="provide-the-setter-values">Provide the setter values</h2>
+<p>Set operation modifies the resource configuration in place by reading the resources,
+changing parameter values, and writing them back.</p>
+<p>In <code>list-setters</code> output, <code>namespace</code> setter is marked as required by the package
+publisher, hence it is mandatory to set it to a new value. You may set other setter
+parameters, either selectively in few of the packages or in all the them.</p>
+<p><code>--recurse-subpackages(-R)</code> flag is <code>default:false</code> for set command. If not invoked,
+the set operation is performed only on the resource files of parent package and not
+the subpackages.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg <span style="color:#204a87">set</span> hello-composite-pkg/ namespace myspace -R
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
+<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
 
-<span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;data&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
-<span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
-</code></pre></div><p>Run them on the directory containing <code>example.yaml</code> using:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn run DIR/ --enable-star
-</code></pre></div><h2 id="debugging-functions">Debugging Functions</h2>
-<p>It is possible to debug Starlark functions using <code>print</code></p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
-<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;name&#34;</span><span style="color:#000;font-weight:bold">])</span>
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --enable-star --star-path c.star
-</code></pre></div><blockquote>
-<p>foo</p>
-</blockquote>
-<h2 id="openapi">OpenAPI</h2>
-<p>The OpenAPI known to kpt is provided to the Starlark program through the
-<code>ctx.open_api</code> variable. This may contain metadata about the resources and
-their types.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic">#c.star</span>
-<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">open_api</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;definitions&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;io.k8s.api.apps.v1.Deployment&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;description&#34;</span><span style="color:#000;font-weight:bold">])</span>
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --enable-star --star-path c.star
-</code></pre></div><blockquote>
-<p>Deployment enables declarative updates for Pods and ReplicaSets.</p>
-</blockquote>
-<h2 id="retaining-yaml-comments">Retaining YAML Comments</h2>
-<p>While Starlark programs are unable to retain comments on resources, kpt will
-attempt to retain comments by copying them from the function inputs to the
-function outputs.</p>
-<p>It is not possible at this time to add, modify or delete comments from
-Starlark scripts.</p>
-<h2 id="next-steps">Next Steps</h2>
-<ul>
-<li>Explore other ways to run functions from the <a href="../">Functions Developer Guide</a>.</li>
-<li>Find out how to structure a pipeline of functions from the
-<a href="../../../../concepts/functions/">functions concepts</a> page.</li>
-<li>Consult the <a href="../../../../reference/fn/">fn command reference</a>.</li>
-</ul>
+hello-composite-pkg/hello-subpkg/
+<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">2</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
 
+hello-composite-pkg/hello-subpkg/hello-nestedpkg/
+<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
+</code></pre></div><h2 id="apply-the-composite-package">Apply the composite package</h2>
+<p>Now that you have configured the package, apply it to the cluster</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create namespace myspace
+kubectl apply -f hello-composite-pkg/ -R
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">deployment.apps/hello-composite created
+deployment.apps/hello-sub created
+configmap/hello-cm created
+deployment.apps/hello-nested created
+</code></pre></div>
         <div class="section-index">
     
     
@@ -1345,7 +1370,7 @@ Starlark scripts.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8a9a358774f25a50bf783caa812d500a1c9cfd24">Deduplicate kpt function docs (#923) (8a9a3587)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
 </div>
 </div>
 

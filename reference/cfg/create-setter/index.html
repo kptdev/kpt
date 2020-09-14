@@ -1053,7 +1053,7 @@ if (!doNotTrack) {
 </p>
 
 <p>Setters provide a solution for template-free setting or substitution of field
-values through package metadata (OpenAPI).  They are a safer alternative to
+values through package metadata (OpenAPI). They are a safer alternative to
 other substitution techniques which do not have the context of the
 structured data &ndash; e.g. using <code>sed</code> to replace values.</p>
 <p>See the <a href="../../../guides/producer/setters/">creating setters</a> guide for more info on creating setters.</p>
@@ -1089,18 +1089,39 @@ NAME:
 VALUE
   The value of the filed <span style="color:#204a87;font-weight:bold">for</span> which setter reference must be added.
   e.g. <span style="color:#0000cf;font-weight:bold">3</span>
-</code></pre></div><h4 id="flags">Flags</h4>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--description
-  Optional description about the value.
+</code></pre></div><!--mdtogo-->
+<h4 id="flags">Flags</h4>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">--description string
+  record a description <span style="color:#204a87;font-weight:bold">for</span> the current setter value.
 
---set-by
-  Optional record of who <span style="color:#204a87">set</span> the value.
+--field string
+  name of the field to set, a suffix of the path to the field, or the full path
+  to the field. Default is to match all fields.
 
 --value
   Optional flag, alternative to specifying the value as an argument
   e.g. used to specify values that start with <span style="color:#4e9a06">&#39;-&#39;</span>
-</code></pre></div><!--mdtogo-->
 
+--recurse-subpackages, -R
+  create setter recursively in all the nested subpackages
+
+--required
+  indicates that this setter must be <span style="color:#204a87">set</span> by package consumer before live apply/preview
+
+--schema-path string
+  openAPI schema file path <span style="color:#204a87;font-weight:bold">for</span> setter constraints -- file content
+  e.g. <span style="color:#ce5c00;font-weight:bold">{</span><span style="color:#4e9a06">&#34;type&#34;</span>: <span style="color:#4e9a06">&#34;string&#34;</span>, <span style="color:#4e9a06">&#34;maxLength&#34;</span>: 15, <span style="color:#4e9a06">&#34;enum&#34;</span>: <span style="color:#ce5c00;font-weight:bold">[</span><span style="color:#4e9a06">&#34;allowedValue1&#34;</span>, <span style="color:#4e9a06">&#34;allowedValue2&#34;</span><span style="color:#ce5c00;font-weight:bold">]}</span>
+
+--set-by string
+  record who the field was default by.
+
+--type string
+  OpenAPI field <span style="color:#204a87">type</span> <span style="color:#204a87;font-weight:bold">for</span> the setter -- e.g. integer,boolean,string.
+
+--value string
+  alternative to specifying the value as an argument. e.g. used to specify values
+  that start with <span style="color:#4e9a06">&#39;-&#39;</span>
+</code></pre></div>
         <div class="section-index">
     
     
@@ -1179,7 +1200,7 @@ VALUE
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
 </div>
 </div>
 

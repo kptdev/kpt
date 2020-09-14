@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,18 +32,18 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Starlark Runtime | Kpt</title><meta property="og:title" content="Starlark Runtime" />
-<meta property="og:description" content="Writing and running functions as Starlark scripts
+<title>Create and publish a composite package | Kpt</title><meta property="og:title" content="Create and publish a composite package" />
+<meta property="og:description" content="Build a composite package from scratch and publish it
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Starlark Runtime">
-<meta itemprop="description" content="Writing and running functions as Starlark scripts
+<meta itemprop="name" content="Create and publish a composite package">
+<meta itemprop="description" content="Build a composite package from scratch and publish it
 ">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Starlark Runtime"/>
-<meta name="twitter:description" content="Writing and running functions as Starlark scripts
+<meta name="twitter:title" content="Create and publish a composite package"/>
+<meta name="twitter:description" content="Build a composite package from scratch and publish it
 "/>
 
 
@@ -76,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Starlark Runtime | Kpt</title>
+    <title>Create and publish a composite package | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -668,10 +668,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Functions</a>
+    <a  href="/kpt/guides/producer/functions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctions">
+    <li class="collapse " id="kptguidesproducerfunctions">
       
       
       
@@ -731,10 +731,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
+    <a  href="/kpt/guides/producer/functions/starlark/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Starlark Runtime</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerfunctionsstarlark">
+    <li class="collapse " id="kptguidesproducerfunctionsstarlark">
       
       
       
@@ -944,10 +944,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/compositepkgs/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Composite Package</a>
+    <a  href="/kpt/guides/producer/compositepkgs/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Composite Package</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducercompositepkgs">
+    <li class="collapse show" id="kptguidesproducercompositepkgs">
       
       
       
@@ -1080,8 +1080,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/functions/starlark/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Starlark%20Runtime" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/compositepkgs/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Create%20and%20publish%20a%20composite%20package" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1095,15 +1095,16 @@ if (!doNotTrack) {
 
 <nav id="TableOfContents">
   <ul>
-    <li>
+    <li><a href="#steps">Steps</a></li>
+    <li><a href="#create-a-composite-package">Create a composite package</a></li>
+    <li><a href="#add-setters-and-substitutions">Add setters and substitutions</a>
       <ul>
-        <li></li>
+        <li><a href="#create-setters">Create setters</a></li>
+        <li><a href="#create-substitutions">Create substitutions</a></li>
+        <li><a href="#list-and-verify-setterssubstitutions">List and verify setters/substitutions</a></li>
       </ul>
     </li>
-    <li><a href="#debugging-functions">Debugging Functions</a></li>
-    <li><a href="#openapi">OpenAPI</a></li>
-    <li><a href="#retaining-yaml-comments">Retaining YAML Comments</a></li>
-    <li><a href="#next-steps">Next Steps</a></li>
+    <li><a href="#publish-the-package">Publish the package</a></li>
   </ul>
 </nav>
 
@@ -1117,9 +1118,6 @@ if (!doNotTrack) {
             <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
 	<ol class="breadcrumb spb-1">
 		
-
-
-
 
 
 
@@ -1144,15 +1142,8 @@ if (!doNotTrack) {
 
 
 
-<li class="breadcrumb-item" >
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/">Functions</a>
-</li>
-
-
-
-
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/">Starlark Runtime</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/">Composite Package</a>
 </li>
 
 	</ol>
@@ -1160,99 +1151,139 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Starlark Runtime</h1>
-	<div class="lead">Writing and running functions as Starlark scripts</div>
+	<h1>Create and publish a composite package</h1>
+	<div class="lead">Build a composite package from scratch and publish it</div>
 	
 
 <div class="pageinfo pageinfo-warning">
-<p>The Starlark runtime is Alpha. It is disabled by default, and must be enabled
-with the <code>--enable-star</code> flag.</p>
+<h4 id="notice-composite-packages-feature-support-is-in-alpha-phase">Notice: Composite packages feature support is in alpha phase</h4>
 
 </div>
 
-<p>Functions may be written as <a href="https://github.com/bazelbuild/starlark">Starlark</a> scripts which modify a ResourceList
-provided as a variable.</p>
-<h4 id="imperative-run">Imperative Run</h4>
-<p>Starlark functions can be run imperatively by providing the Starlark script as
-a flag on <code>kpt fn run</code>. Following is an example of a Starlark function which
-adds a &ldquo;foo&rdquo; annotation to every resource in the package.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
-<span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
-<span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
-  <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">resource</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#000">r</span><span style="color:#000;font-weight:bold">:</span>
-    <span style="color:#8f5902;font-style:italic"># mutate the resource</span>
-    <span style="color:#000">resource</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;annotations&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;foo&#34;</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">an</span>
+<p>This guide walks you through an example to create, parameterize and publish a kpt
+package which has subpackages in it. A kpt package is a directory of resource
+configs with valid <code>Kptfile</code> in it. A composite package is a <code>kpt</code> package with 1
+or more subpackages in it.</p>
+<p>Principles:</p>
+<ol>
+<li>Each kpt package is an independent building block and
+should contain resources(ex: setter definitions) of its own.</li>
+<li>If a package is present in the directory tree of parent package,
+the configs of that package are out of scope for the actions performed
+on the parent package.</li>
+<li>To run a command recursively on all the subpackages, users can leverage
+<code>--recurse-subpackages(-R)</code> flag. This is equivalent to running the same
+command on each package path in the directory tree.</li>
+</ol>
+<h2 id="steps">Steps</h2>
+<ol>
+<li><a href="#create-a-composite-package">Create a composite package</a></li>
+<li><a href="#add-setters-and-substitutions">Add setters and substitutions</a></li>
+<li><a href="#publish-the-package">Publish the package</a></li>
+</ol>
+<h2 id="create-a-composite-package">Create a composite package</h2>
+<p>Create a composite package directory structure and initialize <code>kpt</code> packages.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir hello-composite-pkg
+kpt pkg init hello-composite-pkg
 
-<span style="color:#8f5902;font-style:italic"># get the value of the annotation to add</span>
-<span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;data&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
+mkdir hello-composite-pkg/hello-subpkg
+kpt pkg init hello-composite-pkg/hello-subpkg
 
-<span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
-</code></pre></div><p>Run the Starlark function with:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># run c.star as a function, generating a ConfigMap with value=bar as the</span>
-<span style="color:#8f5902;font-style:italic"># functionConfig</span>
-kpt fn run . --enable-star --star-path c.star -- <span style="color:#000">value</span><span style="color:#ce5c00;font-weight:bold">=</span>bar
-</code></pre></div><p>Any resource under <code>.</code> will have the <code>foo: bar</code> annotation added.</p>
-<h4 id="declarative-run">Declarative Run</h4>
-<p>Starlark functions can also be run declaratively using the
-<code>config.kubernetes.io/function</code> annotation. This annotation indicates that the
-resource is functionConfig that should be provided to a function.</p>
-<p>Following is an example of a Starlark function which adds a &ldquo;foo&rdquo; annotation to
-each resource in its package. The ExampleKind resource will be set as the
-ResourceList.functionConfig.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># example.yaml</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>example.com/v1beta1<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ExampleKind<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>function-input<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
-</span><span style="color:#8f5902;font-style:italic">      starlark: {path: c.star, name: example-name}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">data</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">value</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#34;hello world&#34;</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><p>Example Starlark function to which will add an annotation to each resource
-scoped to <code>example.yaml</code> (those under the directory containing <code>example.yaml</code>):</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
-<span style="color:#8f5902;font-style:italic"># set the foo annotation on each resource</span>
-<span style="color:#204a87;font-weight:bold">def</span> <span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">r</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">):</span>
-  <span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">resource</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#000">r</span><span style="color:#000;font-weight:bold">:</span>
-    <span style="color:#000">resource</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;annotations&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;foo&#34;</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">an</span>
+<span style="color:#8f5902;font-style:italic"># this is a subdir and not a package</span>
+mkdir hello-composite-pkg/hello-subpkg/hello-dir
 
-<span style="color:#000">an</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;functionConfig&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;data&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;value&#34;</span><span style="color:#000;font-weight:bold">]</span>
-<span style="color:#000">run</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">],</span> <span style="color:#000">an</span><span style="color:#000;font-weight:bold">)</span>
-</code></pre></div><p>Run them on the directory containing <code>example.yaml</code> using:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">kpt fn run DIR/ --enable-star
-</code></pre></div><h2 id="debugging-functions">Debugging Functions</h2>
-<p>It is possible to debug Starlark functions using <code>print</code></p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic"># c.star</span>
-<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">resource_list</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;items&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#0000cf;font-weight:bold">0</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;metadata&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;name&#34;</span><span style="color:#000;font-weight:bold">])</span>
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --enable-star --star-path c.star
-</code></pre></div><blockquote>
-<p>foo</p>
-</blockquote>
-<h2 id="openapi">OpenAPI</h2>
-<p>The OpenAPI known to kpt is provided to the Starlark program through the
-<code>ctx.open_api</code> variable. This may contain metadata about the resources and
-their types.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#8f5902;font-style:italic">#c.star</span>
-<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">ctx</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">open_api</span><span style="color:#000;font-weight:bold">[</span><span style="color:#4e9a06">&#34;definitions&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;io.k8s.api.apps.v1.Deployment&#34;</span><span style="color:#000;font-weight:bold">][</span><span style="color:#4e9a06">&#34;description&#34;</span><span style="color:#000;font-weight:bold">])</span>
-</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --enable-star --star-path c.star
-</code></pre></div><blockquote>
-<p>Deployment enables declarative updates for Pods and ReplicaSets.</p>
-</blockquote>
-<h2 id="retaining-yaml-comments">Retaining YAML Comments</h2>
-<p>While Starlark programs are unable to retain comments on resources, kpt will
-attempt to retain comments by copying them from the function inputs to the
-function outputs.</p>
-<p>It is not possible at this time to add, modify or delete comments from
-Starlark scripts.</p>
-<h2 id="next-steps">Next Steps</h2>
-<ul>
-<li>Explore other ways to run functions from the <a href="../">Functions Developer Guide</a>.</li>
-<li>Find out how to structure a pipeline of functions from the
-<a href="../../../../concepts/functions/">functions concepts</a> page.</li>
-<li>Consult the <a href="../../../../reference/fn/">fn command reference</a>.</li>
-</ul>
+mkdir hello-composite-pkg/hello-subpkg/hello-nestedpkg
+kpt pkg init hello-composite-pkg/hello-subpkg/hello-nestedpkg
+</code></pre></div><p>Add resource files(.yaml) to the directories. You may use(copy/paste) the resource files from
+<a href="https://github.com/GoogleContainerTools/kpt/tree/master/package-examples/hello-composite-pkg">hello-composite-pkg</a> to respective directories on local and delete the <code>$kpt-set</code> comments.</p>
+<h2 id="add-setters-and-substitutions">Add setters and substitutions</h2>
+<h3 id="create-setters">Create setters</h3>
+<p><a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">Setters</a> provide a solution for template-free setting of field values through
+package metadata (OpenAPI). Setters will be invoked by package consumers to
+programmatically modify the configuration using <code>kpt cfg set</code> to <a href="https://googlecontainertools.github.io/kpt/guides/consumer/set/">set</a> values.
+Create <code>namespace</code> setter in all the packages.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-setter hello-composite-pkg/ namespace YOURSPACE -R --required
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
+created setter <span style="color:#4e9a06">&#34;namespace&#34;</span>
 
+hello-composite-pkg/hello-subpkg/
+created setter <span style="color:#4e9a06">&#34;namespace&#34;</span>
+
+hello-composite-pkg/hello-subpkg/hello-nestedpkg/
+created setter <span style="color:#4e9a06">&#34;namespace&#34;</span>
+</code></pre></div><p>Similarly create a setter with name <code>gcloud.core.project</code>. If the package consumer
+has <code>gcloud</code> set up on local, they can observe that the value of the setter
+<code>gcloud.core.project</code> will be set automatically when the package is fetched.
+<a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters">Auto-setters</a> are automatically set deriving the values from the output of
+<code>gcloud config list</code> command, when the package is fetched using <a href="../../..//reference/pkg/get/">kpt pkg get</a>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-setter hello-composite-pkg/ gcloud.core.project PROJECT_ID -R
+</code></pre></div><h3 id="create-substitutions">Create substitutions</h3>
+<p><a href="https://googlecontainertools.github.io/kpt/guides/producer/substitutions/">Substitutions</a> provide a solution for template-free substitution of field values
+built on top of setters. They enable substituting values into part of a field,
+including combining multiple setters into a single value.</p>
+<p>Substitutions may be invoked to programmatically modify the configuration using
+<code>kpt cfg set</code> to substitute values which are derived from the setter.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-subst hello-composite-pkg/ image-tag <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--field-value gcr.io/kpt-dev/helloworld-gke:0.1.0 <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--pattern gcr.io/kpt-dev/<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>image<span style="color:#ce5c00;font-weight:bold">}</span>:<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>tag<span style="color:#ce5c00;font-weight:bold">}</span> -R
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
+unable to find setter with name image, creating new setter with value helloworld-gke
+unable to find setter with name tag, creating new setter with value 0.1.0
+created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
+
+hello-composite-pkg/hello-subpkg/
+unable to find setter with name image, creating new setter with value helloworld-gke
+unable to find setter with name tag, creating new setter with value 0.1.0
+created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
+
+hello-composite-pkg/hello-subpkg/hello-nestedpkg/
+unable to find setter with name image, creating new setter with value helloworld-gke
+unable to find setter with name tag, creating new setter with value 0.1.0
+created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
+</code></pre></div><h3 id="list-and-verify-setterssubstitutions">List and verify setters/substitutions</h3>
+<p>Use list-setters command to verify that the setters and substitutions are created as expected</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters hello-composite-pkg/ --include-subst
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
+         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
+  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
+  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
+--------------- -------------------------------- --------------
+  SUBSTITUTION              PATTERN               REFERENCES
+  image-tag      gcr.io/kpt-dev/<span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
+
+hello-composite-pkg/hello-subpkg/
+         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
+  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">2</span>       Yes
+  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
+--------------- -------------------------------- --------------
+  SUBSTITUTION              PATTERN               REFERENCES
+  image-tag      gcr.io/kpt-dev/<span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
+
+hello-composite-pkg/hello-subpkg/hello-nestedpkg/
+         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
+  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
+  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
+--------------- -------------------------------- --------------
+  SUBSTITUTION              PATTERN               REFERENCES
+  image-tag      gcr.io/kpt-dev/<span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
+</code></pre></div><h2 id="publish-the-package">Publish the package</h2>
+<p>Now that as a package creator, you have created and parameterized a composite package,
+publish it so that package consumers can consume it.</p>
+<p>Create a <a href="https://docs.github.com/en/enterprise/2.13/user/articles/creating-a-new-repository">git repo</a> in your profile with name <code>hello-composite-pkg</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> hello-composite-pkg/
+git init<span style="color:#000;font-weight:bold">;</span> git add .<span style="color:#000;font-weight:bold">;</span> git commit -am <span style="color:#4e9a06">&#34;Publish composite package&#34;</span><span style="color:#000;font-weight:bold">;</span>
+git remote add origin &lt;YOUR_GIT_REPO_LINK&gt;
+git push origin master
+</code></pre></div>
         <div class="section-index">
     
     
@@ -1345,7 +1376,7 @@ Starlark scripts.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8a9a358774f25a50bf783caa812d500a1c9cfd24">Deduplicate kpt function docs (#923) (8a9a3587)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
 </div>
 </div>
 

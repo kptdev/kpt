@@ -77,24 +77,27 @@ kpt cfg annotate DIR --kv &lt;span style=&#34;color:#000&#34;&gt;key1&lt;/span&g
 &lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
   Path to a package directory
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
-&lt;pre&gt;&lt;code&gt;--apiVersion
-  Only set annotations on resources with this apiVersion.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--apiVersion
+  Only &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; annotations on resources with this apiVersion.
 
 --kind
-  Only set annotations on resources of this kind.
+  Only &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; annotations on resources of this kind.
 
 --kv
-  The annotation key and value to set.  May be specified multiple times
-  to set multiple annotations at once.
+  The annotation key and value to set.  May be specified multiple &lt;span style=&#34;color:#204a87&#34;&gt;times&lt;/span&gt;
+  to &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; multiple annotations at once.
 
 --namespace
-  Only set annotations on resources in this namespace.
+  Only &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; annotations on resources in this namespace.
 
 --name
-  Only set annotations on resources with this name.
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+  Only &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; annotations on resources with this name.
 
+--recurse-subpackages, -R
+  Add annotations recursively in all the nested subpackages
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -157,7 +160,40 @@ kpt cfg cat my-dir/
 DIR:
   Path to a package directory
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--annotate
+  annotate resources with their file origins.
 
+--dest string
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; specified, write output to a file rather than stdout
+
+--exclude-non-local
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; true, exclude non-local-config in the output.
+
+--format
+  format resource config yaml before printing. &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;default &lt;span style=&#34;color:#204a87&#34;&gt;true&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
+
+--function-config string
+  path to &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;function&lt;/span&gt; config to put in ResourceList -- only &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; wrapped in a ResourceList.
+
+--include-local
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; true, include local-config in the output.
+
+--recurse-subpackages, -R
+  print resources recursively in all the nested subpackages. &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;default &lt;span style=&#34;color:#204a87&#34;&gt;true&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
+
+--strip-comments
+  remove comments from yaml.
+
+--style
+  yaml styles to apply.  may be &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;TaggedStyle&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;DoubleQuotedStyle&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;LiteralStyle&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;FoldedStyle&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;FlowStyle&amp;#39;&lt;/span&gt;.
+
+--wrap-kind string
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; set, wrap the output in this list &lt;span style=&#34;color:#204a87&#34;&gt;type&lt;/span&gt; kind.
+
+--wrap-version string
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; set, wrap the output in this list &lt;span style=&#34;color:#204a87&#34;&gt;type&lt;/span&gt; apiVersion.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -220,6 +256,13 @@ kubectl get all -o yaml &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;
 DIR:
   Path to a package directory.  Defaults to stdin if unspecified.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--kind
+count resources by kind. &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;default &lt;span style=&#34;color:#204a87&#34;&gt;true&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
+
+--recurse-subpackages, -R
+  Prints count of resources recursively in all the nested subpackages. &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;default &lt;span style=&#34;color:#204a87&#34;&gt;true&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -268,7 +311,7 @@ DIR:
 &lt;/p&gt;
 
 &lt;p&gt;Setters provide a solution for template-free setting or substitution of field
-values through package metadata (OpenAPI).  They are a safer alternative to
+values through package metadata (OpenAPI). They are a safer alternative to
 other substitution techniques which do not have the context of the
 structured data &amp;ndash; e.g. using &lt;code&gt;sed&lt;/code&gt; to replace values.&lt;/p&gt;
 &lt;p&gt;See the &lt;a href=&#34;../../../guides/producer/setters/&#34;&gt;creating setters&lt;/a&gt; guide for more info on creating setters.&lt;/p&gt;
@@ -304,18 +347,39 @@ NAME:
 VALUE
   The value of the filed &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; which setter reference must be added.
   e.g. &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--description
-  Optional description about the value.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--description string
+  record a description &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; the current setter value.
 
---set-by
-  Optional record of who &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; the value.
+--field string
+  name of the field to set, a suffix of the path to the field, or the full path
+  to the field. Default is to match all fields.
 
 --value
   Optional flag, alternative to specifying the value as an argument
   e.g. used to specify values that start with &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 
+--recurse-subpackages, -R
+  create setter recursively in all the nested subpackages
+
+--required
+  indicates that this setter must be &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; by package consumer before live apply/preview
+
+--schema-path string
+  openAPI schema file path &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; setter constraints -- file content
+  e.g. &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;string&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;maxLength&amp;#34;&lt;/span&gt;: 15, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;enum&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;allowedValue1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;allowedValue2&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]}&lt;/span&gt;
+
+--set-by string
+  record who the field was default by.
+
+--type string
+  OpenAPI field &lt;span style=&#34;color:#204a87&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; the setter -- e.g. integer,boolean,string.
+
+--value string
+  alternative to specifying the value as an argument. e.g. used to specify values
+  that start with &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;-&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -427,7 +491,21 @@ PATTERN
   substrings.
   e.g. &lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;-setter&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;-setter&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;
+--field string
+  name of the field to &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; -- e.g. --field image
 
+--field-value string
+  value of the field to create substitution &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; -- e.g. --field-value nginx:0.1.0
+
+--pattern string
+  substitution pattern -- e.g. --pattern &lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;my-image-setter&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;my-tag-setter&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;
+
+--recurse-subpackages, -R
+  create substitution recursively in all the nested subpackages
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -496,7 +574,11 @@ NAME:
   The name of the setter to delete. e.g. replicas
 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;
+--recurse-subpackages, -R
+  Delete setter recursively in all the nested subpackages
 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -534,7 +616,11 @@ NAME:
   The name of the substitution to delete. e.g. image-tag
 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;
+--recurse-subpackages, -R
+  Delete substitution recursively in all the nested subpackages
 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -583,7 +669,7 @@ NAME:
 &lt;/p&gt;
 
 &lt;p&gt;Format formats the field ordering in YAML configuration files.&lt;/p&gt;
-&lt;p&gt;Inputs may be directories, files or STDIN.  Formatted resources must
+&lt;p&gt;Inputs may be directories, files or STDIN. Formatted resources must
 include both &lt;code&gt;apiVersion&lt;/code&gt; and &lt;code&gt;kind&lt;/code&gt; fields.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Stdin inputs are formatted and written to stdout&lt;/li&gt;
@@ -621,7 +707,28 @@ kustomize build &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/sp
 DIR:
   Path to a package directory.  Reads from STDIN if not provided.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;
+--keep-annotations
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; true, keep index and filename annotations &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; on Resources.
 
+--override
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; true, override existing filepath annotations.
+
+--pattern string
+  pattern to use &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; generating filenames &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;for&lt;/span&gt; resources -- may contain the following
+  formatting substitution verbs &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;%n&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;metadata.name&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;%s&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;metadata.namespace&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;%k&amp;#39;&lt;/span&gt;: &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;kind&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;
+  &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;default &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;%n_%k.yaml&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
+
+--recurse-subpackages, -R
+  formats resource files recursively in all the nested subpackages
+
+--set-filenames
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; true, &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; default filenames on Resources without them
+
+--use-schema
+  &lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;if&lt;/span&gt; true, uses openapi resource schema to format resources.
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
@@ -698,11 +805,17 @@ kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.template.sp
 
     DIR:
       Path to a package directory
-&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
-&lt;pre&gt;&lt;code&gt;    --invert-match, -v
-      keep resources NOT matching the specified pattern
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;--annotate
+  annotate resources with their file origins. &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;default &lt;span style=&#34;color:#204a87&#34;&gt;true&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
 
+--invert-match, -v
+  keep resources NOT matching the specified pattern
+
+--recurse-subpackages, -R
+  Grep recursively in all the nested subpackages
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     
