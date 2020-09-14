@@ -88,3 +88,6 @@ gencatalog:
 
 servedocs:
 	(cd site && go run github.com/gohugoio/hugo server)
+
+verify-guides:
+	./scripts/verifyGuides.sh
