@@ -117,23 +117,23 @@ config-map-2 (ConfigMap)
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;When the updated package is applied, &lt;code&gt;config-map-1&lt;/code&gt; is automatically
 deleted (pruned) since it is omitted.&lt;/p&gt;
 &lt;p&gt;In order to take advantage of this automatic clean-up, a package must contain
-a &lt;strong&gt;grouping object template&lt;/strong&gt;, which is a ConfigMap with a special label. An example is:&lt;/p&gt;
+an &lt;strong&gt;Inventory Template&lt;/strong&gt;, which is a ConfigMap with a special label. An example is:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;apiVersion&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;v1&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ConfigMap&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;metadata&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;test-grouping-object&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;inventory&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;-78889725&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;namespace&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;default&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;labels&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
-&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;cli-utils.sigs.k8s.io/inventory-id&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;test-group&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
+&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;    &lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;cli-utils.sigs.k8s.io/inventory-id&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;b49dd93f-28db&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;-4626&lt;/span&gt;-b42d-749dd4c5ba2f&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And the special label is:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;cli-utils.sigs.k8s.io/inventory-id: *group-name*
+&lt;pre&gt;&lt;code&gt;cli-utils.sigs.k8s.io/inventory-id: *b49dd93f-28db-4626-b42d-749dd4c5ba2f*
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;kpt live apply&lt;/code&gt; recognizes this template from the special label, and based
-on this kpt will create new grouping object with the metadata of all applied
+on this kpt will create new inventory object with the metadata of all applied
 objects in the ConfigMap&amp;rsquo;s data field. Subsequent &lt;code&gt;kpt live apply&lt;/code&gt; commands can
-then query the grouping object, and calculate the omitted objects, cleaning up
-accordingly. When a grouping object is created in the cluster, a hash suffix
-is added to the name. Example:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;test-grouping-object-17b4dba8
-&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;ordering&#34;&gt;Ordering&lt;/h3&gt;
+then query the inventory object, and calculate the omitted objects, cleaning up
+accordingly. On every subsequent apply operation, the inventory object is updated
+to reflect the current set of resources.&lt;/p&gt;
+&lt;h3 id=&#34;ordering&#34;&gt;Ordering&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;kpt live apply&lt;/code&gt; will sort the resources before applying them. This makes sure
 namespaces are applied before resources going into the namespace, configmaps
 are applied before Deployments and StatefulSets, and other known dependencies
@@ -253,7 +253,7 @@ kpt live apply --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:
 &lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
   Path to a package directory.  The directory must contain exactly
-  one ConfigMap with the grouping object annotation.
+  one ConfigMap with the inventory object annotation.
 &lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--poll-period:
   The frequency with which the cluster will be polled to determine
@@ -559,6 +559,71 @@ kpt live preview --destroy my-dir/
 &lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;--destroy:
   If true, dry-run deletion of all resources.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Status</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/status/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/status/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Status shows the status for the resources in the cluster
+--&gt;
+&lt;p&gt;The status command will print the status for all resources in the live state
+that belong to the current inventory. It will use the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/live/apply/#prune&#34;&gt;Inventory Template&lt;/a&gt; to
+look up the set of resources in the inventory in the live state and poll all
+those resources for their status until either an exit criteria has been met
+or the process is cancelled.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Monitor status for a set of resources based on manifests. Wait until all&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# resources have reconciled.&lt;/span&gt;
+kpt live status my-app/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Monitor status for a set of resources based on manifests. Output in table format:&lt;/span&gt;
+kpt live status my-app/ --poll-until&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;forever --output&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;table
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Check status for a set of resources read from stdin with output in events format&lt;/span&gt;
+kpt cfg cat my-app &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt live status
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live status (DIR | STDIN) [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR | STDIN:
+  Path to a directory if an argument is provided or reading from stdin if left
+  blank. In both situations one of the manifests must contain exactly one
+  ConfigMap with the inventory template annotation.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--poll-period (duration):
+  The frequency with which the cluster will be polled to determine the status
+  of the applied resources. The default value is every 2 seconds.
+
+--poll-until (string):
+  When to stop polling for status and exist. Must be one of the following:
+    known:   Exit when the status for all resources have been found.
+    current: Exit when the status for all resources have reached the Current status.
+    deleted: Exit when the status for all resources have reached the NotFound
+             status, i.e. all the resources have been deleted from the live state.
+    forever: Keep polling for status until interrupted.
+  The default value is ‘known’.
+
+--output (string):
+  Determines the output format for the status information. Must be one of the following:
+    events: The output will be a list of the status events as they become available.
+    table:  The output will be presented as a table that will be updated inline
+            as the status of resources become available.
+  The default value is ‘events’.
+
+--timeout (duration):
+  Determines how long the command should run before exiting. This deadline will
+  be enforced regardless of the value of the --poll-until flag. The default is
+  to wait forever.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>

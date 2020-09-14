@@ -813,6 +813,29 @@ if (!doNotTrack) {
 
       
       
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/reference/live/status/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">status</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptreferencelivestatus">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
     </li>
   </ul>
 </ul>
@@ -1127,23 +1150,23 @@ config-map-2 (ConfigMap)
 </code></pre><p>When the updated package is applied, <code>config-map-1</code> is automatically
 deleted (pruned) since it is omitted.</p>
 <p>In order to take advantage of this automatic clean-up, a package must contain
-a <strong>grouping object template</strong>, which is a ConfigMap with a special label. An example is:</p>
+an <strong>Inventory Template</strong>, which is a ConfigMap with a special label. An example is:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>test-grouping-object<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>inventory<span style="color:#0000cf;font-weight:bold">-78889725</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">namespace</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>default<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">labels</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">cli-utils.sigs.k8s.io/inventory-id</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>test-group<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">cli-utils.sigs.k8s.io/inventory-id</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>b49dd93f-28db<span style="color:#0000cf;font-weight:bold">-4626</span>-b42d-749dd4c5ba2f<span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><p>And the special label is:</p>
-<pre><code>cli-utils.sigs.k8s.io/inventory-id: *group-name*
+<pre><code>cli-utils.sigs.k8s.io/inventory-id: *b49dd93f-28db-4626-b42d-749dd4c5ba2f*
 </code></pre><p><code>kpt live apply</code> recognizes this template from the special label, and based
-on this kpt will create new grouping object with the metadata of all applied
+on this kpt will create new inventory object with the metadata of all applied
 objects in the ConfigMap&rsquo;s data field. Subsequent <code>kpt live apply</code> commands can
-then query the grouping object, and calculate the omitted objects, cleaning up
-accordingly. When a grouping object is created in the cluster, a hash suffix
-is added to the name. Example:</p>
-<pre><code>test-grouping-object-17b4dba8
-</code></pre><h3 id="ordering">Ordering</h3>
+then query the inventory object, and calculate the omitted objects, cleaning up
+accordingly. On every subsequent apply operation, the inventory object is updated
+to reflect the current set of resources.</p>
+<h3 id="ordering">Ordering</h3>
 <p><code>kpt live apply</code> will sort the resources before applying them. This makes sure
 namespaces are applied before resources going into the namespace, configmaps
 are applied before Deployments and StatefulSets, and other known dependencies
@@ -1263,7 +1286,7 @@ kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=
 </code></pre><h4 id="args">Args</h4>
 <pre><code>DIR:
   Path to a package directory.  The directory must contain exactly
-  one ConfigMap with the grouping object annotation.
+  one ConfigMap with the inventory object annotation.
 </code></pre><h4 id="flags">Flags</h4>
 <pre><code>--poll-period:
   The frequency with which the cluster will be polled to determine
@@ -1363,12 +1386,14 @@ kpt live apply --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=
         
             
         
+            
+        
     
 </div>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3163e0c1900024c2cfa0a466c37bfc08d8849efa">docs: Document how ordering of resources works during apply and prune (3163e0c1)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 8, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/115099ef0b550f0f4fbf0e6c0614922318a6ee4f">docs: Generate the doc strings for the status cli command (115099ef)</a>
 </div>
 </div>
 
