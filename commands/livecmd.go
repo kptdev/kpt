@@ -52,7 +52,7 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 		ErrOut: os.Stderr,
 	}
 
-	initCmd := initcmd.NewCmdInit(ioStreams)
+	initCmd := initcmd.NewCmdInit(f, ioStreams)
 	initCmd.Short = livedocs.InitShort
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples
