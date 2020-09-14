@@ -1171,7 +1171,15 @@ kpt cfg create-setter hello-world/ replicas <span style="color:#0000cf;font-weig
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">3</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$kpt-set&#34;:&#34;replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
-</span></code></pre></div><h4 id="invoking-a-setter">Invoking a Setter</h4>
+</span></code></pre></div><h4 id="auto-setters">Auto setters</h4>
+<p>Some setters are automatically set deriving the values from the output of <code>gcloud config list</code>
+command, when the package is fetched using <code>kpt pkg get</code>. Package consumers need not
+invoke <code>kpt cfg set</code> on them explicitly. Following are the names of supported auto-setters:</p>
+<pre><code>gcloud.core.project
+gcloud.project.projectNumber
+gcloud.compute.region
+gcloud.compute.zone
+</code></pre><h4 id="invoking-a-setter">Invoking a Setter</h4>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># deployment.yaml -- original</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>Deployment<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1550,7 +1558,7 @@ kpt cfg delete-setter replicas
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified August 20, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c705230b6d26e7fb03e93140eaf57d0dffa3e835">docs:Auto-setter docs (c705230b)</a>
 </div>
 </div>
 
