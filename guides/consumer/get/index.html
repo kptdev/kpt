@@ -1219,6 +1219,7 @@ for the local package</li>
 <a href="../../..//reference/pkg/get/">kpt pkg get</a>.  This guide will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
 as a public package catalogue.</p>
 <h3 id="fetch-command">Fetch Command</h3>
+<!-- @fetchPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
 </code></pre></div><h3 id="fetch-output">Fetch Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
@@ -1247,6 +1248,7 @@ would be interpreted by kpt as version <code>v1.2.3</code> of the cockroachdb pa
 <h3 id="kptfile-command">Kptfile Command</h3>
 <p>The upstream commit and branch / tag reference are stored in the package&rsquo;s
 <a href="../../../api-reference/kptfile/">Kptfile</a>.  These are used by <code>kpt pkg update</code>.</p>
+<!-- @catPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat cockroachdb/Kptfile
 </code></pre></div><p>Print the <code>Kptfile</code> written by <code>kpt pkg get</code> to see the upstream package data.</p>
 <h3 id="kptfile-output">Kptfile Output</h3>
@@ -1266,17 +1268,14 @@ would be interpreted by kpt as version <code>v1.2.3</code> of the cockroachdb pa
 (e.g. YAML files), however packages may also include supporting
 artifacts such as documentation.</p>
 <h3 id="package-contents-command">Package Contents Command</h3>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">tree cockroachdb/
+<!-- @treePackage @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree cockroachdb/
 </code></pre></div><h3 id="package-contents-output">Package Contents Output</h3>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cockroachdb/
-├── Kptfile
-├── OWNERS
-├── README.md
-├── cockroachdb-statefulset.yaml
-├── demo.sh
-└── minikube.sh
-
-<span style="color:#0000cf;font-weight:bold">0</span> directories, <span style="color:#0000cf;font-weight:bold">6</span> files
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cockroachdb
+├── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Service cockroachdb
+├── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  StatefulSet cockroachdb
+├── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  PodDisruptionBudget cockroachdb-budget
+└── <span style="color:#ce5c00;font-weight:bold">[</span>cockroachdb-statefulset.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Service cockroachdb-public
 </code></pre></div><p>The cockroachdb package fetched from <a href="https://github.com/kubernetes/examples">kubernetes examples</a> contains a
 <code>cockroachdb-statefulset.yaml</code> file with the resource configuration, as well
 as other files included in the directory.</p>
@@ -1311,6 +1310,7 @@ specific resources or fields.</p>
 <h2 id="apply-the-package-to-a-cluster">Apply the package to a cluster</h2>
 <p>Use <code>kubectl apply</code> to deploy the local package to a remote cluster.</p>
 <h3 id="apply-command">Apply Command</h3>
+<!-- @applyPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -R -f cockroachdb
 </code></pre></div><h3 id="apply-output">Apply Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">service/cockroachdb-public created
@@ -1438,7 +1438,7 @@ statefulset.apps/cockroachdb   3/3     54s
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6dfd83ecf4035c623235cbd1162a090a69d761ec">Turn guides into executable tests (6dfd83ec)</a>
 </div>
 </div>
 

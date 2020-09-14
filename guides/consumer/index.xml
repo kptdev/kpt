@@ -63,6 +63,7 @@ for the local package&lt;/li&gt;
 &lt;a href=&#34;../../..//reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;.  This guide will use the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; repository
 as a public package catalogue.&lt;/p&gt;
 &lt;h3 id=&#34;fetch-command&#34;&gt;Fetch Command&lt;/h3&gt;
+&lt;!-- @fetchPackage @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;fetch-output&#34;&gt;Fetch Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
@@ -91,6 +92,7 @@ would be interpreted by kpt as version &lt;code&gt;v1.2.3&lt;/code&gt; of the co
 &lt;h3 id=&#34;kptfile-command&#34;&gt;Kptfile Command&lt;/h3&gt;
 &lt;p&gt;The upstream commit and branch / tag reference are stored in the package&amp;rsquo;s
 &lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt;.  These are used by &lt;code&gt;kpt pkg update&lt;/code&gt;.&lt;/p&gt;
+&lt;!-- @catPackage @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;cat cockroachdb/Kptfile
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Print the &lt;code&gt;Kptfile&lt;/code&gt; written by &lt;code&gt;kpt pkg get&lt;/code&gt; to see the upstream package data.&lt;/p&gt;
 &lt;h3 id=&#34;kptfile-output&#34;&gt;Kptfile Output&lt;/h3&gt;
@@ -110,17 +112,14 @@ would be interpreted by kpt as version &lt;code&gt;v1.2.3&lt;/code&gt; of the co
 (e.g. YAML files), however packages may also include supporting
 artifacts such as documentation.&lt;/p&gt;
 &lt;h3 id=&#34;package-contents-command&#34;&gt;Package Contents Command&lt;/h3&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;tree cockroachdb/
+&lt;!-- @treePackage @verifyGuides--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree cockroachdb/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;package-contents-output&#34;&gt;Package Contents Output&lt;/h3&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;cockroachdb/
-├── Kptfile
-├── OWNERS
-├── README.md
-├── cockroachdb-statefulset.yaml
-├── demo.sh
-└── minikube.sh
-
-&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;0&lt;/span&gt; directories, &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;6&lt;/span&gt; files
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;cockroachdb
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  StatefulSet cockroachdb
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  PodDisruptionBudget cockroachdb-budget
+└── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;cockroachdb-statefulset.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service cockroachdb-public
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The cockroachdb package fetched from &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt; contains a
 &lt;code&gt;cockroachdb-statefulset.yaml&lt;/code&gt; file with the resource configuration, as well
 as other files included in the directory.&lt;/p&gt;
@@ -155,6 +154,7 @@ specific resources or fields.&lt;/p&gt;
 &lt;h2 id=&#34;apply-the-package-to-a-cluster&#34;&gt;Apply the package to a cluster&lt;/h2&gt;
 &lt;p&gt;Use &lt;code&gt;kubectl apply&lt;/code&gt; to deploy the local package to a remote cluster.&lt;/p&gt;
 &lt;h3 id=&#34;apply-command&#34;&gt;Apply Command&lt;/h3&gt;
+&lt;!-- @applyPackage @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl apply -R -f cockroachdb
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;apply-output&#34;&gt;Apply Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;service/cockroachdb-public created
