@@ -43,5 +43,12 @@ NAME:
 
 <!--mdtogo-->
 
+```sh
+
+--recurse-subpackages, -R
+  Delete substitution recursively in all the nested subpackages
+
+```
+
 [setters]: ../create-setter/
 [creating substitutions]: ../../../guides/producer/substitutions/

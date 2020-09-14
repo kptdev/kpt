@@ -43,4 +43,11 @@ NAME:
 
 <!--mdtogo-->
 
+```sh
+
+--recurse-subpackages, -R
+  Delete setter recursively in all the nested subpackages
+
+```
+
 [setters]: ../../../guides/producer/setters/#deleting-a-setter

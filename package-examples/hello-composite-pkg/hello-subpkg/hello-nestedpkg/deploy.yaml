@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-nested
+  namespace: YOURSPACE # {"$kpt-set":"namespace"}
+  labels:
+    app: hello
+    version: '0.1.0'
+    projectID: YOUR_PROJECT_ID # {"$kpt-set":"gcloud.core.project"}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: helloworld-gke
+        image: gcr.io/kpt-dev/helloworld-gke:0.1.0 # {"$kpt-set":"image-tag"}
+        ports:
+        - name: http
+          containerPort: 80
+        env:
+        - name: PORT
+          value: '80'

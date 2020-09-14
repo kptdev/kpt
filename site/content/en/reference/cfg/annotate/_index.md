@@ -4,8 +4,9 @@ linkTitle: "annotate"
 weight: 4
 type: docs
 description: >
-   Set an annotation on one or more resources
+  Set an annotation on one or more resources
 ---
+
 <!--mdtogo:Short
     Set an annotation on one or more resources
 -->
@@ -18,7 +19,9 @@ Annotate can be useful when combined with other tools or commands that
 read annotations to configure their behavior.
 
 ### Examples
+
 <!--mdtogo:Examples-->
+
 ```sh
 # set an annotation on all Resources: 'key: value'
 kpt cfg annotate DIR --kv key=value
@@ -38,10 +41,13 @@ kpt cfg annotate DIR --kv key=value --kind Service --name foo
 # set multiple annotations
 kpt cfg annotate DIR --kv key1=value1 --kv key2=value2
 ```
+
 <!--mdtogo-->
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```
 kpt cfg annotate DIR --kv KEY=VALUE...
 ```
@@ -53,9 +59,11 @@ DIR:
   Path to a package directory
 ```
 
+<!--mdtogo-->
+
 #### Flags
 
-```
+```sh
 --apiVersion
   Only set annotations on resources with this apiVersion.
 
@@ -71,5 +79,7 @@ DIR:
 
 --name
   Only set annotations on resources with this name.
+
+--recurse-subpackages, -R
+  Add annotations recursively in all the nested subpackages
 ```
-<!--mdtogo-->

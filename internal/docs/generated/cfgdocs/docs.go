@@ -59,24 +59,6 @@ Args:
 
   DIR:
     Path to a package directory
-
-Flags:
-
-  --apiVersion
-    Only set annotations on resources with this apiVersion.
-  
-  --kind
-    Only set annotations on resources of this kind.
-  
-  --kv
-    The annotation key and value to set.  May be specified multiple times
-    to set multiple annotations at once.
-  
-  --namespace
-    Only set annotations on resources in this namespace.
-  
-  --name
-    Only set annotations on resources with this name.
 `
 var AnnotateExamples = `
   # set an annotation on all Resources: 'key: value'
@@ -134,18 +116,6 @@ var CreateSetterLong = `
   VALUE
     The value of the filed for which setter reference must be added.
     e.g. 3
-
-Flags:
-
-  --description
-    Optional description about the value.
-  
-  --set-by
-    Optional record of who set the value.
-  
-  --value
-    Optional flag, alternative to specifying the value as an argument
-    e.g. used to specify values that start with '-'
 `
 var CreateSetterExamples = `
   # create a setter called replicas for fields matching value "3"
@@ -295,11 +265,6 @@ Args:
   
       DIR:
         Path to a package directory
-
-Flags:
-
-      --invert-match, -v
-        keep resources NOT matching the specified pattern
 `
 var GrepExamples = `
   # find Deployment Resources
