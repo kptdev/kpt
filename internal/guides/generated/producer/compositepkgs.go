@@ -23,7 +23,7 @@ var CompositepkgsGuide = `
 {{% /pageinfo %}}
 
 This guide walks you through an example to create, parameterize and publish a kpt
-package which has nested subpackages in it. A kpt package is a directory of resource
+package which has subpackages in it. A kpt package is a directory of resource
 configs with valid ` + "`" + `Kptfile` + "`" + ` in it. A composite package is a ` + "`" + `kpt` + "`" + ` package with 1
 or more subpackages in it.
 
@@ -34,8 +34,9 @@ Principles:
 2. If a package is present in the directory tree of parent package,
    the configs of that package are out of scope for the actions performed
    on the parent package.
-3. ` + "`" + `--recurse-subpackages(-R)` + "`" + ` flag can be leveraged to run a command
-   recursively on all the nested subpackages of a root package.
+3. To run a command recursively on all the subpackages, users can leverage
+   ` + "`" + `--recurse-subpackages(-R)` + "`" + ` flag. This is equivalent to running the same
+   command on each package path in the directory tree.
 
 ## Steps
 
@@ -87,8 +88,8 @@ Output:
 Similarly create a setter with name ` + "`" + `gcloud.core.project` + "`" + `. If the package consumer
 has ` + "`" + `gcloud` + "`" + ` set up on local, they can observe that the value of the setter
 ` + "`" + `gcloud.core.project` + "`" + ` will be set automatically when the package is fetched.
-` + "`" + `gcloud` + "`" + ` config setters are automatically set deriving the values from the
-output of ` + "`" + `gcloud config list` + "`" + ` command, when the package is fetched using [kpt pkg get].
+[Auto-setters] are automatically set deriving the values from the output of
+` + "`" + `gcloud config list` + "`" + ` command, when the package is fetched using [kpt pkg get].
 
   kpt cfg create-setter hello-composite-pkg/ gcloud.core.project PROJECT_ID -R
 
