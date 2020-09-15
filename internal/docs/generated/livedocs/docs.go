@@ -34,7 +34,7 @@ Args:
 
   DIR:
     Path to a package directory.  The directory must contain exactly
-    one ConfigMap with the grouping object annotation.
+    one ConfigMap with the inventory object annotation.
 
 Flags:
 
@@ -149,15 +149,17 @@ Flags:
 
   --inventory-id:
     Identifier for group of applied resources. Must be composed of valid label characters.
-  --inventory-namespace:
-    namespace for the inventory object. If no namespace is provided, namespace "default" will be used.
+  --namespace:
+    namespace for the inventory object. If not provided, kpt will check if all the resources
+    in the package belong in the same namespace. If they are, that namespace will be used. If
+    they are not, the namespace in the user's context will be chosen.
 `
 var InitExamples = `
   # initialize a package
   kpt live init my-dir/
 
   # initialize a package with a specific name for the group of resources
-  kpt live init --inventory-namespace=test my-dir/
+  kpt live init --namespace=test my-dir/
 `
 
 var PreviewShort = `Preview prints the changes apply would make to the cluster`
@@ -222,6 +224,10 @@ Flags:
     to wait forever.
 `
 var StatusExamples = `
+  # Monitor status for a set of resources based on manifests. Wait until all
+  # resources have reconciled.
+  kpt live status my-app/
+
   # Monitor status for a set of resources based on manifests. Output in table format:
   kpt live status my-app/ --poll-until=forever --output=table
 
