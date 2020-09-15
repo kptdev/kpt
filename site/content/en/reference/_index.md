@@ -93,6 +93,53 @@ By default, kpt will use the builtin schema.
   The path to an OpenAPI schema file. The default value is ./openapi.json
 ```
 
+### Annotations
+
+Kpt supports a small set of annotations that allow customizing the behavior
+of kpt on a per-resource basis
+
+#### config.kubernetes.io/local-config
+
+config.kubernetes.io/local-config declares that the configuration is to local
+tools rather than a resource that should be applied to an APIServer. Function
+configuration defined declaratively in KRM files is an example of a resource
+that should contain this annotation so that tools know it is not intended to
+be sent to the Kubernetes api server.
+
+Example:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kpt-functions/label-namespace
+    config.kubernetes.io/local-config: "true"
+data:
+  "label_name": "color"
+  "label_value": "orange"
+```
+
+#### config.kubernetes.io/function
+
+Provides a way to declaratively include functions in a package. More information
+about this on the [running functions] page.
+
+#### config.kubernetes.io/path
+
+Records the slash-delimited, OS-agnostic, relative file path to a Resource. It
+is set by kpt when files are read from the file system and removed before resources
+are written to files.
+
+#### config.kubernetes.io/index
+
+Records the index of a Resource in file. In a multi-object YAML file, resources
+are separated by three dashes (---), and the index represents the position of
+the resource starting from zero. It is set by kpt when files are read from the
+file system and removed before resources are written to files.
+
 ### Global flags
 
 Kpt exposes many global flags in addition to the ones listed above to allow
@@ -196,3 +243,4 @@ by kpt.
 [architecture]: ../concepts/architecture/
 [guides]: ../guides/
 [FAQ]: ../faq/
+[running functions]: https://googlecontainertools.github.io/kpt/guides/consumer/function/#declarative-run
