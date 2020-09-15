@@ -1085,7 +1085,7 @@ such as apply, preview and destroy.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># initialize a package</span>
 kpt live init my-dir/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># initialize a package with a specific name for the group of resources</span>
-kpt live init --inventory-namespace<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">test</span> my-dir/
+kpt live init --namespace<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">test</span> my-dir/
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
 <!--mdtogo:Long-->
@@ -1097,8 +1097,10 @@ kpt live init --inventory-namespace<span style="color:#ce5c00;font-weight:bold">
 </code></pre><h4 id="flags">Flags</h4>
 <pre><code>--inventory-id:
   Identifier for group of applied resources. Must be composed of valid label characters.
---inventory-namespace:
-  namespace for the inventory object. If no namespace is provided, namespace &quot;default&quot; will be used.
+--namespace:
+  namespace for the inventory object. If not provided, kpt will check if all the resources
+  in the package belong in the same namespace. If they are, that namespace will be used. If
+  they are not, the namespace in the user's context will be chosen.
 </code></pre><!--mdtogo-->
 
         <div class="section-index">
@@ -1181,7 +1183,7 @@ kpt live init --inventory-namespace<span style="color:#ce5c00;font-weight:bold">
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 1, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9995464b3a70aaa035d0482194eca5671dafcfb5">Docs: update kpt live init docs (9995464b)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 14, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/886c564b371999a533b6fbd1e4ce13a46e575acc">docs: Update documentation for kpt live init (886c564b)</a>
 </div>
 </div>
 
