@@ -7,6 +7,17 @@ description: >
     Update a customized local package with upstream (remote) package changes.
 ---
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 *Packages can be arbitrarily customized and later merge updates from
 upstream.*
 
@@ -68,6 +79,7 @@ updated to later versions to merge in upstream changes.
 
 ### Fetch Command
 
+<!-- @fetchPackage @verifyGuides-->
 ```sh
 export REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $REPO/package-examples/helloworld-set@v0.3.0 helloworld
@@ -114,6 +126,19 @@ The old package contents without local modifications.
 vi helloworld/deploy.yaml
 ```
 
+{{% hide %}}
+
+<!-- @updateLocalPackage @verifyGuides-->
+```
+# Update the local package
+cat <<EOF >> helloworld/deploy.yaml
+        - name: NEW_ENV # This is a local package addition
+          value: "local package edits"
+EOF
+```
+
+{{% /hide %}}
+
 ### New local configuration
 
 ```yaml
@@ -141,6 +166,7 @@ kpt will throw an error if trying to update a package and the git repo
 has uncommitted changes.
 {{% /pageinfo %}}
 
+<!-- @commitLocalChanges @verifyGuides-->
 ```sh
 git init
 git add .
@@ -154,6 +180,7 @@ specified version and applying the upstream changes to the local package.
 
 ### Merge Command
 
+<!-- @mergeUpdates @verifyGuides-->
 ```sh
 kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 ```
@@ -242,6 +269,17 @@ The Kptfile was updated with the new upstream metadata.
           value: "local package edits"
 ...
 ```
+
+{{% hide %}}
+
+<!-- @verifyUpdate @verifyGuides-->
+```
+grep "helloworld-gke:v0.3.0" helloworld/deploy.yaml
+grep "name: NEW_ENV" helloworld/deploy.yaml
+grep "ref: v0.5.0" helloworld/Kptfile
+```
+
+{{% /hide %}}
 
 The updated local package contains *both* the upstream changes (new image tag),
 and local modifications (additional environment variable).

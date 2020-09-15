@@ -7,6 +7,17 @@ description: >
     Display the contents of a local package using kpt cfg for rendering.
 ---
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 *Tools can parse and render configuration so it is easier for humans to read.*
 
 ## Topics
@@ -30,6 +41,7 @@ as a public package catalogue.
 
 ### Fetch Command
 
+<!-- @fetchPackage @verifyGuides-->
 ```sh
 kpt pkg get https://github.com/kubernetes/examples/staging/ examples
 ```
@@ -64,6 +76,7 @@ to work with using tools such as `less`.
 
 ### Count Example Command 1
 
+<!-- @countExamples @verifyGuides-->
 ```sh
 kpt cfg count examples/
 ```
@@ -85,6 +98,7 @@ Pod: 45
 
 ### Count Example Command 2
 
+<!-- @countCockroachdb @verifyGuides-->
 ```sh
 kpt cfg count examples/cockroachdb/
 ```
@@ -102,6 +116,7 @@ StatefulSet: 1
 
 ### Count Example Command 3
 
+<!-- @countAll @verifyGuides-->
 ```sh
 kpt cfg count examples/ --kind=false
 ```
@@ -118,6 +133,7 @@ The total aggregate resource count can be shown with `--kind=false`
 
 ### Display Command
 
+<!-- @treeCockroachdb @verifyGuides-->
 ```sh
 kpt cfg tree examples/cockroachdb/ --image --replicas
 ```
@@ -147,6 +163,7 @@ will print arbitrary fields by providing the `--field` flag.
 
 ### Filter Command
 
+<!-- @filterExamples @verifyGuides-->
 ```sh
 kpt cfg grep "spec.replicas>3" examples | kpt cfg tree --replicas
 ```
@@ -174,8 +191,11 @@ may be piped to tree for rendering.
 
 ### Dump Command
 
+<!-- @catCockroachdb @verifyGuides-->
 ```sh
 kpt cfg cat examples/cockroachdb
+# Temporary workaround for https://github.com/GoogleContainerTools/kpt/issues/1050
+echo "\n"
 ```
 
 The raw YAML configuration may be dumped using [`kpt cfg cat`][kpt cfg cat].
