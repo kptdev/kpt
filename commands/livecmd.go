@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/cli-utils/cmd/diff"
 	"sigs.k8s.io/cli-utils/cmd/initcmd"
 	"sigs.k8s.io/cli-utils/cmd/preview"
+	"sigs.k8s.io/cli-utils/cmd/status"
 )
 
 func GetLiveCommand(name string, f util.Factory) *cobra.Command {
@@ -78,10 +79,15 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
 
+	statusCmd := status.StatusCommand(f)
+	statusCmd.Short = livedocs.StatusShort
+	statusCmd.Long = livedocs.StatusLong
+	statusCmd.Example = livedocs.StatusExamples
+
 	fetchOpenAPICmd := cmdfetchk8sschema.NewCommand(name, f, ioStreams)
 
 	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd,
-		fetchOpenAPICmd)
+		fetchOpenAPICmd, statusCmd)
 
 	return liveCmd
 }
