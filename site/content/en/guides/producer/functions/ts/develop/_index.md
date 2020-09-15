@@ -70,7 +70,7 @@ running in a local container.
 
 #### Using a GKE Cluster
 
-You can also use a deployed cluster in GKE. The beta k8s feature is avilable
+You can also use a deployed cluster in GKE. The beta k8s feature is available
 only when using GKE's `--enable-kubernetes-alpha` flag, as seen here:
 
 ```sh
