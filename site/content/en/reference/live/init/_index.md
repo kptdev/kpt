@@ -27,7 +27,7 @@ kpt live init my-dir/
 
 ```sh
 # initialize a package with a specific name for the group of resources
-kpt live init --inventory-namespace=test my-dir/
+kpt live init --namespace=test my-dir/
 ```
 <!--mdtogo-->
 
@@ -50,7 +50,9 @@ DIR:
 ```
 --inventory-id:
   Identifier for group of applied resources. Must be composed of valid label characters.
---inventory-namespace:
-  namespace for the inventory object. If no namespace is provided, namespace "default" will be used.
+--namespace:
+  namespace for the inventory object. If not provided, kpt will check if all the resources
+  in the package belong in the same namespace. If they are, that namespace will be used. If
+  they are not, the namespace in the user's context will be chosen.
 ```
 <!--mdtogo-->
