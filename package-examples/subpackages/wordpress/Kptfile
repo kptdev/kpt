@@ -1,27 +1,27 @@
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
-  name: hello-composite-pkg
+  name: wordpress
 packageMetadata:
   shortDescription: sample description
 openAPI:
   definitions:
-    io.k8s.cli.setters.namespace:
+    io.k8s.cli.setters.teamname:
       x-k8s-cli:
         setter:
-          name: namespace
-          value: YOURSPACE
+          name: teamname
+          value: YOURTEAM
           required: true
     io.k8s.cli.setters.gcloud.core.project:
       x-k8s-cli:
         setter:
           name: gcloud.core.project
-          value: YOUR_PROJECT_ID
+          value: PROJECT_ID
     io.k8s.cli.substitutions.image-tag:
       x-k8s-cli:
         substitution:
           name: image-tag
-          pattern: gcr.io/kpt-dev/${image}:${tag}
+          pattern: ${image}:${tag}-apache
           values:
           - marker: ${image}
             ref: '#/definitions/io.k8s.cli.setters.image'
@@ -31,9 +31,9 @@ openAPI:
       x-k8s-cli:
         setter:
           name: image
-          value: helloworld-gke
+          value: wordpress
     io.k8s.cli.setters.tag:
       x-k8s-cli:
         setter:
           name: tag
-          value: 0.1.0
+          value: "4.8"

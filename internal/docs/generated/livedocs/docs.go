@@ -34,7 +34,7 @@ Args:
 
   DIR:
     Path to a package directory.  The directory must contain exactly
-    one ConfigMap with the grouping object annotation.
+    one ConfigMap with the inventory object annotation.
 
 Flags:
 
@@ -222,6 +222,10 @@ Flags:
     to wait forever.
 `
 var StatusExamples = `
+  # Monitor status for a set of resources based on manifests. Wait until all
+  # resources have reconciled.
+  kpt live status my-app/
+
   # Monitor status for a set of resources based on manifests. Output in table format:
   kpt live status my-app/ --poll-until=forever --output=table
 

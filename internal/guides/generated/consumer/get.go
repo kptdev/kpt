@@ -16,6 +16,15 @@
 package consumer
 
 var GetGuide = `
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+  # Set up workspace for the test.
+  TEST_HOME=$(mktemp -d)
+  cd $TEST_HOME
+
+{{% /hide %}}
+
 *Any git directory containing configuration files may be used by kpt
 as a package.*
 
@@ -55,6 +64,7 @@ as a public package catalogue.
 
 ### Fetch Command
 
+<!-- @fetchPackage @verifyGuides-->
   kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
 
 ### Fetch Output
@@ -64,6 +74,14 @@ as a public package catalogue.
 The contents of the ` + "`" + `staging/cockroachdb` + "`" + ` subdirectory in the
 ` + "`" + `https://github.com/kubernetes/examples` + "`" + ` were copied to the local folder
 ` + "`" + `cockroachdb` + "`" + `.
+
+{{% hide %}}
+
+<!-- @verifyFetch @verifyGuides-->
+  # Verify that we downloaded the package and that it includes KRM resources.
+  cat cockroachdb/cockroachdb-statefulset.yaml | grep "kind: StatefulSet"
+
+{{% /hide %}}
 
 {{% pageinfo color="info" %}}
 
@@ -86,6 +104,7 @@ The contents of the ` + "`" + `staging/cockroachdb` + "`" + ` subdirectory in th
 The upstream commit and branch / tag reference are stored in the package's
 [Kptfile].  These are used by ` + "`" + `kpt pkg update` + "`" + `.
 
+<!-- @catPackage @verifyGuides-->
   cat cockroachdb/Kptfile
 
 Print the ` + "`" + `Kptfile` + "`" + ` written by ` + "`" + `kpt pkg get` + "`" + ` to see the upstream package data.
@@ -104,6 +123,14 @@ Print the ` + "`" + `Kptfile` + "`" + ` written by ` + "`" + `kpt pkg get` + "`"
           directory: staging/cockroachdb
           ref: master
 
+{{% hide %}}
+
+<!-- @verifyKptfile @verifyGuides-->
+  # Verify that the Kptfile exists and points to the correct upstream repo.
+  cat cockroachdb/Kptfile | grep "repo: https://github.com/kubernetes/examples"
+
+{{% /hide %}}
+
 ## View the package contents
 
 The primary package artifacts are Kubernetes [resource configuration]
@@ -112,19 +139,16 @@ artifacts such as documentation.
 
 ### Package Contents Command
 
-  tree cockroachdb/
+<!-- @treePackage @verifyGuides-->
+  kpt cfg tree cockroachdb/
 
 ### Package Contents Output
 
-  cockroachdb/
-  ├── Kptfile
-  ├── OWNERS
-  ├── README.md
-  ├── cockroachdb-statefulset.yaml
-  ├── demo.sh
-  └── minikube.sh
-  
-  0 directories, 6 files
+  cockroachdb
+  ├── [cockroachdb-statefulset.yaml]  Service cockroachdb
+  ├── [cockroachdb-statefulset.yaml]  StatefulSet cockroachdb
+  ├── [cockroachdb-statefulset.yaml]  PodDisruptionBudget cockroachdb-budget
+  └── [cockroachdb-statefulset.yaml]  Service cockroachdb-public
 
 The cockroachdb package fetched from [kubernetes examples] contains a
 ` + "`" + `cockroachdb-statefulset.yaml` + "`" + ` file with the resource configuration, as well
@@ -166,6 +190,14 @@ Use ` + "`" + `kubectl apply` + "`" + ` to deploy the local package to a remote 
 
 ### Apply Command
 
+{{% hide %}}
+
+<!-- @createKindCluster @verifyGuides-->
+  kind delete cluster && kind create cluster
+
+{{% /hide %}}
+
+<!-- @applyPackage @verifyGuides-->
   kubectl apply -R -f cockroachdb
 
 ### Apply Output
@@ -174,6 +206,24 @@ Use ` + "`" + `kubectl apply` + "`" + ` to deploy the local package to a remote 
   service/cockroachdb created
   poddisruptionbudget.policy/cockroachdb-budget unchanged
   statefulset.apps/cockroachdb created
+
+{{% hide %}}
+
+<!-- @verifyApply @verifyGuides-->
+  # Verify that we have cockroachdb installed and that it can be reconciled.
+  counter=0
+  until kubectl get sts cockroachdb | grep "3/3"
+  do
+    if [ $counter -gt 150 ];then
+      echo "sts has not reconciled after 5m. Exiting.."
+      exit 1
+    fi
+    echo "Waiting for sts to reconcile"
+    counter=$((counter + 1))
+    sleep 2s
+  done
+
+{{% /hide %}}
 
 {{% pageinfo color="info" %}}
 This guide used ` + "`" + `kubectl apply` + "`" + ` to demonstrate how kpt packages work out of the
