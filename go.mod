@@ -26,6 +26,6 @@ require (
 	// Once there is a 0.18 release, we can import a semver release.
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
 	sigs.k8s.io/cli-utils v0.20.0
-	sigs.k8s.io/kustomize/cmd/config v0.7.1-0.20200914202724-1c6481d011df
-	sigs.k8s.io/kustomize/kyaml v0.7.2-0.20200914202724-1c6481d011df
+	sigs.k8s.io/kustomize/cmd/config v0.7.1-0.20200915164007-ad7fed061e2f
+	sigs.k8s.io/kustomize/kyaml v0.7.2-0.20200915164007-ad7fed061e2f
 )
