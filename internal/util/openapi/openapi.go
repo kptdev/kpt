@@ -75,7 +75,7 @@ func ReadOpenAPISchemaFromDisk(path string) ([]byte, error) {
 func ConfigureOpenAPISchema(openAPISchema []byte) error {
 	openapi.SuppressBuiltInSchemaUse()
 
-	_, err := openapi.AddSchema(openAPISchema)
+	err := openapi.AddSchema(openAPISchema)
 	if err != nil {
 		return err
 	}
@@ -83,6 +83,5 @@ func ConfigureOpenAPISchema(openAPISchema []byte) error {
 	// of where we got the Kubernetes openAPI schema.
 	// TODO: Refactor the openapi package in kyaml so we don't need to
 	// know the name of the kustomize asset here.
-	_, err = openapi.AddSchema(kustomizationapi.MustAsset("openapi/kustomizationapi/swagger.json"))
-	return err
+	return openapi.AddSchema(kustomizationapi.MustAsset("openapi/kustomizationapi/swagger.json"))
 }
