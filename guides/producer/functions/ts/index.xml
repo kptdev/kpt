@@ -270,7 +270,7 @@ running in a local container.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;h4 id=&#34;using-a-gke-cluster&#34;&gt;Using a GKE Cluster&lt;/h4&gt;
-&lt;p&gt;You can also use a deployed cluster in GKE. The beta k8s feature is avilable
+&lt;p&gt;You can also use a deployed cluster in GKE. The beta k8s feature is available
 only when using GKE&amp;rsquo;s &lt;code&gt;--enable-kubernetes-alpha&lt;/code&gt; flag, as seen here:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;gcloud container clusters create &lt;span style=&#34;color:#000&#34;&gt;$USER&lt;/span&gt;-1-15 --cluster-version&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;latest --region&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;us-central1-a --project &amp;lt;PROJECT&amp;gt;
 gcloud container clusters get-credentials &lt;span style=&#34;color:#000&#34;&gt;$USER&lt;/span&gt;-1-15 --zone us-central1-a --project &amp;lt;PROJECT&amp;gt;
