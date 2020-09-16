@@ -15,23 +15,16 @@
 package sync
 
 import (
-	"io/ioutil"
-
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
-	"gopkg.in/yaml.v3"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 func SetDependency(dependency kptfile.Dependency) error {
-	b, err := ioutil.ReadFile(kptfile.KptFileName)
+	k, err := kptfileutil.ReadFile("")
 	if err != nil {
 		return errors.WrapPrefixf(err, "failed to read Kptfile -- create one with `kpt pkg init .`")
-	}
-	k := &kptfile.KptFile{}
-
-	if err := yaml.Unmarshal(b, k); err != nil {
-		return errors.WrapPrefixf(err, "failed to unmarshal Kptfile")
 	}
 
 	// validate dependencies are well formed
@@ -54,12 +47,12 @@ func SetDependency(dependency kptfile.Dependency) error {
 	if !found {
 		if dependency.Strategy == "" {
 			dependency.Strategy = string(update.FastForward)
+		} else if !update.ValidStrategy(dependency.Strategy) {
+			return errors.Errorf("provided update strategy %q is invalid, must "+
+				"be one of %q", dependency.Strategy, update.Strategies)
 		}
 		k.Dependencies = append(k.Dependencies, dependency)
 	}
-	b, err = yaml.Marshal(k)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(kptfile.KptFileName, b, 0600)
+
+	return kptfileutil.WriteFile("", k)
 }

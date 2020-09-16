@@ -16,7 +16,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20200221170553-0f24fbd83dfb // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
+	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71 // indirect
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.17.3
 	k8s.io/cli-runtime v0.17.3

@@ -237,6 +237,70 @@ var InitExamples = `
       --description "my cockroachdb implementation"
 `
 
+var SetdependencyShort = `Set a subpackage as a dependency to a Kptfile`
+var SetdependencyLong = `
+  kpt pkg set-dependency REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+  
+  REPO_URI:
+    URI of a git repository containing 1 or more packages as subdirectories.
+    In most cases the .git suffix should be specified to delimit the REPO_URI
+    from the PKG_PATH, but this is not required for widely recognized repo
+    prefixes.  If get cannot parse the repo for the directory and version,
+    then it will print an error asking for '.git' to be specified as part of
+    the argument.
+    e.g. https://github.com/kubernetes/examples.git
+    Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
+  
+  PKG_PATH:
+    Path to remote subdirectory containing Kubernetes Resource configuration
+    files or directories.  Defaults to the root directory.
+    Uses '/' as the path separator (regardless of OS).
+    e.g. staging/cockroachdb
+  
+  VERSION:
+    A git tag, branch, ref or commit for the remote version of the package to
+    fetch.  Defaults to the repository master branch.
+    e.g. @master
+  
+  LOCAL_DEST_DIRECTORY:
+    The local directory to write the package to. e.g. ./my-cockroachdb-copy
+  
+      * If the directory does NOT exist: create the specified directory and write
+        the package contents when get/update command is invoked
+      * If the directory DOES exist and contains a Kptfile: update the subpackage 
+        when update command is invoked
+      * If the directory DOES exist and does not contain a Kptfile: Throw an error
+
+Flags:
+
+  --strategy:
+    Controls how changes to the local package are handled.
+    Defaults to resource-merge.
+  
+      * resource-merge: perform a structural comparison of the original /
+        updated Resources, and merge the changes into the local package.
+        See ` + "`" + `kpt help apis merge3` + "`" + ` for details on merge.
+      * fast-forward: fail without updating if the local package was modified
+        since it was fetched.
+      * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
+        patch of the changes between the source version and destination
+        version.
+        REQUIRES THE LOCAL PACKAGE TO HAVE BEEN COMMITTED TO A LOCAL GIT REPO.
+      * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
+        THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace
+        it with the remote version.
+`
+var SetdependencyExamples = `
+Create a new package and add a dependency to it:
+
+  # init a package
+  kpt pkg init .
+  
+  # add a dependency to the package
+  kpt pkg set-dependency https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
+      hello-world
+`
+
 var SyncShort = `Fetch and update packages declaratively`
 var SyncLong = `
   kpt pkg sync LOCAL_PKG_DIR [flags]

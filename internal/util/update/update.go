@@ -67,6 +67,11 @@ var strategies = map[StrategyType]func() Updater{
 	KResourceMerge:     func() Updater { return ResourceMergeUpdater{} },
 }
 
+func ValidStrategy(strategy string) bool {
+	_, ok := strategies[StrategyType(strategy)]
+	return ok
+}
+
 // StrategyType controls the update strategy to use when the local package
 // has been modifed from its original remote source.
 type StrategyType string

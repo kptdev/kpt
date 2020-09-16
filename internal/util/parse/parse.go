@@ -146,6 +146,11 @@ func getDest(v, repo, subdir string) (string, error) {
 		return v, nil
 	}
 
+	// any other errors related to permissions etc.
+	if err != nil {
+		return "", errors.Wrap(err)
+	}
+
 	if !f.IsDir() {
 		return "", errors.Errorf("LOCAL_PKG_DEST must be a directory")
 	}
