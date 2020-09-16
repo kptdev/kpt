@@ -81,24 +81,24 @@ steps:
   - name: 'launcher.gcr.io/google/ubuntu1604'
     dir: 'artifacts'
     args: [ 'curl', '-L',
-            '-O', 'https://github.com/${_GITHUB_USER}/kpt/releases/download/${TAG_NAME}/kpt_darwin_amd64_${_VERSION}.tar.gz',
-            '-O', 'https://github.com/${_GITHUB_USER}/kpt/releases/download/${TAG_NAME}/kpt_linux_amd64_${_VERSION}.tar.gz',
-            '-O', 'https://github.com/${_GITHUB_USER}/kpt/releases/download/${TAG_NAME}/kpt_windows_amd64_${_VERSION}.tar.gz'
+            '-O', 'https://github.com/${_GITHUB_USER}/kpt/releases/download/${TAG_NAME}/kpt_darwin_amd64-${_VERSION}.tar.gz',
+            '-O', 'https://github.com/${_GITHUB_USER}/kpt/releases/download/${TAG_NAME}/kpt_linux_amd64-${_VERSION}.tar.gz',
+            '-O', 'https://github.com/${_GITHUB_USER}/kpt/releases/download/${TAG_NAME}/kpt_windows_amd64-${_VERSION}.tar.gz'
     ]
 
   # upload the artifacts to GCS
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
-    args: [ 'cp', '-a', 'public-read', 'kpt_darwin_amd64_${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64_${TAG_NAME}.tar.gz' ]
+    args: [ 'cp', '-a', 'public-read', 'kpt_darwin_amd64-${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/releases/${TAG_NAME}/darwin_amd64/kpt_darwin_amd64_${TAG_NAME}.tar.gz' ]
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
-    args: [ 'cp', '-a', 'public-read', 'kpt_darwin_amd64_${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/latest/darwin_amd64/kpt_darwin_amd64.tar.gz' ]
+    args: [ 'cp', '-a', 'public-read', 'kpt_darwin_amd64-${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/latest/darwin_amd64/kpt_darwin_amd64.tar.gz' ]
 
   - name: 'launcher.gcr.io/google/ubuntu1604'
     dir: 'artifacts'
     entrypoint: 'bash'
-    args: [ '-c', 'tar -xvf kpt_darwin_amd64_${_VERSION}.tar.gz kpt && mv kpt kpt_darwin_amd64' ]
+    args: [ '-c', 'tar -xvf kpt_darwin_amd64-${_VERSION}.tar.gz kpt && mv kpt kpt_darwin_amd64' ]
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
@@ -106,16 +106,16 @@ steps:
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
-    args: [ 'cp', '-a', 'public-read', 'kpt_linux_amd64_${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64_${TAG_NAME}.tar.gz' ]
+    args: [ 'cp', '-a', 'public-read', 'kpt_linux_amd64-${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/releases/${TAG_NAME}/linux_amd64/kpt_linux_amd64_${TAG_NAME}.tar.gz' ]
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
-    args: [ 'cp', '-a', 'public-read', 'kpt_linux_amd64_${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/latest/linux_amd64/kpt_linux_amd64.tar.gz' ]
+    args: [ 'cp', '-a', 'public-read', 'kpt_linux_amd64-${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/latest/linux_amd64/kpt_linux_amd64.tar.gz' ]
 
   - name: 'launcher.gcr.io/google/ubuntu1604'
     dir: 'artifacts'
     entrypoint: 'bash'
-    args: [ '-c', 'tar -xvf kpt_linux_amd64_${_VERSION}.tar.gz kpt && mv kpt kpt_linux_amd64' ]
+    args: [ '-c', 'tar -xvf kpt_linux_amd64-${_VERSION}.tar.gz kpt && mv kpt kpt_linux_amd64' ]
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
@@ -123,16 +123,16 @@ steps:
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
-    args: [ 'cp', '-a', 'public-read', 'kpt_windows_amd64_${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64_${TAG_NAME}.tar.gz' ]
+    args: [ 'cp', '-a', 'public-read', 'kpt_windows_amd64-${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/releases/${TAG_NAME}/windows_amd64/kpt_windows_amd64_${TAG_NAME}.tar.gz' ]
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
-    args: [ 'cp', '-a', 'public-read', 'kpt_windows_amd64_${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/latest/windows_amd64/kpt_windows_amd64.tar.gz' ]
+    args: [ 'cp', '-a', 'public-read', 'kpt_windows_amd64-${_VERSION}.tar.gz', 'gs://${_GCS_BUCKET}/latest/windows_amd64/kpt_windows_amd64.tar.gz' ]
 
   - name: 'launcher.gcr.io/google/ubuntu1604'
     dir: 'artifacts'
     entrypoint: 'bash'
-    args: [ '-c', 'tar -xvf kpt_windows_amd64_${_VERSION}.tar.gz kpt.exe && mv kpt.exe kpt_windows_amd64.exe' ]
+    args: [ '-c', 'tar -xvf kpt_windows_amd64-${_VERSION}.tar.gz kpt.exe && mv kpt.exe kpt_windows_amd64.exe' ]
 
   - name: 'gcr.io/cloud-builders/gsutil'
     dir: 'artifacts'
