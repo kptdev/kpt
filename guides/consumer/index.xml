@@ -1117,6 +1117,10 @@ using the form &lt;code&gt;kpt fn run DIR/&lt;/code&gt;.&lt;/p&gt;
 &lt;li&gt;write the function(s) output back to the package directory; creating,
 deleting, or updating resources&lt;/li&gt;
 &lt;/ol&gt;
+&lt;p&gt;This repository documents a catalog of functions implementing the
+&lt;a href=&#34;https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md&#34;&gt;Configuration Functions Specification&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Implement configuration functions using any toolchain such as the
+&lt;a href=&#34;../../producer/functions/ts/&#34;&gt;Typescript SDK&lt;/a&gt; or &lt;a href=&#34;../../producer/functions/golang/&#34;&gt;Golang Libraries&lt;/a&gt;.&lt;/p&gt;
 &lt;h3 id=&#34;imperative-run&#34;&gt;Imperative Run&lt;/h3&gt;
 &lt;p&gt;Functions can be run imperatively by specifying the &lt;code&gt;--image&lt;/code&gt; flag.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt; Locally run the container image

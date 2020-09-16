@@ -404,7 +404,7 @@ specifically:</p>
 <ul>
 <li><strong>Configuration as data:</strong> enables us to programmatically manipulate
 configurations using stateless programs called <em>functions</em>.</li>
-<li><strong>Unix philosophy:</strong> inspires us to develop a <a href="../../guides/consumer/function/catalog/">catalog</a> of useful,
+<li><strong>Unix philosophy:</strong> inspires us to develop a catalog of useful,
 interoperable functions which implement the
 <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md">Configuration Functions Specification</a>.</li>
 </ul>
@@ -434,7 +434,8 @@ function&rsquo;s behavior.</li>
 <img src="https://googlecontainertools.github.io/kpt//images/source.png" />
 
 <p>Instead, the function typically produces the <code>output</code> by reading configurations
-from an external system (e.g. reading files from a filesystem).</p>
+from an external system (e.g. reading files from a filesystem). Find examples in
+the <a href="../../guides/consumer/function/sources">sources catalog</a>.</p>
 <h3 id="sink-function">Sink Function</h3>
 <p>A Sink Function produces no <code>output</code>:</p>
 
@@ -443,7 +444,7 @@ from an external system (e.g. reading files from a filesystem).</p>
 <img src="https://googlecontainertools.github.io/kpt//images/sink.png" />
 
 <p>Instead, the function typically writes configurations to an external system
-(e.g. writing files to a filesystem).</p>
+(e.g. writing files to a filesystem). Find examples in the <a href="../../guides/consumer/function/sinks">sinks catalog</a>.</p>
 <h3 id="pipeline">Pipeline</h3>
 <p>In order do something useful with a function, we need to compose a pipeline
 with a source and a sink function.</p>
@@ -458,7 +459,6 @@ pipeline. Get detailed tutorials on how to use <code>kpt fn export</code> from t
 <h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Get a quickstart on writing functions from the <a href="../../guides/producer/functions/">function producer docs</a>.</li>
-<li>See more examples of functions in the functions <a href="../../guides/consumer/function/catalog/">catalog</a>.</li>
 <li>Learn more ways of using the <code>kpt fn</code> command from the <a href="../../reference/fn/run/">reference</a> doc.</li>
 </ul>
 
@@ -484,7 +484,7 @@ pipeline. Get detailed tutorials on how to use <code>kpt fn export</code> from t
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8a9a358774f25a50bf783caa812d500a1c9cfd24">Deduplicate kpt function docs (#923) (8a9a3587)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/bc3b5b1328e7e8441dab1366983f93b3bafdadd5">Fix spacing lint error. (bc3b5b13)</a>
 </div>
 </div>
 

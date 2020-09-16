@@ -331,7 +331,6 @@ because:&lt;/p&gt;
 &lt;/ul&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;See more examples of functions in the &lt;a href=&#34;../../../guides/consumer/function/catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../../guides/producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the
 &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
@@ -372,7 +371,7 @@ DIR:
 &lt;h3 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Learn about &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; like sources, sinks, and pipelines.&lt;/li&gt;
-&lt;li&gt;See more examples of sink functions in the functions &lt;a href=&#34;../../guides/consumer/function/catalog/&#34;&gt;catalog&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;See more examples of sink functions in the functions &lt;a href=&#34;../../guides/consumer/function/sinks&#34;&gt;catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 
       </description>
@@ -410,7 +409,7 @@ DIR:
 &lt;h3 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Learn about &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; like sources, sinks, and pipelines.&lt;/li&gt;
-&lt;li&gt;See more examples of source functions in the functions &lt;a href=&#34;../../guides/consumer/function/catalog/&#34;&gt;catalog&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;See more examples of source functions in the functions &lt;a href=&#34;../../guides/consumer/function/sources&#34;&gt;catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 
       </description>

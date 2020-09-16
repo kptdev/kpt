@@ -53,7 +53,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions from &lt;a href=&#34;../../catalog&#34;&gt;Kpt Functions Catalog&lt;/a&gt; declaratively:
+&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions declaratively:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;gatekeeper-validate&lt;/code&gt; enforces constraints over all resources.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;label-namespace&lt;/code&gt; adds a label to all Namespaces.&lt;/li&gt;
@@ -162,7 +162,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions from &lt;a href=&#34;../../catalog&#34;&gt;Kpt Functions Catalog&lt;/a&gt; declaratively:
+&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions declaratively:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;gatekeeper-validate&lt;/code&gt; enforces constraints over all resources.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;label-namespace&lt;/code&gt; adds a label to all Namespaces.&lt;/li&gt;
@@ -255,7 +255,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions from &lt;a href=&#34;../../catalog&#34;&gt;Kpt Functions Catalog&lt;/a&gt; declaratively:
+&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions declaratively:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;gatekeeper-validate&lt;/code&gt; enforces constraints over all resources.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;label-namespace&lt;/code&gt; adds a label to all Namespaces.&lt;/li&gt;
@@ -390,7 +390,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions from &lt;a href=&#34;../../catalog&#34;&gt;Kpt Functions Catalog&lt;/a&gt; declaratively:
+&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions declaratively:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;gatekeeper-validate&lt;/code&gt; enforces constraints over all resources.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;label-namespace&lt;/code&gt; adds a label to all Namespaces.&lt;/li&gt;
@@ -476,7 +476,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions from &lt;a href=&#34;../../catalog&#34;&gt;Kpt Functions Catalog&lt;/a&gt; declaratively:
+&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions declaratively:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;gatekeeper-validate&lt;/code&gt; enforces constraints over all resources.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;label-namespace&lt;/code&gt; adds a label to all Namespaces.&lt;/li&gt;
@@ -609,7 +609,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;resources/constraints/&lt;/code&gt;: declares constraints used by the &lt;code&gt;gatekeeper-validate&lt;/code&gt; function.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions from &lt;a href=&#34;../../catalog&#34;&gt;Kpt Functions Catalog&lt;/a&gt; declaratively:
+&lt;li&gt;&lt;code&gt;functions.yaml&lt;/code&gt;: runs two functions declaratively:
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;gatekeeper-validate&lt;/code&gt; enforces constraints over all resources.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;label-namespace&lt;/code&gt; adds a label to all Namespaces.&lt;/li&gt;

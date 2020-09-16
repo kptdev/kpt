@@ -403,35 +403,6 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/function/catalog/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Functions Catalog</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumerfunctioncatalog">
-      
-      
-      
-      
-      
-      
-      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalogcatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/catalog/node_modules/markdown-table/readme/"></a>
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
     <a  href="/kpt/guides/consumer/function/export/" class="align-left pl-0 pr-2 td-sidebar-link td-sidebar-link__section">Exporting a Workflow</a>
   </li>
   <ul>
@@ -575,6 +546,127 @@ if (!doNotTrack) {
   </ul>
 </ul>
 
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+      
+      <a class="td-sidebar-link td-sidebar-link__page " id="m-kptguidesconsumerfunctioncatalognode_modulesmarkdown-tablereadme" href="/kpt/guides/consumer/function/catalog/node_modules/markdown-table/readme/"></a>
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/generators/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Generators</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctiongenerators">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/sinks/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Sinks</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionsinks">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/sources/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Sources</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionsources">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/transformers/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Transformers</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctiontransformers">
+      
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/function/validators/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Validators</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumerfunctionvalidators">
+      
       
       
     </li>
@@ -1202,7 +1294,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 <ul>
 <li><code>resources/resources.yaml</code>: declares a <code>Deployment</code> and a <code>Namespace</code>.</li>
 <li><code>resources/constraints/</code>: declares constraints used by the <code>gatekeeper-validate</code> function.</li>
-<li><code>functions.yaml</code>: runs two functions from <a href="../../catalog">Kpt Functions Catalog</a> declaratively:
+<li><code>functions.yaml</code>: runs two functions declaratively:
 <ul>
 <li><code>gatekeeper-validate</code> enforces constraints over all resources.</li>
 <li><code>label-namespace</code> adds a label to all Namespaces.</li>
@@ -1308,7 +1400,7 @@ git push --set-upstream origin master
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3a694b8a45d1c23da9e8354d83a533b3e9cbdb3e">Regenerate docs (3a694b8a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/61ba7f9329158f0037b9e769503c650885f98a6a">Flatten catalogs with parent function information. (61ba7f93)</a>
 </div>
 </div>
 
