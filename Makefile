@@ -83,7 +83,7 @@ lintdocs:
 	(cd site && npm run lint-fix)
 
 gencatalog:
-	rm site/content/en/guides/consumer/function/catalog/_index.md
+	rm site/content/en/guides/consumer/function/catalog/*/_index.md
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
 servedocs:

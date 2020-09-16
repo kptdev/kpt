@@ -50,6 +50,12 @@ Either way, `kpt fn run` will
 4. write the function(s) output back to the package directory; creating,
    deleting, or updating resources
 
+This repository documents a catalog of functions implementing the
+[Configuration Functions Specification][spec].
+
+Implement configuration functions using any toolchain such as the
+[Typescript SDK][ts sdk] or [Golang Libraries][go libs].
+
 ### Imperative Run
 
 Functions can be run imperatively by specifying the `--image` flag.
@@ -166,3 +172,6 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
 [function producer docs]: ../../producer/functions/
 [functions concepts]: ../../../concepts/functions/
 [reference]: ../../../reference/fn/run/
+[spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
+[ts sdk]: ../../producer/functions/ts/
+[go libs]: ../../producer/functions/golang/

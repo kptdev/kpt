@@ -152,8 +152,7 @@ code .
 In `src/my_func.ts`, implement the `KptFunc` interface from the [TS SDK API].
 
 Take a look at these [demo functions] to better understand how
-to use the typescript library. These functions are available as container
-images documented in the [catalog].
+to use the typescript library.
 
 Once you've written some code, build the package with:
 
@@ -301,6 +300,5 @@ npm run kpt:docker-build -- --tag=latest
 [VSCode]: https://code.visualstudio.com/
 [TS SDK API]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
 [demo functions]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
-[catalog]: ../../../../consumer/function/catalog/
 [run functions]: ../../../../consumer/function/
 [functions concepts]: ../../../../../concepts/functions/

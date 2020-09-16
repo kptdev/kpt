@@ -48,4 +48,4 @@ DIR:
 
 [sink function]: ../../../concepts/functions/#sink-function
 [functions concepts]: ../../../concepts/functions/
-[catalog]: ../../guides/consumer/function/catalog/
+[catalog]: ../../guides/consumer/function/sinks

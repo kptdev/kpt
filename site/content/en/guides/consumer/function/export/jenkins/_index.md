@@ -45,7 +45,7 @@ Then you will get an `example-package` directory:
 
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
-- `functions.yaml`: runs two functions from [Kpt Functions Catalog] declaratively:
+- `functions.yaml`: runs two functions declaratively:
   - `gatekeeper-validate` enforces constraints over all resources.
   - `label-namespace` adds a label to all Namespaces.
 
@@ -164,7 +164,6 @@ Once local changes are pushed, build again on Jenkins, then you can see how it f
 
 [Jenkins]: https://www.jenkins.io/
 [tutorial]: https://www.jenkins.io/doc/tutorials/
-[Kpt Functions Catalog]: ../../catalog
 [page]: ./creating_a_jenkins_instance_on_gcp
 [Marketplace]: https://console.cloud.google.com/marketplace/browse?q=jenkins&filter=solution-type:vm&filter=price:free
 [agent]: https://www.jenkins.io/doc/book/glossary/#agent

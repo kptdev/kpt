@@ -88,10 +88,8 @@ See the [Functions Developer Guide] for more on producing functions.
 - Learn how to [run functions].
 - Find out how to structure a pipeline of functions from the
   [functions concepts] page.
-- See more examples of functions in the functions [catalog].
 
 [Functions Developer Guide]: ../../guides/producer/functions/
-[catalog]: ../../guides/consumer/function/catalog/
 [Typescript SDK]: ../../guides/producer/functions/ts/
 [sdk-ts-examples]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
 [Golang Libraries]: ../../guides/producer/functions/golang/

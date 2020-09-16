@@ -44,7 +44,7 @@ Then you will get an `example-package` directory:
 
 - `resources/resources.yaml`: declares a `Deployment` and a `Namespace`.
 - `resources/constraints/`: declares constraints used by the `gatekeeper-validate` function.
-- `functions.yaml`: runs two functions from [Kpt Functions Catalog] declaratively:
+- `functions.yaml`: runs two functions declaratively:
   - `gatekeeper-validate` enforces constraints over all resources.
   - `label-namespace` adds a label to all Namespaces.
 
@@ -112,4 +112,3 @@ Once local changes are pushed, you can see how the pipeline fails on GitLab CI.
 
 [GitLab CI]: https://docs.gitlab.com/ee/ci/
 [Getting Started with GitLab CI]: https://docs.gitlab.com/ee/ci/quick_start/README.html
-[Kpt Functions Catalog]: ../../catalog

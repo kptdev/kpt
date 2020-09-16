@@ -387,7 +387,6 @@ because:
 
 ## Next Steps
 
-* See more examples of functions in the [functions catalog].
 * Get a quickstart on writing functions from the [function producer docs].
 * Find out how to structure a pipeline of functions from the
   [functions concepts] page.
@@ -398,6 +397,5 @@ because:
 [Issue 823]: https://github.com/GoogleContainerTools/kpt/issues/823/
 [Issue 824]: https://github.com/GoogleContainerTools/kpt/issues/824/
 [Issue 757]: https://github.com/GoogleContainerTools/kpt/issues/757/
-[functions catalog]: ../../../guides/consumer/function/catalog/
 [function producer docs]: ../../../guides/producer/functions/
 [functions concepts]: ../../../concepts/functions/
