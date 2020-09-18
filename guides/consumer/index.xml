@@ -956,139 +956,6 @@ and local modifications (additional environment variable).&lt;/p&gt;
     </item>
     
     <item>
-      <title>Guides: Get and apply a remote composite package</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/</guid>
-      <description>
-        
-        
-        
-
-&lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
-&lt;h4 id=&#34;notice-composite-packages-feature-support-is-in-alpha-phase&#34;&gt;Notice: Composite packages feature support is in alpha phase&lt;/h4&gt;
-
-&lt;/div&gt;
-
-&lt;p&gt;This guide walks you through an example to get, view, set and apply contents of a
-kpt package which has subpackages in it. A kpt package is a directory of
-resource configs with a valid &lt;code&gt;Kptfile&lt;/code&gt; in it. A composite package is a &lt;code&gt;kpt&lt;/code&gt; package
-with 1 or more subpackages in its directory tree.&lt;/p&gt;
-&lt;p&gt;Principles:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Each kpt package is an independent building block and
-should contain resources(ex: setter definitions) of its own.&lt;/li&gt;
-&lt;li&gt;If a package is present in the directory tree of parent package,
-the configs of that package are out of scope for the actions performed
-on the parent package.&lt;/li&gt;
-&lt;li&gt;To run a command recursively on all the subpackages, users can leverage
-&lt;code&gt;--recurse-subpackages(-R)&lt;/code&gt; flag. This is equivalent to running the same
-command on each package path in the directory tree.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#view-the-package-contents&#34;&gt;View the package contents&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#set-the-setter-parameters&#34;&gt;Set the setter parameters&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#apply-the-composite-package&#34;&gt;Apply the composite package&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
-&lt;p&gt;Fetch an example package which has subpackages using &lt;a href=&#34;../../..//reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;.&lt;/p&gt;
-&lt;h3 id=&#34;get-command&#34;&gt;get command&lt;/h3&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-composite-pkg &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;hello-composite-pkg
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;view-the-package-contents&#34;&gt;View the package contents&lt;/h2&gt;
-&lt;p&gt;The primary package artifacts are Kubernetes resource configuration
-(e.g. YAML files).&lt;/p&gt;
-&lt;h3 id=&#34;tree-command&#34;&gt;tree command&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/tree/&#34;&gt;tree&lt;/a&gt; command is used to list the contents of the package in a tree structure.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree hello-composite-pkg/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;hello-composite-pkg
-├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Kptfile&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Kptfile hello-composite-pkg
-├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;deploy.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Deployment default/hello-composite
-└── Pkg: hello-subpkg
-    ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Kptfile&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Kptfile hello-subpkg
-    ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;deploy.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Deployment default/hello-sub
-    ├── hello-dir
-    │   └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;configmap.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  ConfigMap default/hello-cm
-    └── Pkg: hello-nestedpkg
-        ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Kptfile&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Kptfile hello-nestedpkg
-        └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;deploy.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Deployment default/hello-nested
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There are three kpt packages in the output:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;hello-composite-pkg&lt;/li&gt;
-&lt;li&gt;hello-subpkg&lt;/li&gt;
-&lt;li&gt;hello-nestedpkg&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;&lt;code&gt;hello-dir&lt;/code&gt; is a subdirectory of &lt;code&gt;hello-subpkg&lt;/code&gt; and is not a kpt package, as it doesn&amp;rsquo;t
-contain a &lt;code&gt;Kptfile&lt;/code&gt; in it.&lt;/p&gt;
-&lt;p&gt;Optionally, users may use other commands like &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/count/&#34;&gt;count&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/grep/&#34;&gt;grep&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/cat/&#34;&gt;cat&lt;/a&gt; to
-further view and understand the package contents.&lt;/p&gt;
-&lt;h3 id=&#34;list-setters-command&#34;&gt;list-setters command&lt;/h3&gt;
-&lt;p&gt;The fetched package contains parameters called setters which can be used to set configuration
-values from the commandline.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters hello-composite-pkg/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Prints the list of setters included recursively in all the subpackages&lt;/p&gt;
-&lt;p&gt;Output:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;hello-composite-pkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  image                 helloworld-gke                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  namespace             YOURSPACE                                &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       Yes
-  tag                   0.1.0                                    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-
-hello-composite-pkg/hello-subpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  image                 helloworld-gke                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  namespace             YOURSPACE                                &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt;       Yes
-  tag                   0.1.0                                    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  image                 helloworld-gke                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  namespace             YOURSPACE                                &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       Yes
-  tag                   0.1.0                                    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If you have &lt;code&gt;gcloud&lt;/code&gt; set up on your local, you can observe that the value of the setter
-&lt;code&gt;gcloud.core.project&lt;/code&gt; is set automatically when the package is fetched.&lt;br&gt;
-&lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters&#34;&gt;Auto-setters&lt;/a&gt; are automatically set deriving the values from the output of
-&lt;code&gt;gcloud config list&lt;/code&gt; command, when the package is fetched using &lt;a href=&#34;../../..//reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;.&lt;/p&gt;
-&lt;h2 id=&#34;provide-the-setter-values&#34;&gt;Provide the setter values&lt;/h2&gt;
-&lt;p&gt;Set operation modifies the resource configuration in place by reading the resources,
-changing parameter values, and writing them back.&lt;/p&gt;
-&lt;p&gt;In &lt;code&gt;list-setters&lt;/code&gt; output, &lt;code&gt;namespace&lt;/code&gt; setter is marked as required by the package
-publisher, hence it is mandatory to set it to a new value. You may set other setter
-parameters, either selectively in few of the packages or in all the them.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;--recurse-subpackages(-R)&lt;/code&gt; flag is &lt;code&gt;default:false&lt;/code&gt; for set command. If not invoked,
-the set operation is performed only on the resource files of parent package and not
-the subpackages.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; hello-composite-pkg/ namespace myspace -R
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;hello-composite-pkg/
-&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;s&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
-
-hello-composite-pkg/hello-subpkg/
-&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt; field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;s&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt; field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;s&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;apply-the-composite-package&#34;&gt;Apply the composite package&lt;/h2&gt;
-&lt;p&gt;Now that you have configured the package, apply it to the cluster&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl create namespace myspace
-kubectl apply -f hello-composite-pkg/ -R
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;deployment.apps/hello-composite created
-deployment.apps/hello-sub created
-configmap/hello-cm created
-deployment.apps/hello-nested created
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-      </description>
-    </item>
-    
-    <item>
       <title>Guides: Running Functions</title>
       <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -1222,6 +1089,107 @@ as input to the next&lt;/li&gt;
 &lt;li&gt;Learn more ways of using the &lt;code&gt;kpt fn&lt;/code&gt; command from the &lt;a href=&#34;../../../reference/fn/run/&#34;&gt;reference&lt;/a&gt; doc.&lt;/li&gt;
 &lt;/ul&gt;
 
+      </description>
+    </item>
+    
+    <item>
+      <title>Guides: Consume a package with subpackages</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/consumer/subpackages/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/guides/consumer/subpackages/</guid>
+      <description>
+        
+        
+        
+
+&lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
+&lt;h4 id=&#34;notice-subpackages-support-is-available-with-kpt-version-v0340-for-cfg-commands-only&#34;&gt;Notice: Subpackages support is available with kpt version v0.34.0+ for [cfg] commands only&lt;/h4&gt;
+
+&lt;/div&gt;
+
+&lt;p&gt;This guide walks you through an example to get, view, set and apply contents of an
+example kpt package with a &lt;a href=&#34;https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages&#34;&gt;subpackage&lt;/a&gt; in its directory tree.&lt;/p&gt;
+&lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#view-the-package-contents&#34;&gt;View the package contents&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#provide-the-setter-values&#34;&gt;Provide the setter values&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#apply-the-package&#34;&gt;Apply the package&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
+&lt;p&gt;Fetch an example kpt package with &lt;a href=&#34;https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages&#34;&gt;subpackage&lt;/a&gt; using &lt;a href=&#34;../../..//reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;get-command&#34;&gt;get command&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;wordpress
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;view-the-package-contents&#34;&gt;View the package contents&lt;/h2&gt;
+&lt;p&gt;The primary package artifacts are Kubernetes resource configuration
+(e.g. YAML files).&lt;/p&gt;
+&lt;h3 id=&#34;list-package-contents-in-a-tree-structure&#34;&gt;List package contents in a tree structure&lt;/h3&gt;
+&lt;p&gt;Once you fetch the package onto local list its contents using &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/tree/&#34;&gt;tree&lt;/a&gt; command.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree wordpress/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Kptfile&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Kptfile wordpress
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;wordpress-deployment.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Deployment wordpress
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;wordpress-deployment.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service wordpress
+├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;wordpress-deployment.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  PersistentVolumeClaim wp-pv-claim
+└── Pkg: mysql
+    ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Kptfile&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Kptfile mysql
+    ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;mysql-deployment.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  PersistentVolumeClaim mysql-pv-claim
+    ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;mysql-deployment.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Deployment wordpress-mysql
+    └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;mysql-deployment.yaml&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service wordpress-mysql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There are two kpt packages in the output:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;wordpress&lt;/li&gt;
+&lt;li&gt;mysql&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code&gt;mysql&lt;/code&gt; package is a &lt;a href=&#34;https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages&#34;&gt;subpackage&lt;/a&gt; of &lt;code&gt;wordpress&lt;/code&gt; package&lt;/p&gt;
+&lt;p&gt;Optionally, users may use other commands like &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/count/&#34;&gt;count&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/grep/&#34;&gt;grep&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/cat/&#34;&gt;cat&lt;/a&gt; to
+further view and understand the package contents.&lt;/p&gt;
+&lt;h3 id=&#34;list-setters-in-the-package&#34;&gt;List setters in the package&lt;/h3&gt;
+&lt;p&gt;The fetched package contains &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;setters&lt;/a&gt;. Invoke &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/&#34;&gt;list-setters&lt;/a&gt; command to list
+the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;setters&lt;/a&gt; recursively in all the packages.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters wordpress/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       No
+  image                 wordpress                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  tag                   4.8                                 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  teamname              YOURTEAM                            &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       Yes
+
+wordpress/mysql/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       No
+  image                 wordpress                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  tag                   4.8                                 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  teamname              YOURTEAM                            &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       Yes
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You may notice that the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters&#34;&gt;auto-setter&lt;/a&gt; &lt;code&gt;gcloud.core.project&lt;/code&gt; is already set if you
+have &lt;code&gt;gcloud&lt;/code&gt; configured on your local.&lt;/p&gt;
+&lt;h2 id=&#34;provide-the-setter-values&#34;&gt;Provide the setter values&lt;/h2&gt;
+&lt;p&gt;Provide the values for all the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/#marking-a-field-as-required&#34;&gt;required setters&lt;/a&gt;. By default, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/set/&#34;&gt;set&lt;/a&gt;
+command is performed only on the resource files of provided package and not its
+subpackages. &lt;code&gt;--recurse-subpackages(-R)&lt;/code&gt; can be leveraged to run the command on
+subpackages recursively.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg &lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; wordpress/ teamname myteam -R
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt; field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;s&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
+
+wordpress/mysql/
+&lt;span style=&#34;color:#204a87&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt; field&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;(&lt;/span&gt;s&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;apply-the-package&#34;&gt;Apply the package&lt;/h2&gt;
+&lt;p&gt;Now that you have configured the package, apply it to the cluster&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl apply -f wordpress/ -R
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;service/wordpress-mysql created
+persistentvolumeclaim/mysql-pv-claim created
+deployment.apps/wordpress-mysql created
+service/wordpress created
+persistentvolumeclaim/wp-pv-claim created
+deployment.apps/wordpress created
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
       </description>
     </item>
     

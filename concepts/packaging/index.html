@@ -379,6 +379,42 @@ configuration as resources serialized in YAML or JSON format.</li>
 <p>For compatibility with other arbitrary formats, kpt supports generating
 resource configuration data from templates, configuration DSLs, and programs
 using <a href="../functions/#source-function">source functions</a>.</p>
+<h2 id="subpackages">Subpackages</h2>
+<p>A <code>subpackage</code> is a <code>kpt</code> package which is nested within the directory tree of
+another <code>kpt</code> package.</p>
+<p>Here is an example directory structure of a <code>kpt</code> package with subpackages</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">foo
+├── Kptfile
+├── bar <span style="color:#8f5902;font-style:italic"># subpackage</span>
+│   ├── Kptfile
+│   ├── baz <span style="color:#8f5902;font-style:italic"># subpackage</span>
+│   │   ├── Kptfile
+│   │   └── cm.yaml
+│   └── deploy.yaml
+└── service.yaml
+</code></pre></div><h4 id="use-cases">Use cases</h4>
+<ol>
+<li>Package publishers need a way to pick and choose multiple component packages
+which work well together, create a single single <code>kpt</code> package using them to
+ship an out of the box application, maintain the package and abstract the
+details from package consumers. Alternatively, package consumers may <a href="https://googlecontainertools.github.io/kpt/guides/consumer/update/">update</a>
+individual <code>subpackages</code> directly from the upstream sources.</li>
+<li>Package publishers need a way to create parameter values (e.g. <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">setters</a>) to
+be consistent across multiple <code>subpackages</code> and make it easy for package
+consumers to provide them with a single command.</li>
+<li>(Under development) Package consumers need a way to apply a set of
+<code>subpackages</code> in a single command to a live cluster while maintaining
+the ability to manage them (e.g. add/destroy) independently.</li>
+</ol>
+<h4 id="principles">Principles</h4>
+<p>Here are the core principles around <code>subpackages</code> concept</p>
+<ol>
+<li>Each kpt package is an independent building block and should contain resources
+(e.g. setter definitions) in its <code>Kptfile</code>.</li>
+<li>Commands performed on a package are not performed on its subpackages unless
+<code>--recurse-subpackages(-R)</code> is provided. (only available with <a href="https://googlecontainertools.github.io/kpt/reference/cfg/">cfg</a> commands currently
+and the default value of <code>-R</code> flag might vary for each command)</li>
+</ol>
 
         <div class="section-index">
     
@@ -402,7 +438,7 @@ using <a href="../functions/#source-function">source functions</a>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6d40df4841c4357f16b91dc957f8494c1f99d89d">Composite Packages concepts (6d40df48)</a>
 </div>
 </div>
 

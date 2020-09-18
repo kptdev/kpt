@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/consumer/subpackages/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,18 +32,18 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Get and apply a remote composite package | Kpt</title><meta property="og:title" content="Get and apply a remote composite package" />
-<meta property="og:description" content="Fetch a composite package from a remote git repository and apply its contents to a cluster
+<title>Consume a package with subpackages | Kpt</title><meta property="og:title" content="Consume a package with subpackages" />
+<meta property="og:description" content="Fetch a kpt package with subpackages from a remote git repository and apply its  contents to a cluster
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/consumer/subpackages/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Get and apply a remote composite package">
-<meta itemprop="description" content="Fetch a composite package from a remote git repository and apply its contents to a cluster
+<meta itemprop="name" content="Consume a package with subpackages">
+<meta itemprop="description" content="Fetch a kpt package with subpackages from a remote git repository and apply its  contents to a cluster
 ">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Get and apply a remote composite package"/>
-<meta name="twitter:description" content="Fetch a composite package from a remote git repository and apply its contents to a cluster
+<meta name="twitter:title" content="Consume a package with subpackages"/>
+<meta name="twitter:description" content="Fetch a kpt package with subpackages from a remote git repository and apply its  contents to a cluster
 "/>
 
 
@@ -76,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Get and apply a remote composite package | Kpt</title>
+    <title>Consume a package with subpackages | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -344,29 +344,6 @@ if (!doNotTrack) {
   </li>
   <ul>
     <li class="collapse " id="kptguidesconsumerupdate">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/compositepkgs/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Composite Package</a>
-  </li>
-  <ul>
-    <li class="collapse show" id="kptguidesconsumercompositepkgs">
       
       
       
@@ -673,6 +650,29 @@ if (!doNotTrack) {
   </ul>
 </ul>
 
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/subpackages/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Subpackages</a>
+  </li>
+  <ul>
+    <li class="collapse show" id="kptguidesconsumersubpackages">
+      
       
       
     </li>
@@ -1036,10 +1036,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/compositepkgs/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Composite Package</a>
+    <a  href="/kpt/guides/producer/subpackages/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Subpackages</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducercompositepkgs">
+    <li class="collapse " id="kptguidesproducersubpackages">
       
       
       
@@ -1172,8 +1172,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/consumer/compositepkgs/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Get%20and%20apply%20a%20remote%20composite%20package" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/consumer/subpackages/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Consume%20a%20package%20with%20subpackages" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1195,12 +1195,12 @@ if (!doNotTrack) {
     </li>
     <li><a href="#view-the-package-contents">View the package contents</a>
       <ul>
-        <li><a href="#tree-command">tree command</a></li>
-        <li><a href="#list-setters-command">list-setters command</a></li>
+        <li><a href="#list-package-contents-in-a-tree-structure">List package contents in a tree structure</a></li>
+        <li><a href="#list-setters-in-the-package">List setters in the package</a></li>
       </ul>
     </li>
     <li><a href="#provide-the-setter-values">Provide the setter values</a></li>
-    <li><a href="#apply-the-composite-package">Apply the composite package</a></li>
+    <li><a href="#apply-the-package">Apply the package</a></li>
   </ul>
 </nav>
 
@@ -1239,7 +1239,7 @@ if (!doNotTrack) {
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/compositepkgs/">Composite Package</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/consumer/subpackages/">Subpackages</a>
 </li>
 
 	</ol>
@@ -1247,128 +1247,96 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Get and apply a remote composite package</h1>
-	<div class="lead">Fetch a composite package from a remote git repository and apply its contents to a cluster</div>
+	<h1>Consume a package with subpackages</h1>
+	<div class="lead">Fetch a kpt package with subpackages from a remote git repository and apply its  contents to a cluster</div>
 	
 
 <div class="pageinfo pageinfo-warning">
-<h4 id="notice-composite-packages-feature-support-is-in-alpha-phase">Notice: Composite packages feature support is in alpha phase</h4>
+<h4 id="notice-subpackages-support-is-available-with-kpt-version-v0340-for-cfg-commands-only">Notice: Subpackages support is available with kpt version v0.34.0+ for [cfg] commands only</h4>
 
 </div>
 
-<p>This guide walks you through an example to get, view, set and apply contents of a
-kpt package which has subpackages in it. A kpt package is a directory of
-resource configs with a valid <code>Kptfile</code> in it. A composite package is a <code>kpt</code> package
-with 1 or more subpackages in its directory tree.</p>
-<p>Principles:</p>
-<ol>
-<li>Each kpt package is an independent building block and
-should contain resources(ex: setter definitions) of its own.</li>
-<li>If a package is present in the directory tree of parent package,
-the configs of that package are out of scope for the actions performed
-on the parent package.</li>
-<li>To run a command recursively on all the subpackages, users can leverage
-<code>--recurse-subpackages(-R)</code> flag. This is equivalent to running the same
-command on each package path in the directory tree.</li>
-</ol>
+<p>This guide walks you through an example to get, view, set and apply contents of an
+example kpt package with a <a href="https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages">subpackage</a> in its directory tree.</p>
 <h2 id="steps">Steps</h2>
 <ol>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a></li>
 <li><a href="#view-the-package-contents">View the package contents</a></li>
-<li><a href="#set-the-setter-parameters">Set the setter parameters</a></li>
-<li><a href="#apply-the-composite-package">Apply the composite package</a></li>
+<li><a href="#provide-the-setter-values">Provide the setter values</a></li>
+<li><a href="#apply-the-package">Apply the package</a></li>
 </ol>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
-<p>Fetch an example package which has subpackages using <a href="../../..//reference/pkg/get/">kpt pkg get</a>.</p>
+<p>Fetch an example kpt package with <a href="https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages">subpackage</a> using <a href="../../..//reference/pkg/get/">kpt pkg get</a>.</p>
 <h3 id="get-command">get command</h3>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/hello-composite-pkg <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>hello-composite-pkg
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>wordpress
 </code></pre></div><h2 id="view-the-package-contents">View the package contents</h2>
 <p>The primary package artifacts are Kubernetes resource configuration
 (e.g. YAML files).</p>
-<h3 id="tree-command">tree command</h3>
-<p><a href="https://googlecontainertools.github.io/kpt/reference/cfg/tree/">tree</a> command is used to list the contents of the package in a tree structure.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree hello-composite-pkg/
+<h3 id="list-package-contents-in-a-tree-structure">List package contents in a tree structure</h3>
+<p>Once you fetch the package onto local list its contents using <a href="https://googlecontainertools.github.io/kpt/reference/cfg/tree/">tree</a> command.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree wordpress/
 </code></pre></div><p>Output:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg
-├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile hello-composite-pkg
-├── <span style="color:#ce5c00;font-weight:bold">[</span>deploy.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment default/hello-composite
-└── Pkg: hello-subpkg
-    ├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile hello-subpkg
-    ├── <span style="color:#ce5c00;font-weight:bold">[</span>deploy.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment default/hello-sub
-    ├── hello-dir
-    │   └── <span style="color:#ce5c00;font-weight:bold">[</span>configmap.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  ConfigMap default/hello-cm
-    └── Pkg: hello-nestedpkg
-        ├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile hello-nestedpkg
-        └── <span style="color:#ce5c00;font-weight:bold">[</span>deploy.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment default/hello-nested
-</code></pre></div><p>There are three kpt packages in the output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress
+├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile wordpress
+├── <span style="color:#ce5c00;font-weight:bold">[</span>wordpress-deployment.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment wordpress
+├── <span style="color:#ce5c00;font-weight:bold">[</span>wordpress-deployment.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Service wordpress
+├── <span style="color:#ce5c00;font-weight:bold">[</span>wordpress-deployment.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  PersistentVolumeClaim wp-pv-claim
+└── Pkg: mysql
+    ├── <span style="color:#ce5c00;font-weight:bold">[</span>Kptfile<span style="color:#ce5c00;font-weight:bold">]</span>  Kptfile mysql
+    ├── <span style="color:#ce5c00;font-weight:bold">[</span>mysql-deployment.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  PersistentVolumeClaim mysql-pv-claim
+    ├── <span style="color:#ce5c00;font-weight:bold">[</span>mysql-deployment.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Deployment wordpress-mysql
+    └── <span style="color:#ce5c00;font-weight:bold">[</span>mysql-deployment.yaml<span style="color:#ce5c00;font-weight:bold">]</span>  Service wordpress-mysql
+</code></pre></div><p>There are two kpt packages in the output:</p>
 <ol>
-<li>hello-composite-pkg</li>
-<li>hello-subpkg</li>
-<li>hello-nestedpkg</li>
+<li>wordpress</li>
+<li>mysql</li>
 </ol>
-<p><code>hello-dir</code> is a subdirectory of <code>hello-subpkg</code> and is not a kpt package, as it doesn&rsquo;t
-contain a <code>Kptfile</code> in it.</p>
+<p><code>mysql</code> package is a <a href="https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages">subpackage</a> of <code>wordpress</code> package</p>
 <p>Optionally, users may use other commands like <a href="https://googlecontainertools.github.io/kpt/reference/cfg/count/">count</a>, <a href="https://googlecontainertools.github.io/kpt/reference/cfg/grep/">grep</a>, <a href="https://googlecontainertools.github.io/kpt/reference/cfg/cat/">cat</a> to
 further view and understand the package contents.</p>
-<h3 id="list-setters-command">list-setters command</h3>
-<p>The fetched package contains parameters called setters which can be used to set configuration
-values from the commandline.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters hello-composite-pkg/
-</code></pre></div><p>Prints the list of setters included recursively in all the subpackages</p>
-<p>Output:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
-  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
-  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
-  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
+<h3 id="list-setters-in-the-package">List setters in the package</h3>
+<p>The fetched package contains <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">setters</a>. Invoke <a href="https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/">list-setters</a> command to list
+the <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">setters</a> recursively in all the packages.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters wordpress/
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">3</span>       No
+  image                 wordpress                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  tag                   4.8                                 <span style="color:#0000cf;font-weight:bold">1</span>       No
+  teamname              YOURTEAM                            <span style="color:#0000cf;font-weight:bold">3</span>       Yes
 
-hello-composite-pkg/hello-subpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
-  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
-  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">2</span>       Yes
-  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
-  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
-  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
-  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
-</code></pre></div><p>If you have <code>gcloud</code> set up on your local, you can observe that the value of the setter
-<code>gcloud.core.project</code> is set automatically when the package is fetched.<br>
-<a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters">Auto-setters</a> are automatically set deriving the values from the output of
-<code>gcloud config list</code> command, when the package is fetched using <a href="../../..//reference/pkg/get/">kpt pkg get</a>.</p>
+wordpress/mysql/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">3</span>       No
+  image                 wordpress                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  tag                   4.8                                 <span style="color:#0000cf;font-weight:bold">1</span>       No
+  teamname              YOURTEAM                            <span style="color:#0000cf;font-weight:bold">3</span>       Yes
+</code></pre></div><p>You may notice that the <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters">auto-setter</a> <code>gcloud.core.project</code> is already set if you
+have <code>gcloud</code> configured on your local.</p>
 <h2 id="provide-the-setter-values">Provide the setter values</h2>
-<p>Set operation modifies the resource configuration in place by reading the resources,
-changing parameter values, and writing them back.</p>
-<p>In <code>list-setters</code> output, <code>namespace</code> setter is marked as required by the package
-publisher, hence it is mandatory to set it to a new value. You may set other setter
-parameters, either selectively in few of the packages or in all the them.</p>
-<p><code>--recurse-subpackages(-R)</code> flag is <code>default:false</code> for set command. If not invoked,
-the set operation is performed only on the resource files of parent package and not
-the subpackages.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg <span style="color:#204a87">set</span> hello-composite-pkg/ namespace myspace -R
+<p>Provide the values for all the <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/#marking-a-field-as-required">required setters</a>. By default, <a href="https://googlecontainertools.github.io/kpt/reference/cfg/set/">set</a>
+command is performed only on the resource files of provided package and not its
+subpackages. <code>--recurse-subpackages(-R)</code> can be leveraged to run the command on
+subpackages recursively.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg <span style="color:#204a87">set</span> wordpress/ teamname myteam -R
 </code></pre></div><p>Output:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
-<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">3</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
 
-hello-composite-pkg/hello-subpkg/
-<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">2</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
-</code></pre></div><h2 id="apply-the-composite-package">Apply the composite package</h2>
+wordpress/mysql/
+<span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">3</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span>
+</code></pre></div><h2 id="apply-the-package">Apply the package</h2>
 <p>Now that you have configured the package, apply it to the cluster</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create namespace myspace
-kubectl apply -f hello-composite-pkg/ -R
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f wordpress/ -R
 </code></pre></div><p>Output:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">deployment.apps/hello-composite created
-deployment.apps/hello-sub created
-configmap/hello-cm created
-deployment.apps/hello-nested created
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">service/wordpress-mysql created
+persistentvolumeclaim/mysql-pv-claim created
+deployment.apps/wordpress-mysql created
+service/wordpress created
+persistentvolumeclaim/wp-pv-claim created
+deployment.apps/wordpress created
 </code></pre></div>
         <div class="section-index">
     
@@ -1470,7 +1438,7 @@ deployment.apps/hello-nested created
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6d40df4841c4357f16b91dc957f8494c1f99d89d">Composite Packages concepts (6d40df48)</a>
 </div>
 </div>
 

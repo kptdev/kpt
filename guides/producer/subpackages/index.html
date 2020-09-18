@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/subpackages/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,18 +32,18 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Create and publish a composite package | Kpt</title><meta property="og:title" content="Create and publish a composite package" />
-<meta property="og:description" content="Build a composite package from scratch and publish it
+<title>Publish a package with subpackages | Kpt</title><meta property="og:title" content="Publish a package with subpackages" />
+<meta property="og:description" content="Create and publish a kpt package with subpackage in its directory tree
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/subpackages/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Create and publish a composite package">
-<meta itemprop="description" content="Build a composite package from scratch and publish it
+<meta itemprop="name" content="Publish a package with subpackages">
+<meta itemprop="description" content="Create and publish a kpt package with subpackage in its directory tree
 ">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Create and publish a composite package"/>
-<meta name="twitter:description" content="Build a composite package from scratch and publish it
+<meta name="twitter:title" content="Publish a package with subpackages"/>
+<meta name="twitter:description" content="Create and publish a kpt package with subpackage in its directory tree
 "/>
 
 
@@ -76,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Create and publish a composite package | Kpt</title>
+    <title>Publish a package with subpackages | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -344,29 +344,6 @@ if (!doNotTrack) {
   </li>
   <ul>
     <li class="collapse " id="kptguidesconsumerupdate">
-      
-      
-      
-    </li>
-  </ul>
-</ul>
-
-      
-      
-      
-      
-
-
-
-
-
-
-<ul class="td-sidebar-nav__section pr-md-3">
-  <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/consumer/compositepkgs/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Composite Package</a>
-  </li>
-  <ul>
-    <li class="collapse " id="kptguidesconsumercompositepkgs">
       
       
       
@@ -673,6 +650,29 @@ if (!doNotTrack) {
   </ul>
 </ul>
 
+      
+      
+    </li>
+  </ul>
+</ul>
+
+      
+      
+      
+      
+
+
+
+
+
+
+<ul class="td-sidebar-nav__section pr-md-3">
+  <li class="td-sidebar-nav__section-title">
+    <a  href="/kpt/guides/consumer/subpackages/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Subpackages</a>
+  </li>
+  <ul>
+    <li class="collapse " id="kptguidesconsumersubpackages">
+      
       
       
     </li>
@@ -1036,10 +1036,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/compositepkgs/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Composite Package</a>
+    <a  href="/kpt/guides/producer/subpackages/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Subpackages</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducercompositepkgs">
+    <li class="collapse show" id="kptguidesproducersubpackages">
       
       
       
@@ -1172,8 +1172,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/compositepkgs/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Create%20and%20publish%20a%20composite%20package" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/subpackages/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Publish%20a%20package%20with%20subpackages" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1188,15 +1188,17 @@ if (!doNotTrack) {
 <nav id="TableOfContents">
   <ul>
     <li><a href="#steps">Steps</a></li>
-    <li><a href="#create-a-composite-package">Create a composite package</a></li>
+    <li><a href="#create-the-package">Create the package</a></li>
     <li><a href="#add-setters-and-substitutions">Add setters and substitutions</a>
       <ul>
+        <li><a href="#add-annotations">Add annotations</a></li>
         <li><a href="#create-setters">Create setters</a></li>
         <li><a href="#create-substitutions">Create substitutions</a></li>
         <li><a href="#list-and-verify-setterssubstitutions">List and verify setters/substitutions</a></li>
       </ul>
     </li>
     <li><a href="#publish-the-package">Publish the package</a></li>
+    <li><a href="#next-steps">Next steps</a></li>
   </ul>
 </nav>
 
@@ -1235,7 +1237,7 @@ if (!doNotTrack) {
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/">Composite Package</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/subpackages/">Subpackages</a>
 </li>
 
 	</ol>
@@ -1243,139 +1245,127 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Create and publish a composite package</h1>
-	<div class="lead">Build a composite package from scratch and publish it</div>
+	<h1>Publish a package with subpackages</h1>
+	<div class="lead">Create and publish a kpt package with subpackage in its directory tree</div>
 	
 
 <div class="pageinfo pageinfo-warning">
-<h4 id="notice-composite-packages-feature-support-is-in-alpha-phase">Notice: Composite packages feature support is in alpha phase</h4>
+<h4 id="notice-subpackages-support-is-available-with-kpt-version-v0340-for-cfg-commands-only">Notice: Subpackages support is available with kpt version v0.34.0+ for [cfg] commands only</h4>
 
 </div>
 
-<p>This guide walks you through an example to create, parameterize and publish a kpt
-package which has subpackages in it. A kpt package is a directory of resource
-configs with valid <code>Kptfile</code> in it. A composite package is a <code>kpt</code> package with 1
-or more subpackages in it.</p>
-<p>Principles:</p>
-<ol>
-<li>Each kpt package is an independent building block and
-should contain resources(ex: setter definitions) of its own.</li>
-<li>If a package is present in the directory tree of parent package,
-the configs of that package are out of scope for the actions performed
-on the parent package.</li>
-<li>To run a command recursively on all the subpackages, users can leverage
-<code>--recurse-subpackages(-R)</code> flag. This is equivalent to running the same
-command on each package path in the directory tree.</li>
-</ol>
+<p>This guide walks you through an example to create, parameterize and publish a
+kpt package with a <a href="https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages">subpackage</a> in it.</p>
 <h2 id="steps">Steps</h2>
 <ol>
-<li><a href="#create-a-composite-package">Create a composite package</a></li>
+<li><a href="#create-the-package">Create the package</a></li>
 <li><a href="#add-setters-and-substitutions">Add setters and substitutions</a></li>
 <li><a href="#publish-the-package">Publish the package</a></li>
 </ol>
-<h2 id="create-a-composite-package">Create a composite package</h2>
-<p>Create a composite package directory structure and initialize <code>kpt</code> packages.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir hello-composite-pkg
-kpt pkg init hello-composite-pkg
+<h2 id="create-the-package">Create the package</h2>
+<p>Initialize a <code>kpt</code> package with a <a href="https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages">subpackage</a> in its directory tree.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir wordpress
+kpt pkg init wordpress
 
-mkdir hello-composite-pkg/hello-subpkg
-kpt pkg init hello-composite-pkg/hello-subpkg
-
-<span style="color:#8f5902;font-style:italic"># this is a subdir and not a package</span>
-mkdir hello-composite-pkg/hello-subpkg/hello-dir
-
-mkdir hello-composite-pkg/hello-subpkg/hello-nestedpkg
-kpt pkg init hello-composite-pkg/hello-subpkg/hello-nestedpkg
-</code></pre></div><p>Add resource files(.yaml) to the directories. You may use(copy/paste) the resource files from
-<a href="https://github.com/GoogleContainerTools/kpt/tree/master/package-examples/hello-composite-pkg">hello-composite-pkg</a> to respective directories on local and delete the <code>$kpt-set</code> comments.</p>
-<h2 id="add-setters-and-substitutions">Add setters and substitutions</h2>
-<h3 id="create-setters">Create setters</h3>
-<p><a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">Setters</a> provide a solution for template-free setting of field values through
-package metadata (OpenAPI). Setters will be invoked by package consumers to
-programmatically modify the configuration using <code>kpt cfg set</code> to <a href="https://googlecontainertools.github.io/kpt/guides/consumer/set/">set</a> values.
-Create <code>namespace</code> setter in all the packages.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-setter hello-composite-pkg/ namespace YOURSPACE -R --required
+mkdir wordpress/mysql
+kpt pkg init wordpress/mysql
+</code></pre></div><p>Download the <code>Wordpress</code> deployment configuration file.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> wordpress
+curl -LO https://k8s.io/examples/application/wordpress/wordpress-deployment.yaml
+</code></pre></div><p>Download the <code>MySQL</code> deployment configuration file.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> mysql
+curl -LO https://k8s.io/examples/application/wordpress/mysql-deployment.yaml
+<span style="color:#204a87">cd</span> ../../
+</code></pre></div><h2 id="add-setters-and-substitutions">Add setters and substitutions</h2>
+<h3 id="add-annotations">Add annotations</h3>
+<p>As a package publisher you might want to add [annotations] to kubernetes objects.
+You can leverage <code>--recurse-subpackages(-R)</code> flag to create it recursively in both
+<code>wordpress</code> and <code>mysql</code> packages.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg annotate wordpress/ --kv <span style="color:#000">teamname</span><span style="color:#ce5c00;font-weight:bold">=</span>YOURTEAM -R
 </code></pre></div><p>Output:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
-created setter <span style="color:#4e9a06">&#34;namespace&#34;</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+added annotations in the package
 
-hello-composite-pkg/hello-subpkg/
-created setter <span style="color:#4e9a06">&#34;namespace&#34;</span>
+wordpress/mysql/
+added annotations in the package
+</code></pre></div><p>Similarly add <code>projectId</code> annotation to both the packages.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg annotate wordpress/ --kv <span style="color:#000">projectId</span><span style="color:#ce5c00;font-weight:bold">=</span>PROJECT_ID -R
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+added annotations in the package
 
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-created setter <span style="color:#4e9a06">&#34;namespace&#34;</span>
-</code></pre></div><p>Similarly create a setter with name <code>gcloud.core.project</code>. If the package consumer
-has <code>gcloud</code> set up on local, they can observe that the value of the setter
-<code>gcloud.core.project</code> will be set automatically when the package is fetched.
-<a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters">Auto-setters</a> are automatically set deriving the values from the output of
-<code>gcloud config list</code> command, when the package is fetched using <a href="../../..//reference/pkg/get/">kpt pkg get</a>.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-setter hello-composite-pkg/ gcloud.core.project PROJECT_ID -R
+wordpress/mysql/
+added annotations in the package
+</code></pre></div><h3 id="create-setters">Create setters</h3>
+<p>Create <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">Setters</a> for the annotations values which you just added</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-setter wordpress/ teamname YOURTEAM -R --required
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+created setter <span style="color:#4e9a06">&#34;teamname&#34;</span>
+
+wordpress/mysql/
+created setter <span style="color:#4e9a06">&#34;teamname&#34;</span>
+</code></pre></div><p>Similarly create an <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters">auto-setter</a> with name <code>gcloud.core.project</code>.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-setter wordpress/ gcloud.core.project PROJECT_ID -R
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+created setter <span style="color:#4e9a06">&#34;gcloud.core.project&#34;</span>
+
+wordpress/mysql/
+created setter <span style="color:#4e9a06">&#34;gcloud.core.project&#34;</span>
 </code></pre></div><h3 id="create-substitutions">Create substitutions</h3>
-<p><a href="https://googlecontainertools.github.io/kpt/guides/producer/substitutions/">Substitutions</a> provide a solution for template-free substitution of field values
-built on top of setters. They enable substituting values into part of a field,
-including combining multiple setters into a single value.</p>
-<p>Substitutions may be invoked to programmatically modify the configuration using
-<code>kpt cfg set</code> to substitute values which are derived from the setter.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-subst hello-composite-pkg/ image-tag <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>--field-value gcr.io/kpt-dev/helloworld-gke:0.1.0 <span style="color:#4e9a06">\
-</span><span style="color:#4e9a06"></span>--pattern gcr.io/kpt-dev/<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>image<span style="color:#ce5c00;font-weight:bold">}</span>:<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>tag<span style="color:#ce5c00;font-weight:bold">}</span> -R
+<p>Create <a href="https://googlecontainertools.github.io/kpt/guides/producer/substitutions/">Substitutions</a> so that package consumers can substitute values,
+using <code>kpt cfg set</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-subst wordpress image-tag <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--field-value wordpress:4.8-apache <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--pattern <span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>image<span style="color:#ce5c00;font-weight:bold">}</span>:<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>tag<span style="color:#ce5c00;font-weight:bold">}</span>-apache
 </code></pre></div><p>Output:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
-unable to find setter with name image, creating new setter with value helloworld-gke
-unable to find setter with name tag, creating new setter with value 0.1.0
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+unable to find setter with name image, creating new setter with value wordpress
+unable to find setter with name tag, creating new setter with value 4.8
 created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
-
-hello-composite-pkg/hello-subpkg/
-unable to find setter with name image, creating new setter with value helloworld-gke
-unable to find setter with name tag, creating new setter with value 0.1.0
-created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-unable to find setter with name image, creating new setter with value helloworld-gke
-unable to find setter with name tag, creating new setter with value 0.1.0
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg create-subst wordpress/mysql image-tag <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--field-value mysql:5.6 <span style="color:#4e9a06">\
+</span><span style="color:#4e9a06"></span>--pattern <span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>image<span style="color:#ce5c00;font-weight:bold">}</span>:<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>tag<span style="color:#ce5c00;font-weight:bold">}</span>
+</code></pre></div><p>Output:</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/mysql/
+unable to find setter with name image, creating new setter with value wordpress
+unable to find setter with name tag, creating new setter with value 4.8
 created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
 </code></pre></div><h3 id="list-and-verify-setterssubstitutions">List and verify setters/substitutions</h3>
 <p>Use list-setters command to verify that the setters and substitutions are created as expected</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters hello-composite-pkg/ --include-subst
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters wordpress/ --include-subst
 </code></pre></div><p>Output:</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">hello-composite-pkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
-  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
-  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
-  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
---------------- -------------------------------- --------------
-  SUBSTITUTION              PATTERN               REFERENCES
-  image-tag      gcr.io/kpt-dev/<span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">3</span>       No
+  image                 wordpress                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  tag                   4.8                                 <span style="color:#0000cf;font-weight:bold">1</span>       No
+  teamname              YOURTEAM                            <span style="color:#0000cf;font-weight:bold">3</span>       Yes
+--------------- ------------------------ --------------
+  SUBSTITUTION          PATTERN           REFERENCES
+  image-tag      <span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>-apache   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
 
-hello-composite-pkg/hello-subpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
-  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
-  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">2</span>       Yes
-  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
---------------- -------------------------------- --------------
-  SUBSTITUTION              PATTERN               REFERENCES
-  image-tag      gcr.io/kpt-dev/<span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">1</span>       No
-  image                 helloworld-gke                           <span style="color:#0000cf;font-weight:bold">1</span>       No
-  namespace             YOURSPACE                                <span style="color:#0000cf;font-weight:bold">1</span>       Yes
-  tag                   0.1.0                                    <span style="color:#0000cf;font-weight:bold">1</span>       No
---------------- -------------------------------- --------------
-  SUBSTITUTION              PATTERN               REFERENCES
-  image-tag      gcr.io/kpt-dev/<span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
+wordpress/mysql/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">3</span>       No
+  image                 wordpress                           <span style="color:#0000cf;font-weight:bold">1</span>       No
+  tag                   4.8                                 <span style="color:#0000cf;font-weight:bold">1</span>       No
+  teamname              YOURTEAM                            <span style="color:#0000cf;font-weight:bold">3</span>       Yes
+--------------- ----------------- --------------
+  SUBSTITUTION       PATTERN       REFERENCES
+  image-tag      <span style="color:#4e9a06">${</span><span style="color:#000">image</span><span style="color:#4e9a06">}</span>:<span style="color:#4e9a06">${</span><span style="color:#000">tag</span><span style="color:#4e9a06">}</span>   <span style="color:#ce5c00;font-weight:bold">[</span>image,tag<span style="color:#ce5c00;font-weight:bold">]</span>
 </code></pre></div><h2 id="publish-the-package">Publish the package</h2>
-<p>Now that as a package creator, you have created and parameterized a composite package,
+<p>Now that as a package creator, you have created and parameterized a <code>kpt</code> package,
 publish it so that package consumers can consume it.</p>
-<p>Create a <a href="https://docs.github.com/en/enterprise/2.13/user/articles/creating-a-new-repository">git repo</a> in your profile with name <code>hello-composite-pkg</code></p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> hello-composite-pkg/
-git init<span style="color:#000;font-weight:bold">;</span> git add .<span style="color:#000;font-weight:bold">;</span> git commit -am <span style="color:#4e9a06">&#34;Publish composite package&#34;</span><span style="color:#000;font-weight:bold">;</span>
+<p>Create a <a href="https://docs.github.com/en/enterprise/2.13/user/articles/creating-a-new-repository">git repo</a> in your profile with name <code>wordpress</code></p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">cd</span> wordpress/
+git init<span style="color:#000;font-weight:bold">;</span> git add .<span style="color:#000;font-weight:bold">;</span> git commit -am <span style="color:#4e9a06">&#34;Publish package&#34;</span><span style="color:#000;font-weight:bold">;</span>
 git remote add origin &lt;YOUR_GIT_REPO_LINK&gt;
 git push origin master
-</code></pre></div>
+</code></pre></div><h2 id="next-steps">Next steps</h2>
+<p>Go through the <a href="https://googlecontainertools.github.io/kpt/guides/producer/subpackages/">consumer guide</a> to consume the published package</p>
+
         <div class="section-index">
     
     
@@ -1476,7 +1466,7 @@ git push origin master
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 10, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7716e112c23a6804825f9e276d24c3c290d2e3d3">docs: Guides For Composite Packages (7716e112)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6d40df4841c4357f16b91dc957f8494c1f99d89d">Composite Packages concepts (6d40df48)</a>
 </div>
 </div>
 

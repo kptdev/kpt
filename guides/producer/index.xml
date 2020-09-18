@@ -1245,145 +1245,133 @@ helm template mysql-1.3.1.tgz --output-dir .
     </item>
     
     <item>
-      <title>Guides: Create and publish a composite package</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/</link>
+      <title>Guides: Publish a package with subpackages</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/producer/subpackages/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://googlecontainertools.github.io/kpt/guides/producer/compositepkgs/</guid>
+      <guid>https://googlecontainertools.github.io/kpt/guides/producer/subpackages/</guid>
       <description>
         
         
         
 
 &lt;div class=&#34;pageinfo pageinfo-warning&#34;&gt;
-&lt;h4 id=&#34;notice-composite-packages-feature-support-is-in-alpha-phase&#34;&gt;Notice: Composite packages feature support is in alpha phase&lt;/h4&gt;
+&lt;h4 id=&#34;notice-subpackages-support-is-available-with-kpt-version-v0340-for-cfg-commands-only&#34;&gt;Notice: Subpackages support is available with kpt version v0.34.0+ for [cfg] commands only&lt;/h4&gt;
 
 &lt;/div&gt;
 
-&lt;p&gt;This guide walks you through an example to create, parameterize and publish a kpt
-package which has subpackages in it. A kpt package is a directory of resource
-configs with valid &lt;code&gt;Kptfile&lt;/code&gt; in it. A composite package is a &lt;code&gt;kpt&lt;/code&gt; package with 1
-or more subpackages in it.&lt;/p&gt;
-&lt;p&gt;Principles:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Each kpt package is an independent building block and
-should contain resources(ex: setter definitions) of its own.&lt;/li&gt;
-&lt;li&gt;If a package is present in the directory tree of parent package,
-the configs of that package are out of scope for the actions performed
-on the parent package.&lt;/li&gt;
-&lt;li&gt;To run a command recursively on all the subpackages, users can leverage
-&lt;code&gt;--recurse-subpackages(-R)&lt;/code&gt; flag. This is equivalent to running the same
-command on each package path in the directory tree.&lt;/li&gt;
-&lt;/ol&gt;
+&lt;p&gt;This guide walks you through an example to create, parameterize and publish a
+kpt package with a &lt;a href=&#34;https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages&#34;&gt;subpackage&lt;/a&gt; in it.&lt;/p&gt;
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;#create-a-composite-package&#34;&gt;Create a composite package&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#create-the-package&#34;&gt;Create the package&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#add-setters-and-substitutions&#34;&gt;Add setters and substitutions&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#publish-the-package&#34;&gt;Publish the package&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h2 id=&#34;create-a-composite-package&#34;&gt;Create a composite package&lt;/h2&gt;
-&lt;p&gt;Create a composite package directory structure and initialize &lt;code&gt;kpt&lt;/code&gt; packages.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mkdir hello-composite-pkg
-kpt pkg init hello-composite-pkg
+&lt;h2 id=&#34;create-the-package&#34;&gt;Create the package&lt;/h2&gt;
+&lt;p&gt;Initialize a &lt;code&gt;kpt&lt;/code&gt; package with a &lt;a href=&#34;https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages&#34;&gt;subpackage&lt;/a&gt; in its directory tree.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mkdir wordpress
+kpt pkg init wordpress
 
-mkdir hello-composite-pkg/hello-subpkg
-kpt pkg init hello-composite-pkg/hello-subpkg
-
-&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# this is a subdir and not a package&lt;/span&gt;
-mkdir hello-composite-pkg/hello-subpkg/hello-dir
-
-mkdir hello-composite-pkg/hello-subpkg/hello-nestedpkg
-kpt pkg init hello-composite-pkg/hello-subpkg/hello-nestedpkg
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Add resource files(.yaml) to the directories. You may use(copy/paste) the resource files from
-&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt/tree/master/package-examples/hello-composite-pkg&#34;&gt;hello-composite-pkg&lt;/a&gt; to respective directories on local and delete the &lt;code&gt;$kpt-set&lt;/code&gt; comments.&lt;/p&gt;
-&lt;h2 id=&#34;add-setters-and-substitutions&#34;&gt;Add setters and substitutions&lt;/h2&gt;
-&lt;h3 id=&#34;create-setters&#34;&gt;Create setters&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;Setters&lt;/a&gt; provide a solution for template-free setting of field values through
-package metadata (OpenAPI). Setters will be invoked by package consumers to
-programmatically modify the configuration using &lt;code&gt;kpt cfg set&lt;/code&gt; to &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/consumer/set/&#34;&gt;set&lt;/a&gt; values.
-Create &lt;code&gt;namespace&lt;/code&gt; setter in all the packages.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-setter hello-composite-pkg/ namespace YOURSPACE -R --required
+mkdir wordpress/mysql
+kpt pkg init wordpress/mysql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Download the &lt;code&gt;Wordpress&lt;/code&gt; deployment configuration file.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; wordpress
+curl -LO https://k8s.io/examples/application/wordpress/wordpress-deployment.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Download the &lt;code&gt;MySQL&lt;/code&gt; deployment configuration file.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; mysql
+curl -LO https://k8s.io/examples/application/wordpress/mysql-deployment.yaml
+&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; ../../
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;add-setters-and-substitutions&#34;&gt;Add setters and substitutions&lt;/h2&gt;
+&lt;h3 id=&#34;add-annotations&#34;&gt;Add annotations&lt;/h3&gt;
+&lt;p&gt;As a package publisher you might want to add [annotations] to kubernetes objects.
+You can leverage &lt;code&gt;--recurse-subpackages(-R)&lt;/code&gt; flag to create it recursively in both
+&lt;code&gt;wordpress&lt;/code&gt; and &lt;code&gt;mysql&lt;/code&gt; packages.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg annotate wordpress/ --kv &lt;span style=&#34;color:#000&#34;&gt;teamname&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;YOURTEAM -R
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;hello-composite-pkg/
-created setter &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;namespace&amp;#34;&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+added annotations in the package
 
-hello-composite-pkg/hello-subpkg/
-created setter &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;namespace&amp;#34;&lt;/span&gt;
+wordpress/mysql/
+added annotations in the package
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Similarly add &lt;code&gt;projectId&lt;/code&gt; annotation to both the packages.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg annotate wordpress/ --kv &lt;span style=&#34;color:#000&#34;&gt;projectId&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;PROJECT_ID -R
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+added annotations in the package
 
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-created setter &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;namespace&amp;#34;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Similarly create a setter with name &lt;code&gt;gcloud.core.project&lt;/code&gt;. If the package consumer
-has &lt;code&gt;gcloud&lt;/code&gt; set up on local, they can observe that the value of the setter
-&lt;code&gt;gcloud.core.project&lt;/code&gt; will be set automatically when the package is fetched.
-&lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters&#34;&gt;Auto-setters&lt;/a&gt; are automatically set deriving the values from the output of
-&lt;code&gt;gcloud config list&lt;/code&gt; command, when the package is fetched using &lt;a href=&#34;../../..//reference/pkg/get/&#34;&gt;kpt pkg get&lt;/a&gt;.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-setter hello-composite-pkg/ gcloud.core.project PROJECT_ID -R
+wordpress/mysql/
+added annotations in the package
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;create-setters&#34;&gt;Create setters&lt;/h3&gt;
+&lt;p&gt;Create &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;Setters&lt;/a&gt; for the annotations values which you just added&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-setter wordpress/ teamname YOURTEAM -R --required
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+created setter &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;teamname&amp;#34;&lt;/span&gt;
+
+wordpress/mysql/
+created setter &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;teamname&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Similarly create an &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters&#34;&gt;auto-setter&lt;/a&gt; with name &lt;code&gt;gcloud.core.project&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-setter wordpress/ gcloud.core.project PROJECT_ID -R
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+created setter &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;gcloud.core.project&amp;#34;&lt;/span&gt;
+
+wordpress/mysql/
+created setter &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;gcloud.core.project&amp;#34;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;create-substitutions&#34;&gt;Create substitutions&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/substitutions/&#34;&gt;Substitutions&lt;/a&gt; provide a solution for template-free substitution of field values
-built on top of setters. They enable substituting values into part of a field,
-including combining multiple setters into a single value.&lt;/p&gt;
-&lt;p&gt;Substitutions may be invoked to programmatically modify the configuration using
-&lt;code&gt;kpt cfg set&lt;/code&gt; to substitute values which are derived from the setter.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-subst hello-composite-pkg/ image-tag &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;--field-value gcr.io/kpt-dev/helloworld-gke:0.1.0 &lt;span style=&#34;color:#4e9a06&#34;&gt;\
-&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;--pattern gcr.io/kpt-dev/&lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;image&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt; -R
+&lt;p&gt;Create &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/substitutions/&#34;&gt;Substitutions&lt;/a&gt; so that package consumers can substitute values,
+using &lt;code&gt;kpt cfg set&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-subst wordpress image-tag &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;--field-value wordpress:4.8-apache &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;--pattern &lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;image&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;-apache
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;hello-composite-pkg/
-unable to find setter with name image, creating new setter with value helloworld-gke
-unable to find setter with name tag, creating new setter with value 0.1.0
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+unable to find setter with name image, creating new setter with value wordpress
+unable to find setter with name tag, creating new setter with value 4.8
 created substitution &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;image-tag&amp;#34;&lt;/span&gt;
-
-hello-composite-pkg/hello-subpkg/
-unable to find setter with name image, creating new setter with value helloworld-gke
-unable to find setter with name tag, creating new setter with value 0.1.0
-created substitution &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;image-tag&amp;#34;&lt;/span&gt;
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-unable to find setter with name image, creating new setter with value helloworld-gke
-unable to find setter with name tag, creating new setter with value 0.1.0
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg create-subst wordpress/mysql image-tag &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;--field-value mysql:5.6 &lt;span style=&#34;color:#4e9a06&#34;&gt;\
+&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&lt;/span&gt;--pattern &lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;image&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;\$&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;{&lt;/span&gt;tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/mysql/
+unable to find setter with name image, creating new setter with value wordpress
+unable to find setter with name tag, creating new setter with value 4.8
 created substitution &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;image-tag&amp;#34;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;list-and-verify-setterssubstitutions&#34;&gt;List and verify setters/substitutions&lt;/h3&gt;
 &lt;p&gt;Use list-setters command to verify that the setters and substitutions are created as expected&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters hello-composite-pkg/ --include-subst
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters wordpress/ --include-subst
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;hello-composite-pkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  image                 helloworld-gke                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  namespace             YOURSPACE                                &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       Yes
-  tag                   0.1.0                                    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
---------------- -------------------------------- --------------
-  SUBSTITUTION              PATTERN               REFERENCES
-  image-tag      gcr.io/kpt-dev/&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;   &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;image,tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       No
+  image                 wordpress                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  tag                   4.8                                 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  teamname              YOURTEAM                            &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       Yes
+--------------- ------------------------ --------------
+  SUBSTITUTION          PATTERN           REFERENCES
+  image-tag      &lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;-apache   &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;image,tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
 
-hello-composite-pkg/hello-subpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  image                 helloworld-gke                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  namespace             YOURSPACE                                &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;2&lt;/span&gt;       Yes
-  tag                   0.1.0                                    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
---------------- -------------------------------- --------------
-  SUBSTITUTION              PATTERN               REFERENCES
-  image-tag      gcr.io/kpt-dev/&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;   &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;image,tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
-
-hello-composite-pkg/hello-subpkg/hello-nestedpkg/
-         NAME                VALUE        SET BY   DESCRIPTION   COUNT   REQUIRED
-  gcloud.core.project   YOUR_PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  image                 helloworld-gke                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
-  namespace             YOURSPACE                                &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       Yes
-  tag                   0.1.0                                    &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
---------------- -------------------------------- --------------
-  SUBSTITUTION              PATTERN               REFERENCES
-  image-tag      gcr.io/kpt-dev/&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;   &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;image,tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
+wordpress/mysql/
+         NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
+  gcloud.core.project   PROJECT_ID                          &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       No
+  image                 wordpress                           &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  tag                   4.8                                 &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;       No
+  teamname              YOURTEAM                            &lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;3&lt;/span&gt;       Yes
+--------------- ----------------- --------------
+  SUBSTITUTION       PATTERN       REFERENCES
+  image-tag      &lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;image&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;:&lt;span style=&#34;color:#4e9a06&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#000&#34;&gt;tag&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;}&lt;/span&gt;   &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;image,tag&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;publish-the-package&#34;&gt;Publish the package&lt;/h2&gt;
-&lt;p&gt;Now that as a package creator, you have created and parameterized a composite package,
+&lt;p&gt;Now that as a package creator, you have created and parameterized a &lt;code&gt;kpt&lt;/code&gt; package,
 publish it so that package consumers can consume it.&lt;/p&gt;
-&lt;p&gt;Create a &lt;a href=&#34;https://docs.github.com/en/enterprise/2.13/user/articles/creating-a-new-repository&#34;&gt;git repo&lt;/a&gt; in your profile with name &lt;code&gt;hello-composite-pkg&lt;/code&gt;&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; hello-composite-pkg/
-git init&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt; git add .&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt; git commit -am &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;Publish composite package&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt;
+&lt;p&gt;Create a &lt;a href=&#34;https://docs.github.com/en/enterprise/2.13/user/articles/creating-a-new-repository&#34;&gt;git repo&lt;/a&gt; in your profile with name &lt;code&gt;wordpress&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; wordpress/
+git init&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt; git add .&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt; git commit -am &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;Publish package&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt;
 git remote add origin &amp;lt;YOUR_GIT_REPO_LINK&amp;gt;
 git push origin master
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next steps&lt;/h2&gt;
+&lt;p&gt;Go through the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/subpackages/&#34;&gt;consumer guide&lt;/a&gt; to consume the published package&lt;/p&gt;
+
       </description>
     </item>
     
