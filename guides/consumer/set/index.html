@@ -1317,6 +1317,7 @@ line comments &ndash; e.g. <code># { &quot;$kpt-set&quot;: &quot;replicas-setter
 </ol>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <h3 id="command">Command</h3>
+<!-- @fetchPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.6.0 helloworld
 </code></pre></div><h3 id="output">Output</h3>
@@ -1346,6 +1347,7 @@ changing values, and writing them back.</strong></p>
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$kpt-set&#34;:&#34;replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h3 id="set-command">Set Command</h3>
+<!-- @setReplicas @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg <span style="color:#204a87">set</span> helloworld/ replicas <span style="color:#0000cf;font-weight:bold">3</span>
 </code></pre></div><p>Change the replicas value in the configuration from 5 to 3.</p>
 <h3 id="set-output">Set Output</h3>
@@ -1459,7 +1461,7 @@ changing values, and writing them back.</strong></p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/29e20d6890bc1337417618c8b41de6cc97e96fe1">docs:Update cfg docs (29e20d68)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a7418e75e2a02d8016ed1f1a2b331e1a60b87f7c">Turn consumer guides into executable tests (a7418e75)</a>
 </div>
 </div>
 

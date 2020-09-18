@@ -1326,6 +1326,7 @@ resources for deleted configuration.</p>
 </ul>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <h3 id="command">Command</h3>
+<!-- @fetchPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">SRC_REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get <span style="color:#000">$SRC_REPO</span>/package-examples/helloworld-set@v0.5.0 helloworld
 </code></pre></div><p>Grab a remote package to apply to a cluster.</p>
@@ -1347,6 +1348,7 @@ to as an inventory object.</p>
 </div>
 
 <h3 id="init-command">Init Command</h3>
+<!-- @liveInit @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt live init helloworld
 </code></pre></div><h3 id="init-output">Init Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">namespace: default is used <span style="color:#204a87;font-weight:bold">for</span> inventory object
@@ -1369,6 +1371,7 @@ applied resources.  This file should be checked into <code>git</code> along with
 rest of the package, but otherwise ignored by users.</p>
 <h2 id="apply-to-a-cluster">Apply to a cluster</h2>
 <h3 id="apply-command">Apply Command</h3>
+<!-- @liveApply @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt live apply helloworld --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>2m
 </code></pre></div><p>Apply the resources to the cluster and block until the changes have
 been fully rolled out &ndash; e.g. until the Pods are running.</p>
@@ -1534,7 +1537,7 @@ configmap/inventory-2911da3b pruned
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified August 1, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9995464b3a70aaa035d0482194eca5671dafcfb5">Docs: update kpt live init docs (9995464b)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a7418e75e2a02d8016ed1f1a2b331e1a60b87f7c">Turn consumer guides into executable tests (a7418e75)</a>
 </div>
 </div>
 

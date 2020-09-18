@@ -1289,6 +1289,7 @@ if (!doNotTrack) {
 <a href="../../../reference/pkg/get/">kpt pkg get</a>.  In this guide we will use the <a href="https://github.com/kubernetes/examples">kubernetes examples</a> repository
 as a public package catalogue.</p>
 <h3 id="fetch-command">Fetch Command</h3>
+<!-- @fetchPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/kubernetes/examples/staging/ examples
 </code></pre></div><p>Fetch the entire examples/staging directory as a kpt package under <code>examples</code>.
 This will contain many resources.</p>
@@ -1308,6 +1309,7 @@ This will contain many resources.</p>
 to work with using tools such as <code>less</code>.</p>
 <h2 id="summarize-resource-counts">Summarize resource counts</h2>
 <h3 id="count-example-command-1">Count Example Command 1</h3>
+<!-- @countExamples @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/
 </code></pre></div><p>The <a href="../../../reference/cfg/count/"><code>kpt cfg count</code></a> command summarizes the resource counts to
 show the shape of a package.</p>
@@ -1320,6 +1322,7 @@ Namespace: <span style="color:#0000cf;font-weight:bold">4</span>
 Pod: <span style="color:#0000cf;font-weight:bold">45</span>
 ...
 </code></pre></div><h3 id="count-example-command-2">Count Example Command 2</h3>
+<!-- @countCockroachdb @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/cockroachdb/
 </code></pre></div><p>Running <a href="../../../reference/cfg/count/"><code>count</code></a> on a subdirectory will summarize that
 directory even if it doesn&rsquo;t have a Kptfile.</p>
@@ -1328,12 +1331,14 @@ directory even if it doesn&rsquo;t have a Kptfile.</p>
 Service: <span style="color:#0000cf;font-weight:bold">2</span>
 StatefulSet: <span style="color:#0000cf;font-weight:bold">1</span>
 </code></pre></div><h3 id="count-example-command-3">Count Example Command 3</h3>
+<!-- @countAll @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg count examples/ --kind<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">false</span>
 </code></pre></div><p>The total aggregate resource count can be shown with <code>--kind=false</code></p>
 <h3 id="count-example-output-3">Count Example Output 3</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#0000cf;font-weight:bold">201</span>
 </code></pre></div><h2 id="display-resources-as-a-tree">Display resources as a tree</h2>
 <h3 id="display-command">Display Command</h3>
+<!-- @treeCockroachdb @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree examples/cockroachdb/ --image --replicas
 </code></pre></div><p>Because the raw YAML configuration may be difficult for humans to easily
 view and understand, kpt provides a command for rendering configuration
@@ -1352,6 +1357,7 @@ as a tree.  Flags may be provided to print specific fields under the resources.<
 will print arbitrary fields by providing the <code>--field</code> flag.</p>
 <h2 id="filter-resources">Filter resources</h2>
 <h3 id="filter-command">Filter Command</h3>
+<!-- @filterExamples @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg grep <span style="color:#4e9a06">&#34;spec.replicas&gt;3&#34;</span> examples <span style="color:#000;font-weight:bold">|</span> kpt cfg tree --replicas
 </code></pre></div><p>Grep can be used to filter resources by field values.  The output of
 <a href="../../../reference/cfg/grep/"><code>kpt cfg grep</code></a> is the matching full resource configuration, which
@@ -1369,7 +1375,10 @@ may be piped to tree for rendering.</p>
         └── spec.replicas: <span style="color:#0000cf;font-weight:bold">14</span>
 </code></pre></div><h2 id="dump-all-resources">Dump all resources</h2>
 <h3 id="dump-command">Dump Command</h3>
+<!-- @catCockroachdb @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg cat examples/cockroachdb
+<span style="color:#8f5902;font-style:italic"># Temporary workaround for https://github.com/GoogleContainerTools/kpt/issues/1050</span>
+<span style="color:#204a87">echo</span> <span style="color:#4e9a06">&#34;\n&#34;</span>
 </code></pre></div><p>The raw YAML configuration may be dumped using <a href="../../../reference/cfg/cat/"><code>kpt cfg cat</code></a>.
 This will print only the YAML for Kubernetes resources.</p>
 <h3 id="dump-output">Dump Output</h3>
@@ -1484,7 +1493,7 @@ metadata:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9225091c5080ee9747042295d35b8d18f481d186">Docs: Add docker image to installation (9225091c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a7418e75e2a02d8016ed1f1a2b331e1a60b87f7c">Turn consumer guides into executable tests (a7418e75)</a>
 </div>
 </div>
 

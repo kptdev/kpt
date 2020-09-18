@@ -1325,6 +1325,7 @@ in this guide.</p>
 <p>Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.</p>
 <h3 id="fetch-command">Fetch Command</h3>
+<!-- @fetchPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get <span style="color:#000">$REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
 </code></pre></div><p>Fetch the <code>helloworld-set</code> package at version <code>v0.3.0</code>.</p>
@@ -1378,6 +1379,7 @@ has uncommitted changes.</p>
 
 </div>
 
+<!-- @commitLocalChanges @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git init
 git add .
 git commit -m <span style="color:#4e9a06">&#34;add helloworld package at v0.3.0&#34;</span>
@@ -1385,6 +1387,7 @@ git commit -m <span style="color:#4e9a06">&#34;add helloworld package at v0.3.0&
 <p>Package updates are performed by fetching the upstream package at the
 specified version and applying the upstream changes to the local package.</p>
 <h3 id="merge-command">Merge Command</h3>
+<!-- @mergeUpdates @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg update helloworld@v0.5.0 --strategy<span style="color:#ce5c00;font-weight:bold">=</span>resource-merge
 </code></pre></div><p>Update the local package to the upstream version v0.5.0 by doing a 3-way
 merge between 1) the original upstream commit, 2) the local (customized)
@@ -1552,7 +1555,7 @@ and local modifications (additional environment variable).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 7, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/c78d6c566a905ab2b7466a85c70435cc8d3d3ed2">Docs: Fix W3 Link Checker results (c78d6c56)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a7418e75e2a02d8016ed1f1a2b331e1a60b87f7c">Turn consumer guides into executable tests (a7418e75)</a>
 </div>
 </div>
 
