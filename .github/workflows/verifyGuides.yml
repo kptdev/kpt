@@ -31,4 +31,6 @@ jobs:
           GOPATH=$(go env GOPATH) go get github.com/monopole/mdrip
           GOPATH=$(go env GOPATH) go get sigs.k8s.io/kind@v0.8.1
       - run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
           make verify-guides

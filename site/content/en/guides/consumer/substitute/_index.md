@@ -7,6 +7,17 @@ description: >
     Customize a local package by substituting values into fields.
 ---
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 *Dynamic needs for packages are built into tools which read and write
 configuration data.*
 
@@ -66,6 +77,7 @@ in this guide.
 
 ### Fetch Command
 
+<!-- @fetchPackage @verifyGuides-->
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.3.0 helloworld
@@ -106,14 +118,24 @@ kpt cfg list-setters helloworld/ --include-subst
 ### List Output
 
 ```sh
-    NAME      VALUE       SET BY             DESCRIPTION        COUNT  
+    NAME      VALUE       SET BY             DESCRIPTION        COUNT
   http-port   80      package-default   helloworld port         3
   image-tag   0.1.0   package-default   hello-world image tag   1
   replicas    5       package-default   helloworld replicas     1
   ------------   ------------------------------------------   ----------
-  SUBSTITUTION                    PATTERN                     REFERENCES
-  image          gcr.io/kpt-dev/helloworld-gke:${image-tag}   [image-tag]
+  SUBSTITUTION                      PATTERN                       REFERENCES
+  image-tag      gcr.io/kpt-dev/helloworld-gke:IMAGE_TAG_SETTER   [image-tag]
 ```
+
+{{% hide %}}
+
+<!-- @verifyListSubst @verifyGuides-->
+```
+# Verify that we get the expected output
+kpt cfg list-setters helloworld/ --include-subst | tr -s ' ' | grep "image-tag gcr.io/kpt-dev/helloworld-gke:IMAGE_TAG_SETTER \[image-tag\]"
+```
+
+{{% /hide %}}
 
 ## Substitute a value
 
@@ -134,6 +156,7 @@ metadata:
 
 ### Command
 
+<!-- @setImageTag @verifyGuides-->
 ```sh
  kpt cfg set helloworld/ image-tag v0.2.0
 ```
@@ -159,6 +182,16 @@ metadata:
         image: gcr.io/kpt-dev/helloworld-gke:v0.2.0 # {"$kpt-set":"image-tag"}
 ...
 ```
+
+{{% hide %}}
+
+<!-- @verifySubst @verifyGuides-->
+```
+# Verify that the sustitution was updated
+grep "image: gcr.io/kpt-dev/helloworld-gke:v0.2.0" helloworld/deploy.yaml
+```
+
+{{% /hide %}}
 
 ## Customizing setters
 

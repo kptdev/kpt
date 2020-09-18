@@ -7,6 +7,17 @@ description: >
     Customize a local package by setting field values.
 ---
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 *Dynamic needs for packages are built into tools which read and write
 configuration data.*
 
@@ -67,6 +78,7 @@ in this guide.
 
 ### Command
 
+<!-- @fetchPackage @verifyGuides-->
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.6.0 helloworld
@@ -103,6 +115,18 @@ Print the list of setters included in the package.
 The package contains 3 setters which may be used to modify the configuration
 using `kpt set`.
 
+{{% hide %}}
+
+<!-- @verifyListSetters @verifyGuides-->
+```
+# Verify that we find the expected setters.
+kpt cfg list-setters helloworld/ | tr -s ' ' | grep "http-port 80 package-default helloworld port 3 No"
+kpt cfg list-setters helloworld/ | tr -s ' ' | grep "image-tag v0.1.0 package-default helloworld image tag 1 No"
+kpt cfg list-setters helloworld/ | tr -s ' ' | grep "replicas 5 package-default helloworld replicas 1 No"
+```
+
+{{% /hide %}}
+
 ## Set a field
 
 Setters **modify the resource configuration in place by reading the resources,
@@ -122,6 +146,7 @@ spec:
 
 ### Set Command
 
+<!-- @setReplicas @verifyGuides-->
 ```sh
 kpt cfg set helloworld/ replicas 3
 ```
@@ -145,6 +170,16 @@ spec:
  replicas: 3 # {"$kpt-set":"replicas"}
 ...
 ```
+
+{{% hide %}}
+
+<!-- @verifySet @verifyGuides-->
+```
+# Verify that the setter updated the value
+grep "replicas: 3" helloworld/deploy.yaml
+```
+
+{{% /hide %}}
 
 [Kptfile]: ../../../api-reference/kptfile/
 [kpt cfg set]: ../../../reference/cfg/set/

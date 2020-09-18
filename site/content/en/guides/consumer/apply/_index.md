@@ -7,6 +7,17 @@ description: >
     Apply the contents of a local package to a remote cluster.
 ---
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 ## Topics
 
 [kpt live apply]
@@ -50,6 +61,7 @@ resources for deleted configuration.
 
 ### Command
 
+<!-- @fetchPackage @verifyGuides-->
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 helloworld
@@ -79,6 +91,7 @@ The inventory template must be created for a package to be applied using
 
 ### Init Command
 
+<!-- @liveInit @verifyGuides-->
 ```sh
 kpt live init helloworld
 ```
@@ -113,8 +126,18 @@ rest of the package, but otherwise ignored by users.
 
 ## Apply to a cluster
 
+{{% hide %}}
+
+<!-- @createKindCluster @verifyGuides-->
+```
+kind delete cluster && kind create cluster
+```
+
+{{% /hide %}}
+
 ### Apply Command
 
+<!-- @liveApply @verifyGuides-->
 ```sh
 kpt live apply helloworld --reconcile-timeout=2m
 ```
@@ -164,6 +187,16 @@ NAME                     TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        
 service/helloworld-gke   NodePort    10.48.2.143   <none>        80:32442/TCP   2m47s
 service/kubernetes       ClusterIP   10.48.0.1     <none>        443/TCP        19m
 ```
+
+{{% hide %}}
+
+<!-- @ @verifyApply-->
+```
+# Verify that apply was successful
+kubectl get deployments | tr -s ' ' | grep "deployment.apps/helloworld-gke 5/5"
+```
+
+{{% /hide %}}
 
 ### Command: `tree`
 
