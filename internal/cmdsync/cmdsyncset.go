@@ -17,10 +17,10 @@ package cmdsync
 
 import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/sync"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/spf13/cobra"
 )
 

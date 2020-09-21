@@ -17,8 +17,8 @@ package sync
 import (
 	"io/ioutil"
 
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )

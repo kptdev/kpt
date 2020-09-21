@@ -26,7 +26,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
 	assertnow "gotest.tools/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"

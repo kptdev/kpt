@@ -24,9 +24,9 @@ import (
 	"text/template"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"

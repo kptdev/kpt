@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/cpuguy83/go-md2man/v2/md2man"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )

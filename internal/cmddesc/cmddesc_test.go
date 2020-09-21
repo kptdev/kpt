@@ -23,8 +23,8 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
-	"github.com/GoogleContainerTools/kpt/internal/kptfile"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"gotest.tools/assert"
 )
 
