@@ -7,6 +7,15 @@ description: >
     Initialize and publish a new package
 ---
 
+{{% hide %}}
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+{{% /hide %}}
+
 A kpt package is published as a git subdirectory containing configuration
 files (YAML). Publishers of kpt packages can create or generate YAML files
 however they like using the tool of their choice.
@@ -42,48 +51,77 @@ be individually versioned (as version v1.0.2) by creating the tag `example/v1.0.
 
 ## Create a git repo
 
+<!-- @defineEnvVars @verifyGuides-->
 ```sh
-git clone REPO_URL # or create a new repo with `git init`
-cd REPO_NAME
+REPO_NAME=my-repo
+REPO_URL="<url>"
+```
+
+{{% hide %}}
+<!-- @setRepoUrlForTest @verifyGuides-->
+```
+# Set up workspace for the test.
+REPO_URL=file://$(pwd)/$REPO_NAME.git
+```
+{{% /hide %}}
+
+<!-- @setupRepo @verifyGuides-->
+```sh
+mkdir $REPO_NAME # or clone with git `git clone`
+git init $REPO_NAME # only if new repo
 ```
 
 ## Create the package
 
+<!-- @createPackage @verifyGuides-->
 ```sh
-mkdir nginx
+mkdir $REPO_NAME/nginx
 ```
 
 Recommended: initialize the package with metadata
 
+<!-- @initPackage @verifyGuides-->
 ```sh
-kpt pkg init nginx --tag kpt.dev/app=nginx --description "kpt nginx package"
+kpt pkg init $REPO_NAME/nginx --tag kpt.dev/app=nginx --description "kpt nginx package"
 ```
 
 ## Create configuration
 
+<!-- @addConfig @verifyGuides-->
 ```sh
-curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
+curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output $REPO_NAME/nginx/nginx-deployment.yaml
 ```
 
 ## Publish package to git
 
+<!-- @commitRepo @verifyGuides-->
 ```sh
-git add .
-git commit -m "Add nginx package"
+(cd $REPO_NAME && git add . && git commit -m "Add nginx package")
 ```
 
 Recommended: tag the commit as a release
 
+<!-- @createTag @verifyGuides-->
 ```sh
 # tag as DIR/VERSION for per-directory versioning
-git tag nginx/v0.1.0
-git push nginx/v0.1.0
+(cd $REPO_NAME && git tag nginx/v0.1.0)
+# git push nginx/v0.1.0 # requires an upstream repo
 ```
 
 ## Fetch the released package
 
+<!-- @fetchPackage @verifyGuides-->
 ```sh
-kpt pkg get https://<REPO>/nginx@v0.1.0 nginx
+kpt pkg get $REPO_URL/nginx@v0.1.0 nginx
 ```
+
+{{% hide %}}
+<!-- @setRepoUrlForTest @verifyGuides-->
+```
+grep "ref: v0.1.0" nginx/Kptfile
+grep "kpt nginx package" nginx/README.md
+grep  "name: nginx-deployment" nginx/nginx-deployment.yaml
+```
+{{% /hide %}}
 
 [tagging]: https://git-scm.com/book/en/v2/Git-Basics-Tagging

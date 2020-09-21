@@ -7,6 +7,16 @@ description: >
     Create high-level setters to provide imperative configuration editing
     commands.
 ---
+
+{{% hide %}}
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+{{% /hide %}}
+
 Setters provide a solution for template-free setting or substitution of field
 values through package metadata (OpenAPI).  They are a safer alternative to
 other substitution techniques which do not have the context of the
@@ -22,6 +32,13 @@ using `kpt cfg set` to set and/or substitute values.
 Creating a setter requires that the package has a Kptfile.  If one does
 not exist for the package, run `kpt pkg init DIR/` to create one.
 {{% /pageinfo %}}
+
+{{% hide %}}
+<!-- @createKptfile @verifyGuides-->
+```
+kpt pkg init .
+```
+{{% /hide %}}
 
 ## Setters explained
 
@@ -52,19 +69,23 @@ command will:
 1. create a new OpenAPI definition for a setter in the Kptfile
 2. create references to the setter definition on the resource fields
 
-```yaml
+<!-- @createResource @verifyGuides-->
+```sh
+cat <<EOF >deployment.yaml
 # deployment.yaml -- original
 kind: Deployment
 metadata:
   name: foo
 spec:
   replicas: 3
+EOF
 ```
 
+<!-- @createSetter @verifyGuides-->
 ```sh
 # create or update a setter named "replicas"
 # match fields with the value "3"
-kpt cfg create-setter hello-world/ replicas 3
+kpt cfg create-setter . replicas 3
 ```
 
 ```yaml
@@ -86,6 +107,15 @@ metadata:
 spec:
   replicas: 3 # {"$kpt-set":"replicas"}
 ```
+
+{{% hide %}}
+<!-- @validateCreateSetter @verifyGuides-->
+```
+grep "io.k8s.cli.setters.replicas" Kptfile
+grep 'value: "3"' Kptfile
+grep 'replicas: 3 # {"$kpt-set":"replicas"}' deployment.yaml
+```
+{{% /hide %}}
 
 #### Targeting fields using the path
 
@@ -154,31 +184,36 @@ gcloud.compute.zone
 #### Invoking a Setter
 
 ```yaml
-# deployment.yaml -- original
 kind: Deployment
 metadata:
- name: helloworld-gke
- labels:
-   app: hello
+  name: foo
 spec:
- replicas: 3 # {"$kpt-set":"replicas"}
+  replicas: 3 # {"$kpt-set":"replicas"}
 ```
 
+<!-- @setReplicas @verifyGuides-->
 ```sh
 # set the replicas field to 5
-kpt cfg set DIR/ replicas 5
+kpt cfg set . replicas 5
 ```
 
 ```yaml
 # deployment.yaml -- updated
 kind: Deployment
 metadata:
- name: helloworld-gke
- labels:
-   app: hello
+  name: foo
 spec:
- replicas: 5 # {"$kpt-set":"replicas"}
+  replicas: 3 # {"$kpt-set":"replicas"}
 ```
+
+{{% hide %}}
+<!-- @validateSetSetter @verifyGuides-->
+```
+grep 'value: "5"' Kptfile
+grep 'replicas: 5 # {"$kpt-set":"replicas"}' deployment.yaml
+kpt cfg delete-setter . replicas
+```
+{{% /hide %}}
 
 #### OpenAPI Validations
 
@@ -188,12 +223,14 @@ constraints can be provided in json file format. The `set` operation validates
 the input value against provided schema during setter creation and throws an
 error if the input value doesn't meet any of the constraints.
 
+<!-- @createSetterForValidation @verifyGuides-->
 ```sh
-$ cat /path/to/file.json
+cat <<EOF >schema.json
 {"maximum": 10, "type": "integer"}
+EOF
 
 # create setter with openAPI property constraints
-kpt cfg create-setter DIR/ replicas 3 --schema-path /path/to/file.json
+kpt cfg create-setter . replicas 5 --schema-path schema.json
 ```
 
 The command creates setter with the following definition
@@ -207,18 +244,25 @@ openAPI:
       x-k8s-cli:
         setter:
           name: replicas
-          value: "3"
+          value: "5"
 ```
 
 ```sh
 # try to set value not adhering to the constraints
-kpt cfg set DIR/ replicas 11
+kpt cfg set . replicas 11
 ```
 
 ```sh
 error: The input value doesn't validate against provided OpenAPI schema:
 validation failure list: replicas in body should be less than or equal to 10
 ```
+
+{{% hide %}}
+<!-- @testSetSetter @verifyGuides-->
+```
+kpt cfg set . replicas 11 || echo "Worked" | grep "Worked"
+```
+{{% /hide %}}
 
 ```sh
 Example schema for integer validation
@@ -270,7 +314,9 @@ The list setter will take variable args for its value rather than a single value
 **Note:** You should skip passing the value arg while creating array setters. `field`
 flag is required for array setters.
 
-```yaml
+<!-- @createResourceForListSetter @verifyGuides-->
+```sh
+cat <<EOF >example.yaml
 # example.yaml
 apiVersion: example.com/v1beta1
 kind: Example
@@ -278,6 +324,7 @@ spec:
   list:
   - "a"
   - "b"
+EOF
 ```
 
 ```yaml
@@ -285,7 +332,10 @@ spec:
 kind: Kptfile
 ```
 
-`$ kpt cfg create-setter DIR/ list --type array --field spec.list`
+<!-- @createListSetter @verifyGuides-->
+```
+kpt cfg create-setter . list --type array --field spec.list
+```
 
 ```yaml
 # example.yaml
@@ -308,11 +358,23 @@ openAPI:
         setter:
           name: list
           listValues:
-          - "a"
-          - "b"
+          - a
+          - b
 ```
 
-`$ kpt cfg set DIR/ list c d e`
+{{% hide %}}
+<!-- @validateCreateListSetter @verifyGuides-->
+```
+grep "type: array" Kptfile
+grep "listValues:" Kptfile
+grep 'list: # {"$kpt-set":"list"}' example.yaml
+```
+{{% /hide %}}
+
+<!-- @setListSetter @verifyGuides-->
+```
+kpt cfg set . list c d e
+```
 
 ```yaml
 # example.yaml
@@ -340,6 +402,14 @@ openAPI:
           - "d"
           - "e"
 ```
+
+{{% hide %}}
+<!-- @validateSetListSetter @verifyGuides-->
+```
+grep '\- "d"' Kptfile
+grep '\- "d"' example.yaml
+```
+{{% /hide %}}
 
 #### Enumerations
 
