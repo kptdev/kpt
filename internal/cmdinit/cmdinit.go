@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -138,7 +139,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 
-		err = ioutil.WriteFile(filepath.Join(args[0], man.ManFilename), buff.Bytes(), 0600)
+		// Replace single quotes with backticks.
+		content := strings.ReplaceAll(buff.String(), "'", "`")
+
+		err = ioutil.WriteFile(filepath.Join(args[0], man.ManFilename), []byte(content), 0600)
 		if err != nil {
 			return err
 		}
@@ -147,21 +151,36 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-var manTemplate = `{{.Name}}
-==================================================
+// manTemplate is the content for the automatically generated README.md file.
+// It uses ' instead of ` since golang doesn't allow using ` in a raw string
+// literal. We do a replace on the content before printing.
+var manTemplate = `# {{.Name}}
 
-# NAME
-
-  {{.Name}}
-
-# SYNOPSIS
-
-  kubectl apply --recursive -f {{.Name}}
-
-# Description
-
+## Description
 {{.Description}}
 
-# SEE ALSO
+## Usage
 
+### Fetch the package
+'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] {{.Name}}'
+Details: https://googlecontainertools.github.io/kpt/reference/pkg/get/
+
+### View package content
+'kpt cfg tree {{.Name}}'
+Details: https://googlecontainertools.github.io/kpt/reference/cfg/tree/
+
+### List setters
+'kpt cfg list-setters {{.Name}}'
+Details: https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/
+
+### Set a value
+'kpt cfg set {{.Name}} NAME VALUE'
+Details: https://googlecontainertools.github.io/kpt/reference/cfg/set/
+
+### Apply the package
+'''
+kpt live init {{.Name}}
+kpt live apply {{.Name}} --reconcile-timeout=2m --output=table
+'''
+Details: https://googlecontainertools.github.io/kpt/reference/live/
 `
