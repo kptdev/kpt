@@ -23,6 +23,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/e2e"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
@@ -413,10 +414,10 @@ spec:
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			old := ext.GetOpenAPIFile
-			defer func() { ext.GetOpenAPIFile = old }()
-			ext.GetOpenAPIFile = func(args []string) (s string, err error) {
-				return dir + "/Kptfile", nil
+			old := ext.KRMFileName
+			defer func() { ext.KRMFileName = old }()
+			ext.KRMFileName = func() string {
+				return kptfile.KptFileName
 			}
 
 			r, err := ioutil.TempFile(dir, "k8s-cli-*.yaml")
