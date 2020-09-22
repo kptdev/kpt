@@ -10,7 +10,8 @@ description: >
 ## Functions Explained
 
 KRM Config Functions are client-side programs that make it easy to operate on a
-package of Kubernetes configuration files.
+package of Kubernetes configuration files. Anyone who wants to automate management
+of a configuration can write a function to accomplish the task.
 
 In GitOps workflows, KPT functions read and write configuration files from a
 Git repo. Changes to the system authored by humans and mutating KPT functions
