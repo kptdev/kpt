@@ -21,8 +21,8 @@ configurations before they are applied to a cluster.
 
 {{< png src="images/pipeline" >}}
 
-Kpt offers multiple runtimes for configuration functions to run arbitrary
-actions on configuration. By default kpt runs configuration functions in a
+KPT offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default KPT runs configuration functions in a
 [container runtime], but it also provides runtimes for functions packaged as
 [executables] or [starlark scripts].
 
@@ -147,7 +147,7 @@ The example command will:
 
 - read all resources from the package directory `.` to generate input resources
 - for each resource with the `config.kubernetes.io/function` annotation, e.g.
-  `label-ns-fc.yaml`, kpt will run the specified function (using the resource
+  `label-ns-fc.yaml`, KPT will run the specified function (using the resource
   as the functionConfig)
   - functions are run sequentially, with the output of each function provided
     as input to the next
@@ -168,7 +168,6 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
 [container runtime]: ../../producer/functions/container/
 [executables]: ../../producer/functions/exec/
 [starlark scripts]: ../../producer/functions/starlark/
-[`kpt cfg set`]: ../../../reference/cfg/set/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
 [VCS]: https://en.wikipedia.org/wiki/Version_control
 [functions catalog]: catalog/
