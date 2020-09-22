@@ -18,6 +18,9 @@ are reviewed before being committed to the repo. They can be run locally or as
 part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
 configurations before they are applied to a cluster.
 
+
+{{< png src="images/pipeline" >}}
+
 Kpt offers multiple runtimes for configuration functions to run arbitrary
 actions on configuration. By default kpt runs configuration functions in a
 [container runtime], but it also provides runtimes for functions packaged as
