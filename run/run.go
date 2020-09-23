@@ -82,8 +82,8 @@ func GetMain() *cobra.Command {
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// register function to use Kptfile for OpenAPI
-		ext.GetOpenAPIFile = func(args []string) (s string, err error) {
-			return filepath.Join(args[0], kptfile.KptFileName), nil
+		ext.KRMFileName = func() string {
+			return kptfile.KptFileName
 		}
 		err := kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
 		if err != nil {

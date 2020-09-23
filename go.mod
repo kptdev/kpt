@@ -25,7 +25,7 @@ require (
 	// Currently, we have to import the latest version of kubectl.
 	// Once there is a 0.18 release, we can import a semver release.
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
-	sigs.k8s.io/cli-utils v0.20.1
-	sigs.k8s.io/kustomize/cmd/config v0.8.0
-	sigs.k8s.io/kustomize/kyaml v0.8.0
+	sigs.k8s.io/cli-utils v0.20.2
+	sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200922204209-cf38166bd62c
+	sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200922204209-cf38166bd62c
 )
