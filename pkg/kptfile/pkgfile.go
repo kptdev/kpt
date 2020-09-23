@@ -50,6 +50,18 @@ type KptFile struct {
 
 	// Functions contains configuration for running functions
 	Functions Functions `yaml:"functions,omitempty"`
+
+	// Parameters for inventory object.
+	Inventory Inventory `yaml:"inventory,omitempty"`
+}
+
+// Inventory encapsulates the parameters for the inventory object. All of the
+// the parameters are required if any are set.
+type Inventory struct {
+	Namespace string `yaml:"namespace,omitempty"`
+	Name      string `yaml:"name,omitempty"`
+	// Unique label to identify inventory object in cluster.
+	InventoryID string `yaml:"inventoryID,omitempty"`
 }
 
 type Functions struct {
