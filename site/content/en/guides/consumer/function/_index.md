@@ -159,7 +159,6 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
 
 ## Next Steps
 
-- See more examples of functions in the [functions catalog].
 - Get a quickstart on writing functions from the [function producer docs].
 - Find out how to structure a pipeline of functions from the
   [functions concepts] page.
@@ -170,7 +169,6 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
 [starlark scripts]: ../../producer/functions/starlark/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
 [VCS]: https://en.wikipedia.org/wiki/Version_control
-[functions catalog]: catalog/
 [function producer docs]: ../../producer/functions/
 [functions concepts]: ../../../concepts/functions/
 [reference]: ../../../reference/fn/run/
