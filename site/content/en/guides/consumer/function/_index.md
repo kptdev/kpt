@@ -13,8 +13,8 @@ KRM Config Functions are client-side programs that make it easy to operate on a
 package of Kubernetes configuration files. Anyone who wants to automate management
 of a configuration can write a function to accomplish the task.
 
-In GitOps workflows, KPT functions read and write configuration files from a
-Git repo. Changes to the system authored by humans and mutating KPT functions
+In GitOps workflows, configuration functions read and write configuration files from
+a Git repo. Changes to the system authored by humans and mutating functions
 are reviewed before being committed to the repo. They can be run locally or as
 part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
 configurations before they are applied to a cluster.
