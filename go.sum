@@ -638,6 +638,8 @@ sigs.k8s.io/kustomize/cmd/config v0.8.0 h1:zrLcS03Wk8+azb3cmKuPTkIFBFg9BP0aZ1GYz
 sigs.k8s.io/kustomize/cmd/config v0.8.0/go.mod h1:3vnx3SFRfYrPJfzG8q/fHpCvjjF7ksZSt7t6nNe5qkk=
 sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200922204209-cf38166bd62c h1:TYKkSYTSPSum0iB/nGf7H9uHWn8sSkJIlRUd7ZllqXc=
 sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200922204209-cf38166bd62c/go.mod h1:UZ6TTvgftENXmRS3YWgxLkLakI9ilzTdIFyK/usXUyo=
+sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200924195921-3a5951563dec h1://OdIqwosbLerHd6Zk4/Y+BWSuFjlXmaEUmJU8gxyyM=
+sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200924195921-3a5951563dec/go.mod h1:PlMvypgZFfP2rQKS5tOpYHnRb35tR1wJo7C+frqudWU=
 sigs.k8s.io/kustomize/kyaml v0.7.1/go.mod h1:ne3F9JPhW2wrVaLslxBsEe6MQJQ9YK5rUutrdhBWXwI=
 sigs.k8s.io/kustomize/kyaml v0.7.2-0.20200903155941-0f49fef5ed58 h1:5Yjha1M1CQfaCl4SlUC/9lPJyQfy9ljgLaY19Ja+wus=
 sigs.k8s.io/kustomize/kyaml v0.7.2-0.20200903155941-0f49fef5ed58/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
@@ -654,6 +656,8 @@ sigs.k8s.io/kustomize/kyaml v0.8.0/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKW
 sigs.k8s.io/kustomize/kyaml v0.8.1/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
 sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200922204209-cf38166bd62c h1:jvC8RRmfCZ3RzJ71tySDQJYldpPMioCyxw0IYOzd3Xg=
 sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200922204209-cf38166bd62c/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
+sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200924195921-3a5951563dec h1:Nz39T2Tnj6mRG0Rhfz8YJHxrtMtPTQ1F9roBPUPMles=
+sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200924195921-3a5951563dec/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190817042607-6149e4549fca/go.mod h1:IIgPezJWb76P0hotTxzDbWsMYB8APh18qZnxkomBpxA=
 sigs.k8s.io/structured-merge-diff v1.0.1-0.20191108220359-b1b620dd3f06/go.mod h1:/ULNhyfzRopfcjskuui0cTITekDduZ7ycKN3oUT9R18=

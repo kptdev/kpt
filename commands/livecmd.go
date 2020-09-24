@@ -64,7 +64,7 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
 	applyCmd.Example = livedocs.ApplyExamples
 
-	previewCmd := preview.GetPreviewRunner(f, ioStreams).Command
+	previewCmd := preview.PreviewCommand(f, ioStreams)
 	previewCmd.Short = livedocs.PreviewShort
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
@@ -74,7 +74,7 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
 	diffCmd.Example = livedocs.DiffExamples
 
-	destroyCmd := destroy.GetDestroyRunner(f, ioStreams).Command
+	destroyCmd := destroy.DestroyCommand(f, ioStreams)
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
