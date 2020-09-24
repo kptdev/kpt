@@ -37,50 +37,22 @@ const (
 	GcloudProjectNumber = "gcloud.project.projectNumber"
 )
 
-func PerformSetters(path string) error {
-	// auto-fill setters from the environment
-	for i := range os.Environ() {
-		e := os.Environ()[i]
-		if !strings.HasPrefix(e, "KPT_SET_") {
-			continue
-		}
-		parts := strings.SplitN(e, "=", 2)
-		if len(parts) < 2 {
-			continue
-		}
-		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
-		k = strings.ToLower(k)
-
-		rw := &kio.LocalPackageReadWriter{
-			PackagePath:           path,
-			KeepReaderAnnotations: false,
-			IncludeSubpackages:    true,
-		}
-
-		setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
-		err := kio.Pipeline{
-			Inputs:  []kio.Reader{rw},
-			Filters: []kio.Filter{setter},
-			Outputs: []kio.Writer{rw},
-		}.Execute()
-
-		if err != nil {
-			return err
-		}
-
-		setter2 := &settersutil.FieldSetter{Name: k, Value: v, SetBy: "kpt", ResourcesPath: path, OpenAPIPath: filepath.Join(path, kptfile.KptFileName)}
-		err = kio.Pipeline{
-			Inputs:  []kio.Reader{rw},
-			Filters: []kio.Filter{setter2},
-			Outputs: []kio.Writer{rw},
-		}.Execute()
-
-		if err != nil {
-			return err
-		}
+func PerformAutoSetters(path string) error {
+	// auto-fill setters from environment
+	if err := SetEnvAutoSetters(path); err != nil {
+		return err
 	}
 
-	// auto-fill setters from gcloud
+	// auto-fill setters from gcloud config
+	if err := SetGcloudAutoSetters(path); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetGcloudAutoSetters auto-fills setters from gcloud config
+func SetGcloudAutoSetters(path string) error {
 	gcloudConfig := []string{"compute.region", "compute.zone", "core.project"}
 	for _, c := range gcloudConfig {
 		gcloudCmd := exec.Command("gcloud",
@@ -106,32 +78,7 @@ func PerformSetters(path string) error {
 			return err
 		}
 	}
-
 	return nil
-}
-
-var GetProjectNumberFromProjectID = func(projectID string) (string, error) {
-	gcloudCmd := exec.Command("gcloud",
-		"projects", "describe", projectID, "--format", "value(projectNumber)")
-	b, err := gcloudCmd.Output()
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to get project number for %s, please verify gcloud "+
-			"credentials are valid and try again", projectID)
-	}
-	return strings.TrimSpace(string(b)), nil
-}
-
-// DefExists returns true if the setterName exists in Kptfile definitions
-func DefExists(resourcePath, setterName string) bool {
-	if err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, kptfile.KptFileName)); err != nil {
-		return false
-	}
-	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + setterName)
-	if err != nil {
-		return false
-	}
-	setter, _ := openapi.Resolve(&ref)
-	return setter != nil
 }
 
 // SetV1AutoSetter sets the input auto setter recursively in all the sub-packages of root
@@ -204,6 +151,7 @@ func SetV2AutoSetter(name, value, root string) error {
 		rw := &kio.LocalPackageReadWriter{
 			PackagePath:           resourcesPath,
 			KeepReaderAnnotations: false,
+			PackageFileName:       kptfile.KptFileName,
 		}
 		err = kio.Pipeline{
 			Inputs:  []kio.Reader{rw},
@@ -242,4 +190,87 @@ func SetV2AutoSetter(name, value, root string) error {
 		}
 	}
 	return nil
+}
+
+var GetProjectNumberFromProjectID = func(projectID string) (string, error) {
+	gcloudCmd := exec.Command("gcloud",
+		"projects", "describe", projectID, "--format", "value(projectNumber)")
+	b, err := gcloudCmd.Output()
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get project number for %s, please verify gcloud "+
+			"credentials are valid and try again", projectID)
+	}
+	return strings.TrimSpace(string(b)), nil
+}
+
+// SetEnvAutoSetters auto-fills setters from the environment
+func SetEnvAutoSetters(root string) error {
+	resourcePackagesPaths, err := pathutil.DirsWithFile(root, kptfile.KptFileName, true)
+	if err != nil {
+		return err
+	}
+	envVariables := environmentVariables()
+	for i := range envVariables {
+		e := envVariables[i]
+		if !strings.HasPrefix(e, "KPT_SET_") {
+			continue
+		}
+		parts := strings.SplitN(e, "=", 2)
+		if len(parts) < 2 {
+			continue
+		}
+		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
+
+		for _, resourcesPath := range resourcePackagesPaths {
+			rw := &kio.LocalPackageReadWriter{
+				PackagePath:           resourcesPath,
+				KeepReaderAnnotations: false,
+				PackageFileName:       kptfile.KptFileName,
+			}
+
+			setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
+			err := kio.Pipeline{
+				Inputs:  []kio.Reader{rw},
+				Filters: []kio.Filter{setter},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+
+			if err != nil {
+				return err
+			}
+
+			setter2 := &settersutil.FieldSetter{
+				Name:          k,
+				Value:         v,
+				SetBy:         "kpt",
+				ResourcesPath: resourcesPath,
+				OpenAPIPath:   filepath.Join(resourcesPath, kptfile.KptFileName),
+			}
+			err = kio.Pipeline{
+				Inputs:  []kio.Reader{rw},
+				Filters: []kio.Filter{setter2},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+var environmentVariables = os.Environ
+
+// DefExists returns true if the setterName exists in Kptfile definitions
+func DefExists(resourcePath, setterName string) bool {
+	if err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, kptfile.KptFileName)); err != nil {
+		return false
+	}
+	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + setterName)
+	if err != nil {
+		return false
+	}
+	setter, _ := openapi.Resolve(&ref)
+	return setter != nil
 }

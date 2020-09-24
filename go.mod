@@ -29,3 +29,4 @@ require (
 	sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200924195921-3a5951563dec
 	sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200924195921-3a5951563dec
 )
+

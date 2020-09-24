@@ -87,7 +87,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	if r.AutoSet {
-		if err := setters.PerformSetters(r.Get.Destination); err != nil {
+		if err := setters.PerformAutoSetters(r.Get.Destination); err != nil {
 			return err
 		}
 	}
