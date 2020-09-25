@@ -10,16 +10,19 @@ description: >
 ## Functions Explained
 
 KRM Config Functions are client-side programs that make it easy to operate on a
-package of Kubernetes configuration files.
+package of Kubernetes configuration files. Anyone who wants to automate management
+of a configuration can write a function to accomplish the task.
 
-In GitOps workflows, KPT functions read and write configuration files from a
-Git repo. Changes to the system authored by humans and mutating KPT functions
+In GitOps workflows, configuration functions read and write configuration files from
+a Git repo. Changes to the system authored by humans and mutating functions
 are reviewed before being committed to the repo. They can be run locally or as
 part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
 configurations before they are applied to a cluster.
 
-Kpt offers multiple runtimes for configuration functions to run arbitrary
-actions on configuration. By default kpt runs configuration functions in a
+{{< png src="images/pipeline" >}}
+
+KPT offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default KPT runs configuration functions in a
 [container runtime], but it also provides runtimes for functions packaged as
 [executables] or [starlark scripts].
 
@@ -144,7 +147,7 @@ The example command will:
 
 - read all resources from the package directory `.` to generate input resources
 - for each resource with the `config.kubernetes.io/function` annotation, e.g.
-  `label-ns-fc.yaml`, kpt will run the specified function (using the resource
+  `label-ns-fc.yaml`, KPT will run the specified function (using the resource
   as the functionConfig)
   - functions are run sequentially, with the output of each function provided
     as input to the next
@@ -156,7 +159,6 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
 
 ## Next Steps
 
-- See more examples of functions in the [functions catalog].
 - Get a quickstart on writing functions from the [function producer docs].
 - Find out how to structure a pipeline of functions from the
   [functions concepts] page.
@@ -165,10 +167,8 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
 [container runtime]: ../../producer/functions/container/
 [executables]: ../../producer/functions/exec/
 [starlark scripts]: ../../producer/functions/starlark/
-[`kpt cfg set`]: ../../../reference/cfg/set/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
 [VCS]: https://en.wikipedia.org/wiki/Version_control
-[functions catalog]: catalog/
 [function producer docs]: ../../producer/functions/
 [functions concepts]: ../../../concepts/functions/
 [reference]: ../../../reference/fn/run/
