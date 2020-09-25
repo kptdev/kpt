@@ -966,14 +966,20 @@ and local modifications (additional environment variable).&lt;/p&gt;
         
         &lt;h2 id=&#34;functions-explained&#34;&gt;Functions Explained&lt;/h2&gt;
 &lt;p&gt;KRM Config Functions are client-side programs that make it easy to operate on a
-package of Kubernetes configuration files.&lt;/p&gt;
-&lt;p&gt;In GitOps workflows, KPT functions read and write configuration files from a
-Git repo. Changes to the system authored by humans and mutating KPT functions
+package of Kubernetes configuration files. Anyone who wants to automate management
+of a configuration can write a function to accomplish the task.&lt;/p&gt;
+&lt;p&gt;In GitOps workflows, configuration functions read and write configuration files from
+a Git repo. Changes to the system authored by humans and mutating functions
 are reviewed before being committed to the repo. They can be run locally or as
 part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
 configurations before they are applied to a cluster.&lt;/p&gt;
-&lt;p&gt;Kpt offers multiple runtimes for configuration functions to run arbitrary
-actions on configuration. By default kpt runs configuration functions in a
+
+
+
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/pipeline.png&#34; /&gt;
+
+&lt;p&gt;KPT offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default KPT runs configuration functions in a
 &lt;a href=&#34;../../producer/functions/container/&#34;&gt;container runtime&lt;/a&gt;, but it also provides runtimes for functions packaged as
 &lt;a href=&#34;../../producer/functions/exec/&#34;&gt;executables&lt;/a&gt; or &lt;a href=&#34;../../producer/functions/starlark/&#34;&gt;starlark scripts&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;The image below details how a function adds the label &lt;code&gt;color: pink&lt;/code&gt; to a
@@ -1068,7 +1074,7 @@ like a list of strings.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;read all resources from the package directory &lt;code&gt;.&lt;/code&gt; to generate input resources&lt;/li&gt;
 &lt;li&gt;for each resource with the &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation, e.g.
-&lt;code&gt;label-ns-fc.yaml&lt;/code&gt;, kpt will run the specified function (using the resource
+&lt;code&gt;label-ns-fc.yaml&lt;/code&gt;, KPT will run the specified function (using the resource
 as the functionConfig)
 &lt;ul&gt;
 &lt;li&gt;functions are run sequentially, with the output of each function provided
@@ -1082,7 +1088,6 @@ as input to the next&lt;/li&gt;
 &lt;code&gt;config.kubernetes.io/function&lt;/code&gt; annotation.&lt;/p&gt;
 &lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;See more examples of functions in the &lt;a href=&#34;catalog/&#34;&gt;functions catalog&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Get a quickstart on writing functions from the &lt;a href=&#34;../../producer/functions/&#34;&gt;function producer docs&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the
 &lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;

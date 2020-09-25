@@ -1245,14 +1245,20 @@ if (!doNotTrack) {
 	<div class="lead">Modify or validate the contents of a package by calling a function.</div>
 	<h2 id="functions-explained">Functions Explained</h2>
 <p>KRM Config Functions are client-side programs that make it easy to operate on a
-package of Kubernetes configuration files.</p>
-<p>In GitOps workflows, KPT functions read and write configuration files from a
-Git repo. Changes to the system authored by humans and mutating KPT functions
+package of Kubernetes configuration files. Anyone who wants to automate management
+of a configuration can write a function to accomplish the task.</p>
+<p>In GitOps workflows, configuration functions read and write configuration files from
+a Git repo. Changes to the system authored by humans and mutating functions
 are reviewed before being committed to the repo. They can be run locally or as
 part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
 configurations before they are applied to a cluster.</p>
-<p>Kpt offers multiple runtimes for configuration functions to run arbitrary
-actions on configuration. By default kpt runs configuration functions in a
+
+
+
+<img src="https://googlecontainertools.github.io/kpt//images/pipeline.png" />
+
+<p>KPT offers multiple runtimes for configuration functions to run arbitrary
+actions on configuration. By default KPT runs configuration functions in a
 <a href="../../producer/functions/container/">container runtime</a>, but it also provides runtimes for functions packaged as
 <a href="../../producer/functions/exec/">executables</a> or <a href="../../producer/functions/starlark/">starlark scripts</a>.</p>
 <p>The image below details how a function adds the label <code>color: pink</code> to a
@@ -1347,7 +1353,7 @@ like a list of strings.</p>
 <ul>
 <li>read all resources from the package directory <code>.</code> to generate input resources</li>
 <li>for each resource with the <code>config.kubernetes.io/function</code> annotation, e.g.
-<code>label-ns-fc.yaml</code>, kpt will run the specified function (using the resource
+<code>label-ns-fc.yaml</code>, KPT will run the specified function (using the resource
 as the functionConfig)
 <ul>
 <li>functions are run sequentially, with the output of each function provided
@@ -1361,7 +1367,6 @@ as input to the next</li>
 <code>config.kubernetes.io/function</code> annotation.</p>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
-<li>See more examples of functions in the <a href="catalog/">functions catalog</a>.</li>
 <li>Get a quickstart on writing functions from the <a href="../../producer/functions/">function producer docs</a>.</li>
 <li>Find out how to structure a pipeline of functions from the
 <a href="../../../concepts/functions/">functions concepts</a> page.</li>
@@ -1517,7 +1522,7 @@ as input to the next</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/61ba7f9329158f0037b9e769503c650885f98a6a">Flatten catalogs with parent function information. (61ba7f93)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9c94bd991e3064c96485f4791156220582cc7d67">Remove broken catalog link. (9c94bd99)</a>
 </div>
 </div>
 
