@@ -20,6 +20,9 @@ enableMissingTranslationPlaceholders = true
 
 disableKinds = ["taxonomy", "taxonomyTerm"]
 
+# Ignore dependencies in site generation
+ignoreFiles=["node_modules"]
+
 # Highlighting config
 pygmentsCodeFences = true
 pygmentsUseClasses = false
