@@ -150,7 +150,7 @@ Docker container. You can explicitly specify the environment variables that you
 want to export by either declarative or imperative ways. The value can be in
 `key=value` format or only the key of an already exported environment variable.
 
-**Declarative Example**
+Declarative Example:
 
 Use an `env` field in the function config file.
 
@@ -166,7 +166,7 @@ metadata:
         env: [foo=bar, KUBECONFIG]
 ```
 
-**Imperative Example**
+Imperative Example:
 
 Use `--env` or `-e` flag.
 
@@ -176,8 +176,9 @@ kpt fn run --image whatever --env KUBECONFIG -e foo=bar
 
 If both declarative and imperative ways are used, the imperative values will be
 merged with declarative values.
- - Different keys will be both added to the env list.
- - Same key but different values: declarative value will be replaced by
+
+* Different keys will be both added to the env list.
+* Same key but different values: declarative value will be replaced by
  imperative value.
 
 ## Deferring Failure
