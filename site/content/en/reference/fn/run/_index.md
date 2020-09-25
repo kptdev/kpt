@@ -145,18 +145,40 @@ the container in case of permissions issues.
 
 ## Environment Variables
 
-`kpt` exports all local environment variables except the `TMPDIR` variable
-when launching a docker container. Check the value of any environment
-variables that are declared locally as they may be affecting container
-behavior.
+`kpt` will not export any local environment variables by default when launching a
+Docker container. You can explicitly specify the environment variables that you
+want to export by either declarative or imperative ways. The value can be in
+`key=value` format or only the key of an already exported environment variable.
 
-```sh
-# Check the value of the GOPATH environment variable
-echo $GOPATH
+**Declarative Example**
 
-# List all environment variables
-env
+Use an `env` field in the function config file.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: build
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kpt-functions/kustomize-build
+        env: [foo=bar, KUBECONFIG]
 ```
+
+**Imperative Example**
+
+Use `--env` or `-e` flag.
+
+```bash
+kpt fn run --image whatever --env KUBECONFIG -e foo=bar
+```
+
+If both declarative and imperative ways are used, the imperative values will be
+merged with declarative values.
+ - Different keys will be both added to the env list.
+ - Same key but different values: declarative value will be replaced by
+ imperative value.
 
 ## Deferring Failure
 
