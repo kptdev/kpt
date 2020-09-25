@@ -640,6 +640,8 @@ sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbL
 sigs.k8s.io/kustomize v2.0.3+incompatible/go.mod h1:MkjgH3RdOWrievjo6c9T245dYlB5QeXV4WCbnt/PEpU=
 sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200924195921-3a5951563dec h1://OdIqwosbLerHd6Zk4/Y+BWSuFjlXmaEUmJU8gxyyM=
 sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200924195921-3a5951563dec/go.mod h1:PlMvypgZFfP2rQKS5tOpYHnRb35tR1wJo7C+frqudWU=
+sigs.k8s.io/kustomize/kyaml v0.8.1 h1:5GRanVGU6+iq3ERTiQD9VIfyGByFVB4z4GthP8NkRYE=
+sigs.k8s.io/kustomize/kyaml v0.8.1/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
 sigs.k8s.io/kustomize/kyaml v0.8.1/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
 sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200924195921-3a5951563dec h1:Nz39T2Tnj6mRG0Rhfz8YJHxrtMtPTQ1F9roBPUPMles=
 sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200924195921-3a5951563dec/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
