@@ -266,12 +266,6 @@ details in the following:
 
 * [Issue 757]
 
-#### Don't use Imperative and Declarative in One Command
-
-If you use imperative functions (by `--image` or `--fn-path`) with declarative
-ones (by config files in `DIR`, see following section) at the same time, the
-declarative functions will be **ignored**.
-
 ## Declarative Run Specifics
 
 ### Scoping Rules
@@ -323,7 +317,8 @@ containing function configurations:
 kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 ```
 
-Alternatively, scoping can be disabled using `--global-scope` flag.
+Alternatively, scoping can be disabled using `--global-scope` flag. Using `--fn-flag`
+or `--image` will not enable global scope automatically.
 
 ### Multiple Functions Ordering
 
@@ -390,6 +385,12 @@ because:
 * it expects arguments in the `spec` field
 * it takes complex arguments with nested values
 * it takes flags as arguments
+
+### Don't use Imperative and Declarative in One Command
+
+If you use imperative functions (by `--image` or `--fn-path`) with declarative
+ones (by config files in `DIR`, see following section) at the same time, the
+declarative functions will be **ignored**.
 
 ## Next Steps
 
