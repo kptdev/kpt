@@ -135,3 +135,54 @@ func TestSetV2AutoSetter(t *testing.T) {
 		})
 	}
 }
+
+func TestEnvironmentSetters(t *testing.T) {
+	var tests = []struct {
+		name            string
+		envVariables    []string
+		dataset         string
+		expectedDataset string
+	}{
+		{
+			name:    "autoset-recurse-subpackages",
+			dataset: "dataset-with-autosetters",
+			envVariables: []string{"KPT_SET_gcloud.core.project=my-project",
+				"KPT_SET_gcloud.project.projectNumber=1234"},
+			expectedDataset: "dataset-with-autosetters-set",
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+			testDataDir := filepath.Join("../../", "testutil", "testdata")
+			sourceDir := filepath.Join(testDataDir, test.dataset)
+			expectedDir := filepath.Join(testDataDir, test.expectedDataset)
+			baseDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = copyutil.CopyDir(sourceDir, baseDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			defer os.RemoveAll(baseDir)
+			environmentVariables = func() []string {
+				return test.envVariables
+			}
+			err = SetEnvAutoSetters(baseDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			diff, err := copyutil.Diff(baseDir, expectedDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, 0, diff.Len()) {
+				t.FailNow()
+			}
+		})
+	}
+}
