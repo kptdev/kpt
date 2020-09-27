@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -64,11 +63,6 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		return errors.Errorf("failed to clone git repo: updated source: %v", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
-
-	err = setters.PerformAutoSetters(updated.AbsPath())
-	if err != nil {
-		return err
-	}
 
 	kf, err := u.updatedKptfile(updated.AbsPath(), original.AbsPath(), options)
 	if err != nil {
@@ -218,6 +212,7 @@ func MergeSubPackages(localRoot, updatedRoot, originalRoot string) error {
 		if fileExists(filepath.Join(originalPkgPath, kptfile.KptFileName)) {
 			dirsForSettersUpdate = append(dirsForSettersUpdate, originalPkgPath)
 		}
+
 		err = settersutil.SetAllSetterDefinitions(
 			false,
 			filepath.Join(localPkgPath, kptfile.KptFileName),
