@@ -1293,23 +1293,32 @@ be individually versioned (as version v1.0.2) by creating the tag <code>example/
 <li><a href="#fetch-the-released-package">Fetch the released package</a></li>
 </ol>
 <h2 id="create-a-git-repo">Create a git repo</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone REPO_URL <span style="color:#8f5902;font-style:italic"># or create a new repo with `git init`</span>
-<span style="color:#204a87">cd</span> REPO_NAME
+<!-- @defineEnvVars @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#000">REPO_NAME</span><span style="color:#ce5c00;font-weight:bold">=</span>my-repo
+<span style="color:#000">REPO_URL</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;&lt;url&gt;&#34;</span>
+</code></pre></div><!-- @setupRepo @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir <span style="color:#000">$REPO_NAME</span> <span style="color:#8f5902;font-style:italic"># or clone with git `git clone`</span>
+git init <span style="color:#000">$REPO_NAME</span> <span style="color:#8f5902;font-style:italic"># only if new repo</span>
 </code></pre></div><h2 id="create-the-package">Create the package</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir nginx
+<!-- @createPackage @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir <span style="color:#000">$REPO_NAME</span>/nginx
 </code></pre></div><p>Recommended: initialize the package with metadata</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg init nginx --tag kpt.dev/app<span style="color:#ce5c00;font-weight:bold">=</span>nginx --description <span style="color:#4e9a06">&#34;kpt nginx package&#34;</span>
+<!-- @initPackage @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg init <span style="color:#000">$REPO_NAME</span>/nginx --tag kpt.dev/app<span style="color:#ce5c00;font-weight:bold">=</span>nginx --description <span style="color:#4e9a06">&#34;kpt nginx package&#34;</span>
 </code></pre></div><h2 id="create-configuration">Create configuration</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
+<!-- @addConfig @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output <span style="color:#000">$REPO_NAME</span>/nginx/nginx-deployment.yaml
 </code></pre></div><h2 id="publish-package-to-git">Publish package to git</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add .
-git commit -m <span style="color:#4e9a06">&#34;Add nginx package&#34;</span>
+<!-- @commitRepo @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#204a87">cd</span> <span style="color:#000">$REPO_NAME</span> <span style="color:#ce5c00;font-weight:bold">&amp;&amp;</span> git add . <span style="color:#ce5c00;font-weight:bold">&amp;&amp;</span> git commit -m <span style="color:#4e9a06">&#34;Add nginx package&#34;</span><span style="color:#ce5c00;font-weight:bold">)</span>
 </code></pre></div><p>Recommended: tag the commit as a release</p>
+<!-- @createTag @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># tag as DIR/VERSION for per-directory versioning</span>
-git tag nginx/v0.1.0
-git push nginx/v0.1.0
+<span style="color:#ce5c00;font-weight:bold">(</span><span style="color:#204a87">cd</span> <span style="color:#000">$REPO_NAME</span> <span style="color:#ce5c00;font-weight:bold">&amp;&amp;</span> git tag nginx/v0.1.0<span style="color:#ce5c00;font-weight:bold">)</span>
+<span style="color:#8f5902;font-style:italic"># git push nginx/v0.1.0 # requires an upstream repo</span>
 </code></pre></div><h2 id="fetch-the-released-package">Fetch the released package</h2>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://&lt;REPO&gt;/nginx@v0.1.0 nginx
+<!-- @fetchPackage @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get <span style="color:#000">$REPO_URL</span>/nginx@v0.1.0 nginx
 </code></pre></div>
         <div class="section-index">
     
@@ -1411,7 +1420,7 @@ git push nginx/v0.1.0
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 28, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/3a694b8a45d1c23da9e8354d83a533b3e9cbdb3e">Regenerate docs (3a694b8a)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 21, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b4da3284063323698910addddcda48e93cef49b3">Turns the consumer init and setter guides into tests (b4da3284)</a>
 </div>
 </div>
 
