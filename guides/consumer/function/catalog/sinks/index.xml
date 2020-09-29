@@ -1,11 +1,11 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Kpt – Sink Catalog</title>
-    <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/sinks/</link>
+    <link>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/sinks/</link>
     <description>Recent content in Sink Catalog on Kpt</description>
     <generator>Hugo -- gohugo.io</generator>
     
-	  <atom:link href="https://googlecontainertools.github.io/kpt/guides/consumer/function/sinks/index.xml" rel="self" type="application/rss+xml" />
+	  <atom:link href="https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/sinks/index.xml" rel="self" type="application/rss+xml" />
     
     
       

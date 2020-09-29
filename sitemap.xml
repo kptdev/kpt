@@ -293,6 +293,11 @@
   </url>
   
   <url>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/</loc>
+    <lastmod>2020-09-28T18:49:41+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/</loc>
     <lastmod>2020-09-24T23:04:17+00:00</lastmod>
   </url>
@@ -348,11 +353,6 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/node_modules/markdown-table/readme/</loc>
-    <lastmod>2020-09-11T23:38:18+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/index.json</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
   </url>
@@ -403,8 +403,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/generators/</loc>
-    <lastmod>2020-09-11T23:57:35+00:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/generators/</loc>
+    <lastmod>2020-09-25T18:47:46+00:00</lastmod>
   </url>
   
   <url>
@@ -434,7 +434,7 @@
   
   <url>
     <loc>https://googlecontainertools.github.io/kpt/reference/fn/run/</loc>
-    <lastmod>2020-09-11T23:38:18+00:00</lastmod>
+    <lastmod>2020-09-25T16:11:59-07:00</lastmod>
   </url>
   
   <url>
@@ -448,8 +448,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/sinks/</loc>
-    <lastmod>2020-09-11T23:38:18+00:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/sinks/</loc>
+    <lastmod>2020-09-25T18:47:46+00:00</lastmod>
   </url>
   
   <url>
@@ -458,8 +458,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/sources/</loc>
-    <lastmod>2020-09-11T23:38:18+00:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/sources/</loc>
+    <lastmod>2020-09-25T18:47:46+00:00</lastmod>
   </url>
   
   <url>
@@ -468,8 +468,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/transformers/</loc>
-    <lastmod>2020-09-11T23:57:35+00:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/transformers/</loc>
+    <lastmod>2020-09-25T18:47:46+00:00</lastmod>
   </url>
   
   <url>
@@ -478,8 +478,8 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/validators/</loc>
-    <lastmod>2020-09-11T23:57:35+00:00</lastmod>
+    <loc>https://googlecontainertools.github.io/kpt/guides/consumer/function/catalog/validators/</loc>
+    <lastmod>2020-09-25T18:47:46+00:00</lastmod>
   </url>
   
 </urlset>

@@ -1147,16 +1147,32 @@ page.</p>
 permissions to access mounted volumes. Check how the function is running inside
 the container in case of permissions issues.</p>
 <h2 id="environment-variables">Environment Variables</h2>
-<p><code>kpt</code> exports all local environment variables except the <code>TMPDIR</code> variable
-when launching a docker container. Check the value of any environment
-variables that are declared locally as they may be affecting container
-behavior.</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># Check the value of the GOPATH environment variable</span>
-<span style="color:#204a87">echo</span> <span style="color:#000">$GOPATH</span>
-
-<span style="color:#8f5902;font-style:italic"># List all environment variables</span>
-env
-</code></pre></div><h2 id="deferring-failure">Deferring Failure</h2>
+<p><code>kpt</code> will not export any local environment variables by default when launching a
+Docker container. You can explicitly specify the environment variables that you
+want to export by either declarative or imperative ways. The value can be in
+<code>key=value</code> format or only the key of an already exported environment variable.</p>
+<p>Declarative Example:</p>
+<p>Use an <code>env</code> field in the function config file.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">apiVersion</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>v1<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kind</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>ConfigMap<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>build<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">annotations</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
+</span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-functions/kustomize-build<span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">env</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#000;font-weight:bold">[</span>foo=bar<span style="color:#000;font-weight:bold">,</span><span style="color:#f8f8f8;text-decoration:underline"> </span>KUBECONFIG<span style="color:#000;font-weight:bold">]</span><span style="color:#f8f8f8;text-decoration:underline">
+</span></code></pre></div><p>Imperative Example:</p>
+<p>Use <code>--env</code> or <code>-e</code> flag.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">kpt fn run --image whatever --env KUBECONFIG -e <span style="color:#000">foo</span><span style="color:#ce5c00;font-weight:bold">=</span>bar
+</code></pre></div><p>If both declarative and imperative ways are used, the imperative values will be
+merged with declarative values.</p>
+<ul>
+<li>Different keys will be both added to the env list.</li>
+<li>Same key but different values: declarative value will be replaced by
+imperative value.</li>
+</ul>
+<h2 id="deferring-failure">Deferring Failure</h2>
 <p>When running multiple validation functions, it may be desired to defer failures
 until all functions have been run so that the results of all functions are
 written to the results directory. Functions can specify that failures should be
@@ -1408,7 +1424,7 @@ because:</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/61ba7f9329158f0037b9e769503c650885f98a6a">Flatten catalogs with parent function information. (61ba7f93)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 25, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/650a44a6b5cea9b324680d0e696ed7529175958d">docs: markdown style (650a44a6)</a>
 </div>
 </div>
 
