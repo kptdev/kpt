@@ -88,9 +88,9 @@ var (
 				Content:     producer.SubstitutionsGuide,
 			},
 			{
-				Name:        "Blueprints",
-				Description: "Publishing a blueprint",
-				Content:     producer.BlueprintGuide,
+				Name:        "Packages",
+				Description: "Publishing a package",
+				Content:     producer.PackageGuide,
 			},
 			{
 				Name:        "Variants",

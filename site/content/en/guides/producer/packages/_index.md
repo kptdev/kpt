@@ -1,10 +1,10 @@
 ---
-title: "Publishing a blueprint"
-linkTitle: "Blueprints"
+title: "Publishing a package"
+linkTitle: "Packages"
 weight: 5
 type: docs
 description: >
-    Writing effective blueprint packages
+    Writing effective packages
 ---
 
 {{% pageinfo color="warning" %}}
@@ -13,20 +13,20 @@ description: >
 
 {{% /pageinfo %}}
 
-*Reusable, customizable components can be built and shared as blueprints.*
+*Reusable, customizable components can be built and shared as packages.*
 
 ## Overview
 
-Blueprints are a **pattern for developing reusable, customizable
-configuration**.  Blueprints are typically published and consumed by
+Packages are a **pattern for developing reusable, customizable
+configuration**. Packages are typically published and consumed by
 different teams.
 
 {{% pageinfo color="primary" %}}
-Because packages can be updated to new versions, blueprint consumers
-can pull in changes to a blueprint after fetching it.
+Because packages can be updated to new versions, consumers
+can pull in changes to a package after fetching it.
 {{% /pageinfo %}}
 
-### Example use cases for blueprints
+### Example use cases for packages
 
 - **Languages**: Java / Node / Ruby / Python / Golang application
 - **Frameworks**: Spring, Express, Rails, Django
@@ -37,16 +37,16 @@ can pull in changes to a blueprint after fetching it.
     admin-server, hystrix, various backends)
 - **Infrastructure Stacks**: CloudSQL + Pubsub + GKE
 
-{{< svg src="images/blueprint" >}}
+{{< svg src="images/package" >}}
 
 ```sh
-# Optional: copy the mysql-kustomize blueprint to follow along
+# Optional: copy the mysql-kustomize package to follow along
 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
 ```
 
 ## Factor / denormalize the configuration data
 
-Structuring blueprints into separate publisher and consumer focused pieces
+Structuring packages into separate publisher and consumer focused pieces
 provides a clean UX for consumers to modifys the package.
 
 Example: provide separate directories with pieces consumers are expected to
@@ -221,7 +221,7 @@ package rather than exclusively through text editors and sed:
 
 - Setting a value in several different patches at once
 - Setting common or required values -- e.g. the image name for a Java app
-  blueprint
+  package
 - Setting the image tag to match the digest of an image that was just build.
 - Setting a value from the environment when the package is fetched the first
   time -- e.g. GCP project.

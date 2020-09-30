@@ -941,11 +941,11 @@ are used &lt;em&gt;not&lt;/em&gt; the name of the substitution.  The name of the
     </item>
     
     <item>
-      <title>Guides: Publishing a blueprint</title>
-      <link>https://googlecontainertools.github.io/kpt/guides/producer/blueprint/</link>
+      <title>Guides: Publishing a package</title>
+      <link>https://googlecontainertools.github.io/kpt/guides/producer/packages/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://googlecontainertools.github.io/kpt/guides/producer/blueprint/</guid>
+      <guid>https://googlecontainertools.github.io/kpt/guides/producer/packages/</guid>
       <description>
         
         
@@ -956,20 +956,20 @@ are used &lt;em&gt;not&lt;/em&gt; the name of the substitution.  The name of the
 
 &lt;/div&gt;
 
-&lt;p&gt;&lt;em&gt;Reusable, customizable components can be built and shared as blueprints.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Reusable, customizable components can be built and shared as packages.&lt;/em&gt;&lt;/p&gt;
 &lt;h2 id=&#34;overview&#34;&gt;Overview&lt;/h2&gt;
-&lt;p&gt;Blueprints are a &lt;strong&gt;pattern for developing reusable, customizable
-configuration&lt;/strong&gt;.  Blueprints are typically published and consumed by
+&lt;p&gt;Packages are a &lt;strong&gt;pattern for developing reusable, customizable
+configuration&lt;/strong&gt;. Packages are typically published and consumed by
 different teams.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
-&lt;p&gt;Because packages can be updated to new versions, blueprint consumers
-can pull in changes to a blueprint after fetching it.&lt;/p&gt;
+&lt;p&gt;Because packages can be updated to new versions, consumers
+can pull in changes to a package after fetching it.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h3 id=&#34;example-use-cases-for-blueprints&#34;&gt;Example use cases for blueprints&lt;/h3&gt;
+&lt;h3 id=&#34;example-use-cases-for-packages&#34;&gt;Example use cases for packages&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;Languages&lt;/strong&gt;: Java / Node / Ruby / Python / Golang application&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Frameworks&lt;/strong&gt;: Spring, Express, Rails, Django&lt;/li&gt;
@@ -986,12 +986,12 @@ admin-server, hystrix, various backends)&lt;/li&gt;
 
 
 
-&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/blueprint.svg&#34; /&gt;
+&lt;img src=&#34;https://googlecontainertools.github.io/kpt//images/package.svg&#34; /&gt;
 
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Optional: copy the mysql-kustomize blueprint to follow along&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Optional: copy the mysql-kustomize package to follow along&lt;/span&gt;
 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;factor--denormalize-the-configuration-data&#34;&gt;Factor / denormalize the configuration data&lt;/h2&gt;
-&lt;p&gt;Structuring blueprints into separate publisher and consumer focused pieces
+&lt;p&gt;Structuring packages into separate publisher and consumer focused pieces
 provides a clean UX for consumers to modifys the package.&lt;/p&gt;
 &lt;p&gt;Example: provide separate directories with pieces consumers are expected to
 edit (replicas) vs publisher implementation (health check command).&lt;/p&gt;
@@ -1145,7 +1145,7 @@ package rather than exclusively through text editors and sed:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Setting a value in several different patches at once&lt;/li&gt;
 &lt;li&gt;Setting common or required values &amp;ndash; e.g. the image name for a Java app
-blueprint&lt;/li&gt;
+package&lt;/li&gt;
 &lt;li&gt;Setting the image tag to match the digest of an image that was just build.&lt;/li&gt;
 &lt;li&gt;Setting a value from the environment when the package is fetched the first
 time &amp;ndash; e.g. GCP project.&lt;/li&gt;

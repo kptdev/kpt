@@ -7,7 +7,7 @@ description: >
   Export a GitLab CI config file that runs kpt functions
 ---
 
-In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on [GitLab CI]. This tutorial takes about 5 minutes.
+In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on [GitLab CI]. This tutorial takes about 5 minutes.
 
 {{% pageinfo color="info" %}}
 A kpt version `v0.32.0` or higher is required.
@@ -37,7 +37,7 @@ Use `kpt pkg get` to fetch source files of this tutorial:
 git init
 git remote add origin https://github.com/<USER>/<REPO>.git
 # Fetch source files
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 ```
 
 Then you will get an `example-package` directory:
