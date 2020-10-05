@@ -90,7 +90,7 @@ var (
 			{
 				Name:        "Packages",
 				Description: "Publishing a package",
-				Content:     producer.PackageGuide,
+				Content:     producer.PackagesGuide,
 			},
 			{
 				Name:        "Variants",
