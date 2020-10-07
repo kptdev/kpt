@@ -77,6 +77,15 @@ in this guide.
 Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.
 
+### Initialize local Repository
+
+```sh
+mkdir workspace
+cd workspace
+git init
+
+```
+
 ### Fetch Command
 
 <!-- @fetchPackage @verifyGuides-->
@@ -102,6 +111,15 @@ resolve the subdirectory version.
 `package-examples/helloworld-set/v0.3.0` if it exists, otherwise it is
 resolved to the tag `v0.3.0`.
 {{% /pageinfo %}}
+
+### Commit Local Repository 1st Version
+
+```sh
+git add .
+git commit -m "init"
+
+```
+
 
 ## Edit the contents
 
@@ -166,13 +184,11 @@ kpt will throw an error if trying to update a package and the git repo
 has uncommitted changes.
 {{% /pageinfo %}}
 
-Move into the directory where you cloned the repo (helloworld in thie example)
 
 <!-- @commitLocalChanges @verifyGuides-->
 ```sh
-git init
 git add .
-git commit -m "add helloworld package at v0.3.0"
+git commit -m "local package edits"
 ```
 
 ## Merge upstream changes
@@ -186,7 +202,7 @@ You need to perform the command below from the directory where you cloned the re
 
 <!-- @mergeUpdates @verifyGuides-->
 ```sh
-kpt pkg update .@v0.5.0 --strategy=resource-merge
+kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 ```
 
 Update the local package to the upstream version v0.5.0 by doing a 3-way
