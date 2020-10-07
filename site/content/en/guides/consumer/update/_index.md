@@ -183,7 +183,6 @@ kpt will throw an error if trying to update a package and the git repo
 has uncommitted changes.
 {{% /pageinfo %}}
 
-
 <!-- @commitLocalChanges @verifyGuides-->
 ```sh
 git add .
