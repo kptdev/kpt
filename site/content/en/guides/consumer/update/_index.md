@@ -120,7 +120,6 @@ git commit -m "init"
 
 ```
 
-
 ## Edit the contents
 
 Edit the contents of the package by making changes to it.
