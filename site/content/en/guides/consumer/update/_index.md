@@ -196,8 +196,6 @@ specified version and applying the upstream changes to the local package.
 
 ### Merge Command
 
-You need to perform the command below from the directory where you cloned the repo (helloworld in thie example)
-
 <!-- @mergeUpdates @verifyGuides-->
 ```sh
 kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
