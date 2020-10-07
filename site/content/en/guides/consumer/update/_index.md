@@ -166,6 +166,8 @@ kpt will throw an error if trying to update a package and the git repo
 has uncommitted changes.
 {{% /pageinfo %}}
 
+Move into the directory where you cloned the repo (helloworld in thie example)
+
 <!-- @commitLocalChanges @verifyGuides-->
 ```sh
 git init
@@ -180,9 +182,11 @@ specified version and applying the upstream changes to the local package.
 
 ### Merge Command
 
+You need to perform the command below from the directory where you cloned the repo (helloworld in thie example)
+
 <!-- @mergeUpdates @verifyGuides-->
 ```sh
-kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
+kpt pkg update .@v0.5.0 --strategy=resource-merge
 ```
 
 Update the local package to the upstream version v0.5.0 by doing a 3-way
