@@ -43,8 +43,7 @@ func GetAnthosCommands(name string) []*cobra.Command {
 
 // NormalizeCommand will modify commands to be consistent, e.g. silencing errors
 func NormalizeCommand(c ...*cobra.Command) {
-	for i := range c {
-		cmd := c[i]
+	for _, cmd := range c {
 		cmd.Short = strings.TrimPrefix(cmd.Short, "[Alpha] ")
 		NormalizeCommand(cmd.Commands()...)
 	}
