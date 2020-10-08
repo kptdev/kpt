@@ -79,11 +79,11 @@ updated to later versions to merge in upstream changes.
 
 ### Initialize local Repository
 
+<!-- @InitRepo @verifyGuides-->
 ```sh
 mkdir workspace
 cd workspace
 git init
-
 ```
 
 ### Fetch Command
@@ -114,10 +114,10 @@ resolved to the tag `v0.3.0`.
 
 ### Commit Local Repository 1st Version
 
+<!-- @commitLocalRepository @verifyGuides-->
 ```sh
 git add .
 git commit -m "init"
-
 ```
 
 ## Edit the contents
