@@ -22,3 +22,9 @@ kpt/kpt
 
 # Emacs temp files
 *~
+
+# VS Code individual configurations
+.vscode/
+
+# local tmp directory (in case you download packages here)
+tmp/

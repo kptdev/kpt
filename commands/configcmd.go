@@ -140,6 +140,7 @@ func SetCommand(parent string) *cobra.Command {
 	kustomizeCmd.Long = cfgdocs.SetShort + "\n" + cfgdocs.SetLong
 	kustomizeCmd.Example = cfgdocs.SetExamples
 	kustomizeCmd.SilenceUsage = true
+	kustomizeCmd.SilenceErrors = true
 	var autoRun bool
 	setCmd.Flags().BoolVar(&autoRun, "auto-run", true,
 		`Automatically run functions after setting (if enabled for the package)`)
