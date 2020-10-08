@@ -7,5 +7,5 @@ contact_links:
     url: https://googlecontainertools.github.io/kpt/guides/
     about: Learn more about using kpt with these guides
   - name: Kpt Mailing List
-    url: https://groups.google.com/forum/?oldui=1#!forum/kpt-users
+    url: https://groups.google.com/forum/#!forum/kpt-users
     about: Join the Kpt mailing list
