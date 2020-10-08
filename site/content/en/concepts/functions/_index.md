@@ -16,7 +16,7 @@ Use cases:
 
 - **Configuration Validation:** e.g. Require all `Namespace` configurations to
   have a `cost-center` label.
-- **Configuration Generation:** e.g. Provide a blueprint for new services by
+- **Configuration Generation:** e.g. Provide a package for new services by
   generating a `Namespace` with organization-mandated defaults for `RBAC`,
   `ResourceQuota`, etc.
 - **Configuration Transformation:** e.g. Update all `PodSecurityPolicy`

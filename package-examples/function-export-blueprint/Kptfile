@@ -1,6 +1,0 @@
-apiVersion: kpt.dev/v1alpha1
-kind: Kptfile
-metadata:
-  name: function-export-blueprint
-packageMetadata:
-  shortDescription: example blueprint for kpt fn export
