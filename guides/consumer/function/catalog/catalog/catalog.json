@@ -29,14 +29,6 @@
     "toolchain": "../../../producer/functions/golang/"
   },
   {
-    "image": "gcr.io/kpt-functions/kustomize-build",
-    "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/kustomize_build.ts",
-    "description": "Run kustomize to build configuration",
-    "type": "source",
-    "toolchain": "../../../producer/functions/ts/",
-    "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/kustomize-build/"
-  },
-  {
     "image": "gcr.io/kpt-dev/kpt",
     "args": "fn sink",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/internal/commands/sink.go",

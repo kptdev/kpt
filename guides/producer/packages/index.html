@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/blueprint/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/guides/producer/packages/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,18 +32,18 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>Publishing a blueprint | Kpt</title><meta property="og:title" content="Publishing a blueprint" />
-<meta property="og:description" content="Writing effective blueprint packages
+<title>Publishing a package | Kpt</title><meta property="og:title" content="Publishing a package" />
+<meta property="og:description" content="Writing effective packages
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/blueprint/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/guides/producer/packages/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="Publishing a blueprint">
-<meta itemprop="description" content="Writing effective blueprint packages
+<meta itemprop="name" content="Publishing a package">
+<meta itemprop="description" content="Writing effective packages
 ">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Publishing a blueprint"/>
-<meta name="twitter:description" content="Writing effective blueprint packages
+<meta name="twitter:title" content="Publishing a package"/>
+<meta name="twitter:description" content="Writing effective packages
 "/>
 
 
@@ -76,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>Publishing a blueprint | Kpt</title>
+    <title>Publishing a package | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -984,10 +984,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Blueprints</a>
+    <a  href="/kpt/guides/producer/packages/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Packages</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptguidesproducerblueprint">
+    <li class="collapse show" id="kptguidesproducerpackages">
       
       
       
@@ -1189,8 +1189,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/blueprint/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Publishing%20a%20blueprint" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/guides/producer/packages/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Publishing%20a%20package" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -1206,7 +1206,7 @@ if (!doNotTrack) {
   <ul>
     <li><a href="#overview">Overview</a>
       <ul>
-        <li><a href="#example-use-cases-for-blueprints">Example use cases for blueprints</a></li>
+        <li><a href="#example-use-cases-for-packages">Example use cases for packages</a></li>
       </ul>
     </li>
     <li><a href="#factor--denormalize-the-configuration-data">Factor / denormalize the configuration data</a></li>
@@ -1256,7 +1256,7 @@ if (!doNotTrack) {
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/guides/producer/blueprint/">Blueprints</a>
+	<a href="https://googlecontainertools.github.io/kpt/guides/producer/packages/">Packages</a>
 </li>
 
 	</ol>
@@ -1264,8 +1264,8 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>Publishing a blueprint</h1>
-	<div class="lead">Writing effective blueprint packages</div>
+	<h1>Publishing a package</h1>
+	<div class="lead">Writing effective packages</div>
 	
 
 <div class="pageinfo pageinfo-warning">
@@ -1273,20 +1273,20 @@ if (!doNotTrack) {
 
 </div>
 
-<p><em>Reusable, customizable components can be built and shared as blueprints.</em></p>
+<p><em>Reusable, customizable components can be built and shared as packages.</em></p>
 <h2 id="overview">Overview</h2>
-<p>Blueprints are a <strong>pattern for developing reusable, customizable
-configuration</strong>.  Blueprints are typically published and consumed by
+<p>Packages are a <strong>pattern for developing reusable, customizable
+configuration</strong>. Packages are typically published and consumed by
 different teams.</p>
 
 
 <div class="pageinfo pageinfo-primary">
-<p>Because packages can be updated to new versions, blueprint consumers
-can pull in changes to a blueprint after fetching it.</p>
+<p>Because packages can be updated to new versions, consumers
+can pull in changes to a package after fetching it.</p>
 
 </div>
 
-<h3 id="example-use-cases-for-blueprints">Example use cases for blueprints</h3>
+<h3 id="example-use-cases-for-packages">Example use cases for packages</h3>
 <ul>
 <li><strong>Languages</strong>: Java / Node / Ruby / Python / Golang application</li>
 <li><strong>Frameworks</strong>: Spring, Express, Rails, Django</li>
@@ -1303,12 +1303,12 @@ admin-server, hystrix, various backends)</li>
 
 
 
-<img src="https://googlecontainertools.github.io/kpt//images/blueprint.svg" />
+<img src="https://googlecontainertools.github.io/kpt//images/package.svg" />
 
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># Optional: copy the mysql-kustomize blueprint to follow along</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># Optional: copy the mysql-kustomize package to follow along</span>
 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
 </code></pre></div><h2 id="factor--denormalize-the-configuration-data">Factor / denormalize the configuration data</h2>
-<p>Structuring blueprints into separate publisher and consumer focused pieces
+<p>Structuring packages into separate publisher and consumer focused pieces
 provides a clean UX for consumers to modifys the package.</p>
 <p>Example: provide separate directories with pieces consumers are expected to
 edit (replicas) vs publisher implementation (health check command).</p>
@@ -1462,7 +1462,7 @@ package rather than exclusively through text editors and sed:</p>
 <ul>
 <li>Setting a value in several different patches at once</li>
 <li>Setting common or required values &ndash; e.g. the image name for a Java app
-blueprint</li>
+package</li>
 <li>Setting the image tag to match the digest of an image that was just build.</li>
 <li>Setting a value from the environment when the package is fetched the first
 time &ndash; e.g. GCP project.</li>
@@ -1624,7 +1624,7 @@ fields, whereas adds will only conflict if the user added the same field.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 13, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/29e20d6890bc1337417618c8b41de6cc97e96fe1">docs:Update cfg docs (29e20d68)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 30, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d04a7e891f2e46e86ef70b27a2847e9b24719609">Docs: change references of blueprint to packages (d04a7e89)</a>
 </div>
 </div>
 

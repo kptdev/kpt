@@ -984,10 +984,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/guides/producer/blueprint/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Blueprints</a>
+    <a  href="/kpt/guides/producer/packages/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Packages</a>
   </li>
   <ul>
-    <li class="collapse " id="kptguidesproducerblueprint">
+    <li class="collapse " id="kptguidesproducerpackages">
       
       
       
@@ -1277,7 +1277,7 @@ if (!doNotTrack) {
 <div class="td-content">
 	<h1>Exporting a GitLab CI Pipeline</h1>
 	<div class="lead">Export a GitLab CI config file that runs kpt functions</div>
-	<p>In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on <a href="https://docs.gitlab.com/ee/ci/">GitLab CI</a>. This tutorial takes about 5 minutes.</p>
+	<p>In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on <a href="https://docs.gitlab.com/ee/ci/">GitLab CI</a>. This tutorial takes about 5 minutes.</p>
 
 
 <div class="pageinfo pageinfo-info">
@@ -1303,7 +1303,7 @@ if (!doNotTrack) {
 git init
 git remote add origin https://github.com/&lt;USER&gt;/&lt;REPO&gt;.git
 <span style="color:#8f5902;font-style:italic"># Fetch source files</span>
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 </code></pre></div><p>Then you will get an <code>example-package</code> directory:</p>
 <ul>
 <li><code>resources/resources.yaml</code>: declares a <code>Deployment</code> and a <code>Namespace</code>.</li>
@@ -1458,7 +1458,7 @@ git push --set-upstream origin master
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 11, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/61ba7f9329158f0037b9e769503c650885f98a6a">Flatten catalogs with parent function information. (61ba7f93)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified September 30, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d04a7e891f2e46e86ef70b27a2847e9b24719609">Docs: change references of blueprint to packages (d04a7e89)</a>
 </div>
 </div>
 

@@ -44,7 +44,7 @@ Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem).
 `,
 "generator": `
-Generators create blueprints for new services by building a configuration for
+Generators create packages for new services by building a configuration for
 a namespace with organization-mandated config defaults.
 `,
 "transformer": `

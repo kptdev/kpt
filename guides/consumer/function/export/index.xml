@@ -22,7 +22,7 @@
       <description>
         
         
-        &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on &lt;a href=&#34;https://github.com/features/actions&#34;&gt;GitHub Actions&lt;/a&gt; and modify it manually to make it fully functional. This tutorial takes about 10 minutes.&lt;/p&gt;
+        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on &lt;a href=&#34;https://github.com/features/actions&#34;&gt;GitHub Actions&lt;/a&gt; and modify it manually to make it fully functional. This tutorial takes about 10 minutes.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
@@ -48,7 +48,7 @@
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Fetch source files&lt;/span&gt;
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;example-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
@@ -131,7 +131,7 @@ git push --set-upstream origin master
       <description>
         
         
-        &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://docs.gitlab.com/ee/ci/&#34;&gt;GitLab CI&lt;/a&gt;. This tutorial takes about 5 minutes.&lt;/p&gt;
+        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://docs.gitlab.com/ee/ci/&#34;&gt;GitLab CI&lt;/a&gt;. This tutorial takes about 5 minutes.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
@@ -157,7 +157,7 @@ git push --set-upstream origin master
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Fetch source files&lt;/span&gt;
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;example-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
@@ -224,7 +224,7 @@ git push --set-upstream origin master
       <description>
         
         
-        &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://www.jenkins.io/&#34;&gt;Jenkins&lt;/a&gt;. To make the generated pipeline work, extra steps that you may need is covered in the tutorial. This tutorial takes about 20~25 minutes.&lt;/p&gt;
+        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://www.jenkins.io/&#34;&gt;Jenkins&lt;/a&gt;. To make the generated pipeline work, extra steps that you may need is covered in the tutorial. This tutorial takes about 20~25 minutes.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
@@ -250,7 +250,7 @@ git push --set-upstream origin master
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Fetch source files&lt;/span&gt;
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;example-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
@@ -363,7 +363,7 @@ git push --set-upstream origin master
       <description>
         
         
-        &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://cloud.google.com/cloud-build&#34;&gt;Cloud Build&lt;/a&gt;. This tutorial takes about 5 minutes.&lt;/p&gt;
+        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://cloud.google.com/cloud-build&#34;&gt;Cloud Build&lt;/a&gt;. This tutorial takes about 5 minutes.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
@@ -385,7 +385,7 @@ git push --set-upstream origin master
 
 &lt;p&gt;Use &lt;code&gt;kpt pkg get&lt;/code&gt; to fetch source files of this tutorial:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Fetch source files&lt;/span&gt;
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;example-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
@@ -445,7 +445,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
       <description>
         
         
-        &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on &lt;a href=&#34;https://circleci.com/&#34;&gt;CircleCI&lt;/a&gt; and merge it manually to your existing pipeline. This tutorial takes about 10 minutes.&lt;/p&gt;
+        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a workflow that runs the functions against the resources on &lt;a href=&#34;https://circleci.com/&#34;&gt;CircleCI&lt;/a&gt; and merge it manually to your existing pipeline. This tutorial takes about 10 minutes.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
@@ -471,7 +471,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Fetch source files&lt;/span&gt;
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;example-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
@@ -578,7 +578,7 @@ git push --set-upstream origin master
       <description>
         
         
-        &lt;p&gt;In this tutorial, you will pull an example blueprint that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://tekton.dev/&#34;&gt;Tekton&lt;/a&gt; and modify it to make it fully functional. How to setting up Tekton is also included if you don&amp;rsquo;t have one running yet. This tutorial takes about 20 minutes.&lt;/p&gt;
+        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://tekton.dev/&#34;&gt;Tekton&lt;/a&gt; and modify it to make it fully functional. How to setting up Tekton is also included if you don&amp;rsquo;t have one running yet. This tutorial takes about 20 minutes.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;
@@ -604,7 +604,7 @@ git push --set-upstream origin master
 git init
 git remote add origin https://github.com/&amp;lt;USER&amp;gt;/&amp;lt;REPO&amp;gt;.git
 &lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Fetch source files&lt;/span&gt;
-kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export-blueprint example-package
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you will get an &lt;code&gt;example-package&lt;/code&gt; directory:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;resources/resources.yaml&lt;/code&gt;: declares a &lt;code&gt;Deployment&lt;/code&gt; and a &lt;code&gt;Namespace&lt;/code&gt;.&lt;/li&gt;
