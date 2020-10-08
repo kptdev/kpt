@@ -3,7 +3,7 @@ name: 💡 Feature Request
 about: Suggest an idea for kpt
 title: ""
 labels:
-  - kind/feature
+  - enhancement
   - size/M
 assignees: ""
 ---
