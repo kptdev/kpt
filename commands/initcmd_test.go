@@ -49,7 +49,7 @@ upstream:
     ref: master
 inventory:
     name: foo
-    namespace: bar
+    namespace: test-namespace
     inventoryID: SSSSSSSSSS-RRRRR
 `
 

@@ -22,6 +22,14 @@ import (
 
 const defaultInventoryName = "inventory"
 
+// InvExistsError defines new error when the inventory
+// values have already been set on the Kptfile.
+type InvExistsError struct{}
+
+func (i *InvExistsError) Error() string {
+	return invExistsError
+}
+
 var invExistsError = `ResourceGroup configuration has already been created. Changing
 them after a package has been applied to the cluster can lead to
 undesired results. Use the --force flag to suppress this error.
@@ -64,7 +72,6 @@ func (io *KptInitOptions) Run(args []string) error {
 		return err
 	}
 	io.namespace = strings.TrimSpace(ns)
-	fmt.Fprintf(io.ioStreams.Out, "namespace: %s is used for inventory object\n", io.namespace)
 	// Set the init options default inventory object name, if not set by flag.
 	if io.name == "" {
 		randomSuffix := common.RandomStr(time.Now().UTC().UnixNano())
@@ -116,7 +123,7 @@ func (io *KptInitOptions) updateKptfile() error {
 	// Validate the inventory values don't already exist
 	isEmpty := kptfileInventoryEmpty(kf.Inventory)
 	if !isEmpty && !io.force {
-		return fmt.Errorf(invExistsError)
+		return &InvExistsError{}
 	}
 	// Check the new inventory values are valid.
 	if err := io.validate(); err != nil {

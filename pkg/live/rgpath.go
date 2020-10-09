@@ -63,10 +63,11 @@ func generateInventoryObj(inv kptfile.Inventory) (*unstructured.Unstructured, er
 		return nil, fmt.Errorf("kptfile inventory missing inventoryID")
 	}
 	// Create and return ResourceGroup custom resource as inventory object.
+	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
 	var inventoryObj = &unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "kpt.dev/v1alpha1",
-			"kind":       "ResourceGroup",
+			"apiVersion": groupVersion,
+			"kind":       ResourceGroupGVK.Kind,
 			"metadata": map[string]interface{}{
 				"name":      name,
 				"namespace": namespace,
