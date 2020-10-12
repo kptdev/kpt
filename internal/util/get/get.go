@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -67,9 +68,14 @@ func (c Command) Run() error {
 	// define where we are going to clone the package from
 	r := &git.RepoSpec{OrgRepo: c.Repo, Path: c.Directory, Ref: c.Ref}
 
+	defaultRef, err := gitutil.DefaultRef(c.Repo)
+	if err != nil {
+		return err
+	}
+
 	// clone the repo to a tmp directory.
 	// delete the tmp directory later.
-	err := ClonerUsingGitExec(r)
+	err = ClonerUsingGitExec(r, defaultRef)
 	if err != nil {
 		return errors.Errorf("failed to clone git repo: %v", err)
 	}
@@ -103,7 +109,7 @@ type Cloner func(repoSpec *git.RepoSpec) error
 // ClonerUsingGitExec uses a local git install, as opposed
 // to say, some remote API, to obtain a local clone of
 // a remote repo.
-func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
+func ClonerUsingGitExec(repoSpec *git.RepoSpec, defaultRef string) error {
 	// look for a tag with the directory as a prefix for versioning
 	// subdirectories independently
 	originalRef := repoSpec.Ref
@@ -123,7 +129,7 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	if err != nil {
 		if strings.HasPrefix(repoSpec.Path, "blob/") {
 			return errors.Errorf("failed to clone git repo containing /blob/, "+
-				"you may need to remove /blob/master from the url:\n%v", err)
+				"you may need to remove /blob/%s from the url:\n%v", defaultRef, err)
 		}
 		return errors.Errorf("failed to clone git repo: %v", err)
 	}
@@ -165,7 +171,10 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 			repoSpec.CloneSpec())
 	}
 	if repoSpec.Ref == "" {
-		repoSpec.Ref = "master"
+		repoSpec.Ref, err = gitutil.DefaultRef(repoSpec.Dir)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = func() error {

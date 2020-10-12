@@ -32,10 +32,57 @@ import (
 // for remote repos.  Defaults to UserHomeDir/.kpt/repos if unspecified.
 const RepoCacheDirEnv = "KPT_CACHE_DIR"
 
+// DefaultRef returns the DefaultRef to "master" if master branch exists in
+// remote repository, falls back to "main" if master branch doesn't exist
+// Making it a var so that it can be overridden for local testing
+var DefaultRef = func(repo string) (string, error) {
+	masterRef := "master"
+	mainRef := "main"
+	masterExists, err := branchExists(repo, masterRef)
+	if err != nil {
+		return "", err
+	}
+	mainExists, err := branchExists(repo, mainRef)
+	if err != nil {
+		return "", err
+	}
+	if masterExists {
+		return masterRef, nil
+	} else if mainExists {
+		return mainRef, nil
+	}
+	return masterRef, nil
+}
+
+// BranchExists checks if branch is present in the input repo
+func branchExists(repo, branch string) (bool, error) {
+	gitProgram, err := exec.LookPath("git")
+	if err != nil {
+		return false, errors.Wrap(err)
+	}
+	stdOut := bytes.Buffer{}
+	stdErr := bytes.Buffer{}
+	cmd := exec.Command(gitProgram, "ls-remote", repo, branch)
+	cmd.Stderr = &stdErr
+	cmd.Stdout = &stdOut
+	err = cmd.Run()
+	if err != nil {
+		// stdErr contains the error message for os related errors, git permission errors
+		// and if repo doesn't exist
+		return false, errors.Errorf("failed to lookup master(or main) branch %v: %s", err, strings.TrimSpace(stdErr.String()))
+	}
+	// stdOut contains the branch information if the branch is present in remote repo
+	// stdOut is empty if the repo doesn't have the input branch
+	if strings.TrimSpace(stdOut.String()) != "" {
+		return true, nil
+	}
+	return false, nil
+}
+
 // NewUpstreamGitRunner returns a new GitRunner for an upstream package.
 //
 // The upstream package repo will be fetched to a local cache directory under $HOME/.kpt
-// and hard reset to origin/master.
+// and hard reset to origin/main.
 // The refs will also be fetched so they are available locally.
 func NewUpstreamGitRunner(uri, dir string, required []string, optional []string) (*GitRunner, error) {
 	g := &GitRunner{}
@@ -195,16 +242,21 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
 	}
 
+	defaultRef, err := DefaultRef(uri)
+	if err != nil {
+		return "", errors.Errorf("%v, please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
+	}
+
 	// reset the repo state
-	if err = gitRunner.Run("checkout", "master"); err != nil {
-		return "", errors.Errorf("failed to clone repo: trouble checking out master: %v, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
+	if err = gitRunner.Run("checkout", defaultRef); err != nil {
+		return "", errors.Errorf("failed to clone repo: trouble checking out %s: %v, "+
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", defaultRef, err)
 	}
 
 	// TODO: make this safe for concurrent operations
-	if err = gitRunner.Run("reset", "--hard", "origin/master"); err != nil {
-		return "", errors.Errorf("failed to clone repo: trouble reset to master: %v, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
+	if err = gitRunner.Run("reset", "--hard", "origin/"+defaultRef); err != nil {
+		return "", errors.Errorf("failed to clone repo: trouble reset to %s: %v, "+
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", defaultRef, err)
 	}
 	gitRunner.Dir = filepath.Join(repoCacheDir, dir)
 	return repoCacheDir, nil

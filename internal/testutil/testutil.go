@@ -267,9 +267,21 @@ func (g *TestGitRepo) CheckoutBranch(branch string, create bool) error {
 	// checkout the branch
 	cmd := exec.Command("git", args...)
 	cmd.Dir = g.RepoDirectory
-	stdoutStderr, err := cmd.CombinedOutput()
+	_, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s", stdoutStderr)
+		return err
+	}
+
+	return nil
+}
+
+// DeleteBranch deletes the git branch in the repo
+func (g *TestGitRepo) DeleteBranch(branch string) error {
+	// checkout the branch
+	cmd := exec.Command("git", []string{"branch", "-D", branch}...)
+	cmd.Dir = g.RepoDirectory
+	_, err := cmd.Output()
+	if err != nil {
 		return err
 	}
 
@@ -312,9 +324,8 @@ func (g *TestGitRepo) CopyAddData(data string) error {
 
 	cmd := exec.Command("git", "add", ".")
 	cmd.Dir = g.RepoDirectory
-	stdoutStderr, err := cmd.CombinedOutput()
+	_, err = cmd.CombinedOutput()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s", stdoutStderr)
 		return err
 	}
 
@@ -505,6 +516,15 @@ func SetupDefaultRepoAndWorkspace(t *testing.T) (*TestGitRepo, string, func()) {
 	if !assert.NoError(t, gr.Run("init")) {
 		assert.FailNowf(t, "%s %s", gr.Stdout.String(), gr.Stderr.String())
 	}
+
+	// make sure that both master and main branches are created in the test repo
+	// do not error if they already exist or
+	_ = g.CheckoutBranch("master", true)
+	_ = g.CheckoutBranch("main", true)
+
+	// checkout to master branch
+	err = g.CheckoutBranch("master", false)
+	assert.NoError(t, err)
 
 	return g, dir, func() {
 		// ignore cleanup failures

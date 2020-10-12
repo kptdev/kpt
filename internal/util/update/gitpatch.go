@@ -131,7 +131,11 @@ func (u *GitPatchUpdater) patchLocalPackage() error {
 			fmt.Fprintf(os.Stderr, "cleanup remote failed: %v\n", err)
 		}
 	}()
-	if err := g.Run("fetch", alphaGitPatchRemote, "master"); err != nil {
+	defaultRef, err := gitutil.DefaultRef(u.UpdateOptions.ToRepo)
+	if err != nil {
+		return err
+	}
+	if err := g.Run("fetch", alphaGitPatchRemote, defaultRef); err != nil {
 		return errors.Errorf("update failed: failure running git fetch %v: %s %s",
 			err, g.Stderr.String(), g.Stdout.String())
 	}

@@ -607,7 +607,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "trouble fetching") {
+	if !assert.Contains(t, err.Error(), "failed to lookup master(or main) branch") {
 		t.FailNow()
 	}
 }
