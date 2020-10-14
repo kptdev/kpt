@@ -61,7 +61,9 @@ type Inventory struct {
 	Namespace string `yaml:"namespace,omitempty"`
 	Name      string `yaml:"name,omitempty"`
 	// Unique label to identify inventory object in cluster.
-	InventoryID string `yaml:"inventoryID,omitempty"`
+	InventoryID string            `yaml:"inventoryID,omitempty"`
+	Labels      map[string]string `yaml:"labels,omitempty"`
+	Annotations map[string]string `yaml:"annotations,omitempty"`
 }
 
 type Functions struct {
