@@ -283,11 +283,6 @@
   </url>
   
   <url>
-    <loc>https://googlecontainertools.github.io/kpt/guides/producer/variant/</loc>
-    <lastmod>2020-07-16T12:34:28-07:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://googlecontainertools.github.io/kpt/guides/producer/bootstrap/</loc>
     <lastmod>2020-03-18T14:46:20-07:00</lastmod>
   </url>
