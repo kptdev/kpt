@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
@@ -45,21 +46,26 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	g.Ref = options.ToRef
 	g.Repo = options.ToRepo
 
+	defaultRef, err := gitutil.DefaultRef(g.Repo)
+	if err != nil {
+		return err
+	}
+
 	// get the original repo
 	original := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Commit}
-	if err := get.ClonerUsingGitExec(original); err != nil {
+	if err := get.ClonerUsingGitExec(original, defaultRef); err != nil {
 		return errors.Errorf("failed to clone git repo: original source: %v", err)
 	}
 	defer os.RemoveAll(original.AbsPath())
 
 	// get the updated repo
 	updated := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: options.ToRef}
-	if err := get.ClonerUsingGitExec(updated); err != nil {
+	if err := get.ClonerUsingGitExec(updated, defaultRef); err != nil {
 		return errors.Errorf("failed to clone git repo: updated source: %v", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
 
-	err := setters.PerformAutoSetters(updated.AbsPath())
+	err = setters.PerformAutoSetters(updated.AbsPath())
 	if err != nil {
 		return err
 	}

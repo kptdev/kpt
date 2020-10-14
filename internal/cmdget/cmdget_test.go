@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/spf13/cobra"
@@ -68,6 +69,56 @@ func TestCmd_execute(t *testing.T) {
 	})
 }
 
+// TestCmdMainBranch_execute tests that get is correctly invoked if default branch
+// is main and master branch doesn't exist
+func TestCmdMainBranch_execute(t *testing.T) {
+	// set up git repository with master and main branches
+	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	defer clean()
+	dest := filepath.Join(dir, g.RepoName)
+	err := g.CheckoutBranch("main", false)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	err = g.DeleteBranch("master")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	r := cmdget.NewRunner("kpt")
+	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
+	err = r.Command.Execute()
+
+	assert.NoError(t, err)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest)
+
+	commit, err := g.GetCommit()
+	assert.NoError(t, err)
+	g.AssertKptfile(t, dest, kptfile.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: g.RepoName,
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfile.TypeMeta.APIVersion,
+				Kind:       kptfile.TypeMeta.Kind},
+		},
+		PackageMeta: kptfile.PackageMeta{},
+		Upstream: kptfile.Upstream{
+			Type: "git",
+			Git: kptfile.Git{
+				Directory: "/",
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "main",
+				Commit:    commit, // verify the commit matches the repo
+			},
+		},
+	})
+
+}
+
 func TestCmd_stdin(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	if !assert.NoError(t, err) {
@@ -111,7 +162,7 @@ func TestCmd_fail(t *testing.T) {
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "failed to clone git repo: trouble fetching")
+	assert.Contains(t, err.Error(), "failed to lookup master(or main) branch")
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
@@ -131,6 +182,9 @@ func (t NoOpFailRunE) runE(cmd *cobra.Command, args []string) error {
 // TestCmd_Execute_flagAndArgParsing verifies that the flags and args are parsed into the correct Command fields
 func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	failRun := NoOpFailRunE{t: t}.runE
+	gitutil.DefaultRef = func(repo string) (string, error) {
+		return "master", nil
+	}
 
 	r := cmdget.NewRunner("kpt")
 	r.Command.SilenceErrors = true

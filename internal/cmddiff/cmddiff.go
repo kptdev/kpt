@@ -91,9 +91,6 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	} else {
 		r.DiffType = diff.DiffType(r.diffType)
 	}
-	if version == "" {
-		version = "master"
-	}
 
 	r.Path = dir
 	r.Ref = version

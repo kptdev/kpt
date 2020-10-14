@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -51,7 +52,11 @@ func GitParseArgs(args []string) (Target, error) {
 			dir = parts[1]
 		}
 		if version == "" {
-			version = "master"
+			defaultRef, err := gitutil.DefaultRef(repo)
+			if err != nil {
+				return g, err
+			}
+			version = defaultRef
 		}
 		if dir == "" {
 			dir = "/"
@@ -75,6 +80,14 @@ func GitParseArgs(args []string) (Target, error) {
 	if err != nil {
 		return g, err
 	}
+	if version == "" {
+		defaultRef, err := gitutil.DefaultRef(repo)
+		if err != nil {
+			return g, err
+		}
+		version = defaultRef
+	}
+
 	destination, err := getDest(args[1], repo, remoteDir)
 	if err != nil {
 		return g, err
@@ -96,7 +109,7 @@ func getURIAndVersion(v string) (string, string, error) {
 	}
 	pkgURI := strings.SplitN(v, "@", 2)
 	if len(pkgURI) == 1 {
-		return pkgURI[0], "master", nil
+		return pkgURI[0], "", nil
 	}
 	return pkgURI[0], pkgURI[1], nil
 }

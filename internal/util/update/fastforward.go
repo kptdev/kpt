@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
@@ -58,7 +59,11 @@ func errorIfChanged(g kptfile.Git, pkgPath string) error {
 		Path:    g.Directory,
 		Ref:     g.Commit,
 	}
-	err := get.ClonerUsingGitExec(original)
+	defaultRef, err := gitutil.DefaultRef(g.Repo)
+	if err != nil {
+		return err
+	}
+	err = get.ClonerUsingGitExec(original, defaultRef)
 	if err != nil {
 		return errors.Errorf("failed cloning git repo: %v", err)
 	}

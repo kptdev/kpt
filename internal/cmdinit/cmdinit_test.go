@@ -22,6 +22,8 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/stretchr/testify/assert"
 )
@@ -134,5 +136,61 @@ func TestCmd_failNotExists(t *testing.T) {
 	err = r.Command.Execute()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "does not exist")
+	}
+}
+
+func TestGitUtil_DefaultRef(t *testing.T) {
+	// set up git repo with both main and master branches
+	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	defer clean()
+
+	// check if master is picked as default if both main and master branches exist
+	defaultRef, err := gitutil.DefaultRef("file://" + g.RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "master", defaultRef) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "master", defaultRef) {
+		t.FailNow()
+	}
+
+	err = g.CheckoutBranch("main", false)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	// delete master branch and check if main is selected as default
+	err = g.DeleteBranch("master")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	defaultRef, err = gitutil.DefaultRef("file://" + g.RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "main", defaultRef) {
+		t.FailNow()
+	}
+
+	err = g.CheckoutBranch("master", true)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	// delete main branch and check if master is selected as default
+	err = g.DeleteBranch("main")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	defaultRef, err = gitutil.DefaultRef("file://" + g.RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.Equal(t, "master", defaultRef) {
+		t.FailNow()
 	}
 }

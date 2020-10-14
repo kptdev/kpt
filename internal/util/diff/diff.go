@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -131,6 +132,13 @@ func (c *Command) Run() error {
 	}()
 
 	var upstreamTargetPkg string
+
+	if c.Ref == "" {
+		c.Ref, err = gitutil.DefaultRef(kptFile.Upstream.Git.Repo)
+		if err != nil {
+			return err
+		}
+	}
 
 	if c.DiffType == DiffTypeRemote ||
 		c.DiffType == DiffTypeCombined ||
