@@ -4,6 +4,7 @@
 package live
 
 import (
+	"fmt"
 	"io"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -44,27 +45,41 @@ func (f *ResourceGroupProvider) ToRESTMapper() (meta.RESTMapper, error) {
 // ManifestReader returns the ResourceGroup inventory object version of
 // the ManifestReader.
 func (f *ResourceGroupProvider) ManifestReader(reader io.Reader, args []string) (manifestreader.ManifestReader, error) {
+	// Validate parameters.
+	if reader == nil && len(args) == 0 {
+		return nil, fmt.Errorf("unable to build ManifestReader without both reader or args")
+	}
+	if len(args) > 1 {
+		return nil, fmt.Errorf("expected one directory argument allowed; got (%s)", args)
+	}
+	// Create ReaderOptions for subsequent ManifestReader.
 	namespace, enforceNamespace, err := f.factory.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
 		return nil, err
 	}
-
 	readerOptions := manifestreader.ReaderOptions{
 		Factory:          f.factory,
 		Namespace:        namespace,
 		EnforceNamespace: enforceNamespace,
 	}
-
-	// TODO(seans3): Add Kptfile/ResourceGroup version of StreamManifestReader,
-	// when there are no args.
-
-	pathReader := &manifestreader.PathManifestReader{
-		Path:          args[0],
-		ReaderOptions: readerOptions,
+	// No arguments means stream (using reader), while one argument
+	// means path manifest reader.
+	var rgReader manifestreader.ManifestReader
+	if len(args) == 0 {
+		rgReader = &ResourceGroupStreamManifestReader{
+			streamReader: &manifestreader.StreamManifestReader{
+				ReaderName:    "stdin",
+				Reader:        reader,
+				ReaderOptions: readerOptions,
+			},
+		}
+	} else {
+		rgReader = &ResourceGroupPathManifestReader{
+			pathReader: &manifestreader.PathManifestReader{
+				Path:          args[0],
+				ReaderOptions: readerOptions,
+			},
+		}
 	}
-
-	mReader := &ResourceGroupPathManifestReader{
-		pathReader: pathReader,
-	}
-	return mReader, nil
+	return rgReader, nil
 }
