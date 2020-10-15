@@ -57,7 +57,7 @@ var testCases = []TestCase{
 		params:      []string{".", "--workflow", "github-actions"},
 		expected: `
 name: kpt
-on:
+"on":
     push:
         branches:
           - master
@@ -82,7 +82,7 @@ jobs:
 		},
 		expected: `
 name: kpt
-on:
+"on":
     push:
         branches:
           - master
@@ -104,7 +104,7 @@ jobs:
 		params: []string{".", "--fn-path", "function.yaml", "-w", "github-actions"},
 		expected: `
 name: kpt
-on:
+"on":
     push:
         branches:
           - master

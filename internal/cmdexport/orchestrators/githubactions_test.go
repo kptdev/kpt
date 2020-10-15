@@ -26,7 +26,7 @@ var githubActionsTestCases = []testCase{
 		},
 		expected: `
 name: kpt
-on:
+"on":
     push:
         branches:
           - master
@@ -48,7 +48,7 @@ jobs:
 		},
 		expected: `
 name: kpt
-on:
+"on":
     push:
         branches:
           - master
@@ -70,7 +70,7 @@ jobs:
 		},
 		expected: `
 name: kpt
-on:
+"on":
     push:
         branches:
           - master

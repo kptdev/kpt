@@ -12,10 +12,9 @@ require (
 	github.com/posener/complete/v2 v2.0.1-alpha.12
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
-	golang.org/x/crypto v0.0.0-20200221170553-0f24fbd83dfb // indirect
+	github.com/stretchr/testify v1.6.1
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.17.3
 	k8s.io/cli-runtime v0.17.3
@@ -24,7 +23,7 @@ require (
 	// Currently, we have to import the latest version of kubectl.
 	// Once there is a 0.18 release, we can import a semver release.
 	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
-	sigs.k8s.io/cli-utils v0.20.3-0.20200925182448-8e98b5a5ff43
-	sigs.k8s.io/kustomize/cmd/config v0.8.2-0.20200924195921-3a5951563dec
-	sigs.k8s.io/kustomize/kyaml v0.8.2-0.20200924195921-3a5951563dec
+	sigs.k8s.io/cli-utils v0.20.5
+	sigs.k8s.io/kustomize/cmd/config v0.8.3
+	sigs.k8s.io/kustomize/kyaml v0.9.2
 )
