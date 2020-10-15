@@ -40,7 +40,7 @@ func PrintErrorStacktrace(err error) {
 	e := os.Getenv(StackTraceOnErrors)
 	if StackOnError || e == trueString || e == "1" {
 		if err, ok := err.(*errors.Error); ok {
-			fmt.Fprint(os.Stderr, fmt.Sprintf("%s", err.Stack()))
+			fmt.Fprintf(os.Stderr, "%s", err.Stack())
 		}
 	}
 }

@@ -32,7 +32,7 @@ var tests = []testCase{
 	{
 		name: "starlarkFunctions",
 		inputs: map[string]string{
-			"Kptfile": fmt.Sprintf(`
+			"Kptfile": `
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -41,7 +41,7 @@ functions:
   starlarkFunctions:
   - name: func
     path: reconcile.star
-`),
+`,
 
 			"deploy.yaml": `
 apiVersion: apps/v1
@@ -90,7 +90,7 @@ spec:
 		name:   "starlarkFunctions-nested",
 		parent: "a",
 		inputs: map[string]string{
-			"Kptfile": fmt.Sprintf(`
+			"Kptfile": `
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -99,7 +99,7 @@ functions:
   starlarkFunctions:
   - name: func
     path: reconcile.star
-`),
+`,
 
 			"deploy.yaml": `
 apiVersion: apps/v1

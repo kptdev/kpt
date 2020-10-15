@@ -26,7 +26,7 @@ import (
 func AssertNoError(t *testing.T, err error, msgAndArgs ...interface{}) {
 	if !assert.NoError(t, err, msgAndArgs) {
 		if err, ok := err.(*errors.Error); ok {
-			fmt.Fprint(os.Stderr, fmt.Sprintf("%s", err.Stack()))
+			fmt.Fprintf(os.Stderr, "%s", err.Stack())
 		}
 		t.FailNow()
 	}
