@@ -309,7 +309,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
 			}
-			//defer g.Clean()
+			defer g.Clean()
 			if !g.Init() {
 				t.FailNow()
 			}

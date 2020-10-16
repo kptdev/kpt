@@ -33,7 +33,11 @@ func main() {
 		os.Exit(1)
 	}
 	input := Input{Version: os.Args[1]}
-	input.Sha = getSha(input.Version)
+	var err error
+	input.Sha, err = getSha(input.Version)
+	if err != nil {
+		os.Exit(1)
+	}
 
 	// generate the formula text
 	t, err := template.New("formula").Parse(formula)
@@ -56,12 +60,12 @@ func main() {
 	}
 }
 
-func getSha(version string) string {
+func getSha(version string) (string, error) {
 	// create the dir for the data
 	d, err := ioutil.TempDir("", "kpt-bin")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
+		return "", err
 	}
 	defer os.RemoveAll(d)
 
@@ -72,7 +76,7 @@ func getSha(version string) string {
 		"https://github.com/GoogleContainerTools/kpt/archive/" + version + ".tar.gz")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
+		return "", err
 	}
 	defer resp.Body.Close()
 
@@ -83,12 +87,12 @@ func getSha(version string) string {
 			fmt.Fprintf(os.Stderr, "%v", err)
 			os.Exit(1)
 		}
-		defer out.Close()
 
 		if _, err = io.Copy(out, resp.Body); err != nil {
 			fmt.Fprintf(os.Stderr, "%v", err)
 			os.Exit(1)
 		}
+		out.Close()
 	}()
 
 	// calculate the sha
@@ -96,11 +100,11 @@ func getSha(version string) string {
 	o, err := e.Output()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
+		return "", err
 	}
 	parts := strings.Split(string(o), " ")
 	fmt.Println("new sha: " + parts[0])
-	return parts[0]
+	return parts[0], nil
 }
 
 type Input struct {

@@ -57,7 +57,7 @@ license:
 	GOBIN=$(GOBIN) scripts/update-license.sh
 
 lint:
-	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.22.2)
+	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
 	$(GOBIN)/golangci-lint run ./...
 
 # TODO: enable this as part of `all` target when it works for go-errors
