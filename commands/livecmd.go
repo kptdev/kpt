@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/cli-utils/cmd/initcmd"
 	"sigs.k8s.io/cli-utils/cmd/preview"
 	"sigs.k8s.io/cli-utils/cmd/status"
+	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
 func GetLiveCommand(name string, f util.Factory) *cobra.Command {
@@ -53,18 +54,20 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 		ErrOut: os.Stderr,
 	}
 
+	provider := provider.NewProvider(f)
+
 	initCmd := initcmd.NewCmdInit(f, ioStreams)
 	initCmd.Short = livedocs.InitShort
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples
 
-	applyCmd := apply.ApplyCommand(f, ioStreams)
+	applyCmd := apply.GetApplyRunner(provider, ioStreams).Command
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
 	applyCmd.Example = livedocs.ApplyExamples
 
-	previewCmd := preview.PreviewCommand(f, ioStreams)
+	previewCmd := preview.GetPreviewRunner(provider, ioStreams).Command
 	previewCmd.Short = livedocs.PreviewShort
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
@@ -74,12 +77,12 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
 	diffCmd.Example = livedocs.DiffExamples
 
-	destroyCmd := destroy.DestroyCommand(f, ioStreams)
+	destroyCmd := destroy.GetDestroyRunner(provider, ioStreams).Command
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
 
-	statusCmd := status.StatusCommand(f)
+	statusCmd := status.GetStatusRunner(provider).Command
 	statusCmd.Short = livedocs.StatusShort
 	statusCmd.Long = livedocs.StatusLong
 	statusCmd.Example = livedocs.StatusExamples
