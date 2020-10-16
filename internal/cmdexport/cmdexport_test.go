@@ -353,7 +353,7 @@ func (t *TestCase) ReplaceDIRMacro() error {
 
 	var params []string
 	for _, param := range t.params {
-		param = strings.Replace(param, "{DIR}", cwd, -1)
+		param = strings.ReplaceAll(param, "{DIR}", cwd)
 
 		params = append(params, param)
 	}
