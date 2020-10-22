@@ -15,11 +15,14 @@
 package setters
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -91,6 +94,7 @@ func TestSetV2AutoSetter(t *testing.T) {
 		setterValue     string
 		dataset         string
 		expectedDataset string
+		expectedOut     string
 	}{
 		{
 			name:            "autoset-recurse-subpackages",
@@ -98,6 +102,12 @@ func TestSetV2AutoSetter(t *testing.T) {
 			setterName:      "gcloud.core.project",
 			setterValue:     "my-project",
 			expectedDataset: "dataset-with-autosetters-set",
+			expectedOut: `automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql" derived from gcloud config
+automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql" derived from gcloud config
+failed to set "gcloud.core.project" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.core.project" is not found
+automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql/storage" derived from gcloud config
+automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql/storage" derived from gcloud config
+`,
 		},
 	}
 	for i := range tests {
@@ -121,7 +131,8 @@ func TestSetV2AutoSetter(t *testing.T) {
 			GetProjectNumberFromProjectID = func(projectID string) (string, error) {
 				return "1234", nil
 			}
-			err = SetV2AutoSetter(test.setterName, test.setterValue, baseDir)
+			out := &bytes.Buffer{}
+			err = SetV2AutoSetter(test.setterName, test.setterValue, baseDir, out)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -130,6 +141,16 @@ func TestSetV2AutoSetter(t *testing.T) {
 				t.FailNow()
 			}
 			if !assert.Equal(t, 0, diff.Len()) {
+				t.FailNow()
+			}
+
+			// normalize path format for windows
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(out.String(), "\\", "/"),
+				"//", "/")
+			expectedOut := strings.ReplaceAll(test.expectedOut, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(expectedOut, "\\", "/")
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
 				t.FailNow()
 			}
 		})
@@ -142,6 +163,7 @@ func TestEnvironmentSetters(t *testing.T) {
 		envVariables    []string
 		dataset         string
 		expectedDataset string
+		expectedOut     string
 	}{
 		{
 			name:    "autoset-recurse-subpackages",
@@ -149,6 +171,13 @@ func TestEnvironmentSetters(t *testing.T) {
 			envVariables: []string{"KPT_SET_gcloud.core.project=my-project",
 				"KPT_SET_gcloud.project.projectNumber=1234"},
 			expectedDataset: "dataset-with-autosetters-set",
+			expectedOut: `automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql" derived from environment
+failed to set "gcloud.core.project" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.core.project" is not found
+automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql/storage" derived from environment
+automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql" derived from environment
+failed to set "gcloud.project.projectNumber" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.project.projectNumber" is not found
+automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql/storage" derived from environment
+`,
 		},
 	}
 	for i := range tests {
@@ -172,7 +201,12 @@ func TestEnvironmentSetters(t *testing.T) {
 			environmentVariables = func() []string {
 				return test.envVariables
 			}
-			err = SetEnvAutoSetters(baseDir)
+			out := &bytes.Buffer{}
+			a := AutoSet{
+				Writer:      out,
+				PackagePath: baseDir,
+			}
+			err = a.SetEnvAutoSetters()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -181,6 +215,425 @@ func TestEnvironmentSetters(t *testing.T) {
 				t.FailNow()
 			}
 			if !assert.Equal(t, 0, diff.Len()) {
+				t.FailNow()
+			}
+			// normalize path format for windows
+			actualNormalized := strings.ReplaceAll(
+				strings.ReplaceAll(out.String(), "\\", "/"),
+				"//", "/")
+			expectedOut := strings.ReplaceAll(test.expectedOut, "${baseDir}", baseDir)
+			expectedNormalized := strings.ReplaceAll(expectedOut, "\\", "/")
+			if !assert.Equal(t, expectedNormalized, actualNormalized) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestSetInheritedSetters(t *testing.T) {
+	var tests = []struct {
+		name                     string
+		parentPath               string
+		childPath                string
+		parentKptfile            string
+		childKptfile             string
+		childConfigFile          string
+		nestedKptfile            string
+		nestedConfigFile         string
+		expectedChildKptfile     string
+		expectedChildConfigFile  string
+		expectedNestedKptfile    string
+		expectedNestedConfigFile string
+		expectedOut              string
+	}{
+		{
+			name:       "autoset-inherited-setters",
+			parentPath: "${baseDir}/parentPath",
+			childPath:  "${baseDir}/parentPath/somedir/childPath",
+			parentKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: parent
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: parent_namespace
+          isSet: true`,
+			nestedConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}`,
+			nestedKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+`,
+			childConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}`,
+			childKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+`,
+			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: parent_namespace
+          isSet: true
+`,
+			expectedChildConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: parent_namespace # {"$openapi":"namespace"}
+`,
+			expectedOut: `automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
+automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${nestedPkg}" derived from parent "${childPkg}/Kptfile"
+`,
+		},
+		{
+			name:       "child-has-no-parent",
+			parentPath: "${baseDir}/parentPath",
+			childPath:  "${baseDir}/childPath",
+			parentKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: parent
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: parent_namespace`,
+			childConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}
+`,
+			childKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+`,
+			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+`,
+			expectedChildConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}
+`,
+		},
+		{
+			name:       "autoset-inherited-setters-error",
+			parentPath: "${baseDir}/parentPath",
+			childPath:  "${baseDir}/parentPath/somedir/childPath",
+			parentKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: parent
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: parent_namespace`,
+			childConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}
+`,
+			childKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      maxLength: 15
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+`,
+			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      maxLength: 15
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+`,
+			expectedChildConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}
+`,
+			expectedOut: `failed to set "namespace" automatically in package "${childPkg}" with error: ` +
+				`The input value doesn't validate against provided OpenAPI schema: validation failure list:
+namespace in body should be at most 15 chars long
+
+`,
+		},
+		{
+			name:       "skip-autoset-inherited-setters-already-set",
+			parentPath: "${baseDir}/parentPath",
+			childPath:  "${baseDir}/parentPath/somedir/childPath",
+			parentKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: parent
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: parent_namespace`,
+			childConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}`,
+			childKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+          isSet: true
+`,
+			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+          isSet: true
+`,
+			expectedChildConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}`,
+		},
+		{
+			name:       "inherit-defalut-values-from-parent",
+			parentPath: "${baseDir}/parentPath",
+			childPath:  "${baseDir}/parentPath/somedir/childPath",
+			parentKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: parent
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: parent_namespace`,
+			childConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$openapi":"namespace"}`,
+			childKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+`,
+			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: parent_namespace
+`,
+			expectedChildConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: parent_namespace # {"$openapi":"namespace"}
+`,
+			expectedOut: `automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
+`,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+			baseDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			defer os.RemoveAll(baseDir)
+			parentPkg := strings.ReplaceAll(test.parentPath, "${baseDir}", baseDir)
+			childPkg := strings.ReplaceAll(test.childPath, "${baseDir}", baseDir)
+			nestedPkg := strings.ReplaceAll(filepath.Join(test.childPath, "nested_pkg"), "${baseDir}", baseDir)
+			err = os.MkdirAll(parentPkg, 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = os.MkdirAll(nestedPkg, 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = ioutil.WriteFile(filepath.Join(parentPkg, "Kptfile"), []byte(test.parentKptfile), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = ioutil.WriteFile(filepath.Join(childPkg, "Kptfile"), []byte(test.childKptfile), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = ioutil.WriteFile(filepath.Join(childPkg, "deploy.yaml"), []byte(test.childConfigFile), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if test.nestedKptfile != "" {
+				err = ioutil.WriteFile(filepath.Join(nestedPkg, "Kptfile"), []byte(test.nestedKptfile), 0700)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				err = ioutil.WriteFile(filepath.Join(nestedPkg, "deploy.yaml"), []byte(test.nestedConfigFile), 0700)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+			}
+
+			out := &bytes.Buffer{}
+			a := AutoSet{
+				Writer:      out,
+				PackagePath: childPkg,
+			}
+
+			err = a.SetInheritedSetters()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualChildConfigFile, err := ioutil.ReadFile(filepath.Join(childPkg, "deploy.yaml"))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actualChildKptfile, err := ioutil.ReadFile(filepath.Join(childPkg, "Kptfile"))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t, test.expectedChildConfigFile, string(actualChildConfigFile)) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t, test.expectedChildKptfile, string(actualChildKptfile)) {
+				t.FailNow()
+			}
+
+			if test.nestedKptfile != "" {
+				actualNestedKptfile, err := ioutil.ReadFile(filepath.Join(nestedPkg, "Kptfile"))
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+
+				if !assert.Equal(t, test.expectedChildKptfile, string(actualNestedKptfile)) {
+					t.FailNow()
+				}
+
+				actualNestedConfigFile, err := ioutil.ReadFile(filepath.Join(nestedPkg, "deploy.yaml"))
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+
+				if !assert.Equal(t, test.expectedChildConfigFile, string(actualNestedConfigFile)) {
+					t.FailNow()
+				}
+			}
+
+			actualParentKptfile, err := ioutil.ReadFile(filepath.Join(parentPkg, "Kptfile"))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// parent package should not be modified
+			if !assert.Equal(t, test.parentKptfile, string(actualParentKptfile)) {
+				t.FailNow()
+			}
+
+			expectedOut := strings.ReplaceAll(test.expectedOut, "${childPkg}", childPkg)
+			expectedOut = strings.ReplaceAll(expectedOut, "${nestedPkg}", nestedPkg)
+			expectedOut = strings.ReplaceAll(expectedOut, "${parentPkgKptfile}", filepath.Join(parentPkg, kptfile.KptFileName))
+
+			if !assert.Equal(t, expectedOut, out.String()) {
 				t.FailNow()
 			}
 		})

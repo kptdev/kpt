@@ -83,5 +83,5 @@ func ConfigureOpenAPISchema(openAPISchema []byte) error {
 	// of where we got the Kubernetes openAPI schema.
 	// TODO: Refactor the openapi package in kyaml so we don't need to
 	// know the name of the kustomize asset here.
-	return openapi.AddSchema(kustomizationapi.MustAsset("openapi/kustomizationapi/swagger.json"))
+	return openapi.AddSchema(kustomizationapi.MustAsset("kustomizationapi/swagger.json"))
 }

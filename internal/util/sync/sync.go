@@ -88,7 +88,11 @@ func (c Command) Run() error {
 		}
 		path := filepath.Join(c.Dir, dep.Name)
 		if dep.AutoSet {
-			if err := setters.PerformAutoSetters(path); err != nil {
+			a := setters.AutoSet{
+				Writer:      c.StdOut,
+				PackagePath: path,
+			}
+			if err := a.PerformAutoSetters(); err != nil {
 				return err
 			}
 		}
@@ -183,6 +187,7 @@ func (c Command) update(dependency kptfile.Dependency, k *kptfile.KptFile) error
 		Repo:     dependency.Git.Repo,
 		Strategy: update.StrategyType(dependency.Strategy),
 		Verbose:  c.Verbose,
+		AutoSet:  dependency.AutoSet,
 	}.Run()
 }
 
