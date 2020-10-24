@@ -14,12 +14,12 @@ function tableByType(type) {
         }
         const source = `[Source](${r.source})`;
         let toolchain = ``;
-        if (r.toolchain === "../../../producer/functions/golang/") {
-          toolchain = `[Go Library](${r.toolchain})`;
-        } else if (r.toolchain === "../../../producer/functions/ts/") {
-          toolchain = `[Typescript SDK](${r.toolchain})`;
-        } else if (r.toolchain === "../../../producer/functions/starlark/") {
-          toolchain = `[Starlark Runtime](${r.toolchain})`;
+        if (r.toolchain === "golang") {
+          toolchain = "[Go Library](../../../../producer/functions/golang/)";
+        } else if (r.toolchain === "typescript") {
+          toolchain = "[Typescript SDK](../../../../producer/functions/ts/)";
+        } else if (r.toolchain === "starlark") {
+          toolchain = "[Starlark Runtime](../../../../producer/functions/starlark/)";
         }
         t.push([r.image, r.args, desc, example, source, toolchain]);
     });

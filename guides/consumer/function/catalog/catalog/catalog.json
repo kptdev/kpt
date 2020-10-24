@@ -12,7 +12,7 @@
     "description": "Reads a directory of Kubernetes configuration recursively.",
     "type": "source",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/cloud-builders/kubectl",
@@ -26,7 +26,7 @@
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/application-cr/image/main.go",
     "description": "Add an Application CR to a group of resources.",
     "type": "source",
-    "toolchain": "../../../producer/functions/golang/"
+    "toolchain": "golang"
   },
   {
     "image": "gcr.io/kpt-dev/kpt",
@@ -41,14 +41,14 @@
     "description": "Writes a directory of Kubernetes configuration. It maintains the original directory structure as read by source functions.",
     "type": "sink",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/kpt-functions/istioctl-analyze",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/istioctl_analyze.ts",
     "description": "Istioctl analyze is a diagnostic tool that can detect potential issues with Istio configuration and output errors to the results field.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/ts/",
+    "toolchain": "typescript",
     "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/istioctl-analyze/"
   },
   {
@@ -64,14 +64,14 @@
     "description": "Enforces a blacklist of subjects in RoleBinding objects.",
     "type": "validator",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/kpt-functions/kubeval",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/kubeval.ts",
     "description": "Validates configuration using kubeval.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/kustomize-functions/example-validator-kubeval",
@@ -79,14 +79,14 @@
     "description": "Validates that all containers have cpu and memory reservations set.",
     "type": "validator",
     "demo": true,
-    "toolchain": "../../../producer/functions/golang/"
+    "toolchain": "golang"
   },
   {
     "image": "gcr.io/kustomize-functions/example-validator",
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/validator-resource-requests/image/main.go",
     "description": "Validates Kubernetes configuration files using schemas from the Kubernetes OpenAPI spec.",
     "type": "validator",
-    "toolchain": "../../../producer/functions/golang/"
+    "toolchain": "golang"
   },
   {
     "image": "gcr.io/kpt-functions/suggest-psp",
@@ -94,7 +94,7 @@
     "description": "Lints PodSecurityPolicy by suggesting 'spec.allowPrivilegeEscalation' field be set to 'false'.",
     "type": "validator",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/kpt-functions/mutate-psp",
@@ -102,28 +102,28 @@
     "description": "Mutates PodSecurityPolicy objects by setting spec.allowPrivilegeEscalation to false.",
     "type": "transformer",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "N/A",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/starlark/set_namespace.star",
     "description": "Sets the namespace field of all configs passed in.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/starlark/"
+    "toolchain": "starlark"
   },
   {
     "image": "gcr.io/kpt-functions/set-namespace",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/go/set-namespace/main.go",
     "description": "Sets the namespace field of all configs passed in.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/golang/"
+    "toolchain": "golang"
   },
   {
     "image": "gcr.io/kubeflow-images-public/kustomize-fns/remove-namespace",
     "source": "https://github.com/kubeflow/kfctl/tree/master/kustomize-fns/remove-namespace/",
     "description": "Removes the namespace field of cluster-scoped configs.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/golang/"
+    "toolchain": "golang"
   },
   {
     "image": "gcr.io/kpt-functions/label-namespace",
@@ -131,14 +131,14 @@
     "description": "Adds a label to all Namespaces.",
     "type": "transformer",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/kpt-functions/helm-template",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/helm_template.ts",
     "description": "Render chart templates locally using helm template.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/ts/",
+    "toolchain": "typescript",
     "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/helm-template/"
   },
   {
@@ -146,7 +146,7 @@
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/injection-tshirt-sizes/image/main.go",
     "description": "Sets cpu and memory reservations on all containers for Resources annotated with tshirt size.",
     "type": "transformer",
-    "toolchain": "../../../producer/functions/golang/"
+    "toolchain": "golang"
   },
   {
     "image": "gcr.io/kpt-functions/annotate-config",
@@ -154,7 +154,7 @@
     "description": "Adds an annotation to all configs.",
     "type": "transformer",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/kpt-functions/expand-team-cr",
@@ -162,14 +162,14 @@
     "description": "Reads custom resources of type Team and generates multiple Namespace and RoleBinding objects.",
     "type": "generator",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   },
   {
     "image": "gcr.io/kpt-functions/helm-template",
     "source": "https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/ts/src/helm_template.ts",
     "description": "Render chart templates locally using helm template.",
     "type": "generator",
-    "toolchain": "../../../producer/functions/ts/",
+    "toolchain": "typescript",
     "example": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/examples/helm-template/"
   },
   {
@@ -177,7 +177,7 @@
     "source": "https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-go-nginx/image/main.go",
     "description": "Generate configuration from go templates using the functionConfig as the template input.",
     "type": "generator",
-    "toolchain": "../../../producer/functions/golang/"
+    "toolchain": "golang"
   },
   {
     "image": "gcr.io/kustomize-functions/example-cockroachdb",
@@ -191,6 +191,6 @@
     "description": "No Op function for testing purposes",
     "type": "misc",
     "demo": true,
-    "toolchain": "../../../producer/functions/ts/"
+    "toolchain": "typescript"
   }
 ]
