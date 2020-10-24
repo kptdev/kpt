@@ -15,18 +15,20 @@ Download pre-compiled binaries.
 | [macOS (x64)][darwin]
 | [Windows (x64)][windows]
 
-```sh
-# Download binaries using gsutil:
-# Linux (x64)
-gsutil cp gs://kpt-dev/latest/linux_amd64/kpt .
-# macOS (x64)
-gsutil cp gs://kpt-dev/latest/darwin_amd64/kpt .
-# Windows (x64)
-gsutil cp gs://kpt-dev/latest/windows_amd64/kpt.exe .
+For Linux/macOS, download binaries using `curl` alternatively:
 
-# For Linux/macOS
-chmod +x kpt
-sudo mv kpt /usr/local/bin/
+```sh
+# Linux (x64)
+curl -Lo kpt https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
+
+# macOS (x64)
+curl -Lo kpt https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
+```
+
+For Linux/macOS, make `kpt` executable and add it to your path:
+
+```sh
+chmod +x kpt && sudo mv kpt /usr/local/bin/
 ```
 
 **Note:** to run on **MacOS** the first time, it may be necessary to open the
