@@ -58,6 +58,25 @@ inventory:
   namespace: test-namespace
   name: inventory-obj-name
 `
+var kptFileWithAnnotations = `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: test1
+upstream:
+  type: git
+  git:
+    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
+    repo: git@github.com:seans3/blueprint-helloworld
+    directory: /
+    ref: master
+inventory:
+  namespace: test-namespace
+  name: inventory-obj-name
+  inventoryID: XXXXXXXXXX-FOOOOOO
+  annotations:
+    random-key: random-value
+`
 
 var podA = `
 apiVersion: v1
@@ -86,6 +105,7 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 	testCases := map[string]struct {
 		manifests map[string]string
 		numInfos  int
+		annotated bool
 		isError   bool
 	}{
 		"Kptfile missing inventory id is error": {
@@ -119,6 +139,16 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				"Kptfile":           kptFile,
 			},
 			numInfos: 2,
+			isError:  false,
+		},
+		"ResourceGroup inventory object created with annotation, multiple objects": {
+			manifests: map[string]string{
+				"Kptfile":           kptFileWithAnnotations,
+				"pod-a.yaml":        podA,
+				"deployment-a.yaml": deploymentA,
+			},
+			numInfos: 3,
+			annotated: true,
 			isError:  false,
 		},
 	}
@@ -170,6 +200,12 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 			actualID, err := getInventoryLabel(invInfo)
 			assert.NoError(t, err)
 			assert.Equal(t, inventoryID, actualID)
+			actualAnnotations := getInventoryAnnotations(invInfo)
+			if tc.annotated {
+				assert.Equal(t, map[string]string{"random-key": "random-value"}, actualAnnotations)
+			} else {
+			  assert.Equal(t, map[string]string(nil), actualAnnotations)
+			}
 		})
 	}
 }
@@ -189,4 +225,16 @@ func getInventoryLabel(inv *resource.Info) (string, error) {
 		return "", fmt.Errorf("inventory label does not exist for inventory object: %s", common.InventoryLabel)
 	}
 	return inventoryLabel, nil
+}
+
+func getInventoryAnnotations(inv *resource.Info) map[string]string {
+	obj := inv.Object
+	if obj == nil {
+		return nil
+	}
+	accessor, err := meta.Accessor(obj)
+	if err != nil {
+		return nil
+	}
+	return accessor.GetAnnotations()
 }

@@ -88,5 +88,5 @@ func transformKptfile(resource []byte) (*resource.Info, error) {
 	}
 	inv := kptFileTemplate.Inventory
 	klog.V(4).Infof("generating ResourceGroup inventory object %s/%s/%s", inv.Namespace, inv.Name, inv.InventoryID)
-	return generateInventoryObj(inv.Name, inv.Namespace, inv.InventoryID)
+	return generateInventoryObj(inv)
 }
