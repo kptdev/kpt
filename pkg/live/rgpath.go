@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/resource"
@@ -38,7 +39,7 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*resource.Info, error) {
 	}
 	inv := kf.Inventory
 	klog.V(4).Infof("generating ResourceGroup inventory object %s/%s/%s", inv.Namespace, inv.Name, inv.InventoryID)
-	invInfo, err := generateInventoryObj(inv.Name, inv.Namespace, inv.InventoryID)
+	invInfo, err := generateInventoryObj(inv)
 	if err != nil {
 		return []*resource.Info{}, err
 	}
@@ -48,22 +49,22 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*resource.Info, error) {
 
 // generateInventoryObj returns the ResourceGroupInventory object using the
 // passed information.
-func generateInventoryObj(name string, namespace string, id string) (*resource.Info, error) {
+func generateInventoryObj(inv kptfile.Inventory) (*resource.Info, error) {
 	// Validate the parameters
-	name = strings.TrimSpace(name)
+	name := strings.TrimSpace(inv.Name)
 	if name == "" {
 		return nil, fmt.Errorf("kptfile inventory empty name")
 	}
-	namespace = strings.TrimSpace(namespace)
+	namespace := strings.TrimSpace(inv.Namespace)
 	if namespace == "" {
 		return nil, fmt.Errorf("kptfile inventory empty namespace")
 	}
-	id = strings.TrimSpace(id)
+	id := strings.TrimSpace(inv.InventoryID)
 	if id == "" {
 		return nil, fmt.Errorf("kptfile inventory missing inventoryID")
 	}
 	// Create and return ResourceGroup custom resource as inventory object.
-	var inventoryObj = unstructured.Unstructured{
+	var inventoryObj = &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": "kpt.dev/v1alpha1",
 			"kind":       "ResourceGroup",
@@ -79,10 +80,17 @@ func generateInventoryObj(name string, namespace string, id string) (*resource.I
 			},
 		},
 	}
+	labels := inv.Labels
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+	labels[common.InventoryLabel] = id
+	inventoryObj.SetLabels(labels)
+	inventoryObj.SetAnnotations(inv.Annotations)
 	var invInfo = &resource.Info{
 		Namespace: namespace,
 		Name:      name,
-		Object:    &inventoryObj,
+		Object:    inventoryObj,
 	}
 	return invInfo, nil
 }
