@@ -14,7 +14,7 @@
 
 # Example ResourceGroup custom resource with references to
 # two ConfigMaps in the inventory.
-apiVersion: "configmanagement.gke.io/v1beta1"
+apiVersion: "kpt.dev/v1alpha1"
 kind: ResourceGroup
 metadata:
   namespace: default

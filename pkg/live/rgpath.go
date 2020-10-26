@@ -65,7 +65,7 @@ func generateInventoryObj(name string, namespace string, id string) (*resource.I
 	// Create and return ResourceGroup custom resource as inventory object.
 	var inventoryObj = unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "configmanagement.gke.io/v1beta1",
+			"apiVersion": "kpt.dev/v1alpha1",
 			"kind":       "ResourceGroup",
 			"metadata": map[string]interface{}{
 				"name":      name,
