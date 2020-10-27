@@ -51,7 +51,7 @@ We do this by keeping resources serialized as either JSON or YAML configuration.
   in kpt programs are explicitly triggered through invoking kpt (although this can be done by
   automation).
 
-Kpt provides a hybrid GitOps + resource-controller model.  It's architecture is designed to
+Kpt provides a hybrid GitOps + resource-controller model.  Its architecture is designed to
 enable **composing loosely coupled solutions** through reading and writing to a shared data model
 (e.g. resources, controllers, OpenAPI).
 
