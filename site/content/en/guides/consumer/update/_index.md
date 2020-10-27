@@ -77,6 +77,15 @@ in this guide.
 Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.
 
+### Initialize local Repository
+
+<!-- @InitRepo @verifyGuides-->
+```sh
+mkdir workspace
+cd workspace
+git init
+```
+
 ### Fetch Command
 
 <!-- @fetchPackage @verifyGuides-->
@@ -102,6 +111,14 @@ resolve the subdirectory version.
 `package-examples/helloworld-set/v0.3.0` if it exists, otherwise it is
 resolved to the tag `v0.3.0`.
 {{% /pageinfo %}}
+
+### Commit Local Repository 1st Version
+
+<!-- @commitLocalRepository @verifyGuides-->
+```sh
+git add .
+git commit -m "init"
+```
 
 ## Edit the contents
 
@@ -168,9 +185,8 @@ has uncommitted changes.
 
 <!-- @commitLocalChanges @verifyGuides-->
 ```sh
-git init
 git add .
-git commit -m "add helloworld package at v0.3.0"
+git commit -m "local package edits"
 ```
 
 ## Merge upstream changes
