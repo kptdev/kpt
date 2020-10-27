@@ -181,6 +181,20 @@ gcloud.compute.region
 gcloud.compute.zone
 ```
 
+#### Inherit Setter Values from Parent Package
+
+##### Notice: This is an experimental feature and is subjected to changes soon
+
+When a remote kpt package is fetched(/updated) into local directory, kpt searches 
+for its closest parent directory(if any) with a `Kptfile` in the file system and 
+auto-fills matching setters in the fetched(/updated) package with the setter values 
+from the parent package. Setters are matched based on setter names.
+
+e.g. If `mysql` package is fetched into the local directory tree of `wordpress` 
+package, and if both packages contain setter `namespace`, then the `namespace` 
+setter of `mysql` is automatically set to the value from `wordpress` package i.e.
+`mysql` inherits setter value from `wordpress` package.
+
 #### Invoking a Setter
 
 ```yaml
