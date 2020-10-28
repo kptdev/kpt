@@ -188,6 +188,7 @@ func warnIfSetterV1(pkgPath string) {
 	}
 	if len(l.SetterCounts) > 0 {
 		fmt.Println("Warning: This package is using older version of setters which " +
-			"will be deprecated soon, please use 'kpt pkg fix -h' for instructions about upgrading it")
+			"will be deprecated in v0.38.0(expected release date is 11/25/2020) version of kpt, please " +
+			"use 'kpt pkg fix -h' for instructions about upgrading it")
 	}
 }
