@@ -57,8 +57,13 @@ func (f *ResourceGroupProvider) ManifestReader(reader io.Reader, args []string) 
 	if err != nil {
 		return nil, err
 	}
+	mapper, err := f.factory.ToRESTMapper()
+	if err != nil {
+		return nil, err
+	}
+
 	readerOptions := manifestreader.ReaderOptions{
-		Factory:          f.factory,
+		Mapper:           mapper,
 		Namespace:        namespace,
 		EnforceNamespace: enforceNamespace,
 	}

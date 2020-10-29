@@ -20,7 +20,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/klog"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/object"
@@ -30,16 +29,16 @@ import (
 // the Inventory interface. This wrapper loads and stores the
 // object metadata (inventory) to and from the wrapped ResourceGroup.
 type InventoryResourceGroup struct {
-	inv      *resource.Info
+	inv      *unstructured.Unstructured
 	objMetas []object.ObjMetadata
 }
 
 // WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
 // wraps it with the InventoryResourceGroup and upcasts the wrapper as
 // an the Inventory interface.
-func WrapInventoryObj(info *resource.Info) inventory.Inventory {
+func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Inventory {
 	klog.V(4).Infof("wrapping inventory info")
-	return &InventoryResourceGroup{inv: info}
+	return &InventoryResourceGroup{inv: obj}
 }
 
 // Load is an Inventory interface function returning the set of
@@ -50,12 +49,7 @@ func (icm *InventoryResourceGroup) Load() ([]object.ObjMetadata, error) {
 		return objs, fmt.Errorf("inventory info is nil")
 	}
 	klog.V(4).Infof("loading inventory...")
-	inventoryObj, ok := icm.inv.Object.(*unstructured.Unstructured)
-	if !ok {
-		err := fmt.Errorf("inventory object is not an Unstructured: %#v", inventoryObj)
-		return objs, err
-	}
-	items, exists, err := unstructured.NestedSlice(inventoryObj.Object, "spec", "resources")
+	items, exists, err := unstructured.NestedSlice(icm.inv.Object, "spec", "resources")
 	if err != nil {
 		err := fmt.Errorf("error retrieving object metadata from inventory object")
 		return objs, err
@@ -107,20 +101,11 @@ func (icm *InventoryResourceGroup) Store(objMetas []object.ObjMetadata) error {
 
 // GetObject returns the wrapped object (ResourceGroup) as a resource.Info
 // or an error if one occurs.
-func (icm *InventoryResourceGroup) GetObject() (*resource.Info, error) {
+func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, error) {
 	if icm.inv == nil {
 		return nil, fmt.Errorf("inventory info is nil")
 	}
 	klog.V(4).Infof("getting inventory resource group")
-	// Verify the ResourceGroup is in Unstructured format.
-	obj := icm.inv.Object
-	if obj == nil {
-		return nil, fmt.Errorf("inventory info has nil Object")
-	}
-	iot, ok := obj.(*unstructured.Unstructured)
-	if !ok {
-		return nil, fmt.Errorf("inventory ResourceGroup is not in Unstructured format")
-	}
 	// Create a slice of Resources as empty Interface
 	klog.V(4).Infof("Creating list of %d resources", len(icm.objMetas))
 	var objs []interface{}
@@ -134,7 +119,7 @@ func (icm *InventoryResourceGroup) GetObject() (*resource.Info, error) {
 		})
 	}
 	// Create the inventory object by copying the template.
-	invCopy := iot.DeepCopy()
+	invCopy := icm.inv.DeepCopy()
 	// Adds the inventory ObjMetadata to the ResourceGroup "spec.resources" section
 	klog.V(4).Infof("storing inventory resources")
 	err := unstructured.SetNestedSlice(invCopy.UnstructuredContent(),
@@ -142,12 +127,5 @@ func (icm *InventoryResourceGroup) GetObject() (*resource.Info, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &resource.Info{
-		Client:    icm.inv.Client,
-		Mapping:   icm.inv.Mapping,
-		Source:    "generated",
-		Name:      invCopy.GetName(),
-		Namespace: invCopy.GetNamespace(),
-		Object:    invCopy,
-	}, nil
+	return invCopy, nil
 }

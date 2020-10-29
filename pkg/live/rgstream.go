@@ -9,7 +9,7 @@ import (
 	"io"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
-	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/klog"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -28,15 +28,15 @@ var ResourceSeparator = []byte("\n---\n")
 // and appends it to the rest of the standard StreamManifestReader
 // generated objects. Returns an error if one occurs. If the
 // ResourceGroup inventory object does not exist, it is NOT an error.
-func (p *ResourceGroupStreamManifestReader) Read() ([]*resource.Info, error) {
+func (p *ResourceGroupStreamManifestReader) Read() ([]*unstructured.Unstructured, error) {
 	var resourceBytes bytes.Buffer
 	_, err := io.Copy(&resourceBytes, p.streamReader.Reader)
 	if err != nil {
-		return []*resource.Info{}, err
+		return []*unstructured.Unstructured{}, err
 	}
 	// Split the bytes into resource configs, and if the resource
 	// config is a Kptfile, transform it into a ResourceGroup object.
-	var rgInfo *resource.Info
+	var rgInfo *unstructured.Unstructured
 	var filteredBytes bytes.Buffer
 	resources := bytes.Split(resourceBytes.Bytes(), ResourceSeparator)
 	for _, r := range resources {
@@ -44,12 +44,12 @@ func (p *ResourceGroupStreamManifestReader) Read() ([]*resource.Info, error) {
 			r = append(r, ResourceSeparator...)
 			_, err := filteredBytes.Write(r)
 			if err != nil {
-				return []*resource.Info{}, err
+				return []*unstructured.Unstructured{}, err
 			}
 		} else {
 			rgInfo, err = transformKptfile(r)
 			if err != nil {
-				return []*resource.Info{}, err
+				return []*unstructured.Unstructured{}, err
 			}
 		}
 	}
@@ -77,7 +77,7 @@ func isKptfile(resource []byte) bool {
 
 // transformKptfile transforms the passed kptfile resource config
 // into the ResourceGroup inventory object, or an error.
-func transformKptfile(resource []byte) (*resource.Info, error) {
+func transformKptfile(resource []byte) (*unstructured.Unstructured, error) {
 	d := yaml.NewDecoder(bytes.NewReader(resource))
 	d.KnownFields(true)
 	if err := d.Decode(&kptFileTemplate); err != nil {
