@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -104,7 +104,7 @@ spec:
 func TestInvGenPathManifestReader_Read(t *testing.T) {
 	testCases := map[string]struct {
 		manifests map[string]string
-		numInfos  int
+		numObjs   int
 		annotated bool
 		isError   bool
 	}{
@@ -113,16 +113,16 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				"Kptfile":    kptFileMissingID,
 				"pod-a.yaml": podA,
 			},
-			numInfos: 0,
-			isError:  true,
+			numObjs: 0,
+			isError: true,
 		},
 		"Basic ResourceGroup inventory object created": {
 			manifests: map[string]string{
 				"Kptfile":    kptFile,
 				"pod-a.yaml": podA,
 			},
-			numInfos: 2,
-			isError:  false,
+			numObjs: 2,
+			isError: false,
 		},
 		"ResourceGroup inventory object created, multiple objects": {
 			manifests: map[string]string{
@@ -130,16 +130,16 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numInfos: 3,
-			isError:  false,
+			numObjs: 3,
+			isError: false,
 		},
 		"ResourceGroup inventory object created, Kptfile last": {
 			manifests: map[string]string{
 				"deployment-a.yaml": deploymentA,
 				"Kptfile":           kptFile,
 			},
-			numInfos: 2,
-			isError:  false,
+			numObjs: 2,
+			isError: false,
 		},
 		"ResourceGroup inventory object created with annotation, multiple objects": {
 			manifests: map[string]string{
@@ -147,9 +147,9 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numInfos: 3,
+			numObjs:   3,
 			annotated: true,
-			isError:  false,
+			isError:   false,
 		},
 	}
 
@@ -157,6 +157,11 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
 			defer tf.Cleanup()
+
+			mapper, err := tf.ToRESTMapper()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
 			// Set up the yaml manifests (including Kptfile) in temp dir.
 			dir, err := ioutil.TempDir("", "path-reader-test")
@@ -172,7 +177,7 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 			pathReader := &manifestreader.PathManifestReader{
 				Path: dir,
 				ReaderOptions: manifestreader.ReaderOptions{
-					Factory:          tf,
+					Mapper:           mapper,
 					Namespace:        inventoryNamespace,
 					EnforceNamespace: false,
 				},
@@ -180,7 +185,7 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 			rgPathReader := &ResourceGroupPathManifestReader{
 				pathReader: pathReader,
 			}
-			readInfos, err := rgPathReader.Read()
+			readObjs, err := rgPathReader.Read()
 
 			// Validate the returned values are correct.
 			if tc.isError {
@@ -190,32 +195,28 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			assert.Equal(t, len(readInfos), tc.numInfos)
-			for _, info := range readInfos {
-				assert.Equal(t, inventoryNamespace, info.Namespace)
+			assert.Equal(t, len(readObjs), tc.numObjs)
+			for _, obj := range readObjs {
+				assert.Equal(t, inventoryNamespace, obj.GetNamespace())
 			}
-			invInfo, _, err := inventory.SplitInfos(readInfos)
+			invObj, _, err := inventory.SplitUnstructureds(readObjs)
 			assert.NoError(t, err)
-			assert.Equal(t, inventoryName, invInfo.Name)
-			actualID, err := getInventoryLabel(invInfo)
+			assert.Equal(t, inventoryName, invObj.GetName())
+			actualID, err := getInventoryLabel(invObj)
 			assert.NoError(t, err)
 			assert.Equal(t, inventoryID, actualID)
-			actualAnnotations := getInventoryAnnotations(invInfo)
+			actualAnnotations := getInventoryAnnotations(invObj)
 			if tc.annotated {
 				assert.Equal(t, map[string]string{"random-key": "random-value"}, actualAnnotations)
 			} else {
-			  assert.Equal(t, map[string]string(nil), actualAnnotations)
+				assert.Equal(t, map[string]string(nil), actualAnnotations)
 			}
 		})
 	}
 }
 
-func getInventoryLabel(inv *resource.Info) (string, error) {
-	obj := inv.Object
-	if obj == nil {
-		return "", fmt.Errorf("inventory object is nil")
-	}
-	accessor, err := meta.Accessor(obj)
+func getInventoryLabel(inv *unstructured.Unstructured) (string, error) {
+	accessor, err := meta.Accessor(inv)
 	if err != nil {
 		return "", err
 	}
@@ -227,12 +228,8 @@ func getInventoryLabel(inv *resource.Info) (string, error) {
 	return inventoryLabel, nil
 }
 
-func getInventoryAnnotations(inv *resource.Info) map[string]string {
-	obj := inv.Object
-	if obj == nil {
-		return nil
-	}
-	accessor, err := meta.Accessor(obj)
+func getInventoryAnnotations(inv *unstructured.Unstructured) map[string]string {
+	accessor, err := meta.Accessor(inv)
 	if err != nil {
 		return nil
 	}

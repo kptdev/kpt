@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 )
@@ -16,33 +16,33 @@ import (
 func TestResourceStreamManifestReader_Read(t *testing.T) {
 	testCases := map[string]struct {
 		manifests map[string]string
-		numInfos  int
+		numObjs   int
 	}{
 		"Kptfile only is valid": {
 			manifests: map[string]string{
 				"Kptfile": kptFile,
 			},
-			numInfos: 1,
+			numObjs: 1,
 		},
 		"Only a pod is valid": {
 			manifests: map[string]string{
 				"pod-a.yaml": podA,
 			},
-			numInfos: 1,
+			numObjs: 1,
 		},
 		"Multiple pods are valid": {
 			manifests: map[string]string{
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numInfos: 2,
+			numObjs: 2,
 		},
 		"Basic ResourceGroup inventory object created": {
 			manifests: map[string]string{
 				"Kptfile":    kptFile,
 				"pod-a.yaml": podA,
 			},
-			numInfos: 2,
+			numObjs: 2,
 		},
 		"ResourceGroup inventory object created, multiple objects": {
 			manifests: map[string]string{
@@ -50,14 +50,14 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numInfos: 3,
+			numObjs: 3,
 		},
 		"ResourceGroup inventory object created, Kptfile last": {
 			manifests: map[string]string{
 				"deployment-a.yaml": deploymentA,
 				"Kptfile":           kptFile,
 			},
-			numInfos: 2,
+			numObjs: 2,
 		},
 	}
 
@@ -65,6 +65,11 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
 			defer tf.Cleanup()
+
+			mapper, err := tf.ToRESTMapper()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
 			streamStr := ""
 			for _, manifestStr := range tc.manifests {
@@ -75,7 +80,7 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 				ReaderName: "rgstream",
 				Reader:     strings.NewReader(streamStr),
 				ReaderOptions: manifestreader.ReaderOptions{
-					Factory:          tf,
+					Mapper:           mapper,
 					Namespace:        inventoryNamespace,
 					EnforceNamespace: false,
 				},
@@ -83,16 +88,16 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 			rgStreamReader := &ResourceGroupStreamManifestReader{
 				streamReader: streamReader,
 			}
-			readInfos, err := rgStreamReader.Read()
+			readObjs, err := rgStreamReader.Read()
 			assert.NoError(t, err)
-			assert.Equal(t, tc.numInfos, len(readInfos))
-			for _, info := range readInfos {
-				assert.Equal(t, inventoryNamespace, info.Namespace)
+			assert.Equal(t, tc.numObjs, len(readObjs))
+			for _, obj := range readObjs {
+				assert.Equal(t, inventoryNamespace, obj.GetNamespace())
 			}
-			invInfo := findResourceGroupInventory(readInfos)
-			if invInfo != nil {
-				assert.Equal(t, inventoryName, invInfo.Name)
-				actualID, err := getInventoryLabel(invInfo)
+			invObj := findResourceGroupInventory(readObjs)
+			if invObj != nil {
+				assert.Equal(t, inventoryName, invObj.GetName())
+				actualID, err := getInventoryLabel(invObj)
 				assert.NoError(t, err)
 				assert.Equal(t, inventoryID, actualID)
 			}
@@ -213,7 +218,7 @@ metadata:
 
 // Returns the ResourceGroup inventory object from a slice
 // of objects, or nil if it does not exist.
-func findResourceGroupInventory(infos []*resource.Info) *resource.Info {
+func findResourceGroupInventory(infos []*unstructured.Unstructured) *unstructured.Unstructured {
 	for _, info := range infos {
 		invLabel, _ := getInventoryLabel(info)
 		if len(invLabel) != 0 {
