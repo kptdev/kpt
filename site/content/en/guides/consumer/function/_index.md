@@ -86,9 +86,9 @@ and sink will default to STDOUT.
 **Example:** This is equivalent to the preceding example
 
 ```sh
-kpt source . |
+kpt fn source . |
   kpt fn run --image gcr.io/kpt-functions/label-namespace -- label_name=color label_value=orange |
-  kpt sink .
+  kpt fn sink .
 ```
 
 The above example commands will:
