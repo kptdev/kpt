@@ -312,7 +312,7 @@ func (a AutoSet) SetInheritedSetters() error {
 			continue
 		}
 
-		if err := openapi.AddSchemaFromFile(parentKptfilePath); err != nil {
+		if err := openapi.DeleteSchemaInFile(parentKptfilePath); err != nil {
 			return err
 		}
 
@@ -324,6 +324,9 @@ func (a AutoSet) SetInheritedSetters() error {
 		// for each setter in target path, derive the setter values from parent package
 		// openAPI schema definitions and set them
 		for _, ref := range targetPkgRefs {
+			if err := openapi.AddSchemaFromFile(parentKptfilePath); err != nil {
+				return err
+			}
 			sch := openapi.Schema().Definitions[ref]
 			cliExt, err := setters2.GetExtFromSchema(&sch)
 			if cliExt == nil || cliExt.Setter == nil || err != nil {
@@ -336,6 +339,7 @@ func (a AutoSet) SetInheritedSetters() error {
 				// skip if the setter is already set on local
 				continue
 			}
+
 			fs := &settersutil.FieldSetter{
 				Name:            cliExt.Setter.Name,
 				Value:           cliExt.Setter.Value,
@@ -361,10 +365,9 @@ func (a AutoSet) SetInheritedSetters() error {
 					fmt.Fprintf(a.Writer, format, count, cliExt.Setter.Name, cliExt.Setter.ListValues, targetPath, parentKptfilePath)
 				}
 			}
-		}
-
-		if err := openapi.DeleteSchemaInFile(parentKptfilePath); err != nil {
-			return err
+			if err := openapi.DeleteSchemaInFile(parentKptfilePath); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

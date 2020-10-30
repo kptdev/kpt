@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
@@ -261,11 +262,17 @@ openAPI:
         setter:
           name: namespace
           value: parent_namespace
-          isSet: true`,
+          isSet: true
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: parent_name`,
 			nestedConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}
+  name: child_name # {"$kpt-set":"name"}`,
 			nestedKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -277,11 +284,17 @@ openAPI:
         setter:
           name: namespace
           value: child_namespace
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: child_name
 `,
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}
+  name: child_name # {"$kpt-set":"name"}`,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -293,6 +306,11 @@ openAPI:
         setter:
           name: namespace
           value: child_namespace
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: child_name
 `,
 			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
@@ -306,14 +324,22 @@ openAPI:
           name: namespace
           value: parent_namespace
           isSet: true
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: parent_name
 `,
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: parent_namespace # {"$openapi":"namespace"}
+  namespace: parent_namespace # {"$kpt-set":"namespace"}
+  name: parent_name # {"$kpt-set":"name"}
 `,
 			expectedOut: `automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
+automatically set 1 field(s) for setter "name" to value "parent_name" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
 automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${nestedPkg}" derived from parent "${childPkg}/Kptfile"
+automatically set 1 field(s) for setter "name" to value "parent_name" in package "${nestedPkg}" derived from parent "${childPkg}/Kptfile"
 `,
 		},
 		{
@@ -334,7 +360,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
@@ -363,7 +389,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 		},
 		{
@@ -384,7 +410,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
@@ -415,7 +441,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 			expectedOut: `failed to set "namespace" automatically in package "${childPkg}" with error: ` +
 				`The input value doesn't validate against provided OpenAPI schema: validation failure list:
@@ -441,7 +467,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -471,7 +497,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
 		},
 		{
 			name:       "inherit-defalut-values-from-parent",
@@ -491,7 +517,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -519,7 +545,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: parent_namespace # {"$openapi":"namespace"}
+  namespace: parent_namespace # {"$kpt-set":"namespace"}
 `,
 			expectedOut: `automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
 `,
@@ -527,6 +553,7 @@ metadata:
 	}
 	for i := range tests {
 		test := tests[i]
+		fieldmeta.SetShortHandRef("$kpt-set")
 		t.Run(test.name, func(t *testing.T) {
 			// reset the openAPI afterward
 			openapi.ResetOpenAPI()
