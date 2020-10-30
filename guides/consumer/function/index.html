@@ -1301,9 +1301,9 @@ This is used to parameterize the behavior of the function.</p>
 <p>If the package directory <code>.</code> is not specified, the source will default to STDIN
 and sink will default to STDOUT.</p>
 <p><strong>Example:</strong> This is equivalent to the preceding example</p>
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt <span style="color:#204a87">source</span> . <span style="color:#000;font-weight:bold">|</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn <span style="color:#204a87">source</span> . <span style="color:#000;font-weight:bold">|</span>
   kpt fn run --image gcr.io/kpt-functions/label-namespace -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange <span style="color:#000;font-weight:bold">|</span>
-  kpt sink .
+  kpt fn sink .
 </code></pre></div><p>The above example commands will:</p>
 <ul>
 <li>read all resources from the package directory <code>.</code> to generate input resources</li>
@@ -1479,7 +1479,7 @@ as input to the next</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 24, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9c94bd991e3064c96485f4791156220582cc7d67">Remove broken catalog link. (9c94bd99)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9d4eff59596aac595fb328ff3b18db0c966c2b93">Docs: Fix error in the example with kpt fn source|sink (#1165) (9d4eff59)</a>
 </div>
 </div>
 

@@ -1036,9 +1036,9 @@ This is used to parameterize the behavior of the function.&lt;/p&gt;
 &lt;p&gt;If the package directory &lt;code&gt;.&lt;/code&gt; is not specified, the source will default to STDIN
 and sink will default to STDOUT.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt; This is equivalent to the preceding example&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; . &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn &lt;span style=&#34;color:#204a87&#34;&gt;source&lt;/span&gt; . &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
   kpt fn run --image gcr.io/kpt-functions/label-namespace -- &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt;
-  kpt sink .
+  kpt fn sink .
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The above example commands will:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;read all resources from the package directory &lt;code&gt;.&lt;/code&gt; to generate input resources&lt;/li&gt;
