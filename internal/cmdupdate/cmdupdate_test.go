@@ -32,13 +32,13 @@ import (
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
-	dest := filepath.Join(dir, g.RepoName)
+	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
 	getCmd := cmdget.NewRunner("kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -46,7 +46,7 @@ func TestCmd_execute(t *testing.T) {
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
 		return
 	}
-	gitRunner := gitutil.NewLocalGitRunner(dir)
+	gitRunner := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, gitRunner.Run("add", ".")) {
 		return
 	}
@@ -64,7 +64,7 @@ func TestCmd_execute(t *testing.T) {
 
 	// update the cloned package
 	updateCmd := cmdupdate.NewRunner("kpt")
-	if !assert.NoError(t, os.Chdir(dir)) {
+	if !assert.NoError(t, os.Chdir(w.WorkspaceDirectory)) {
 		return
 	}
 	updateCmd.Command.SetArgs([]string{g.RepoName, "--strategy", "fast-forward"})
@@ -106,13 +106,13 @@ func TestCmd_execute(t *testing.T) {
 }
 
 func TestCmd_failUnCommitted(t *testing.T) {
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
-	dest := filepath.Join(dir, g.RepoName)
+	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
 	getCmd := cmdget.NewRunner("kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -132,7 +132,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 
 	// update the cloned package
 	updateCmd := cmdupdate.NewRunner("kpt")
-	if !assert.NoError(t, os.Chdir(dir)) {
+	if !assert.NoError(t, os.Chdir(w.WorkspaceDirectory)) {
 		return
 	}
 	updateCmd.Command.SetArgs([]string{g.RepoName})

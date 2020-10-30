@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	assertnow "gotest.tools/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -256,22 +257,7 @@ func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfile.Kp
 
 // CheckoutBranch checks out the git branch in the repo
 func (g *TestGitRepo) CheckoutBranch(branch string, create bool) error {
-	var args []string
-	if create {
-		args = []string{"checkout", "-b", branch}
-	} else {
-		args = []string{"checkout", branch}
-	}
-
-	// checkout the branch
-	cmd := exec.Command("git", args...)
-	cmd.Dir = g.RepoDirectory
-	_, err := cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return checkoutBranch(g.RepoDirectory, branch, create)
 }
 
 // DeleteBranch deletes the git branch in the repo
@@ -289,16 +275,10 @@ func (g *TestGitRepo) DeleteBranch(branch string) error {
 
 // Commit performs a git commit
 func (g *TestGitRepo) Commit(message string) error {
-	cmd := exec.Command("git", "commit", "-m", message)
-	cmd.Dir = g.RepoDirectory
-	stdoutStderr, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s", stdoutStderr)
-		return err
-	}
-	return nil
+	return commit(g.RepoDirectory, message)
 }
 
+// Commit performs a git commit
 func Commit(t *testing.T, g *TestGitRepo, message string) {
 	if !assert.NoError(t, g.Commit(message)) {
 		t.FailNow()
@@ -308,27 +288,6 @@ func Commit(t *testing.T, g *TestGitRepo, message string) {
 func CommitTag(t *testing.T, g *TestGitRepo, tag string) {
 	Commit(t, g, tag)
 	Tag(t, g, tag)
-}
-
-// CopyAddData copies data from a source and adds it
-func (g *TestGitRepo) CopyAddData(data string) error {
-	if !filepath.IsAbs(data) {
-		data = filepath.Join(g.DatasetDirectory, data)
-	}
-
-	err := copyutil.CopyDir(data, g.RepoDirectory)
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command("git", "add", ".")
-	cmd.Dir = g.RepoDirectory
-	_, err = cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func CopyData(t *testing.T, g *TestGitRepo, data, dest string) {
@@ -394,24 +353,7 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 		data = filepath.Join(g.DatasetDirectory, data)
 	}
 
-	// remove the old data
-	files, err := ioutil.ReadDir(g.RepoDirectory)
-	if err != nil {
-		return err
-	}
-	for i := range files {
-		f := files[i]
-		if f.IsDir() && f.Name() == ".git" {
-			continue
-		}
-		err := os.RemoveAll(filepath.Join(g.RepoDirectory, f.Name()))
-		if err != nil {
-			return err
-		}
-	}
-
-	// copy the new data
-	return g.CopyAddData(data)
+	return replaceData(g.RepoDirectory, data)
 }
 
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
@@ -439,8 +381,11 @@ func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 		return err
 	}
 
+	if !filepath.IsAbs(data) {
+		data = filepath.Join(g.DatasetDirectory, data)
+	}
 	// populate the repo with
-	err = g.CopyAddData(data)
+	err = copyAddData(dir, data)
 	if err != nil {
 		return err
 	}
@@ -468,16 +413,8 @@ func getTestUtilGoFilePath() (string, error) {
 }
 
 // Tag initializes tags the git repository
-func (g *TestGitRepo) Tag(tag string) error {
-	cmd := exec.Command("git", "tag", tag)
-	cmd.Dir = g.RepoDirectory
-	b, err := cmd.Output()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", b)
-		return err
-	}
-
-	return nil
+func (g *TestGitRepo) Tag(tagName string) error {
+	return tag(g.RepoDirectory, tagName)
 }
 
 func Tag(t *testing.T, g *TestGitRepo, tag string) {
@@ -499,16 +436,19 @@ func CopyKptfile(t *testing.T, src, dest string) {
 
 // SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
 // returns a cleanup function to remove the git repo and workspace.
-func SetupDefaultRepoAndWorkspace(t *testing.T) (*TestGitRepo, string, func()) {
+func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, *TestWorkspace, func()) {
 	// setup the repo to clone from
 	g := &TestGitRepo{}
-	err := g.SetupTestGitRepo(Dataset1)
+	err := g.SetupTestGitRepo(dataset)
 	assert.NoError(t, err)
 
 	// setup the directory to clone to
-	dir, err := ioutil.TempDir("", "test-kpt-local-")
+	w := &TestWorkspace{
+		PackageDir: g.RepoName,
+	}
+	err = w.SetupTestWorkspace()
 	assert.NoError(t, err)
-	err = os.Chdir(dir)
+	err = os.Chdir(w.WorkspaceDirectory)
 	assert.NoError(t, err)
 
 	gr := gitutil.NewLocalGitRunner("./")
@@ -525,9 +465,222 @@ func SetupDefaultRepoAndWorkspace(t *testing.T) (*TestGitRepo, string, func()) {
 	err = g.CheckoutBranch("master", false)
 	assert.NoError(t, err)
 
-	return g, dir, func() {
+	return g, w, func() {
 		// ignore cleanup failures
 		_ = g.RemoveAll()
-		_ = os.RemoveAll(dir)
+		_ = w.RemoveAll()
 	}
+}
+
+func checkoutBranch(repo string, branch string, create bool) error {
+	var args []string
+	if create {
+		args = []string{"checkout", "-b", branch}
+	} else {
+		args = []string{"checkout", branch}
+	}
+
+	// checkout the branch
+	cmd := exec.Command("git", args...)
+	cmd.Dir = repo
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func replaceData(repo, data string) error {
+	// Walk the data directory and copy over all files. We have special
+	// handling of the Kptfile to make sure we don't lose the Upstream data.
+	if err := filepath.Walk(data, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(data, path)
+		if err != nil {
+			return err
+		}
+
+		_, err = os.Stat(filepath.Join(repo, rel))
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		// If the file/directory doesn't exist in the repo folder, we just
+		// copy it over.
+		if os.IsNotExist(err) {
+			if info.IsDir() {
+				err := os.Mkdir(filepath.Join(repo, rel), 0700)
+				if err != nil {
+					return err
+				}
+			} else {
+				err := copyutil.SyncFile(path, filepath.Join(repo, rel))
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		// If it is a directory and we know it already exists, we don't need
+		// to do anything.
+		if info.IsDir() {
+			return nil
+		}
+
+		// For Kptfiles we need to keep the Upstream section even if we replace
+		// the file.
+		if filepath.Base(path) == "Kptfile" {
+			dataKptfile, err := kptfileutil.ReadFile(filepath.Dir(path))
+			if err != nil {
+				return err
+			}
+			repoKptfileDir := filepath.Dir(filepath.Join(repo, rel))
+			repoKptfile, err := kptfileutil.ReadFile(repoKptfileDir)
+			if err != nil {
+				return err
+			}
+			dataKptfile.Upstream = repoKptfile.Upstream
+			err = kptfileutil.WriteFile(repoKptfileDir, dataKptfile)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := copyutil.SyncFile(path, filepath.Join(repo, rel))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// We then walk the repo folder and remove and files/directories that
+	// exists in the repo, but doesn't exist in the data directory.
+	if err := filepath.Walk(repo, func(path string, info os.FileInfo, err error) error {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		// Find the relative path of the file/directory
+		rel, err := filepath.Rel(repo, path)
+		if err != nil {
+			return err
+		}
+		// We skip anything that is inside the .git folder
+		if strings.HasPrefix(rel, ".git") {
+			return nil
+		}
+
+		// Check if a file/directory exists at the path relative path within the
+		// data directory
+		dataCopy := filepath.Join(data, rel)
+		_, err = os.Stat(dataCopy)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		// If the file/directory doesn't exist in the data folder, we remove
+		// them from the repo folder.
+		if os.IsNotExist(err) {
+			if info.IsDir() {
+				if err := os.RemoveAll(path); err != nil {
+					return err
+				}
+			} else {
+				if err := os.Remove(path); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// Add the changes to git.
+	cmd := exec.Command("git", "add", ".")
+	cmd.Dir = repo
+	_, err := cmd.CombinedOutput()
+	return err
+}
+
+func copyAddData(repo string, data string) error {
+	err := copyutil.CopyDir(data, repo)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("git", "add", ".")
+	cmd.Dir = repo
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func commit(repo, message string) error {
+	cmd := exec.Command("git", "commit", "-m", message)
+	cmd.Dir = repo
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s", stdoutStderr)
+		return err
+	}
+	return nil
+}
+
+func tag(repo, tag string) error {
+	cmd := exec.Command("git", "tag", tag)
+	cmd.Dir = repo
+	b, err := cmd.Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", b)
+		return err
+	}
+
+	return nil
+}
+
+type TestWorkspace struct {
+	WorkspaceDirectory string
+	PackageDir         string
+}
+
+func (w *TestWorkspace) SetupTestWorkspace() error {
+	var err error
+	w.WorkspaceDirectory, err = ioutil.TempDir("", "test-kpt-local-")
+	return err
+}
+
+func (w *TestWorkspace) RemoveAll() error {
+	return os.RemoveAll(w.WorkspaceDirectory)
+}
+
+// CheckoutBranch checks out the git branch in the repo
+func (w *TestWorkspace) CheckoutBranch(branch string, create bool) error {
+	return checkoutBranch(w.WorkspaceDirectory, branch, create)
+}
+
+// ReplaceData replaces the data with a new source
+func (w *TestWorkspace) ReplaceData(data string) error {
+	return replaceData(filepath.Join(w.WorkspaceDirectory, w.PackageDir), data)
+}
+
+// Commit performs a git commit
+func (w *TestWorkspace) Commit(message string) error {
+	return commit(w.WorkspaceDirectory, message)
+}
+
+// Tag initializes tags the git repository
+func (w *TestWorkspace) Tag(tagName string) error {
+	return tag(w.WorkspaceDirectory, tagName)
 }
