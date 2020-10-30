@@ -75,10 +75,6 @@ vet:
 docker:
 	docker build .
 
-functions-examples-docker:
-	docker build . -f functions/examples/Dockerfile -t gcr.io/kpt-dev/example-functions:v0.1.0
-	docker push gcr.io/kpt-dev/example-functions:v0.1.0
-
 lintdocs:
 	(cd site && npm run lint-fix)
 
