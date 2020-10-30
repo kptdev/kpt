@@ -821,7 +821,12 @@ in this guide.&lt;/p&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
 &lt;p&gt;Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.&lt;/p&gt;
-&lt;h3 id=&#34;fetch-command&#34;&gt;Fetch Command&lt;/h3&gt;
+&lt;h3 id=&#34;initialize-local-repository&#34;&gt;Initialize local Repository&lt;/h3&gt;
+&lt;!-- @InitRepo @verifyGuides--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mkdir workspace
+&lt;span style=&#34;color:#204a87&#34;&gt;cd&lt;/span&gt; workspace
+git init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;fetch-command&#34;&gt;Fetch Command&lt;/h3&gt;
 &lt;!-- @fetchPackage @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;REPO&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get &lt;span style=&#34;color:#000&#34;&gt;$REPO&lt;/span&gt;/package-examples/helloworld-set@v0.3.0 helloworld
@@ -840,7 +845,11 @@ resolved to the tag &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;
 
 &lt;/div&gt;
 
-&lt;h2 id=&#34;edit-the-contents&#34;&gt;Edit the contents&lt;/h2&gt;
+&lt;h3 id=&#34;commit-local-repository-1st-version&#34;&gt;Commit Local Repository 1st Version&lt;/h3&gt;
+&lt;!-- @commitLocalRepository @verifyGuides--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git add .
+git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;init&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;edit-the-contents&#34;&gt;Edit the contents&lt;/h2&gt;
 &lt;p&gt;Edit the contents of the package by making changes to it.&lt;/p&gt;
 &lt;h3 id=&#34;old-local-configuration&#34;&gt;Old local configuration&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# helloworld/deploy.yaml (upstream)&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -877,9 +886,8 @@ has uncommitted changes.&lt;/p&gt;
 &lt;/div&gt;
 
 &lt;!-- @commitLocalChanges @verifyGuides--&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git init
-git add .
-git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;add helloworld package at v0.3.0&amp;#34;&lt;/span&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;git add .
+git commit -m &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;local package edits&amp;#34;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;merge-upstream-changes&#34;&gt;Merge upstream changes&lt;/h2&gt;
 &lt;p&gt;Package updates are performed by fetching the upstream package at the
 specified version and applying the upstream changes to the local package.&lt;/p&gt;

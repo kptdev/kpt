@@ -1186,8 +1186,10 @@ if (!doNotTrack) {
     <li><a href="#steps">Steps</a></li>
     <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
       <ul>
+        <li><a href="#initialize-local-repository">Initialize local Repository</a></li>
         <li><a href="#fetch-command">Fetch Command</a></li>
         <li><a href="#fetch-output">Fetch Output</a></li>
+        <li><a href="#commit-local-repository-1st-version">Commit Local Repository 1st Version</a></li>
       </ul>
     </li>
     <li><a href="#edit-the-contents">Edit the contents</a>
@@ -1318,7 +1320,12 @@ in this guide.</p>
 <h2 id="fetch-a-remote-package">Fetch a remote package</h2>
 <p>Packages can be fetched at specific versions defined by git tags, and have
 updated to later versions to merge in upstream changes.</p>
-<h3 id="fetch-command">Fetch Command</h3>
+<h3 id="initialize-local-repository">Initialize local Repository</h3>
+<!-- @InitRepo @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir workspace
+<span style="color:#204a87">cd</span> workspace
+git init
+</code></pre></div><h3 id="fetch-command">Fetch Command</h3>
 <!-- @fetchPackage @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#204a87">export</span> <span style="color:#000">REPO</span><span style="color:#ce5c00;font-weight:bold">=</span>https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get <span style="color:#000">$REPO</span>/package-examples/helloworld-set@v0.3.0 helloworld
@@ -1337,7 +1344,11 @@ resolved to the tag <code>v0.3.0</code>.</p>
 
 </div>
 
-<h2 id="edit-the-contents">Edit the contents</h2>
+<h3 id="commit-local-repository-1st-version">Commit Local Repository 1st Version</h3>
+<!-- @commitLocalRepository @verifyGuides-->
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add .
+git commit -m <span style="color:#4e9a06">&#34;init&#34;</span>
+</code></pre></div><h2 id="edit-the-contents">Edit the contents</h2>
 <p>Edit the contents of the package by making changes to it.</p>
 <h3 id="old-local-configuration">Old local configuration</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#8f5902;font-style:italic"># helloworld/deploy.yaml (upstream)</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1374,9 +1385,8 @@ has uncommitted changes.</p>
 </div>
 
 <!-- @commitLocalChanges @verifyGuides-->
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git init
-git add .
-git commit -m <span style="color:#4e9a06">&#34;add helloworld package at v0.3.0&#34;</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add .
+git commit -m <span style="color:#4e9a06">&#34;local package edits&#34;</span>
 </code></pre></div><h2 id="merge-upstream-changes">Merge upstream changes</h2>
 <p>Package updates are performed by fetching the upstream package at the
 specified version and applying the upstream changes to the local package.</p>
@@ -1547,7 +1557,7 @@ and local modifications (additional environment variable).</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a7418e75e2a02d8016ed1f1a2b331e1a60b87f7c">Turn consumer guides into executable tests (a7418e75)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/1a6a27a7b223c6b3757df4e5a532232da3758234">Docs: fixing an error when running kpt pkg update from outside local git repo (#1110) (1a6a27a7)</a>
 </div>
 </div>
 
