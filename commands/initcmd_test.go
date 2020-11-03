@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubernetes Authors.
+// Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
 package commands
