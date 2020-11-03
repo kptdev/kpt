@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubernetes Authors.
+// Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
 package live
@@ -36,7 +36,7 @@ func (p *ResourceGroupStreamManifestReader) Read() ([]*unstructured.Unstructured
 	}
 	// Split the bytes into resource configs, and if the resource
 	// config is a Kptfile, transform it into a ResourceGroup object.
-	var rgInfo *unstructured.Unstructured
+	var rgObj *unstructured.Unstructured
 	var filteredBytes bytes.Buffer
 	resources := bytes.Split(resourceBytes.Bytes(), ResourceSeparator)
 	for _, r := range resources {
@@ -47,20 +47,25 @@ func (p *ResourceGroupStreamManifestReader) Read() ([]*unstructured.Unstructured
 				return []*unstructured.Unstructured{}, err
 			}
 		} else {
-			rgInfo, err = transformKptfile(r)
-			if err != nil {
-				return []*unstructured.Unstructured{}, err
+			klog.V(4).Infoln("found Kptfile during stream Read()")
+			rgObj, err = transformKptfile(r)
+			if err == nil {
+				klog.V(4).Infof("created ResourceGroup inventory from Kptfile: %s/%s",
+					rgObj.GetNamespace(), rgObj.GetName())
+			} else {
+				klog.V(4).Infof("unable to create ResourceGroup inventory from Kptfile: %s", err)
 			}
 		}
 	}
-	// Reset the stream reader, and generate the infos. Append the
-	// ResourceGroup inventory info if it exists.
+	// Reset the stream reader, and generate the objs. Append the
+	// ResourceGroup inventory obj if it exists.
 	p.streamReader.Reader = bytes.NewReader(filteredBytes.Bytes())
-	infos, err := p.streamReader.Read()
-	if rgInfo != nil {
-		infos = append(infos, rgInfo)
+	objs, err := p.streamReader.Read()
+	if rgObj != nil {
+		objs = append(objs, rgObj)
+		klog.V(4).Infof("stream Read() generated %d resources", len(objs))
 	}
-	return infos, err
+	return objs, err
 }
 
 var kptFileTemplate = kptfile.KptFile{ResourceMeta: kptfile.TypeMeta}

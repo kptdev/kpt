@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubernetes Authors.
+// Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
 package live
@@ -103,26 +103,26 @@ spec:
 
 func TestInvGenPathManifestReader_Read(t *testing.T) {
 	testCases := map[string]struct {
-		manifests map[string]string
-		numObjs   int
-		annotated bool
-		isError   bool
+		manifests  map[string]string
+		numObjs    int
+		hasKptfile bool
+		annotated  bool
 	}{
-		"Kptfile missing inventory id is error": {
+		"Kptfile missing inventory id returns only Pod": {
 			manifests: map[string]string{
 				"Kptfile":    kptFileMissingID,
 				"pod-a.yaml": podA,
 			},
-			numObjs: 0,
-			isError: true,
+			numObjs:    1,
+			hasKptfile: false,
 		},
 		"Basic ResourceGroup inventory object created": {
 			manifests: map[string]string{
 				"Kptfile":    kptFile,
 				"pod-a.yaml": podA,
 			},
-			numObjs: 2,
-			isError: false,
+			numObjs:    2,
+			hasKptfile: true,
 		},
 		"ResourceGroup inventory object created, multiple objects": {
 			manifests: map[string]string{
@@ -130,16 +130,16 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numObjs: 3,
-			isError: false,
+			numObjs:    3,
+			hasKptfile: true,
 		},
 		"ResourceGroup inventory object created, Kptfile last": {
 			manifests: map[string]string{
 				"deployment-a.yaml": deploymentA,
 				"Kptfile":           kptFile,
 			},
-			numObjs: 2,
-			isError: false,
+			numObjs:    2,
+			hasKptfile: true,
 		},
 		"ResourceGroup inventory object created with annotation, multiple objects": {
 			manifests: map[string]string{
@@ -147,9 +147,9 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numObjs:   3,
-			annotated: true,
-			isError:   false,
+			numObjs:    3,
+			hasKptfile: true,
+			annotated:  true,
 		},
 	}
 
@@ -186,30 +186,24 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				pathReader: pathReader,
 			}
 			readObjs, err := rgPathReader.Read()
-
-			// Validate the returned values are correct.
-			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
-				return
-			}
 			assert.NoError(t, err)
 			assert.Equal(t, len(readObjs), tc.numObjs)
 			for _, obj := range readObjs {
 				assert.Equal(t, inventoryNamespace, obj.GetNamespace())
 			}
-			invObj, _, err := inventory.SplitUnstructureds(readObjs)
-			assert.NoError(t, err)
-			assert.Equal(t, inventoryName, invObj.GetName())
-			actualID, err := getInventoryLabel(invObj)
-			assert.NoError(t, err)
-			assert.Equal(t, inventoryID, actualID)
-			actualAnnotations := getInventoryAnnotations(invObj)
-			if tc.annotated {
-				assert.Equal(t, map[string]string{"random-key": "random-value"}, actualAnnotations)
-			} else {
-				assert.Equal(t, map[string]string(nil), actualAnnotations)
+			if tc.hasKptfile {
+				invObj, _, err := inventory.SplitUnstructureds(readObjs)
+				assert.NoError(t, err)
+				assert.Equal(t, inventoryName, invObj.GetName())
+				actualID, err := getInventoryLabel(invObj)
+				assert.NoError(t, err)
+				assert.Equal(t, inventoryID, actualID)
+				actualAnnotations := getInventoryAnnotations(invObj)
+				if tc.annotated {
+					assert.Equal(t, map[string]string{"random-key": "random-value"}, actualAnnotations)
+				} else {
+					assert.Equal(t, map[string]string(nil), actualAnnotations)
+				}
 			}
 		})
 	}
