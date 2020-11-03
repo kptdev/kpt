@@ -125,16 +125,10 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${BRANCH_NAME}', '.' ]
     dir: 'kpt'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/example-functions:${BRANCH_NAME}', '-f', 'functions/examples/Dockerfile', '.' ]
-    dir: 'kpt'
 
   # push the container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/kpt:${BRANCH_NAME}']
-    dir: 'kpt'
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/example-functions:${BRANCH_NAME}']
     dir: 'kpt'
 
   # push the binaries
