@@ -131,3 +131,60 @@ func TestLoadStore(t *testing.T) {
 		})
 	}
 }
+
+var cmInvObj = &unstructured.Unstructured{
+	Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      inventoryObjName,
+			"namespace": testNamespace,
+			"labels": map[string]interface{}{
+				common.InventoryLabel: testInventoryLabel,
+			},
+		},
+	},
+}
+
+func TestIsResourceGroupInventory(t *testing.T) {
+	tests := map[string]struct {
+		invObj   *unstructured.Unstructured
+		expected bool
+		isError  bool
+	}{
+		"Nil inventory is error": {
+			invObj:   nil,
+			expected: false,
+			isError:  true,
+		},
+		"ConfigMap inventory is false": {
+			invObj:   cmInvObj,
+			expected: false,
+			isError:  false,
+		},
+		"ResourceGroup inventory is false": {
+			invObj:   inventoryObj,
+			expected: true,
+			isError:  false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual, err := IsResourceGroupInventory(tc.invObj)
+			if tc.isError {
+				if err == nil {
+					t.Fatalf("expected error but received none")
+				}
+				return
+			}
+			if !tc.isError && err != nil {
+				t.Fatalf("unexpected error %v received", err)
+				return
+			}
+			if tc.expected != actual {
+				t.Errorf("expected inventory as (%t), got (%t)", tc.expected, actual)
+			}
+		})
+	}
+}

@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubernetes Authors.
+// Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
 package commands
@@ -49,7 +49,7 @@ upstream:
     ref: master
 inventory:
     name: foo
-    namespace: bar
+    namespace: test-namespace
     inventoryID: SSSSSSSSSS-RRRRR
 `
 

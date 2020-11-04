@@ -25,6 +25,14 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
+// ResourceGroupGVK is the group/version/kind of the custom
+// resource used to store inventory.
+var ResourceGroupGVK = schema.GroupVersionKind{
+	Group:   "kpt.dev",
+	Version: "v1alpha1",
+	Kind:    "ResourceGroup",
+}
+
 // InventoryResourceGroup wraps a ResourceGroup resource and implements
 // the Inventory interface. This wrapper loads and stores the
 // object metadata (inventory) to and from the wrapped ResourceGroup.
@@ -128,4 +136,21 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 		return nil, err
 	}
 	return invCopy, nil
+}
+
+// IsResourceGroupInventory returns true if the passed object is
+// a ResourceGroup inventory object; false otherwise. If an error
+// occurs, then false is returned and the error.
+func IsResourceGroupInventory(obj *unstructured.Unstructured) (bool, error) {
+	if obj == nil {
+		return false, fmt.Errorf("inventory object is nil")
+	}
+	if !inventory.IsInventoryObject(obj) {
+		return false, nil
+	}
+	invGK := obj.GetObjectKind().GroupVersionKind().GroupKind()
+	if ResourceGroupGVK.GroupKind() != invGK {
+		return false, nil
+	}
+	return true, nil
 }
