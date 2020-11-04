@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubernetes Authors.
+// Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
 package live
@@ -23,27 +23,32 @@ type ResourceGroupPathManifestReader struct {
 
 // Read reads the manifests and returns them as Info objects.
 // Generates and adds a ResourceGroup inventory object from
-// Kptfile data.
+// Kptfile data. If unable to generate the ResourceGroup inventory
+// object from the Kptfile, it is NOT an error.
 func (p *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, error) {
 	// Using the default path reader to generate the objects.
-	infos, err := p.pathReader.Read()
+	objs, err := p.pathReader.Read()
 	if err != nil {
 		return []*unstructured.Unstructured{}, err
 	}
 	// Read the Kptfile in the top directory to get the inventory
 	// parameters to create the ResourceGroup inventory object.
 	kf, err := kptfileutil.ReadFile(p.pathReader.Path)
-	if err != nil {
-		return []*unstructured.Unstructured{}, err
+	if err == nil {
+		inv := kf.Inventory
+		klog.V(4).Infof("from Kptfile generating ResourceGroup inventory object %s/%s/%s",
+			inv.Namespace, inv.Name, inv.InventoryID)
+		invObj, err := generateInventoryObj(inv)
+		if err == nil {
+			objs = append(objs, invObj)
+		} else {
+			klog.V(4).Infof("unable to generate ResourceGroup inventory: %s", err)
+		}
+	} else {
+		klog.V(4).Infof("unable to parse Kpfile for ResourceGroup inventory: %s", err)
 	}
-	inv := kf.Inventory
-	klog.V(4).Infof("generating ResourceGroup inventory object %s/%s/%s", inv.Namespace, inv.Name, inv.InventoryID)
-	invInfo, err := generateInventoryObj(inv)
-	if err != nil {
-		return []*unstructured.Unstructured{}, err
-	}
-	infos = append(infos, invInfo)
-	return infos, nil
+	klog.V(4).Infof("path Read() generated %d resources", len(objs))
+	return objs, nil
 }
 
 // generateInventoryObj returns the ResourceGroupInventory object using the
