@@ -18,7 +18,7 @@
 
 <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
 
-<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/concepts/api-conventions/index.xml">
+<link rel="alternate" type="application/rss&#43;xml" href="https://googlecontainertools.github.io/kpt/concepts/setters/index.xml">
 
 
 <link rel="shortcut icon" href="/favicons/favicon.ico" >
@@ -32,18 +32,18 @@
 <link rel="icon" type="image/png" href="/kpt/favicons/android-144x144.png" sizes="144x144">
 <link rel="icon" type="image/png" href="/kpt/favicons/android-192x192.png" sizes="192x192">
 
-<title>API Conventions | Kpt</title><meta property="og:title" content="API Conventions" />
-<meta property="og:description" content="Kpt API Conventions
+<title>Setters | Kpt</title><meta property="og:title" content="Setters" />
+<meta property="og:description" content="Setters and related concepts
 " />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://googlecontainertools.github.io/kpt/concepts/api-conventions/" />
+<meta property="og:url" content="https://googlecontainertools.github.io/kpt/concepts/setters/" />
 <meta property="og:site_name" content="Kpt" />
-<meta itemprop="name" content="API Conventions">
-<meta itemprop="description" content="Kpt API Conventions
+<meta itemprop="name" content="Setters">
+<meta itemprop="description" content="Setters and related concepts
 ">
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="API Conventions"/>
-<meta name="twitter:description" content="Kpt API Conventions
+<meta name="twitter:title" content="Setters"/>
+<meta name="twitter:description" content="Setters and related concepts
 "/>
 
 
@@ -76,7 +76,7 @@ if (!doNotTrack) {
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
 
-    <title>API Conventions | Kpt</title>
+    <title>Setters | Kpt</title>
   </head>
   <body class="td-section">
     <header>
@@ -231,10 +231,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/concepts/api-conventions/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">API Conventions</a>
+    <a  href="/kpt/concepts/api-conventions/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">API Conventions</a>
   </li>
   <ul>
-    <li class="collapse show" id="kptconceptsapi-conventions">
+    <li class="collapse " id="kptconceptsapi-conventions">
       
       
       
@@ -300,10 +300,10 @@ if (!doNotTrack) {
 
 <ul class="td-sidebar-nav__section pr-md-3">
   <li class="td-sidebar-nav__section-title">
-    <a  href="/kpt/concepts/setters/" class="align-left pl-0 pr-2 collapsed td-sidebar-link td-sidebar-link__section">Setters</a>
+    <a  href="/kpt/concepts/setters/" class="align-left pl-0 pr-2 active td-sidebar-link td-sidebar-link__section">Setters</a>
   </li>
   <ul>
-    <li class="collapse " id="kptconceptssetters">
+    <li class="collapse show" id="kptconceptssetters">
       
       
       
@@ -338,8 +338,8 @@ if (!doNotTrack) {
 
 
 
-<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/concepts/api-conventions/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
-<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=API%20Conventions" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
+<a href="https://github.com/GoogleContainerTools/kpt/edit/master/site/content/en/concepts/setters/_index.md" target="_blank"><i class="fa fa-edit fa-fw"></i> Edit this page</a>
+<a href="https://github.com/GoogleContainerTools/kpt/issues/new?title=Setters" target="_blank"><i class="fab fa-github fa-fw"></i> Create documentation issue</a>
 
 
 <a href="https://github.com/GoogleContainerTools/kpt/issues/new" target="_blank"><i class="fas fa-tasks fa-fw"></i> Create project issue</a>
@@ -350,25 +350,6 @@ if (!doNotTrack) {
 
 
 
-
-<nav id="TableOfContents">
-  <ul>
-    <li><a href="#cli-conventions">CLI Conventions</a>
-      <ul>
-        <li><a href="#command-io-conventions">Command IO Conventions</a></li>
-        <li><a href="#arguments-subcommands-and-flags">Arguments, subcommands and flags</a></li>
-        <li><a href="#documentation">Documentation</a></li>
-      </ul>
-    </li>
-    <li><a href="#resource-annotations">Resource Annotations</a>
-      <ul>
-        <li><a href="#resource-io-annotations">Resource IO Annotations</a></li>
-        <li><a href="#functions-annotations">Functions Annotations</a></li>
-      </ul>
-    </li>
-    <li><a href="#next-steps">Next Steps</a></li>
-  </ul>
-</nav>
 
 
 
@@ -395,7 +376,7 @@ if (!doNotTrack) {
 
 
 <li class="breadcrumb-item active" aria-current="page">
-	<a href="https://googlecontainertools.github.io/kpt/concepts/api-conventions/">API Conventions</a>
+	<a href="https://googlecontainertools.github.io/kpt/concepts/setters/">Setters</a>
 </li>
 
 	</ol>
@@ -403,84 +384,57 @@ if (!doNotTrack) {
 
             
 <div class="td-content">
-	<h1>API Conventions</h1>
-	<div class="lead">Kpt API Conventions</div>
-	<h2 id="cli-conventions">CLI Conventions</h2>
-<p>Following are the CLI conventions used for building kpt.  This is a living document that should
-be iterated upon.</p>
-<h3 id="command-io-conventions">Command IO Conventions</h3>
-<ul>
-<li>Commands that read resources should be able to read them from files, directories or stdin
-<ul>
-<li>It should be possible to pipe <code>kubectl get -o yaml</code> to the input of these commands</li>
-</ul>
-</li>
-<li>Commands that write resources should be able to write them to files, directories or stdout
-<ul>
-<li>It should be possible to pipe the output of these commands to <code>kubectl apply -f -</code></li>
-</ul>
-</li>
-<li>It should be possible to compose commands by piping them together
-<ul>
-<li>Metadata (such as which file a resource was read from) may need to be persisted to the
-resources (e.g. as annotations) or as part of the output format (e.g. ResourceList) so
-this state isn&rsquo;t lost between piped commands.</li>
-<li>e.g. it should be possible to read resources from one command, and pipe them to another command
-which will write them back to files.</li>
-</ul>
-</li>
-</ul>
-<h3 id="arguments-subcommands-and-flags">Arguments, subcommands and flags</h3>
-<ul>
-<li>Directories and files should be arguments
-<ul>
-<li>e.g. <code>kpt live apply DIR/</code> vs <code>kubectl apply -f DIR/</code></li>
-<li>This makes it easier to compose with tools such as <code>find</code> and <code>xargs</code></li>
-</ul>
-</li>
-<li>Subcommands commands should be used in favor of mutually exclusive or complex flags
-<ul>
-<li>e.g. <code>kubectl create cronjob --schedule=X</code> vs <code>kubectl run --generator=cronjob --schedule=X</code></li>
-<li>This simplifies the documentation (subcommands support more documentation options than flags do)</li>
-</ul>
-</li>
-<li>Features which are alpha should be guarded behind flags and documented as alpha in the command
-help or flag help.</li>
-</ul>
-<h3 id="documentation">Documentation</h3>
-<p>Documentation should be compiled into the command help itself.</p>
-<ul>
-<li>Reference documentation should be built into the help for each command</li>
-<li>Guides and concept docs should be built into their own &ldquo;help&rdquo; commands</li>
-<li>Reference documentation should have asciinema-style &ldquo;images&rdquo; that demonstrate
-how the commands are used.</li>
-</ul>
-<h2 id="resource-annotations">Resource Annotations</h2>
-<p>kpt uses the following annotations to store resource metadata.</p>
-<h3 id="resource-io-annotations">Resource IO Annotations</h3>
-<h4 id="configkubernetesiopath">config.kubernetes.io/path</h4>
-<p><code>config.kubernetes.io/path</code> stores the file path that the resource was read from.</p>
-<ul>
-<li>When reading resources, if reading from a directory kpt should annotate each resource with the path of the file it was read from</li>
-<li>When writing resources, if writing to a directory kpt should read the annotation and write each to the file matching the path</li>
-</ul>
-<h4 id="configkubernetesioindex">config.kubernetes.io/index</h4>
-<p><code>config.kubernetes.io/index</code> stores the index into the file that the resource was read from.</p>
-<ul>
-<li>When reading resources, if reading from a file kpt should annotate the resource with the index into the file</li>
-<li>When writing resources, if writing to a file kpt should write the resources in order specified by the indexes</li>
-</ul>
-<h3 id="functions-annotations">Functions Annotations</h3>
-<h4 id="configkubernetesiofunction">config.kubernetes.io/function</h4>
-<p><code>config.kubernetes.io/function</code> indicates that the resource may be provided to the specified function
-as the ResourceList.functionConfig.</p>
-<h2 id="next-steps">Next Steps</h2>
-<ul>
-<li>See the <a href="https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/config-io.md">Configuration IO API Semantics</a> for when to use resource annotations.</li>
-<li>Learn more about <a href="../functions/">functions concepts</a>.</li>
-<li>Consult the <a href="../../faq/">FAQ</a> for answers to common questions.</li>
-</ul>
-
+	<h1>Setters</h1>
+	<div class="lead">Setters and related concepts</div>
+	<h2 id="setters">Setters</h2>
+<p>Setters provide a solution for template-free setting or substitution of field
+values through package metadata (OpenAPI). They are a safer alternative to other
+substitution techniques which do not have the context of the structured data
+– e.g. using <code>sed</code> to replace values.</p>
+<p>The OpenAPI definitions for setters are defined in a Kptfile and referenced by a
+fields through comments on the fields.</p>
+<p>Setters may be invoked to modify the configuration using <code>kpt cfg set</code>
+to set and/or substitute values.</p>
+<h3 id="auto-setters">Auto setters</h3>
+<p>The values of few setters are auto-filled when the package is fetched(/updated).
+Package consumers need not invoke <code>kpt cfg set</code> on them explicitly.</p>
+<h4 id="gcloud-configs">gcloud configs</h4>
+<p>This category of auto-setters derive the values from the output of <code>gcloud config list</code>
+command. Following are the names of supported <code>gcloud</code> auto-setters:</p>
+<pre><code>gcloud.core.project
+gcloud.project.projectNumber
+gcloud.compute.region
+gcloud.compute.zone
+</code></pre><h4 id="inherit-setter-values-from-parent-package">Inherit Setter Values from Parent Package</h4>
+<h5 id="notice-this-is-an-experimental-feature-and-is-subjected-to-changes-soon">Notice: This is an experimental feature and is subjected to changes soon</h5>
+<p>When a remote kpt package is fetched(/updated) into local directory, kpt searches
+for its closest parent directory(if any) with a <code>Kptfile</code> in the file system and
+auto-fills matching setters in the fetched(/updated) package with the setter values
+from the parent package. Setters are matched based on setter names.</p>
+<p>e.g. Consider an example of <code>wordpress</code> package on local</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress
+├── Kptfile
+└── deployment.yaml
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ kpt cfg list-setters wordpress/
+wordpress/
+   NAME             VALUE     SET BY   DESCRIPTION   COUNT   REQUIRED   IS SET
+ namespace         my-space                            <span style="color:#0000cf;font-weight:bold">1</span>       No         Yes
+</code></pre></div><p>If <code>mysql</code> package is fetched into the local directory tree of <code>wordpress</code>
+package, and if both packages contain setter <code>namespace</code>, then the <code>namespace</code>
+setter of <code>mysql</code> is automatically set to the value from <code>wordpress</code> package i.e.
+<code>mysql</code> inherits setter value from <code>wordpress</code> package.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ kpt pkg get git@github.com:example.git/mysql ./wordpress/
+fetching package / from git@github.com:example.git/mysql to wordpress/mysql
+automatically <span style="color:#204a87">set</span> <span style="color:#0000cf;font-weight:bold">1</span> field<span style="color:#ce5c00;font-weight:bold">(</span>s<span style="color:#ce5c00;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">for</span> setter <span style="color:#4e9a06">&#34;namespace&#34;</span> to value <span style="color:#4e9a06">&#34;my-namespace&#34;</span> in
+package <span style="color:#4e9a06">&#34;wordpress/mysql&#34;</span> derived from parent <span style="color:#4e9a06">&#34;wordpress/Kptfile&#34;</span>
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ tree wordpress/
+wordpress
+├── Kptfile
+├── mysql <span style="color:#8f5902;font-style:italic"># subpackage</span>
+│   ├── Kptfile
+│   └── deployment.yaml
+└── deployment.yaml
+</code></pre></div>
         <div class="section-index">
     
     
@@ -505,7 +459,7 @@ as the ResourceList.functionConfig.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified June 19, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/7bf1a36d19747d493ad7972c23b53c7070f7ae57">Transfer kpt-functions sdk and catalog docs to kpt (7bf1a36d)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/69c9e8e23b71a808db1d312a96d802e681a085d3">Regenerate docs (69c9e8e2)</a>
 </div>
 </div>
 
