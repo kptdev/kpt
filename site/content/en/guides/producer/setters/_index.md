@@ -1,43 +1,38 @@
 ---
-title: "Create Setters"
+title: "Setters"
 linkTitle: "Setters"
 weight: 2
 type: docs
 description: >
-    Create high-level setters to provide imperative configuration editing
-    commands.
+  Create high-level [setters] to provide imperative configuration editing
+  commands.
 ---
 
 {{% hide %}}
+
 <!-- @makeWorkplace @verifyGuides-->
+
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
 cd $TEST_HOME
 ```
+
 {{% /hide %}}
 
-Setters provide a solution for template-free setting or substitution of field
-values through package metadata (OpenAPI).  They are a safer alternative to
-other substitution techniques which do not have the context of the
-structured data -- e.g. using `sed` to replace values.
-
-The OpenAPI definitions for setters are defined in a Kptfile and referenced by
-a fields through comments on the fields.
-
-Setters may be invoked to programmatically modify the configuration
-using `kpt cfg set` to set and/or substitute values.
-
 {{% pageinfo color="primary" %}}
-Creating a setter requires that the package has a Kptfile.  If one does
+Creating a setter requires that the package has a Kptfile. If one does
 not exist for the package, run `kpt pkg init DIR/` to create one.
 {{% /pageinfo %}}
 
 {{% hide %}}
+
 <!-- @createKptfile @verifyGuides-->
+
 ```
 kpt pkg init .
 ```
+
 {{% /hide %}}
 
 ## Setters explained
@@ -60,16 +55,29 @@ in this guide.
 
 {{< svg src="images/set-command" >}}
 
+This guide walks you through an end-to-end example to create, invoke and delete setters.
+
+## Steps
+
+1. [Creating a Setter](#creating-a-setter)
+2. [Targeting fields using the path](#targeting-fields-using-the-path)
+3. [Invoking a Setter](#invoking-a-setter)
+4. [Deleting a Setter](#deleting-a-setter)
+5. [OpenAPI Validations](#openapi-validations)
+6. [Required Setters](#required-setters)
+7. [Setting Lists](#setting-lists)
+
 #### Creating a Setter
 
 Setters may be created either manually (by editing the Kptfile directly), or
-programmatically (through the `create-setter` command).  The `create-setter`
+programmatically (through the `create-setter` command). The `create-setter`
 command will:
 
 1. create a new OpenAPI definition for a setter in the Kptfile
 2. create references to the setter definition on the resource fields
 
 <!-- @createResource @verifyGuides-->
+
 ```sh
 cat <<EOF >deployment.yaml
 # deployment.yaml -- original
@@ -82,6 +90,7 @@ EOF
 ```
 
 <!-- @createSetter @verifyGuides-->
+
 ```sh
 # create or update a setter named "replicas"
 # match fields with the value "3"
@@ -109,12 +118,15 @@ spec:
 ```
 
 {{% hide %}}
+
 <!-- @validateCreateSetter @verifyGuides-->
+
 ```
 grep "io.k8s.cli.setters.replicas" Kptfile
 grep 'value: "3"' Kptfile
 grep 'replicas: 3 # {"$kpt-set":"replicas"}' deployment.yaml
 ```
+
 {{% /hide %}}
 
 #### Targeting fields using the path
@@ -159,26 +171,13 @@ metadata:
   name: nginx-deployment
 spec:
   containers:
-  - name: nginx
-    image: nginx
-    volumeMounts:
-    - name: nginx # {"$kpt-set":"mountName"}
-      mountPath: /usr/share/nginx
-    - name: temp
-      mountPath: /tmp
-```
-
-#### Auto setters
-
-Some setters are automatically set deriving the values from the output of `gcloud config list`
-command, when the package is fetched using `kpt pkg get`. Package consumers need not
-invoke `kpt cfg set` on them explicitly. Following are the names of supported auto-setters:
-
-```
-gcloud.core.project
-gcloud.project.projectNumber
-gcloud.compute.region
-gcloud.compute.zone
+    - name: nginx
+      image: nginx
+      volumeMounts:
+        - name: nginx # {"$kpt-set":"mountName"}
+          mountPath: /usr/share/nginx
+        - name: temp
+          mountPath: /tmp
 ```
 
 #### Invoking a Setter
@@ -192,6 +191,7 @@ spec:
 ```
 
 <!-- @setReplicas @verifyGuides-->
+
 ```sh
 # set the replicas field to 5
 kpt cfg set . replicas 5
@@ -207,13 +207,65 @@ spec:
 ```
 
 {{% hide %}}
+
 <!-- @validateSetSetter @verifyGuides-->
+
 ```
 grep 'value: "5"' Kptfile
 grep 'replicas: 5 # {"$kpt-set":"replicas"}' deployment.yaml
+```
+
+{{% /hide %}}
+
+#### Deleting a Setter
+
+Setters may be deleted either manually (by editing the Kptfile directly), or
+programmatically (through the `delete-setter` command). The `delete-setter`
+command will:
+
+1. delete an OpenAPI definition for a setter in the Kptfile
+2. remove references to the setter definition on the resource fields
+
+```yaml
+# Kptfile -- original
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      x-k8s-cli:
+        setter:
+          name: "replicas"
+          value: "3"
+```
+
+```yaml
+# deployment.yaml -- original
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}
+```
+
+<!-- @deleteSetter @verifyGuides-->
+
+```sh
+# delete a setter named "replicas"
 kpt cfg delete-setter . replicas
 ```
-{{% /hide %}}
+
+```yaml
+# Kptfile -- updated
+openAPI:
+```
+
+```yaml
+# deployment.yaml -- updated
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 3
+```
 
 #### OpenAPI Validations
 
@@ -221,9 +273,11 @@ Users can input any additional validation constraints during `create-setter`
 operation in the form of openAPI schema. Relevant openAPI specification
 constraints can be provided in json file format. The `set` operation validates
 the input value against provided schema during setter creation and throws an
-error if the input value doesn't meet any of the constraints.
+error if the input value doesn't meet any of the constraints. This example walks
+you through the steps to work with openAPI validations.
 
 <!-- @createSetterForValidation @verifyGuides-->
+
 ```sh
 cat <<EOF >schema.json
 {"maximum": 10, "type": "integer"}
@@ -258,10 +312,14 @@ validation failure list: replicas in body should be less than or equal to 10
 ```
 
 {{% hide %}}
+
 <!-- @testSetSetter @verifyGuides-->
+
 ```
 kpt cfg set . replicas 11 || echo "Worked" | grep "Worked"
+kpt cfg delete-setter . replicas
 ```
+
 {{% /hide %}}
 
 ```sh
@@ -305,163 +363,15 @@ Example schema for array validation
 
 Relevant resources for more information: [OpenAPI types]
 
-#### Setting Lists
-
-It is possible to create setters for fields which are a list of strings/integers.
-The setter type must be `array`, and the reference must be on the list field.
-The list setter will take variable args for its value rather than a single value.
-
-**Note:** You should skip passing the value arg while creating array setters. `field`
-flag is required for array setters.
-
-<!-- @createResourceForListSetter @verifyGuides-->
-```sh
-cat <<EOF >example.yaml
-# example.yaml
-apiVersion: example.com/v1beta1
-kind: Example
-spec:
-  list:
-  - "a"
-  - "b"
-EOF
-```
-
-```yaml
-# Kptfile
-kind: Kptfile
-```
-
-<!-- @createListSetter @verifyGuides-->
-```
-kpt cfg create-setter . list --type array --field spec.list
-```
-
-```yaml
-# example.yaml
-apiVersion: example.com/v1beta1
-kind: Example
-spec:
-  list: # {"$kpt-set":"list"}
-  - "a"
-  - "b"
-```
-
-```yaml
-# Kptfile
-kind: Kptfile
-openAPI:
-  definitions:
-    io.k8s.cli.setters.list:
-      type: array
-      x-k8s-cli:
-        setter:
-          name: list
-          listValues:
-          - a
-          - b
-```
-
-{{% hide %}}
-<!-- @validateCreateListSetter @verifyGuides-->
-```
-grep "type: array" Kptfile
-grep "listValues:" Kptfile
-grep 'list: # {"$kpt-set":"list"}' example.yaml
-```
-{{% /hide %}}
-
-<!-- @setListSetter @verifyGuides-->
-```
-kpt cfg set . list c d e
-```
-
-```yaml
-# example.yaml
-apiVersion: example.com/v1beta1
-kind: Example
-spec:
-  list: # {"$kpt-set":"list"}
-  - "c"
-  - "d"
-  - "e"
-```
-
-```yaml
-# Kptfile
-kind: Kptfile
-openAPI:
-  definitions:
-    io.k8s.cli.setters.list:
-      type: array
-      x-k8s-cli:
-        setter:
-          name: list
-          listValues:
-          - "c"
-          - "d"
-          - "e"
-```
-
-{{% hide %}}
-<!-- @validateSetListSetter @verifyGuides-->
-```
-grep '\- "d"' Kptfile
-grep '\- "d"' example.yaml
-```
-{{% /hide %}}
-
-#### Enumerations
-
-Setters may be configured to map an enum input to a different value set
-in the configuration.
-
-e.g. users set `small`, `medium`, `large` cpu sizes, and these are mapped
-to numeric values set in the configuration.
-
-This may be done by modifying the Kptfile OpenAPI definitions as shown here:
-
-```yaml
-openAPI:
-  definitions:
-    io.k8s.cli.setters.cpu:
-      x-k8s-cli:
-        setter:
-          name: "cpu"
-          value: "small"
-          # enumValues will replace the user provided key with the
-          # map value when setting fields.
-          enumValues:
-            small: "0.5"
-            medium: "2"
-            large: "4"
-```
-
-Set would change the configuration like this:
-
-```yaml
-kind: Deployment
-metadata:
-  name: foo
-spec:
-  template:
-    spec:
-      containers:
-      - name: foo
-    resources:
-      requests:
-        cpu: "0.5" # {"$kpt-set":"cpu"}
-```
-
-#### Marking a field as required
+#### Required setters
 
 Package publisher can mark a setter as required to convey the consumer that the
 setter value must be set before triggering live apply/preview operation
-on the package.
+on the package. This example walks you through the steps to work with required setters.
 
 ```sh
 # create a setter named "replicas" and mark it as required
-kpt cfg create-setter hello-world/ replicas 3 --required
+kpt cfg create-setter . replicas 3 --required
 ```
 
 ```yaml
@@ -487,7 +397,7 @@ openAPI:
 
 ```sh
 # if you live apply/preview without setting the value
-kpt live apply hello-world/
+kpt live apply .
 
 error: setter replicas is required but not set, please set it and try again
 ```
@@ -500,135 +410,120 @@ kpt live apply hello-world/
 # Success
 ```
 
-#### Modifying a Setter
+#### Setting Lists
 
-Setters are uniquely identified by their name. create-setter command can be leveraged
-to modify an existing setter definition. Users may choose to modify setters in following
-scenarios.
+It is possible to create setters for fields which are a list of strings/integers.
+The setter type must be `array`, and the reference must be on the list field.
+The list setter will take variable args for its value rather than a single value.
 
-1. Add new features to existing setters, such as openAPI validations, marking setter
-as required setter etc.
-2. Add existing setter references to new resources that are added to package.
+**Note:** You should skip passing the value arg while creating array setters. `field`
+flag is required for array setters.
 
-Consider an existing package with deployment-foo.yaml and Kptfile as follows.
+<!-- @createResourceForListSetter @verifyGuides-->
 
-```yaml
-# deployment-foo.yaml
-kind: Deployment
-metadata:
-  name: foo
+```sh
+cat <<EOF >example.yaml
+# example.yaml
+apiVersion: example.com/v1beta1
+kind: Example
 spec:
-  replicas: 3 # {"$kpt-set":"replicas"}
+  list:
+  - "a"
+  - "b"
+EOF
 ```
 
 ```yaml
 # Kptfile
+kind: Kptfile
+```
+
+<!-- @createListSetter @verifyGuides-->
+
+```
+kpt cfg create-setter . list --type array --field spec.list
+```
+
+```yaml
+# example.yaml
+apiVersion: example.com/v1beta1
+kind: Example
+spec:
+  list: # {"$kpt-set":"list"}
+    - "a"
+    - "b"
+```
+
+```yaml
+# Kptfile
+kind: Kptfile
 openAPI:
   definitions:
-    io.k8s.cli.setters.replicas:
+    io.k8s.cli.setters.list:
+      type: array
       x-k8s-cli:
         setter:
-          name: "replicas"
-          value: "3"
+          name: list
+          listValues:
+            - a
+            - b
 ```
 
-Add new resource to the package
+{{% hide %}}
+
+<!-- @validateCreateListSetter @verifyGuides-->
+
+```
+grep "type: array" Kptfile
+grep "listValues:" Kptfile
+grep 'list: # {"$kpt-set":"list"}' example.yaml
+```
+
+{{% /hide %}}
+
+<!-- @setListSetter @verifyGuides-->
+
+```
+kpt cfg set . list c d e
+```
 
 ```yaml
-# deployment-bar.yaml
-kind: Deployment
-metadata:
-  name: bar
+# example.yaml
+apiVersion: example.com/v1beta1
+kind: Example
 spec:
-  replicas: 3
-```
-
-```sh
-$ cat /path/to/file.json
-{"maximum": 10, "type": "integer"}
-
-# modify existing setter replicas with openAPI property constraints and required flag
-kpt cfg create-setter DIR/ replicas 3 --schema-path /path/to/file.json --required
+  list: # {"$kpt-set":"list"}
+    - "c"
+    - "d"
+    - "e"
 ```
 
 ```yaml
-# Kptfile -- updated
+# Kptfile
+kind: Kptfile
 openAPI:
   definitions:
-    io.k8s.cli.setters.replicas:
-      maximum: 10
-      type: integer
+    io.k8s.cli.setters.list:
+      type: array
       x-k8s-cli:
         setter:
-          name: replicas
-          value: "3"
-          required: true
+          name: list
+          listValues:
+            - "c"
+            - "d"
+            - "e"
 ```
 
-```yaml
-# deployment-foo.yaml -- remains unchanged
-kind: Deployment
-metadata:
-  name: foo
-spec:
-  replicas: 3 # {"$kpt-set":"replicas"}
+{{% hide %}}
+
+<!-- @validateSetListSetter @verifyGuides-->
+
+```
+grep '\- "d"' Kptfile
+grep '\- "d"' example.yaml
 ```
 
-```yaml
-# deployment-bar.yaml -- setter ref added
-kind: Deployment
-metadata:
-  name: bar
-spec:
-  replicas: 3 # {"$kpt-set":"replicas"}
-```
+{{% /hide %}}
 
-#### Deleting a Setter
-
-Setters may be deleted either manually (by editing the Kptfile directly), or
-programmatically (through the `delete-setter` command).  The `delete-setter`
-command will:
-
-1. delete an OpenAPI definition for a setter in the Kptfile
-2. remove references to the setter definition on the resource fields
-
-```yaml
-# Kptfile -- original
-openAPI:
-  definitions:
-    io.k8s.cli.setters.replicas:
-      x-k8s-cli:
-        setter:
-          name: "replicas"
-          value: "3"
-```
-
-```yaml
-# deployment.yaml -- original
-kind: Deployment
-metadata:
-  name: foo
-spec:
-  replicas: 3 # {"$kpt-set":"replicas"}
-```
-
-```sh
-# delete a setter named "replicas"
-kpt cfg delete-setter replicas
-```
-
-```yaml
-# Kptfile -- updated
-openAPI:
-```
-
-```yaml
-# deployment.yaml -- updated
-kind: Deployment
-metadata:
-  name: foo
-spec:
-  replicas: 3
-```
-
-[OpenAPI types]: https://swagger.io/docs/specification/data-models/data-types/
+[openapi types]: https://swagger.io/docs/specification/data-models/data-types/
+[setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#setters

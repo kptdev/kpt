@@ -54,6 +54,9 @@ func parse(path, content string) guide {
 	indent := false
 	for scanner.Scan() {
 		line := scanner.Text()
+		if skip(line) {
+			continue
+		}
 
 		if strings.HasPrefix(line, "---") {
 			inFormat = !inFormat
@@ -86,6 +89,25 @@ func parse(path, content string) guide {
 		Name:    name,
 		Content: strings.Join(lines, "\n"),
 	}
+}
+
+var hide = false
+
+// skip returns true if the input line should be ignored
+// mdrip comments and hide section in docs must be ignored
+func skip(line string) bool {
+	if strings.HasPrefix(line, "<!-- @") {
+		return true
+	}
+	if line == "{{% hide %}}" {
+		hide = true
+		return true
+	}
+	if line == "{{% /hide %}}" {
+		hide = false
+		return true
+	}
+	return hide
 }
 
 func Write(guides []guide, dest, license string) error {
