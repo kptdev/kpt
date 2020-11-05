@@ -41,7 +41,7 @@ func TestDualDelegatingProvider_Read(t *testing.T) {
 		},
 		"Only ResourceGroup inventory object created": {
 			manifests: map[string]string{
-				"Kptfile":    kptFile,
+				"Kptfile": kptFile,
 			},
 			numObjs: 1,
 			invKind: "ResourceGroup",
@@ -49,9 +49,9 @@ func TestDualDelegatingProvider_Read(t *testing.T) {
 		},
 		"ResourceGroup inventory object with multiple objects": {
 			manifests: map[string]string{
-				"pod-a.yaml": podA,
-				"Kptfile":    kptFile,
-				"deployment-a.yaml":       deploymentA,
+				"pod-a.yaml":        podA,
+				"Kptfile":           kptFile,
+				"deployment-a.yaml": deploymentA,
 			},
 			numObjs: 3,
 			invKind: "ResourceGroup",
@@ -78,7 +78,7 @@ func TestDualDelegatingProvider_Read(t *testing.T) {
 			manifests: map[string]string{
 				"deployment-a.yaml":       deploymentA,
 				"inventory-template.yaml": configMapInv,
-				"pod-a.yaml": podA,
+				"pod-a.yaml":              podA,
 			},
 			numObjs: 3,
 			invKind: "ConfigMap",
