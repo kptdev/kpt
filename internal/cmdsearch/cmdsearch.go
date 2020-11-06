@@ -46,6 +46,8 @@ func NewSearchRunner(name string) *SearchRunner {
 		"Match by path expression of a field.")
 	c.Flags().StringVar(&r.PutLiteral, "put-literal", "",
 		"Set or update the value of the matching fields with the given literal value.")
+	c.Flags().StringVar(&r.PutPattern, "put-pattern", "",
+		"Put the setter pattern as a line comment for matching fields.")
 	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
 		"search recursively in all the nested subpackages")
 
@@ -69,6 +71,7 @@ type SearchRunner struct {
 	ByValueRegex       string
 	ByPath             string
 	PutLiteral         string
+	PutPattern         string
 	RecurseSubPackages bool
 }
 
@@ -92,6 +95,7 @@ func (r *SearchRunner) runE(c *cobra.Command, args []string) error {
 		RecurseSubPackages: r.RecurseSubPackages,
 		CmdRunner:          r,
 		RootPkgPath:        args[0],
+		NeedOpenAPI:        true,
 	}
 	return e.Execute()
 }
@@ -103,6 +107,8 @@ func (r *SearchRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		ByPath:       r.ByPath,
 		Count:        0,
 		PutLiteral:   r.PutLiteral,
+		PutPattern:   r.PutPattern,
+		PackagePath:  pkgPath,
 	}
 	err := s.Perform(pkgPath)
 	fmt.Fprintf(w, "matched %d field(s)\n", s.Count)
