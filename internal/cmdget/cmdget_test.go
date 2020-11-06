@@ -32,9 +32,9 @@ import (
 
 // TestCmd_execute tests that get is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
-	dest := filepath.Join(dir, g.RepoName)
+	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	r := cmdget.NewRunner("kpt")
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
@@ -73,9 +73,9 @@ func TestCmd_execute(t *testing.T) {
 // is main and master branch doesn't exist
 func TestCmdMainBranch_execute(t *testing.T) {
 	// set up git repository with master and main branches
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
-	dest := filepath.Join(dir, g.RepoName)
+	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := g.CheckoutBranch("main", false)
 	if !assert.NoError(t, err) {
 		t.FailNow()

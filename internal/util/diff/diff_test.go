@@ -44,7 +44,7 @@ import (
 // 5. Run remote diff between master and cloned
 func TestCommand_RunRemoteDiff(t *testing.T) {
 	t.SkipNow()
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
@@ -72,7 +72,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
 
-	localPkg := filepath.Join(dir, g.RepoName)
+	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	diffOutput := &bytes.Buffer{}
 
@@ -116,7 +116,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 // 5. add more data to the master branch, commit it
 // 5. Run combined diff between master and cloned
 func TestCommand_RunCombinedDiff(t *testing.T) {
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
@@ -144,7 +144,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
 
-	localPkg := filepath.Join(dir, g.RepoName)
+	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	diffOutput := &bytes.Buffer{}
 
@@ -189,7 +189,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 // 5. Update cloned package with dataset3
 // 6. Run remote diff and verify the output
 func TestCommand_Run_LocalDiff(t *testing.T) {
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
@@ -210,7 +210,7 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
 	assert.NoError(t, err)
 
-	localPkg := filepath.Join(dir, g.RepoName)
+	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// make changes in local package
 	err = copyutil.CopyDir(filepath.Join(g.DatasetDirectory, testutil.Dataset3), localPkg)
