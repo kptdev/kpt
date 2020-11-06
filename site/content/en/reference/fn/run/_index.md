@@ -200,6 +200,58 @@ metadata:
       deferFailure: true
 ```
 
+## Scoping Rules
+
+Functions which are nested under some sub directory are scoped only to
+Resources under that same sub directory. This allows fine grain control over
+how functions are executed.
+
+`kpt fn run DIR/` will recursively traverse DIR/ looking for declared functions
+and invoking them -- passing in only those resources scoped to the function.
+
+**Example:** Function declared in `stuff/my-function.yaml` is scoped to
+Resources in `stuff/` and is NOT scoped to Resources in `apps/`
+
+```sh
+.
+├── stuff
+│   ├── inscope-deployment.yaml
+│   ├── stuff2
+│   │     └── inscope-deployment.yaml
+│   └── my-function.yaml # functions is scoped to stuff/...
+└── apps
+    ├── not-inscope-deployment.yaml
+    └── not-inscope-service.yaml
+```
+
+Alternatively, you can also place function configurations in a special
+directory named `functions`.
+
+**Example**: This is equivalent to previous example
+
+```sh
+.
+├── stuff
+│   ├── inscope-deployment.yaml
+│   ├── stuff2
+│   │     └── inscope-deployment.yaml
+│   └── functions
+│         └── my-function.yaml
+└── apps
+    ├── not-inscope-deployment.yaml
+    └── not-inscope-service.yaml
+```
+
+Alternatively, you can also use `--fn-path` to explicitly provide the directory
+containing function configurations:
+
+```sh
+kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
+```
+
+Alternatively, scoping can be disabled using `--global-scope` flag. Using `--fn-flag`
+or `--image` will not enable global scope automatically.
+
 ## Imperative Run Specifics
 
 ### Generating FunctionConfig for Imperative Runs
@@ -291,57 +343,6 @@ details in the following:
 
 ## Declarative Run Specifics
 
-### Scoping Rules
-
-Functions which are nested under some sub directory are scoped only to
-Resources under that same sub directory. This allows fine grain control over
-how functions are executed.
-
-`kpt fn run DIR/` will recursively traverse DIR/ looking for declared functions
-and invoking them -- passing in only those resources scoped to the function.
-
-**Example:** Function declared in `stuff/my-function.yaml` is scoped to
-Resources in `stuff/` and is NOT scoped to Resources in `apps/`
-
-```sh
-.
-├── stuff
-│   ├── inscope-deployment.yaml
-│   ├── stuff2
-│   │     └── inscope-deployment.yaml
-│   └── my-function.yaml # functions is scoped to stuff/...
-└── apps
-    ├── not-inscope-deployment.yaml
-    └── not-inscope-service.yaml
-```
-
-Alternatively, you can also place function configurations in a special
-directory named `functions`.
-
-**Example**: This is equivalent to previous example
-
-```sh
-.
-├── stuff
-│   ├── inscope-deployment.yaml
-│   ├── stuff2
-│   │     └── inscope-deployment.yaml
-│   └── functions
-│         └── my-function.yaml
-└── apps
-    ├── not-inscope-deployment.yaml
-    └── not-inscope-service.yaml
-```
-
-Alternatively, you can also use `--fn-path` to explicitly provide the directory
-containing function configurations:
-
-```sh
-kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
-```
-
-Alternatively, scoping can be disabled using `--global-scope` flag.
-
 ### Multiple Functions Ordering
 
 Functions execution follows a deterministic order and is based on the following set of rules:
@@ -407,6 +408,12 @@ because:
 * it expects arguments in the `spec` field
 * it takes complex arguments with nested values
 * it takes flags as arguments
+
+### Don't use Imperative and Declarative in One Command
+
+If you use imperative functions (by `--image` or `--fn-path`) with declarative
+ones (by config files in `DIR`, see following section) at the same time, the
+declarative functions will be **ignored**.
 
 ## Next Steps
 
