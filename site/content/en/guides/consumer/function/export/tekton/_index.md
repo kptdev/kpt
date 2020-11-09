@@ -7,7 +7,7 @@ description: >
   Export a Tekton pipeline that runs kpt functions
 ---
 
-In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on [Tekton] and modify it to make it fully functional. How to setting up Tekton is also included if you don't have one running yet. This tutorial takes about 20 minutes.
+In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on [Tekton] and modify it to make it fully functional. Setting up Tekton is also covered if you don't have one running yet. This tutorial takes about 20 minutes.
 
 {{% pageinfo color="info" %}}
 A kpt version `v0.32.0` or higher is required.
