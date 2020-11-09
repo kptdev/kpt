@@ -11,7 +11,10 @@ import (
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/cli-utils/pkg/provider"
 )
+
+var _ provider.Provider = &ResourceGroupProvider{}
 
 // ResourceGroupProvider implements the Provider interface, returning
 // ResourceGroup versions of some kpt live apply structures.

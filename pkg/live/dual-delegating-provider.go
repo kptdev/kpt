@@ -16,6 +16,8 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
+var _ provider.Provider = &DualDelegatingProvider{}
+
 // DualDelegatingProvider encapsulates another Provider to which it
 // delegates most functions, enabling a Provider which will return
 // values based on the inventory object found from ManifestReader()
