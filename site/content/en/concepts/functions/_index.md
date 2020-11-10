@@ -98,7 +98,7 @@ pipeline. Get detailed tutorials on how to use `kpt fn export` from the
 
 [architecture influences]: ../architecture/#influences
 [sources catalog]: ../../guides/consumer/function/sources
-[sinks catalog]: ../../guides/consumer/function/sinks
+[sinks catalog]: ../../guides/consumer/function/catalog/sinks
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [Export a Workflow]: ../../guides/consumer/function/export/
 [function producer docs]: ../../guides/producer/functions/

@@ -29,4 +29,4 @@ from an external system (e.g. reading files from a filesystem).
 
 - Learn more ways of using the kpt fn command from the [reference] doc.
 
-[reference]: ../../../../reference/fn/run/
+[reference]: ../../../../../reference/fn/run/
