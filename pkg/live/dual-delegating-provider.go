@@ -87,12 +87,27 @@ func (cp *DualDelegatingProvider) ManifestReader(reader io.Reader, args []string
 		return nil, inventory.NoInventoryObjError{}
 	}
 	if rgInv != nil && cmInv != nil {
-		return nil, inventory.MultipleInventoryObjError{
-			InventoryObjectTemplates: []*unstructured.Unstructured{rgInv, cmInv},
+		return nil, MultipleInventoryObjError{
+			InvObjs: []*unstructured.Unstructured{rgInv, cmInv},
 		}
 	}
 	cp.calcInventory = true
 	return &CachedManifestReader{objs: objs}, nil
+}
+
+// MultipleInventoryObjError is thrown when more than one inventory
+// objects is detected.
+type MultipleInventoryObjError struct {
+	InvObjs []*unstructured.Unstructured
+}
+
+const multipleInventoryErrorStr = `Detected ResourceGroup (Kptfile) and deprecated ConfigMap (inventory-template.yaml)
+inventory objects. Please run "kpt live migrate" to complete upgrade to
+ResourceGroup inventory object.
+`
+
+func (g MultipleInventoryObjError) Error() string {
+	return multipleInventoryErrorStr
 }
 
 // CachedManifestReader implements ManifestReader, storing objects to return.
