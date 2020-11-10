@@ -105,7 +105,6 @@ func TestSetV2AutoSetter(t *testing.T) {
 			expectedDataset: "dataset-with-autosetters-set",
 			expectedOut: `automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql" derived from gcloud config
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql" derived from gcloud config
-failed to set "gcloud.core.project" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.core.project" is not found
 automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql/storage" derived from gcloud config
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql/storage" derived from gcloud config
 `,
@@ -173,10 +172,8 @@ func TestEnvironmentSetters(t *testing.T) {
 				"KPT_SET_gcloud.project.projectNumber=1234"},
 			expectedDataset: "dataset-with-autosetters-set",
 			expectedOut: `automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql" derived from environment
-failed to set "gcloud.core.project" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.core.project" is not found
 automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql/storage" derived from environment
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql" derived from environment
-failed to set "gcloud.project.projectNumber" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.project.projectNumber" is not found
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql/storage" derived from environment
 `,
 		},
