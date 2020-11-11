@@ -92,7 +92,8 @@ func GetMain() *cobra.Command {
 
 		if len(args) > 0 {
 			// add openAPI definitions from Kptfile to configured openAPI
-			if addErr := openapi.AddSchemaFromFile(filepath.Join(args[0], kptfile.KptFileName)); addErr != nil {
+			_, addErr := openapi.AddSchemaFromFile(filepath.Join(args[0], kptfile.KptFileName))
+			if addErr != nil {
 				// do not throw error if schema doesn't exist or not readable from Kptfile
 				return nil
 			}
