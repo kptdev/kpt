@@ -166,8 +166,8 @@ results:
 [Go Fn Lib]: ./golang/
 [TS SDK]: ./ts/
 [`kpt fn source`]: ../../../reference/fn/source/
-[`helm-template`]: gcr.io/kpt-functions/helm-template/
-[`kpt fn sink`]: ../../../refernce/fn/sink/
+[`helm-template`]: https://gcr.io/kpt-functions/helm-template/
+[`kpt fn sink`]: ../../../reference/fn/sink/
 [run functions]: ../../consumer/function/
 [functions concepts]: ../../../concepts/functions/
 [fn command reference]: ../../../reference/fn/
