@@ -174,7 +174,7 @@ func (mr *MigrateRunner) applyCRD() error {
 	var clearResourceVersion = false
 	// Apply the CRD to the cluster and ignore already exists error.
 	// Empty namespace, since CRD's are cluster-scoped.
-	_, err = helper.Create("", clearResourceVersion, crd, nil)
+	_, err = helper.Create("", clearResourceVersion, crd)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return err
 	}

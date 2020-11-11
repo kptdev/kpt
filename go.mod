@@ -6,7 +6,6 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
@@ -16,14 +15,14 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gotest.tools v2.2.0+incompatible
-	k8s.io/apimachinery v0.17.3
-	k8s.io/cli-runtime v0.17.3
-	k8s.io/client-go v0.17.3
+	k8s.io/apimachinery v0.18.10
+	k8s.io/cli-runtime v0.18.10
+	k8s.io/client-go v0.18.10
 	k8s.io/klog v1.0.0
 	// Currently, we have to import the latest version of kubectl.
 	// Once there is a 0.18 release, we can import a semver release.
-	k8s.io/kubectl v0.0.0-20191219154910-1528d4eea6dd
-	sigs.k8s.io/cli-utils v0.21.1-0.20201104195052-79dde05e8f42
-	sigs.k8s.io/kustomize/cmd/config v0.8.5-0.20201109195158-d66fc462ec31
-	sigs.k8s.io/kustomize/kyaml v0.9.4-0.20201109195158-d66fc462ec31
+	k8s.io/kubectl v0.18.10
+	sigs.k8s.io/cli-utils v0.21.1
+	sigs.k8s.io/kustomize/cmd/config v0.8.5
+	sigs.k8s.io/kustomize/kyaml v0.9.4
 )
