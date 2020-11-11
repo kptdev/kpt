@@ -117,8 +117,11 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	// from ConfigMap to ResourceGroup inventory object.
 	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
 		klog.V(2).Infoln("adding kpt live migrate command")
+		// Create a ConfigMap and a ResourceGroup provider for the
+		// migrate command, and add the migrate command to live command.
+		cmProvider := provider.NewProvider(f)
 		rgProvider := live.NewResourceGroupProvider(f)
-		migrateCmd := GetMigrateRunner(p, rgProvider, ioStreams).Command
+		migrateCmd := GetMigrateRunner(cmProvider, rgProvider, ioStreams).Command
 		liveCmd.AddCommand(migrateCmd)
 	}
 
