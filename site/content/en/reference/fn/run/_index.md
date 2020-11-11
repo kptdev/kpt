@@ -100,8 +100,7 @@ metadata:
     config.k8s.io/function: |
       container:
         image: gcr.io/kpt-functions/kubeval
-        network:
-          required: true
+        network: true
     config.kubernetes.io/local-config: 'true'
 ```
 
