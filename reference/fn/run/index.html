@@ -1121,8 +1121,7 @@ the functionConfig.</p>
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.k8s.io/function</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic">|
 </span><span style="color:#8f5902;font-style:italic">      container:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">image</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>gcr.io/kpt-functions/kubeval<span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">network</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">          </span><span style="color:#204a87;font-weight:bold">required</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">        </span><span style="color:#204a87;font-weight:bold">network</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#204a87;font-weight:bold">true</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">    </span><span style="color:#204a87;font-weight:bold">config.kubernetes.io/local-config</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#4e9a06">&#39;true&#39;</span><span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt pkg get https://github.com/instrumenta/kubeval.git/fixtures .
 kpt fn <span style="color:#204a87">source</span> fixtures/*invalid.yaml <span style="color:#000;font-weight:bold">|</span>
@@ -1430,7 +1429,7 @@ declarative functions will be <strong>ignored</strong>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 25, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/650a44a6b5cea9b324680d0e696ed7529175958d">docs: markdown style (650a44a6)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/de9963f2f133f9b6283552691bbfa73f8b87cf72">docs: update network option in function config (de9963f2)</a>
 </div>
 </div>
 
