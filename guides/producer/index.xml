@@ -527,9 +527,9 @@ generated in the past by reading them from the input.&lt;/p&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;resourcelistitems&#34;&gt;ResourceList.items&lt;/h3&gt;
 &lt;p&gt;Items are resources read from some source &amp;ndash; such as a package directory &amp;ndash;
-using a source function &amp;ndash; such as &lt;a href=&#34;../../../reference/fn/source/&#34;&gt;&lt;code&gt;kpt fn source&lt;/code&gt;&lt;/a&gt; or &lt;a href=&#34;gcr.io/kpt-functions/helm-template/&#34;&gt;&lt;code&gt;helm-template&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+using a source function &amp;ndash; such as &lt;a href=&#34;../../../reference/fn/source/&#34;&gt;&lt;code&gt;kpt fn source&lt;/code&gt;&lt;/a&gt; or &lt;a href=&#34;https://gcr.io/kpt-functions/helm-template/&#34;&gt;&lt;code&gt;helm-template&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;After a function adds, deletes or modifies items, the items will be written to
-a sink directory using a sink function &amp;ndash; such as &lt;a href=&#34;../../../refernce/fn/sink/&#34;&gt;&lt;code&gt;kpt fn sink&lt;/code&gt;&lt;/a&gt;. In most
+a sink directory using a sink function &amp;ndash; such as &lt;a href=&#34;../../../reference/fn/sink/&#34;&gt;&lt;code&gt;kpt fn sink&lt;/code&gt;&lt;/a&gt;. In most
 cases the sink directory will be the same as the source directory.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt; &lt;/span&gt;ResourceList&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;items&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;

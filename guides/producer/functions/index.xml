@@ -62,7 +62,7 @@ the example.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Explore other ways to run functions from the &lt;a href=&#34;../&#34;&gt;Functions Developer Guide&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the
-&lt;a href=&#34;../../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;a href=&#34;../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
 &lt;li&gt;Consult the &lt;a href=&#34;../../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -517,9 +517,9 @@ to a file in the specified directory.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next Steps&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Learn how to &lt;a href=&#34;../../../consumer/function/&#34;&gt;run functions&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;Consult the &lt;a href=&#34;../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Consult the &lt;a href=&#34;../../../../reference/fn/&#34;&gt;fn command reference&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Find out how to structure a pipeline of functions from the
-&lt;a href=&#34;../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
+&lt;a href=&#34;../../../../concepts/functions/&#34;&gt;functions concepts&lt;/a&gt; page.&lt;/li&gt;
 &lt;/ul&gt;
 
       </description>
