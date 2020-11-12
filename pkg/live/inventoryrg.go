@@ -128,12 +128,18 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 	}
 	// Create the inventory object by copying the template.
 	invCopy := icm.inv.DeepCopy()
-	// Adds the inventory ObjMetadata to the ResourceGroup "spec.resources" section
-	klog.V(4).Infof("storing inventory resources")
-	err := unstructured.SetNestedSlice(invCopy.UnstructuredContent(),
-		objs, "spec", "resources")
-	if err != nil {
-		return nil, err
+	// Adds or clears the inventory ObjMetadata to the ResourceGroup "spec.resources" section
+	if len(objs) == 0 {
+		klog.V(4).Infoln("clearing inventory resources")
+		unstructured.RemoveNestedField(invCopy.UnstructuredContent(),
+			"spec", "resources")
+	} else {
+		klog.V(4).Infof("storing inventory (%d) resources", len(objs))
+		err := unstructured.SetNestedSlice(invCopy.UnstructuredContent(),
+			objs, "spec", "resources")
+		if err != nil {
+			return nil, err
+		}
 	}
 	return invCopy, nil
 }
