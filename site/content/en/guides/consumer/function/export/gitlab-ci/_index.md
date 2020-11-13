@@ -74,7 +74,7 @@ Now you can manually copy and paste the `kpt` field in the `.gitlab-ci.yml` file
 
 If you don’t have one yet, you can simply copy and paste the file to the root of your repo. It is fully functional.
 
-If you want to see the diff after running kpt functions, append a `after_sciprt` field to run `kpt pkg diff`. Your final `.gitlab-ci.yaml` file looks like this:
+If you want to see the diff after running kpt functions, append an `after_script` field to run `kpt pkg diff`. Your final `.gitlab-ci.yaml` file looks like this:
 
 ```yaml
 stages:
@@ -100,7 +100,7 @@ git commit -am 'Init pipeline'
 git push --set-upstream origin master
 ```
 
-Once the changes are committed and pushed to GitLab, you can see the latest jon on GitLab CI like this:
+Once the changes are committed and pushed to GitLab, you can see the latest job on GitLab CI like this:
 
 {{< png src="images/fn-export/gitlab-ci-result" >}}
 

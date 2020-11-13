@@ -8,11 +8,12 @@ description: >
     Export config files for different workflow orchestrators that run kpt functions
 ---
 
-`kpt fn export` reduces the work to run kpt functions in workflow orchestrators. It allows to export a workflow pipeline that runs kpt functions alongside necessary configurations. The generated pipeline files can be easily integrated into the existing one manually.
+`kpt fn export` reduces the work to run kpt functions in workflow orchestrators. It exports a workflow pipeline that runs kpt functions alongside necessary configurations. The generated pipeline files can be easily integrated into an existing one manually.
 
 ## Examples
 
-These quickstarts cover how to exporting workflow config files for different orchestrators:
+These quickstarts cover how to export workflow config files for different
+orchestrators:
 
 - [GitHub Actions]
 - [GitLab CI]

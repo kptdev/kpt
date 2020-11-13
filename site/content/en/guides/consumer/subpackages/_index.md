@@ -42,7 +42,7 @@ The primary package artifacts are Kubernetes resource configuration
 
 ### List package contents in a tree structure
 
-Once you fetch the package onto local list its contents using [tree] command.
+List the local package contents using the [tree] command.
 
 ```sh
 kpt cfg tree wordpress/
@@ -75,8 +75,8 @@ further view and understand the package contents.
 
 ### List setters in the package
 
-The fetched package contains [setters]. Invoke [list-setters] command to list
-the [setters] recursively in all the packages.
+The fetched package contains [setters]. Invoke the [list-setters] command to
+list the [setters] recursively in all the packages.
 
 ```sh
 kpt cfg list-setters wordpress/

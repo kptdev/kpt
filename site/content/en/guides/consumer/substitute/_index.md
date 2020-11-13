@@ -1,5 +1,5 @@
 ---
-title: "Substitute a values into fields"
+title: "Substitute values into fields"
 linkTitle: "Substitute"
 weight: 4
 type: docs

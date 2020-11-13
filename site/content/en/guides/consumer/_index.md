@@ -4,7 +4,7 @@ linkTitle: "Package Consumers"
 weight: 1
 type: docs
 description: >
-    Guides for workflows related to consume packages published by other
+    Guides for workflows related to consuming packages published by other
     teams or organizations.
 ---
 

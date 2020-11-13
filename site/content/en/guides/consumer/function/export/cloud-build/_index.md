@@ -88,7 +88,7 @@ steps:
 
 ## Viewing the result on Cloud Build
 
-Run this command will trigger a build:
+Running this command will trigger a build:
 
 ```
 gcloud builds submit .
