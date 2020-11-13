@@ -172,8 +172,8 @@ the [kpt live] command.&lt;/p&gt;
 &lt;/div&gt;
 
 &lt;h2 id=&#34;view-the-applied-package&#34;&gt;View the applied package&lt;/h2&gt;
-&lt;p&gt;Once applied to the cluster, the remote resources can be displayed using
-the common tools such as &lt;code&gt;kubectl get&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Once applied to the cluster, the remote resources can be displayed using common
+tools such as &lt;code&gt;kubectl get&lt;/code&gt;.&lt;/p&gt;
 &lt;h3 id=&#34;applied-package-command&#34;&gt;Applied Package Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kubectl get all
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;applied-package-output&#34;&gt;Applied Package Output&lt;/h3&gt;
@@ -289,9 +289,8 @@ will print arbitrary fields by providing the &lt;code&gt;--field&lt;/code&gt; fl
 &lt;h3 id=&#34;filter-command&#34;&gt;Filter Command&lt;/h3&gt;
 &lt;!-- @filterExamples @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.replicas&amp;gt;3&amp;#34;&lt;/span&gt; examples &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree --replicas
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grep can be used to filter resources by field values.  The output of
-&lt;a href=&#34;../../../reference/cfg/grep/&#34;&gt;&lt;code&gt;kpt cfg grep&lt;/code&gt;&lt;/a&gt; is the matching full resource configuration, which
-may be piped to tree for rendering.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grep can be used to filter resources by field values.  The output of &lt;a href=&#34;../../../reference/cfg/grep/&#34;&gt;&lt;code&gt;kpt cfg grep&lt;/code&gt;&lt;/a&gt; is the matching full resource configuration, which may be
+piped to &lt;a href=&#34;../../../reference/cfg/tree/&#34;&gt;&lt;code&gt;kpt cfg tree&lt;/code&gt;&lt;/a&gt; for rendering.&lt;/p&gt;
 &lt;h3 id=&#34;filter-output&#34;&gt;Filter Output&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;.
 ├── storage/minio
@@ -307,8 +306,6 @@ may be piped to tree for rendering.&lt;/p&gt;
 &lt;h3 id=&#34;dump-command&#34;&gt;Dump Command&lt;/h3&gt;
 &lt;!-- @catCockroachdb @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg cat examples/cockroachdb
-&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# Temporary workaround for https://github.com/GoogleContainerTools/kpt/issues/1050&lt;/span&gt;
-&lt;span style=&#34;color:#204a87&#34;&gt;echo&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;\n&amp;#34;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The raw YAML configuration may be dumped using &lt;a href=&#34;../../../reference/cfg/cat/&#34;&gt;&lt;code&gt;kpt cfg cat&lt;/code&gt;&lt;/a&gt;.
 This will print only the YAML for Kubernetes resources.&lt;/p&gt;
 &lt;h3 id=&#34;dump-output&#34;&gt;Dump Output&lt;/h3&gt;
@@ -437,7 +434,7 @@ changing values, and writing them back.&lt;/strong&gt;&lt;/p&gt;
     </item>
     
     <item>
-      <title>Guides: Substitute a values into fields</title>
+      <title>Guides: Substitute values into fields</title>
       <link>https://googlecontainertools.github.io/kpt/guides/consumer/substitute/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
@@ -580,10 +577,10 @@ package &lt;a href=&#34;../../../api-reference/kptfile/&#34;&gt;Kptfile&lt;/a&gt
         
         &lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&#34;../../../reference/live/apply/&#34;&gt;kpt live apply&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Because kpt packages are composed of resource configuration can be applied with
-&lt;code&gt;kubectl apply -R -f DIR&lt;/code&gt;, however kpt includes the next-generation &lt;strong&gt;apply&lt;/strong&gt;
-commands developed out of the Kubernetes &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-utils&#34;&gt;cli-utils&lt;/a&gt; repository as the
-&lt;a href=&#34;../../../reference/live/apply/&#34;&gt;kpt live apply&lt;/a&gt; command.&lt;/p&gt;
+&lt;p&gt;Because kpt packages are composed of resource configuration, they can be
+applied with &lt;code&gt;kubectl apply -R -f DIR&lt;/code&gt;. However, kpt includes the
+next-generation &lt;strong&gt;apply&lt;/strong&gt; commands developed out of the Kubernetes &lt;a href=&#34;https://github.com/kubernetes-sigs/cli-utils&#34;&gt;cli-utils&lt;/a&gt;
+repository as the &lt;a href=&#34;../../../reference/live/apply/&#34;&gt;kpt live apply&lt;/a&gt; command.&lt;/p&gt;
 &lt;p&gt;Kpt live apply provides additional functionality beyond what is provided by
 &lt;code&gt;kubectl apply&lt;/code&gt;, such as communicating back resource status and pruning
 resources for deleted configuration.&lt;/p&gt;
@@ -594,8 +591,6 @@ resources for deleted configuration.&lt;/p&gt;
 
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#topics&#34;&gt;Topics&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#steps&#34;&gt;Steps&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;#command&#34;&gt;Command&lt;/a&gt;&lt;/li&gt;
@@ -726,8 +721,8 @@ the resources.&lt;/p&gt;
 ├── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Resource&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service default/helloworld-gke
 └── &lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;[&lt;/span&gt;Resource&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;]&lt;/span&gt;  Service default/kubernetes
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;prune-resources&#34;&gt;Prune resources&lt;/h2&gt;
-&lt;p&gt;Resources can be deleted from the cluster by deleting them from the
-resource configuration.sh&lt;/p&gt;
+&lt;p&gt;Resources can be deleted from the cluster by deleting the corresponding
+resource configuration.&lt;/p&gt;
 &lt;h3 id=&#34;prune-command&#34;&gt;Prune Command&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;rm helloworld/deploy.yaml
 kpt live apply helloworld/ --reconcile-timeout&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;2m
@@ -781,7 +776,8 @@ can set replicas without apply overwriting them).&lt;/p&gt;
 &lt;p&gt;Following is a short explanation of the command that will be demonstrated
 in this guide.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo&lt;/li&gt;
+&lt;li&gt;Copy the staging/cockroachdb subdirectory out of the &lt;a href=&#34;https://github.com/kubernetes/examples&#34;&gt;kubernetes examples&lt;/a&gt;
+git repo&lt;/li&gt;
 &lt;li&gt;Edit the local package contents&lt;/li&gt;
 &lt;li&gt;Commit the changes&lt;/li&gt;
 &lt;li&gt;Update the local package with upstream changes from a new version&lt;/li&gt;
@@ -793,9 +789,6 @@ in this guide.&lt;/p&gt;
 
 &lt;h2 id=&#34;steps&#34;&gt;Steps&lt;/h2&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;#topics&#34;&gt;Topics&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#kpt-pkg-update-explained&#34;&gt;&lt;code&gt;kpt pkg update&lt;/code&gt; explained&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;#steps&#34;&gt;Steps&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/a&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;#fetch-command&#34;&gt;Fetch Command&lt;/a&gt;&lt;/li&gt;
@@ -819,8 +812,8 @@ in this guide.&lt;/p&gt;
 &lt;li&gt;&lt;a href=&#34;#view-new-package-contents&#34;&gt;View new package contents&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id=&#34;fetch-a-remote-package&#34;&gt;Fetch a remote package&lt;/h2&gt;
-&lt;p&gt;Packages can be fetched at specific versions defined by git tags, and have
-updated to later versions to merge in upstream changes.&lt;/p&gt;
+&lt;p&gt;Packages can be fetched at specific versions defined by git tags, and then
+updated to later versions by merging in upstream changes.&lt;/p&gt;
 &lt;h3 id=&#34;initialize-local-repository&#34;&gt;Initialize local Repository&lt;/h3&gt;
 &lt;!-- @InitRepo @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;mkdir workspace
@@ -1030,9 +1023,9 @@ value. The (&lt;a href=&#34;https://github.com/GoogleContainerTools/kpt-function
 label to all Namespace resources provided to it.&lt;/p&gt;
 &lt;p&gt;Run the function:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt fn run . --image gcr.io/kpt-functions/label-namespace -- &lt;span style=&#34;color:#000&#34;&gt;label_name&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;color &lt;span style=&#34;color:#000&#34;&gt;label_value&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;orange
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Arguments specified after &lt;code&gt;--&lt;/code&gt; will be provided to the function as a
-&lt;code&gt;ConfigMap&lt;/code&gt; input containing &lt;code&gt;data: {label_name: color, label_value: orange}&lt;/code&gt;.
-This is used to parameterize the behavior of the function.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Arguments specified after &lt;code&gt;--&lt;/code&gt; will be provided as input to the function as a
+&lt;code&gt;ConfigMap&lt;/code&gt; containing &lt;code&gt;data: {label_name: color, label_value: orange}&lt;/code&gt;.  This
+is used to parameterize the behavior of the function.&lt;/p&gt;
 &lt;p&gt;If the package directory &lt;code&gt;.&lt;/code&gt; is not specified, the source will default to STDIN
 and sink will default to STDOUT.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Example:&lt;/strong&gt; This is equivalent to the preceding example&lt;/p&gt;
@@ -1139,7 +1132,7 @@ example kpt package with a &lt;a href=&#34;https://googlecontainertools.github.i
 &lt;p&gt;The primary package artifacts are Kubernetes resource configuration
 (e.g. YAML files).&lt;/p&gt;
 &lt;h3 id=&#34;list-package-contents-in-a-tree-structure&#34;&gt;List package contents in a tree structure&lt;/h3&gt;
-&lt;p&gt;Once you fetch the package onto local list its contents using &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/tree/&#34;&gt;tree&lt;/a&gt; command.&lt;/p&gt;
+&lt;p&gt;List the local package contents using the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/tree/&#34;&gt;tree&lt;/a&gt; command.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg tree wordpress/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress
@@ -1161,8 +1154,8 @@ example kpt package with a &lt;a href=&#34;https://googlecontainertools.github.i
 &lt;p&gt;Optionally, users may use other commands like &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/count/&#34;&gt;count&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/grep/&#34;&gt;grep&lt;/a&gt;, &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/cat/&#34;&gt;cat&lt;/a&gt; to
 further view and understand the package contents.&lt;/p&gt;
 &lt;h3 id=&#34;list-setters-in-the-package&#34;&gt;List setters in the package&lt;/h3&gt;
-&lt;p&gt;The fetched package contains &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;setters&lt;/a&gt;. Invoke &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/&#34;&gt;list-setters&lt;/a&gt; command to list
-the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;setters&lt;/a&gt; recursively in all the packages.&lt;/p&gt;
+&lt;p&gt;The fetched package contains &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;setters&lt;/a&gt;. Invoke the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/&#34;&gt;list-setters&lt;/a&gt; command to
+list the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/setters/&#34;&gt;setters&lt;/a&gt; recursively in all the packages.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg list-setters wordpress/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Output:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;wordpress/

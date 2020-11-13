@@ -1295,9 +1295,9 @@ value. The (<a href="https://github.com/GoogleContainerTools/kpt-functions-sdk/b
 label to all Namespace resources provided to it.</p>
 <p>Run the function:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run . --image gcr.io/kpt-functions/label-namespace -- <span style="color:#000">label_name</span><span style="color:#ce5c00;font-weight:bold">=</span>color <span style="color:#000">label_value</span><span style="color:#ce5c00;font-weight:bold">=</span>orange
-</code></pre></div><p>Arguments specified after <code>--</code> will be provided to the function as a
-<code>ConfigMap</code> input containing <code>data: {label_name: color, label_value: orange}</code>.
-This is used to parameterize the behavior of the function.</p>
+</code></pre></div><p>Arguments specified after <code>--</code> will be provided as input to the function as a
+<code>ConfigMap</code> containing <code>data: {label_name: color, label_value: orange}</code>.  This
+is used to parameterize the behavior of the function.</p>
 <p>If the package directory <code>.</code> is not specified, the source will default to STDIN
 and sink will default to STDOUT.</p>
 <p><strong>Example:</strong> This is equivalent to the preceding example</p>
@@ -1479,7 +1479,7 @@ as input to the next</li>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified October 31, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/9d4eff59596aac595fb328ff3b18db0c966c2b93">Docs: Fix error in the example with kpt fn source|sink (#1165) (9d4eff59)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0afc440d9784ee2f5b84ff1d23677f0999139599">docs: consumer guide nits and fixes. (0afc440d)</a>
 </div>
 </div>
 

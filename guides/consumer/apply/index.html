@@ -1267,10 +1267,10 @@ if (!doNotTrack) {
 	<div class="lead">Apply the contents of a local package to a remote cluster.</div>
 	<h2 id="topics">Topics</h2>
 <p><a href="../../../reference/live/apply/">kpt live apply</a></p>
-<p>Because kpt packages are composed of resource configuration can be applied with
-<code>kubectl apply -R -f DIR</code>, however kpt includes the next-generation <strong>apply</strong>
-commands developed out of the Kubernetes <a href="https://github.com/kubernetes-sigs/cli-utils">cli-utils</a> repository as the
-<a href="../../../reference/live/apply/">kpt live apply</a> command.</p>
+<p>Because kpt packages are composed of resource configuration, they can be
+applied with <code>kubectl apply -R -f DIR</code>. However, kpt includes the
+next-generation <strong>apply</strong> commands developed out of the Kubernetes <a href="https://github.com/kubernetes-sigs/cli-utils">cli-utils</a>
+repository as the <a href="../../../reference/live/apply/">kpt live apply</a> command.</p>
 <p>Kpt live apply provides additional functionality beyond what is provided by
 <code>kubectl apply</code>, such as communicating back resource status and pruning
 resources for deleted configuration.</p>
@@ -1281,8 +1281,6 @@ resources for deleted configuration.</p>
 
 <h2 id="steps">Steps</h2>
 <ul>
-<li><a href="#topics">Topics</a></li>
-<li><a href="#steps">Steps</a></li>
 <li><a href="#fetch-a-remote-package">Fetch a remote package</a>
 <ul>
 <li><a href="#command">Command</a></li>
@@ -1413,8 +1411,8 @@ the resources.</p>
 ├── <span style="color:#ce5c00;font-weight:bold">[</span>Resource<span style="color:#ce5c00;font-weight:bold">]</span>  Service default/helloworld-gke
 └── <span style="color:#ce5c00;font-weight:bold">[</span>Resource<span style="color:#ce5c00;font-weight:bold">]</span>  Service default/kubernetes
 </code></pre></div><h2 id="prune-resources">Prune resources</h2>
-<p>Resources can be deleted from the cluster by deleting them from the
-resource configuration.sh</p>
+<p>Resources can be deleted from the cluster by deleting the corresponding
+resource configuration.</p>
 <h3 id="prune-command">Prune Command</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">rm helloworld/deploy.yaml
 kpt live apply helloworld/ --reconcile-timeout<span style="color:#ce5c00;font-weight:bold">=</span>2m
@@ -1529,7 +1527,7 @@ configmap/inventory-2911da3b pruned
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a7418e75e2a02d8016ed1f1a2b331e1a60b87f7c">Turn consumer guides into executable tests (a7418e75)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0afc440d9784ee2f5b84ff1d23677f0999139599">docs: consumer guide nits and fixes. (0afc440d)</a>
 </div>
 </div>
 

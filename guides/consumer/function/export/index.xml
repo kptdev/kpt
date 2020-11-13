@@ -184,7 +184,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;integrating-with-your-existing-pipeline&#34;&gt;Integrating with your existing pipeline&lt;/h2&gt;
 &lt;p&gt;Now you can manually copy and paste the &lt;code&gt;kpt&lt;/code&gt; field in the &lt;code&gt;.gitlab-ci.yml&lt;/code&gt; file into your existing GitLab CI config file, and merge the &lt;code&gt;stages&lt;/code&gt; field.&lt;/p&gt;
 &lt;p&gt;If you don’t have one yet, you can simply copy and paste the file to the root of your repo. It is fully functional.&lt;/p&gt;
-&lt;p&gt;If you want to see the diff after running kpt functions, append a &lt;code&gt;after_sciprt&lt;/code&gt; field to run &lt;code&gt;kpt pkg diff&lt;/code&gt;. Your final &lt;code&gt;.gitlab-ci.yaml&lt;/code&gt; file looks like this:&lt;/p&gt;
+&lt;p&gt;If you want to see the diff after running kpt functions, append an &lt;code&gt;after_script&lt;/code&gt; field to run &lt;code&gt;kpt pkg diff&lt;/code&gt;. Your final &lt;code&gt;.gitlab-ci.yaml&lt;/code&gt; file looks like this:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;stages&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;  &lt;/span&gt;- run-kpt-functions&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;kpt&lt;/span&gt;&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
@@ -202,7 +202,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;git add .
 git commit -am &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;Init pipeline&amp;#39;&lt;/span&gt;
 git push --set-upstream origin master
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Once the changes are committed and pushed to GitLab, you can see the latest jon on GitLab CI like this:&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Once the changes are committed and pushed to GitLab, you can see the latest job on GitLab CI like this:&lt;/p&gt;
 
 
 
@@ -426,7 +426,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- --diff-tool-opts&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;      &lt;/span&gt;- &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;--no-pager diff&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f8f8f8;text-decoration:underline&#34;&gt;
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;viewing-the-result-on-cloud-build&#34;&gt;Viewing the result on Cloud Build&lt;/h2&gt;
-&lt;p&gt;Run this command will trigger a build:&lt;/p&gt;
+&lt;p&gt;Running this command will trigger a build:&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;gcloud builds submit .
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Then you can view the result on &lt;a href=&#34;https://console.cloud.google.com/cloud-build/builds&#34;&gt;Build History&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id=&#34;next-step&#34;&gt;Next step&lt;/h2&gt;
@@ -578,7 +578,7 @@ git push --set-upstream origin master
       <description>
         
         
-        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://tekton.dev/&#34;&gt;Tekton&lt;/a&gt; and modify it to make it fully functional. How to setting up Tekton is also included if you don&amp;rsquo;t have one running yet. This tutorial takes about 20 minutes.&lt;/p&gt;
+        &lt;p&gt;In this tutorial, you will pull an example package that declares Kubernetes resources and two kpt functions. Then you will export a pipeline that runs the functions against the resources on &lt;a href=&#34;https://tekton.dev/&#34;&gt;Tekton&lt;/a&gt; and modify it to make it fully functional. Setting up Tekton is also covered if you don&amp;rsquo;t have one running yet. This tutorial takes about 20 minutes.&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-info&#34;&gt;

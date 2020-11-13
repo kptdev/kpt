@@ -1268,7 +1268,7 @@ example kpt package with a <a href="https://googlecontainertools.github.io/kpt/c
 <p>The primary package artifacts are Kubernetes resource configuration
 (e.g. YAML files).</p>
 <h3 id="list-package-contents-in-a-tree-structure">List package contents in a tree structure</h3>
-<p>Once you fetch the package onto local list its contents using <a href="https://googlecontainertools.github.io/kpt/reference/cfg/tree/">tree</a> command.</p>
+<p>List the local package contents using the <a href="https://googlecontainertools.github.io/kpt/reference/cfg/tree/">tree</a> command.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg tree wordpress/
 </code></pre></div><p>Output:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress
@@ -1290,8 +1290,8 @@ example kpt package with a <a href="https://googlecontainertools.github.io/kpt/c
 <p>Optionally, users may use other commands like <a href="https://googlecontainertools.github.io/kpt/reference/cfg/count/">count</a>, <a href="https://googlecontainertools.github.io/kpt/reference/cfg/grep/">grep</a>, <a href="https://googlecontainertools.github.io/kpt/reference/cfg/cat/">cat</a> to
 further view and understand the package contents.</p>
 <h3 id="list-setters-in-the-package">List setters in the package</h3>
-<p>The fetched package contains <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">setters</a>. Invoke <a href="https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/">list-setters</a> command to list
-the <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">setters</a> recursively in all the packages.</p>
+<p>The fetched package contains <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">setters</a>. Invoke the <a href="https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/">list-setters</a> command to
+list the <a href="https://googlecontainertools.github.io/kpt/guides/producer/setters/">setters</a> recursively in all the packages.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg list-setters wordpress/
 </code></pre></div><p>Output:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/
@@ -1430,7 +1430,7 @@ deployment.apps/wordpress created
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/6d40df4841c4357f16b91dc957f8494c1f99d89d">Composite Packages concepts (6d40df48)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0afc440d9784ee2f5b84ff1d23677f0999139599">docs: consumer guide nits and fixes. (0afc440d)</a>
 </div>
 </div>
 

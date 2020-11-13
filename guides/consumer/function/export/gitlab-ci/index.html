@@ -1307,7 +1307,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 </span></code></pre></div><h2 id="integrating-with-your-existing-pipeline">Integrating with your existing pipeline</h2>
 <p>Now you can manually copy and paste the <code>kpt</code> field in the <code>.gitlab-ci.yml</code> file into your existing GitLab CI config file, and merge the <code>stages</code> field.</p>
 <p>If you don’t have one yet, you can simply copy and paste the file to the root of your repo. It is fully functional.</p>
-<p>If you want to see the diff after running kpt functions, append a <code>after_sciprt</code> field to run <code>kpt pkg diff</code>. Your final <code>.gitlab-ci.yaml</code> file looks like this:</p>
+<p>If you want to see the diff after running kpt functions, append an <code>after_script</code> field to run <code>kpt pkg diff</code>. Your final <code>.gitlab-ci.yaml</code> file looks like this:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#204a87;font-weight:bold">stages</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span>- run-kpt-functions<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">kpt</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
@@ -1325,7 +1325,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/functio
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">git add .
 git commit -am <span style="color:#4e9a06">&#39;Init pipeline&#39;</span>
 git push --set-upstream origin master
-</code></pre></div><p>Once the changes are committed and pushed to GitLab, you can see the latest jon on GitLab CI like this:</p>
+</code></pre></div><p>Once the changes are committed and pushed to GitLab, you can see the latest job on GitLab CI like this:</p>
 
 
 
@@ -1433,7 +1433,7 @@ git push --set-upstream origin master
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 30, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/d04a7e891f2e46e86ef70b27a2847e9b24719609">Docs: change references of blueprint to packages (d04a7e89)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0afc440d9784ee2f5b84ff1d23677f0999139599">docs: consumer guide nits and fixes. (0afc440d)</a>
 </div>
 </div>
 

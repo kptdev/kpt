@@ -1353,9 +1353,8 @@ will print arbitrary fields by providing the <code>--field</code> flag.</p>
 <h3 id="filter-command">Filter Command</h3>
 <!-- @filterExamples @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg grep <span style="color:#4e9a06">&#34;spec.replicas&gt;3&#34;</span> examples <span style="color:#000;font-weight:bold">|</span> kpt cfg tree --replicas
-</code></pre></div><p>Grep can be used to filter resources by field values.  The output of
-<a href="../../../reference/cfg/grep/"><code>kpt cfg grep</code></a> is the matching full resource configuration, which
-may be piped to tree for rendering.</p>
+</code></pre></div><p>Grep can be used to filter resources by field values.  The output of <a href="../../../reference/cfg/grep/"><code>kpt cfg grep</code></a> is the matching full resource configuration, which may be
+piped to <a href="../../../reference/cfg/tree/"><code>kpt cfg tree</code></a> for rendering.</p>
 <h3 id="filter-output">Filter Output</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">.
 ├── storage/minio
@@ -1371,8 +1370,6 @@ may be piped to tree for rendering.</p>
 <h3 id="dump-command">Dump Command</h3>
 <!-- @catCockroachdb @verifyGuides-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt cfg cat examples/cockroachdb
-<span style="color:#8f5902;font-style:italic"># Temporary workaround for https://github.com/GoogleContainerTools/kpt/issues/1050</span>
-<span style="color:#204a87">echo</span> <span style="color:#4e9a06">&#34;\n&#34;</span>
 </code></pre></div><p>The raw YAML configuration may be dumped using <a href="../../../reference/cfg/cat/"><code>kpt cfg cat</code></a>.
 This will print only the YAML for Kubernetes resources.</p>
 <h3 id="dump-output">Dump Output</h3>
@@ -1485,7 +1482,7 @@ metadata:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 15, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a7418e75e2a02d8016ed1f1a2b331e1a60b87f7c">Turn consumer guides into executable tests (a7418e75)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified November 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/0afc440d9784ee2f5b84ff1d23677f0999139599">docs: consumer guide nits and fixes. (0afc440d)</a>
 </div>
 </div>
 

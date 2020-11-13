@@ -35,9 +35,10 @@
       <description>
         
         
-        &lt;p&gt;&lt;code&gt;kpt fn export&lt;/code&gt; reduces the work to run kpt functions in workflow orchestrators. It allows to export a workflow pipeline that runs kpt functions alongside necessary configurations. The generated pipeline files can be easily integrated into the existing one manually.&lt;/p&gt;
+        &lt;p&gt;&lt;code&gt;kpt fn export&lt;/code&gt; reduces the work to run kpt functions in workflow orchestrators. It exports a workflow pipeline that runs kpt functions alongside necessary configurations. The generated pipeline files can be easily integrated into an existing one manually.&lt;/p&gt;
 &lt;h2 id=&#34;examples&#34;&gt;Examples&lt;/h2&gt;
-&lt;p&gt;These quickstarts cover how to exporting workflow config files for different orchestrators:&lt;/p&gt;
+&lt;p&gt;These quickstarts cover how to export workflow config files for different
+orchestrators:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;./github-actions&#34;&gt;GitHub Actions&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;./gitlab-ci&#34;&gt;GitLab CI&lt;/a&gt;&lt;/li&gt;
