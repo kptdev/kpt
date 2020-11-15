@@ -1077,7 +1077,9 @@ if (!doNotTrack) {
 
 <p>The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
-live cluster state.</p>
+live cluster state. With the <code>--server-side</code> flag, the dry-run will
+be performed on resources sent to the server (but not actually applied),
+instead of less thorough dry-run calculations on the client.</p>
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># preview apply for a package</span>
@@ -1095,6 +1097,24 @@ kpt live preview --destroy my-dir/
 </code></pre><h4 id="flags">Flags</h4>
 <pre><code>--destroy:
   If true, dry-run deletion of all resources.
+
+--server-side:
+  Boolean which performs the dry-run by sending the resource to the server.
+  Default value is false (client-side dry-run). Available
+  in version v0.36.0 and above. If not available, the user will see:
+  &quot;error: unknown flag&quot;.
+
+--field-manager:
+  String that can be set if --server-side flag is also set, which defines
+  the resources field owner during dry-run. Available
+  in version v0.36.0 and above. If not available, the user will see:
+  &quot;error: unknown flag&quot;.
+
+--force-conflicts:
+  Boolean that can be set if --server-side flag is also set, which overrides
+  field ownership conflicts during dry-run. Available
+  in version v0.36.0 and above. If not available, the user will see:
+  &quot;error: unknown flag&quot;.
 </code></pre><!--mdtogo-->
 
         <div class="section-index">
@@ -1177,7 +1197,7 @@ kpt live preview --destroy my-dir/
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified October 29, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/5591b68aa9d25bcda4a8c6f9baab6f5d65db9b53">Adds server-side apply docs to kpt live apply (5591b68a)</a>
 </div>
 </div>
 
