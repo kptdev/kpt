@@ -36,6 +36,14 @@ group.  `kpt live apply` tracks the state of your applied resource set and
 related configuration. This helps `kpt` to reliably reconcile the real world
 resources with your configuration changes.
 
+### Client-Side Apply versus Server-Side Apply
+
+kpt live apply defaults to client-side apply, so the updates are accomplished
+by calculating and sending a patch from the client. Server-side apply
+with the `--server-side` flag sends the entire resource to the server
+for the update. The server-side flags and functionality are the same
+as kubectl.
+
 ### Prune
 
 kpt live apply will automatically delete resources which have been
@@ -269,8 +277,25 @@ DIR:
   This determines the output format of the command. The default value is
   events, which will print the events as they happen. The other option is
   table, which will show the output in a table format.
+
+--server-side:
+  Boolean which sends the entire resource to the server during apply instead of
+  calculating a client-side patch. Default value is false (client-side). Available
+  in version v0.36.0 and above. If not available, the user will see: "error: unknown flag".
+
+--field-manager:
+  String specifying the **owner** of the fields being applied. Only usable
+  when --server-side flag is specified. Default value is kubectl. Available in
+  version v0.36.0 and above. If not available, the user will see: "error: unknown flag".
+
+--force-conflicts:
+  Boolean which forces overwrite of field conflicts during apply due to
+  different field managers. Only usable when --server-side flag is specified.
+  Default value is false (error and failure when field managers conflict).
+  Available in v0.36.0 and above. If not available, the user will see: "error: unknown flag".
 ```
 <!--mdtogo-->
 
 [Kubernetes design principles]: https://www.google.com/url?q=https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md%23typical-status-properties&sa=D&ust=1585160635349000&usg=AFQjCNE3ncANdus3xckLj3fkeupwFUoABw
 [proposal]: https://github.com/kubernetes/community/pull/4521
+[kubectl server-side apply]: <https://kubernetes.io/docs/reference/using-api/server-side-apply/>

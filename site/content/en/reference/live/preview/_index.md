@@ -13,7 +13,9 @@ description: >
 
 The preview command will run through the same steps as apply, but
 it will only print what would happen when running apply against the current
-live cluster state.
+live cluster state. With the `--server-side` flag, the dry-run will
+be performed on resources sent to the server (but not actually applied),
+instead of less thorough dry-run calculations on the client.
 
 ### Examples
 <!--mdtogo:Examples-->
@@ -47,5 +49,23 @@ DIRECTORY:
 ```
 --destroy:
   If true, dry-run deletion of all resources.
+
+--server-side:
+  Boolean which performs the dry-run by sending the resource to the server.
+  Default value is false (client-side dry-run). Available
+  in version v0.36.0 and above. If not available, the user will see:
+  "error: unknown flag".
+
+--field-manager:
+  String that can be set if --server-side flag is also set, which defines
+  the resources field owner during dry-run. Available
+  in version v0.36.0 and above. If not available, the user will see:
+  "error: unknown flag".
+
+--force-conflicts:
+  Boolean that can be set if --server-side flag is also set, which overrides
+  field ownership conflicts during dry-run. Available
+  in version v0.36.0 and above. If not available, the user will see:
+  "error: unknown flag".
 ```
 <!--mdtogo-->
