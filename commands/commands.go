@@ -15,6 +15,7 @@
 package commands
 
 import (
+	"os"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
@@ -60,6 +61,11 @@ func GetKptCommands(name string, f util.Factory) []*cobra.Command {
 	guideCmd := GetGuideCommand(name)
 
 	c = append(c, cfgCmd, pkgCmd, fnCmd, ttlCmd, liveCmd, guideCmd)
+
+	if strings.Contains(","+os.Getenv("KPT_EXPERIMENTS")+",", ",render,") {
+		renderCmd := GetRenderCommand(name)
+		c = append(c, renderCmd)
+	}
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)
