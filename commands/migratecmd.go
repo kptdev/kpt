@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
+	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -39,16 +40,22 @@ type MigrateRunner struct {
 	initOptions *KptInitOptions
 	cmProvider  provider.Provider
 	rgProvider  provider.Provider
+	cmLoader    manifestreader.ManifestLoader
+	rgLoader    manifestreader.ManifestLoader
 }
 
 // NewMigrateRunner returns a pointer to an initial MigrateRunner structure.
-func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider, ioStreams genericclioptions.IOStreams) *MigrateRunner {
+func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider,
+	cmLoader manifestreader.ManifestLoader, rgLoader manifestreader.ManifestLoader,
+	ioStreams genericclioptions.IOStreams) *MigrateRunner {
 	r := &MigrateRunner{
 		ioStreams:   ioStreams,
 		dryRun:      false,
 		initOptions: NewKptInitOptions(cmProvider.Factory(), ioStreams),
 		cmProvider:  cmProvider,
 		rgProvider:  rgProvider,
+		cmLoader:    cmLoader,
+		rgLoader:    rgLoader,
 		dir:         "",
 	}
 	cmd := &cobra.Command{
@@ -78,7 +85,9 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 func NewCmdMigrate(f cmdutil.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
 	configMapProvider := provider.NewProvider(f)
 	resourceGroupProvider := live.NewResourceGroupProvider(f)
-	return GetMigrateRunner(configMapProvider, resourceGroupProvider, ioStreams).Command
+	cmLoader := manifestreader.NewManifestLoader(f)
+	rgLoader := live.NewResourceGroupManifestLoader(f)
+	return GetMigrateRunner(configMapProvider, resourceGroupProvider, cmLoader, rgLoader, ioStreams).Command
 }
 
 // Run executes the migration from the ConfigMap based inventory to the ResourceGroup
@@ -219,9 +228,9 @@ func (mr *MigrateRunner) updateKptfile(args []string) error {
 
 // retrieveConfigMapInv retrieves the ConfigMap inventory object or
 // an error if one occurred.
-func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (*unstructured.Unstructured, error) {
+func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (inventory.InventoryInfo, error) {
 	fmt.Fprint(mr.ioStreams.Out, "  retrieve the current ConfigMap inventory...")
-	cmReader, err := mr.cmProvider.ManifestReader(reader, args)
+	cmReader, err := mr.cmLoader.ManifestReader(reader, args)
 	if err != nil {
 		return nil, err
 	}
@@ -229,17 +238,14 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 	if err != nil {
 		return nil, err
 	}
-	cmInv, _, err := inventory.SplitUnstructureds(objs)
-	if err != nil {
-		return nil, err
-	}
-	return cmInv, nil
+	cmInv, _, err := mr.cmLoader.InventoryInfo(objs)
+	return cmInv, err
 }
 
 // retrieveInvObjs returns the object references from the passed
 // inventory object by querying the inventory object in the cluster,
 // or an error if one occurred.
-func (mr *MigrateRunner) retrieveInvObjs(invObj *unstructured.Unstructured) ([]object.ObjMetadata, error) {
+func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]object.ObjMetadata, error) {
 	cmInvClient, err := mr.cmProvider.InventoryClient()
 	if err != nil {
 		return nil, err
@@ -261,7 +267,7 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 		fmt.Fprint(mr.ioStreams.Out, "no inventory objects found\n")
 		return nil
 	}
-	rgReader, err := mr.rgProvider.ManifestReader(reader, args)
+	rgReader, err := mr.rgLoader.ManifestReader(reader, args)
 	if err != nil {
 		return err
 	}
@@ -278,7 +284,8 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 	if err != nil {
 		return err
 	}
-	_, err = rgInvClient.Merge(rgInv, cmObjs)
+	inv := live.WrapInventoryInfoObj(rgInv)
+	_, err = rgInvClient.Merge(inv, cmObjs)
 	if err != nil {
 		return err
 	}
@@ -288,7 +295,7 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 
 // deleteConfigMapInv removes the passed inventory object from the
 // cluster. Returns an error if one occurred.
-func (mr *MigrateRunner) deleteConfigMapInv(invObj *unstructured.Unstructured) error {
+func (mr *MigrateRunner) deleteConfigMapInv(invObj inventory.InventoryInfo) error {
 	fmt.Fprint(mr.ioStreams.Out, "  deleting old ConfigMap inventory object...")
 	cmInvClient, err := mr.cmProvider.InventoryClient()
 	if err != nil {

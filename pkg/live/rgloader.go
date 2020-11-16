@@ -7,47 +7,39 @@ import (
 	"fmt"
 	"io"
 
-	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
-	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
-var _ provider.Provider = &ResourceGroupProvider{}
+var _ manifestreader.ManifestLoader = &ResourceGroupManifestLoader{}
 
-// ResourceGroupProvider implements the Provider interface, returning
+// ResourceGroupManifestLoader implements the Provider interface, returning
 // ResourceGroup versions of some kpt live apply structures.
-type ResourceGroupProvider struct {
+type ResourceGroupManifestLoader struct {
 	factory util.Factory
 }
 
 // NewResourceGroupProvider encapsulates the passed values, and returns a pointer to an ResourceGroupProvider.
-func NewResourceGroupProvider(f util.Factory) *ResourceGroupProvider {
-	return &ResourceGroupProvider{
+func NewResourceGroupManifestLoader(f util.Factory) *ResourceGroupManifestLoader {
+	return &ResourceGroupManifestLoader{
 		factory: f,
 	}
 }
 
 // Factory returns the kubectl factory.
-func (f *ResourceGroupProvider) Factory() util.Factory {
-	return f.factory
-}
-
-// InventoryClient returns the InventoryClient created using the
-// ResourceGroup inventory object wrapper function.
-func (f *ResourceGroupProvider) InventoryClient() (inventory.InventoryClient, error) {
-	return inventory.NewInventoryClient(f.factory, WrapInventoryObj, InvToUnstructuredFunc)
-}
-
-// ToRESTMapper returns the RESTMapper or an erro if one occurred.
-func (f *ResourceGroupProvider) ToRESTMapper() (meta.RESTMapper, error) {
-	return f.factory.ToRESTMapper()
+func (f *ResourceGroupManifestLoader) InventoryInfo(objs []*unstructured.Unstructured) (inventory.InventoryInfo, []*unstructured.Unstructured, error) {
+	objs, invObj := findResourceGroupInv(objs)
+	if invObj == nil {
+		return nil, nil, fmt.Errorf("unable to find the ResourceGroup inventory info")
+	}
+	return &InventoryResourceGroup{inv: invObj}, objs, nil
 }
 
 // ManifestReader returns the ResourceGroup inventory object version of
 // the ManifestReader.
-func (f *ResourceGroupProvider) ManifestReader(reader io.Reader, args []string) (manifestreader.ManifestReader, error) {
+func (f *ResourceGroupManifestLoader) ManifestReader(reader io.Reader, args []string) (manifestreader.ManifestReader, error) {
 	// Validate parameters.
 	if reader == nil && len(args) == 0 {
 		return nil, fmt.Errorf("unable to build ManifestReader without both reader or args")

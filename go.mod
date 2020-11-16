@@ -19,10 +19,8 @@ require (
 	k8s.io/cli-runtime v0.18.10
 	k8s.io/client-go v0.18.10
 	k8s.io/klog v1.0.0
-	// Currently, we have to import the latest version of kubectl.
-	// Once there is a 0.18 release, we can import a semver release.
 	k8s.io/kubectl v0.18.10
-	sigs.k8s.io/cli-utils v0.21.1
+	sigs.k8s.io/cli-utils v0.22.0
 	sigs.k8s.io/kustomize/cmd/config v0.8.5
 	sigs.k8s.io/kustomize/kyaml v0.9.4
 )
