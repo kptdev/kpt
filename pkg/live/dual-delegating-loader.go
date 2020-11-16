@@ -112,7 +112,6 @@ func (cp *DualDelegatingManifestReader) InventoryInfo(objs []*unstructured.Unstr
 	if cmInv != nil {
 		inv = inventory.WrapInventoryInfoObj(cmInv)
 	}
-	//cp.calcInventory = true
 	return inv, objs, nil
 }
 

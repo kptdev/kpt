@@ -40,11 +40,11 @@ func (cp *DualDelegatingProvider) Factory() util.Factory {
 // after ManifestReader().
 func (cp *DualDelegatingProvider) InventoryClient() (inventory.InventoryClient, error) {
 	return inventory.NewInventoryClient(cp.Factory(),
-		inventroyWrapperFunc,
+		inventoryWrapperFunc,
 		invToUnstructuredFunc)
 }
 
-func inventroyWrapperFunc(obj *unstructured.Unstructured) inventory.Inventory {
+func inventoryWrapperFunc(obj *unstructured.Unstructured) inventory.Inventory {
 	switch obj.GetKind() {
 	case "ResourceGroup":
 		return &InventoryResourceGroup{inv: obj}
