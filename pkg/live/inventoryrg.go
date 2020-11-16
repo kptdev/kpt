@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog"
+	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/object"
 )
@@ -41,12 +42,43 @@ type InventoryResourceGroup struct {
 	objMetas []object.ObjMetadata
 }
 
+var _ inventory.InventoryInfo = &InventoryResourceGroup{}
+
 // WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
 // wraps it with the InventoryResourceGroup and upcasts the wrapper as
 // an the Inventory interface.
 func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Inventory {
 	klog.V(4).Infof("wrapping inventory info")
 	return &InventoryResourceGroup{inv: obj}
+}
+
+func WrapInventoryInfoObj(obj *unstructured.Unstructured) inventory.InventoryInfo {
+	return &InventoryResourceGroup{inv: obj}
+}
+
+func InvToUnstructuredFunc(inv inventory.InventoryInfo) *unstructured.Unstructured {
+	switch invInfo := inv.(type) {
+	case *InventoryResourceGroup:
+		return invInfo.inv
+	default:
+		return nil
+	}
+}
+
+func (icm *InventoryResourceGroup) Name() string {
+	return icm.inv.GetName()
+}
+
+func (icm *InventoryResourceGroup) Namespace() string {
+	return icm.inv.GetNamespace()
+}
+
+func (icm *InventoryResourceGroup) ID() string {
+	labels := icm.inv.GetLabels()
+	if val, found := labels[common.InventoryLabel]; found {
+		return val
+	}
+	return ""
 }
 
 // Load is an Inventory interface function returning the set of

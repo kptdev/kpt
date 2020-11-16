@@ -30,6 +30,7 @@ import (
 	"sigs.k8s.io/cli-utils/cmd/initcmd"
 	"sigs.k8s.io/cli-utils/cmd/preview"
 	"sigs.k8s.io/cli-utils/cmd/status"
+	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
@@ -65,9 +66,11 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	// inventory objects is used. If a package has both inventory objects, then
 	// an error is thrown.
 	var p provider.Provider = provider.NewProvider(f)
+	var l manifestreader.ManifestLoader = manifestreader.NewManifestLoader(f)
 	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
 		klog.V(2).Infoln("provider supports ResourceGroup and ConfigMap inventory")
 		p = live.NewDualDelegatingProvider(f)
+		l = live.NewDualDelegatingManifestReader(f)
 	}
 
 	// The default init command creates the ConfigMap inventory yaml. If the magic
@@ -82,13 +85,13 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples
 
-	applyCmd := apply.GetApplyRunner(p, ioStreams).Command
+	applyCmd := apply.GetApplyRunner(p, l, ioStreams).Command
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
 	applyCmd.Example = livedocs.ApplyExamples
 
-	previewCmd := preview.GetPreviewRunner(p, ioStreams).Command
+	previewCmd := preview.GetPreviewRunner(p, l, ioStreams).Command
 	previewCmd.Short = livedocs.PreviewShort
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
@@ -98,12 +101,12 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
 	diffCmd.Example = livedocs.DiffExamples
 
-	destroyCmd := destroy.GetDestroyRunner(p, ioStreams).Command
+	destroyCmd := destroy.GetDestroyRunner(p, l, ioStreams).Command
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
 
-	statusCmd := status.GetStatusRunner(p).Command
+	statusCmd := status.GetStatusRunner(p, l).Command
 	statusCmd.Short = livedocs.StatusShort
 	statusCmd.Long = livedocs.StatusLong
 	statusCmd.Example = livedocs.StatusExamples
@@ -121,7 +124,9 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 		// migrate command, and add the migrate command to live command.
 		cmProvider := provider.NewProvider(f)
 		rgProvider := live.NewResourceGroupProvider(f)
-		migrateCmd := GetMigrateRunner(cmProvider, rgProvider, ioStreams).Command
+		cmLoader := manifestreader.NewManifestLoader(f)
+		rgLoader := live.NewResourceGroupManifestLoader(f)
+		migrateCmd := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
 		liveCmd.AddCommand(migrateCmd)
 	}
 

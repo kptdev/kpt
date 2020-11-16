@@ -16,6 +16,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
@@ -142,7 +143,9 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			// Create MigrateRunner and call "updateKptfile"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
-			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, ioStreams)
+			cmLoader := manifestreader.NewManifestLoader(tf)
+			rgLoader := live.NewResourceGroupManifestLoader(tf)
+			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
 			err = migrateRunner.updateKptfile([]string{dir})
 			// Check if there should be an error
@@ -207,7 +210,9 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
-			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, ioStreams)
+			cmLoader := manifestreader.NewManifestLoader(tf)
+			rgLoader := live.NewResourceGroupManifestLoader(tf)
+			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{})
 			// Check if there should be an error
 			if tc.isError {
@@ -217,10 +222,10 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			if tc.expected.GetName() != actual.GetName() {
+			if tc.expected.GetName() != actual.Name() {
 				t.Errorf("expected ConfigMap (%#v), got (%#v)", tc.expected, actual)
 			}
-			if tc.expected.GetNamespace() != actual.GetNamespace() {
+			if tc.expected.GetNamespace() != actual.Namespace() {
 				t.Errorf("expected ConfigMap (%#v), got (%#v)", tc.expected, actual)
 			}
 		})
@@ -308,7 +313,9 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewFakeResourceGroupProvider(tf, tc.objs)
-			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, ioStreams)
+			cmLoader := manifestreader.NewManifestLoader(tf)
+			rgLoader := live.NewResourceGroupManifestLoader(tf)
+			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{})
 			// Check if there should be an error
 			if tc.isError {
