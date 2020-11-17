@@ -153,7 +153,7 @@ deployment.yaml:  metadata.namespace: otherspace
 			args:    []string{"--by-value", "mysql"},
 			out: `${baseDir}/mysql/
 matched 1 field(s)
-deployment.yaml:  spec.template.spec.containers.name: mysql
+deployment.yaml:  spec.template.spec.containers[0].name: mysql
 
 ${baseDir}/mysql/nosetters/
 matched 0 field(s)

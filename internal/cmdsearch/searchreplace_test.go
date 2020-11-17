@@ -253,6 +253,88 @@ metadata:
  `,
 	},
 	{
+		name: "search by array path",
+		args: []string{"--by-path", "spec.foo[1]"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - b
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+ `,
+		out: `${baseDir}/
+matched 1 field(s)
+${filePath}:  spec.foo[1]: b
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - b
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+ `,
+	},
+	{
+		name: "search by array objects path",
+		args: []string{"--by-path", "spec.foo[1].c"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - c: thing0
+  - c: thing1
+  - c: thing2
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+ `,
+		out: `${baseDir}/
+matched 1 field(s)
+${filePath}:  spec.foo[1].c: thing1
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - c: thing0
+  - c: thing1
+  - c: thing2
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+ `,
+	},
+	{
 		name: "replace by path and value",
 		args: []string{"--by-path", "spec.replicas", "--by-value", "3", "--put-literal", "4"},
 		input: `
