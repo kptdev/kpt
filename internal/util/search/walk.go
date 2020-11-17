@@ -15,6 +15,9 @@
 package search
 
 import (
+	"fmt"
+
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -68,13 +71,28 @@ func acceptImpl(v visitor, object *yaml.RNode, p string) error {
 			return err
 		}
 		// get the schema for the elements
-		return object.VisitElements(func(node *yaml.RNode) error {
+		return VisitElements(object, func(node *yaml.RNode, i int) error {
 			// Traverse each list element
-			return acceptImpl(v, node, p)
+			return acceptImpl(v, node, p+fmt.Sprintf("[%d]", i))
 		})
 	case yaml.ScalarNode:
 		// Visit the scalar field
 		return v.visitScalar(object, p)
+	}
+	return nil
+}
+
+// VisitElements calls fn for each element in a SequenceNode.
+// Returns an error for non-SequenceNodes
+func VisitElements(rn *yaml.RNode, fn func(node *yaml.RNode, i int) error) error {
+	elements, err := rn.Elements()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	for i := range elements {
+		if err := fn(elements[i], i); err != nil {
+			return errors.Wrap(err)
+		}
 	}
 	return nil
 }

@@ -112,18 +112,17 @@ func (sr *SearchReplace) visitMapping(object *yaml.RNode, path string) error {
 
 // visitSequence parses sequence node
 func (sr *SearchReplace) visitSequence(object *yaml.RNode, path string) error {
-	// TODO: pmarupaka support sequence nodes
 	return nil
 }
 
 // visitScalar parses scalar node
 func (sr *SearchReplace) visitScalar(object *yaml.RNode, path string) error {
-	pathMatch, err := sr.pathMatch(path)
-	if err != nil {
-		return err
-	}
+	return sr.matchAndReplace(object.Document(), path)
+}
 
-	valueMatch := object.Document().Value == sr.ByValue || sr.regexMatch(object.Document().Value)
+func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
+	pathMatch := sr.pathMatch(path)
+	valueMatch := node.Value == sr.ByValue || sr.regexMatch(node.Value)
 
 	// at least one of path or value must be matched
 	if (valueMatch && pathMatch) || (valueMatch && sr.ByPath == "") ||
@@ -133,7 +132,7 @@ func (sr *SearchReplace) visitScalar(object *yaml.RNode, path string) error {
 		if sr.PutLiteral != "" {
 			// TODO: pmarupaka Check if the new value honors the openAPI schema and/or
 			// current field type, throw error if it doesn't
-			object.Document().Value = sr.PutLiteral
+			node.Value = sr.PutLiteral
 		}
 
 		if sr.PutPattern != "" {
@@ -142,7 +141,7 @@ func (sr *SearchReplace) visitScalar(object *yaml.RNode, path string) error {
 			if err != nil {
 				return err
 			}
-			pattern := object.Document().Value
+			pattern := node.Value
 			// derive the pattern from the field value by replacing setter values
 			// with setter name markers
 			// e.g. if field value is "my-project-foo", input PutPattern is "${project]-*", and
@@ -151,11 +150,11 @@ func (sr *SearchReplace) visitScalar(object *yaml.RNode, path string) error {
 			for sn, sv := range settersValues {
 				pattern = strings.ReplaceAll(clean(pattern), clean(sv), fmt.Sprintf("${%s}", sn))
 			}
-			object.Document().LineComment = fmt.Sprintf(`{"$kpt-set":%q}`, pattern)
+			node.LineComment = fmt.Sprintf(`{"$kpt-set":%q}`, pattern)
 		}
 
 		if sr.filePath != "" {
-			pathVal := fmt.Sprintf("%s: %s", strings.TrimPrefix(path, PathDelimiter), object.Document().Value)
+			pathVal := fmt.Sprintf("%s: %s", strings.TrimPrefix(path, PathDelimiter), node.Value)
 			sr.Match[sr.filePath] = append(sr.Match[sr.filePath], pathVal)
 		}
 	}
@@ -169,35 +168,6 @@ func (sr *SearchReplace) regexMatch(value string) bool {
 		return false
 	}
 	return sr.regex.Match([]byte(value))
-}
-
-// pathMatch checks if the traversed yaml path matches with the user input path
-// checks if user input path is valid
-func (sr *SearchReplace) pathMatch(yamlPath string) (bool, error) {
-	if sr.ByPath == "" {
-		return false, nil
-	}
-	// TODO: pmarupaka Path expressions should be supported
-	if !isAbsPath(sr.ByPath) {
-		return false, errors.Errorf(`invalid input path, must follow pattern e.g. foo.bar.baz`)
-	}
-	return sr.ByPath == strings.TrimPrefix(yamlPath, PathDelimiter), nil
-}
-
-// isAbsPath checks if input path is absolute and not a path expression
-// only supported path format is e.g. foo.bar.baz
-func isAbsPath(path string) bool {
-	pathElem := strings.Split(path, PathDelimiter)
-	if len(pathElem) == 0 {
-		return false
-	}
-	for _, elem := range pathElem {
-		// more checks can be added in future
-		if elem == "" || strings.Contains(elem, "*") {
-			return false
-		}
-	}
-	return true
 }
 
 // putLiteral puts the literal in the user specified sr.ByPath
