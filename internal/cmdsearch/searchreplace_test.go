@@ -293,8 +293,67 @@ metadata:
  `,
 	},
 	{
-		name: "search by array objects path",
-		args: []string{"--by-path", "spec.foo[1].c"},
+		name: "search replace by array path regex",
+		args: []string{"--by-path", "spec.foo[1]", "--put-literal", "c"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - b
+ `,
+		out: `${baseDir}/
+matched 1 field(s)
+${filePath}:  spec.foo[1]: c
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - c
+ `,
+	},
+	{
+		name: "search replace by array path out of bounds",
+		args: []string{"--by-path", "spec.foo[2]", "--put-literal", "c"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - b
+ `,
+		out: `${baseDir}/
+matched 0 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - b
+ `,
+	},
+	{
+		name: "search replace by array objects path",
+		args: []string{"--by-path", "spec.foo[1].c", "--put-literal", "thing-new"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -306,15 +365,10 @@ spec:
   - c: thing0
   - c: thing1
   - c: thing2
----
-apiVersion: apps/v1
-kind: Service
-metadata:
-  name: nginx-service
  `,
 		out: `${baseDir}/
 matched 1 field(s)
-${filePath}:  spec.foo[1].c: thing1
+${filePath}:  spec.foo[1].c: thing-new
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -325,13 +379,8 @@ spec:
   replicas: 3
   foo:
   - c: thing0
-  - c: thing1
+  - c: thing-new
   - c: thing2
----
-apiVersion: apps/v1
-kind: Service
-metadata:
-  name: nginx-service
  `,
 	},
 	{

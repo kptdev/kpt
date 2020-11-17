@@ -124,7 +124,6 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 	pathMatch := sr.pathMatch(path)
 	valueMatch := node.Value == sr.ByValue || sr.regexMatch(node.Value)
 
-	// at least one of path or value must be matched
 	if (valueMatch && pathMatch) || (valueMatch && sr.ByPath == "") ||
 		(pathMatch && sr.ByValue == "" && sr.ByValueRegex == "") {
 		sr.Count++
@@ -192,7 +191,11 @@ func (sr *SearchReplace) putLiteral(object *yaml.RNode) error {
 // so that the value can be directly put without needing to traverse the entire node,
 // handles the case of adding non-existent field-value to node
 func (sr *SearchReplace) shouldPutLiteralByPath() bool {
-	return isAbsPath(sr.ByPath) && sr.ByValue == "" && sr.ByValueRegex == "" && sr.PutLiteral != ""
+	return isAbsPath(sr.ByPath) &&
+		!strings.Contains(sr.ByPath, "[") && // TODO: pmarupaka Support appending literal for arrays
+		sr.ByValue == "" &&
+		sr.ByValueRegex == "" &&
+		sr.PutLiteral != ""
 }
 
 // settersValues returns the values for the setters present in PutPattern,
