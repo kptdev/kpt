@@ -33,6 +33,12 @@ var tests = []test{
 		shouldMatch:   true,
 	},
 	{
+		name:          "simple path match with **",
+		byPath:        "a.**.c.*.d",
+		traversedPath: "a.b.c.c.d",
+		shouldMatch:   true,
+	},
+	{
 		name:          "simple path no match with *",
 		byPath:        "a.*.c.*",
 		traversedPath: "a.b.c",
@@ -43,6 +49,24 @@ var tests = []test{
 		byPath:        "a.c[0]",
 		traversedPath: "a.c[0]",
 		shouldMatch:   true,
+	},
+	{
+		name:          "array path match regex",
+		byPath:        "a.c[*].d.*[*].f",
+		traversedPath: "a.c[0].d.e[1].f",
+		shouldMatch:   true,
+	},
+	{
+		name:          "complex path match regex",
+		byPath:        "**.c[*].d.*[*].**.f",
+		traversedPath: "a.b.c[0].d.e[1].f",
+		shouldMatch:   true,
+	},
+	{
+		name:          "complex path no match regex",
+		byPath:        "**.c[*].d.d.*[*].**.f",
+		traversedPath: "a.c[2].c[0].d.e[1].f",
+		shouldMatch:   false,
 	},
 }
 
