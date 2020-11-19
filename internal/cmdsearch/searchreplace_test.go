@@ -253,6 +253,102 @@ metadata:
  `,
 	},
 	{
+		name: "search by path expression 1",
+		args: []string{"--by-path", "a.*.c"},
+		input: `
+a:
+  b1:
+    c: thing1 # MATCHES
+    d: cat
+  b2:
+    c: thing2 # MATCHES
+    d: dog
+  b3:
+    d:
+    - f:
+        c: thing3
+        d: beep
+    - f:
+        g:
+          c: thing4
+          d: boop
+    - d: mooo
+ `,
+		out: `${baseDir}/
+matched 2 field(s)
+${filePath}:  a.b1.c: thing1
+${filePath}:  a.b2.c: thing2
+`,
+		expectedResources: `
+a:
+  b1:
+    c: thing1 # MATCHES
+    d: cat
+  b2:
+    c: thing2 # MATCHES
+    d: dog
+  b3:
+    d:
+    - f:
+        c: thing3
+        d: beep
+    - f:
+        g:
+          c: thing4
+          d: boop
+    - d: mooo
+ `,
+	},
+	{
+		name: "search by path expression 2",
+		args: []string{"--by-path", "a.**.c", "--put-literal", "new-thing"},
+		input: `
+a:
+  b1:
+    c: thing1 # MATCHES
+    d: cat
+  b2:
+    c: thing2 # MATCHES
+    d: dog
+  b3:
+    d:
+    - f:
+        c: thing3 # MATCHES
+        d: beep
+    - f:
+        g:
+          c: thing4 # MATCHES
+          d: boop
+    - d: mooo
+ `,
+		out: `${baseDir}/
+matched 4 field(s)
+${filePath}:  a.b1.c: new-thing
+${filePath}:  a.b2.c: new-thing
+${filePath}:  a.b3.d[0].f.c: new-thing
+${filePath}:  a.b3.d[1].f.g.c: new-thing
+`,
+		expectedResources: `
+a:
+  b1:
+    c: new-thing # MATCHES
+    d: cat
+  b2:
+    c: new-thing # MATCHES
+    d: dog
+  b3:
+    d:
+    - f:
+        c: new-thing # MATCHES
+        d: beep
+    - f:
+        g:
+          c: new-thing # MATCHES
+          d: boop
+    - d: mooo
+ `,
+	},
+	{
 		name: "search by array path",
 		args: []string{"--by-path", "spec.foo[1]"},
 		input: `

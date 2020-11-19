@@ -39,7 +39,7 @@ type test struct {
 }
 
 func TestSearchCommand(t *testing.T) {
-	for _, tests := range [][]test{searchReplaceCases, putPatternCases} {
+	for _, tests := range [][]test{searchReplaceCases, putPatternCases, validateCases} {
 		for i := range tests {
 			test := tests[i]
 			t.Run(test.name, func(t *testing.T) {

@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/instrumenta/kubeval/kubeval"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -61,6 +62,11 @@ type SearchReplace struct {
 	filePath string
 
 	PackagePath string
+
+	// validate against openAPI schema
+	Validate bool
+
+	ValidationResult map[string][]kubeval.ValidationResult
 }
 
 // Perform performs the search and replace operation on each node in the package path
@@ -72,6 +78,7 @@ func (sr *SearchReplace) Perform(resourcesPath string) error {
 	}
 
 	sr.Match = make(map[string][]string)
+	sr.ValidationResult = make(map[string][]kubeval.ValidationResult)
 
 	if sr.ByValueRegex != "" {
 		re, err := regexp.Compile(sr.ByValueRegex)
@@ -83,13 +90,17 @@ func (sr *SearchReplace) Perform(resourcesPath string) error {
 
 	return kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
-		Filters: []kio.Filter{kio.FilterAll(sr)},
+		Filters: []kio.Filter{filterAll(sr)},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
 }
 
 // Filter parses input node and performs search and replace operation on the node
 func (sr *SearchReplace) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+	originalObject, err := deepCopy(object)
+	if err != nil {
+		return object, err
+	}
 	filePath, _, err := kioutil.GetFileAnnotations(object)
 	if err != nil {
 		return object, err
@@ -97,12 +108,28 @@ func (sr *SearchReplace) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	sr.filePath = filePath
 
 	if sr.shouldPutLiteralByPath() {
-		return object, sr.putLiteral(object)
+		err = sr.putLiteral(object)
+	} else {
+		// traverse the node to perform search/put operation
+		err = accept(sr, object)
 	}
 
-	// traverse the node to perform search/put operation
-	err = accept(sr, object)
-	return object, err
+	if err != nil {
+		return object, err
+	}
+
+	if sr.Validate {
+		validateResult, err := ValidateNode(object)
+		if err != nil {
+			return object, err
+		}
+		sr.ValidationResult[sr.filePath] = append(sr.ValidationResult[sr.filePath], validateResult...)
+		if len(validateResult) > 0 && len(validateResult[0].Errors) > 0 {
+			return originalObject, nil
+		}
+	}
+
+	return object, nil
 }
 
 // visitMapping parses mapping node
@@ -230,4 +257,37 @@ func (sr *SearchReplace) settersValues() (map[string]string, error) {
 // clean trims the string and removes quotes around it
 func clean(input string) string {
 	return strings.Trim(strings.TrimSpace(input), `"`)
+}
+
+// Validate validates the yaml content against kubernetes schema used by kubeval
+func ValidateNode(object *yaml.RNode) ([]kubeval.ValidationResult, error) {
+	objStr, err := object.String()
+	if err != nil {
+		return nil, err
+	}
+	config := kubeval.NewDefaultConfig()
+	return kubeval.Validate([]byte(objStr), config)
+}
+
+// deepCopy deep copies an RNode object
+func deepCopy(object *yaml.RNode) (*yaml.RNode, error) {
+	objStr, err := object.String()
+	if err != nil {
+		return nil, err
+	}
+	return yaml.Parse(objStr)
+}
+
+// filterAll runs the yaml.Filter against all inputs
+func filterAll(filter yaml.Filter) kio.Filter {
+	return kio.FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		for i := range nodes {
+			node, err := filter.Filter(nodes[i])
+			if err != nil {
+				return nil, errors.Wrap(err)
+			}
+			nodes[i] = node
+		}
+		return nodes, nil
+	})
 }

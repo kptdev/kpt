@@ -48,6 +48,8 @@ func NewSearchRunner(name string) *SearchRunner {
 		"Set or update the value of the matching fields with the given literal value.")
 	c.Flags().StringVar(&r.PutPattern, "put-pattern", "",
 		"Put the setter pattern as a line comment for matching fields.")
+	c.Flags().BoolVar(&r.Validate, "validate", false,
+		"Validates that the resource against schema after updating")
 	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
 		"search recursively in all the nested subpackages")
 
@@ -72,6 +74,7 @@ type SearchRunner struct {
 	ByPath             string
 	PutLiteral         string
 	PutPattern         string
+	Validate           bool
 	RecurseSubPackages bool
 }
 
@@ -109,6 +112,7 @@ func (r *SearchRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		PutLiteral:   r.PutLiteral,
 		PutPattern:   r.PutPattern,
 		PackagePath:  pkgPath,
+		Validate:     r.Validate,
 	}
 	err := s.Perform(pkgPath)
 	fmt.Fprintf(w, "matched %d field(s)\n", s.Count)
@@ -117,5 +121,20 @@ func (r *SearchRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 			fmt.Fprintf(w, "%s:  %s\n", filePath, nodeVal)
 		}
 	}
-	return errors.Wrap(err)
+
+	if r.Validate {
+		printHeader := true
+		for filePath, validationResult := range s.ValidationResult {
+			for _, res := range validationResult {
+				for _, err := range res.Errors {
+					if printHeader {
+						fmt.Fprintf(w, "validation errors\n")
+						printHeader = false
+					}
+					fmt.Fprintf(w, "%s:  %s\n", filePath, err.String())
+				}
+			}
+		}
+	}
+	return err
 }
