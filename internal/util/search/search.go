@@ -153,7 +153,11 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 		}
 
 		if sr.filePath != "" {
-			pathVal := fmt.Sprintf("%s: %s", strings.TrimPrefix(path, PathDelimiter), node.Value)
+			nodeValWithComment := node.Value
+			if node.LineComment != "" {
+				nodeValWithComment = fmt.Sprintf("%s # %s", node.Value, node.LineComment)
+			}
+			pathVal := fmt.Sprintf("%s: %s", strings.TrimPrefix(path, PathDelimiter), nodeValWithComment)
 			sr.Match[sr.filePath] = append(sr.Match[sr.filePath], pathVal)
 		}
 	}

@@ -16,7 +16,9 @@ package commands
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdsearch"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/cfgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
@@ -105,8 +107,17 @@ func GetConfigCommand(name string) *cobra.Command {
 	tree.Long = cfgdocs.TreeShort + "\n" + cfgdocs.TreeLong
 	tree.Example = cfgdocs.TreeExamples
 
+	search := cmdsearch.SearchCommand(name)
+	search.Short = cfgdocs.SearchShort
+	search.Long = cfgdocs.SearchShort + "\n" + cfgdocs.SearchLong
+	search.Example = cfgdocs.SearchExamples
+
 	cfgCmd.AddCommand(an, cat, count, createSetter, deleteSetter, deleteSubstitution, createSubstitution, fmt,
 		grep, listSetters, set, tree)
+
+	if enableSearchCmd := os.Getenv("KPT_ENABLE_SEARCH_CMD"); enableSearchCmd != "" {
+		cfgCmd.AddCommand(search)
+	}
 	return cfgCmd
 }
 

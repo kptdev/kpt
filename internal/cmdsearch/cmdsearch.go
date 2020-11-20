@@ -29,7 +29,6 @@ func NewSearchRunner(name string) *SearchRunner {
 	r := &SearchRunner{}
 	c := &cobra.Command{
 		Use:     "search DIR",
-		Short:   shortMessage,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 		Args:    cobra.ExactArgs(1),
@@ -54,11 +53,6 @@ func NewSearchRunner(name string) *SearchRunner {
 	r.Command = c
 	return r
 }
-
-const shortMessage = `Search and optionally replace fields across all resources. 
-Search matchers are provided by flags with --by- prefix. When multiple matchers 
-are provided they are AND’ed together. --put- flags are mutually exclusive.
- `
 
 func SearchCommand(name string) *cobra.Command {
 	return NewSearchRunner(name).Command
