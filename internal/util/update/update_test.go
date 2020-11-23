@@ -60,7 +60,11 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			}
 
 			// Update the local package
-			if !assert.NoError(t, Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run(),
+			if !assert.NoError(t, Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run(),
 				u.updater) {
 				return
 			}
@@ -104,7 +108,12 @@ func TestCommand_Run_subDir(t *testing.T) {
 			}
 
 			// Update the local package
-			if !assert.NoError(t, Command{Path: "java", Ref: "v1.2", Strategy: u.updater}.Run(),
+			if !assert.NoError(t, Command{
+				Path:            "java",
+				FullPackagePath: toAbsPath(t, "java"),
+				Ref:             "v1.2",
+				Strategy:        u.updater,
+			}.Run(),
 				u.updater) {
 				return
 			}
@@ -146,7 +155,11 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			}
 
 			// Update the local package
-			err := Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if u.err == "" {
 				if !assert.NoError(t, err, u.updater) {
 					return
@@ -201,7 +214,11 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			}
 
 			// Update the local package
-			err = Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err = Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
@@ -244,7 +261,11 @@ func TestCommand_Run_noAdd(t *testing.T) {
 			}
 
 			// Update the local package
-			err = Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err = Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
@@ -325,10 +346,11 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 
 			// run the command
 			err := Command{
-				Path:          g.UpstreamRepo.RepoName,
-				Ref:           "master",
-				Strategy:      u.updater,
-				SimpleMessage: true, // so merge conflict marks are predictable
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Ref:             "master",
+				Strategy:        u.updater,
+				SimpleMessage:   true, // so merge conflict marks are predictable
 			}.Run()
 
 			// check the error response
@@ -384,9 +406,10 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "exp",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "exp",
 			}.Run(),
 				u.updater) {
 				return
@@ -440,9 +463,10 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "v1.0",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "v1.0",
 			}.Run(),
 				u.updater) {
 				return
@@ -491,9 +515,10 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "v1.0",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "v1.0",
 			}.Run(),
 				u.updater) {
 				t.FailNow()
@@ -575,9 +600,10 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "v1.0",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "v1.0",
 			}.Run(),
 				u.updater) {
 				return
@@ -616,7 +642,13 @@ func TestCommand_Run_emitPatch(t *testing.T) {
 
 	// Update the local package
 	b := &bytes.Buffer{}
-	err = Command{Path: g.UpstreamRepo.RepoName, Strategy: AlphaGitPatch, DryRun: true, Output: b}.Run()
+	err = Command{
+		Path:            g.UpstreamRepo.RepoName,
+		FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+		Strategy:        AlphaGitPatch,
+		DryRun:          true,
+		Output:          b,
+	}.Run()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -641,7 +673,12 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 	}
 	for _, u := range updates {
 		func() {
-			err := Command{Path: filepath.Join("fake", "path"), Strategy: u.updater}.Run()
+			path := filepath.Join("fake", "path")
+			err := Command{
+				Path:            path,
+				FullPackagePath: toAbsPath(t, path),
+				Strategy:        u.updater,
+			}.Run()
 			if assert.Error(t, err, u.updater) {
 				assert.Contains(t, err.Error(), "no such file or directory", u.updater)
 			}
@@ -672,88 +709,17 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 				return
 			}
 
-			err := Command{Path: g.UpstreamRepo.RepoName, Ref: "exp", Strategy: u.updater}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Ref:             "exp",
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
 			assert.Contains(t, err.Error(), "failed to clone git repo", u.updater)
 
-			if !g.AssertLocalDataEquals(testutil.Dataset1) {
-				return
-			}
-		}()
-	}
-}
-
-func TestCommand_Run_absolutePath(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-
-	for _, u := range updates {
-		func() {
-			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
-				// Update upstream to Dataset2
-				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
-			}
-			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
-				return
-			}
-
-			err := Command{
-				Path:     filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.UpstreamRepo.RepoName),
-				Ref:      "exp",
-				Strategy: u.updater}.Run()
-			if !assert.Error(t, err) {
-				return
-			}
-			assert.Contains(t, err.Error(),
-				"package path must be relative", u.updater)
-			if !g.AssertLocalDataEquals(testutil.Dataset1) {
-				return
-			}
-		}()
-	}
-}
-
-func TestCommand_Run_relativePath(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-
-	for _, u := range updates {
-		func() {
-			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
-				// Update upstream to Dataset2
-				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
-			}
-			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
-				return
-			}
-
-			err := Command{
-				Path:     filepath.Join(g.UpstreamRepo.RepoName, "..", "..", "foo"),
-				Ref:      "exp",
-				Strategy: u.updater}.Run()
-			if !assert.Error(t, err) {
-				return
-			}
-			assert.Contains(t, err.Error(),
-				"must be under current working directory", u.updater)
 			if !g.AssertLocalDataEquals(testutil.Dataset1) {
 				return
 			}
@@ -781,7 +747,11 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 			}
 
 			// Update the local package
-			err := Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err, u.updater) {
 				return
 			}
@@ -970,7 +940,11 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				return
 			}
 
-			err := Command{Path: g.UpstreamRepo.RepoName, Strategy: KResourceMerge}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        KResourceMerge,
+			}.Run()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -992,6 +966,14 @@ func expandPkg(t *testing.T, pkg *dataset.Pkg) string {
 		t.FailNow()
 	}
 	return filepath.Join(dir, pkg.Name())
+}
+
+func toAbsPath(t *testing.T, path string) string {
+	cwd, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	return filepath.Join(cwd, path)
 }
 
 type nonKRMTestCase struct {
