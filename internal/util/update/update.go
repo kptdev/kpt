@@ -18,7 +18,6 @@ package update
 import (
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
@@ -105,6 +104,9 @@ type Command struct {
 	// Path is the filepath to the local package
 	Path string
 
+	// FullPackagePath is the absolute path to the local package
+	FullPackagePath string
+
 	// Ref is the ref to update to
 	Ref string
 
@@ -135,14 +137,6 @@ type Command struct {
 func (u Command) Run() error {
 	if u.Output == nil {
 		u.Output = os.Stdout
-	}
-
-	if filepath.IsAbs(u.Path) {
-		return errors.Errorf("package path must be relative")
-	}
-	u.Path = filepath.Clean(u.Path)
-	if strings.HasPrefix(u.Path, "../") {
-		return errors.Errorf("package path must be under current working directory")
 	}
 
 	kptfile, err := kptfileutil.ReadFileStrict(u.Path)
