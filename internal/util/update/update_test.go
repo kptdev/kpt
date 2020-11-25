@@ -23,13 +23,15 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/dataset"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -60,8 +62,11 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			}
 
 			// Update the local package
-			if !assert.NoError(t, Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run(),
-				u.updater) {
+			if !assert.NoError(t, Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run(), u.updater) {
 				return
 			}
 
@@ -73,7 +78,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "master") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "master") {
 				return
 			}
 		}()
@@ -104,7 +109,12 @@ func TestCommand_Run_subDir(t *testing.T) {
 			}
 
 			// Update the local package
-			if !assert.NoError(t, Command{Path: "java", Ref: "v1.2", Strategy: u.updater}.Run(),
+			if !assert.NoError(t, Command{
+				Path:            "java",
+				FullPackagePath: toAbsPath(t, "java"),
+				Ref:             "v1.2",
+				Strategy:        u.updater,
+			}.Run(),
 				u.updater) {
 				return
 			}
@@ -117,7 +127,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "v1.2") {
+			if !g.AssertKptfile(g.GetSubDirectory, commit, "v1.2") {
 				return
 			}
 		}()
@@ -146,7 +156,11 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			}
 
 			// Update the local package
-			err := Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if u.err == "" {
 				if !assert.NoError(t, err, u.updater) {
 					return
@@ -164,7 +178,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "master") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "master") {
 				return
 			}
 		}()
@@ -201,7 +215,11 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			}
 
 			// Update the local package
-			err = Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err = Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
@@ -244,7 +262,11 @@ func TestCommand_Run_noAdd(t *testing.T) {
 			}
 
 			// Update the local package
-			err = Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err = Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
@@ -325,10 +347,11 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 
 			// run the command
 			err := Command{
-				Path:          g.UpstreamRepo.RepoName,
-				Ref:           "master",
-				Strategy:      u.updater,
-				SimpleMessage: true, // so merge conflict marks are predictable
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Ref:             "master",
+				Strategy:        u.updater,
+				SimpleMessage:   true, // so merge conflict marks are predictable
 			}.Run()
 
 			// check the error response
@@ -348,7 +371,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			if !g.AssertLocalDataEquals(u.expectedData) {
 				t.FailNow()
 			}
-			if !g.AssertKptfile(expectedCommit, "master") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, expectedCommit, "master") {
 				t.FailNow()
 			}
 		}()
@@ -384,9 +407,10 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "exp",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "exp",
 			}.Run(),
 				u.updater) {
 				return
@@ -404,7 +428,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "exp") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "exp") {
 				return
 			}
 		}()
@@ -440,9 +464,10 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "v1.0",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "v1.0",
 			}.Run(),
 				u.updater) {
 				return
@@ -460,7 +485,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "v1.0") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "v1.0") {
 				return
 			}
 		}()
@@ -491,9 +516,10 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "v1.0",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "v1.0",
 			}.Run(),
 				u.updater) {
 				t.FailNow()
@@ -511,7 +537,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			if !g.AssertKptfile(commit, "v1.0") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "v1.0") {
 				t.FailNow()
 			}
 		}()
@@ -575,9 +601,10 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				Path:     g.UpstreamRepo.RepoName,
-				Strategy: u.updater,
-				Ref:      "v1.0",
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+				Ref:             "v1.0",
 			}.Run(),
 				u.updater) {
 				return
@@ -616,7 +643,13 @@ func TestCommand_Run_emitPatch(t *testing.T) {
 
 	// Update the local package
 	b := &bytes.Buffer{}
-	err = Command{Path: g.UpstreamRepo.RepoName, Strategy: AlphaGitPatch, DryRun: true, Output: b}.Run()
+	err = Command{
+		Path:            g.UpstreamRepo.RepoName,
+		FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+		Strategy:        AlphaGitPatch,
+		DryRun:          true,
+		Output:          b,
+	}.Run()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -641,7 +674,12 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 	}
 	for _, u := range updates {
 		func() {
-			err := Command{Path: filepath.Join("fake", "path"), Strategy: u.updater}.Run()
+			path := filepath.Join("fake", "path")
+			err := Command{
+				Path:            path,
+				FullPackagePath: toAbsPath(t, path),
+				Strategy:        u.updater,
+			}.Run()
 			if assert.Error(t, err, u.updater) {
 				assert.Contains(t, err.Error(), "no such file or directory", u.updater)
 			}
@@ -672,7 +710,12 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 				return
 			}
 
-			err := Command{Path: g.UpstreamRepo.RepoName, Ref: "exp", Strategy: u.updater}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Ref:             "exp",
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
@@ -705,7 +748,11 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 			}
 
 			// Update the local package
-			err := Command{Path: g.UpstreamRepo.RepoName, Strategy: u.updater}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        u.updater,
+			}.Run()
 			if !assert.Error(t, err, u.updater) {
 				return
 			}
@@ -717,152 +764,591 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 func TestCommand_Run_subpackages(t *testing.T) {
 	testCases := []struct {
 		name            string
-		initialUpstream *dataset.Pkg
-		updatedUpstream *dataset.Pkg
-		updatedLocal    *dataset.Pkg
-		expectedLocal   *dataset.Pkg
+		initialUpstream *pkgbuilder.Pkg
+		updatedUpstream Content
+		updatedLocal    Content
+		expectedLocal   *pkgbuilder.Pkg
+		expectedErrMsg  string
 	}{
 		{
-			// TODO(mortent): This does not handle Kptfiles correctly.
 			name: "update fetches any new subpackages",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewPackage("nestedbar").
+									WithKptfile(),
+							),
+						pkgbuilder.NewPackage("zork").
+							WithKptfile(),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile().
 						WithSubPackages(
-							dataset.NewPackage("nestedbar").
+							pkgbuilder.NewPackage("nestedbar").
 								WithKptfile(),
 						),
-					dataset.NewPackage("zork").
+					pkgbuilder.NewPackage("zork").
 						WithKptfile(),
-				),
-			expectedLocal: dataset.NewPackage("foo").
-				WithKptfile().
-				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile().
-						WithSubPackages(
-							dataset.NewPackage("nestedbar"),
-						),
-					dataset.NewPackage("zork"),
 				),
 		},
 		{
 			name: "local updates remain after noop update",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedLocal: dataset.NewPackage("foo").
+			updatedLocal: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile(),
+						pkgbuilder.NewPackage("zork").
+							WithKptfile(),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("zork").
-						WithKptfile(),
-				),
-			expectedLocal: dataset.NewPackage("foo").
-				WithKptfile().
-				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
-					dataset.NewPackage("zork").
+					pkgbuilder.NewPackage("zork").
 						WithKptfile(),
 				),
 		},
 		{
 			name: "non-overlapping additions in both upstream and local is ok",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile(),
+						pkgbuilder.NewPackage("zork").
+							WithKptfile(),
+					),
+			},
+			updatedLocal: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile(),
+						pkgbuilder.NewPackage("abc").
+							WithKptfile(),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("zork").
+					pkgbuilder.NewPackage("zork").
 						WithKptfile(),
-				),
-			updatedLocal: dataset.NewPackage("foo").
-				WithKptfile().
-				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
-					dataset.NewPackage("abc").
-						WithKptfile(),
-				),
-			expectedLocal: dataset.NewPackage("foo").
-				WithKptfile().
-				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
-					dataset.NewPackage("zork"),
-					dataset.NewPackage("abc").
+					pkgbuilder.NewPackage("abc").
 						WithKptfile(),
 				),
 		},
 		{
-			// TODO(mortent): This probably shouldn't work.
 			name: "overlapping additions in both upstream and local is not ok",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile(),
+						pkgbuilder.NewPackage("abc").
+							WithKptfile(),
+					),
+			},
+			updatedLocal: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile(),
+						pkgbuilder.NewPackage("abc").
+							WithKptfile(),
+					),
+			},
+			expectedErrMsg: "subpackage \"abc\" added in both upstream and local",
+		},
+		{
+			name: "subpackages deleted in upstream are deleted in fork",
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
-					dataset.NewPackage("abc").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedLocal: dataset.NewPackage("foo").
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile(),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
+				WithKptfile(),
+		},
+		{
+			name: "multiple layers of subpackages added in upstream",
+			initialUpstream: pkgbuilder.NewPackage("foo").
+				WithKptfile(),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewPackage("nestedbar").
+									WithKptfile(),
+							),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
-					dataset.NewPackage("abc").
-						WithKptfile(),
-				),
-			expectedLocal: dataset.NewPackage("foo").
-				WithKptfile().
-				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
-					dataset.NewPackage("abc").
-						WithKptfile(),
+					pkgbuilder.NewPackage("bar").
+						WithKptfile().
+						WithSubPackages(
+							pkgbuilder.NewPackage("nestedbar").
+								WithKptfile(),
+						),
 				),
 		},
 		{
-			// TODO(mortent): It seems like the behavior here is not correct.
-			name: "subpackages deleted in upstream are deleted in fork",
-			initialUpstream: dataset.NewPackage("foo").
-				WithKptfile().
+			name: "new setters are merged correctly",
+			initialUpstream: pkgbuilder.NewPackage("foo").
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithSetters(
+						pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
+						pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
+					),
+				).
+				WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+					pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+					pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+				}).
 				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
+					pkgbuilder.NewPackage("nosetters").
+						WithKptfile().
+						WithResource(pkgbuilder.DeploymentResource),
+					pkgbuilder.NewPackage("storage").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
+								pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
+							),
+						).
+						WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+							pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+							pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+						}),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
-				WithKptfile(),
-			expectedLocal: dataset.NewPackage("foo").
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile(pkgbuilder.NewKptfile().
+						WithSetters(
+							pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
+							pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
+						),
+					).
+					WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+						pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+						pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+					}).
+					WithSubPackages(
+						pkgbuilder.NewPackage("nosetters").
+							WithKptfile(pkgbuilder.NewKptfile().
+								WithSetters(
+									pkgbuilder.NewSetter("new-setter", "some-value"),
+								),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+						pkgbuilder.NewPackage("storage").
+							WithKptfile(pkgbuilder.NewKptfile().
+								WithSetters(
+									pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
+									pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
+								),
+							).
+							WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+								pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+								pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+							}),
+					),
+			},
+			updatedLocal: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile(pkgbuilder.NewKptfile().
+						WithSetters(
+							pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
+							pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
+						),
+					).
+					WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+						pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+						pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+					},
+						pkgbuilder.SetFieldPath("my-project", "metadata", "namespace"),
+						pkgbuilder.SetFieldPath("a1234", "spec", "foo"),
+					).
+					WithSubPackages(
+						pkgbuilder.NewPackage("nosetters").
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						pkgbuilder.NewPackage("storage").
+							WithKptfile(pkgbuilder.NewKptfile().
+								WithSetters(
+									pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
+									pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
+								),
+							).
+							WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+								pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+								pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+							},
+								pkgbuilder.SetFieldPath("my-project", "metadata", "namespace"),
+								pkgbuilder.SetFieldPath("a1234", "spec", "foo"),
+							),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithSetters(
+						pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
+						pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
+					),
+				).
+				WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+					pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+					pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+				},
+					pkgbuilder.SetFieldPath("my-project", "metadata", "namespace"),
+					pkgbuilder.SetFieldPath("a1234", "spec", "foo"),
+				).
+				WithSubPackages(
+					pkgbuilder.NewPackage("nosetters").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("new-setter", "some-value"),
+							),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+					pkgbuilder.NewPackage("storage").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
+								pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
+							),
+						).
+						WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
+							pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
+							pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
+						},
+							pkgbuilder.SetFieldPath("my-project", "metadata", "namespace"),
+							pkgbuilder.SetFieldPath("a1234", "spec", "foo"),
+						),
+				),
+		},
+		{
+			name: "removed Kptfile from upstream should remain in local",
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
-						WithKptfile(),
+					pkgbuilder.NewPackage("bar").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("name", "my-name"),
+							),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithResource(pkgbuilder.DeploymentResource),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
+				WithKptfile().
+				WithSubPackages(
+					pkgbuilder.NewPackage("bar").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("name", "my-name"),
+							),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+		},
+		{
+			name: "Kptfile added only on local should remain",
+			initialUpstream: pkgbuilder.NewPackage("foo").
+				WithKptfile().
+				WithSubPackages(
+					pkgbuilder.NewPackage("bar").
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithResource(pkgbuilder.DeploymentResource).
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			updatedLocal: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile(pkgbuilder.NewKptfile().
+								WithSetters(
+									pkgbuilder.NewSetter("name", "my-name"),
+								),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
+				WithKptfile().
+				WithSubPackages(
+					pkgbuilder.NewPackage("bar").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("name", "my-name"),
+							),
+						).
+						WithResource(pkgbuilder.DeploymentResource).
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+		},
+		{
+			name: "subpackage deleted from upstream are also deleted in local if unchanged",
+			initialUpstream: pkgbuilder.NewPackage("foo").
+				WithKptfile().
+				WithSubPackages(
+					pkgbuilder.NewPackage("bar").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("foo", "val"),
+							),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile(),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
+				WithKptfile(),
+		},
+		{
+			name: "subpackage deleted from upstream remain in local if changed",
+			initialUpstream: pkgbuilder.NewPackage("foo").
+				WithKptfile().
+				WithSubPackages(
+					pkgbuilder.NewPackage("bar").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("foo", "val"),
+							),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile(),
+			},
+			updatedLocal: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile().
+					WithSubPackages(
+						pkgbuilder.NewPackage("bar").
+							WithKptfile(pkgbuilder.NewKptfile().
+								WithSetters(
+									pkgbuilder.NewSetter("foo", "val"),
+								),
+							).
+							WithResource(pkgbuilder.DeploymentResource,
+								pkgbuilder.SetFieldPath("34", "spec", "replicas")),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
+				WithKptfile().
+				WithSubPackages(
+					pkgbuilder.NewPackage("bar").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("foo", "val"),
+							),
+						).
+						WithResource(pkgbuilder.DeploymentResource,
+							pkgbuilder.SetFieldPath("34", "spec", "replicas")),
+				),
+		},
+		{
+			name: "autosetters behave correctly for deeply nested packages",
+			initialUpstream: pkgbuilder.NewPackage("foo").
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithSetters(
+						pkgbuilder.NewSetter("band", "placeholder"),
+					),
+				),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile(pkgbuilder.NewKptfile().
+						WithSetters(
+							pkgbuilder.NewSetter("band", "placeholder"),
+						),
+					).WithSubPackages(
+					pkgbuilder.NewPackage("bar").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithSetters(
+								pkgbuilder.NewSetter("band", "placeholder"),
+							),
+						).
+						WithSubPackages(
+							pkgbuilder.NewPackage("nestedbar").
+								WithKptfile(pkgbuilder.NewKptfile().
+									WithSetters(
+										pkgbuilder.NewSetter("band", "placeholder"),
+									),
+								),
+						),
+				),
+			},
+			updatedLocal: Content{
+				Pkg: pkgbuilder.NewPackage("foo").
+					WithKptfile(pkgbuilder.NewKptfile().
+						WithSetters(
+							pkgbuilder.NewSetSetter("band", "Hüsker Dü"),
+						),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("foo").
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithSetters(
+						pkgbuilder.NewSetSetter("band", "Hüsker Dü"),
+					),
+				).WithSubPackages(
+				pkgbuilder.NewPackage("bar").
+					WithKptfile(pkgbuilder.NewKptfile().
+						WithSetters(
+							pkgbuilder.NewSetSetter("band", "Hüsker Dü"),
+						),
+					).
+					WithSubPackages(
+						pkgbuilder.NewPackage("nestedbar").
+							WithKptfile(pkgbuilder.NewKptfile().
+								WithSetters(
+									pkgbuilder.NewSetSetter("band", "Hüsker Dü"),
+								),
+							),
+					),
+			),
+		},
+		{
+			name: "Kptfile in nested packages are also merged",
+			initialUpstream: pkgbuilder.NewPackage("base").
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithUpstream("github.com/foo/bar", "somebranch"),
+				).
+				WithSubPackages(
+					pkgbuilder.NewPackage("subpkg").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithUpstream("gitlab.com/comp/proj", "1234abcd").
+							WithSetters(
+								pkgbuilder.NewSetter("setter1", "value1"),
+							),
+						),
+				),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("base").
+					WithKptfile(pkgbuilder.NewKptfile().
+						WithUpstream("github.com/foo/bar", "somebranch"),
+					).
+					WithSubPackages(
+						pkgbuilder.NewPackage("subpkg").
+							WithKptfile(pkgbuilder.NewKptfile().
+								WithUpstream("gitlab.com/comp/proj", "abcd1234").
+								WithSetters(
+									pkgbuilder.NewSetter("setter1", "value1"),
+									pkgbuilder.NewSetter("setter2", "value2"),
+								),
+							),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("base").
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithUpstream("github.com/foo/bar", "somebranch"),
+				).
+				WithSubPackages(
+					pkgbuilder.NewPackage("subpkg").
+						WithKptfile(pkgbuilder.NewKptfile().
+							WithUpstream("gitlab.com/comp/proj", "abcd1234").
+							WithSetters(
+								pkgbuilder.NewSetter("setter1", "value1"),
+								pkgbuilder.NewSetter("setter2", "value2"),
+							),
+						),
+				),
+		},
+		{
+			name: "Upstream package doesn't need to have a Kptfile in the root",
+			initialUpstream: pkgbuilder.NewPackage("").
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewPackage("subpkg").
+						WithKptfile(pkgbuilder.NewKptfile()),
+				),
+			updatedUpstream: Content{
+				Pkg: pkgbuilder.NewPackage("").
+					WithResource(pkgbuilder.DeploymentResource).
+					WithResource(pkgbuilder.ConfigMapResource).
+					WithSubPackages(
+						pkgbuilder.NewPackage("subpkg").
+							WithKptfile(pkgbuilder.NewKptfile()),
+					),
+			},
+			expectedLocal: pkgbuilder.NewPackage("").
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewPackage("subpkg").
+						WithKptfile(pkgbuilder.NewKptfile()),
 				),
 		},
 	}
@@ -870,52 +1356,80 @@ func TestCommand_Run_subpackages(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			dir := expandPkg(t, test.initialUpstream)
+			dir := pkgbuilder.ExpandPkg(t, test.initialUpstream)
 
 			g := &TestSetupManager{
 				T: t, Name: "UpdateTest",
 			}
 			defer g.Clean()
-			if test.updatedUpstream != nil {
+			if test.updatedUpstream.Pkg != nil {
 				g.UpstreamChanges = []Content{
-					{
-						Data: expandPkg(t, test.updatedUpstream),
-					},
+					test.updatedUpstream,
 				}
 			}
-			if test.updatedLocal != nil {
+			if test.updatedLocal.Pkg != nil {
 				g.LocalChanges = []Content{
-					{
-						Data: expandPkg(t, test.updatedLocal),
-					},
+					test.updatedLocal,
 				}
 			}
 			if !g.Init(dir) {
 				return
 			}
 
-			err := Command{Path: g.UpstreamRepo.RepoName, Strategy: KResourceMerge}.Run()
+			err := Command{
+				Path:            g.UpstreamRepo.RepoName,
+				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				Strategy:        KResourceMerge,
+			}.Run()
+			if test.expectedErrMsg != "" {
+				assert.Contains(t, err.Error(), test.expectedErrMsg)
+				return
+			}
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			if !g.AssertLocalDataEquals(expandPkg(t, test.expectedLocal)) {
+			// Format the Kptfiles so we can diff the output without
+			// formatting issues.
+			rw := &kio.LocalPackageReadWriter{
+				NoDeleteFiles:  true,
+				PackagePath:    g.LocalWorkspace.FullPackagePath(),
+				MatchFilesGlob: []string{kptfile.KptFileName},
+			}
+			err = kio.Pipeline{
+				Inputs:  []kio.Reader{rw},
+				Filters: []kio.Filter{filters.FormatFilter{}},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if test.expectedLocal.Name == "" {
+				test.expectedLocal.Name = g.LocalWorkspace.PackageDir
+			}
+			expectedPath := pkgbuilder.ExpandPkg(t, test.expectedLocal)
+
+			if !g.AssertLocalDataEquals(expectedPath) {
+				t.FailNow()
+			}
+			commit, err := g.UpstreamRepo.GetCommit()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !g.AssertKptfileEquals(expectedPath, commit, "master") {
 				t.FailNow()
 			}
 		})
 	}
 }
 
-func expandPkg(t *testing.T, pkg *dataset.Pkg) string {
-	dir, err := ioutil.TempDir("", "test-kpt-builder-")
+func toAbsPath(t *testing.T, path string) string {
+	cwd, err := os.Getwd()
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	err = pkg.Build(dir)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	return filepath.Join(dir, pkg.Name())
+	return filepath.Join(cwd, path)
 }
 
 type nonKRMTestCase struct {
@@ -1034,6 +1548,7 @@ type Content struct {
 	CreateBranch bool
 	Branch       string
 	Data         string
+	Pkg          *pkgbuilder.Pkg
 	Tag          string
 	Message      string
 }
@@ -1135,7 +1650,14 @@ func updateGitDir(t *testing.T, gitDir GitDirectory, changes []Content) error {
 			}
 		}
 
-		err := gitDir.ReplaceData(content.Data)
+		var pkgData string
+		if content.Pkg != nil {
+			pkgData = pkgbuilder.ExpandPkg(t, content.Pkg)
+		} else {
+			pkgData = content.Data
+		}
+
+		err := gitDir.ReplaceData(pkgData)
 		if !assert.NoError(t, err) {
 			return err
 		}
@@ -1154,11 +1676,7 @@ func updateGitDir(t *testing.T, gitDir GitDirectory, changes []Content) error {
 	return nil
 }
 
-func (g *TestSetupManager) AssertKptfile(commit, ref string) bool {
-	name := g.UpstreamRepo.RepoName
-	if g.targetDir != "" {
-		name = g.targetDir
-	}
+func (g *TestSetupManager) AssertKptfile(name, commit, ref string) bool {
 	expectedKptfile := kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -1184,6 +1702,19 @@ func (g *TestSetupManager) AssertKptfile(commit, ref string) bool {
 
 	return g.UpstreamRepo.AssertKptfile(
 		g.T, filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir), expectedKptfile)
+}
+
+func (g *TestSetupManager) AssertKptfileEquals(path, commit, ref string) bool {
+	kf, err := kptfileutil.ReadFile(path)
+	if !assert.NoError(g.T, err) {
+		g.T.FailNow()
+	}
+	kf.Upstream.Type = kptfile.GitOrigin
+	kf.Upstream.Git.Directory = g.GetSubDirectory
+	kf.Upstream.Git.Commit = commit
+	kf.Upstream.Git.Ref = ref
+	kf.Upstream.Git.Repo = g.UpstreamRepo.RepoDirectory
+	return g.UpstreamRepo.AssertKptfile(g.T, g.LocalWorkspace.FullPackagePath(), kf)
 }
 
 func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {

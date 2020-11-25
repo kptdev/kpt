@@ -500,6 +500,16 @@ func checkoutBranch(repo string, branch string, create bool) error {
 }
 
 func replaceData(repo, data string) error {
+	// If the path is absolute we assume it is the full path to the
+	// testdata. If it is relative, we assume it refers to one of the
+	// test data sets.
+	if !filepath.IsAbs(data) {
+		ds, err := GetTestDataPath()
+		if err != nil {
+			return err
+		}
+		data = filepath.Join(ds, data)
+	}
 	// Walk the data directory and copy over all files. We have special
 	// handling of the Kptfile to make sure we don't lose the Upstream data.
 	if err := filepath.Walk(data, func(path string, info os.FileInfo, err error) error {
@@ -541,7 +551,7 @@ func replaceData(repo, data string) error {
 
 		// For Kptfiles we need to keep the Upstream section even if we replace
 		// the file.
-		if filepath.Base(path) == "Kptfile" {
+		if rel == "Kptfile" {
 			dataKptfile, err := kptfileutil.ReadFile(filepath.Dir(path))
 			if err != nil {
 				return err
@@ -661,6 +671,12 @@ func tag(repo, tag string) error {
 type TestWorkspace struct {
 	WorkspaceDirectory string
 	PackageDir         string
+}
+
+// FullPackagePath returns the full path to the roor package in the
+// local workspace.
+func (w *TestWorkspace) FullPackagePath() string {
+	return filepath.Join(w.WorkspaceDirectory, w.PackageDir)
 }
 
 func (w *TestWorkspace) SetupTestWorkspace() error {

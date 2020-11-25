@@ -16,7 +16,10 @@ package testutil
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/go-errors/errors"
@@ -36,4 +39,28 @@ func AssertEqual(t *testing.T, expected, actual interface{}, msgAndArgs ...inter
 	if !assert.Equal(t, expected, actual, msgAndArgs) {
 		t.FailNow()
 	}
+}
+
+func PrintPackage(paths ...string) error {
+	path := filepath.Join(paths...)
+	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if strings.Contains(path, "/.git") {
+			return nil
+		}
+		fmt.Println(path)
+		return nil
+	})
+}
+
+func PrintFile(paths ...string) error {
+	path := filepath.Join(paths...)
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(b))
+	return nil
 }

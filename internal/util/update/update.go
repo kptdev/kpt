@@ -40,6 +40,9 @@ type UpdateOptions struct {
 	// PackagePath is the relative path to the local package
 	PackagePath string
 
+	// AbsPackagePath is the absolute path to the local package
+	AbsPackagePath string
+
 	// DryRun configures AlphaGitPatch to print a patch rather
 	// than apply it
 	DryRun bool
@@ -169,15 +172,16 @@ func (u Command) Run() error {
 		return errors.Errorf("unrecognized update strategy %s", u.Strategy)
 	}
 	err = updater().Update(UpdateOptions{
-		KptFile:       kptfile,
-		ToRef:         u.Ref,
-		ToRepo:        u.Repo,
-		PackagePath:   u.Path,
-		DryRun:        u.DryRun,
-		Verbose:       u.Verbose,
-		SimpleMessage: u.SimpleMessage,
-		Output:        u.Output,
-		AutoSet:       u.AutoSet,
+		KptFile:        kptfile,
+		ToRef:          u.Ref,
+		ToRepo:         u.Repo,
+		PackagePath:    u.Path,
+		AbsPackagePath: u.FullPackagePath,
+		DryRun:         u.DryRun,
+		Verbose:        u.Verbose,
+		SimpleMessage:  u.SimpleMessage,
+		Output:         u.Output,
+		AutoSet:        u.AutoSet,
 	})
 
 	if err != nil {
