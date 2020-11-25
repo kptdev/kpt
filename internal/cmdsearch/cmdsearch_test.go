@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 )
 
 type test struct {
@@ -134,32 +135,30 @@ func TestSearchSubPackages(t *testing.T) {
 			name:    "search-replace-recurse-subpackages",
 			dataset: "dataset-with-autosetters",
 			args:    []string{"--by-value", "myspace", "--put-literal", "otherspace"},
-			out: `${baseDir}/mysql/
-matched 1 field(s)
-deployment.yaml:  metadata.namespace: otherspace
+			out: `${baseDir}/mysql/deployment.yaml
+fieldPath: metadata.namespace
+value: otherspace # {"$openapi":"gcloud.core.project"}
 
-${baseDir}/mysql/nosetters/
-matched 1 field(s)
-deployment.yaml:  metadata.namespace: otherspace
+${baseDir}/mysql/nosetters/deployment.yaml
+fieldPath: metadata.namespace
+value: otherspace
 
-${baseDir}/mysql/storage/
-matched 1 field(s)
-deployment.yaml:  metadata.namespace: otherspace
+${baseDir}/mysql/storage/deployment.yaml
+fieldPath: metadata.namespace
+value: otherspace # {"$openapi":"gcloud.core.project"}
+
+Mutated 3 field(s)
 `,
 		},
 		{
 			name:    "search-recurse-subpackages",
 			dataset: "dataset-with-autosetters",
 			args:    []string{"--by-value", "mysql"},
-			out: `${baseDir}/mysql/
-matched 1 field(s)
-deployment.yaml:  spec.template.spec.containers[0].name: mysql
+			out: `${baseDir}/mysql/deployment.yaml
+fieldPath: spec.template.spec.containers[0].name
+value: mysql
 
-${baseDir}/mysql/nosetters/
-matched 0 field(s)
-
-${baseDir}/mysql/storage/
-matched 0 field(s)
+Matched 1 field(s)
 `,
 		},
 	}
@@ -167,6 +166,7 @@ matched 0 field(s)
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
 			testDataDir := filepath.Join("../", "testutil", "testdata")
+			fieldmeta.SetShortHandRef("$kpt-set")
 			sourceDir := filepath.Join(testDataDir, test.dataset)
 			baseDir, err := ioutil.TempDir("", "")
 			if !assert.NoError(t, err) {

@@ -32,10 +32,15 @@ kind: Service
 metadata:
   name: nginx-service
  `,
-		out: `${baseDir}/
-matched 2 field(s)
-${filePath}:  spec.replicas: 3
-${filePath}:  spec.foo: 3
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 3
+
+${baseDir}/${filePath}
+fieldPath: spec.foo
+value: 3
+
+Matched 2 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -70,10 +75,15 @@ metadata:
 foo:
   bar: 3
  `,
-		out: `${baseDir}/
-matched 2 field(s)
-${filePath}:  spec.replicas: 4
-${filePath}:  foo.bar: 4
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 4
+
+${baseDir}/${filePath}
+fieldPath: foo.bar
+value: 4
+
+Mutated 2 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -109,10 +119,15 @@ metadata:
 spec:
   replicas: 3
  `,
-		out: `${baseDir}/
-matched 2 field(s)
-${filePath}:  spec.replicas: 4
-${filePath}:  spec.replicas: 4
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 4
+
+${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 4
+
+Mutated 2 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -148,9 +163,11 @@ metadata:
 spec:
   replicas: 5
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  spec.replicas: 4
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 4
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -179,9 +196,11 @@ metadata:
 spec:
   replicas: 3
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  metadata.name: nginx-deployment
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: nginx-deployment
+
+Matched 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -203,9 +222,11 @@ metadata:
 spec:
   replicas: 3
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  metadata.name: ubuntu-deployment
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: ubuntu-deployment
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -214,6 +235,34 @@ metadata:
   name: ubuntu-deployment
 spec:
   replicas: 3
+ `,
+	},
+	{
+		name: "search replace by regex helm template and empty values",
+		args: []string{"--by-value-regex", "nginx-*", "--put-literal", "ubuntu-deployment"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: {? {replicas: ''} : ''}
+  foo:
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: ubuntu-deployment
+
+Mutated 1 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu-deployment
+spec:
+  replicas: {? {replicas: ''} : ''}
+  foo:
  `,
 	},
 	{
@@ -233,9 +282,11 @@ kind: Service
 metadata:
   name: nginx-service
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  spec.replicas: 3
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 3
+
+Matched 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -271,9 +322,11 @@ kind: Service
 metadata:
   name: nginx-service
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  spec.foo[1]: b
+		out: `${baseDir}/${filePath}
+fieldPath: spec.foo[1]
+value: b
+
+Matched 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -306,9 +359,11 @@ spec:
   - a
   - b
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  spec.foo[1]: c
+		out: `${baseDir}/${filePath}
+fieldPath: spec.foo[1]
+value: c
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -336,8 +391,7 @@ spec:
   - a
   - b
  `,
-		out: `${baseDir}/
-matched 0 field(s)
+		out: `Mutated 0 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -366,9 +420,11 @@ spec:
   - c: thing1
   - c: thing2
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  spec.foo[1].c: thing-new
+		out: `${baseDir}/${filePath}
+fieldPath: spec.foo[1].c
+value: thing-new
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -400,9 +456,11 @@ kind: Service
 metadata:
   name: nginx-service
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  spec.replicas: 4
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 4
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -430,9 +488,11 @@ metadata:
 spec:
   replicas: 3
  `,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  metadata.namespace: myspace
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.namespace
+value: myspace
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1

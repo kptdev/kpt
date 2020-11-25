@@ -48,9 +48,6 @@ type SearchReplace struct {
 	// Count is the number of matches
 	Count int
 
-	// Match is the map of file path to list of matched fields
-	Match map[string][]string
-
 	// PutLiteral is the literal to be put at to field
 	// filtered by path and/or value
 	PutLiteral string
@@ -61,6 +58,20 @@ type SearchReplace struct {
 	filePath string
 
 	PackagePath string
+
+	// Result stores the result of executing the command
+	Result []SearchResult
+}
+
+type SearchResult struct {
+	// file path of the matching field
+	FilePath  string
+
+	// field path of the matching field
+	FieldPath string
+
+	// value of the matching field
+	Value     string
 }
 
 // Perform performs the search and replace operation on each node in the package path
@@ -70,8 +81,6 @@ func (sr *SearchReplace) Perform(resourcesPath string) error {
 		NoDeleteFiles:   true,
 		PackageFileName: kptfile.KptFileName,
 	}
-
-	sr.Match = make(map[string][]string)
 
 	if sr.ByValueRegex != "" {
 		re, err := regexp.Compile(sr.ByValueRegex)
@@ -122,7 +131,9 @@ func (sr *SearchReplace) visitScalar(object *yaml.RNode, path string) error {
 
 func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 	pathMatch := sr.pathMatch(path)
-	valueMatch := node.Value == sr.ByValue || sr.regexMatch(node.Value)
+	// check if the node value matches with the input by-value-regex or the by-value
+	// empty node values are not matched
+	valueMatch := (sr.ByValue != "" && sr.ByValue == node.Value) || sr.regexMatch(node.Value)
 
 	if (valueMatch && pathMatch) || (valueMatch && sr.ByPath == "") ||
 		(pathMatch && sr.ByValue == "" && sr.ByValueRegex == "") {
@@ -153,8 +164,16 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 		}
 
 		if sr.filePath != "" {
-			pathVal := fmt.Sprintf("%s: %s", strings.TrimPrefix(path, PathDelimiter), node.Value)
-			sr.Match[sr.filePath] = append(sr.Match[sr.filePath], pathVal)
+			nodeVal, err := yaml.String(node)
+			if err != nil {
+				return err
+			}
+			res := SearchResult{
+				FilePath:  sr.filePath,
+				FieldPath: strings.TrimPrefix(path, PathDelimiter),
+				Value:     strings.TrimSpace(nodeVal),
+			}
+			sr.Result = append(sr.Result, res)
 		}
 	}
 	return nil
@@ -182,7 +201,12 @@ func (sr *SearchReplace) putLiteral(object *yaml.RNode) error {
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	sr.Match[sr.filePath] = append(sr.Match[sr.filePath], fmt.Sprintf("%s: %s", sr.ByPath, sr.PutLiteral))
+	res := SearchResult{
+		FilePath:  sr.filePath,
+		FieldPath: sr.ByPath,
+		Value:     sr.PutLiteral,
+	}
+	sr.Result = append(sr.Result, res)
 	sr.Count++
 	return nil
 }

@@ -35,9 +35,11 @@ openAPI:
         setter:
           name: replicas
           value: "3"`,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  spec.replicas: 3
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: 3 # {"$kpt-set":"${replicas}"}
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -73,9 +75,11 @@ openAPI:
         setter:
           name: kind
           value: "deployment"`,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  metadata.name: nginx-deployment
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: nginx-deployment # {"$kpt-set":"${image}-${kind}"}
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -107,10 +111,15 @@ openAPI:
         setter:
           name: project
           value: "my-project"`,
-		out: `${baseDir}/
-matched 2 field(s)
-${filePath}:  metadata.name: my-project-deployment
-${filePath}:  metadata.namespace: my-project-namespace
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: my-project-deployment # {"$kpt-set":"${project}-deployment"}
+
+${baseDir}/${filePath}
+fieldPath: metadata.namespace
+value: my-project-namespace # {"$kpt-set":"${project}-namespace"}
+
+Mutated 2 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
@@ -157,9 +166,11 @@ openAPI:
         setter:
           name: namespace
           value: "my-space"`,
-		out: `${baseDir}/
-matched 1 field(s)
-${filePath}:  metadata.name: dev/my-project/nginx
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: dev/my-project/nginx # {"$kpt-set":"${env}/${project}/${name}"}
+
+Mutated 1 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
