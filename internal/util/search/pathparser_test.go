@@ -3,7 +3,7 @@ package search
 import (
 	"testing"
 
-	"github.com/golangplus/testing/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 type test struct {
@@ -78,7 +78,7 @@ func TestPathMatch(t *testing.T) {
 				ByPath: test.byPath,
 			}
 			actual := sr.pathMatch(test.traversedPath)
-			if !assert.Equal(t, "", actual, test.shouldMatch) {
+			if !assert.Equal(t, actual, test.shouldMatch) {
 				t.FailNow()
 			}
 		})
