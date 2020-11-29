@@ -32,7 +32,7 @@ func ReadFile(dir string) (kptfile.KptFile, error) {
 
 	// if we are in a package subdirectory, find the parent dir with the Kptfile.
 	// this is necessary to parse the duck-commands for sub-directories of a package
-	for os.IsNotExist(err) && filepath.Dir(dir) != dir {
+	for os.IsNotExist(err) && filepath.Base(dir) == kptfile.KptFileName {
 		dir = filepath.Dir(dir)
 		f, err = os.Open(filepath.Join(dir, kptfile.KptFileName))
 	}
