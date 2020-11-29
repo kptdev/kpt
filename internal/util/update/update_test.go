@@ -23,7 +23,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/dataset"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
@@ -793,151 +793,151 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 func TestCommand_Run_subpackages(t *testing.T) {
 	testCases := []struct {
 		name            string
-		initialUpstream *dataset.Pkg
-		updatedUpstream *dataset.Pkg
-		updatedLocal    *dataset.Pkg
-		expectedLocal   *dataset.Pkg
+		initialUpstream *pkgbuilder.Pkg
+		updatedUpstream *pkgbuilder.Pkg
+		updatedLocal    *pkgbuilder.Pkg
+		expectedLocal   *pkgbuilder.Pkg
 	}{
 		{
 			// TODO(mortent): This does not handle Kptfiles correctly.
 			name: "update fetches any new subpackages",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
+			updatedUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile().
 						WithSubPackages(
-							dataset.NewPackage("nestedbar").
+							pkgbuilder.NewPackage("nestedbar").
 								WithKptfile(),
 						),
-					dataset.NewPackage("zork").
+					pkgbuilder.NewPackage("zork").
 						WithKptfile(),
 				),
-			expectedLocal: dataset.NewPackage("foo").
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile().
 						WithSubPackages(
-							dataset.NewPackage("nestedbar"),
+							pkgbuilder.NewPackage("nestedbar"),
 						),
-					dataset.NewPackage("zork"),
+					pkgbuilder.NewPackage("zork"),
 				),
 		},
 		{
 			name: "local updates remain after noop update",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedLocal: dataset.NewPackage("foo").
+			updatedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("zork").
+					pkgbuilder.NewPackage("zork").
 						WithKptfile(),
 				),
-			expectedLocal: dataset.NewPackage("foo").
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("zork").
+					pkgbuilder.NewPackage("zork").
 						WithKptfile(),
 				),
 		},
 		{
 			name: "non-overlapping additions in both upstream and local is ok",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
+			updatedUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("zork").
+					pkgbuilder.NewPackage("zork").
 						WithKptfile(),
 				),
-			updatedLocal: dataset.NewPackage("foo").
+			updatedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("abc").
+					pkgbuilder.NewPackage("abc").
 						WithKptfile(),
 				),
-			expectedLocal: dataset.NewPackage("foo").
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("zork"),
-					dataset.NewPackage("abc").
+					pkgbuilder.NewPackage("zork"),
+					pkgbuilder.NewPackage("abc").
 						WithKptfile(),
 				),
 		},
 		{
 			// TODO(mortent): This probably shouldn't work.
 			name: "overlapping additions in both upstream and local is not ok",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
+			updatedUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("abc").
+					pkgbuilder.NewPackage("abc").
 						WithKptfile(),
 				),
-			updatedLocal: dataset.NewPackage("foo").
+			updatedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("abc").
+					pkgbuilder.NewPackage("abc").
 						WithKptfile(),
 				),
-			expectedLocal: dataset.NewPackage("foo").
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					dataset.NewPackage("abc").
+					pkgbuilder.NewPackage("abc").
 						WithKptfile(),
 				),
 		},
 		{
 			// TODO(mortent): It seems like the behavior here is not correct.
 			name: "subpackages deleted in upstream are deleted in fork",
-			initialUpstream: dataset.NewPackage("foo").
+			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
-			updatedUpstream: dataset.NewPackage("foo").
+			updatedUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile(),
-			expectedLocal: dataset.NewPackage("foo").
+			expectedLocal: pkgbuilder.NewPackage("foo").
 				WithKptfile().
 				WithSubPackages(
-					dataset.NewPackage("bar").
+					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
 				),
 		},
@@ -982,7 +982,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 	}
 }
 
-func expandPkg(t *testing.T, pkg *dataset.Pkg) string {
+func expandPkg(t *testing.T, pkg *pkgbuilder.Pkg) string {
 	dir, err := ioutil.TempDir("", "test-kpt-builder-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -991,7 +991,7 @@ func expandPkg(t *testing.T, pkg *dataset.Pkg) string {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	return filepath.Join(dir, pkg.Name())
+	return filepath.Join(dir, pkg.Name)
 }
 
 type nonKRMTestCase struct {
