@@ -201,22 +201,22 @@ function wait {
 unset RESOURCE_GROUP_INVENTORY
 
 # Test 1: Basic ConfigMap init
-# Creates ConfigMap inventory-template.yaml in "test-1" directory
+# Creates ConfigMap inventory-template.yaml in "test-case-1a" directory
 echo "Testing basic ConfigMap init"
-echo "kpt live init e2e/live/testdata/test-1"
-${BASE}/kpt live init e2e/live/testdata/test-1 > $RESULT/status 2>&1
+echo "kpt live init e2e/live/testdata/test-case-1a"
+${BASE}/kpt live init e2e/live/testdata/test-case-1a > $RESULT/status 2>&1
 assertContains "namespace: test-namespace is used for inventory object"
-assertContains "testdata/test-1/inventory-template.yaml"
+assertContains "testdata/test-case-1a/inventory-template.yaml"
 printResult
 
-# Copy the ConfigMap inventory template to the test-2 directory.
-cp -f e2e/live/testdata/test-1/inventory-template.yaml e2e/live/testdata/test-2
+# Copy the ConfigMap inventory template to the test-case-1b directory.
+cp -f e2e/live/testdata/test-case-1a/inventory-template.yaml e2e/live/testdata/test-case-1b
 
 # Test 2: Basic kpt live preview
-# Preview run for "test-1" directory
+# Preview run for "test-case-1a" directory
 echo "Testing initial preview"
-echo "kpt live preview e2e/live/testdata/test-1"
-${BASE}/kpt live preview e2e/live/testdata/test-1 > $RESULT/status
+echo "kpt live preview e2e/live/testdata/test-case-1a"
+${BASE}/kpt live preview e2e/live/testdata/test-case-1a > $RESULT/status
 assertContains "namespace/test-namespace created (preview)"
 assertContains "pod/pod-a created (preview)"
 assertContains "pod/pod-b created (preview)"
@@ -226,10 +226,10 @@ assertContains "0 resource(s) pruned, 0 skipped"
 printResult
 
 # Test 3: Basic kpt live apply
-# Apply run for "test-1" directory
+# Apply run for "test-case-1a" directory
 echo "Testing basic apply"
-echo "kpt live apply e2e/live/testdata/test-1"
-${BASE}/kpt live apply e2e/live/testdata/test-1 > $RESULT/status
+echo "kpt live apply e2e/live/testdata/test-case-1a"
+${BASE}/kpt live apply e2e/live/testdata/test-case-1a > $RESULT/status
 assertContains "namespace/test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -243,10 +243,10 @@ assertCMInventory "test-namespace" "4"
 printResult
 
 # Test 4: kpt live preview of apply/prune
-# "test-2" directory is "test-1" directory with "pod-a" removed and "pod-d" added.
+# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic preview"
-echo "kpt live preview e2e/live/testdata/test-2"
-${BASE}/kpt live preview e2e/live/testdata/test-2 > $RESULT/status
+echo "kpt live preview e2e/live/testdata/test-case-1b"
+${BASE}/kpt live preview e2e/live/testdata/test-case-1b > $RESULT/status
 assertContains "namespace/test-namespace configured (preview)"
 assertContains "pod/pod-b configured (preview)"
 assertContains "pod/pod-c configured (preview)"
@@ -264,10 +264,10 @@ assertPodExists "pod-c" "test-namespace"
 printResult
 
 # Test 5: Basic kpt live apply/prune
-# "test-2" directory is "test-1" directory with "pod-a" removed and "pod-d" added.
+# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic prune"
-echo "kpt live apply e2e/live/testdata/test-2"
-${BASE}/kpt live apply e2e/live/testdata/test-2 > $RESULT/status
+echo "kpt live apply e2e/live/testdata/test-case-1b"
+${BASE}/kpt live apply e2e/live/testdata/test-case-1b > $RESULT/status
 assertContains "namespace/test-namespace unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
@@ -286,10 +286,10 @@ assertPodNotExists "pod-a" "test-namespace"
 printResult
 
 # Test 6: Basic kpt live destroy
-# "test-2" directory is "test-1" directory with "pod-a" removed and "pod-d" added.
+# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic destroy"
-echo "kpt live destroy e2e/live/testdata/test-2"
-${BASE}/kpt live destroy e2e/live/testdata/test-2 > $RESULT/status
+echo "kpt live destroy e2e/live/testdata/test-case-1b"
+${BASE}/kpt live destroy e2e/live/testdata/test-case-1b > $RESULT/status
 assertContains "pod/pod-d deleted"
 assertContains "pod/pod-c deleted"
 assertContains "pod/pod-b deleted"
@@ -301,12 +301,12 @@ assertPodNotExists "pod-c" "test-namespace"
 assertPodNotExists "pod-d" "test-namespace"
 printResult
 
-# Creates new inventory-template.yaml for "migrate-1" directory.
-echo "kpt live init e2e/live/testdata/migrate-1"
-rm -f e2e/live/testdata/migrate-1/inventory-template.yaml
-${BASE}/kpt live init e2e/live/testdata/migrate-1 > $RESULT/status
+# Creates new inventory-template.yaml for "migrate-case-1a" directory.
+echo "kpt live init e2e/live/testdata/migrate-case-1a"
+rm -f e2e/live/testdata/migrate-case-1a/inventory-template.yaml
+${BASE}/kpt live init e2e/live/testdata/migrate-case-1a > $RESULT/status
 assertContains "namespace: test-rg-namespace is used for inventory object"
-assertContains "live/testdata/migrate-1/inventory-template.yaml"
+assertContains "live/testdata/migrate-case-1a/inventory-template.yaml"
 printResult
 
 
@@ -317,11 +317,13 @@ printResult
 export RESOURCE_GROUP_INVENTORY=1
 
 # Test 7: kpt live apply ConfigMap inventory with RESOURCE_GROUP_INVENTORY set
-# Applies resources in "migrate-1" directory.
+# Applies resources in "migrate-case-1a" directory.
 echo "Testing kpt live apply with ConfigMap inventory"
-echo "kpt live apply e2e/live/testdata/migrate-1"
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-1
-${BASE}/kpt live apply e2e/live/testdata/migrate-1 > $RESULT/status
+echo "kpt live apply e2e/live/testdata/migrate-case-1a"
+# Copy Kptfile into "migrate-case-1a" WITHOUT inventory information. This ensures
+# the apply uses the ConfigMap inventory-template.yaml during the apply.
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
+${BASE}/kpt live apply e2e/live/testdata/migrate-case-1a > $RESULT/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -335,10 +337,10 @@ assertPodExists "pod-c" "test-rg-namespace"
 printResult
 
 # Test 8: kpt live migrate from ConfigMap to ResourceGroup inventory
-# Migrates resources in "migrate-1" directory.
+# Migrates resources in "migrate-case-1a" directory.
 echo "Testing migrate from ConfigMap to ResourceGroup inventory"
-echo "kpt live migrate e2e/live/testdata/migrate-1"
-${BASE}/kpt live migrate e2e/live/testdata/migrate-1 > $RESULT/status
+echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
+${BASE}/kpt live migrate e2e/live/testdata/migrate-case-1a > $RESULT/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "updating Kptfile inventory values...success"
 assertContains "retrieve the current ConfigMap inventory...success (4 inventory objects)"
@@ -353,10 +355,10 @@ assertPodExists "pod-c" "test-rg-namespace"
 printResult
 
 # Test 9: kpt live preview with ResourceGroup inventory
-# Previews resources in the "migrate-1" directory.
+# Previews resources in the "migrate-case-1a" directory.
 echo "Testing kpt live preview with ResourceGroup inventory"
-echo "kpt live preview e2e/live/testdata/migrate-1"
-${BASE}/kpt live preview e2e/live/testdata/migrate-1 > $RESULT/status
+echo "kpt live preview e2e/live/testdata/migrate-case-1a"
+${BASE}/kpt live preview e2e/live/testdata/migrate-case-1a > $RESULT/status
 assertContains "namespace/test-rg-namespace configured (preview)"
 assertContains "pod/pod-a configured (preview)"
 assertContains "pod/pod-b configured (preview)"
@@ -370,11 +372,11 @@ assertPodExists "pod-c" "test-rg-namespace"
 printResult
 
 # Test 10: kpt live apply/prune with ResourceGroup inventory
-# "migrate-2" directory is the same as "migrate-1" with "pod-a" missing, and "pod-d" added.
+# "migrate-case-1b" directory is the same as "migrate-case-1a" with "pod-a" missing, and "pod-d" added.
 echo "Testing kpt live apply/prune with ResourceGroup inventory"
-echo "kpt live apply e2e/live/testdata/migrate-2"
-cp -f e2e/live/testdata/migrate-1/Kptfile e2e/live/testdata/migrate-2
-${BASE}/kpt live apply e2e/live/testdata/migrate-2 > $RESULT/status
+echo "kpt live apply e2e/live/testdata/migrate-case-1b"
+cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b
+${BASE}/kpt live apply e2e/live/testdata/migrate-case-1b > $RESULT/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a pruned"
 assertContains "pod/pod-b unchanged"
@@ -391,8 +393,8 @@ printResult
 
 # Test 11: kpt live destroy with ResourceGroup inventory
 echo "Testing kpt destroy with ResourceGroup inventory"
-echo "kpt live destroy e2e/live/testdata/migrate-2"
-${BASE}/kpt live destroy e2e/live/testdata/migrate-2 > $RESULT/status
+echo "kpt live destroy e2e/live/testdata/migrate-case-1b"
+${BASE}/kpt live destroy e2e/live/testdata/migrate-case-1b > $RESULT/status
 assertContains "pod/pod-d deleted"
 assertContains "pod/pod-c deleted"
 assertContains "pod/pod-b deleted"
@@ -405,12 +407,12 @@ printResult
 
 # Test 12: kpt live init for Kptfile (ResourceGroup inventory)
 # initial Kptfile does NOT have inventory info
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-3
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
 echo "Testing kpt live init for Kptfile (ResourceGroup inventory)"
-echo "kpt live init e2e/live/testdata/migrate-3"
-${BASE}/kpt live init e2e/live/testdata/migrate-3 > $RESULT/status 2>&1
+echo "kpt live init e2e/live/testdata/migrate-error"
+${BASE}/kpt live init e2e/live/testdata/migrate-error > $RESULT/status 2>&1
 # Difference in Kptfile should have inventory data
-diff e2e/live/testdata/Kptfile e2e/live/testdata/migrate-3/Kptfile > $RESULT/status 2>&1
+diff e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error/Kptfile > $RESULT/status 2>&1
 assertContains "inventory:"
 assertContains "namespace: test-rg-namespace"
 assertContains "name: inventory-"
@@ -418,32 +420,32 @@ assertContains "inventoryID:"
 printResult
 
 # Test 13: kpt live migrate with missing inventory-template.yaml should fail
-# "migrate-3" directory does not have an inventory-template.yaml
+# "migrate-error" directory does not have an inventory-template.yaml
 echo "Testing kpt live migrate with missing inventory-template.yaml should fail"
-echo "kpt live migrate e2e/live/testdata/migrate-3"
-rm -f e2e/live/testdata/migrate-3/inventory-template.yaml
-${BASE}/kpt live migrate e2e/live/testdata/migrate-3 > $RESULT/status 2>&1
+echo "kpt live migrate e2e/live/testdata/migrate-error"
+rm -f e2e/live/testdata/migrate-error/inventory-template.yaml
+${BASE}/kpt live migrate e2e/live/testdata/migrate-error > $RESULT/status 2>&1
 assertContains "inventory migration...failed"
 printResult
 
 # Test 14: kpt live migrate with no objects in cluster
-# Add inventory-template.yaml to "migrate-3", but there are no objects in cluster.
-cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-3
+# Add inventory-template.yaml to "migrate-error", but there are no objects in cluster.
+cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-error
 echo "Testing kpt live migrate with no objects in cluster"
-echo "kpt live migrate e2e/live/testdata/migrate-3"
-${BASE}/kpt live migrate e2e/live/testdata/migrate-3 > $RESULT/status 2>&1
+echo "kpt live migrate e2e/live/testdata/migrate-error"
+${BASE}/kpt live migrate e2e/live/testdata/migrate-error > $RESULT/status 2>&1
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "updating Kptfile inventory values...values already exist...success"
 assertContains "retrieve the current ConfigMap inventory...success (0 inventory objects)"
 assertContains "deleting inventory template file:"
-assertContains "e2e/live/testdata/migrate-3/inventory-template.yaml...success"
+assertContains "e2e/live/testdata/migrate-error/inventory-template.yaml...success"
 assertContains "inventory migration...success"
 printResult
 
 # Test 15: kpt live initial apply ResourceGroup inventory
 echo "Testing kpt apply ResourceGroup inventory"
-echo "kpt live apply e2e/live/testdata/migrate-3"
-${BASE}/kpt live apply e2e/live/testdata/migrate-3 > $RESULT/status
+echo "kpt live apply e2e/live/testdata/migrate-error"
+${BASE}/kpt live apply e2e/live/testdata/migrate-error > $RESULT/status
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
