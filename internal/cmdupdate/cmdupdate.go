@@ -17,6 +17,8 @@ package cmdupdate
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -75,7 +77,13 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	if len(parts) > 2 {
 		return errors.Errorf("at most 1 version permitted")
 	}
-	r.Update.Path = parts[0]
+
+	var err error
+	r.Update.Path, r.Update.FullPackagePath, err = resolveAbsAndRelPaths(parts[0])
+	if err != nil {
+		return err
+	}
+
 	if len(parts) > 1 {
 		r.Update.Ref = parts[1]
 	}
@@ -97,4 +105,33 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func resolveAbsAndRelPaths(path string) (string, string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", "", err
+	}
+
+	var relPath string
+	var absPath string
+	if filepath.IsAbs(path) {
+		// If the provided path is absolute, we find the relative path by
+		// comparing it to the current working directory.
+		relPath, err = filepath.Rel(cwd, path)
+		if err != nil {
+			return "", "", err
+		}
+		absPath = filepath.Clean(path)
+	} else {
+		// If the provided path is relative, we find the absolute path by
+		// combining the current working directory with the relative path.
+		relPath = filepath.Clean(path)
+		absPath = filepath.Join(cwd, path)
+	}
+
+	if strings.HasPrefix(relPath, "../") {
+		return "", "", errors.Errorf("package path must be under current working directory")
+	}
+	return relPath, absPath, nil
 }

@@ -437,9 +437,16 @@ func CopyKptfile(t *testing.T, src, dest string) {
 // SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
 // returns a cleanup function to remove the git repo and workspace.
 func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, *TestWorkspace, func()) {
+	// Capture the current working directory so we can set it back to the
+	// original path after test has completed.
+	cwd, err := os.Getwd()
+	if err != nil {
+		assert.NoError(t, err)
+	}
+
 	// setup the repo to clone from
 	g := &TestGitRepo{}
-	err := g.SetupTestGitRepo(dataset)
+	err = g.SetupTestGitRepo(dataset)
 	assert.NoError(t, err)
 
 	// setup the directory to clone to
@@ -469,6 +476,7 @@ func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, *
 		// ignore cleanup failures
 		_ = g.RemoveAll()
 		_ = w.RemoveAll()
+		_ = os.Chdir(cwd)
 	}
 }
 

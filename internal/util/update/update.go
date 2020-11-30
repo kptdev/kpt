@@ -18,7 +18,6 @@ package update
 import (
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
@@ -40,6 +39,9 @@ type UpdateOptions struct {
 
 	// PackagePath is the relative path to the local package
 	PackagePath string
+
+	// AbsPackagePath is the absolute path to the local package
+	AbsPackagePath string
 
 	// DryRun configures AlphaGitPatch to print a patch rather
 	// than apply it
@@ -105,6 +107,9 @@ type Command struct {
 	// Path is the filepath to the local package
 	Path string
 
+	// FullPackagePath is the absolute path to the local package
+	FullPackagePath string
+
 	// Ref is the ref to update to
 	Ref string
 
@@ -137,14 +142,6 @@ func (u Command) Run() error {
 		u.Output = os.Stdout
 	}
 
-	if filepath.IsAbs(u.Path) {
-		return errors.Errorf("package path must be relative")
-	}
-	u.Path = filepath.Clean(u.Path)
-	if strings.HasPrefix(u.Path, "../") {
-		return errors.Errorf("package path must be under current working directory")
-	}
-
 	kptfile, err := kptfileutil.ReadFileStrict(u.Path)
 	if err != nil {
 		return errors.Errorf("unable to read package Kptfile: %v", err)
@@ -175,15 +172,16 @@ func (u Command) Run() error {
 		return errors.Errorf("unrecognized update strategy %s", u.Strategy)
 	}
 	err = updater().Update(UpdateOptions{
-		KptFile:       kptfile,
-		ToRef:         u.Ref,
-		ToRepo:        u.Repo,
-		PackagePath:   u.Path,
-		DryRun:        u.DryRun,
-		Verbose:       u.Verbose,
-		SimpleMessage: u.SimpleMessage,
-		Output:        u.Output,
-		AutoSet:       u.AutoSet,
+		KptFile:        kptfile,
+		ToRef:          u.Ref,
+		ToRepo:         u.Repo,
+		PackagePath:    u.Path,
+		AbsPackagePath: u.FullPackagePath,
+		DryRun:         u.DryRun,
+		Verbose:        u.Verbose,
+		SimpleMessage:  u.SimpleMessage,
+		Output:         u.Output,
+		AutoSet:        u.AutoSet,
 	})
 
 	if err != nil {
