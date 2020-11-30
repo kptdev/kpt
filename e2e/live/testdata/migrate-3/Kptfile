@@ -1,0 +1,15 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: test1
+upstream:
+  type: git
+  git:
+    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
+    repo: git@github.com:yuwenma/blueprint-helloworld
+    directory: /
+    ref: master
+inventory:
+  namespace: test-rg-namespace
+  name: inventory-71512828
+  inventoryID: 94885c00356ee5beb002a465801e7fa7df4f0f69-1605818723418805142
