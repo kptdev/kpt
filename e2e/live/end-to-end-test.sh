@@ -51,34 +51,44 @@ go build -o $BASE -v .
 echo "$BASE/kpt"
 echo
 
-# Create the k8s cluster
-kind delete cluster
-kind create cluster
-echo
-echo
-
-# Necessary to ensure default service account is created before pods.
-echo "Waiting for default service account..."
-echo -n ' '
-sp="/-\|"
-n=1
-until ((n >= 600)); do
-    kubectl -n default get serviceaccount default -o name > $RESULT/status 2>&1
-    test 1 == $(grep "serviceaccount/default" $RESULT/status | wc -l)
-    if [ $? == 0 ]; then
-	echo
-	break
-    fi
-    printf "\b${sp:n++%${#sp}:1}"
-    sleep 0.1
-done
-((n < 600))
-echo "default service account created"
-echo
-
 ###########################################################################
 #  Helper functions
 ###########################################################################
+
+# createTestSuite deletes then creates the kind cluster.
+function createTestSuite {
+    echo "Setting Up Test Suite..."
+    # Create the k8s cluster
+    echo "Deleting kind cluster..."
+    kind delete cluster > /dev/null 2>&1
+    echo "Deleting kind cluster...COMPLETED"
+    echo "Creating kind cluster..."
+    kind create cluster > /dev/null 2>&1    
+    echo "Creating kind cluster...COMPLETED"
+    echo "Setting Up Test Suite...COMPLETED"
+    echo
+}
+
+function waitForDefaultServiceAccount {
+    # Necessary to ensure default service account is created before pods.
+    echo -n "Waiting for default service account..."
+    echo -n ' '
+    sp="/-\|"
+    n=1
+    until ((n >= 300)); do
+	kubectl -n default get serviceaccount default -o name > $RESULT/status 2>&1
+	test 1 == $(grep "serviceaccount/default" $RESULT/status | wc -l)
+	if [ $? == 0 ]; then
+	    echo
+	    break
+	fi
+	printf "\b${sp:n++%${#sp}:1}"
+	sleep 0.2
+    done
+    ((n < 300))
+    echo "Waiting for default service account...CREATED"
+    echo
+}
 
 # assertContains checks that the passed string is a substring of
 # the $RESULT/status file.
@@ -199,6 +209,9 @@ function wait {
 ###########################################################################
 
 unset RESOURCE_GROUP_INVENTORY
+
+createTestSuite
+waitForDefaultServiceAccount
 
 # Test 1: Basic ConfigMap init
 # Creates ConfigMap inventory-template.yaml in "test-case-1a" directory
@@ -457,6 +470,34 @@ assertPodExists "pod-c" "test-rg-namespace"
 printResult
 
 echo
+
+###########################################################################
+#  Tests for ResourceGroup CRD installation
+###########################################################################
+
+# Delete/Create cluster for new test suite
+createTestSuite
+
+export RESOURCE_GROUP_INVENTORY=1
+
+echo "Testing kpt live install-resource-group"
+echo "kpt live install-resource-group"
+# First, check that the ResourceGroup CRD does NOT exist
+kubectl get resourcegroups.kpt.dev > $RESULT/status 2>&1
+assertContains "error: the server doesn't have a resource type \"resourcegroups\""
+# Next, add the ResourceGroup CRD
+${BASE}/kpt live install-resource-group > $RESULT/status
+kubectl get resourcegroups.kpt.dev > $RESULT/status 2>&1
+assertContains "No resources found"
+# Add a simple ResourceGroup custom resource, and verify it exists in the cluster.
+kubectl apply -f e2e/live/testdata/install-rg-crd/example-resource-group.yaml > $RESULT/status
+assertContains "resourcegroup.kpt.dev/example-inventory created"
+kubectl get resourcegroups.kpt.dev --no-headers > $RESULT/status
+assertContains "example-inventory"
+# Finally, add the ResourceGroup CRD again, and check it says it already exists.
+${BASE}/kpt live install-resource-group -v=4 > $RESULT/status 2>&1
+assertContains "ResourceGroup CRD already exists"
+printResult
 
 # Clean-up the k8s cluster
 echo "Cleaning up cluster"

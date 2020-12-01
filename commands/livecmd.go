@@ -127,7 +127,8 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 		cmLoader := manifestreader.NewManifestLoader(f)
 		rgLoader := live.NewResourceGroupManifestLoader(f)
 		migrateCmd := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
-		liveCmd.AddCommand(migrateCmd)
+		installRGCmd := GetInstallRGRunner(f, ioStreams).Command
+		liveCmd.AddCommand(migrateCmd, installRGCmd)
 	}
 
 	return liveCmd
