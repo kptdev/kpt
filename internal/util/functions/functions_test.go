@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/functions"
-	"github.com/GoogleContainerTools/kpt/internal/util/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -365,10 +365,12 @@ func TestReconcileFunctions(t *testing.T) {
 					actual, err := ioutil.ReadFile(abs)
 					testutil.AssertNoError(t, err)
 
-					testutil.AssertEqual(t,
+					if !assert.Equal(t,
 						strings.TrimSpace(expected),
 						strings.TrimSpace(string(actual)),
-					)
+					) {
+						t.FailNow()
+					}
 				}
 			})
 		}

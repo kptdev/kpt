@@ -21,9 +21,9 @@ import (
 
 // KptFileName is the name of the KptFile
 const (
-	KptFileName = "Kptfile"
-	KptFileGroup = "kpt.dev"
-	KptFileVersion = "v1alpha1"
+	KptFileName       = "Kptfile"
+	KptFileGroup      = "kpt.dev"
+	KptFileVersion    = "v1alpha1"
 	KptFileAPIVersion = KptFileGroup + "/" + KptFileVersion
 )
 
