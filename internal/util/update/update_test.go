@@ -33,24 +33,26 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+var (
+	updateStrategies = []StrategyType{
+		FastForward,
+		ForceDeleteReplace,
+		AlphaGitPatch,
+		KResourceMerge,
+	}
+)
+
 // TestCommand_Run_noRefChanges updates a package without specifying a new ref.
 // - Get a package using  a branch ref
 // - Modify upstream with new content
 // - Update the local package to fetch the upstream content
 func TestCommand_Run_noRefChanges(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	for i := range updateStrategies {
+		strategy := updateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
 			}
@@ -63,9 +65,8 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
-			}.Run(),
-				u.updater) {
+				Strategy:        strategy,
+			}.Run()) {
 				return
 			}
 
@@ -80,24 +81,17 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !g.AssertKptfile(commit, "master") {
 				return
 			}
-		}()
+		})
 	}
 }
 
 func TestCommand_Run_subDir(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	for i := range updateStrategies {
+		strategy := updateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{{Tag: "v1.2", Data: testutil.Dataset2}},
 				GetSubDirectory: "java",
@@ -112,9 +106,8 @@ func TestCommand_Run_subDir(t *testing.T) {
 				Path:            "java",
 				FullPackagePath: toAbsPath(t, "java"),
 				Ref:             "v1.2",
-				Strategy:        u.updater,
-			}.Run(),
-				u.updater) {
+				Strategy:        strategy,
+			}.Run()) {
 				return
 			}
 
@@ -129,7 +122,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 			if !g.AssertKptfile(commit, "v1.2") {
 				return
 			}
-		}()
+		})
 	}
 }
 
@@ -143,8 +136,9 @@ func TestCommand_Run_noChanges(t *testing.T) {
 		{AlphaGitPatch, "no updates"},
 		{KResourceMerge, ""},
 	}
-	for _, u := range updates {
-		func() {
+	for i := range updates {
+		u := updates[i]
+		t.Run(string(u.updater), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
 				T: t, Name: string(u.updater),
@@ -180,25 +174,18 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			if !g.AssertKptfile(commit, "master") {
 				return
 			}
-		}()
+		})
 	}
 }
 
 func TestCommand_Run_noCommit(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{Default},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	strategies := append([]StrategyType{Default}, updateStrategies...)
+	for i := range strategies {
+		strategy := strategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -217,7 +204,7 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			err = Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
+				Strategy:        strategy,
 			}.Run()
 			if !assert.Error(t, err) {
 				return
@@ -227,25 +214,18 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			if !g.AssertLocalDataEquals(testutil.Dataset3) {
 				return
 			}
-		}()
+		})
 	}
 }
 
 func TestCommand_Run_noAdd(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{Default},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	strategies := append([]StrategyType{Default}, updateStrategies...)
+	for i := range strategies {
+		strategy := strategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -264,13 +244,13 @@ func TestCommand_Run_noAdd(t *testing.T) {
 			err = Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
+				Strategy:        strategy,
 			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
 			assert.Contains(t, err.Error(), "must commit package")
-		}()
+		})
 	}
 }
 
@@ -324,8 +304,9 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			},
 		},
 	}
-	for _, u := range updates {
-		func() {
+	for i := range updates {
+		u := updates[i]
+		t.Run(string(u.updater), func(t *testing.T) {
 			g := &TestSetupManager{
 				T: t, Name: string(u.updater),
 				// Update upstream to Dataset2
@@ -373,26 +354,19 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			if !g.AssertKptfile(expectedCommit, "master") {
 				t.FailNow()
 			}
-		}()
+		})
 	}
 }
 
 // TestCommand_Run_toBranchRef verifies the package contents are set to the contents of the branch
 // it was updated to.
 func TestCommand_Run_toBranchRef(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	for i := range updateStrategies {
+		strategy := updateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{
 					{Data: testutil.Dataset2, Branch: "exp", CreateBranch: true},
@@ -408,10 +382,9 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
+				Strategy:        strategy,
 				Ref:             "exp",
-			}.Run(),
-				u.updater) {
+			}.Run()) {
 				return
 			}
 
@@ -430,26 +403,19 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			if !g.AssertKptfile(commit, "exp") {
 				return
 			}
-		}()
+		})
 	}
 }
 
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
 // it was updated to.
 func TestCommand_Run_toTagRef(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	for i := range updateStrategies {
+		strategy := updateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{
 					{Data: testutil.Dataset2, Tag: "v1.0"},
@@ -465,10 +431,9 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
+				Strategy:        strategy,
 				Ref:             "v1.0",
-			}.Run(),
-				u.updater) {
+			}.Run()) {
 				return
 			}
 
@@ -487,22 +452,19 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			if !g.AssertKptfile(commit, "v1.0") {
 				return
 			}
-		}()
+		})
 	}
 }
 
 // TestCommand_ResourceMerge_NonKRMUpdates tests if the local non KRM files are updated
 func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	strategies := []StrategyType{KResourceMerge}
+	for i := range strategies {
+		strategy := strategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 				// Update upstream to Dataset5
 				UpstreamChanges: []Content{
 					{Data: testutil.Dataset5, Tag: "v1.0"},
@@ -517,10 +479,9 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
+				Strategy:        strategy,
 				Ref:             "v1.0",
-			}.Run(),
-				u.updater) {
+			}.Run()) {
 				t.FailNow()
 			}
 
@@ -539,23 +500,20 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			if !g.AssertKptfile(commit, "v1.0") {
 				t.FailNow()
 			}
-		}()
+		})
 	}
 }
 
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
 // it was updated to with local values set to different values in upstream.
 func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	strategies := []StrategyType{KResourceMerge}
+	for i := range strategies {
+		strategy := strategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{
 					{Data: testutil.Dataset4, Tag: "v1.0"},
@@ -602,10 +560,9 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
+				Strategy:        strategy,
 				Ref:             "v1.0",
-			}.Run(),
-				u.updater) {
+			}.Run()) {
 				return
 			}
 
@@ -619,7 +576,7 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 			if !assert.NoError(t, g.UpstreamRepo.CheckoutBranch("v1.0", false)) {
 				return
 			}
-		}()
+		})
 	}
 }
 
@@ -663,44 +620,29 @@ func TestCommand_Run_emitPatch(t *testing.T) {
 
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid
 func TestCommand_Run_failInvalidPath(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-	for _, u := range updates {
-		func() {
+	for i := range updateStrategies {
+		strategy := updateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			path := filepath.Join("fake", "path")
 			err := Command{
 				Path:            path,
 				FullPackagePath: toAbsPath(t, path),
-				Strategy:        u.updater,
+				Strategy:        strategy,
 			}.Run()
-			if assert.Error(t, err, u.updater) {
-				assert.Contains(t, err.Error(), "no such file or directory", u.updater)
+			if assert.Error(t, err) {
+				assert.Contains(t, err.Error(), "no such file or directory")
 			}
-		}()
+		})
 	}
 }
 
 // TestCommand_Run_failInvalidRef verifies Run fails if the ref is invalid
 func TestCommand_Run_failInvalidRef(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{FastForward},
-		{ForceDeleteReplace},
-		{AlphaGitPatch},
-		{KResourceMerge},
-	}
-
-	for _, u := range updates {
-		func() {
+	for i := range updateStrategies {
+		strategy := updateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
 			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+				T: t, Name: string(strategy),
 				// Update upstream to Dataset2
 				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
 			}
@@ -713,51 +655,44 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
 				Ref:             "exp",
-				Strategy:        u.updater,
+				Strategy:        strategy,
 			}.Run()
 			if !assert.Error(t, err) {
 				return
 			}
-			assert.Contains(t, err.Error(), "failed to clone git repo", u.updater)
+			assert.Contains(t, err.Error(), "failed to clone git repo")
 
 			if !g.AssertLocalDataEquals(testutil.Dataset1) {
 				return
 			}
-		}()
+		})
 	}
 }
 
 func TestCommand_Run_badStrategy(t *testing.T) {
-	updates := []struct {
-		updater StrategyType
-	}{
-		{"foo"},
-	}
-	for _, u := range updates {
-		func() {
-			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
-				// Update upstream to Dataset2
-				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
-			}
-			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
-				return
-			}
+	strategy := StrategyType("foo")
 
-			// Update the local package
-			err := Command{
-				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
-				Strategy:        u.updater,
-			}.Run()
-			if !assert.Error(t, err, u.updater) {
-				return
-			}
-			assert.Contains(t, err.Error(), "unrecognized update strategy")
-		}()
+	// Setup the test upstream and local packages
+	g := &TestSetupManager{
+		T: t, Name: string(strategy),
+		// Update upstream to Dataset2
+		UpstreamChanges: []Content{{Data: testutil.Dataset2}},
 	}
+	defer g.Clean()
+	if !g.Init(testutil.Dataset1) {
+		return
+	}
+
+	// Update the local package
+	err := Command{
+		Path:            g.UpstreamRepo.RepoName,
+		FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+		Strategy:        strategy,
+	}.Run()
+	if !assert.Error(t, err, strategy) {
+		return
+	}
+	assert.Contains(t, err.Error(), "unrecognized update strategy")
 }
 
 func TestCommand_Run_subpackages(t *testing.T) {
