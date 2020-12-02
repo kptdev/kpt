@@ -5,7 +5,6 @@ package commands
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,13 +12,9 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/cli-runtime/pkg/resource"
-	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"k8s.io/kubectl/pkg/util"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
@@ -27,7 +22,6 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/cli-utils/pkg/provider"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // MigrateRunner encapsulates fields for the kpt migrate command.
@@ -152,62 +146,16 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 // stored in the "rgCrd" variable.
 func (mr *MigrateRunner) applyCRD() error {
 	fmt.Fprint(mr.ioStreams.Out, "  ensuring ResourceGroup CRD exists in cluster...")
-	// Transform the ResourceGroup custom resource definition in the string rgCrd
-	// into an Unstructured object.
-	crd, err := stringToUnstructured(rgCrd)
-	if err != nil {
-		return err
+	var err error
+	// Simply return early if this is a dry run
+	if mr.dryRun {
+		fmt.Fprint(mr.ioStreams.Out, "success\n")
+		return nil
 	}
-	// Get the client and RESTMapping from the CRD.
-	mapper, err := mr.cmProvider.Factory().ToRESTMapper()
-	if err != nil {
-		return err
+	if err = live.ApplyResourceGroupCRD(mr.cmProvider.Factory()); err == nil {
+		fmt.Fprint(mr.ioStreams.Out, "success\n")
 	}
-	// NOTE: The mapper must be told a preferred version (rgCrdVersion) which matches
-	// the version stored in the rgCrd string. Otherwise, the RESTMapper may have
-	// a different default version in the mapping, causing version skew errors.
-	mapping, err := mapper.RESTMapping(crd.GroupVersionKind().GroupKind(), rgCrdVersion)
-	if err != nil {
-		return err
-	}
-	client, err := mr.cmProvider.Factory().UnstructuredClientForMapping(mapping)
-	if err != nil {
-		return err
-	}
-	helper := resource.NewHelper(client, mapping)
-	klog.V(4).Infof("applying ResourceGroup CRD")
-	// Set the "last-applied-annotation" so future applies work correctly.
-	if err := util.CreateApplyAnnotation(crd, unstructured.UnstructuredJSONScheme); err != nil {
-		return err
-	}
-	var clearResourceVersion = false
-	// Apply the CRD to the cluster and ignore already exists error.
-	// Empty namespace, since CRD's are cluster-scoped.
-	_, err = helper.Create("", clearResourceVersion, crd)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
-	}
-	fmt.Fprint(mr.ioStreams.Out, "success\n")
-	return nil
-}
-
-// stringToUnstructured transforms a single resource represented by
-// the passed string into a pointer to an "Unstructured" object,
-// or an error if one occurred.
-func stringToUnstructured(str string) (*unstructured.Unstructured, error) {
-	node, err := yaml.Parse(str)
-	if err != nil {
-		return nil, err
-	}
-	b, err := node.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	var m map[string]interface{}
-	if err := json.Unmarshal(b, &m); err != nil {
-		return nil, err
-	}
-	return &unstructured.Unstructured{Object: m}, nil
+	return err
 }
 
 // updateKptfile installs the "inventory" fields in the Kptfile.
@@ -347,206 +295,3 @@ func findResourceGroupInv(objs []*unstructured.Unstructured) (*unstructured.Unst
 	}
 	return nil, fmt.Errorf("resource group inventory object not found")
 }
-
-var rgCrdVersion = "v1beta1"
-
-// The ResourceGroup custom resource definition.
-var rgCrd = `
-apiVersion: apiextensions.k8s.io/` + rgCrdVersion + `
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.2.5
-  name: resourcegroups.kpt.dev
-spec:
-  group: kpt.dev
-  names:
-    kind: ResourceGroup
-    listKind: ResourceGroupList
-    plural: resourcegroups
-    singular: resourcegroup
-  scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      description: ResourceGroup is the Schema for the resourcegroups API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase.
-            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: ResourceGroupSpec defines the desired state of ResourceGroup
-          properties:
-            descriptor:
-              description: Descriptor regroups the information and metadata about
-                a resource group
-              properties:
-                description:
-                  description: Description is a brief description of a group of resources
-                  type: string
-                links:
-                  description: Links are a list of descriptive URLs intended to be
-                    used to surface additional information
-                  items:
-                    properties:
-                      description:
-                        description: Description explains the purpose of the link
-                        type: string
-                      url:
-                        description: Url is the URL of the link
-                        type: string
-                    required:
-                    - description
-                    - url
-                    type: object
-                  type: array
-                revision:
-                  description: Revision is an optional revision for a group of resources
-                  type: string
-                type:
-                  description: Type can contain prefix, such as Application/WordPress
-                    or Service/Spanner
-                  type: string
-              type: object
-            resources:
-              description: Resources contains a list of resources that form the resource group
-              items:
-                description: ObjMetadata organizes and stores the identifying information
-                  for an object. This struct (as a string) is stored in a grouping
-                  object to keep track of sets of applied objects.
-                properties:
-                  group:
-                    type: string
-                  kind:
-                    type: string
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                required:
-                - group
-                - kind
-                - name
-                - namespace
-                type: object
-              type: array
-          type: object
-        status:
-          description: ResourceGroupStatus defines the observed state of ResourceGroup
-          properties:
-            conditions:
-              description: Conditions lists the conditions of the current status for
-                the group
-              items:
-                properties:
-                  lastTransitionTime:
-                    description: last time the condition transit from one status to
-                      another
-                    format: date-time
-                    type: string
-                  message:
-                    description: human-readable message indicating details about last
-                      transition
-                    type: string
-                  reason:
-                    description: one-word CamelCase reason for the condition's last
-                      transition
-                    type: string
-                  status:
-                    description: Status of the condition
-                    type: string
-                  type:
-                    description: Type of the condition
-                    type: string
-                required:
-                - status
-                - type
-                type: object
-              type: array
-            observedGeneration:
-              description: ObservedGeneration is the most recent generation observed.
-                It corresponds to the Object's generation, which is updated on mutation
-                by the API Server. Everytime the controller does a successful reconcile,
-                it sets ObservedGeneration to match ResourceGroup.metadata.generation.
-              format: int64
-              type: integer
-            resourceStatuses:
-              description: ResourceStatuses lists the status for each resource in
-                the group
-              items:
-                description: ResourceStatus contains the status of a given resource
-                  uniquely identified by its group, kind, name and namespace.
-                properties:
-                  conditions:
-                    items:
-                      properties:
-                        lastTransitionTime:
-                          description: last time the condition transit from one status
-                            to another
-                          format: date-time
-                          type: string
-                        message:
-                          description: human-readable message indicating details about
-                            last transition
-                          type: string
-                        reason:
-                          description: one-word CamelCase reason for the condition’s
-                            last transition
-                          type: string
-                        status:
-                          description: Status of the condition
-                          type: string
-                        type:
-                          description: Type of the condition
-                          type: string
-                      required:
-                      - status
-                      - type
-                      type: object
-                    type: array
-                  group:
-                    type: string
-                  kind:
-                    type: string
-                  name:
-                    type: string
-                  namespace:
-                    type: string
-                  status:
-                    description: Status describes the status of a resource
-                    type: string
-                required:
-                - group
-                - kind
-                - name
-                - namespace
-                - status
-                type: object
-              type: array
-          required:
-          - observedGeneration
-          type: object
-      type: object
-  version: v1alpha1
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
-`

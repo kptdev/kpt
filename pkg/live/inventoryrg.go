@@ -18,12 +18,17 @@ import (
 	"fmt"
 	"strings"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/klog"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"k8s.io/kubectl/pkg/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/object"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // ResourceGroupGVK is the group/version/kind of the custom
@@ -35,24 +40,30 @@ var ResourceGroupGVK = schema.GroupVersionKind{
 }
 
 // InventoryResourceGroup wraps a ResourceGroup resource and implements
-// the Inventory interface. This wrapper loads and stores the
+// the Inventory and InventoryInfo interface. This wrapper loads and stores the
 // object metadata (inventory) to and from the wrapped ResourceGroup.
 type InventoryResourceGroup struct {
 	inv      *unstructured.Unstructured
 	objMetas []object.ObjMetadata
 }
 
+var _ inventory.Inventory = &InventoryResourceGroup{}
 var _ inventory.InventoryInfo = &InventoryResourceGroup{}
 
 // WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
 // wraps it with the InventoryResourceGroup and upcasts the wrapper as
 // an the Inventory interface.
 func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Inventory {
-	klog.V(4).Infof("wrapping inventory info")
+	if obj != nil {
+		klog.V(4).Infof("wrapping Inventory obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
+	}
 	return &InventoryResourceGroup{inv: obj}
 }
 
 func WrapInventoryInfoObj(obj *unstructured.Unstructured) inventory.InventoryInfo {
+	if obj != nil {
+		klog.V(4).Infof("wrapping InventoryInfo obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
+	}
 	return &InventoryResourceGroup{inv: obj}
 }
 
@@ -65,6 +76,8 @@ func InvToUnstructuredFunc(inv inventory.InventoryInfo) *unstructured.Unstructur
 	}
 }
 
+// Name(), Namespace(), and ID() are InventoryResourceGroup functions to
+// implement the InventoryInfo interface.
 func (icm *InventoryResourceGroup) Name() string {
 	return icm.inv.GetName()
 }
@@ -192,3 +205,495 @@ func IsResourceGroupInventory(obj *unstructured.Unstructured) (bool, error) {
 	}
 	return true, nil
 }
+
+// CustomResourceDefinition schema, without specific version. The default version
+// is returned when the RESTMapper returns a RESTMapping for this GroupKind.
+var crdGroupKind = schema.GroupKind{
+	Group: "apiextensions.k8s.io",
+	Kind:  "CustomResourceDefinition",
+}
+
+// ApplyResourceGroupCRD applies the custom resource definition for the
+// ResourceGroup. The apiextensions version applied is based on the RESTMapping
+// returned by the RESTMapper. Returns an error if one occurs; "Already Exists"
+// error is changed to nil error.
+func ApplyResourceGroupCRD(factory cmdutil.Factory) error {
+	// Create the mapping from the CustomResourceDefinision GroupKind.
+	mapper, err := factory.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+	mapping, err := mapper.RESTMapping(crdGroupKind)
+	if err != nil {
+		return err
+	}
+	client, err := factory.UnstructuredClientForMapping(mapping)
+	if err != nil {
+		return err
+	}
+	// mapping contains the full GVK version, which is used to determine
+	// the version of the ResourceGroup CRD to create. We have defined the
+	// v1beta1 and v1 versions of the apiextensions group of the CRD.
+	version := mapping.GroupVersionKind.Version
+	klog.V(4).Infof("using apiextensions.k8s.io version: %s", version)
+	rgCRDStr, ok := resourceGroupCRDs[version]
+	if !ok {
+		klog.V(4).Infof("ResourceGroup CRD version %s not found", version)
+		return err
+	}
+	crd, err := stringToUnstructured(rgCRDStr)
+	if err != nil {
+		return err
+	}
+	// Set the "last-applied-annotation" so future applies work correctly.
+	if err := util.CreateApplyAnnotation(crd, unstructured.UnstructuredJSONScheme); err != nil {
+		return err
+	}
+	// Apply the CRD to the cluster and ignore already exists error.
+	var clearResourceVersion = false
+	var emptyNamespace = ""
+	helper := resource.NewHelper(client, mapping)
+	klog.V(4).Infoln("applying ResourceGroup CRD...")
+	_, err = helper.Create(emptyNamespace, clearResourceVersion, crd)
+	if err != nil {
+		if apierrors.IsAlreadyExists(err) {
+			klog.V(4).Infoln("ResourceGroup CRD already exists")
+			return nil
+		}
+		return err
+	}
+	klog.V(4).Infoln("ResourceGroup CRD successfully applied")
+	return nil
+}
+
+// stringToUnstructured transforms a single resource represented by
+// the passed string into a pointer to an "Unstructured" object,
+// or an error if one occurred.
+func stringToUnstructured(str string) (*unstructured.Unstructured, error) {
+	node, err := yaml.Parse(str)
+	if err != nil {
+		return nil, err
+	}
+	s, err := node.String()
+	if err != nil {
+		return nil, err
+	}
+	var m map[string]interface{}
+	if err := yaml.Unmarshal([]byte(s), &m); err != nil {
+		return nil, err
+	}
+	return &unstructured.Unstructured{Object: m}, nil
+}
+
+// resourceGroupCRDs maps the apiextensions version to the ResourceGroup
+// custom resource definition string.
+var resourceGroupCRDs = map[string]string{
+	"v1beta1": v1beta1RGCrd,
+	"v1":      v1RGCrd,
+}
+
+// ResourceGroup custom resource definition using v1beta1 version
+// of the apiextensions.k8s.io API group. APIServers version 1.15
+// or less will use this apiextensions group by default.
+var v1beta1RGCrd = `
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: resourcegroups.kpt.dev
+spec:
+  group: kpt.dev
+  names:
+    kind: ResourceGroup
+    listKind: ResourceGroupList
+    plural: resourcegroups
+    singular: resourcegroup
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: ResourceGroup is the Schema for the resourcegroups API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase.
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ResourceGroupSpec defines the desired state of ResourceGroup
+          properties:
+            descriptor:
+              description: Descriptor regroups the information and metadata about
+                a resource group
+              properties:
+                description:
+                  description: Description is a brief description of a group of resources
+                  type: string
+                links:
+                  description: Links are a list of descriptive URLs intended to be
+                    used to surface additional information
+                  items:
+                    properties:
+                      description:
+                        description: Description explains the purpose of the link
+                        type: string
+                      url:
+                        description: Url is the URL of the link
+                        type: string
+                    required:
+                    - description
+                    - url
+                    type: object
+                  type: array
+                revision:
+                  description: Revision is an optional revision for a group of resources
+                  type: string
+                type:
+                  description: Type can contain prefix, such as Application/WordPress
+                    or Service/Spanner
+                  type: string
+              type: object
+            resources:
+              description: Resources contains a list of resources that form the resource group
+              items:
+                description: ObjMetadata organizes and stores the identifying information
+                  for an object. This struct (as a string) is stored in a grouping
+                  object to keep track of sets of applied objects.
+                properties:
+                  group:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - group
+                - kind
+                - name
+                - namespace
+                type: object
+              type: array
+          type: object
+        status:
+          description: ResourceGroupStatus defines the observed state of ResourceGroup
+          properties:
+            conditions:
+              description: Conditions lists the conditions of the current status for
+                the group
+              items:
+                properties:
+                  lastTransitionTime:
+                    description: last time the condition transit from one status to
+                      another
+                    format: date-time
+                    type: string
+                  message:
+                    description: human-readable message indicating details about last
+                      transition
+                    type: string
+                  reason:
+                    description: one-word CamelCase reason for the condition's last
+                      transition
+                    type: string
+                  status:
+                    description: Status of the condition
+                    type: string
+                  type:
+                    description: Type of the condition
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            observedGeneration:
+              description: ObservedGeneration is the most recent generation observed.
+                It corresponds to the Object's generation, which is updated on mutation
+                by the API Server. Everytime the controller does a successful reconcile,
+                it sets ObservedGeneration to match ResourceGroup.metadata.generation.
+              format: int64
+              type: integer
+            resourceStatuses:
+              description: ResourceStatuses lists the status for each resource in
+                the group
+              items:
+                description: ResourceStatus contains the status of a given resource
+                  uniquely identified by its group, kind, name and namespace.
+                properties:
+                  conditions:
+                    items:
+                      properties:
+                        lastTransitionTime:
+                          description: last time the condition transit from one status
+                            to another
+                          format: date-time
+                          type: string
+                        message:
+                          description: human-readable message indicating details about
+                            last transition
+                          type: string
+                        reason:
+                          description: one-word CamelCase reason for the condition’s
+                            last transition
+                          type: string
+                        status:
+                          description: Status of the condition
+                          type: string
+                        type:
+                          description: Type of the condition
+                          type: string
+                      required:
+                      - status
+                      - type
+                      type: object
+                    type: array
+                  group:
+                    type: string
+                  kind:
+                    type: string
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                  status:
+                    description: Status describes the status of a resource
+                    type: string
+                required:
+                - group
+                - kind
+                - name
+                - namespace
+                - status
+                type: object
+              type: array
+          required:
+          - observedGeneration
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`
+
+// ResourceGroup custom resource definition using v1 version
+// of the apiextensions.k8s.io API group. APIServers at 1.16
+// or greater will use this apiextensions group by default.
+var v1RGCrd = `
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: resourcegroups.kpt.dev
+spec:
+  conversion:
+    strategy: None
+  group: kpt.dev
+  names:
+    kind: ResourceGroup
+    listKind: ResourceGroupList
+    plural: resourcegroups
+    singular: resourcegroup
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ResourceGroup is the Schema for the resourcegroups API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ResourceGroupSpec defines the desired state of ResourceGroup
+            properties:
+              descriptor:
+                description: Descriptor regroups the information and metadata about
+                  a resource group
+                properties:
+                  description:
+                    description: Description is a brief description of a group of
+                      resources
+                    type: string
+                  links:
+                    description: Links are a list of descriptive URLs intended to
+                      be used to surface additional information
+                    items:
+                      properties:
+                        description:
+                          description: Description explains the purpose of the link
+                          type: string
+                        url:
+                          description: Url is the URL of the link
+                          type: string
+                      required:
+                      - description
+                      - url
+                      type: object
+                    type: array
+                  revision:
+                    description: Revision is an optional revision for a group of resources
+                    type: string
+                  type:
+                    description: Type can contain prefix, such as Application/WordPress
+                      or Service/Spanner
+                    type: string
+                type: object
+              resources:
+                description: Resources contains a list of resources that form the
+                  resource group
+                items:
+                  description: ObjMetadata organizes and stores the identifying information
+                    for an object. This struct (as a string) is stored in a grouping
+                    object to keep track of sets of applied objects.
+                  properties:
+                    group:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                  - group
+                  - kind
+                  - name
+                  - namespace
+                  type: object
+                type: array
+            type: object
+          status:
+            description: ResourceGroupStatus defines the observed state of ResourceGroup
+            properties:
+              conditions:
+                description: Conditions lists the conditions of the current status
+                  for the group
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: last time the condition transit from one status
+                        to another
+                      format: date-time
+                      type: string
+                    message:
+                      description: human-readable message indicating details about
+                        last transition
+                      type: string
+                    reason:
+                      description: one-word CamelCase reason for the condition’s last
+                        transition
+                      type: string
+                    status:
+                      description: Status of the condition
+                      type: string
+                    type:
+                      description: Type of the condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              observedGeneration:
+                description: ObservedGeneration is the most recent generation observed.
+                  It corresponds to the Object's generation, which is updated on mutation
+                  by the API Server. Everytime the controller does a successful reconcile,
+                  it sets ObservedGeneration to match ResourceGroup.metadata.generation.
+                format: int64
+                type: integer
+              resourceStatuses:
+                description: ResourceStatuses lists the status for each resource in
+                  the group
+                items:
+                  description: ResourceStatus contains the status of a given resource
+                    uniquely identified by its group, kind, name and namespace.
+                  properties:
+                    conditions:
+                      items:
+                        properties:
+                          lastTransitionTime:
+                            description: last time the condition transit from one
+                              status to another
+                            format: date-time
+                            type: string
+                          message:
+                            description: human-readable message indicating details
+                              about last transition
+                            type: string
+                          reason:
+                            description: one-word CamelCase reason for the condition’s
+                              last transition
+                            type: string
+                          status:
+                            description: Status of the condition
+                            type: string
+                          type:
+                            description: Type of the condition
+                            type: string
+                        required:
+                        - status
+                        - type
+                        type: object
+                      type: array
+                    group:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    status:
+                      description: Status describes the status of a resource
+                      type: string
+                  required:
+                  - group
+                  - kind
+                  - name
+                  - namespace
+                  - status
+                  type: object
+                type: array
+            required:
+            - observedGeneration
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`
