@@ -21,9 +21,9 @@ import (
 
 // KptFileName is the name of the KptFile
 const (
-	KptFileName = "Kptfile"
-	KptFileGroup = "kpt.dev"
-	KptFileVersion = "v1alpha1"
+	KptFileName       = "Kptfile"
+	KptFileGroup      = "kpt.dev"
+	KptFileVersion    = "v1alpha1"
 	KptFileAPIVersion = KptFileGroup + "/" + KptFileVersion
 )
 
@@ -57,7 +57,7 @@ type KptFile struct {
 	Functions Functions `yaml:"functions,omitempty"`
 
 	// Parameters for inventory object.
-	Inventory Inventory `yaml:"inventory,omitempty"`
+	Inventory *Inventory `yaml:"inventory,omitempty"`
 }
 
 // Inventory encapsulates the parameters for the inventory object. All of the

@@ -53,7 +53,7 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 
 // generateInventoryObj returns the ResourceGroupInventory object using the
 // passed information.
-func generateInventoryObj(inv kptfile.Inventory) (*unstructured.Unstructured, error) {
+func generateInventoryObj(inv *kptfile.Inventory) (*unstructured.Unstructured, error) {
 	// Validate the parameters
 	name := strings.TrimSpace(inv.Name)
 	if name == "" {
