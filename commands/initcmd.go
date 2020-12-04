@@ -130,7 +130,7 @@ func (io *KptInitOptions) updateKptfile() error {
 		return err
 	}
 	// Finally, set the inventory parameters in the Kptfile and write it.
-	kf.Inventory = kptfile.Inventory{
+	kf.Inventory = &kptfile.Inventory{
 		Namespace:   io.namespace,
 		Name:        io.name,
 		InventoryID: io.inventoryID,
@@ -160,17 +160,8 @@ func (io *KptInitOptions) validate() error {
 
 // kptfileInventoryEmpty returns true if the Inventory structure
 // in the Kptfile is empty; false otherwise.
-func kptfileInventoryEmpty(inv kptfile.Inventory) bool {
-	if len(inv.Name) > 0 {
-		return false
-	}
-	if len(inv.Namespace) > 0 {
-		return false
-	}
-	if len(inv.InventoryID) > 0 {
-		return false
-	}
-	return true
+func kptfileInventoryEmpty(inv *kptfile.Inventory) bool {
+	return inv == nil
 }
 
 // NewCmdInit returns the cobra command for the init command.

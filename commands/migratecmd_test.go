@@ -167,16 +167,8 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 				if len(kf.Inventory.InventoryID) == 0 {
 					t.Errorf("inventory id not set in Kptfile")
 				}
-			} else {
-				if len(kf.Inventory.Namespace) != 0 {
-					t.Errorf("inventory name not set in Kptfile")
-				}
-				if len(kf.Inventory.Name) != 0 {
-					t.Errorf("inventory name not set in Kptfile")
-				}
-				if len(kf.Inventory.InventoryID) != 0 {
-					t.Errorf("inventory id not set in Kptfile")
-				}
+			} else if kf.Inventory != nil {
+				t.Errorf("inventory shouldn't be set during dryrun")
 			}
 		})
 	}
