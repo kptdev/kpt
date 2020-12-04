@@ -90,6 +90,8 @@ type Pkg struct {
 
 	resources []resourceInfoWithSetters
 
+	files map[string]string
+
 	subPkgs []*Pkg
 }
 
@@ -162,7 +164,8 @@ func NewSetterRef(name string, path ...string) SetterRef {
 // NewPackage creates a new package for testing.
 func NewPackage(name string) *Pkg {
 	return &Pkg{
-		Name: name,
+		Name:  name,
+		files: make(map[string]string),
 	}
 }
 
@@ -207,6 +210,11 @@ func (p *Pkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef
 		setterRefs:   setterRefs,
 		mutators:     mutators,
 	})
+	return p
+}
+
+func (p *Pkg) WithFile(name, content string) *Pkg {
+	p.files[name] = content
 	return p
 }
 
@@ -265,6 +273,21 @@ func buildRecursive(path string, pkg *Pkg) error {
 
 		filePath := filepath.Join(pkgPath, ri.resourceInfo.filename)
 		err = ioutil.WriteFile(filePath, []byte(r.MustString()), 0600)
+		if err != nil {
+			return err
+		}
+	}
+
+	for name, content := range pkg.files {
+		filePath := filepath.Join(pkgPath, name)
+		_, err := os.Stat(filePath)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("file %s already exists", name)
+		}
+		err = ioutil.WriteFile(filePath, []byte(content), 0600)
 		if err != nil {
 			return err
 		}
