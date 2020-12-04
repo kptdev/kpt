@@ -60,4 +60,4 @@ See the [roadmap] for more information about new features planned for `kpt`.
 [docs]: https://googlecontainertools.github.io/kpt
 [release]: https://github.com/GoogleContainerTools/kpt/releases/latest
 [gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
-[roadmap]: https://github.com/GoogleContainerTools/kpt/docs/ROADMAP.md
+[roadmap]: https://github.com/GoogleContainerTools/kpt/blob/master/docs/ROADMAP.md
