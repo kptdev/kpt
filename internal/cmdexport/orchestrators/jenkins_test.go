@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/testutil"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateJenkinsStageStep(t *testing.T) {
@@ -39,7 +39,7 @@ fn run /app/resources \
 --fn-path /app/function2.yaml`
 	script := step.Generate()
 
-	testutil.AssertEqual(t, script, strings.TrimLeft(expected, "\n"))
+	assert.Equal(t, script, strings.TrimLeft(expected, "\n"))
 }
 
 var jenkinsTestCases = []testCase{

@@ -24,13 +24,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var (
@@ -51,10 +48,10 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 		strategy := updateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
+				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -78,7 +75,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "master") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "master") {
 				return
 			}
 		})
@@ -90,10 +87,10 @@ func TestCommand_Run_subDir(t *testing.T) {
 		strategy := updateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []Content{{Tag: "v1.2", Data: testutil.Dataset2}},
+				UpstreamChanges: []testutil.Content{{Tag: "v1.2", Data: testutil.Dataset2}},
 				GetSubDirectory: "java",
 			}
 			defer g.Clean()
@@ -119,7 +116,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "v1.2") {
+			if !g.AssertKptfile(g.GetSubDirectory, commit, "v1.2") {
 				return
 			}
 		})
@@ -140,8 +137,8 @@ func TestCommand_Run_noChanges(t *testing.T) {
 		u := updates[i]
 		t.Run(string(u.updater), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+			g := &testutil.TestSetupManager{
+				T: t,
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -171,7 +168,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "master") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "master") {
 				return
 			}
 		})
@@ -184,8 +181,8 @@ func TestCommand_Run_noCommit(t *testing.T) {
 		strategy := strategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -224,8 +221,8 @@ func TestCommand_Run_noAdd(t *testing.T) {
 		strategy := strategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -264,12 +261,12 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 		updater        StrategyType // update strategy type
 		expectedData   string       // expect
 		expectedErr    string
-		expectedCommit func(writer *TestSetupManager) string
+		expectedCommit func(writer *testutil.TestSetupManager) string
 	}{
 		{FastForward,
 			testutil.Dataset3,                        // expect no changes to the data
 			"local package files have been modified", // expect an error
-			func(writer *TestSetupManager) string { // expect Kptfile to keep the commit
+			func(writer *testutil.TestSetupManager) string { // expect Kptfile to keep the commit
 				f, err := kptfileutil.ReadFile(filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, writer.UpstreamRepo.RepoName))
 				if !assert.NoError(writer.T, err) {
 					return ""
@@ -281,7 +278,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 		{ForceDeleteReplace,
 			testutil.Dataset2, // expect the upstream changes
 			"",                // expect no error
-			func(writer *TestSetupManager) string {
+			func(writer *testutil.TestSetupManager) string {
 				c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit
 				return c
 			},
@@ -290,7 +287,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 		{AlphaGitPatch,
 			testutil.UpdateMergeConflict,     // expect a merge conflict
 			"Failed to merge in the changes", // expect an error
-			func(writer *TestSetupManager) string {
+			func(writer *testutil.TestSetupManager) string {
 				c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit as a staged change
 				return c
 			},
@@ -298,7 +295,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 		{KResourceMerge,
 			testutil.DatasetMerged, // expect a merge conflict
 			"",                     // expect an error
-			func(writer *TestSetupManager) string {
+			func(writer *testutil.TestSetupManager) string {
 				c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit as a staged change
 				return c
 			},
@@ -307,10 +304,10 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 	for i := range updates {
 		u := updates[i]
 		t.Run(string(u.updater), func(t *testing.T) {
-			g := &TestSetupManager{
-				T: t, Name: string(u.updater),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
+				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -351,7 +348,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			if !g.AssertLocalDataEquals(u.expectedData) {
 				t.FailNow()
 			}
-			if !g.AssertKptfile(expectedCommit, "master") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, expectedCommit, "master") {
 				t.FailNow()
 			}
 		})
@@ -365,10 +362,10 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 		strategy := updateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []Content{
+				UpstreamChanges: []testutil.Content{
 					{Data: testutil.Dataset2, Branch: "exp", CreateBranch: true},
 					{Data: testutil.Dataset3, Branch: "master"},
 				},
@@ -400,7 +397,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "exp") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "exp") {
 				return
 			}
 		})
@@ -414,10 +411,10 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 		strategy := updateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []Content{
+				UpstreamChanges: []testutil.Content{
 					{Data: testutil.Dataset2, Tag: "v1.0"},
 					{Data: testutil.Dataset3},
 				},
@@ -449,7 +446,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(commit, "v1.0") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "v1.0") {
 				return
 			}
 		})
@@ -463,10 +460,10 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 		strategy := strategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset5
-				UpstreamChanges: []Content{
+				UpstreamChanges: []testutil.Content{
 					{Data: testutil.Dataset5, Tag: "v1.0"},
 				},
 			}
@@ -497,7 +494,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			if !g.AssertKptfile(commit, "v1.0") {
+			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "v1.0") {
 				t.FailNow()
 			}
 		})
@@ -512,10 +509,10 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 		strategy := strategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []Content{
+				UpstreamChanges: []testutil.Content{
 					{Data: testutil.Dataset4, Tag: "v1.0"},
 				},
 			}
@@ -582,9 +579,9 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 
 func TestCommand_Run_emitPatch(t *testing.T) {
 	// Setup the test upstream and local packages
-	g := &TestSetupManager{
-		T: t, Name: string(AlphaGitPatch),
-		UpstreamChanges: []Content{{Data: testutil.Dataset2}},
+	g := &testutil.TestSetupManager{
+		T:               t,
+		UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 	}
 	defer g.Clean()
 	if !g.Init(testutil.Dataset1) {
@@ -641,10 +638,10 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 	for i := range updateStrategies {
 		strategy := updateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
-			g := &TestSetupManager{
-				T: t, Name: string(strategy),
+			g := &testutil.TestSetupManager{
+				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []Content{{Data: testutil.Dataset2}},
+				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 			}
 			defer g.Clean()
 			if !g.Init(testutil.Dataset1) {
@@ -673,10 +670,10 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 	strategy := StrategyType("foo")
 
 	// Setup the test upstream and local packages
-	g := &TestSetupManager{
-		T: t, Name: string(strategy),
+	g := &testutil.TestSetupManager{
+		T: t,
 		// Update upstream to Dataset2
-		UpstreamChanges: []Content{{Data: testutil.Dataset2}},
+		UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 	}
 	defer g.Clean()
 	if !g.Init(testutil.Dataset1) {
@@ -851,23 +848,23 @@ func TestCommand_Run_subpackages(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			dir := expandPkg(t, test.initialUpstream)
+			dir := pkgbuilder.ExpandPkg(t, test.initialUpstream)
 
-			g := &TestSetupManager{
-				T: t, Name: "UpdateTest",
+			g := &testutil.TestSetupManager{
+				T: t,
 			}
 			defer g.Clean()
 			if test.updatedUpstream != nil {
-				g.UpstreamChanges = []Content{
+				g.UpstreamChanges = []testutil.Content{
 					{
-						Data: expandPkg(t, test.updatedUpstream),
+						Data: pkgbuilder.ExpandPkg(t, test.updatedUpstream),
 					},
 				}
 			}
 			if test.updatedLocal != nil {
-				g.LocalChanges = []Content{
+				g.LocalChanges = []testutil.Content{
 					{
-						Data: expandPkg(t, test.updatedLocal),
+						Data: pkgbuilder.ExpandPkg(t, test.updatedLocal),
 					},
 				}
 			}
@@ -884,23 +881,11 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				t.FailNow()
 			}
 
-			if !g.AssertLocalDataEquals(expandPkg(t, test.expectedLocal)) {
+			if !g.AssertLocalDataEquals(pkgbuilder.ExpandPkg(t, test.expectedLocal)) {
 				t.FailNow()
 			}
 		})
 	}
-}
-
-func expandPkg(t *testing.T, pkg *pkgbuilder.Pkg) string {
-	dir, err := ioutil.TempDir("", "test-kpt-builder-")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	err = pkg.Build(dir)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	return filepath.Join(dir, pkg.Name)
 }
 
 func toAbsPath(t *testing.T, path string) string {
@@ -993,220 +978,4 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			tg.AssertEqual(t, local, filepath.Join(expectedLocal))
 		})
 	}
-}
-
-type TestSetupManager struct {
-	T *testing.T
-	// Name is the name of the updater being used
-	Name string
-
-	// GetRef is the git ref to fetch
-	GetRef string
-
-	// GetSubDirectory is the repo subdirectory containing the package
-	GetSubDirectory string
-
-	// UpstreamInit are made before fetching the repo
-	UpstreamInit []Content
-
-	// UpstreamChanges are upstream content changes made after cloning the repo
-	UpstreamChanges []Content
-
-	LocalChanges []Content
-
-	UpstreamRepo *testutil.TestGitRepo
-
-	LocalWorkspace *testutil.TestWorkspace
-
-	cleanTestRepo func()
-	cacheDir      string
-	targetDir     string
-}
-
-type Content struct {
-	CreateBranch bool
-	Branch       string
-	Data         string
-	Tag          string
-	Message      string
-}
-
-// Init initializes test data
-// - Setup a new upstream repo in a tmp directory
-// - Set the initial upstream content to Dataset1
-// - Setup a new cache location for git repos and update the environment variable
-// - Setup fetch the upstream package to a local package
-// - Verify the local package contains the upstream content
-func (g *TestSetupManager) Init(dataset string) bool {
-	// Default optional values
-	if g.GetRef == "" {
-		g.GetRef = "master"
-	}
-	if g.GetSubDirectory == "" {
-		g.GetSubDirectory = "/"
-	}
-
-	// Configure the cache location for cloning repos
-	cacheDir, err := ioutil.TempDir("", "kpt-test-cache-repos-")
-	if !assert.NoError(g.T, err) {
-		return false
-	}
-	g.cacheDir = cacheDir
-	os.Setenv(gitutil.RepoCacheDirEnv, g.cacheDir)
-
-	// Setup a "remote" source repo, and a "local" destination repo
-	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = testutil.SetupDefaultRepoAndWorkspace(g.T, dataset)
-	g.UpstreamRepo.Updater = g.Name
-	if g.GetSubDirectory == "/" {
-		g.targetDir = filepath.Base(g.UpstreamRepo.RepoName)
-	} else {
-		g.targetDir = filepath.Base(g.GetSubDirectory)
-	}
-	if !assert.NoError(g.T, os.Chdir(g.UpstreamRepo.RepoDirectory)) {
-		return false
-	}
-
-	if err := updateGitDir(g.T, g.UpstreamRepo, g.UpstreamInit); err != nil {
-		return false
-	}
-
-	// Fetch the source repo
-	if !assert.NoError(g.T, os.Chdir(g.LocalWorkspace.WorkspaceDirectory)) {
-		return false
-	}
-
-	if !assert.NoError(g.T, get.Command{
-		Destination: g.targetDir,
-		Git: kptfile.Git{
-			Repo:      g.UpstreamRepo.RepoDirectory,
-			Ref:       g.GetRef,
-			Directory: g.GetSubDirectory,
-		}}.Run(), g.Name) {
-		return false
-	}
-	localGit := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
-	if !assert.NoError(g.T, localGit.Run("add", ".")) {
-		return false
-	}
-	if !assert.NoError(g.T, localGit.Run("commit", "-m", "add files")) {
-		return false
-	}
-
-	// Modify source repository state after fetching it
-	if err := updateGitDir(g.T, g.UpstreamRepo, g.UpstreamChanges); err != nil {
-		return false
-	}
-
-	// Verify the local package has the correct dataset
-	if same := g.AssertLocalDataEquals(filepath.Join(dataset, g.GetSubDirectory)); !same {
-		return same
-	}
-
-	if err := updateGitDir(g.T, g.LocalWorkspace, g.LocalChanges); err != nil {
-		return false
-	}
-
-	return true
-}
-
-type GitDirectory interface {
-	CheckoutBranch(branch string, create bool) error
-	ReplaceData(data string) error
-	Commit(message string) error
-	Tag(tagName string) error
-}
-
-func updateGitDir(t *testing.T, gitDir GitDirectory, changes []Content) error {
-	for _, content := range changes {
-		if content.Message == "" {
-			content.Message = "initializing data"
-		}
-		if len(content.Branch) > 0 {
-			err := gitDir.CheckoutBranch(content.Branch, content.CreateBranch)
-			if !assert.NoError(t, err) {
-				return err
-			}
-		}
-
-		err := gitDir.ReplaceData(content.Data)
-		if !assert.NoError(t, err) {
-			return err
-		}
-
-		err = gitDir.Commit(content.Message)
-		if !assert.NoError(t, err) {
-			return err
-		}
-		if len(content.Tag) > 0 {
-			err = gitDir.Tag(content.Tag)
-			if !assert.NoError(t, err) {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func (g *TestSetupManager) AssertKptfile(commit, ref string) bool {
-	name := g.UpstreamRepo.RepoName
-	if g.targetDir != "" {
-		name = g.targetDir
-	}
-	expectedKptfile := kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: name,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: g.GetSubDirectory,
-				Repo:      g.UpstreamRepo.RepoDirectory,
-				Ref:       ref,
-				Commit:    commit,
-			},
-		},
-	}
-
-	return g.UpstreamRepo.AssertKptfile(
-		g.T, filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir), expectedKptfile)
-}
-
-func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {
-	var sourceDir string
-	if filepath.IsAbs(path) {
-		sourceDir = path
-	} else {
-		sourceDir = filepath.Join(g.UpstreamRepo.DatasetDirectory, path)
-	}
-	destDir := filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir)
-	return g.UpstreamRepo.AssertEqual(g.T, sourceDir, destDir)
-}
-
-func (g *TestSetupManager) SetLocalData(path string) bool {
-	if !assert.NoError(g.T, copyutil.CopyDir(
-		filepath.Join(g.UpstreamRepo.DatasetDirectory, path),
-		filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.UpstreamRepo.RepoName))) {
-		return false
-	}
-	localGit := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
-	if !assert.NoError(g.T, localGit.Run("add", ".")) {
-		return false
-	}
-	if !assert.NoError(g.T, localGit.Run("commit", "-m", "add files")) {
-		return false
-	}
-	return true
-}
-
-func (g *TestSetupManager) Clean() {
-	g.cleanTestRepo()
-	os.RemoveAll(g.cacheDir)
 }

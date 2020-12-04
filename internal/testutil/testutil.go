@@ -62,8 +62,6 @@ type TestGitRepo struct {
 
 	// RepoName is the name of the repository
 	RepoName string
-
-	Updater string
 }
 
 var AssertNoError = assertnow.NilError
@@ -88,16 +86,16 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool 
 		return false
 	}
 	diff = diff.Difference(KptfileSet)
-	return assert.Empty(t, diff.List(), g.Updater)
+	return assert.Empty(t, diff.List())
 }
 
-func AssertEqual(t *testing.T, g *TestGitRepo, sourceDir, destDir string) {
+func AssertPkgEqual(t *testing.T, g *TestGitRepo, sourceDir, destDir string) {
 	diff, err := Diff(sourceDir, destDir)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 	diff = diff.Difference(KptfileSet)
-	if !assert.Empty(t, diff.List(), g.Updater) {
+	if !assert.Empty(t, diff.List()) {
 		t.FailNow()
 	}
 }
@@ -243,16 +241,16 @@ func Compare(t *testing.T, a, b string) {
 func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfile.KptFile) bool {
 	// read the actual generated KptFile
 	b, err := ioutil.ReadFile(filepath.Join(cloned, kptfile.KptFileName))
-	if !assert.NoError(t, err, g.Updater) {
+	if !assert.NoError(t, err) {
 		return false
 	}
 	actual := kptfile.KptFile{}
 	d := yaml.NewDecoder(bytes.NewBuffer(b))
 	d.KnownFields(true)
-	if !assert.NoError(t, d.Decode(&actual), g.Updater) {
+	if !assert.NoError(t, d.Decode(&actual)) {
 		return false
 	}
-	return assert.Equal(t, kpkg, actual, g.Updater)
+	return assert.Equal(t, kpkg, actual)
 }
 
 // CheckoutBranch checks out the git branch in the repo
@@ -707,4 +705,28 @@ func (w *TestWorkspace) Commit(message string) error {
 // Tag initializes tags the git repository
 func (w *TestWorkspace) Tag(tagName string) error {
 	return tag(w.WorkspaceDirectory, tagName)
+}
+
+func PrintPackage(paths ...string) error {
+	path := filepath.Join(paths...)
+	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if strings.Contains(path, "/.git") {
+			return nil
+		}
+		fmt.Println(path)
+		return nil
+	})
+}
+
+func PrintFile(paths ...string) error {
+	path := filepath.Join(paths...)
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(b))
+	return nil
 }
