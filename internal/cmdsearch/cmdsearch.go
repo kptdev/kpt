@@ -17,6 +17,8 @@ package cmdsearch
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
+	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/search"
 	"github.com/spf13/cobra"
@@ -73,6 +75,8 @@ type SearchRunner struct {
 	PutLiteral         string
 	PutPattern         string
 	RecurseSubPackages bool
+	MatchCount         int
+	Writer             io.Writer
 }
 
 func (r *SearchRunner) preRunE(c *cobra.Command, args []string) error {
@@ -86,21 +90,34 @@ func (r *SearchRunner) preRunE(c *cobra.Command, args []string) error {
 		c.Flag("by-value-regex").Changed {
 		return errors.Errorf(`only one of ["by-value", "by-value-regex"] can be provided`)
 	}
+	r.Writer = c.OutOrStdout()
 	return nil
 }
 
 func (r *SearchRunner) runE(c *cobra.Command, args []string) error {
 	e := runner.ExecuteCmdOnPkgs{
-		Writer:             c.OutOrStdout(),
+		Writer:             ioutil.Discard, // dummy writer, runner need not print any info
 		RecurseSubPackages: r.RecurseSubPackages,
 		CmdRunner:          r,
 		RootPkgPath:        args[0],
 		NeedOpenAPI:        true,
+		SkipPkgPathPrint:   true,
 	}
-	return e.Execute()
+	err := e.Execute()
+	if err != nil {
+		return err
+	}
+	var action string
+	if r.PutPattern != "" || r.PutLiteral != "" {
+		action = "Mutated"
+	} else {
+		action = "Matched"
+	}
+	fmt.Fprintf(r.Writer, "%s %d field(s)\n", action, r.MatchCount)
+	return nil
 }
 
-func (r *SearchRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
+func (r *SearchRunner) ExecuteCmd(_ io.Writer, pkgPath string) error {
 	s := search.SearchReplace{
 		ByValue:      r.ByValue,
 		ByValueRegex: r.ByValueRegex,
@@ -111,11 +128,9 @@ func (r *SearchRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 		PackagePath:  pkgPath,
 	}
 	err := s.Perform(pkgPath)
-	fmt.Fprintf(w, "matched %d field(s)\n", s.Count)
-	for filePath, nodeVals := range s.Match {
-		for _, nodeVal := range nodeVals {
-			fmt.Fprintf(w, "%s:  %s\n", filePath, nodeVal)
-		}
+	r.MatchCount += s.Count
+	for _, res := range s.Result {
+		fmt.Fprintf(r.Writer, "%s\nfieldPath: %s\nvalue: %s\n\n", filepath.Join(pkgPath, res.FilePath), res.FieldPath, res.Value)
 	}
 	return errors.Wrap(err)
 }
