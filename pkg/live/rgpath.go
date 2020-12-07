@@ -5,7 +5,6 @@ package live
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -31,41 +30,32 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	if err != nil {
 		return []*unstructured.Unstructured{}, err
 	}
+	klog.V(4).Infof("path Read() %d resources", len(objs))
 	// Read the Kptfile in the top directory to get the inventory
 	// parameters to create the ResourceGroup inventory object.
 	kf, err := kptfileutil.ReadFile(p.pathReader.Path)
+	if err != nil {
+		klog.V(4).Infof("unable to parse Kptfile for ResourceGroup inventory: %s", err)
+		return objs, nil
+	}
+	inv := kf.Inventory
+	invObj, err := generateInventoryObj(inv)
 	if err == nil {
-		inv := kf.Inventory
 		klog.V(4).Infof("from Kptfile generating ResourceGroup inventory object %s/%s/%s",
 			inv.Namespace, inv.Name, inv.InventoryID)
-		invObj, err := generateInventoryObj(inv)
-		if err == nil {
-			objs = append(objs, invObj)
-		} else {
-			klog.V(4).Infof("unable to generate ResourceGroup inventory: %s", err)
-		}
+		objs = append(objs, invObj)
 	} else {
-		klog.V(4).Infof("unable to parse Kpfile for ResourceGroup inventory: %s", err)
+		klog.V(4).Infof("unable to generate ResourceGroup inventory: %s", err)
 	}
-	klog.V(4).Infof("path Read() generated %d resources", len(objs))
 	return objs, nil
 }
 
 // generateInventoryObj returns the ResourceGroupInventory object using the
 // passed information.
 func generateInventoryObj(inv *kptfile.Inventory) (*unstructured.Unstructured, error) {
-	// Validate the parameters
-	name := strings.TrimSpace(inv.Name)
-	if name == "" {
-		return nil, fmt.Errorf("kptfile inventory empty name")
-	}
-	namespace := strings.TrimSpace(inv.Namespace)
-	if namespace == "" {
-		return nil, fmt.Errorf("kptfile inventory empty namespace")
-	}
-	id := strings.TrimSpace(inv.InventoryID)
-	if id == "" {
-		return nil, fmt.Errorf("kptfile inventory missing inventoryID")
+	// First, ensure the Kptfile inventory section is valid.
+	if isValid, err := kptfileutil.ValidateInventory(inv); !isValid {
+		return nil, err
 	}
 	// Create and return ResourceGroup custom resource as inventory object.
 	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
@@ -74,10 +64,10 @@ func generateInventoryObj(inv *kptfile.Inventory) (*unstructured.Unstructured, e
 			"apiVersion": groupVersion,
 			"kind":       ResourceGroupGVK.Kind,
 			"metadata": map[string]interface{}{
-				"name":      name,
-				"namespace": namespace,
+				"name":      inv.Name,
+				"namespace": inv.Namespace,
 				"labels": map[string]interface{}{
-					common.InventoryLabel: id,
+					common.InventoryLabel: inv.InventoryID,
 				},
 			},
 			"spec": map[string]interface{}{
@@ -89,7 +79,7 @@ func generateInventoryObj(inv *kptfile.Inventory) (*unstructured.Unstructured, e
 	if labels == nil {
 		labels = make(map[string]string)
 	}
-	labels[common.InventoryLabel] = id
+	labels[common.InventoryLabel] = inv.InventoryID
 	inventoryObj.SetLabels(labels)
 	inventoryObj.SetAnnotations(inv.Annotations)
 	return inventoryObj, nil
