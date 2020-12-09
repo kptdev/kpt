@@ -32,23 +32,72 @@
 
 set +e
 
+# Change from empty string to build the kpt binary from the downloaded
+# repositories at HEAD, including dependencies cli-utils and kustomize.
+BUILD_DEPS_AT_HEAD=""
+
 ###########################################################################
 #  Setup for test
 ###########################################################################
 
-# Setup temporary directory for output.
-BASE=$(mktemp -d -t ci-XXXXXXXXXX)
-RESULT=$BASE/output
-mkdir -p $RESULT
+# Setup temporary directory for src, bin, and output.
+TMP_DIR=$(mktemp -d -t kpt-e2e-XXXXXXXXXX)
+SRC_DIR="${TMP_DIR}/src"
+mkdir -p $SRC_DIR
+BIN_DIR="${TMP_DIR}/bin"
+mkdir -p ${BIN_DIR}
+OUTPUT_DIR="${TMP_DIR}/output"
+mkdir -p $OUTPUT_DIR
 
-# Build the kpt binary and copy it to the temp dir.
+# Build the kpt binary and copy it to the temp dir. If BUILD_DEPS_AT_HEAD
+# is set, then copy the kpt repository AND dependency directories into
+# TMP_DIR and build from there.
 echo "kpt end-to-end test"
 echo
-echo "Building kpt..."
+echo "Temp Dir: $TMP_DIR"
+echo
 
-go build -o $BASE -v .
+if [ -z $BUILD_DEPS_AT_HEAD ]; then
+    echo "Building kpt locally..."
+    go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
+    echo "Building kpt locally...SUCCESS"
 
-echo "$BASE/kpt"
+else
+    echo "Building kpt using dependencies at HEAD..."
+    echo
+    # Clone kpt repository into kpt source directory
+    KPT_SRC_DIR="${SRC_DIR}/github.com/GoogleContainerTools/kpt"
+    mkdir -p $KPT_SRC_DIR
+    echo "Downloading kpt repository at HEAD..."
+    git clone https://github.com/GoogleContainerTools/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+    echo "Downloading kpt repository at HEAD...SUCCESS"
+    # Clone cli-utils repository into source directory
+    CLI_UTILS_SRC_DIR="${SRC_DIR}/sigs.k8s.io/cli-utils"
+    mkdir -p $CLI_UTILS_SRC_DIR
+    echo "Downloading cli-utils repository at HEAD..."
+    git clone https://github.com/kubernetes-sigs/cli-utils ${CLI_UTILS_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+    echo "Downloading cli-utils repository at HEAD...SUCCESS"
+    # Clone kustomize respository into source directory
+    KUSTOMIZE_SRC_DIR="${SRC_DIR}/sigs.k8s.io/kustomize"
+    mkdir -p $KUSTOMIZE_SRC_DIR
+    echo "Downloading kustomize repository at HEAD..."
+    git clone https://github.com/kubernetes-sigs/kustomize ${KUSTOMIZE_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+    echo "Downloading kustomize repository at HEAD...SUCCESS"
+    # Tell kpt to build using the locally downloaded dependencies
+    echo "Updating kpt/go.mod to reference locally downloaded repositories..."
+    echo -e "\n\nreplace sigs.k8s.io/cli-utils => ../../../sigs.k8s.io/cli-utils" >> ${KPT_SRC_DIR}/go.mod
+    echo -e "replace sigs.k8s.io/kustomize/cmd/config => ../../../sigs.k8s.io/kustomize/cmd/config" >> ${KPT_SRC_DIR}/go.mod
+    echo -e "replace sigs.k8s.io/kustomize/kyaml => ../../../sigs.k8s.io/kustomize/kyaml\n" >> ${KPT_SRC_DIR}/go.mod
+    echo "Updating kpt/go.mod to reference locally downloaded repositories...SUCCESS"
+    # Build kpt using the cloned directories
+    export GOPATH=${TMP_DIR}
+    echo "Building kpt..."
+    (cd -- ${KPT_SRC_DIR} && go build -o $BIN_DIR -v . > ${OUTPUT_DIR}/kptbuild 2>&1)
+    echo "Building kpt...SUCCESS"
+    echo
+    echo "Building kpt using dependencies at HEAD...SUCCESS"
+fi
+
 echo
 
 ###########################################################################
@@ -58,6 +107,7 @@ echo
 # createTestSuite deletes then creates the kind cluster.
 function createTestSuite {
     echo "Setting Up Test Suite..."
+    echo
     # Create the k8s cluster
     echo "Deleting kind cluster..."
     kind delete cluster > /dev/null 2>&1
@@ -65,6 +115,7 @@ function createTestSuite {
     echo "Creating kind cluster..."
     kind create cluster > /dev/null 2>&1    
     echo "Creating kind cluster...COMPLETED"
+    echo
     echo "Setting Up Test Suite...COMPLETED"
     echo
 }
@@ -76,8 +127,8 @@ function waitForDefaultServiceAccount {
     sp="/-\|"
     n=1
     until ((n >= 300)); do
-	kubectl -n default get serviceaccount default -o name > $RESULT/status 2>&1
-	test 1 == $(grep "serviceaccount/default" $RESULT/status | wc -l)
+	kubectl -n default get serviceaccount default -o name > $OUTPUT_DIR/status 2>&1
+	test 1 == $(grep "serviceaccount/default" $OUTPUT_DIR/status | wc -l)
 	if [ $? == 0 ]; then
 	    echo
 	    break
@@ -91,11 +142,11 @@ function waitForDefaultServiceAccount {
 }
 
 # assertContains checks that the passed string is a substring of
-# the $RESULT/status file.
+# the $OUTPUT_DIR/status file.
 ERROR=""
 function assertContains {
   test 1 == \
-  $(grep "$@" $RESULT/status | wc -l); \
+  $(grep "$@" $OUTPUT_DIR/status | wc -l); \
   if [ $? == 0 ]; then
       echo -n '.'
   else
@@ -112,10 +163,10 @@ function assertCMInventory {
     local numInv=$2
     
     inv=$(kubectl get cm -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers)
-    echo $inv | awk '{print $1}' > $RESULT/invname
-    echo $inv | awk '{print $2}' > $RESULT/numinv
+    echo $inv | awk '{print $1}' > $OUTPUT_DIR/invname
+    echo $inv | awk '{print $2}' > $OUTPUT_DIR/numinv
 
-    test 1 == $(grep "inventory-" $RESULT/invname | wc -l);
+    test 1 == $(grep "inventory-" $OUTPUT_DIR/invname | wc -l);
     if [ $? == 0 ]; then
 	echo -n '.'
     else
@@ -123,7 +174,7 @@ function assertCMInventory {
 	ERROR+="ERROR: expected ConfigMap inventory to exist\n"
     fi
 
-    test 1 == $(grep $numInv $RESULT/numinv | wc -l);
+    test 1 == $(grep $numInv $OUTPUT_DIR/numinv | wc -l);
     if [ $? == 0 ]; then
 	echo -n '.'
     else
@@ -138,9 +189,9 @@ function assertCMInventory {
 function assertRGInventory {
     local ns=$1
     
-    kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}' > $RESULT/invname
+    kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}' > $OUTPUT_DIR/invname
 
-    test 1 == $(grep "inventory-" $RESULT/invname | wc -l);
+    test 1 == $(grep "inventory-" $OUTPUT_DIR/invname | wc -l);
     if [ $? == 0 ]; then
 	echo -n '.'
     else
@@ -156,9 +207,9 @@ function assertPodExists {
     local namespace=$2
 
     kubectl wait --for=condition=Ready -n $namespace pod/$podName --timeout=${TIMEOUT_SECS}s > /dev/null 2>&1
-    kubectl get po -n $namespace $podName -o name | awk '{print $1}' > $RESULT/podname
+    kubectl get po -n $namespace $podName -o name | awk '{print $1}' > $OUTPUT_DIR/podname
 
-    test 1 == $(grep $podName $RESULT/podname | wc -l);
+    test 1 == $(grep $podName $OUTPUT_DIR/podname | wc -l);
     if [ $? == 0 ]; then
 	echo -n '.'
     else
@@ -175,9 +226,9 @@ function assertPodNotExists {
     local namespace=$2
 
     kubectl wait --for=delete -n $namespace pod/$podName --timeout=${TIMEOUT_SECS}s > /dev/null 2>&1
-    kubectl get po -n $namespace $podName -o name > $RESULT/podname 2>&1
+    kubectl get po -n $namespace $podName -o name > $OUTPUT_DIR/podname 2>&1
     
-    test 1 == $(grep "(NotFound)" $RESULT/podname | wc -l);
+    test 1 == $(grep "(NotFound)" $OUTPUT_DIR/podname | wc -l);
     if [ $? == 0 ]; then
 	echo -n '.'
     else
@@ -217,7 +268,7 @@ waitForDefaultServiceAccount
 # Creates ConfigMap inventory-template.yaml in "test-case-1a" directory
 echo "Testing basic ConfigMap init"
 echo "kpt live init e2e/live/testdata/test-case-1a"
-${BASE}/kpt live init e2e/live/testdata/test-case-1a > $RESULT/status 2>&1
+${BIN_DIR}/kpt live init e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "namespace: test-namespace is used for inventory object"
 assertContains "testdata/test-case-1a/inventory-template.yaml"
 printResult
@@ -229,7 +280,7 @@ cp -f e2e/live/testdata/test-case-1a/inventory-template.yaml e2e/live/testdata/t
 # Preview run for "test-case-1a" directory
 echo "Testing initial preview"
 echo "kpt live preview e2e/live/testdata/test-case-1a"
-${BASE}/kpt live preview e2e/live/testdata/test-case-1a > $RESULT/status
+${BIN_DIR}/kpt live preview e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-namespace created (preview)"
 assertContains "pod/pod-a created (preview)"
 assertContains "pod/pod-b created (preview)"
@@ -242,7 +293,7 @@ printResult
 # Apply run for "test-case-1a" directory
 echo "Testing basic apply"
 echo "kpt live apply e2e/live/testdata/test-case-1a"
-${BASE}/kpt live apply e2e/live/testdata/test-case-1a > $RESULT/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -259,7 +310,7 @@ printResult
 # "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic preview"
 echo "kpt live preview e2e/live/testdata/test-case-1b"
-${BASE}/kpt live preview e2e/live/testdata/test-case-1b > $RESULT/status
+${BIN_DIR}/kpt live preview e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
 assertContains "namespace/test-namespace configured (preview)"
 assertContains "pod/pod-b configured (preview)"
 assertContains "pod/pod-c configured (preview)"
@@ -280,7 +331,7 @@ printResult
 # "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic prune"
 echo "kpt live apply e2e/live/testdata/test-case-1b"
-${BASE}/kpt live apply e2e/live/testdata/test-case-1b > $RESULT/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
 assertContains "namespace/test-namespace unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
@@ -302,7 +353,7 @@ printResult
 # "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic destroy"
 echo "kpt live destroy e2e/live/testdata/test-case-1b"
-${BASE}/kpt live destroy e2e/live/testdata/test-case-1b > $RESULT/status
+${BIN_DIR}/kpt live destroy e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
 assertContains "pod/pod-d deleted"
 assertContains "pod/pod-c deleted"
 assertContains "pod/pod-b deleted"
@@ -317,7 +368,7 @@ printResult
 # Creates new inventory-template.yaml for "migrate-case-1a" directory.
 echo "kpt live init e2e/live/testdata/migrate-case-1a"
 rm -f e2e/live/testdata/migrate-case-1a/inventory-template.yaml
-${BASE}/kpt live init e2e/live/testdata/migrate-case-1a > $RESULT/status
+${BIN_DIR}/kpt live init e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "namespace: test-rg-namespace is used for inventory object"
 assertContains "live/testdata/migrate-case-1a/inventory-template.yaml"
 printResult
@@ -336,7 +387,7 @@ echo "kpt live apply e2e/live/testdata/migrate-case-1a"
 # Copy Kptfile into "migrate-case-1a" WITHOUT inventory information. This ensures
 # the apply uses the ConfigMap inventory-template.yaml during the apply.
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
-${BASE}/kpt live apply e2e/live/testdata/migrate-case-1a > $RESULT/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -344,6 +395,7 @@ assertContains "pod/pod-c created"
 assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured"
 assertContains "0 resource(s) pruned, 0 skipped"
 # Validate resources in the cluster
+assertCMInventory "test-rg-namespace" "4"
 assertPodExists "pod-a" "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
@@ -353,7 +405,7 @@ printResult
 # Migrates resources in "migrate-case-1a" directory.
 echo "Testing migrate from ConfigMap to ResourceGroup inventory"
 echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
-${BASE}/kpt live migrate e2e/live/testdata/migrate-case-1a > $RESULT/status
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "updating Kptfile inventory values...success"
 assertContains "retrieve the current ConfigMap inventory...success (4 inventory objects)"
@@ -365,13 +417,14 @@ assertContains "inventory migration...success"
 assertPodExists "pod-a" "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
+assertRGInventory "test-rg-namespace"
 printResult
 
 # Test 9: kpt live preview with ResourceGroup inventory
 # Previews resources in the "migrate-case-1a" directory.
 echo "Testing kpt live preview with ResourceGroup inventory"
 echo "kpt live preview e2e/live/testdata/migrate-case-1a"
-${BASE}/kpt live preview e2e/live/testdata/migrate-case-1a > $RESULT/status
+${BIN_DIR}/kpt live preview e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace configured (preview)"
 assertContains "pod/pod-a configured (preview)"
 assertContains "pod/pod-b configured (preview)"
@@ -379,6 +432,7 @@ assertContains "pod/pod-c configured (preview)"
 assertContains "4 resource(s) applied. 0 created, 0 unchanged, 4 configured (preview)"
 assertContains "0 resource(s) pruned, 0 skipped (preview)"
 # Validate resources in the cluster
+assertRGInventory "test-rg-namespace"
 assertPodExists "pod-a" "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
@@ -389,7 +443,7 @@ printResult
 echo "Testing kpt live apply/prune with ResourceGroup inventory"
 echo "kpt live apply e2e/live/testdata/migrate-case-1b"
 cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b
-${BASE}/kpt live apply e2e/live/testdata/migrate-case-1b > $RESULT/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b > $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a pruned"
 assertContains "pod/pod-b unchanged"
@@ -398,6 +452,7 @@ assertContains "pod/pod-d created"
 assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured"
 assertContains "1 resource(s) pruned, 0 skipped"
 # Validate resources in the cluster
+assertRGInventory "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
 assertPodExists "pod-d" "test-rg-namespace"
@@ -407,7 +462,7 @@ printResult
 # Test 11: kpt live destroy with ResourceGroup inventory
 echo "Testing kpt destroy with ResourceGroup inventory"
 echo "kpt live destroy e2e/live/testdata/migrate-case-1b"
-${BASE}/kpt live destroy e2e/live/testdata/migrate-case-1b > $RESULT/status
+${BIN_DIR}/kpt live destroy e2e/live/testdata/migrate-case-1b > $OUTPUT_DIR/status
 assertContains "pod/pod-d deleted"
 assertContains "pod/pod-c deleted"
 assertContains "pod/pod-b deleted"
@@ -418,14 +473,15 @@ assertPodNotExists "pod-c" "test-rg-namespace"
 assertPodNotExists "pod-d" "test-rg-namespace"
 printResult
 
+
 # Test 12: kpt live init for Kptfile (ResourceGroup inventory)
 # initial Kptfile does NOT have inventory info
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
 echo "Testing kpt live init for Kptfile (ResourceGroup inventory)"
 echo "kpt live init e2e/live/testdata/migrate-error"
-${BASE}/kpt live init e2e/live/testdata/migrate-error > $RESULT/status 2>&1
+${BIN_DIR}/kpt live init e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
 # Difference in Kptfile should have inventory data
-diff e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error/Kptfile > $RESULT/status 2>&1
+diff e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error/Kptfile > $OUTPUT_DIR/status 2>&1
 assertContains "inventory:"
 assertContains "namespace: test-rg-namespace"
 assertContains "name: inventory-"
@@ -437,7 +493,7 @@ printResult
 echo "Testing kpt live migrate with missing inventory-template.yaml should fail"
 echo "kpt live migrate e2e/live/testdata/migrate-error"
 rm -f e2e/live/testdata/migrate-error/inventory-template.yaml
-${BASE}/kpt live migrate e2e/live/testdata/migrate-error > $RESULT/status 2>&1
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
 assertContains "inventory migration...failed"
 printResult
 
@@ -446,7 +502,7 @@ printResult
 cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-error
 echo "Testing kpt live migrate with no objects in cluster"
 echo "kpt live migrate e2e/live/testdata/migrate-error"
-${BASE}/kpt live migrate e2e/live/testdata/migrate-error > $RESULT/status 2>&1
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "updating Kptfile inventory values...values already exist...success"
 assertContains "retrieve the current ConfigMap inventory...success (0 inventory objects)"
@@ -458,7 +514,7 @@ printResult
 # Test 15: kpt live initial apply ResourceGroup inventory
 echo "Testing kpt apply ResourceGroup inventory"
 echo "kpt live apply e2e/live/testdata/migrate-error"
-${BASE}/kpt live apply e2e/live/testdata/migrate-error > $RESULT/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-error > $OUTPUT_DIR/status
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
@@ -470,6 +526,12 @@ assertPodExists "pod-c" "test-rg-namespace"
 printResult
 
 echo
+
+# Cleanup
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1b
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
+
 
 ###########################################################################
 #  Tests for ResourceGroup CRD installation
@@ -483,19 +545,19 @@ export RESOURCE_GROUP_INVENTORY=1
 echo "Testing kpt live install-resource-group"
 echo "kpt live install-resource-group"
 # First, check that the ResourceGroup CRD does NOT exist
-kubectl get resourcegroups.kpt.dev > $RESULT/status 2>&1
+kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
 assertContains "error: the server doesn't have a resource type \"resourcegroups\""
 # Next, add the ResourceGroup CRD
-${BASE}/kpt live install-resource-group > $RESULT/status
-kubectl get resourcegroups.kpt.dev > $RESULT/status 2>&1
+${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status
+kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
 assertContains "No resources found"
 # Add a simple ResourceGroup custom resource, and verify it exists in the cluster.
-kubectl apply -f e2e/live/testdata/install-rg-crd/example-resource-group.yaml > $RESULT/status
+kubectl apply -f e2e/live/testdata/install-rg-crd/example-resource-group.yaml > $OUTPUT_DIR/status
 assertContains "resourcegroup.kpt.dev/example-inventory created"
-kubectl get resourcegroups.kpt.dev --no-headers > $RESULT/status
+kubectl get resourcegroups.kpt.dev --no-headers > $OUTPUT_DIR/status
 assertContains "example-inventory"
 # Finally, add the ResourceGroup CRD again, and check it says it already exists.
-${BASE}/kpt live install-resource-group -v=4 > $RESULT/status 2>&1
+${BIN_DIR}/kpt live install-resource-group -v=4 > $OUTPUT_DIR/status 2>&1
 assertContains "ResourceGroup CRD already exists"
 printResult
 
