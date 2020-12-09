@@ -9,7 +9,4 @@ upstream:
     repo: git@github.com:yuwenma/blueprint-helloworld
     directory: /
     ref: master
-inventory:
-  namespace: test-rg-namespace
-  name: inventory-62308923
-  inventoryID: bad7c50de3c41e2e801032dbe4cdc111102d9ae0-1605844107990241514
+
