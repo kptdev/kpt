@@ -12,6 +12,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
@@ -149,11 +150,19 @@ func (mr *MigrateRunner) applyCRD() error {
 	var err error
 	// Simply return early if this is a dry run
 	if mr.dryRun {
-		fmt.Fprint(mr.ioStreams.Out, "success\n")
+		fmt.Fprintln(mr.ioStreams.Out, "success")
 		return nil
 	}
-	if err = live.ApplyResourceGroupCRD(mr.cmProvider.Factory()); err == nil {
-		fmt.Fprint(mr.ioStreams.Out, "success\n")
+	// Apply the ResourceGroup CRD to the cluster, swallowing an "AlreadyExists" error.
+	err = live.ApplyResourceGroupCRD(mr.cmProvider.Factory())
+	if apierrors.IsAlreadyExists(err) {
+		fmt.Fprint(mr.ioStreams.Out, "already installed...")
+		err = nil
+	}
+	if err != nil {
+		fmt.Fprintln(mr.ioStreams.Out, "failed")
+	} else {
+		fmt.Fprintln(mr.ioStreams.Out, "success")
 	}
 	return err
 }
