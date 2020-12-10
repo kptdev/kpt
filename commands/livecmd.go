@@ -24,7 +24,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/cli-utils/cmd/apply"
 	"sigs.k8s.io/cli-utils/cmd/destroy"
 	"sigs.k8s.io/cli-utils/cmd/diff"
 	"sigs.k8s.io/cli-utils/cmd/initcmd"
@@ -85,7 +84,7 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples
 
-	applyCmd := apply.GetApplyRunner(p, l, ioStreams).Command
+	applyCmd := GetApplyRunner(p, l, ioStreams).Command()
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
@@ -116,8 +115,9 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd,
 		fetchOpenAPICmd, statusCmd)
 
-	// If the magic env var exists, then add the migrate command to change
-	// from ConfigMap to ResourceGroup inventory object.
+	// If the magic env var exists, then add the migrate to change
+	// from ConfigMap to ResourceGroup inventory object. Also add
+	// the install-resource-group command.
 	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
 		klog.V(2).Infoln("adding kpt live migrate command")
 		// Create a ConfigMap and a ResourceGroup provider for the
