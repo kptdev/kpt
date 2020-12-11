@@ -437,14 +437,6 @@ assertPodNotExists "pod-c" "test-namespace"
 assertPodNotExists "pod-d" "test-namespace"
 printResult
 
-# Creates new inventory-template.yaml for "migrate-case-1a" directory.
-echo "kpt live init e2e/live/testdata/migrate-case-1a"
-rm -f e2e/live/testdata/migrate-case-1a/inventory-template.yaml
-${BIN_DIR}/kpt live init e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
-assertContains "namespace: test-rg-namespace is used for inventory object"
-assertContains "live/testdata/migrate-case-1a/inventory-template.yaml"
-printResult
-
 
 ###########################################################################
 #  Tests with RESOURCE_GROUP_INVENTORY env var set
@@ -458,6 +450,7 @@ echo "Testing kpt live apply with ConfigMap inventory"
 echo "kpt live apply e2e/live/testdata/migrate-case-1a"
 # Copy Kptfile into "migrate-case-1a" WITHOUT inventory information. This ensures
 # the apply uses the ConfigMap inventory-template.yaml during the apply.
+cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-case-1a
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
 ${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
@@ -475,10 +468,26 @@ printResult
 
 # Test 8: kpt live migrate from ConfigMap to ResourceGroup inventory
 # Migrates resources in "migrate-case-1a" directory.
+echo "Testing migrate dry-run from ConfigMap to ResourceGroup inventory"
+echo "kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a"
+# Run migrate dry-run and verify that the migrate did not actually happen
+${BIN_DIR}/kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "updating Kptfile inventory values...success"
+assertContains "retrieve the current ConfigMap inventory...success (4 inventory objects)"
+assertContains "migrate inventory to ResourceGroup...success"
+assertContains "deleting old ConfigMap inventory object...success"
+assertContains "deleting inventory template file"
+assertContains "inventory migration...success"
+# Migrate did not actually happen in dry-run, so ConfigMap inventory still exists
+assertCMInventory "test-rg-namespace" "4"
+printResult
+
+# Now actually run the migrate and verify the new ResourceGroup inventory exists
 echo "Testing migrate from ConfigMap to ResourceGroup inventory"
 echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
-assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "ensuring ResourceGroup CRD exists in cluster...already installed...success"
 assertContains "updating Kptfile inventory values...success"
 assertContains "retrieve the current ConfigMap inventory...success (4 inventory objects)"
 assertContains "migrate inventory to ResourceGroup...success"
@@ -580,6 +589,17 @@ assertContains "updating Kptfile inventory values...values already exist...succe
 assertContains "retrieve the current ConfigMap inventory...success (0 inventory objects)"
 assertContains "deleting inventory template file:"
 assertContains "e2e/live/testdata/migrate-error/inventory-template.yaml...success"
+assertContains "inventory migration...success"
+printResult
+
+# Now test kpt live migrate with --force flag, which overwrites inventory
+# info in the Kptfile.
+cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-error
+echo "Testing kpt live migrate with --force flag"
+echo "kpt live migrate --force e2e/live/testdata/migrate-error"
+${BIN_DIR}/kpt live migrate --force e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
+# Does not contain "values already exist"
+assertContains "updating Kptfile inventory values...success"
 assertContains "inventory migration...success"
 printResult
 

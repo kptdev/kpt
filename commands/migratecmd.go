@@ -221,7 +221,11 @@ func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]obje
 func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Reader, args []string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  migrate inventory to ResourceGroup...")
 	if len(cmObjs) == 0 {
-		fmt.Fprint(mr.ioStreams.Out, "no inventory objects found\n")
+		fmt.Fprintln(mr.ioStreams.Out, "no inventory objects found")
+		return nil
+	}
+	if mr.dryRun {
+		fmt.Fprintln(mr.ioStreams.Out, "success")
 		return nil
 	}
 	rgReader, err := mr.rgLoader.ManifestReader(reader, args)
@@ -246,7 +250,7 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 	if err != nil {
 		return err
 	}
-	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	fmt.Fprintln(mr.ioStreams.Out, "success")
 	return nil
 }
 
@@ -257,6 +261,9 @@ func (mr *MigrateRunner) deleteConfigMapInv(invObj inventory.InventoryInfo) erro
 	cmInvClient, err := mr.cmProvider.InventoryClient()
 	if err != nil {
 		return err
+	}
+	if mr.dryRun {
+		cmInvClient.SetDryRunStrategy(common.DryRunClient)
 	}
 	if err = cmInvClient.DeleteInventoryObj(invObj); err != nil {
 		return err
@@ -279,12 +286,14 @@ func (mr *MigrateRunner) deleteConfigMapFile() error {
 		}
 		if len(cmFilename) > 0 {
 			fmt.Fprintf(mr.ioStreams.Out, "deleting inventory template file: %s...", cmFilename)
-			err = os.Remove(cmFilename)
-			if err != nil {
-				fmt.Fprint(mr.ioStreams.Out, "failed\n")
-				return err
+			if !mr.dryRun {
+				err = os.Remove(cmFilename)
+				if err != nil {
+					fmt.Fprintln(mr.ioStreams.Out, "failed")
+					return err
+				}
 			}
-			fmt.Fprint(mr.ioStreams.Out, "success\n")
+			fmt.Fprintln(mr.ioStreams.Out, "success")
 		}
 	}
 	return nil
