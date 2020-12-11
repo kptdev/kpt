@@ -23,18 +23,78 @@
 # Example KPT ROOT DIR:
 #   ~/go/src/github.com/GoogleContainerTools/kpt
 #
+# Flags:
+#   -b) Build the kpt binary with dependencies at HEAD. Downloads HEAD
+#       for cli-utils and kustomize repositories, and builds kpt using
+#       these downloaded repositories.
+#   -k) Run against this Kubernetes version. Creates a local Kubernetes
+#       cluster at this version using "kind". Only accepts MAJOR.MINOR.
+#       Example: 1.17. This is translated to a patch version. Example:
+#       1.17 runs version 1.17.11.
+#
 # Prerequisites (must be in $PATH):
 #   kind - Kubernetes in Docker
 #   kubectl - version of kubectl should be within +/- 1 version of cluster.
-#     CHECK: kubectl version
+#     CHECK: $ kubectl version
+#
+# Examples:
+#   $ ./e2e/live/end-to-end-test.sh -b
+#   $ ./e2e/live/end-to-end-test.sh -v 1.17
+#   $ ./e2e/live/end-to-end-test.sh -bv 1.17
 #
 ###########################################################################
 
-set +e
+# A POSIX variable; reset in case getopts has been used previously in the shell.
+OPTIND=1
+
+# Kind/Kubernetes versions.
+DEFAULT_KIND_VERSION=0.9.0
+KIND_1_19_VERSION=1.19.1
+KIND_1_18_VERSION=1.18.8
+KIND_1_17_VERSION=1.17.11
+KIND_1_16_VERSION=1.16.15
+KIND_1_15_VERSION=1.15.12
+KIND_1_14_VERSION=1.14.10
+KIND_1_13_VERSION=1.13.12
+DEFAULT_K8S_VERSION=${KIND_1_16_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
 BUILD_DEPS_AT_HEAD=""
+
+# Default Kubernetes cluster version to run test against.
+K8S_VERSION=${DEFAULT_K8S_VERSION}
+
+# Parse/validate parameters
+options="bk:"
+while getopts $options opt; do
+    case "$opt" in
+	b)  BUILD_DEPS_AT_HEAD=1;;
+	k)  short_version=$OPTARG
+	    case "$short_version" in
+		1.13) K8S_VERSION=$KIND_1_13_VERSION
+		      ;;
+		1.14) K8S_VERSION=$KIND_1_14_VERSION
+		      ;;
+		1.15) K8S_VERSION=$KIND_1_15_VERSION
+		      ;;
+		1.16) K8S_VERSION=$KIND_1_16_VERSION
+		      ;;
+		1.17) K8S_VERSION=$KIND_1_17_VERSION
+		      ;;
+		1.18) K8S_VERSION=$KIND_1_18_VERSION
+		      ;;
+		1.19) K8S_VERSION=$KIND_1_19_VERSION
+		      ;;
+	    esac
+	    ;;
+	\? ) echo "Usage: $0 [-b] [-k k8s-version]" >&2; exit 1;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+[ "${1:-}" = "--" ] && shift
 
 ###########################################################################
 #  Setup for test
@@ -54,70 +114,78 @@ mkdir -p $OUTPUT_DIR
 # TMP_DIR and build from there.
 echo "kpt end-to-end test"
 echo
+echo "Kubernetes Version: ${K8S_VERSION}"
 echo "Temp Dir: $TMP_DIR"
-echo
-
-if [ -z $BUILD_DEPS_AT_HEAD ]; then
-    echo "Building kpt locally..."
-    go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
-    echo "Building kpt locally...SUCCESS"
-
-else
-    echo "Building kpt using dependencies at HEAD..."
-    echo
-    # Clone kpt repository into kpt source directory
-    KPT_SRC_DIR="${SRC_DIR}/github.com/GoogleContainerTools/kpt"
-    mkdir -p $KPT_SRC_DIR
-    echo "Downloading kpt repository at HEAD..."
-    git clone https://github.com/GoogleContainerTools/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
-    echo "Downloading kpt repository at HEAD...SUCCESS"
-    # Clone cli-utils repository into source directory
-    CLI_UTILS_SRC_DIR="${SRC_DIR}/sigs.k8s.io/cli-utils"
-    mkdir -p $CLI_UTILS_SRC_DIR
-    echo "Downloading cli-utils repository at HEAD..."
-    git clone https://github.com/kubernetes-sigs/cli-utils ${CLI_UTILS_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
-    echo "Downloading cli-utils repository at HEAD...SUCCESS"
-    # Clone kustomize respository into source directory
-    KUSTOMIZE_SRC_DIR="${SRC_DIR}/sigs.k8s.io/kustomize"
-    mkdir -p $KUSTOMIZE_SRC_DIR
-    echo "Downloading kustomize repository at HEAD..."
-    git clone https://github.com/kubernetes-sigs/kustomize ${KUSTOMIZE_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
-    echo "Downloading kustomize repository at HEAD...SUCCESS"
-    # Tell kpt to build using the locally downloaded dependencies
-    echo "Updating kpt/go.mod to reference locally downloaded repositories..."
-    echo -e "\n\nreplace sigs.k8s.io/cli-utils => ../../../sigs.k8s.io/cli-utils" >> ${KPT_SRC_DIR}/go.mod
-    echo -e "replace sigs.k8s.io/kustomize/cmd/config => ../../../sigs.k8s.io/kustomize/cmd/config" >> ${KPT_SRC_DIR}/go.mod
-    echo -e "replace sigs.k8s.io/kustomize/kyaml => ../../../sigs.k8s.io/kustomize/kyaml\n" >> ${KPT_SRC_DIR}/go.mod
-    echo "Updating kpt/go.mod to reference locally downloaded repositories...SUCCESS"
-    # Build kpt using the cloned directories
-    export GOPATH=${TMP_DIR}
-    echo "Building kpt..."
-    (cd -- ${KPT_SRC_DIR} && go build -o $BIN_DIR -v . > ${OUTPUT_DIR}/kptbuild 2>&1)
-    echo "Building kpt...SUCCESS"
-    echo
-    echo "Building kpt using dependencies at HEAD...SUCCESS"
-fi
-
 echo
 
 ###########################################################################
 #  Helper functions
 ###########################################################################
 
+# buildKpt builds the kpt binary, storing it in the temporary directory.
+# To check the stdout output of the build check $OUTPUT_DIR/kptbuild.
+# stderr output will be output to the terminal.
+function buildKpt {
+    set -e
+    if [ -z $BUILD_DEPS_AT_HEAD ]; then
+	echo "Building kpt locally..."
+	go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
+	echo "Building kpt locally...SUCCESS"
+
+    else
+	echo "Building kpt using dependencies at HEAD..."
+	echo
+	# Clone kpt repository into kpt source directory
+	KPT_SRC_DIR="${SRC_DIR}/github.com/GoogleContainerTools/kpt"
+	mkdir -p $KPT_SRC_DIR
+	echo "Downloading kpt repository at HEAD..."
+	git clone https://github.com/GoogleContainerTools/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+	echo "Downloading kpt repository at HEAD...SUCCESS"
+	# Clone cli-utils repository into source directory
+	CLI_UTILS_SRC_DIR="${SRC_DIR}/sigs.k8s.io/cli-utils"
+	mkdir -p $CLI_UTILS_SRC_DIR
+	echo "Downloading cli-utils repository at HEAD..."
+	git clone https://github.com/kubernetes-sigs/cli-utils ${CLI_UTILS_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+	echo "Downloading cli-utils repository at HEAD...SUCCESS"
+	# Clone kustomize respository into source directory
+	KUSTOMIZE_SRC_DIR="${SRC_DIR}/sigs.k8s.io/kustomize"
+	mkdir -p $KUSTOMIZE_SRC_DIR
+	echo "Downloading kustomize repository at HEAD..."
+	git clone https://github.com/kubernetes-sigs/kustomize ${KUSTOMIZE_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+	echo "Downloading kustomize repository at HEAD...SUCCESS"
+	# Tell kpt to build using the locally downloaded dependencies
+	echo "Updating kpt/go.mod to reference locally downloaded repositories..."
+	echo -e "\n\nreplace sigs.k8s.io/cli-utils => ../../../sigs.k8s.io/cli-utils" >> ${KPT_SRC_DIR}/go.mod
+	echo -e "replace sigs.k8s.io/kustomize/cmd/config => ../../../sigs.k8s.io/kustomize/cmd/config" >> ${KPT_SRC_DIR}/go.mod
+	echo -e "replace sigs.k8s.io/kustomize/kyaml => ../../../sigs.k8s.io/kustomize/kyaml\n" >> ${KPT_SRC_DIR}/go.mod
+	echo "Updating kpt/go.mod to reference locally downloaded repositories...SUCCESS"
+	# Build kpt using the cloned directories
+	export GOPATH=${TMP_DIR}
+	echo "Building kpt..."
+	(cd -- ${KPT_SRC_DIR} && go build -o $BIN_DIR -v . > ${OUTPUT_DIR}/kptbuild)
+	echo "Building kpt...SUCCESS"
+	echo
+	echo "Building kpt using dependencies at HEAD...SUCCESS"
+    fi
+    set +e
+}
+
 # createTestSuite deletes then creates the kind cluster.
 function createTestSuite {
+    set -e
     echo "Setting Up Test Suite..."
     echo
     # Create the k8s cluster
     echo "Deleting kind cluster..."
     kind delete cluster > /dev/null 2>&1
-    echo "Deleting kind cluster...COMPLETED"
+    echo "Deleting kind cluster...SUCCESS"
     echo "Creating kind cluster..."
-    kind create cluster > /dev/null 2>&1    
-    echo "Creating kind cluster...COMPLETED"
+    kind create cluster --image=kindest/node:v${K8S_VERSION} > $OUTPUT_DIR/k8sstartup 2>&1
+    echo "Creating kind cluster...SUCCESS"
     echo
-    echo "Setting Up Test Suite...COMPLETED"
+    echo "Setting Up Test Suite...SUCCESS"
     echo
+    set +e
 }
 
 function waitForDefaultServiceAccount {
@@ -256,10 +324,14 @@ function wait {
 }
 
 ###########################################################################
-#  Run tests
+#  Main
 ###########################################################################
 
-unset RESOURCE_GROUP_INVENTORY
+buildKpt
+
+echo
+set +e                          # Do not stop the test for errors
+unset RESOURCE_GROUP_INVENTORY  # In case this was set before; clear it
 
 createTestSuite
 waitForDefaultServiceAccount
