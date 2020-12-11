@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
@@ -215,8 +214,8 @@ var crdGroupKind = schema.GroupKind{
 
 // ApplyResourceGroupCRD applies the custom resource definition for the
 // ResourceGroup. The apiextensions version applied is based on the RESTMapping
-// returned by the RESTMapper. Returns an error if one occurs; "Already Exists"
-// error is changed to nil error.
+// returned by the RESTMapper. Returns an error if one occurs, including an
+// "Already Exists" error.
 func ApplyResourceGroupCRD(factory cmdutil.Factory) error {
 	// Create the mapping from the CustomResourceDefinision GroupKind.
 	mapper, err := factory.ToRESTMapper()
@@ -255,15 +254,7 @@ func ApplyResourceGroupCRD(factory cmdutil.Factory) error {
 	helper := resource.NewHelper(client, mapping)
 	klog.V(4).Infoln("applying ResourceGroup CRD...")
 	_, err = helper.Create(emptyNamespace, clearResourceVersion, crd)
-	if err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			klog.V(4).Infoln("ResourceGroup CRD already exists")
-			return nil
-		}
-		return err
-	}
-	klog.V(4).Infoln("ResourceGroup CRD successfully applied")
-	return nil
+	return err
 }
 
 // stringToUnstructured transforms a single resource represented by

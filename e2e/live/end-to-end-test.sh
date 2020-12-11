@@ -503,7 +503,7 @@ cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-error
 echo "Testing kpt live migrate with no objects in cluster"
 echo "kpt live migrate e2e/live/testdata/migrate-error"
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
-assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "ensuring ResourceGroup CRD exists in cluster...already installed...success"
 assertContains "updating Kptfile inventory values...values already exist...success"
 assertContains "retrieve the current ConfigMap inventory...success (0 inventory objects)"
 assertContains "deleting inventory template file:"
@@ -549,6 +549,7 @@ kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
 assertContains "error: the server doesn't have a resource type \"resourcegroups\""
 # Next, add the ResourceGroup CRD
 ${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status
+assertContains "installing ResourceGroup custom resource definition...success"
 kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
 assertContains "No resources found"
 # Add a simple ResourceGroup custom resource, and verify it exists in the cluster.
@@ -557,8 +558,8 @@ assertContains "resourcegroup.kpt.dev/example-inventory created"
 kubectl get resourcegroups.kpt.dev --no-headers > $OUTPUT_DIR/status
 assertContains "example-inventory"
 # Finally, add the ResourceGroup CRD again, and check it says it already exists.
-${BIN_DIR}/kpt live install-resource-group -v=4 > $OUTPUT_DIR/status 2>&1
-assertContains "ResourceGroup CRD already exists"
+${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status 2>&1
+assertContains "...already installed...success"
 printResult
 
 # Clean-up the k8s cluster
