@@ -65,13 +65,13 @@ type SearchReplace struct {
 
 type SearchResult struct {
 	// file path of the matching field
-	FilePath  string
+	FilePath string
 
 	// field path of the matching field
 	FieldPath string
 
 	// value of the matching field
-	Value     string
+	Value string
 }
 
 // Perform performs the search and replace operation on each node in the package path
