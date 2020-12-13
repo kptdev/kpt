@@ -478,7 +478,7 @@ printResult
 echo "Testing migrate from ConfigMap to ResourceGroup inventory"
 echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
-assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "ensuring ResourceGroup CRD exists in cluster...already installed...success"
 assertContains "updating Kptfile inventory values...success"
 assertContains "retrieve the current ConfigMap inventory...success (4 inventory objects)"
 assertContains "migrate inventory to ResourceGroup...success"
@@ -555,7 +555,7 @@ ${BIN_DIR}/kpt live init e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error/Kptfile > $OUTPUT_DIR/status 2>&1
 assertContains "inventory:"
-assertContains "namespace: test-rg-namespace"
+assertContains "namespace: test-namespace-migrate-error"
 assertContains "name: inventory-"
 assertContains "inventoryID:"
 printResult
@@ -587,14 +587,15 @@ printResult
 echo "Testing kpt apply ResourceGroup inventory"
 echo "kpt live apply e2e/live/testdata/migrate-error"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-error > $OUTPUT_DIR/status
+assertContains "namespace/test-namespace-migrate-error"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
 assertContains "0 resource(s) pruned, 0 skipped"
 # Validate resources in the cluster
-assertPodExists "pod-a" "test-rg-namespace"
-assertPodExists "pod-b" "test-rg-namespace"
-assertPodExists "pod-c" "test-rg-namespace"
+assertPodExists "pod-a" "test-namespace-migrate-error"
+assertPodExists "pod-b" "test-namespace-migrate-error"
+assertPodExists "pod-c" "test-namespace-migrate-error"
 printResult
 
 echo

@@ -5,7 +5,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: pod-c
-  namespace: test-rg-namespace
+  namespace: test-namespace-migrate-error
   labels:
     name: test-pod-label
 spec:
