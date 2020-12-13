@@ -46,7 +46,7 @@ type Content struct {
 	CreateBranch bool
 	Branch       string
 	Data         string
-	Pkg          *pkgbuilder.Pkg
+	Pkg          *pkgbuilder.RootPkg
 	Tag          string
 	Message      string
 }

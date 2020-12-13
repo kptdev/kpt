@@ -70,33 +70,199 @@ var (
 	}
 )
 
-type resourceInfo struct {
-	filename string
-	manifest string
-}
-
-type resourceInfoWithSetters struct {
-	resourceInfo resourceInfo
-	setterRefs   []SetterRef
-	mutators     []yaml.Filter
-}
-
 // Pkg represents a package that can be created on the file system
 // by using the Build function
-type Pkg struct {
-	Name string
-
+type pkg struct {
 	Kptfile *Kptfile
 
 	resources []resourceInfoWithSetters
 
 	files map[string]string
 
-	subPkgs []*Pkg
+	subPkgs []*SubPkg
 }
 
-func NewKptfile() *Kptfile {
-	return &Kptfile{}
+// withKptfile configures the current package to have a Kptfile. Only
+// zero or one Kptfiles are accepted.
+func (p *pkg) withKptfile(kf ...*Kptfile) {
+	if len(kf) > 1 {
+		panic("only 0 or 1 Kptfiles are allowed")
+	}
+	if len(kf) == 0 {
+		p.Kptfile = NewKptfile()
+	} else {
+		p.Kptfile = kf[0]
+	}
+}
+
+// withResource configures the package to include the provided resource
+func (p *pkg) withResource(resourceName string, mutators ...yaml.Filter) {
+	resourceInfo, ok := resources[resourceName]
+	if !ok {
+		panic(fmt.Errorf("unknown resource %s", resourceName))
+	}
+	p.resources = append(p.resources, resourceInfoWithSetters{
+		resourceInfo: resourceInfo,
+		setterRefs:   []SetterRef{},
+		mutators:     mutators,
+	})
+}
+
+// withResourceAndSetters configures the package to have the provided resource.
+// It also allows for specifying setterRefs for the resource and a set of
+// mutators that will update the content of the resource.
+func (p *pkg) withResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) {
+	resourceInfo, ok := resources[resourceName]
+	if !ok {
+		panic(fmt.Errorf("unknown resource %s", resourceName))
+	}
+	p.resources = append(p.resources, resourceInfoWithSetters{
+		resourceInfo: resourceInfo,
+		setterRefs:   setterRefs,
+		mutators:     mutators,
+	})
+}
+
+// withFile configures the package to contain a file with the provided name
+// and the given content.
+func (p *pkg) withFile(name, content string) {
+	p.files[name] = content
+}
+
+// withSubPackages adds the provided packages as subpackages to the current
+// package
+func (p *pkg) withSubPackages(ps ...*SubPkg) {
+	p.subPkgs = append(p.subPkgs, ps...)
+}
+
+// RootPkg is a package without any parent package.
+type RootPkg struct {
+	pkg *pkg
+}
+
+// NewRootPkg creates a new package for testing.
+func NewRootPkg() *RootPkg {
+	return &RootPkg{
+		pkg: &pkg{
+			files: make(map[string]string),
+		},
+	}
+}
+
+// WithKptfile configures the current package to have a Kptfile. Only
+// zero or one Kptfiles are accepted.
+func (rp *RootPkg) WithKptfile(kf ...*Kptfile) *RootPkg {
+	rp.pkg.withKptfile(kf...)
+	return rp
+}
+
+// HasKptfile tells whether the package contains a Kptfile.
+func (rp *RootPkg) HasKptfile() bool {
+	return rp.pkg.Kptfile != nil
+}
+
+// WithResource configures the package to include the provided resource
+func (rp *RootPkg) WithResource(resourceName string, mutators ...yaml.Filter) *RootPkg {
+	rp.pkg.withResource(resourceName, mutators...)
+	return rp
+}
+
+// WithResourceAndSetters configures the package to have the provided resource.
+// It also allows for specifying setterRefs for the resource and a set of
+// mutators that will update the content of the resource.
+func (rp *RootPkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) *RootPkg {
+	rp.pkg.withResourceAndSetters(resourceName, setterRefs, mutators...)
+	return rp
+}
+
+// WithFile configures the package to contain a file with the provided name
+// and the given content.
+func (rp *RootPkg) WithFile(name, content string) *RootPkg {
+	rp.pkg.withFile(name, content)
+	return rp
+}
+
+// WithSubPackages adds the provided packages as subpackages to the current
+// package
+func (rp *RootPkg) WithSubPackages(ps ...*SubPkg) *RootPkg {
+	rp.pkg.withSubPackages(ps...)
+	return rp
+}
+
+// Build outputs the current data structure as a set of (nested) package
+// in the provided path.
+func (rp *RootPkg) Build(path string, pkgName string) error {
+	pkgPath := filepath.Join(path, pkgName)
+	err := os.Mkdir(pkgPath, 0700)
+	if err != nil {
+		return err
+	}
+	err = buildPkg(pkgPath, rp.pkg, pkgName)
+	if err != nil {
+		return err
+	}
+	for i := range rp.pkg.subPkgs {
+		subPkg := rp.pkg.subPkgs[i]
+		err := buildSubPkg(pkgPath, subPkg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// SubPkg is a subpackage, so it is contained inside another package. The
+// name sets both the name of the directory in which the package is stored
+// and the metadata.name field in the Kptfile (if there is one).
+type SubPkg struct {
+	pkg *pkg
+
+	Name string
+}
+
+// NewSubPkg returns a new subpackage for testing.
+func NewSubPkg(name string) *SubPkg {
+	return &SubPkg{
+		pkg: &pkg{
+			files: make(map[string]string),
+		},
+		Name: name,
+	}
+}
+
+// WithKptfile configures the current package to have a Kptfile. Only
+// zero or one Kptfiles are accepted.
+func (sp *SubPkg) WithKptfile(kf ...*Kptfile) *SubPkg {
+	sp.pkg.withKptfile(kf...)
+	return sp
+}
+
+// WithResource configures the package to include the provided resource
+func (sp *SubPkg) WithResource(resourceName string, mutators ...yaml.Filter) *SubPkg {
+	sp.pkg.withResource(resourceName, mutators...)
+	return sp
+}
+
+// WithResourceAndSetters configures the package to have the provided resource.
+// It also allows for specifying setterRefs for the resource and a set of
+// mutators that will update the content of the resource.
+func (sp *SubPkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) *SubPkg {
+	sp.pkg.withResourceAndSetters(resourceName, setterRefs, mutators...)
+	return sp
+}
+
+// WithFile configures the package to contain a file with the provided name
+// and the given content.
+func (sp *SubPkg) WithFile(name, content string) *SubPkg {
+	sp.pkg.withFile(name, content)
+	return sp
+}
+
+// WithSubPackages adds the provided packages as subpackages to the current
+// package
+func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
+	sp.pkg.withSubPackages(ps...)
+	return sp
 }
 
 // Kptfile represents the Kptfile of a package.
@@ -104,6 +270,10 @@ type Kptfile struct {
 	Setters []Setter
 	Repo    string
 	Ref     string
+}
+
+func NewKptfile() *Kptfile {
+	return &Kptfile{}
 }
 
 // WithUpstream adds information about the upstream information to the Kptfile.
@@ -161,89 +331,40 @@ func NewSetterRef(name string, path ...string) SetterRef {
 	}
 }
 
-// NewPackage creates a new package for testing.
-func NewPackage(name string) *Pkg {
-	return &Pkg{
-		Name:  name,
-		files: make(map[string]string),
-	}
+type resourceInfo struct {
+	filename string
+	manifest string
 }
 
-// WithKptfile configures the current package to have a Kptfile. Only
-// zero or one Kptfiles are accepted.
-func (p *Pkg) WithKptfile(kf ...*Kptfile) *Pkg {
-	if len(kf) > 1 {
-		panic("only 0 or 1 Kptfiles are allowed")
-	}
-	if len(kf) == 0 {
-		p.Kptfile = NewKptfile()
-	} else {
-		p.Kptfile = kf[0]
-	}
-	return p
+type resourceInfoWithSetters struct {
+	resourceInfo resourceInfo
+	setterRefs   []SetterRef
+	mutators     []yaml.Filter
 }
 
-// WithResource configures the package to include the provided resource
-func (p *Pkg) WithResource(resourceName string, mutators ...yaml.Filter) *Pkg {
-	resourceInfo, ok := resources[resourceName]
-	if !ok {
-		panic(fmt.Errorf("unknown resource %s", resourceName))
-	}
-	p.resources = append(p.resources, resourceInfoWithSetters{
-		resourceInfo: resourceInfo,
-		setterRefs:   []SetterRef{},
-		mutators:     mutators,
-	})
-	return p
-}
-
-// WithResourceAndSetters configures the package to have the provided resource.
-// It also allows for specifying setterRefs for the resource and a set of
-// mutators that will update the content of the resource.
-func (p *Pkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) *Pkg {
-	resourceInfo, ok := resources[resourceName]
-	if !ok {
-		panic(fmt.Errorf("unknown resource %s", resourceName))
-	}
-	p.resources = append(p.resources, resourceInfoWithSetters{
-		resourceInfo: resourceInfo,
-		setterRefs:   setterRefs,
-		mutators:     mutators,
-	})
-	return p
-}
-
-func (p *Pkg) WithFile(name, content string) *Pkg {
-	p.files[name] = content
-	return p
-}
-
-// WithSubPackages adds the provided packages as subpackages to the current
-// package
-func (p *Pkg) WithSubPackages(ps ...*Pkg) *Pkg {
-	p.subPkgs = append(p.subPkgs, ps...)
-	return p
-}
-
-// Build outputs the current data structure as a set of (nested) package
-// in the provided path.
-func (p *Pkg) Build(path string) error {
-	_, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-	return buildRecursive(path, p)
-}
-
-func buildRecursive(path string, pkg *Pkg) error {
+func buildSubPkg(path string, pkg *SubPkg) error {
 	pkgPath := filepath.Join(path, pkg.Name)
 	err := os.Mkdir(pkgPath, 0700)
 	if err != nil {
 		return err
 	}
+	err = buildPkg(pkgPath, pkg.pkg, pkg.Name)
+	if err != nil {
+		return err
+	}
+	for i := range pkg.pkg.subPkgs {
+		subPkg := pkg.pkg.subPkgs[i]
+		err := buildSubPkg(pkgPath, subPkg)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
+func buildPkg(pkgPath string, pkg *pkg, pkgName string) error {
 	if pkg.Kptfile != nil {
-		content := buildKptfile(pkg)
+		content := buildKptfile(pkg, pkgName)
 
 		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfileutil.KptFileName),
 			[]byte(content), 0600)
@@ -272,7 +393,7 @@ func buildRecursive(path string, pkg *Pkg) error {
 		}
 
 		filePath := filepath.Join(pkgPath, ri.resourceInfo.filename)
-		err = ioutil.WriteFile(filePath, []byte(r.MustString()), 0600)
+		err := ioutil.WriteFile(filePath, []byte(r.MustString()), 0600)
 		if err != nil {
 			return err
 		}
@@ -292,15 +413,6 @@ func buildRecursive(path string, pkg *Pkg) error {
 			return err
 		}
 	}
-
-	for i := range pkg.subPkgs {
-		subPkg := pkg.subPkgs[i]
-		err = buildRecursive(pkgPath, subPkg)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -308,11 +420,11 @@ var kptfileTemplate = `
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
-  name: {{.Name}}
-{{- if gt (len .Kptfile.Setters) 0 }}
+  name: {{.PkgName}}
+{{- if gt (len .Pkg.Kptfile.Setters) 0 }}
 openAPI:
   definitions:
-{{- range .Kptfile.Setters }}
+{{- range .Pkg.Kptfile.Setters }}
     io.k8s.cli.setters.{{.Name}}:
       x-k8s-cli:
         setter:
@@ -323,22 +435,25 @@ openAPI:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- if gt (len .Kptfile.Repo) 0 }}
+{{- if gt (len .Pkg.Kptfile.Repo) 0 }}
 upstream:
   type: git
   git:
-    ref: {{.Kptfile.Ref}}
-    repo: {{.Kptfile.Repo}}
+    ref: {{.Pkg.Kptfile.Ref}}
+    repo: {{.Pkg.Kptfile.Repo}}
 {{- end }}
 `
 
-func buildKptfile(pkg *Pkg) string {
+func buildKptfile(pkg *pkg, pkgName string) string {
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {
 		panic(err)
 	}
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, pkg)
+	err = tmpl.Execute(&buf, map[string]interface{}{
+		"Pkg":     pkg,
+		"PkgName": pkgName,
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -346,17 +461,23 @@ func buildKptfile(pkg *Pkg) string {
 	return result
 }
 
-func ExpandPkg(t *testing.T, pkg *Pkg) string {
-	if pkg.Name == "" {
-		pkg.Name = "base"
-	}
+// ExpandPkg writes the provided package to disk. The name of the root package
+// will just be set to "base".
+func ExpandPkg(t *testing.T, pkg *RootPkg) string {
+	return ExpandPkgWithName(t, pkg, "base")
+}
+
+// ExpandPkgWithName writes the provided package to disk and uses the given
+// rootName to set the value of the package directory and the metadata.name
+// field of the root package.
+func ExpandPkgWithName(t *testing.T, pkg *RootPkg, rootName string) string {
 	dir, err := ioutil.TempDir("", "test-kpt-builder-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	err = pkg.Build(dir)
+	err = pkg.Build(dir, rootName)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	return filepath.Join(dir, pkg.Name)
+	return filepath.Join(dir, rootName)
 }

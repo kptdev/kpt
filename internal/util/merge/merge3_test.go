@@ -30,10 +30,10 @@ func TestMerge3_Nested_packages(t *testing.T) {
 	testCases := []struct {
 		name               string
 		includeSubPackages bool
-		original           *pkgbuilder.Pkg
-		upstream           *pkgbuilder.Pkg
-		local              *pkgbuilder.Pkg
-		expected           *pkgbuilder.Pkg
+		original           *pkgbuilder.RootPkg
+		upstream           *pkgbuilder.RootPkg
+		local              *pkgbuilder.RootPkg
+		expected           *pkgbuilder.RootPkg
 	}{
 		{
 			name:               "subpackages are merged if included",
@@ -62,34 +62,34 @@ func TestMerge3_Nested_packages(t *testing.T) {
 		{
 			name:               "local copy defines the package boundaries if different from upstream",
 			includeSubPackages: false,
-			original: pkgbuilder.NewPackage("base").
+			original: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a").
+					pkgbuilder.NewSubPkg("a").
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource),
 				),
-			upstream: pkgbuilder.NewPackage("base").
+			upstream: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource, annotationSetter).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a").
+					pkgbuilder.NewSubPkg("a").
 						WithResource(pkgbuilder.DeploymentResource, annotationSetter),
 				),
-			local: pkgbuilder.NewPackage("base").
+			local: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource, labelSetter).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a").
+					pkgbuilder.NewSubPkg("a").
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource, labelSetter),
 				),
-			expected: pkgbuilder.NewPackage("base").
+			expected: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource, labelSetter, annotationSetter).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a").
+					pkgbuilder.NewSubPkg("a").
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource, labelSetter),
 				),
@@ -97,34 +97,34 @@ func TestMerge3_Nested_packages(t *testing.T) {
 		{
 			name:               "upstream changes not included if in a different package",
 			includeSubPackages: false,
-			original: pkgbuilder.NewPackage("base").
+			original: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a").
+					pkgbuilder.NewSubPkg("a").
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource),
 				),
-			upstream: pkgbuilder.NewPackage("base").
+			upstream: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource, annotationSetter).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a").
+					pkgbuilder.NewSubPkg("a").
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource, annotationSetter),
 				),
-			local: pkgbuilder.NewPackage("base").
+			local: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource, labelSetter).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a"). // No Kptfile
+					pkgbuilder.NewSubPkg("a"). // No Kptfile
 									WithResource(pkgbuilder.DeploymentResource, labelSetter),
 				),
-			expected: pkgbuilder.NewPackage("base").
+			expected: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource, labelSetter, annotationSetter).
 				WithSubPackages(
-					pkgbuilder.NewPackage("a").
+					pkgbuilder.NewSubPkg("a").
 						WithResource(pkgbuilder.DeploymentResource, labelSetter),
 				),
 		},
@@ -152,7 +152,7 @@ func TestMerge3_Nested_packages(t *testing.T) {
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			
+
 			if !assert.Empty(t, diffs.List()) {
 				t.FailNow()
 			}
@@ -160,22 +160,22 @@ func TestMerge3_Nested_packages(t *testing.T) {
 	}
 }
 
-func createPkg(mutators ...yaml.Filter) *pkgbuilder.Pkg {
+func createPkg(mutators ...yaml.Filter) *pkgbuilder.RootPkg {
 	return createPkgMultipleMutators(mutators, mutators)
 }
 
-func createPkgMultipleMutators(packageMutators, subPackageMutators []yaml.Filter) *pkgbuilder.Pkg {
-	return pkgbuilder.NewPackage("base").
+func createPkgMultipleMutators(packageMutators, subPackageMutators []yaml.Filter) *pkgbuilder.RootPkg {
+	return pkgbuilder.NewRootPkg().
 		WithKptfile().
 		WithResource(pkgbuilder.DeploymentResource, packageMutators...).
 		WithSubPackages(
-			pkgbuilder.NewPackage("a").
+			pkgbuilder.NewSubPkg("a").
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource, subPackageMutators...),
-			pkgbuilder.NewPackage("b").
+			pkgbuilder.NewSubPkg("b").
 				WithResource(pkgbuilder.DeploymentResource, packageMutators...).
 				WithSubPackages(
-					pkgbuilder.NewPackage("c").
+					pkgbuilder.NewSubPkg("c").
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource, subPackageMutators...),
 				),
