@@ -490,6 +490,12 @@ assertPodExists "pod-a" "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
 assertRGInventory "test-rg-namespace"
+# Run it again, and validate the output
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...already installed...success"
+assertContains "updating Kptfile inventory values...values already exist...success"
+assertContains "retrieve the current ConfigMap inventory...no ConfigMap inventory...completed"
+assertContains "inventory migration...success"
 printResult
 
 # Test 9: kpt live preview with ResourceGroup inventory
@@ -545,7 +551,6 @@ assertPodNotExists "pod-c" "test-rg-namespace"
 assertPodNotExists "pod-d" "test-rg-namespace"
 printResult
 
-
 # Test 12: kpt live init for Kptfile (ResourceGroup inventory)
 # initial Kptfile does NOT have inventory info
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
@@ -558,15 +563,6 @@ assertContains "inventory:"
 assertContains "namespace: test-namespace-migrate-error"
 assertContains "name: inventory-"
 assertContains "inventoryID:"
-printResult
-
-# Test 13: kpt live migrate with missing inventory-template.yaml should fail
-# "migrate-error" directory does not have an inventory-template.yaml
-echo "Testing kpt live migrate with missing inventory-template.yaml should fail"
-echo "kpt live migrate e2e/live/testdata/migrate-error"
-rm -f e2e/live/testdata/migrate-error/inventory-template.yaml
-${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
-assertContains "inventory migration...failed"
 printResult
 
 # Test 14: kpt live migrate with no objects in cluster
