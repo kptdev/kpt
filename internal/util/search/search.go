@@ -16,6 +16,7 @@ package search
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -65,13 +66,13 @@ type SearchReplace struct {
 
 type SearchResult struct {
 	// file path of the matching field
-	FilePath  string
+	FilePath string
 
 	// field path of the matching field
 	FieldPath string
 
 	// value of the matching field
-	Value     string
+	Value string
 }
 
 // Perform performs the search and replace operation on each node in the package path
@@ -235,7 +236,11 @@ func (sr *SearchReplace) settersValues() (map[string]string, error) {
 	res := make(map[string]string)
 	for _, marker := range markers {
 		name := strings.TrimSuffix(strings.TrimPrefix(marker, "${"), "}")
-		sch := openapi.Schema().Definitions[fieldmeta.SetterDefinitionPrefix+name]
+		settersSchema, err := openapi.SchemaFromFile(filepath.Join(sr.PackagePath, kptfile.KptFileName))
+		if err != nil {
+			return nil, err
+		}
+		sch := settersSchema.Definitions[fieldmeta.SetterDefinitionPrefix+name]
 		cliExt, err := setters2.GetExtFromSchema(&sch)
 		if err != nil {
 			return res, err
