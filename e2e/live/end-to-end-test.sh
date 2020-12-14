@@ -39,9 +39,22 @@
 #
 # Examples:
 #   $ ./e2e/live/end-to-end-test.sh -b
-#   $ ./e2e/live/end-to-end-test.sh -v 1.17
-#   $ ./e2e/live/end-to-end-test.sh -bv 1.17
+#   $ ./e2e/live/end-to-end-test.sh -k 1.17
+#   $ ./e2e/live/end-to-end-test.sh -bk 1.17
 #
+###########################################################################
+
+# TODO
+#  1) Validate prerequisites (e.g. kind, kubectl)
+#  2) Refactor helper functions into another file
+#  3) Fix -k <UNKNOWN K8S VERSION>
+#  4) Add "-v" verbosity level flags
+#  5) Count the test cases and print it out
+#  6) Print timing for the tests
+
+
+###########################################################################
+#  Parameters/args
 ###########################################################################
 
 # A POSIX variable; reset in case getopts has been used previously in the shell.
@@ -95,28 +108,6 @@ done
 shift $((OPTIND-1))
 
 [ "${1:-}" = "--" ] && shift
-
-###########################################################################
-#  Setup for test
-###########################################################################
-
-# Setup temporary directory for src, bin, and output.
-TMP_DIR=$(mktemp -d -t kpt-e2e-XXXXXXXXXX)
-SRC_DIR="${TMP_DIR}/src"
-mkdir -p $SRC_DIR
-BIN_DIR="${TMP_DIR}/bin"
-mkdir -p ${BIN_DIR}
-OUTPUT_DIR="${TMP_DIR}/output"
-mkdir -p $OUTPUT_DIR
-
-# Build the kpt binary and copy it to the temp dir. If BUILD_DEPS_AT_HEAD
-# is set, then copy the kpt repository AND dependency directories into
-# TMP_DIR and build from there.
-echo "kpt end-to-end test"
-echo
-echo "Kubernetes Version: ${K8S_VERSION}"
-echo "Temp Dir: $TMP_DIR"
-echo
 
 ###########################################################################
 #  Helper functions
@@ -211,15 +202,35 @@ function waitForDefaultServiceAccount {
 
 # assertContains checks that the passed string is a substring of
 # the $OUTPUT_DIR/status file.
-ERROR=""
 function assertContains {
+  local test_arg="$@"
   test 1 == \
-  $(grep "$@" $OUTPUT_DIR/status | wc -l); \
+  $(grep "$test_arg" $OUTPUT_DIR/status | wc -l); \
   if [ $? == 0 ]; then
       echo -n '.'
   else
       echo -n 'E'
-      ERROR+="ERROR: assertContains $@, but missing\n"
+      if [ ! -f $OUTPUT_DIR/errors ]; then
+	  touch $OUTPUT_DIR/errors
+      fi
+      echo "error: expected missing text \"${test_arg}\"" >> $OUTPUT_DIR/errors
+  fi
+}
+
+# assertNotContains checks that the passed string is NOT a substring of
+# the $OUTPUT_DIR/status file.
+function assertNotContains {
+  local test_arg="$@"
+  test 0 == \
+  $(grep "$test_arg" $OUTPUT_DIR/status | wc -l); \
+  if [ $? == 0 ]; then
+      echo -n '.'
+  else
+      echo -n 'E'
+      if [ ! -f $OUTPUT_DIR/errors ]; then
+	  touch $OUTPUT_DIR/errors
+      fi
+      echo "error: unexpected text \"${test_arg}\" found" >> $OUTPUT_DIR/errors
   fi
 }
 
@@ -239,7 +250,10 @@ function assertCMInventory {
 	echo -n '.'
     else
 	echo -n 'E'
-	ERROR+="ERROR: expected ConfigMap inventory to exist\n"
+	if [ ! -f $OUTPUT_DIR/errors ]; then
+	    touch $OUTPUT_DIR/errors
+	fi
+	echo "error: expected missing ConfigMap inventory object in ${ns} namespace" >> $OUTPUT_DIR/errors
     fi
 
     test 1 == $(grep $numInv $OUTPUT_DIR/numinv | wc -l);
@@ -247,7 +261,10 @@ function assertCMInventory {
 	echo -n '.'
     else
 	echo -n 'E'
-	ERROR+="ERROR: expected ConfigMap inventory to have $numInv inventory items\n"
+	if [ ! -f $OUTPUT_DIR/errors ]; then
+	    touch $OUTPUT_DIR/errors
+	fi
+	echo "error: expected ConfigMap inventory to have $numInv inventory items" >> $OUTPUT_DIR/errors
     fi
 }
 
@@ -264,6 +281,10 @@ function assertRGInventory {
 	echo -n '.'
     else
 	echo -n 'E'
+	if [ ! -f $OUTPUT_DIR/errors ]; then
+	    touch $OUTPUT_DIR/errors
+	fi
+	echo "error: expected missing ResourceGroup inventory in ${ns} namespace" >> $OUTPUT_DIR/errors
     fi
 }
 
@@ -282,8 +303,11 @@ function assertPodExists {
 	echo -n '.'
     else
 	echo -n 'E'
-	ERROR+="ERROR: expected pod $namespace/$podName to exist\n"
-    fi    
+	if [ ! -f $OUTPUT_DIR/errors ]; then
+	    touch $OUTPUT_DIR/errors
+	fi
+	echo "error: expected missing pod $namespace/$podName in ${namespace} namespace" >> $OUTPUT_DIR/errors
+    fi
 }
 
 # assertPodNotExists checks that a pod with the passed podName and passed
@@ -301,19 +325,24 @@ function assertPodNotExists {
 	echo -n '.'
     else
 	echo -n 'E'
-	ERROR+="ERROR: expected pod $namespace/$podName to not exist\n"
-    fi    
+	if [ ! -f $OUTPUT_DIR/errors ]; then
+	    touch $OUTPUT_DIR/errors
+	fi
+	echo "error: unexpected pod $namespace/$podName found in ${namespace} namespace" >> $OUTPUT_DIR/errors
+    fi
 }
 
 # printResult prints the results of the previous assert statements
 function printResult {
-    if [ -z $ERROR ]; then
-	echo "SUCCESS"
-    else
+    if [ -f $OUTPUT_DIR/errors ]; then
 	echo "ERROR"
+	cat $OUTPUT_DIR/errors
+	echo
+	rm -f $OUTPUT_DIR/errors
+    else
+	echo "SUCCESS"
     fi
     echo
-    ERROR=""
 }
 
 # wait sleeps for the passed number of seconds.
@@ -327,6 +356,24 @@ function wait {
 #  Main
 ###########################################################################
 
+# Setup temporary directory for src, bin, and output.
+TMP_DIR=$(mktemp -d -t kpt-e2e-XXXXXXXXXX)
+SRC_DIR="${TMP_DIR}/src"
+mkdir -p $SRC_DIR
+BIN_DIR="${TMP_DIR}/bin"
+mkdir -p ${BIN_DIR}
+OUTPUT_DIR="${TMP_DIR}/output"
+mkdir -p $OUTPUT_DIR
+
+# Build the kpt binary and copy it to the temp dir. If BUILD_DEPS_AT_HEAD
+# is set, then copy the kpt repository AND dependency directories into
+# TMP_DIR and build from there.
+echo "kpt end-to-end test"
+echo
+echo "Kubernetes Version: ${K8S_VERSION}"
+echo "Temp Dir: $TMP_DIR"
+echo
+
 buildKpt
 
 echo
@@ -337,21 +384,44 @@ createTestSuite
 waitForDefaultServiceAccount
 
 # Test 1: Basic ConfigMap init
-# Creates ConfigMap inventory-template.yaml in "test-case-1a" directory
-echo "Testing basic ConfigMap init"
+echo "Testing basic ConfigMap init with flags"
 echo "kpt live init e2e/live/testdata/test-case-1a"
+# First test is an error, since the inventory-template.yaml file already exists
 ${BIN_DIR}/kpt live init e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "namespace: test-namespace is used for inventory object"
+assertContains "error: inventory object template file already exists:"
 assertContains "testdata/test-case-1a/inventory-template.yaml"
+# Remove file and now test the init.
+rm -f e2e/live/testdata/test-case-1a/inventory-template.yaml
+${BIN_DIR}/kpt live init e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
+assertContains "namespace: test-namespace is used for inventory object"
+assertContains "testdata/test-case-1a/inventory-template.yaml"
+# Test with the --inventory-id flag
+rm -f e2e/live/testdata/test-case-1a/inventory-template.yaml
+${BIN_DIR}/kpt live init --inventory-id=foobar e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
+assertContains "namespace: test-namespace is used for inventory object"
+assertContains "testdata/test-case-1a/inventory-template.yaml"
+cat e2e/live/testdata/test-case-1a/inventory-template.yaml > $OUTPUT_DIR/status
+assertContains "cli-utils.sigs.k8s.io/inventory-id: foobar"
+assertContains "name: inventory-"
+assertContains "namespace: test-namespace"
+# Test with the --namespace flag
+rm -f e2e/live/testdata/test-case-1a/inventory-template.yaml
+${BIN_DIR}/kpt live init --namespace=foobar e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
+assertContains "namespace: foobar is used for inventory object"
+assertContains "testdata/test-case-1a/inventory-template.yaml"
+# Check the namespace/name written to the inventory template
+cat e2e/live/testdata/test-case-1a/inventory-template.yaml > $OUTPUT_DIR/status
+assertContains "namespace: foobar"
+assertContains "name: inventory-"
 printResult
-
-# Copy the ConfigMap inventory template to the test-case-1b directory.
-cp -f e2e/live/testdata/test-case-1a/inventory-template.yaml e2e/live/testdata/test-case-1b
 
 # Test 2: Basic kpt live preview
 # Preview run for "test-case-1a" directory
 echo "Testing initial preview"
 echo "kpt live preview e2e/live/testdata/test-case-1a"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1a/inventory-template.yaml
 ${BIN_DIR}/kpt live preview e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-namespace created (preview)"
 assertContains "pod/pod-a created (preview)"
@@ -365,6 +435,8 @@ printResult
 # Apply run for "test-case-1a" directory
 echo "Testing basic apply"
 echo "kpt live apply e2e/live/testdata/test-case-1a"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1a/inventory-template.yaml
 ${BIN_DIR}/kpt live apply e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-namespace"
 assertContains "pod/pod-a created"
@@ -382,6 +454,8 @@ printResult
 # "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic preview"
 echo "kpt live preview e2e/live/testdata/test-case-1b"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
 ${BIN_DIR}/kpt live preview e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
 assertContains "namespace/test-namespace configured (preview)"
 assertContains "pod/pod-b configured (preview)"
@@ -421,10 +495,29 @@ assertPodExists "pod-d" "test-namespace"
 assertPodNotExists "pod-a" "test-namespace"
 printResult
 
+# Basic kpt live preview --destroy
+echo "Testing basic preview destroy"
+echo "kpt live preview --destroy e2e/live/testdata/test-case-1b"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
+${BIN_DIR}/kpt live preview --destroy e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
+assertContains "pod/pod-d deleted (preview)"
+assertContains "pod/pod-c deleted (preview)"
+assertContains "pod/pod-b deleted (preview)"
+assertContains "namespace/test-namespace deleted (preview)"
+assertContains "4 resource(s) deleted, 0 skipped (preview)"
+# Validate resources NOT DESTROYED in the cluster
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+assertPodExists "pod-d" "test-namespace"
+printResult
+
 # Test 6: Basic kpt live destroy
 # "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic destroy"
 echo "kpt live destroy e2e/live/testdata/test-case-1b"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
 ${BIN_DIR}/kpt live destroy e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
 assertContains "pod/pod-d deleted"
 assertContains "pod/pod-c deleted"
@@ -448,6 +541,8 @@ export RESOURCE_GROUP_INVENTORY=1
 # Applies resources in "migrate-case-1a" directory.
 echo "Testing kpt live apply with ConfigMap inventory"
 echo "kpt live apply e2e/live/testdata/migrate-case-1a"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
 # Copy Kptfile into "migrate-case-1a" WITHOUT inventory information. This ensures
 # the apply uses the ConfigMap inventory-template.yaml during the apply.
 cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-case-1a
@@ -486,6 +581,8 @@ printResult
 # Now actually run the migrate and verify the new ResourceGroup inventory exists
 echo "Testing migrate from ConfigMap to ResourceGroup inventory"
 echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...already installed...success"
 assertContains "updating Kptfile inventory values...success"
@@ -529,6 +626,7 @@ printResult
 # "migrate-case-1b" directory is the same as "migrate-case-1a" with "pod-a" missing, and "pod-d" added.
 echo "Testing kpt live apply/prune with ResourceGroup inventory"
 echo "kpt live apply e2e/live/testdata/migrate-case-1b"
+# Use the same Kptfile (with inventory) as migrate-case-1a in migrate-case-1b
 cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b
 ${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b > $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
@@ -579,7 +677,7 @@ printResult
 
 # Test 14: kpt live migrate with no objects in cluster
 # Add inventory-template.yaml to "migrate-error", but there are no objects in cluster.
-cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-error
+cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-error/inventory-template.yaml
 echo "Testing kpt live migrate with no objects in cluster"
 echo "kpt live migrate e2e/live/testdata/migrate-error"
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
