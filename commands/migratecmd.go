@@ -15,6 +15,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -123,6 +124,12 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	// Retrieve the current ConfigMap inventory objects.
 	cmInvObj, err := mr.retrieveConfigMapInv(bytes.NewReader(stdinBytes), args)
 	if err != nil {
+		if _, ok := err.(inventory.NoInventoryObjError); ok {
+			// No ConfigMap inventory means the migration has already run before.
+			klog.V(4).Infoln("swallowing no ConfigMap inventory error")
+			return nil
+		}
+		klog.V(4).Infof("error retrieving ConfigMap inventory object: %s", err)
 		return err
 	}
 	cmObjs, err := mr.retrieveInvObjs(cmInvObj)
@@ -196,6 +203,12 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 		return nil, err
 	}
 	cmInv, _, err := mr.cmLoader.InventoryInfo(objs)
+	if err != nil {
+		// No ConfigMap inventory means the migration has already run before.
+		if _, ok := err.(inventory.NoInventoryObjError); ok { //nolint
+			fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
+		}
+	}
 	return cmInv, err
 }
 
