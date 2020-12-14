@@ -6,6 +6,7 @@ package commands
 import (
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -47,6 +48,11 @@ func (w *ApplyRunnerWrapper) Command() *cobra.Command {
 // invoked. Returns an error if one happened. Swallows the
 // "AlreadyExists" error for CRD installation.
 func (w *ApplyRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
+	if len(args) > 0 {
+		if err := setters.CheckForRequiredSetters(args[0]); err != nil {
+			return err
+		}
+	}
 	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
 		klog.V(4).Infoln("wrapper applyRunner detected environment variable")
 		err := live.ApplyResourceGroupCRD(w.factory)

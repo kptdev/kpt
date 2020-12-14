@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/cli-utils/cmd/destroy"
 	"sigs.k8s.io/cli-utils/cmd/diff"
 	"sigs.k8s.io/cli-utils/cmd/initcmd"
-	"sigs.k8s.io/cli-utils/cmd/preview"
 	"sigs.k8s.io/cli-utils/cmd/status"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
@@ -90,7 +89,7 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
 	applyCmd.Example = livedocs.ApplyExamples
 
-	previewCmd := preview.GetPreviewRunner(p, l, ioStreams).Command
+	previewCmd := GetPreviewRunner(p, l, ioStreams).Command()
 	previewCmd.Short = livedocs.PreviewShort
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
