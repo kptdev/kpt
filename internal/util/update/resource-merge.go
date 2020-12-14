@@ -74,7 +74,6 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	}
 
 	err = settersutil.SetAllSetterDefinitions(
-		false,
 		filepath.Join(options.PackagePath, kptfile.KptFileName),
 		original.AbsPath(),
 		updated.AbsPath(),
@@ -214,7 +213,6 @@ func MergeSubPackages(localRoot, updatedRoot, originalRoot string) error {
 		}
 
 		err = settersutil.SetAllSetterDefinitions(
-			false,
 			filepath.Join(localPkgPath, kptfile.KptFileName),
 			dirsForSettersUpdate...,
 		)

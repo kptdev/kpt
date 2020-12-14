@@ -27,10 +27,8 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
-	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -95,64 +93,9 @@ func (a AutoSet) SetGcloudAutoSetters() error {
 			continue
 		}
 
-		err = SetV1AutoSetter(fmt.Sprintf("gcloud.%s", c), v, a.PackagePath)
-		if err != nil {
-			return err
-		}
-
 		err = SetV2AutoSetter(fmt.Sprintf("gcloud.%s", c), v, a.PackagePath, a.Writer)
 		if err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-// SetV1AutoSetter sets the input auto setter recursively in all the sub-packages of root
-// Sets GcloudProjectNumber as well, if input setter is GcloudProject
-func SetV1AutoSetter(name, value, path string) error {
-	setter := &setters.PerformSetters{
-		Name:  name,
-		Value: value,
-		SetBy: "kpt",
-	}
-	rw := &kio.LocalPackageReadWriter{
-		PackagePath:           path,
-		KeepReaderAnnotations: false,
-		IncludeSubpackages:    true,
-	}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{rw},
-		Filters: []kio.Filter{setter},
-		Outputs: []kio.Writer{rw},
-	}.Execute()
-	if err != nil {
-		return err
-	}
-
-	if name == GcloudProject && setter.Count > 0 {
-		// set the projectNumber if we set the projectID
-		projectID := value
-		projectNumber, err := GetProjectNumberFromProjectID(projectID)
-		if err != nil {
-			return err
-		}
-		if projectNumber != "" {
-			rw := &kio.LocalPackageReadWriter{
-				PackagePath:           path,
-				KeepReaderAnnotations: false,
-				IncludeSubpackages:    true,
-			}
-			err = kio.Pipeline{
-				Inputs: []kio.Reader{rw},
-				Filters: []kio.Filter{&setters.PerformSetters{
-					Name:  GcloudProjectNumber,
-					Value: projectNumber, SetBy: "kpt"}},
-				Outputs: []kio.Writer{rw},
-			}.Execute()
-			if err != nil {
-				return err
-			}
 		}
 	}
 	return nil
@@ -247,22 +190,6 @@ func (a AutoSet) SetEnvAutoSetters() error {
 		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
 
 		for _, resourcesPath := range resourcePackagesPaths {
-			rw := &kio.LocalPackageReadWriter{
-				PackagePath:     resourcesPath,
-				PackageFileName: kptfile.KptFileName,
-			}
-
-			setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
-			err := kio.Pipeline{
-				Inputs:  []kio.Reader{rw},
-				Filters: []kio.Filter{setter},
-				Outputs: []kio.Writer{rw},
-			}.Execute()
-
-			if err != nil {
-				return err
-			}
-
 			if !DefExists(resourcesPath, k) || isSet(k, filepath.Join(resourcesPath, kptfile.KptFileName)) {
 				continue
 			}
@@ -331,12 +258,11 @@ func (a AutoSet) SetInheritedSetters() error {
 
 // setInheritedSettersForPkg inherits the setter value of setterRef to pkgPath from parentKptfilePath
 func (a AutoSet) setInheritedSettersForPkg(pkgPath, parentKptfilePath, setterRef string) error {
-	clean, err := openapi.AddSchemaFromFile(parentKptfilePath)
+	sc, err := openapi.SchemaFromFile(parentKptfilePath)
 	if err != nil {
 		return err
 	}
-	defer clean()
-	sch := openapi.Schema().Definitions[setterRef]
+	sch := sc.Definitions[setterRef]
 	cliExt, err := setters2.GetExtFromSchema(&sch)
 	if cliExt == nil || cliExt.Setter == nil || err != nil {
 		// if the ref doesn't exist in global schema or if it is not a setter
@@ -427,7 +353,7 @@ func parentDirWithKptfile(parentPath string) (string, error) {
 
 // DefExists returns true if the setterName exists in Kptfile definitions
 func DefExists(resourcePath, setterName string) bool {
-	_, err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, kptfile.KptFileName))
+	sc, err := openapi.SchemaFromFile(filepath.Join(resourcePath, kptfile.KptFileName))
 	if err != nil {
 		return false
 	}
@@ -435,6 +361,6 @@ func DefExists(resourcePath, setterName string) bool {
 	if err != nil {
 		return false
 	}
-	setter, _ := openapi.Resolve(&ref)
+	setter, _ := openapi.Resolve(&ref, sc)
 	return setter != nil
 }
