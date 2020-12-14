@@ -566,6 +566,9 @@ cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
 echo "Testing kpt live init for Kptfile (ResourceGroup inventory)"
 echo "kpt live init e2e/live/testdata/migrate-error"
 ${BIN_DIR}/kpt live init e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
+assertContains "namespace: test-rg-namespace is used for inventory object"
+assertContains "Initialized: "
+assertContains "Kptfile"
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error/Kptfile > $OUTPUT_DIR/status 2>&1
 assertContains "inventory:"

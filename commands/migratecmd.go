@@ -54,6 +54,7 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 		rgLoader:    rgLoader,
 		dir:         "",
 	}
+	r.initOptions.Quiet = true // Do not print output during migration
 	cmd := &cobra.Command{
 		Use:                   "migrate DIRECTORY",
 		DisableFlagsInUseLine: true,
