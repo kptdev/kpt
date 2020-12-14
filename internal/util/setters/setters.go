@@ -364,3 +364,24 @@ func DefExists(resourcePath, setterName string) bool {
 	setter, _ := openapi.Resolve(&ref, sc)
 	return setter != nil
 }
+
+// CheckForRequiredSetters takes the package path, checks if there is a KrmFile
+// and checks if all the required setters are set
+func CheckForRequiredSetters(path string) error {
+	kptFilePath := filepath.Join(path, kptfile.KptFileName)
+	_, err := os.Stat(kptFilePath)
+	if err != nil {
+		// if file is not readable or doesn't exist, exit without error
+		// as there might be packages without KrmFile
+		return nil
+	}
+	settersSchema, err := openapi.SchemaFromFile(kptFilePath)
+	if err != nil {
+		return err
+	}
+	if settersSchema == nil {
+		// this happens when there is Kptfile but no setter definitions
+		return nil
+	}
+	return setters2.CheckRequiredSettersSet(settersSchema)
+}

@@ -471,3 +471,133 @@ spec:
 		})
 	}
 }
+
+func TestLiveCommands(t *testing.T) {
+	var tests = []struct {
+		name         string
+		inputOpenAPI string
+		command      string
+		args         []string
+		out          string
+		errMsg       string
+	}{
+		{
+			name:    "test preview command setters pre-check",
+			command: "preview",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: false
+ `,
+			errMsg: `setter replicas is required but not set, please set it to new value and try again`,
+		},
+		{
+			name:    "test apply command setters pre-check",
+			command: "apply",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: false
+ `,
+			errMsg: `setter replicas is required but not set, please set it to new value and try again`,
+		},
+		{
+			name:    "preview command setters pre-check pass, fail with no cluster",
+			command: "preview",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: true
+ `,
+			errMsg: `Package uninitialized`,
+		},
+		{
+			name:    "apply command setters pre-check pass, fail with no cluster",
+			command: "apply",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: true
+ `,
+			errMsg: `Package uninitialized`,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+
+			dir, err := ioutil.TempDir("", "")
+			if err != nil {
+				t.FailNow()
+			}
+			defer os.RemoveAll(dir)
+
+			err = ioutil.WriteFile(dir+"/Kptfile", []byte(test.inputOpenAPI), 0600)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			cmd := run.GetMain()
+			args := []string{"live", test.command, dir}
+			args = append(args, test.args...)
+			cmd.SetArgs(args)
+			err = cmd.Execute()
+
+			if test.errMsg != "" {
+				if !assert.NotNil(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), test.errMsg) {
+					t.FailNow()
+				}
+			}
+
+			if test.errMsg == "" && !assert.NoError(t, err) {
+				t.FailNow()
+			}
+		})
+	}
+}
