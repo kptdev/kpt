@@ -22,7 +22,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
@@ -95,9 +94,6 @@ func (c Command) Run() error {
 			if err := a.PerformAutoSetters(); err != nil {
 				return err
 			}
-		}
-		if err := functions.RunFunctions(path, dep.Functions); err != nil {
-			return err
 		}
 	}
 

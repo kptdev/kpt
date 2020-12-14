@@ -53,9 +53,6 @@ type KptFile struct {
 	// https://github.com/go-yaml/yaml/issues/575
 	OpenAPI interface{} `yaml:"openAPI,omitempty"`
 
-	// Functions contains configuration for running functions
-	Functions Functions `yaml:"functions,omitempty"`
-
 	// Parameters for inventory object.
 	Inventory *Inventory `yaml:"inventory,omitempty"`
 }
@@ -69,21 +66,6 @@ type Inventory struct {
 	InventoryID string            `yaml:"inventoryID,omitempty"`
 	Labels      map[string]string `yaml:"labels,omitempty"`
 	Annotations map[string]string `yaml:"annotations,omitempty"`
-}
-
-type Functions struct {
-	// AutoRunStarlark will cause starlark functions to automatically be run.
-	AutoRunStarlark bool `yaml:"autoRunStarlark,omitempty"`
-
-	// StarlarkFunctions is a list of starlark functions to run
-	StarlarkFunctions []StarlarkFunction `yaml:"starlarkFunctions,omitempty"`
-}
-
-type StarlarkFunction struct {
-	// Name is the name that will be given to the program
-	Name string `yaml:"name,omitempty"`
-	// Path is the path to the *.star script to run
-	Path string `yaml:"path,omitempty"`
 }
 
 // MergeOpenAPI adds the OpenAPI definitions from localKf to updatedKf.
@@ -270,10 +252,9 @@ func shouldRemoveValue(updatedDef, localDef, originalDef *yaml.MapNode, key stri
 type Dependency struct {
 	Name            string `yaml:"name,omitempty"`
 	Upstream        `yaml:",inline,omitempty"`
-	EnsureNotExists bool       `yaml:"ensureNotExists,omitempty"`
-	Strategy        string     `yaml:"updateStrategy,omitempty"`
-	Functions       []Function `yaml:"functions,omitempty"`
-	AutoSet         bool       `yaml:"autoSet,omitempty"`
+	EnsureNotExists bool   `yaml:"ensureNotExists,omitempty"`
+	Strategy        string `yaml:"updateStrategy,omitempty"`
+	AutoSet         bool   `yaml:"autoSet,omitempty"`
 }
 
 type PackageMeta struct {
@@ -338,9 +319,4 @@ type Git struct {
 
 	// Ref is the git ref the package was cloned from
 	Ref string `yaml:"ref,omitempty"`
-}
-
-type Function struct {
-	Config yaml.Node `yaml:"config,omitempty"`
-	Image  string    `yaml:"image,omitempty"`
 }

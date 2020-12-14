@@ -105,31 +105,8 @@ func TestKptGetSet(t *testing.T) {
 				},
 			},
 		},
-		{name: "fn",
-			dataset: testutil.HelloWorldFn,
-			replacements: map[string][]string{
-				"deploy.yaml": {"replicas: 5", "replicas: 7",
-					`    app: hello`,
-					`    app: hello
-    foo: bar`},
-				"service.yaml": {
-					`    app: hello`,
-					`    app: hello
-    foo: bar`},
-				"Kptfile": {
-					`          setBy: package-default
-          value: "5"`,
-					`          value: "7"
-          isSet: true`,
-				},
-			},
-		},
-
 		// verify things work if there is no kptfile
 		{name: "no_kptfile", dataset: testutil.HelloWorldSet, noKptfile: true},
-
-		// verify things work if there is no kptfile
-		{name: "fn_no_kptfile", dataset: testutil.HelloWorldFnNoKptfile, noKptfile: true},
 	}
 
 	for i := range tests {
