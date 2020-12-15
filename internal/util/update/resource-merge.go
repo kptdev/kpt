@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -249,7 +250,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath 
 // copyPackage copies the content of a single package from src to dst. It
 // will not copy resources belonging to any subpackages.
 func (u ResourceMergeUpdater) copyPackage(src, dst string) error {
-	return walkPackage(src, func(path string, info os.FileInfo, err error) error {
+	return pkgutil.WalkPackage(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -275,42 +276,6 @@ func (u ResourceMergeUpdater) copyPackage(src, dst string) error {
 		}
 
 		return nil
-	})
-}
-
-// walkPackage walks the package defined at src and provides a callback for
-// every folder and file. Any subpackages and the .git folder are excluded.
-func walkPackage(src string, c func(string, os.FileInfo, error) error) error {
-	excludedDirs := make(map[string]bool)
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return c(path, info, err)
-		}
-		// don't copy the .git dir
-		if path != src {
-			rel := strings.TrimPrefix(path, src)
-			if copyutil.IsDotGitFolder(rel) {
-				return nil
-			}
-		}
-
-		for dir := range excludedDirs {
-			if strings.HasPrefix(path, dir) {
-				return nil
-			}
-		}
-
-		if info.IsDir() {
-			_, err := os.Stat(filepath.Join(path, kptfile.KptFileName))
-			if err != nil && !os.IsNotExist(err) {
-				return c(path, info, err)
-			}
-			if err == nil && path != src {
-				excludedDirs[path] = true
-				return nil
-			}
-		}
-		return c(path, info, err)
 	})
 }
 
@@ -450,7 +415,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	files := sets.String{}
 	dirs := sets.String{}
-	err := walkPackage(root, func(path string, info os.FileInfo, err error) error {
+	err := pkgutil.WalkPackage(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.Wrap(err)
 		}
