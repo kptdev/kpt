@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
@@ -34,7 +32,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
@@ -68,7 +65,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	defer os.RemoveAll(updated.AbsPath())
 
 	// local package controls the upstream field
-	commit, err := u.lookupCommit(updated.AbsPath())
+	commit, err := lookupCommit(updated.AbsPath())
 	if err != nil {
 		return err
 	}
@@ -107,46 +104,6 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	return nil
 }
 
-// findAllSubpackages traverses the packages in local, updated and original
-// and finds all subpackages. A subpackage is a subdirectory underneath the
-// root that has a Kptfile in it.
-// The list is sorted in increasing order based on the depth of the subpackage
-// relative to the root package.
-func findAllSubpackages(local, updated, original string) ([]string, error) {
-	uniquePaths := make(map[string]bool)
-	for _, path := range []string{local, updated, original} {
-		paths, err := pathutil.DirsWithFile(path, kptfile.KptFileName, true)
-		if err != nil {
-			return []string{}, err
-		}
-		for _, p := range paths {
-			relPath, err := filepath.Rel(path, p)
-			if err != nil {
-				return []string{}, err
-			}
-			uniquePaths[relPath] = true
-		}
-	}
-	var paths []string
-	for p := range uniquePaths {
-		paths = append(paths, p)
-	}
-	sort.Slice(paths, func(i, j int) bool {
-		iPath := paths[i]
-		jPath := paths[j]
-		if iPath == "." {
-			return true
-		}
-		if jPath == "." {
-			return false
-		}
-		iSegmentCount := len(strings.Split(iPath, "/"))
-		jSegmentCount := len(strings.Split(jPath, "/"))
-		return iSegmentCount < jSegmentCount
-	})
-	return paths, nil
-}
-
 // updatePackage updates the package in the location specified by localPath
 // using the provided paths to the updated version of the package and the
 // original version of the package.
@@ -172,7 +129,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 		return fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath)
 	// Package added in upstream
 	case !originalExists && !localExists && updatedExists:
-		if err := u.copyPackage(updatedPath, localPath); err != nil {
+		if err := pkgutil.CopyPackage(updatedPath, localPath); err != nil {
 			return err
 		}
 	// Package added locally
@@ -245,63 +202,6 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath 
 	}
 
 	return ReplaceNonKRMFiles(updatedPath, originalPath, localPath)
-}
-
-// copyPackage copies the content of a single package from src to dst. It
-// will not copy resources belonging to any subpackages.
-func (u ResourceMergeUpdater) copyPackage(src, dst string) error {
-	return pkgutil.WalkPackage(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// path is an absolute path, rather than a path relative to src.
-		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
-		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
-		copyTo := strings.TrimPrefix(path, src)
-
-		// make directories that don't exist
-		if info.IsDir() {
-			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
-		}
-
-		// copy file by reading and writing it
-		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
-		if err != nil {
-			return err
-		}
-		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-}
-
-// exists returns true if a file or directory exists on the provided path,
-// and false otherwise.
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
-	}
-	return !os.IsNotExist(err), nil
-}
-
-// lookupCommit looks up the sha of the current commit on the repo at the
-// provided path.
-func (u ResourceMergeUpdater) lookupCommit(repoPath string) (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
-	cmd.Dir = repoPath
-	cmd.Env = os.Environ()
-	cmd.Stderr = os.Stderr
-	b, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	commit := strings.TrimSpace(string(b))
-	return commit, nil
 }
 
 // updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the update

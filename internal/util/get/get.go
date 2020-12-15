@@ -31,7 +31,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Command fetches a package from a git repository and copies it to a local directory.
@@ -260,19 +259,7 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	kpgfile, err := kptfileutil.ReadFile(c.Destination)
 	if err != nil {
 		// no KptFile present, create a default
-		kpgfile = kptfile.KptFile{
-			ResourceMeta: yaml.ResourceMeta{
-				TypeMeta: yaml.TypeMeta{
-					APIVersion: kptfile.TypeMeta.APIVersion,
-					Kind:       kptfile.TypeMeta.Kind,
-				},
-				ObjectMeta: yaml.ObjectMeta{
-					NameMeta: yaml.NameMeta{
-						Name: c.Name,
-					},
-				},
-			},
-		}
+		kpgfile = kptfileutil.DefaultKptfile(c.Name)
 	}
 
 	// find the git commit sha that we cloned the package at so we can write it to the KptFile

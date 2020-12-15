@@ -15,6 +15,7 @@
 package pkgutil
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,5 +57,37 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 			}
 		}
 		return c(path, info, err)
+	})
+}
+
+// CopyPackage copies the content of a single package from src to dst. It
+// will not copy resources belonging to any subpackages.
+func CopyPackage(src, dst string) error {
+	return WalkPackage(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// path is an absolute path, rather than a path relative to src.
+		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
+		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
+		copyTo := strings.TrimPrefix(path, src)
+
+		// make directories that don't exist
+		if info.IsDir() {
+			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+		}
+
+		// copy file by reading and writing it
+		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 }
