@@ -20,7 +20,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdsearch"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/cfgdocs"
-	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
@@ -149,20 +148,11 @@ func SetCommand(parent string) *cobra.Command {
 	kustomizeCmd.Example = cfgdocs.SetExamples
 	kustomizeCmd.SilenceUsage = true
 	kustomizeCmd.SilenceErrors = true
-	var autoRun bool
-	setCmd.Flags().BoolVar(&autoRun, "auto-run", true,
-		`Automatically run functions after setting (if enabled for the package)`)
 	setCmd.RunE = func(c *cobra.Command, args []string) error {
 		warnIfSetterV1(args[0])
 		kustomizeCmd.SetArgs(args)
 		if err := kustomizeCmd.Execute(); err != nil {
 			return err
-		}
-
-		if autoRun {
-			if err := functions.ReconcileFunctions(args[0]); err != nil {
-				return err
-			}
 		}
 
 		if len(args) != 3 || args[1] != setters.GcloudProject {
