@@ -5,10 +5,12 @@ package commands
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
@@ -18,6 +20,8 @@ import (
 	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
+	"sigs.k8s.io/cli-utils/pkg/apply"
+	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -26,18 +30,21 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
+var inventoryTemplate = "inventory-template.yaml"
+
 // MigrateRunner encapsulates fields for the kpt migrate command.
 type MigrateRunner struct {
 	Command   *cobra.Command
 	ioStreams genericclioptions.IOStreams
 
-	dir         string
-	dryRun      bool
-	initOptions *KptInitOptions
-	cmProvider  provider.Provider
-	rgProvider  provider.Provider
-	cmLoader    manifestreader.ManifestLoader
-	rgLoader    manifestreader.ManifestLoader
+	cmTemplateContent []byte
+	dir               string
+	dryRun            bool
+	initOptions       *KptInitOptions
+	cmProvider        provider.Provider
+	rgProvider        provider.Provider
+	cmLoader          manifestreader.ManifestLoader
+	rgLoader          manifestreader.ManifestLoader
 }
 
 // NewMigrateRunner returns a pointer to an initial MigrateRunner structure.
@@ -140,7 +147,10 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	if len(cmObjs) > 0 {
 		// Migrate the ConfigMap inventory objects to a ResourceGroup custom resource.
 		if err = mr.migrateObjs(cmObjs, bytes.NewReader(stdinBytes), args); err != nil {
-			return err
+			if mr.dryRun {
+				return err
+			}
+			return mr.restoreConfigMapFileContent()
 		}
 		// Delete the old ConfigMap inventory object.
 		if err = mr.deleteConfigMapInv(cmInvObj); err != nil {
@@ -233,6 +243,18 @@ func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]obje
 // object and applies the inventory object to the cluster. Returns
 // an error if one occurred.
 func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Reader, args []string) error {
+	if !mr.dryRun {
+		var err error
+		mr.cmTemplateContent, err = mr.getConfigMapFileContent()
+		if err != nil {
+			return err
+		}
+		err = mr.deleteConfigMapFile()
+		if err != nil {
+			return err
+		}
+	}
+
 	fmt.Fprint(mr.ioStreams.Out, "  migrate inventory to ResourceGroup...")
 	if len(cmObjs) == 0 {
 		fmt.Fprintln(mr.ioStreams.Out, "no inventory objects found")
@@ -250,18 +272,26 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 	if err != nil {
 		return err
 	}
-	// Filter the ConfigMap inventory object.
-	rgInv, err := findResourceGroupInv(objs)
+	inv, objs, err := mr.rgLoader.InventoryInfo(objs)
 	if err != nil {
 		return err
 	}
-	rgInvClient, err := mr.rgProvider.InventoryClient()
-	if err != nil {
+
+	applier := apply.NewApplier(mr.rgProvider)
+
+	if err := applier.Initialize(); err != nil {
 		return err
 	}
-	inv := live.WrapInventoryInfoObj(rgInv)
-	_, err = rgInvClient.Merge(inv, cmObjs)
+	ch := applier.Run(context.TODO(), inv, objs, apply.Options{
+		ReconcileTimeout: 0,
+		EmitStatusEvents: false,
+		NoPrune:          true,
+		DryRunStrategy:   common.DryRunNone,
+		InventoryPolicy:  inventory.AdoptAll,
+	})
+	err = mr.handleEvents(ch)
 	if err != nil {
+		fmt.Fprintln(mr.ioStreams.Out, "failed", err.Error())
 		return err
 	}
 	fmt.Fprintln(mr.ioStreams.Out, "success")
@@ -308,6 +338,49 @@ func (mr *MigrateRunner) deleteConfigMapFile() error {
 				}
 			}
 			fmt.Fprintln(mr.ioStreams.Out, "success")
+		}
+	}
+	return nil
+}
+
+func (mr *MigrateRunner) getConfigMapFileContent() ([]byte, error) {
+	if len(mr.dir) > 0 {
+		cmFilename, _, err := common.ExpandDir(mr.dir)
+		if err != nil {
+			return nil, err
+		}
+		if len(cmFilename) > 0 {
+			return ioutil.ReadFile(cmFilename)
+		}
+	}
+	return nil, nil
+}
+
+func (mr *MigrateRunner) restoreConfigMapFileContent() error {
+	if len(mr.cmTemplateContent) == 0 {
+		return nil
+	}
+	if len(mr.dir) > 0 {
+		filename := filepath.Join(mr.dir, inventoryTemplate)
+		return ioutil.WriteFile(filename, mr.cmTemplateContent, 0644)
+	}
+	return nil
+}
+
+func (mr *MigrateRunner) handleEvents(ch <-chan event.Event) error {
+	for e := range ch {
+		switch e.Type {
+		case event.ErrorType:
+			return e.ErrorEvent.Err
+		case event.ApplyType:
+			if e.ApplyEvent.Type == event.ApplyEventResourceUpdate {
+				if e.ApplyEvent.Error != nil {
+					return e.ApplyEvent.Error
+				}
+			}
+			if e.ApplyEvent.Type == event.ApplyEventCompleted {
+				return nil
+			}
 		}
 	}
 	return nil
