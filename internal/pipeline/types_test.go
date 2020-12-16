@@ -22,170 +22,116 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func TestPipelineParse(t *testing.T) {
-	type testcase struct {
-		Input    string
-		Expected Pipeline
-		Error    bool
-	}
+type testcase struct {
+	Input    string
+	Expected Pipeline
+	Error    bool
+}
 
-	testcases := []testcase{
-		{
-			Input: `
+var testcases map[string]testcase = map[string]testcase{
+	"simple": {
+		Input: `
 apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
 `,
-			Expected: Pipeline{
-				ResourceMeta: yaml.ResourceMeta{
-					TypeMeta: yaml.TypeMeta{
-						APIVersion: "kpt.dev/v1alpha1",
-						Kind:       "Pipeline",
-					},
-					ObjectMeta: yaml.ObjectMeta{
-						NameMeta: yaml.NameMeta{
-							Name: "pipeline",
-						},
-					},
-				},
-			},
-		},
-		{
-			Input: `
+		Expected: *NewBuilder().
+			SetAPIVersion("kpt.dev/v1alpha1").
+			SetKind("Pipeline").
+			SetName("pipeline").
+			SetSources(nil).
+			Build(),
+	},
+	"with sources": {
+		Input: `
 apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
 sources:
-  - ./base
-  - ./*
+- ./base
+- ./*
 `,
-			Expected: Pipeline{
-				ResourceMeta: yaml.ResourceMeta{
-					TypeMeta: yaml.TypeMeta{
-						APIVersion: "kpt.dev/v1alpha1",
-						Kind:       "Pipeline",
-					},
-					ObjectMeta: yaml.ObjectMeta{
-						NameMeta: yaml.NameMeta{
-							Name: "pipeline",
-						},
-					},
-				},
-				Sources: []string{
-					"./base",
-					"./*",
-				},
-			},
-		},
-		{
-			Input: `
+		Expected: *NewBuilder().
+			SetAPIVersion("kpt.dev/v1alpha1").
+			SetKind("Pipeline").
+			SetName("pipeline").
+			SetSources([]string{"./base", "./*"}).
+			Build(),
+	},
+	"complex": {
+		Input: `
 apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
 sources:
-  - ./base
-  - ./*
+- ./base
+- ./*
 
 generators:
-  - image: gcr.io/kpt-functions/generate-folders
-    config:
-      apiVersion: cft.dev/v1alpha1
-      kind: ResourceHierarchy
-      metadata:
-        name: root-hierarchy
-        namespace: hierarchy # {"$kpt-set":"namespace"}
+- image: gcr.io/kpt-functions/generate-folders
+  config:
+    apiVersion: cft.dev/v1alpha1
+    kind: ResourceHierarchy
+    metadata:
+      name: root-hierarchy
+      namespace: hierarchy # {"$kpt-set":"namespace"}
 transformers:
-  - image: patch-strategic-merge
-    configPath: ./patch.yaml
-  - image: gcr.io/kpt-functions/set-annotation
-    configMap:
-      environment: dev
+- image: patch-strategic-merge
+  configPath: ./patch.yaml
+- image: gcr.io/kpt-functions/set-annotation
+  configMap:
+    environment: dev
 
 validators:
-  - image: gcr.io/kpt-functions/policy-controller-validate
+- image: gcr.io/kpt-functions/policy-controller-validate
 `,
-			Expected: Pipeline{
-				ResourceMeta: yaml.ResourceMeta{
-					TypeMeta: yaml.TypeMeta{
-						APIVersion: "kpt.dev/v1alpha1",
-						Kind:       "Pipeline",
-					},
-					ObjectMeta: yaml.ObjectMeta{
-						NameMeta: yaml.NameMeta{
-							Name: "pipeline",
-						},
-					},
-				},
-				Sources: []string{
-					"./base",
-					"./*",
-				},
-				Generators: []Function{
-					{
-						Image: "gcr.io/kpt-functions/generate-folders",
-						Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
+		Expected: *NewBuilder().
+			SetAPIVersion("kpt.dev/v1alpha1").
+			SetKind("Pipeline").
+			SetName("pipeline").
+			SetSources([]string{"./base", "./*"}).
+			AddGenerators(
+				Function{
+					Image: "gcr.io/kpt-functions/generate-folders",
+					Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
 kind: ResourceHierarchy
 metadata:
   name: root-hierarchy
   namespace: hierarchy # {"$kpt-set":"namespace"}`).YNode(),
+				},
+			).
+			AddTransformers(
+				Function{
+					Image:      "patch-strategic-merge",
+					ConfigPath: "./patch.yaml",
+				},
+				Function{
+					Image: "gcr.io/kpt-functions/set-annotation",
+					ConfigMap: map[string]string{
+						"environment": "dev",
 					},
 				},
-				Transformers: []Function{
-					{
-						Image:      "patch-strategic-merge",
-						ConfigPath: "./patch.yaml",
-					},
-					{
-						Image: "gcr.io/kpt-functions/set-annotation",
-						ConfigMap: map[string]string{
-							"environment": "dev",
-						},
-					},
+			).
+			AddValidators(
+				Function{
+					Image: "gcr.io/kpt-functions/policy-controller-validate",
 				},
-				Validators: []Function{
-					{
-						Image: "gcr.io/kpt-functions/policy-controller-validate",
-					},
-				},
-			},
-		},
-		{
-			Input: `
+			).
+			Build(),
+	},
+	"error": {
+		Input: `
 apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
 unknown
 `,
-			Error: true,
-		},
-	}
-	for _, tc := range testcases {
-		actual, err := parseFromString(tc.Input)
-		if tc.Error {
-			if !assert.Errorf(t, err, "no error when input is %s", tc.Input) {
-				t.FailNow()
-			}
-			continue
-		} else if !assert.NoError(t, err, "error when input is %s", tc.Input) {
-			t.FailNow()
-		}
-		if !assert.True(t, isPipelineEqual(t, actual, tc.Expected)) {
-			t.FailNow()
-		}
-	}
-}
-
-func parseFromString(input string) (Pipeline, error) {
-	var p Pipeline
-	err := yaml.Unmarshal([]byte(input), &p)
-	if err != nil {
-		return p, err
-	}
-	return p, nil
+		Error: true,
+	},
 }
 
 func isFunctionEqual(t *testing.T, f1, f2 Function) bool {
@@ -232,6 +178,18 @@ func isPipelineEqual(t *testing.T, p1, p2 Pipeline) bool {
 	}
 
 	if !assert.EqualValues(t, p1.Sources, p2.Sources) {
+		return false
+	}
+
+	if !assert.EqualValues(t, p1.Name, p2.Name) {
+		return false
+	}
+
+	if !assert.EqualValues(t, p1.Kind, p2.Kind) {
+		return false
+	}
+
+	if !assert.EqualValues(t, p1.APIVersion, p2.APIVersion) {
 		return false
 	}
 
