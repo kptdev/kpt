@@ -20,6 +20,7 @@ func GetPreviewRunner(provider provider.Provider, loader manifestreader.Manifest
 	}
 	// Set the wrapper run to be the RunE function for the wrapped command.
 	previewRunner.Command.RunE = w.RunE
+	previewRunner.Command.PreRunE = w.PreRunE
 	return w
 }
 
@@ -35,14 +36,18 @@ func (w *PreviewRunnerWrapper) Command() *cobra.Command {
 	return w.previewRunner.Command
 }
 
-// RunE checks if required setters are set as a pre-step if Kptfile
-// exists in the package path. Then the wrapped PreviewRunner is
-// invoked. Returns an error if one happened.
-func (w *PreviewRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
+func (w *PreviewRunnerWrapper) PreRunE(_ *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		if err := setters.CheckForRequiredSetters(args[0]); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+// RunE checks if required setters are set as a pre-step if Kptfile
+// exists in the package path. Then the wrapped PreviewRunner is
+// invoked. Returns an error if one happened.
+func (w *PreviewRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
 	return w.previewRunner.RunE(cmd, args)
 }

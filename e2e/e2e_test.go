@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/run"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -522,7 +523,7 @@ openAPI:
 			errMsg: `setter replicas is required but not set, please set it to new value and try again`,
 		},
 		{
-			name:    "preview command setters pre-check pass, fail with no cluster",
+			name:    "preview command setters pre-check pass",
 			command: "preview",
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -539,10 +540,9 @@ openAPI:
           required: true
           isSet: true
  `,
-			errMsg: `Package uninitialized`,
 		},
 		{
-			name:    "apply command setters pre-check pass, fail with no cluster",
+			name:    "apply command setters pre-check pass",
 			command: "apply",
 			inputOpenAPI: `
 apiVersion: v1alpha1
@@ -559,7 +559,6 @@ openAPI:
           required: true
           isSet: true
  `,
-			errMsg: `Package uninitialized`,
 		},
 	}
 	for i := range tests {
@@ -581,6 +580,15 @@ openAPI:
 			}
 
 			cmd := run.GetMain()
+
+			subCommand, _, err := cmd.Find([]string{"live", test.command})
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			subCommand.RunE = func(_ *cobra.Command, _ []string) error {
+				return nil
+			}
+
 			args := []string{"live", test.command, dir}
 			args = append(args, test.args...)
 			cmd.SetArgs(args)
