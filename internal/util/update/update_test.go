@@ -728,7 +728,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []StrategyType{KResourceMerge},
+					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile().
 						WithSubPackages(
@@ -774,6 +774,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithKptfile(),
 						),
 				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
+				},
 			},
 		},
 		{
@@ -818,6 +822,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithKptfile(),
 						),
 				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
+				},
 			},
 		},
 		{
@@ -853,6 +861,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					strategies:     []StrategyType{KResourceMerge},
 					expectedErrMsg: "subpackage \"abc\" added in both upstream and local",
 				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
+				},
 			},
 		},
 		{
@@ -869,7 +881,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []StrategyType{KResourceMerge},
+					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(),
 				},
@@ -893,7 +905,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []StrategyType{KResourceMerge},
+					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile().
 						WithSubPackages(
@@ -1045,6 +1057,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								),
 						),
 				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
+				},
 			},
 		},
 		{
@@ -1069,6 +1085,9 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					),
 			},
 			expectedResults: []resultForStrategy{
+				// TODO(mortent): Revisit this. Not clear that the Kptfile
+				// shouldn't be deleted here since it doesn't really have any
+				// local changes.
 				{
 					strategies: []StrategyType{KResourceMerge},
 					expectedLocal: pkgbuilder.NewRootPkg().
@@ -1080,6 +1099,15 @@ func TestCommand_Run_subpackages(t *testing.T) {
 										pkgbuilder.NewSetter("name", "my-name"),
 									),
 								).
+								WithResource(pkgbuilder.DeploymentResource),
+						),
+				},
+				{
+					strategies: []StrategyType{FastForward},
+					expectedLocal: pkgbuilder.NewRootPkg().
+						WithKptfile().
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("bar").
 								WithResource(pkgbuilder.DeploymentResource),
 						),
 				},
@@ -1131,6 +1159,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithResource(pkgbuilder.ConfigMapResource),
 						),
 				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
+				},
 			},
 		},
 		{
@@ -1152,7 +1184,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []StrategyType{KResourceMerge},
+					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(),
 				},
@@ -1204,6 +1236,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithResource(pkgbuilder.DeploymentResource,
 									pkgbuilder.SetFieldPath("34", "spec", "replicas")),
 						),
+				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
 				},
 			},
 		},
@@ -1271,6 +1307,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 							),
 					),
 				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
+				},
 			},
 		},
 		{
@@ -1306,7 +1346,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []StrategyType{KResourceMerge},
+					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(pkgbuilder.NewKptfile().
 							WithUpstream("github.com/foo/bar", "somebranch"),
@@ -1343,7 +1383,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []StrategyType{KResourceMerge},
+					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource).
@@ -1377,7 +1417,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []StrategyType{KResourceMerge},
+					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(pkgbuilder.NewKptfile()).
 						WithFile("data.txt", "updated content").
@@ -1410,6 +1450,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(pkgbuilder.NewKptfile()).
 						WithFile("data.txt", "local content"),
+				},
+				{
+					strategies:     []StrategyType{FastForward},
+					expectedErrMsg: "use a different update --strategy",
 				},
 			},
 		},

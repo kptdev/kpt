@@ -133,3 +133,20 @@ func ValidateInventory(inv *kptfile.Inventory) (bool, error) {
 	}
 	return true, nil
 }
+
+// DefaultKptfile returns a new minimal Kptfile.
+func DefaultKptfile(name string) kptfile.KptFile {
+	return kptfile.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfile.TypeMeta.APIVersion,
+				Kind:       kptfile.TypeMeta.Kind,
+			},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: name,
+				},
+			},
+		},
+	}
+}
