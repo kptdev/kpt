@@ -28,6 +28,7 @@ func GetApplyRunner(provider provider.Provider, loader manifestreader.ManifestLo
 	}
 	// Set the wrapper run to be the RunE function for the wrapped command.
 	applyRunner.Command.RunE = w.RunE
+	applyRunner.Command.PreRunE = w.PreRunE
 	return w
 }
 
@@ -43,16 +44,20 @@ func (w *ApplyRunnerWrapper) Command() *cobra.Command {
 	return w.applyRunner.Command
 }
 
-// RunE runs the ResourceGroup CRD installation as a pre-step if an
-// environment variable exists. Then the wrapped ApplyRunner is
-// invoked. Returns an error if one happened. Swallows the
-// "AlreadyExists" error for CRD installation.
-func (w *ApplyRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
+func (w *ApplyRunnerWrapper) PreRunE(_ *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		if err := setters.CheckForRequiredSetters(args[0]); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+// RunE runs the ResourceGroup CRD installation as a pre-step if an
+// environment variable exists. Then the wrapped ApplyRunner is
+// invoked. Returns an error if one happened. Swallows the
+// "AlreadyExists" error for CRD installation.
+func (w *ApplyRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
 	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
 		klog.V(4).Infoln("wrapper applyRunner detected environment variable")
 		err := live.ApplyResourceGroupCRD(w.factory)
