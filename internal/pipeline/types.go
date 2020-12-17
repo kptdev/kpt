@@ -60,6 +60,85 @@ type Pipeline struct {
 	Validators []Function `yaml:"validators,omitempty"`
 }
 
+// String returns the string representation of Pipeline
+func (p *Pipeline) String() (string, error) {
+	b, err := yaml.Marshal(p)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+// SetName sets Pipeline name
+func (p *Pipeline) SetName(n string) *Pipeline {
+	p.Name = n
+	return p
+}
+
+// SetKind sets Pipeline kind
+func (p *Pipeline) SetKind(k string) *Pipeline {
+	p.Kind = k
+	return p
+}
+
+// SetAPIVersion sets Pipeline API version
+func (p *Pipeline) SetAPIVersion(v string) *Pipeline {
+	p.APIVersion = v
+	return p
+}
+
+// AddSources appends the sources to Pipeline
+func (p *Pipeline) AddSources(s ...string) *Pipeline {
+	p.Sources = append(p.Sources, s...)
+	return p
+}
+
+// SetSources replaces the sources in Pipeline by s
+func (p *Pipeline) SetSources(s []string) *Pipeline {
+	p.Sources = s
+	return p
+}
+
+// AddGenerators appends the generators to Pipeline
+func (p *Pipeline) AddGenerators(g ...Function) *Pipeline {
+	addFunctions(&p.Generators, g)
+	return p
+}
+
+// SetGenerators replaces the generators in Pipeline by g
+func (p *Pipeline) SetGenerators(g []Function) *Pipeline {
+	p.Generators = g
+	return p
+}
+
+// AddTransformers appends the transformers to Pipeline
+func (p *Pipeline) AddTransformers(t ...Function) *Pipeline {
+	addFunctions(&p.Transformers, t)
+	return p
+}
+
+// SetTransformers replaces the transformers in Pipeline by t
+func (p *Pipeline) SetTransformers(t []Function) *Pipeline {
+	p.Transformers = t
+	return p
+}
+
+// AddValidators appends the validators to Pipeline
+func (p *Pipeline) AddValidators(v ...Function) *Pipeline {
+	addFunctions(&p.Validators, v)
+	return p
+}
+
+// SetValidators replaces the validators in Pipeline by v
+func (p *Pipeline) SetValidators(v []Function) *Pipeline {
+	p.Validators = v
+	return p
+}
+
+func addFunctions(orig *[]Function, new []Function) {
+	*orig = append(*orig, new...)
+}
+
 // Function defines an item in the pipeline function list
 type Function struct {
 	// `Image` is the path of the function container image

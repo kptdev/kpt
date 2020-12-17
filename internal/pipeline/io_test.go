@@ -24,8 +24,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func TestDefaultPipeline(t *testing.T) {
-	p := DefaultPipeline()
+func TestNewPipeline(t *testing.T) {
+	p := NewPipeline()
 	expected := Pipeline{
 		ResourceMeta: yaml.ResourceMeta{
 			TypeMeta: yaml.TypeMeta{
@@ -112,22 +112,5 @@ func TestFromFileError(t *testing.T) {
 	_, err := FromFile("not-exist")
 	if err == nil {
 		t.Fatalf("expect an error when open non-exist file")
-	}
-}
-
-func TestString(t *testing.T) {
-	expected := `apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-    name: pipeline
-sources:
-  - ./*
-`
-	actual, err := String(DefaultPipeline())
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.EqualValues(t, expected, actual) {
-		t.Fatalf("unexpected string value")
 	}
 }

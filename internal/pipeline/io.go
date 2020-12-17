@@ -17,27 +17,27 @@
 package pipeline
 
 import (
-	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
-	defaultAPIVersion string = "kpt.dev/v1alpha1"
-	defaultKind       string = "Pipeline"
-	defaultName       string = "pipeline"
+	kptAPIVersion string = "kpt.dev/v1alpha1"
+	pipelineKind  string = "Pipeline"
+	defaultName   string = "pipeline"
 )
 
 var defaultSources []string = []string{"./*"}
 
-// newPipeline returns a new empty Pipeline
-func newPipeline() *Pipeline {
+// newEmptyPipeline returns a new empty Pipeline
+func newEmptyPipeline() *Pipeline {
 	return &Pipeline{}
 }
 
-// DefaultPipeline returns a pointer to a default Pipeline.
+// NewPipeline returns a pointer to a new default Pipeline.
 // The default Pipeline should be:
 // apiVersion: kpt.dev/v1alpha1
 // kind: Pipeline
@@ -45,10 +45,10 @@ func newPipeline() *Pipeline {
 //   name: pipeline
 // sources:
 //   - '.*'
-func DefaultPipeline() *Pipeline {
-	p := newPipeline()
-	p.APIVersion = defaultAPIVersion
-	p.Kind = defaultKind
+func NewPipeline() *Pipeline {
+	p := newEmptyPipeline()
+	p.APIVersion = kptAPIVersion
+	p.Kind = pipelineKind
 	p.Name = defaultName
 	p.Sources = defaultSources
 	return p
@@ -56,7 +56,7 @@ func DefaultPipeline() *Pipeline {
 
 // FromBytes returns a Pipeline parsed from bytes
 func FromBytes(b []byte) (*Pipeline, error) {
-	p := newPipeline()
+	p := newEmptyPipeline()
 	err := yaml.Unmarshal(b, p)
 	if err != nil {
 		return nil, err
@@ -71,19 +71,11 @@ func FromString(s string) (*Pipeline, error) {
 
 // FromReader returns a Pipeline parsed from the content in reader
 func FromReader(r io.Reader) (*Pipeline, error) {
-	b := bytes.NewBuffer(nil)
-	buf := make([]byte, 256)
-	for {
-		n, err := r.Read(buf)
-		if err != nil {
-			if err != io.EOF {
-				return nil, err
-			}
-			break
-		}
-		b.Write(buf[0:n])
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
 	}
-	p, err := FromBytes(b.Bytes())
+	p, err := FromBytes(b)
 	if err != nil {
 		return nil, err
 	}
@@ -97,13 +89,4 @@ func FromFile(path string) (*Pipeline, error) {
 		return nil, err
 	}
 	return FromReader(f)
-}
-
-// String returns the string representation of Pipeline
-func String(p *Pipeline) (string, error) {
-	b, err := yaml.Marshal(p)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
 }

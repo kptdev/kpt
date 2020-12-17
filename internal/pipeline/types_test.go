@@ -22,6 +22,83 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func TestString(t *testing.T) {
+	expected := `apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+    name: pipeline
+sources:
+  - ./*
+`
+	actual, err := NewPipeline().String()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	if !assert.EqualValues(t, expected, actual) {
+		t.Fatalf("unexpected string value")
+	}
+}
+
+var expected Pipeline = Pipeline{
+	Sources: []string{
+		"a",
+		"b",
+	},
+	Generators: []Function{
+		{
+			Image: "gcr.io/kpt-functions/generate-folders",
+			Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
+kind: ResourceHierarchy
+metadata:
+name: root-hierarchy
+namespace: hierarchy # {"$kpt-set":"namespace"}`).YNode(),
+		},
+	},
+	Transformers: []Function{
+		{
+			Image:      "patch-strategic-merge",
+			ConfigPath: "./patch.yaml",
+		},
+		{
+			Image: "gcr.io/kpt-functions/set-annotation",
+			ConfigMap: map[string]string{
+				"environment": "dev",
+			},
+		},
+	},
+	Validators: []Function{
+		{
+			Image: "gcr.io/kpt-functions/policy-controller-validate",
+		},
+	},
+}
+
+func TestAdd(t *testing.T) {
+	actual := (&Pipeline{}).
+		AddSources("a", "b").
+		AddGenerators(expected.Generators...).
+		AddTransformers(expected.Transformers...).
+		AddValidators(expected.Validators...)
+
+	if !isPipelineEqual(t, *actual, expected) {
+		t.Fatalf("build result is different from expected")
+	}
+}
+
+func TestSet(t *testing.T) {
+	actual := NewPipeline().
+		SetName("").
+		SetKind("").
+		SetAPIVersion("").
+		SetSources([]string{"a", "b"}).
+		SetGenerators(expected.Generators).
+		SetTransformers(expected.Transformers).
+		SetValidators(expected.Validators)
+	if !isPipelineEqual(t, *actual, expected) {
+		t.Fatalf("build result is different from expected")
+	}
+}
+
 type testcase struct {
 	Input    string
 	Expected Pipeline
@@ -36,12 +113,11 @@ kind: Pipeline
 metadata:
   name: pipeline
 `,
-		Expected: *NewBuilder().
+		Expected: *NewPipeline().
 			SetAPIVersion("kpt.dev/v1alpha1").
 			SetKind("Pipeline").
 			SetName("pipeline").
-			SetSources(nil).
-			Build(),
+			SetSources(nil),
 	},
 	"with sources": {
 		Input: `
@@ -53,12 +129,11 @@ sources:
 - ./base
 - ./*
 `,
-		Expected: *NewBuilder().
+		Expected: *NewPipeline().
 			SetAPIVersion("kpt.dev/v1alpha1").
 			SetKind("Pipeline").
 			SetName("pipeline").
-			SetSources([]string{"./base", "./*"}).
-			Build(),
+			SetSources([]string{"./base", "./*"}),
 	},
 	"complex": {
 		Input: `
@@ -88,7 +163,7 @@ transformers:
 validators:
 - image: gcr.io/kpt-functions/policy-controller-validate
 `,
-		Expected: *NewBuilder().
+		Expected: *NewPipeline().
 			SetAPIVersion("kpt.dev/v1alpha1").
 			SetKind("Pipeline").
 			SetName("pipeline").
@@ -119,8 +194,7 @@ metadata:
 				Function{
 					Image: "gcr.io/kpt-functions/policy-controller-validate",
 				},
-			).
-			Build(),
+			),
 	},
 	"error": {
 		Input: `
