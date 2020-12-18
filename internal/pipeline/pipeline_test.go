@@ -159,6 +159,7 @@ metadata:
 					},
 				},
 			},
+			Sources: []string{"./*"},
 		},
 	},
 	"with sources": {

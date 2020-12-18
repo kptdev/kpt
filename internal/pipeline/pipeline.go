@@ -101,7 +101,7 @@ func New() *Pipeline {
 
 // FromBytes returns a Pipeline parsed from bytes
 func FromBytes(b []byte) (*Pipeline, error) {
-	p := &Pipeline{}
+	p := New()
 	err := yaml.Unmarshal(b, p)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to construct pipeline from bytes")
