@@ -14,6 +14,9 @@
 package pipeline_test
 
 import (
+	"bytes"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 
@@ -30,7 +33,7 @@ metadata:
 sources:
   - ./*
 `
-	actual, err := NewPipeline().String()
+	actual, err := New().String()
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -39,63 +42,94 @@ sources:
 	}
 }
 
-var expected Pipeline = Pipeline{
-	Sources: []string{
-		"a",
-		"b",
-	},
-	Generators: []Function{
-		{
-			Image: "gcr.io/kpt-functions/generate-folders",
-			Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
-kind: ResourceHierarchy
-metadata:
-name: root-hierarchy
-namespace: hierarchy # {"$kpt-set":"namespace"}`).YNode(),
-		},
-	},
-	Transformers: []Function{
-		{
-			Image:      "patch-strategic-merge",
-			ConfigPath: "./patch.yaml",
-		},
-		{
-			Image: "gcr.io/kpt-functions/set-annotation",
-			ConfigMap: map[string]string{
-				"environment": "dev",
+func TestNew(t *testing.T) {
+	p := New()
+	expected := Pipeline{
+		ResourceMeta: yaml.ResourceMeta{
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: "kpt.dev/v1alpha1",
+				Kind:       "Pipeline",
+			},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: "pipeline",
+				},
 			},
 		},
-	},
-	Validators: []Function{
-		{
-			Image: "gcr.io/kpt-functions/policy-controller-validate",
+		Sources: []string{
+			"./*",
 		},
-	},
-}
-
-func TestAdd(t *testing.T) {
-	actual := (&Pipeline{}).
-		AddSources("a", "b").
-		AddGenerators(expected.Generators...).
-		AddTransformers(expected.Transformers...).
-		AddValidators(expected.Validators...)
-
-	if !isPipelineEqual(t, *actual, expected) {
-		t.Fatalf("build result is different from expected")
+	}
+	if !assert.True(t, isPipelineEqual(t, *p, expected)) {
+		t.FailNow()
 	}
 }
 
-func TestSet(t *testing.T) {
-	actual := NewPipeline().
-		SetName("").
-		SetKind("").
-		SetAPIVersion("").
-		SetSources([]string{"a", "b"}).
-		SetGenerators(expected.Generators).
-		SetTransformers(expected.Transformers).
-		SetValidators(expected.Validators)
-	if !isPipelineEqual(t, *actual, expected) {
-		t.Fatalf("build result is different from expected")
+func checkOutput(t *testing.T, name string, tc testcase, actual *Pipeline, err error) {
+	if tc.Error {
+		if !assert.Errorf(t, err, "error is expected. Test case: %s", name) {
+			t.FailNow()
+		}
+		return
+	} else if !assert.NoError(t, err, "error is not expected. Test case: %s", name) {
+		t.FailNow()
+	}
+	if !assert.Truef(t, isPipelineEqual(t, *actual, tc.Expected),
+		"pipelines don't equal. Test case: %s", name) {
+		t.FailNow()
+	}
+}
+
+func TestFromBytes(t *testing.T) {
+	for name, tc := range testcases {
+		actual, err := FromBytes([]byte(tc.Input))
+		checkOutput(t, name, tc, actual, err)
+	}
+}
+
+func TestFromString(t *testing.T) {
+	for name, tc := range testcases {
+		actual, err := FromString(tc.Input)
+		checkOutput(t, name, tc, actual, err)
+	}
+}
+
+func TestFromReader(t *testing.T) {
+	for name, tc := range testcases {
+		r := bytes.NewBufferString(tc.Input)
+		actual, err := FromReader(r)
+		checkOutput(t, name, tc, actual, err)
+	}
+}
+
+func preparePipelineFile(s string) (string, error) {
+	tmp, err := ioutil.TempFile("", "kpt-pipeline-*")
+	if err != nil {
+		return "", err
+	}
+	_, err = tmp.WriteString(s)
+	if err != nil {
+		return "", err
+	}
+	return tmp.Name(), nil
+}
+
+func TestFromFile(t *testing.T) {
+	for name, tc := range testcases {
+		path, err := preparePipelineFile(tc.Input)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		actual, err := FromFile(path)
+		checkOutput(t, name, tc, actual, err)
+		os.Remove(path)
+	}
+}
+
+func TestFromFileError(t *testing.T) {
+	_, err := FromFile("not-exist")
+	if err == nil {
+		t.Fatalf("expect an error when open non-exist file")
 	}
 }
 
@@ -113,11 +147,19 @@ kind: Pipeline
 metadata:
   name: pipeline
 `,
-		Expected: *NewPipeline().
-			SetAPIVersion("kpt.dev/v1alpha1").
-			SetKind("Pipeline").
-			SetName("pipeline").
-			SetSources(nil),
+		Expected: Pipeline{
+			ResourceMeta: yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "kpt.dev/v1alpha1",
+					Kind:       "Pipeline",
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{
+						Name: "pipeline",
+					},
+				},
+			},
+		},
 	},
 	"with sources": {
 		Input: `
@@ -129,11 +171,23 @@ sources:
 - ./base
 - ./*
 `,
-		Expected: *NewPipeline().
-			SetAPIVersion("kpt.dev/v1alpha1").
-			SetKind("Pipeline").
-			SetName("pipeline").
-			SetSources([]string{"./base", "./*"}),
+		Expected: Pipeline{
+			ResourceMeta: yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "kpt.dev/v1alpha1",
+					Kind:       "Pipeline",
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{
+						Name: "pipeline",
+					},
+				},
+			},
+			Sources: []string{
+				"./base",
+				"./*",
+			},
+		},
 	},
 	"complex": {
 		Input: `
@@ -163,13 +217,24 @@ transformers:
 validators:
 - image: gcr.io/kpt-functions/policy-controller-validate
 `,
-		Expected: *NewPipeline().
-			SetAPIVersion("kpt.dev/v1alpha1").
-			SetKind("Pipeline").
-			SetName("pipeline").
-			SetSources([]string{"./base", "./*"}).
-			AddGenerators(
-				Function{
+		Expected: Pipeline{
+			ResourceMeta: yaml.ResourceMeta{
+				TypeMeta: yaml.TypeMeta{
+					APIVersion: "kpt.dev/v1alpha1",
+					Kind:       "Pipeline",
+				},
+				ObjectMeta: yaml.ObjectMeta{
+					NameMeta: yaml.NameMeta{
+						Name: "pipeline",
+					},
+				},
+			},
+			Sources: []string{
+				"./base",
+				"./*",
+			},
+			Generators: []Function{
+				{
 					Image: "gcr.io/kpt-functions/generate-folders",
 					Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
 kind: ResourceHierarchy
@@ -177,24 +242,25 @@ metadata:
   name: root-hierarchy
   namespace: hierarchy # {"$kpt-set":"namespace"}`).YNode(),
 				},
-			).
-			AddTransformers(
-				Function{
+			},
+			Transformers: []Function{
+				{
 					Image:      "patch-strategic-merge",
 					ConfigPath: "./patch.yaml",
 				},
-				Function{
+				{
 					Image: "gcr.io/kpt-functions/set-annotation",
 					ConfigMap: map[string]string{
 						"environment": "dev",
 					},
 				},
-			).
-			AddValidators(
-				Function{
+			},
+			Validators: []Function{
+				{
 					Image: "gcr.io/kpt-functions/policy-controller-validate",
 				},
-			),
+			},
+		},
 	},
 	"error": {
 		Input: `

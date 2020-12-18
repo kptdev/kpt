@@ -17,8 +17,21 @@
 package pipeline
 
 import (
+	"io"
+	"io/ioutil"
+	"os"
+
+	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+const (
+	kptAPIVersion string = "kpt.dev/v1alpha1"
+	pipelineKind  string = "Pipeline"
+	defaultName   string = "pipeline"
+)
+
+var defaultSources []string = []string{"./*"}
 
 // Pipeline declares a pipeline of functions used to generate, transform,
 // or validate resources. A kpt package contains zero or one pipeline declration.
@@ -64,79 +77,63 @@ type Pipeline struct {
 func (p *Pipeline) String() (string, error) {
 	b, err := yaml.Marshal(p)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to convert pipeline to string")
 	}
 	return string(b), nil
 }
 
-// SetName sets Pipeline name
-func (p *Pipeline) SetName(n string) *Pipeline {
-	p.Name = n
+// New returns a pointer to a new default Pipeline.
+// The default Pipeline should be:
+// apiVersion: kpt.dev/v1alpha1
+// kind: Pipeline
+// metadata:
+//   name: pipeline
+// sources:
+//   - '.*'
+func New() *Pipeline {
+	p := &Pipeline{}
+	p.APIVersion = kptAPIVersion
+	p.Kind = pipelineKind
+	p.Name = defaultName
+	p.Sources = defaultSources
 	return p
 }
 
-// SetKind sets Pipeline kind
-func (p *Pipeline) SetKind(k string) *Pipeline {
-	p.Kind = k
-	return p
+// FromBytes returns a Pipeline parsed from bytes
+func FromBytes(b []byte) (*Pipeline, error) {
+	p := &Pipeline{}
+	err := yaml.Unmarshal(b, p)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to construct pipeline from bytes")
+	}
+	return p, nil
 }
 
-// SetAPIVersion sets Pipeline API version
-func (p *Pipeline) SetAPIVersion(v string) *Pipeline {
-	p.APIVersion = v
-	return p
+// FromString returns a Pipeline parsed from string
+func FromString(s string) (*Pipeline, error) {
+	return FromBytes([]byte(s))
 }
 
-// AddSources appends the sources to Pipeline
-func (p *Pipeline) AddSources(s ...string) *Pipeline {
-	p.Sources = append(p.Sources, s...)
-	return p
+// FromReader returns a Pipeline parsed from the content in reader
+func FromReader(r io.Reader) (*Pipeline, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to construct pipeline from reader")
+	}
+	p, err := FromBytes(b)
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
-// SetSources replaces the sources in Pipeline by s
-func (p *Pipeline) SetSources(s []string) *Pipeline {
-	p.Sources = s
-	return p
-}
-
-// AddGenerators appends the generators to Pipeline
-func (p *Pipeline) AddGenerators(g ...Function) *Pipeline {
-	addFunctions(&p.Generators, g)
-	return p
-}
-
-// SetGenerators replaces the generators in Pipeline by g
-func (p *Pipeline) SetGenerators(g []Function) *Pipeline {
-	p.Generators = g
-	return p
-}
-
-// AddTransformers appends the transformers to Pipeline
-func (p *Pipeline) AddTransformers(t ...Function) *Pipeline {
-	addFunctions(&p.Transformers, t)
-	return p
-}
-
-// SetTransformers replaces the transformers in Pipeline by t
-func (p *Pipeline) SetTransformers(t []Function) *Pipeline {
-	p.Transformers = t
-	return p
-}
-
-// AddValidators appends the validators to Pipeline
-func (p *Pipeline) AddValidators(v ...Function) *Pipeline {
-	addFunctions(&p.Validators, v)
-	return p
-}
-
-// SetValidators replaces the validators in Pipeline by v
-func (p *Pipeline) SetValidators(v []Function) *Pipeline {
-	p.Validators = v
-	return p
-}
-
-func addFunctions(orig *[]Function, new []Function) {
-	*orig = append(*orig, new...)
+// FromFile returns a Pipeline read from file
+func FromFile(path string) (*Pipeline, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open path %s", path)
+	}
+	return FromReader(f)
 }
 
 // Function defines an item in the pipeline function list
