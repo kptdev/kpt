@@ -102,7 +102,7 @@ func GetMain() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&installComp, "install-completion", false,
-		"install shell completion")
+		"Install shell completion")
 	// this command will be invoked by the shell-completion code
 	cmd.AddCommand(&cobra.Command{
 		Use:           "kpt",
@@ -144,12 +144,12 @@ func GetMain() *cobra.Command {
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
-		"print a stack-trace on failure")
+		"Print a stack-trace on failure")
 
 	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaSource, "k8s-schema-source",
-		kptopenapi.SchemaSourceBuiltin, "source for the kubernetes openAPI schema")
+		kptopenapi.SchemaSourceBuiltin, fmt.Sprintf("Source for the kubernetes openAPI schema. Must be one of %s.", kptopenapi.SchemaSources))
 	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaPath, "k8s-schema-path",
-		"./openapi.json", "path to the kubernetes openAPI schema file")
+		"./openapi.json", "Path to the kubernetes openAPI schema file")
 
 	if _, err := exec.LookPath("git"); err != nil {
 		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")
