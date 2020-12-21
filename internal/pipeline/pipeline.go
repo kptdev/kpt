@@ -17,11 +17,11 @@
 package pipeline
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 
-	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -73,13 +73,10 @@ type Pipeline struct {
 	Validators []Function `yaml:"validators,omitempty"`
 }
 
-// String returns the string representation of Pipeline
-func (p *Pipeline) String() (string, error) {
-	b, err := yaml.Marshal(p)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to convert pipeline to string")
-	}
-	return string(b), nil
+// String returns the string representation of Pipeline struct
+// The string returnes is
+func (p *Pipeline) String() string {
+	return fmt.Sprintf("%+v", *p)
 }
 
 // New returns a pointer to a new default Pipeline.
@@ -91,36 +88,39 @@ func (p *Pipeline) String() (string, error) {
 // sources:
 //   - '.*'
 func New() *Pipeline {
-	p := &Pipeline{}
-	p.APIVersion = kptAPIVersion
-	p.Kind = pipelineKind
-	p.Name = defaultName
-	p.Sources = defaultSources
-	return p
+	return &Pipeline{
+		ResourceMeta: yaml.ResourceMeta{
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptAPIVersion,
+				Kind:       pipelineKind,
+			},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: defaultName,
+				},
+			},
+		},
+		Sources: defaultSources,
+	}
 }
 
-// FromBytes returns a Pipeline parsed from bytes
-func FromBytes(b []byte) (*Pipeline, error) {
+// fromBytes returns a Pipeline parsed from bytes
+func fromBytes(b []byte) (*Pipeline, error) {
 	p := New()
 	err := yaml.Unmarshal(b, p)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to construct pipeline from bytes")
+		return nil, fmt.Errorf("failed to construct pipeline from bytes: %w", err)
 	}
 	return p, nil
-}
-
-// FromString returns a Pipeline parsed from string
-func FromString(s string) (*Pipeline, error) {
-	return FromBytes([]byte(s))
 }
 
 // FromReader returns a Pipeline parsed from the content in reader
 func FromReader(r io.Reader) (*Pipeline, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to construct pipeline from reader")
+		return nil, fmt.Errorf("failed to construct pipeline from reader: %w", err)
 	}
-	p, err := FromBytes(b)
+	p, err := fromBytes(b)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func FromReader(r io.Reader) (*Pipeline, error) {
 func FromFile(path string) (*Pipeline, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open path %s", path)
+		return nil, fmt.Errorf("failed to open path %s: %w", path, err)
 	}
 	return FromReader(f)
 }

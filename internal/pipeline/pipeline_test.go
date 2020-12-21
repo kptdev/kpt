@@ -26,17 +26,10 @@ import (
 )
 
 func TestString(t *testing.T) {
-	expected := `apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-    name: pipeline
-sources:
-  - ./*
-`
-	actual, err := New().String()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	expected := "{ResourceMeta:{TypeMeta:{APIVersion:kpt.dev/v1alpha1 Kind:Pipeline} " +
+		"ObjectMeta:{NameMeta:{Name:pipeline Namespace:} Labels:map[] Annotations:map[]}} " +
+		"Sources:[./*] Generators:[] Transformers:[] Validators:[]}"
+	actual := New().String()
 	if !assert.EqualValues(t, expected, actual) {
 		t.Fatalf("unexpected string value")
 	}
@@ -77,20 +70,6 @@ func checkOutput(t *testing.T, name string, tc testcase, actual *Pipeline, err e
 	if !assert.Truef(t, isPipelineEqual(t, *actual, tc.Expected),
 		"pipelines don't equal. Test case: %s", name) {
 		t.FailNow()
-	}
-}
-
-func TestFromBytes(t *testing.T) {
-	for name, tc := range testcases {
-		actual, err := FromBytes([]byte(tc.Input))
-		checkOutput(t, name, tc, actual, err)
-	}
-}
-
-func TestFromString(t *testing.T) {
-	for name, tc := range testcases {
-		actual, err := FromString(tc.Input)
-		checkOutput(t, name, tc, actual, err)
 	}
 }
 
