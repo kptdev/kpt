@@ -17,8 +17,21 @@
 package pipeline
 
 import (
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+const (
+	kptAPIVersion string = "kpt.dev/v1alpha1"
+	pipelineKind  string = "Pipeline"
+	defaultName   string = "pipeline"
+)
+
+var defaultSources []string = []string{"./*"}
 
 // Pipeline declares a pipeline of functions used to generate, transform,
 // or validate resources. A kpt package contains zero or one pipeline declration.
@@ -58,6 +71,74 @@ type Pipeline struct {
 	// 2.c Sequence of KRM functions that validate resources.
 	// Validators are not permitted to mutate resources.
 	Validators []Function `yaml:"validators,omitempty"`
+}
+
+// String returns the string representation of Pipeline struct
+// The string returned is the struct content in Go default format
+func (p *Pipeline) String() string {
+	return fmt.Sprintf("%+v", *p)
+}
+
+// New returns a pointer to a new default Pipeline.
+// The default Pipeline should be:
+// apiVersion: kpt.dev/v1alpha1
+// kind: Pipeline
+// metadata:
+//   name: pipeline
+// sources:
+//   - '.*'
+func New() *Pipeline {
+	return &Pipeline{
+		ResourceMeta: yaml.ResourceMeta{
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptAPIVersion,
+				Kind:       pipelineKind,
+			},
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: defaultName,
+				},
+			},
+		},
+		Sources: defaultSources,
+	}
+}
+
+// fromBytes returns a Pipeline parsed from bytes
+func fromBytes(b []byte) (*Pipeline, error) {
+	p := New()
+	err := yaml.Unmarshal(b, p)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct pipeline from bytes: %w", err)
+	}
+	return p, nil
+}
+
+// FromReader returns a Pipeline parsed from the content in reader
+// TODO: The Pipeline read will be validated and an error will be returned if
+// it's not valid.
+func FromReader(r io.Reader) (*Pipeline, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct pipeline from reader: %w", err)
+	}
+	p, err := fromBytes(b)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: Validate the Pipeline
+	return p, nil
+}
+
+// FromFile returns a Pipeline read from file
+// TODO: The Pipeline read will be validated and an error will be returned if
+// it's not valid.
+func FromFile(path string) (*Pipeline, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open path %s: %w", path, err)
+	}
+	return FromReader(f)
 }
 
 // Function defines an item in the pipeline function list
