@@ -74,7 +74,7 @@ type Pipeline struct {
 }
 
 // String returns the string representation of Pipeline struct
-// The string returnes is
+// The string returned is the struct content in Go default format
 func (p *Pipeline) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
