@@ -115,6 +115,8 @@ func fromBytes(b []byte) (*Pipeline, error) {
 }
 
 // FromReader returns a Pipeline parsed from the content in reader
+// TODO: The Pipeline read will be validated and an error will be returned if
+// it's not valid.
 func FromReader(r io.Reader) (*Pipeline, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -124,10 +126,13 @@ func FromReader(r io.Reader) (*Pipeline, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: Validate the Pipeline
 	return p, nil
 }
 
 // FromFile returns a Pipeline read from file
+// TODO: The Pipeline read will be validated and an error will be returned if
+// it's not valid.
 func FromFile(path string) (*Pipeline, error) {
 	f, err := os.Open(path)
 	if err != nil {
