@@ -71,7 +71,13 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		return err
 	}
 	r.Get.Git = t.Git
-	r.Get.Destination = t.Destination
+
+	_, absDestPath, err := cmdutil.ResolveAbsAndRelPaths(t.Destination)
+	if err != nil {
+		return err
+	}
+
+	r.Get.Destination = absDestPath
 	return nil
 }
 

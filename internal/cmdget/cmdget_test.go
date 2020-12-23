@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
@@ -34,6 +35,9 @@ import (
 func TestCmd_execute(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	r := cmdget.NewRunner("kpt")
@@ -75,6 +79,9 @@ func TestCmdMainBranch_execute(t *testing.T) {
 	// set up git repository with master and main branches
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := g.CheckoutBranch("main", false)
 	if !assert.NoError(t, err) {
@@ -181,6 +188,16 @@ func (t NoOpFailRunE) runE(cmd *cobra.Command, args []string) error {
 
 // TestCmd_Execute_flagAndArgParsing verifies that the flags and args are parsed into the correct Command fields
 func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
+	var pathPrefix string
+	if runtime.GOOS == "darwin" {
+		pathPrefix = "/private"
+	}
+
+	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	failRun := NoOpFailRunE{t: t}.runE
 	gitutil.DefaultRef = func(repo string) (string, error) {
 		return "master", nil
@@ -208,7 +225,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, r.Command.Execute())
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, "something://foo", r.Get.Repo)
-	assert.Equal(t, "foo", r.Get.Destination)
+	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "foo"), r.Get.Destination)
 
 	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE
@@ -217,7 +234,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "file://foo", r.Get.Repo)
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, "/blueprints/java", r.Get.Directory)
-	assert.Equal(t, "java", r.Get.Destination)
+	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
 
 	// current working dir -- should use package name
 	r = cmdget.NewRunner("kpt")
@@ -227,7 +244,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "https://foo", r.Get.Repo)
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, "/blueprints/java", r.Get.Directory)
-	assert.Equal(t, "java", r.Get.Destination)
+	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
 
 	// current working dir -- should use package name
 	r = cmdget.NewRunner("kpt")
@@ -237,7 +254,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "https://foo", r.Get.Repo)
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, "/blueprints/java", r.Get.Directory)
-	assert.Equal(t, "java", r.Get.Destination)
+	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
 
 	// clean relative path
 	r = cmdget.NewRunner("kpt")
@@ -247,7 +264,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "https://foo", r.Get.Repo)
 	assert.Equal(t, "master", r.Get.Ref)
 	assert.Equal(t, "/blueprints/java", r.Get.Directory)
-	assert.Equal(t, "baz", r.Get.Destination)
+	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "baz"), r.Get.Destination)
 
 	// clean absolute path
 	r = cmdget.NewRunner("kpt")

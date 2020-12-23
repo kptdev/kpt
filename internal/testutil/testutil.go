@@ -52,6 +52,8 @@ const (
 
 // TestGitRepo manages a local git repository for testing
 type TestGitRepo struct {
+	T *testing.T
+
 	// RepoDirectory is the temp directory of the git repo
 	RepoDirectory string
 
@@ -353,7 +355,12 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 }
 
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
-func (g *TestGitRepo) SetupTestGitRepo(data string) error {
+func (g *TestGitRepo) SetupTestGitRepo(data []Content) error {
+	err := g.createEmptyGitRepo()
+	if err != nil {
+		return err
+	}
+
 	// configure the path to the test dataset
 	ds, err := GetTestDataPath()
 	if err != nil {
@@ -361,7 +368,10 @@ func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 	}
 	g.DatasetDirectory = ds
 
-	// create the test repo directory
+	return updateGitDir(g.T, g, data)
+}
+
+func (g *TestGitRepo) createEmptyGitRepo() error {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-upstream-", TmpDirPrefix))
 	if err != nil {
 		return err
@@ -374,15 +384,6 @@ func (g *TestGitRepo) SetupTestGitRepo(data string) error {
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s", stdoutStderr)
-		return err
-	}
-
-	if !filepath.IsAbs(data) {
-		data = filepath.Join(g.DatasetDirectory, data)
-	}
-	// populate the repo with
-	err = copyAddData(dir, data)
-	if err != nil {
 		return err
 	}
 	return g.Commit("initial commit")
@@ -433,28 +434,21 @@ func CopyKptfile(t *testing.T, src, dest string) {
 // SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
 // returns a cleanup function to remove the git repo and workspace.
 func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, *TestWorkspace, func()) {
-	// Capture the current working directory so we can set it back to the
-	// original path after test has completed.
-	cwd, err := os.Getwd()
-	if err != nil {
-		assert.NoError(t, err)
-	}
-
 	// setup the repo to clone from
-	g := &TestGitRepo{}
-	err = g.SetupTestGitRepo(dataset)
+	g := &TestGitRepo{T: t}
+	err := g.SetupTestGitRepo([]Content{
+		{
+			Data: dataset,
+		},
+	})
 	assert.NoError(t, err)
 
 	// setup the directory to clone to
-	w := &TestWorkspace{
-		PackageDir: g.RepoName,
-	}
+	w := &TestWorkspace{}
 	err = w.SetupTestWorkspace()
 	assert.NoError(t, err)
-	err = os.Chdir(w.WorkspaceDirectory)
-	assert.NoError(t, err)
 
-	gr := gitutil.NewLocalGitRunner("./")
+	gr := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, gr.Run("init")) {
 		assert.FailNowf(t, "%s %s", gr.Stdout.String(), gr.Stderr.String())
 	}
@@ -472,7 +466,6 @@ func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, *
 		// ignore cleanup failures
 		_ = g.RemoveAll()
 		_ = w.RemoveAll()
-		_ = os.Chdir(cwd)
 	}
 }
 
@@ -625,24 +618,8 @@ func replaceData(repo, data string) error {
 	return err
 }
 
-func copyAddData(repo string, data string) error {
-	err := copyutil.CopyDir(data, repo)
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.Command("git", "add", ".")
-	cmd.Dir = repo
-	_, err = cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func commit(repo, message string) error {
-	cmd := exec.Command("git", "commit", "-m", message)
+	cmd := exec.Command("git", "commit", "-m", message, "--allow-empty")
 	cmd.Dir = repo
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
@@ -727,4 +704,22 @@ func PrintFile(paths ...string) error {
 	}
 	fmt.Println(string(b))
 	return nil
+}
+
+func Chdir(t *testing.T, path string) func() {
+	cwd, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	revertFunc := func() {
+		if err := os.Chdir(cwd); err != nil {
+			panic(err)
+		}
+	}
+	err = os.Chdir(path)
+	if !assert.NoError(t, err) {
+		defer revertFunc()
+		t.FailNow()
+	}
+	return revertFunc
 }

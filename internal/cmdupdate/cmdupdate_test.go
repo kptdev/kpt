@@ -36,6 +36,9 @@ import (
 func TestCmd_execute(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
@@ -66,9 +69,6 @@ func TestCmd_execute(t *testing.T) {
 
 	// update the cloned package
 	updateCmd := cmdupdate.NewRunner("kpt")
-	if !assert.NoError(t, os.Chdir(w.WorkspaceDirectory)) {
-		return
-	}
 	updateCmd.Command.SetArgs([]string{g.RepoName, "--strategy", "fast-forward"})
 	if !assert.NoError(t, updateCmd.Command.Execute()) {
 		return
@@ -110,6 +110,9 @@ func TestCmd_execute(t *testing.T) {
 func TestCmd_failUnCommitted(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
@@ -134,9 +137,6 @@ func TestCmd_failUnCommitted(t *testing.T) {
 
 	// update the cloned package
 	updateCmd := cmdupdate.NewRunner("kpt")
-	if !assert.NoError(t, os.Chdir(w.WorkspaceDirectory)) {
-		return
-	}
 	updateCmd.Command.SetArgs([]string{g.RepoName})
 	err = updateCmd.Command.Execute()
 	if !assert.Error(t, err) {
@@ -282,17 +282,7 @@ func TestCmd_path(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			currentWD, err := os.Getwd()
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			defer func() {
-				_ = os.Chdir(currentWD)
-			}()
-			err = os.Chdir(test.currentWD)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			defer testutil.Chdir(t, test.currentWD)()
 
 			r := cmdupdate.NewRunner("kpt")
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error {

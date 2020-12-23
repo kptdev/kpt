@@ -244,6 +244,10 @@ func (c *Command) DefaultValues() error {
 		return errors.Errorf("must specify remote subdirectory")
 	}
 
+	if !filepath.IsAbs(c.Destination) {
+		return errors.Errorf("destination must be an absolute path")
+	}
+
 	// default the name to the destination name
 	if len(c.Name) == 0 {
 		c.Name = filepath.Base(c.Destination)
