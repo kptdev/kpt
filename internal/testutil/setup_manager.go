@@ -95,21 +95,14 @@ func (g *TestSetupManager) Init(dataset string) bool {
 	} else {
 		g.targetDir = filepath.Base(g.GetSubDirectory)
 	}
-	if !assert.NoError(g.T, os.Chdir(g.UpstreamRepo.RepoDirectory)) {
-		return false
-	}
+	g.LocalWorkspace.PackageDir = g.targetDir
 
 	if err := updateGitDir(g.T, g.UpstreamRepo, g.UpstreamInit); err != nil {
 		return false
 	}
 
-	// Fetch the source repo
-	if !assert.NoError(g.T, os.Chdir(g.LocalWorkspace.WorkspaceDirectory)) {
-		return false
-	}
-
 	if !assert.NoError(g.T, get.Command{
-		Destination: g.targetDir,
+		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
 		Git: kptfile.Git{
 			Repo:      g.UpstreamRepo.RepoDirectory,
 			Ref:       g.GetRef,

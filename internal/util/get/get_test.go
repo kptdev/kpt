@@ -46,22 +46,24 @@ func TestCommand_Run(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{Git: kptfile.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Ref:       "master",
 		Directory: "/",
 	},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+		Destination: absPath}.Run()
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -94,20 +96,22 @@ func TestCommand_Run_subdir(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
 	err := Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
-		Destination: filepath.Base(subdir),
+		Destination: absPath,
 	}.Run()
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, subdir)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), r)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -138,17 +142,26 @@ func TestCommand_Run_destination(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
-	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"}, Destination: dest}.Run()
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, dest)
+	err := Command{
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run()
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, dest)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -182,20 +195,26 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: subdir},
-		Destination: dest,
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: subdir,
+		},
+		Destination: absPath,
 	}.Run()
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, dest)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), r)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -230,6 +249,8 @@ func TestCommand_Run_branch(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	// add commits to the exp branch
 	err := g.CheckoutBranch("exp", true)
 	assert.NoError(t, err)
@@ -245,17 +266,22 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit2)
 
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "refs/heads/exp", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "refs/heads/exp",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run()
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -290,6 +316,8 @@ func TestCommand_Run_tag(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
 	commit0, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -310,17 +338,22 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = Command{Git: kptfile.Git{
-		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+	err = Command{
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "refs/tags/v2",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run()
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -354,9 +387,17 @@ func TestCommand_Run_clean(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run()
 	assert.NoError(t, err)
 
 	// verify the KptFile contains the expected values
@@ -364,10 +405,9 @@ func TestCommand_Run_clean(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
 
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -402,13 +442,19 @@ func TestCommand_Run_clean(t *testing.T) {
 
 	// configure clone to clean the existing dir
 	err = Command{
-		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory), Clean: true}.Run()
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
+		Clean:       true,
+	}.Run()
 	assert.NoError(t, err)
 
 	// verify files are updated
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -442,9 +488,16 @@ func TestCommand_Run_failClean(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
-	err := Command{Git: kptfile.Git{
-		Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory),
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+	err := Command{
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
 	}.Run()
 	assert.NoError(t, err)
 
@@ -453,9 +506,8 @@ func TestCommand_Run_failClean(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -480,8 +532,12 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	// configure clone to clean the existing dir, but fail
 	err = Command{
-		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "refs/heads/not-real", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory),
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "refs/heads/not-real",
+			Directory: "/",
+		},
+		Destination: absPath,
 		Clean:       true,
 	}.Run()
 	if !assert.Error(t, err) {
@@ -495,8 +551,8 @@ func TestCommand_Run_failClean(t *testing.T) {
 	}
 
 	// verify files weren't deleted
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -526,9 +582,17 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run()
 	assert.NoError(t, err)
 
 	// verify the KptFile contains the expected values
@@ -536,9 +600,8 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -569,13 +632,18 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// try to clone and expect a failure
 	err = Command{
-		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
-	assert.EqualError(t, err, fmt.Sprintf("destination directory %s already exists", g.RepoName))
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run()
+	assert.EqualError(t, err, fmt.Sprintf("destination directory %s already exists", absPath))
 
 	// verify files are unchanged
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertKptfile(t, absPath, kptfile.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -600,10 +668,18 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
-	_, _, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
-	err := Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "refs/heads/master"}, Destination: "foo"}.Run()
+	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
+	err := Command{
+		Git: kptfile.Git{
+			Repo:      "foo",
+			Directory: "/",
+			Ref:       "refs/heads/master",
+		},
+		Destination: absPath,
+	}.Run()
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -613,10 +689,18 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidBranch(t *testing.T) {
-	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
-	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/heads/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
+	err := Command{
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Directory: "/",
+			Ref:       "refs/heads/foo",
+		},
+		Destination: absPath,
+	}.Run()
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -629,10 +713,17 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidTag(t *testing.T) {
-	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
-	err := Command{Git: kptfile.Git{Repo: g.RepoDirectory, Directory: "/", Ref: "refs/tags/foo"}, Destination: filepath.Base(g.RepoDirectory)}.Run()
+	err := Command{
+		Git: kptfile.Git{
+			Repo:      g.RepoDirectory,
+			Directory: "/",
+			Ref:       "refs/tags/foo",
+		},
+		Destination: filepath.Join(w.WorkspaceDirectory, g.RepoDirectory),
+	}.Run()
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}

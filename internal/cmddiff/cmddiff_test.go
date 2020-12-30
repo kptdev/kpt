@@ -47,6 +47,9 @@ func TestCmdInvalidDiffTool(t *testing.T) {
 func TestCmdExecute(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	getRunner := cmdget.NewRunner("")

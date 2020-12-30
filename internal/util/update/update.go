@@ -142,7 +142,7 @@ func (u Command) Run() error {
 		u.Output = os.Stdout
 	}
 
-	kptfile, err := kptfileutil.ReadFileStrict(u.Path)
+	kptfile, err := kptfileutil.ReadFileStrict(u.FullPackagePath)
 	if err != nil {
 		return errors.Errorf("unable to read package Kptfile: %v", err)
 	}
@@ -156,8 +156,8 @@ func (u Command) Run() error {
 	}
 
 	// require package is checked into git before trying to update it
-	g := gitutil.NewLocalGitRunner("./")
-	if err := g.Run("status", "-s", u.Path); err != nil {
+	g := gitutil.NewLocalGitRunner(u.FullPackagePath)
+	if err := g.Run("status", "-s"); err != nil {
 		return errors.Errorf(
 			"kpt packages must be checked into a git repo before they are updated: %v", err)
 	}
@@ -191,7 +191,7 @@ func (u Command) Run() error {
 	// perform auto-setters after the package is updated
 	a := setters.AutoSet{
 		Writer:      u.Output,
-		PackagePath: u.Path,
+		PackagePath: u.FullPackagePath,
 	}
 	return a.PerformAutoSetters()
 }

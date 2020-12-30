@@ -17,6 +17,7 @@ package cmdutil
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -55,3 +56,29 @@ var K8sSchemaSource string
 // K8sSchemaPath defines the path to the openAPI schema if we are reading from
 // a file
 var K8sSchemaPath string
+
+func ResolveAbsAndRelPaths(path string) (string, string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", "", err
+	}
+
+	var relPath string
+	var absPath string
+	if filepath.IsAbs(path) {
+		// If the provided path is absolute, we find the relative path by
+		// comparing it to the current working directory.
+		relPath, err = filepath.Rel(cwd, path)
+		if err != nil {
+			return "", "", err
+		}
+		absPath = filepath.Clean(path)
+	} else {
+		// If the provided path is relative, we find the absolute path by
+		// combining the current working directory with the relative path.
+		relPath = filepath.Clean(path)
+		absPath = filepath.Join(cwd, path)
+	}
+
+	return relPath, absPath, nil
+}

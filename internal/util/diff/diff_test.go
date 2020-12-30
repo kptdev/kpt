@@ -119,6 +119,8 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
 	commit0, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -139,12 +141,11 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
+	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = get.Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+		Destination: localPkg}.Run()
 	assert.NoError(t, err)
-
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	diffOutput := &bytes.Buffer{}
 
@@ -192,6 +193,8 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
 
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
 	commit0, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -205,12 +208,11 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 
+	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = get.Command{Git: kptfile.Git{
 		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+		Destination: localPkg}.Run()
 	assert.NoError(t, err)
-
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// make changes in local package
 	err = copyutil.CopyDir(filepath.Join(g.DatasetDirectory, testutil.Dataset3), localPkg)

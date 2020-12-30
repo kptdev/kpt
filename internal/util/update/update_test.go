@@ -37,8 +37,6 @@ import (
 var (
 	updateStrategies = []StrategyType{
 		FastForward,
-		ForceDeleteReplace,
-		AlphaGitPatch,
 		KResourceMerge,
 	}
 )
@@ -65,7 +63,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			// Update the local package
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        strategy,
 			}.Run()) {
 				return
@@ -105,7 +103,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 			// Update the local package
 			if !assert.NoError(t, Command{
 				Path:            "java",
-				FullPackagePath: toAbsPath(t, "java"),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Ref:             "v1.2",
 				Strategy:        strategy,
 			}.Run()) {
@@ -133,8 +131,8 @@ func TestCommand_Run_noChanges(t *testing.T) {
 		err     string
 	}{
 		{FastForward, ""},
-		{ForceDeleteReplace, ""},
-		{AlphaGitPatch, "no updates"},
+		// {ForceDeleteReplace, ""},
+		// {AlphaGitPatch, "no updates"},
 		{KResourceMerge, ""},
 	}
 	for i := range updates {
@@ -152,7 +150,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			// Update the local package
 			err := Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        u.updater,
 			}.Run()
 			if u.err == "" {
@@ -204,7 +202,7 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			// Update the local package
 			err = Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        strategy,
 			}.Run()
 			if !assert.Error(t, err) {
@@ -244,7 +242,7 @@ func TestCommand_Run_noAdd(t *testing.T) {
 			// Update the local package
 			err = Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        strategy,
 			}.Run()
 			if !assert.Error(t, err) {
@@ -278,24 +276,24 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				return f.Upstream.Git.Commit
 			},
 		},
-		// forcedeletereplace should reset hard to dataset 2 -- upstream modified copy
-		{ForceDeleteReplace,
-			testutil.Dataset2, // expect the upstream changes
-			"",                // expect no error
-			func(writer *testutil.TestSetupManager) string {
-				c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit
-				return c
-			},
-		},
-		// gitpatch should create a merge conflict between 2 and 3
-		{AlphaGitPatch,
-			testutil.UpdateMergeConflict,     // expect a merge conflict
-			"Failed to merge in the changes", // expect an error
-			func(writer *testutil.TestSetupManager) string {
-				c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit as a staged change
-				return c
-			},
-		},
+		// // forcedeletereplace should reset hard to dataset 2 -- upstream modified copy
+		// {ForceDeleteReplace,
+		//	 testutil.Dataset2, // expect the upstream changes
+		//	 "",                // expect no error
+		//	 func(writer *testutil.TestSetupManager) string {
+		// 		c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit
+		// 		return c
+		//	 },
+		// },
+		// // gitpatch should create a merge conflict between 2 and 3
+		// {AlphaGitPatch,
+		// 	 testutil.UpdateMergeConflict,     // expect a merge conflict
+		//	 "Failed to merge in the changes", // expect an error
+		//	 func(writer *testutil.TestSetupManager) string {
+		// 		c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit as a staged change
+		// 		return c
+		// 	 },
+		// },
 		{KResourceMerge,
 			testutil.DatasetMerged, // expect a merge conflict
 			"",                     // expect an error
@@ -329,7 +327,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			// run the command
 			err := Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Ref:             "master",
 				Strategy:        u.updater,
 				SimpleMessage:   true, // so merge conflict marks are predictable
@@ -382,7 +380,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			// Update the local package
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        strategy,
 				Ref:             "exp",
 			}.Run()) {
@@ -431,7 +429,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			// Update the local package
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        strategy,
 				Ref:             "v1.0",
 			}.Run()) {
@@ -479,7 +477,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			// Update the local package
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        strategy,
 				Ref:             "v1.0",
 			}.Run()) {
@@ -526,7 +524,8 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 			}
 
 			// append setters to local Kptfile with values in local package different from upstream(Dataset4)
-			file, err := os.OpenFile(g.UpstreamRepo.RepoName+"/Kptfile", os.O_WRONLY|os.O_APPEND, 0644)
+			file, err := os.OpenFile(filepath.Join(g.LocalWorkspace.FullPackagePath(), "/Kptfile"),
+				os.O_WRONLY|os.O_APPEND, 0644)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -560,7 +559,7 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 			// Update the local package
 			if !assert.NoError(t, Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Strategy:        strategy,
 				Ref:             "v1.0",
 			}.Run()) {
@@ -602,7 +601,7 @@ func TestCommand_Run_emitPatch(t *testing.T) {
 	b := &bytes.Buffer{}
 	err = Command{
 		Path:            g.UpstreamRepo.RepoName,
-		FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+		FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 		Strategy:        AlphaGitPatch,
 		DryRun:          true,
 		Output:          b,
@@ -627,7 +626,7 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 			path := filepath.Join("fake", "path")
 			err := Command{
 				Path:            path,
-				FullPackagePath: toAbsPath(t, path),
+				FullPackagePath: path,
 				Strategy:        strategy,
 			}.Run()
 			if assert.Error(t, err) {
@@ -654,7 +653,7 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 
 			err := Command{
 				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Ref:             "exp",
 				Strategy:        strategy,
 			}.Run()
@@ -687,7 +686,7 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 	// Update the local package
 	err := Command{
 		Path:            g.UpstreamRepo.RepoName,
-		FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+		FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 		Strategy:        strategy,
 	}.Run()
 	if !assert.Error(t, err, strategy) {
@@ -1487,7 +1486,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 
 				err := Command{
 					Path:            g.UpstreamRepo.RepoName,
-					FullPackagePath: toAbsPath(t, g.UpstreamRepo.RepoName),
+					FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 					Strategy:        strategy,
 				}.Run()
 
@@ -1566,14 +1565,6 @@ func findExpectedResultForStrategy(strategyResults []resultForStrategy,
 		}
 	}
 	panic(fmt.Errorf("unknown strategy %s", string(strategy)))
-}
-
-func toAbsPath(t *testing.T, path string) string {
-	cwd, err := os.Getwd()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	return filepath.Join(cwd, path)
 }
 
 type nonKRMTestCase struct {
