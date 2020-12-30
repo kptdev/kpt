@@ -34,7 +34,7 @@ import (
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -108,7 +108,7 @@ func TestCmd_execute(t *testing.T) {
 }
 
 func TestCmd_failUnCommitted(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()

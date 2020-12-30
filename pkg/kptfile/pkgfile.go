@@ -47,6 +47,8 @@ type KptFile struct {
 
 	Dependencies []Dependency `yaml:"dependencies,omitempty"`
 
+	Subpackages []Subpackage `yaml:"subpackages,omitempty"`
+
 	// OpenAPI contains additional schema for the resources in this package
 	// Uses interface{} instead of Node to work around yaml serialization issues
 	// See https://github.com/go-yaml/yaml/issues/518 and
@@ -255,6 +257,12 @@ type Dependency struct {
 	EnsureNotExists bool   `yaml:"ensureNotExists,omitempty"`
 	Strategy        string `yaml:"updateStrategy,omitempty"`
 	AutoSet         bool   `yaml:"autoSet,omitempty"`
+}
+
+type Subpackage struct {
+	LocalDir       string `yaml:"localDir,omitempty"`
+	Git            Git    `yaml:"git,omitempty"`
+	UpdateStrategy string `yaml:"updateStrategy,omitempty"`
 }
 
 type PackageMeta struct {

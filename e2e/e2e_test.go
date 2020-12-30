@@ -159,13 +159,15 @@ func TestKptGetSet(t *testing.T) {
 				// diff requires a kptfile exists
 				testutil.CopyKptfile(t, localDir, upstreamGit.RepoDirectory)
 
-				testutil.AssertPkgEqual(t, upstreamGit,
-					filepath.Join(expected, test.subdir), localDir)
+				if !testutil.AssertPkgEqual(t, filepath.Join(expected, test.subdir), localDir) {
+					t.FailNow()
+				}
 				return
 			}
 
-			testutil.AssertPkgEqual(t, upstreamGit,
-				filepath.Join(expected, test.subdir), localDir)
+			if !testutil.AssertPkgEqual(t, filepath.Join(expected, test.subdir), localDir) {
+				t.FailNow()
+			}
 
 			// Run Set
 			cmd = run.GetMain()
@@ -189,9 +191,10 @@ func TestKptGetSet(t *testing.T) {
 			testutil.Compare(t,
 				filepath.Join(expected, test.subdir, "Kptfile"),
 				filepath.Join(localDir, "Kptfile"))
-			testutil.AssertPkgEqual(t, upstreamGit,
-				filepath.Join(expected, test.subdir),
-				localDir)
+			if !testutil.AssertPkgEqual(t, filepath.Join(expected, test.subdir),
+				localDir) {
+				t.FailNow()
+			}
 		})
 	}
 }

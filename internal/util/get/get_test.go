@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
@@ -43,7 +44,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 // - destination directory should match the base name of the repo
 // - KptFile should be populated with values pointing to the origin
 func TestCommand_Run(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -93,7 +94,7 @@ func TestCommand_Run(t *testing.T) {
 // - KptFile should have the subdir listed
 func TestCommand_Run_subdir(t *testing.T) {
 	subdir := "java"
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -139,7 +140,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 // than using the name of the source repo.
 func TestCommand_Run_destination(t *testing.T) {
 	dest := "my-dataset"
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -192,7 +193,7 @@ func TestCommand_Run_destination(t *testing.T) {
 func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	subdir := "java"
 	dest := "new-java"
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -246,7 +247,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 // 4. clone the new branch
 // 5. verify contents match the new branch
 func TestCommand_Run_branch(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -313,7 +314,7 @@ func TestCommand_Run_branch(t *testing.T) {
 // 4. clone at the tag
 // 5. verify the clone has the data from the tagged version
 func TestCommand_Run_tag(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -384,7 +385,7 @@ func TestCommand_Run_tag(t *testing.T) {
 // 3. clone the master branch again
 // 4. verify the new master branch data is present
 func TestCommand_Run_clean(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -485,7 +486,7 @@ func TestCommand_Run_clean(t *testing.T) {
 // 2. clone a non-existing branch
 // 3. verify the master branch data is still present
 func TestCommand_Run_failClean(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -579,7 +580,7 @@ func TestCommand_Run_failClean(t *testing.T) {
 // TestCommand_Run_failExistingDir verifies that command will fail without changing anything if the
 // directory already exists
 func TestCommand_Run_failExistingDir(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -668,7 +669,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
-	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
@@ -689,7 +690,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidBranch(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
@@ -713,7 +714,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidTag(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	err := Command{
@@ -750,4 +751,157 @@ func TestCommand_DefaultValues_AtVersion(t *testing.T) {
 
 	c = Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "r"}}
 	assert.EqualError(t, c.DefaultValues(), "must specify destination")
+}
+
+func TestCommand_Run_subpackages(t *testing.T) {
+	testCases := []struct {
+		name            string
+		directory       string
+		ref             string
+		upstream        testutil.Content
+		refRepos        map[string][]testutil.Content
+		expectedResults *pkgbuilder.RootPkg
+	}{
+		{
+			name:      "basic package",
+			directory: "/",
+			ref:       "master",
+			upstream: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile().
+					WithResource(pkgbuilder.DeploymentResource),
+			},
+			expectedResults: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		{
+			name:      "package with subpackages",
+			directory: "/",
+			ref:       "master",
+			upstream: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile().
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			expectedResults: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile().
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+		},
+		{
+			name:      "package with remote subpackages",
+			directory: "/",
+			ref:       "master",
+			upstream: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithSubpackages(
+								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward"),
+							),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithSubpackages(
+												pkgbuilder.NewSubpackage("bar", "/foobar", "v1.2", "fast-forward"),
+											),
+									).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+					},
+				},
+				"bar": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResults: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithSubpackages(
+							pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+		},
+	}
+
+	for i := range testCases {
+		test := testCases[i]
+		t.Run(test.name, func(t *testing.T) {
+			refRepos, err := testutil.SetupRepos(t, test.refRepos)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			repoPaths := make(map[string]string)
+			for name, tgr := range refRepos {
+				repoPaths[name] = tgr.RepoDirectory
+			}
+
+			dir := pkgbuilder.ExpandPkg(t, pkgbuilder.NewRootPkg(), repoPaths)
+			g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, dir, repoPaths)
+			defer clean()
+
+			err = testutil.UpdateGitDir(t, g, []testutil.Content{test.upstream}, repoPaths)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			var targetDir string
+			if test.directory == "/" {
+				targetDir = filepath.Base(g.RepoName)
+			} else {
+				targetDir = filepath.Base(test.directory)
+			}
+			w.PackageDir = targetDir
+			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
+
+			err = Command{
+				Git: kptfile.Git{
+					Repo:      g.RepoDirectory,
+					Directory: test.directory,
+					Ref:       test.ref,
+				},
+				Destination: destinationDir,
+			}.Run()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			expectedPath := pkgbuilder.ExpandPkg(t, test.expectedResults, repoPaths)
+			testutil.AssertPkgEqual(t, expectedPath, w.FullPackagePath())
+		})
+	}
 }

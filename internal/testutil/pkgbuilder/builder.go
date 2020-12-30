@@ -135,6 +135,18 @@ func (p *pkg) withSubPackages(ps ...*SubPkg) {
 	p.subPkgs = append(p.subPkgs, ps...)
 }
 
+func (p *pkg) allReferencedRepos(collector map[string]bool) {
+	for i := range p.subPkgs {
+		p.subPkgs[i].pkg.allReferencedRepos(collector)
+	}
+	if p.Kptfile != nil {
+		for i := range p.Kptfile.Subpackages {
+			sp := p.Kptfile.Subpackages[i]
+			collector[sp.Name] = true
+		}
+	}
+}
+
 // RootPkg is a package without any parent package.
 type RootPkg struct {
 	pkg *pkg
@@ -159,6 +171,19 @@ func (rp *RootPkg) WithKptfile(kf ...*Kptfile) *RootPkg {
 // HasKptfile tells whether the package contains a Kptfile.
 func (rp *RootPkg) HasKptfile() bool {
 	return rp.pkg.Kptfile != nil
+}
+
+// AllReferencedRepos returns the name of all remote subpackages referenced
+// in the package (including any local subpackages).
+func (rp *RootPkg) AllReferencedRepos() []string {
+	repoNameMap := make(map[string]bool)
+	rp.pkg.allReferencedRepos(repoNameMap)
+
+	var repoNames []string
+	for n := range repoNameMap {
+		repoNames = append(repoNames, n)
+	}
+	return repoNames
 }
 
 // WithResource configures the package to include the provided resource
@@ -191,19 +216,19 @@ func (rp *RootPkg) WithSubPackages(ps ...*SubPkg) *RootPkg {
 
 // Build outputs the current data structure as a set of (nested) package
 // in the provided path.
-func (rp *RootPkg) Build(path string, pkgName string) error {
+func (rp *RootPkg) Build(path string, pkgName string, repoPaths map[string]string) error {
 	pkgPath := filepath.Join(path, pkgName)
 	err := os.Mkdir(pkgPath, 0700)
 	if err != nil {
 		return err
 	}
-	err = buildPkg(pkgPath, rp.pkg, pkgName)
+	err = buildPkg(pkgPath, rp.pkg, pkgName, repoPaths)
 	if err != nil {
 		return err
 	}
 	for i := range rp.pkg.subPkgs {
 		subPkg := rp.pkg.subPkgs[i]
-		err := buildSubPkg(pkgPath, subPkg)
+		err := buildSubPkg(pkgPath, subPkg, repoPaths)
 		if err != nil {
 			return err
 		}
@@ -267,9 +292,10 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 
 // Kptfile represents the Kptfile of a package.
 type Kptfile struct {
-	Setters []Setter
-	Repo    string
-	Ref     string
+	Setters     []Setter
+	Subpackages []RemoteSubpackage
+	Repo        string
+	Ref         string
 }
 
 func NewKptfile() *Kptfile {
@@ -283,6 +309,33 @@ func (k *Kptfile) WithUpstream(repo, ref string) *Kptfile {
 	k.Repo = repo
 	k.Ref = ref
 	return k
+}
+
+func (k *Kptfile) WithSubpackages(subpackages ...RemoteSubpackage) *Kptfile {
+	k.Subpackages = subpackages
+	return k
+}
+
+// RemoteSubpackage contains information about remote subpackages that should
+// be listed in the Kptfile.
+type RemoteSubpackage struct {
+	// Name is the name of the remote subpackage. It will be used as the value
+	// for the LocalDir property and also used to resolve the Repo path from
+	// other defined repos.
+	Name      string
+	Repo      string
+	Directory string
+	Ref       string
+	Strategy  string
+}
+
+func NewSubpackage(name, directory, ref, strategy string) RemoteSubpackage {
+	return RemoteSubpackage{
+		Name:      name,
+		Directory: directory,
+		Ref:       ref,
+		Strategy:  strategy,
+	}
 }
 
 // WithSetters adds information about the setters for a Kptfile.
@@ -342,19 +395,19 @@ type resourceInfoWithSetters struct {
 	mutators     []yaml.Filter
 }
 
-func buildSubPkg(path string, pkg *SubPkg) error {
+func buildSubPkg(path string, pkg *SubPkg, repoPaths map[string]string) error {
 	pkgPath := filepath.Join(path, pkg.Name)
 	err := os.Mkdir(pkgPath, 0700)
 	if err != nil {
 		return err
 	}
-	err = buildPkg(pkgPath, pkg.pkg, pkg.Name)
+	err = buildPkg(pkgPath, pkg.pkg, pkg.Name, repoPaths)
 	if err != nil {
 		return err
 	}
 	for i := range pkg.pkg.subPkgs {
 		subPkg := pkg.pkg.subPkgs[i]
-		err := buildSubPkg(pkgPath, subPkg)
+		err := buildSubPkg(pkgPath, subPkg, repoPaths)
 		if err != nil {
 			return err
 		}
@@ -362,9 +415,9 @@ func buildSubPkg(path string, pkg *SubPkg) error {
 	return nil
 }
 
-func buildPkg(pkgPath string, pkg *pkg, pkgName string) error {
+func buildPkg(pkgPath string, pkg *pkg, pkgName string, repoPaths map[string]string) error {
 	if pkg.Kptfile != nil {
-		content := buildKptfile(pkg, pkgName)
+		content := buildKptfile(pkg, pkgName, repoPaths)
 
 		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfileutil.KptFileName),
 			[]byte(content), 0600)
@@ -416,11 +469,23 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string) error {
 	return nil
 }
 
+// TODO: Consider using the Kptfile struct for this instead of a template.
 var kptfileTemplate = `
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: {{.PkgName}}
+{{- if gt (len .Pkg.Kptfile.Subpackages) 0 }}
+subpackages:
+{{- range .Pkg.Kptfile.Subpackages }}
+- git:
+    directory: {{.Directory}}
+    ref: {{.Ref}}
+    repo: {{.Repo}}
+  localDir: {{.Name}}
+  updateStrategy: {{.Strategy}}
+{{- end }}
+{{- end }}
 {{- if gt (len .Pkg.Kptfile.Setters) 0 }}
 openAPI:
   definitions:
@@ -444,7 +509,20 @@ upstream:
 {{- end }}
 `
 
-func buildKptfile(pkg *pkg, pkgName string) string {
+func buildKptfile(pkg *pkg, pkgName string, repoPaths map[string]string) string {
+	for i := range pkg.Kptfile.Subpackages {
+		name := pkg.Kptfile.Subpackages[i].Name
+		found := false
+		for n, repoPath := range repoPaths {
+			if n == name {
+				pkg.Kptfile.Subpackages[i].Repo = repoPath
+				found = true
+			}
+		}
+		if !found {
+			panic(fmt.Errorf("paths for package %s not found", name))
+		}
+	}
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {
 		panic(err)
@@ -463,19 +541,19 @@ func buildKptfile(pkg *pkg, pkgName string) string {
 
 // ExpandPkg writes the provided package to disk. The name of the root package
 // will just be set to "base".
-func ExpandPkg(t *testing.T, pkg *RootPkg) string {
-	return ExpandPkgWithName(t, pkg, "base")
+func ExpandPkg(t *testing.T, pkg *RootPkg, repoPaths map[string]string) string {
+	return ExpandPkgWithName(t, pkg, "base", repoPaths)
 }
 
 // ExpandPkgWithName writes the provided package to disk and uses the given
 // rootName to set the value of the package directory and the metadata.name
 // field of the root package.
-func ExpandPkgWithName(t *testing.T, pkg *RootPkg, rootName string) string {
+func ExpandPkgWithName(t *testing.T, pkg *RootPkg, rootName string, repoPaths map[string]string) string {
 	dir, err := ioutil.TempDir("", "test-kpt-builder-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	err = pkg.Build(dir, rootName)
+	err = pkg.Build(dir, rootName, repoPaths)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

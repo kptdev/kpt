@@ -128,8 +128,8 @@ func TestPkgDiff(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			pkg1Dir := pkgbuilder.ExpandPkg(t, test.pkg1)
-			pkg2Dir := pkgbuilder.ExpandPkg(t, test.pkg2)
+			pkg1Dir := pkgbuilder.ExpandPkg(t, test.pkg1, map[string]string{})
+			pkg2Dir := pkgbuilder.ExpandPkg(t, test.pkg2, map[string]string{})
 			diff, err := PkgDiff(pkg1Dir, pkg2Dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()

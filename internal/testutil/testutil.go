@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	toposort "github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
 	assertnow "gotest.tools/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -81,23 +82,16 @@ var KptfileSet = func() sets.String {
 // use a set of golden files as the sourceDir rather than the original TestGitRepo
 // that was copied.
 func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool {
+	return AssertPkgEqual(t, sourceDir, destDir)
+}
+
+func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
 	diff, err := Diff(sourceDir, destDir)
 	if !assert.NoError(t, err) {
 		return false
 	}
 	diff = diff.Difference(KptfileSet)
 	return assert.Empty(t, diff.List())
-}
-
-func AssertPkgEqual(t *testing.T, g *TestGitRepo, sourceDir, destDir string) {
-	diff, err := Diff(sourceDir, destDir)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	diff = diff.Difference(KptfileSet)
-	if !assert.Empty(t, diff.List()) {
-		t.FailNow()
-	}
 }
 
 // Diff returns a list of files that differ between the source and destination.
@@ -355,7 +349,7 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 }
 
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
-func (g *TestGitRepo) SetupTestGitRepo(data []Content) error {
+func (g *TestGitRepo) SetupTestGitRepo(data []Content, repoPaths map[string]string) error {
 	err := g.createEmptyGitRepo()
 	if err != nil {
 		return err
@@ -368,7 +362,7 @@ func (g *TestGitRepo) SetupTestGitRepo(data []Content) error {
 	}
 	g.DatasetDirectory = ds
 
-	return updateGitDir(g.T, g, data)
+	return UpdateGitDir(g.T, g, data, repoPaths)
 }
 
 func (g *TestGitRepo) createEmptyGitRepo() error {
@@ -433,14 +427,14 @@ func CopyKptfile(t *testing.T, src, dest string) {
 
 // SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
 // returns a cleanup function to remove the git repo and workspace.
-func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, *TestWorkspace, func()) {
+func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string, repoPaths map[string]string) (*TestGitRepo, *TestWorkspace, func()) {
 	// setup the repo to clone from
 	g := &TestGitRepo{T: t}
 	err := g.SetupTestGitRepo([]Content{
 		{
 			Data: dataset,
 		},
-	})
+	}, repoPaths)
 	assert.NoError(t, err)
 
 	// setup the directory to clone to
@@ -467,6 +461,51 @@ func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string) (*TestGitRepo, *
 		_ = g.RemoveAll()
 		_ = w.RemoveAll()
 	}
+}
+
+// SetupRepos creates repos and returns a mapping from name to TestGitRepos.
+func SetupRepos(t *testing.T, repoContent map[string][]Content) (map[string]*TestGitRepo, error) {
+	// Since the different repos might references each other as remote
+	// subpackages, we need to create them in the correct order. We do a
+	// topological sort to make sure we create a repo before any other repos
+	// that references it.
+	var repoNames []string
+	for n := range repoContent {
+		repoNames = append(repoNames, n)
+	}
+
+	topo := toposort.NewGraph(len(repoNames))
+	topo.AddNodes(repoNames...)
+	for n, contents := range repoContent {
+		for _, c := range contents {
+			if c.Pkg == nil {
+				continue
+			}
+			pkg := c.Pkg
+			refRepos := pkg.AllReferencedRepos()
+			for _, refRepo := range refRepos {
+				topo.AddEdge(refRepo, n)
+			}
+		}
+	}
+	ordering, ok := topo.Toposort()
+	if !ok {
+		return map[string]*TestGitRepo{}, fmt.Errorf("unable to sort repo references. Cycles are not allowed")
+	}
+
+	// Create the repos in correct order.
+	refRepos := make(map[string]*TestGitRepo)
+	repoPaths := make(map[string]string)
+	for _, name := range ordering {
+		data := repoContent[name]
+		tgr := &TestGitRepo{T: t}
+		if err := tgr.SetupTestGitRepo(data, repoPaths); err != nil {
+			return refRepos, err
+		}
+		refRepos[name] = tgr
+		repoPaths[name] = tgr.RepoDirectory
+	}
+	return refRepos, nil
 }
 
 func checkoutBranch(repo string, branch string, create bool) error {

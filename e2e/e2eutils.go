@@ -34,7 +34,7 @@ func SetupGitRepo(t *testing.T) (*testutil.TestGitRepo, string, func()) {
 		t.FailNow()
 	}
 
-	g, _, c := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, _, c := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	upstream := g.RepoDirectory
 
 	clean := func() {

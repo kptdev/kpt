@@ -45,9 +45,15 @@ type TestSetupManager struct {
 	// UpstreamChanges are upstream content changes made after cloning the repo
 	UpstreamChanges []Content
 
+	// RefReposChanges are content for any other repos that will be used as
+	// remote subpackages.
+	RefReposChanges map[string][]Content
+
 	LocalChanges []Content
 
 	UpstreamRepo *TestGitRepo
+
+	RefRepos map[string]*TestGitRepo
 
 	LocalWorkspace *TestWorkspace
 
@@ -88,8 +94,21 @@ func (g *TestSetupManager) Init(dataset string) bool {
 	g.cacheDir = cacheDir
 	os.Setenv(gitutil.RepoCacheDirEnv, g.cacheDir)
 
+	// Set up any repos that will be used as remote subpackages.
+	refRepos, err := SetupRepos(g.T, g.RefReposChanges)
+	if !assert.NoError(g.T, err) {
+		return false
+	}
+	g.RefRepos = refRepos
+
+	// Create the mapping from repo name to path.
+	repoPaths := make(map[string]string)
+	for name, tgr := range refRepos {
+		repoPaths[name] = tgr.RepoDirectory
+	}
+
 	// Setup a "remote" source repo, and a "local" destination repo
-	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = SetupDefaultRepoAndWorkspace(g.T, dataset)
+	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = SetupDefaultRepoAndWorkspace(g.T, dataset, repoPaths)
 	if g.GetSubDirectory == "/" {
 		g.targetDir = filepath.Base(g.UpstreamRepo.RepoName)
 	} else {
@@ -97,7 +116,7 @@ func (g *TestSetupManager) Init(dataset string) bool {
 	}
 	g.LocalWorkspace.PackageDir = g.targetDir
 
-	if err := updateGitDir(g.T, g.UpstreamRepo, g.UpstreamInit); err != nil {
+	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamInit, repoPaths); err != nil {
 		return false
 	}
 
@@ -119,7 +138,7 @@ func (g *TestSetupManager) Init(dataset string) bool {
 	}
 
 	// Modify source repository state after fetching it
-	if err := updateGitDir(g.T, g.UpstreamRepo, g.UpstreamChanges); err != nil {
+	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamChanges, repoPaths); err != nil {
 		return false
 	}
 
@@ -128,7 +147,7 @@ func (g *TestSetupManager) Init(dataset string) bool {
 		return same
 	}
 
-	if err := updateGitDir(g.T, g.LocalWorkspace, g.LocalChanges); err != nil {
+	if err := UpdateGitDir(g.T, g.LocalWorkspace, g.LocalChanges, repoPaths); err != nil {
 		return false
 	}
 
@@ -142,7 +161,7 @@ type GitDirectory interface {
 	Tag(tagName string) error
 }
 
-func updateGitDir(t *testing.T, gitDir GitDirectory, changes []Content) error {
+func UpdateGitDir(t *testing.T, gitDir GitDirectory, changes []Content, repoPaths map[string]string) error {
 	for _, content := range changes {
 		if content.Message == "" {
 			content.Message = "initializing data"
@@ -156,7 +175,7 @@ func updateGitDir(t *testing.T, gitDir GitDirectory, changes []Content) error {
 
 		var pkgData string
 		if content.Pkg != nil {
-			pkgData = pkgbuilder.ExpandPkg(t, content.Pkg)
+			pkgData = pkgbuilder.ExpandPkg(t, content.Pkg, repoPaths)
 		} else {
 			pkgData = content.Data
 		}

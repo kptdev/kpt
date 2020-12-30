@@ -33,7 +33,7 @@ import (
 
 // TestCmd_execute tests that get is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -77,7 +77,7 @@ func TestCmd_execute(t *testing.T) {
 // is main and master branch doesn't exist
 func TestCmdMainBranch_execute(t *testing.T) {
 	// set up git repository with master and main branches
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -193,7 +193,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 		pathPrefix = "/private"
 	}
 
-	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
