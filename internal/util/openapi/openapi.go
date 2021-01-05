@@ -30,6 +30,8 @@ const (
 	SchemaSourceCluster = "cluster"
 )
 
+var SchemaSources = fmt.Sprintf("{%q, %q, %q}", SchemaSourceBuiltin, SchemaSourceCluster, SchemaSourceFile)
+
 // ConfigureOpenAPI sets the openAPI schema in kyaml. It can either
 // fetch the schema from a cluster, read it from file, or just the
 // schema built into kyaml.
@@ -51,8 +53,8 @@ func ConfigureOpenAPI(factory util.Factory, k8sSchemaSource, k8sSchemaPath strin
 	case SchemaSourceBuiltin:
 		return nil
 	default:
-		return fmt.Errorf("unknown schema source %s. Must be one of file, cluster, builtin",
-			k8sSchemaSource)
+		return fmt.Errorf("unknown schema source %s. Must be one of %s",
+			k8sSchemaSource, SchemaSources)
 	}
 }
 
