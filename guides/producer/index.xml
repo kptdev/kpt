@@ -436,7 +436,7 @@ embedded in other systems. For example, functions could be:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;manually run locally&lt;/li&gt;
 &lt;li&gt;automatically run locally as part of &lt;em&gt;make&lt;/em&gt;, &lt;em&gt;mvn&lt;/em&gt;, &lt;em&gt;go generate&lt;/em&gt;, etc&lt;/li&gt;
-&lt;li&gt;automatically run in CICD systems&lt;/li&gt;
+&lt;li&gt;automatically run in CI/CD systems&lt;/li&gt;
 &lt;li&gt;run by controllers as reconcile implementations&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -447,7 +447,7 @@ embedded in other systems. For example, functions could be:&lt;/p&gt;
 
 
 &lt;div class=&#34;pageinfo pageinfo-primary&#34;&gt;
-&lt;p&gt;Unlikely pure-templating and DSL approaches, functions must be able to both
+&lt;p&gt;Unlike pure-templating and DSL approaches, functions must be able to both
 &lt;em&gt;read&lt;/em&gt; and &lt;em&gt;write&lt;/em&gt; resources, and specifically should be able to read resources
 they have previously written &amp;ndash; updating the inputs rather generating new
 resources.&lt;/p&gt;
