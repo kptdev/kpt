@@ -5,14 +5,17 @@ package commands
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/pkg/client"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
@@ -139,7 +142,7 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	}
 	if len(cmObjs) > 0 {
 		// Migrate the ConfigMap inventory objects to a ResourceGroup custom resource.
-		if err = mr.migrateObjs(cmObjs, bytes.NewReader(stdinBytes), args); err != nil {
+		if err = mr.migrateObjs(cmObjs, cmInvObj.ID(), bytes.NewReader(stdinBytes), args); err != nil {
 			return err
 		}
 		// Delete the old ConfigMap inventory object.
@@ -232,7 +235,7 @@ func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]obje
 // migrateObjs stores the passed objects in the ResourceGroup inventory
 // object and applies the inventory object to the cluster. Returns
 // an error if one occurred.
-func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Reader, args []string) error {
+func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, oldID string, reader io.Reader, args []string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  migrate inventory to ResourceGroup...")
 	if len(cmObjs) == 0 {
 		fmt.Fprintln(mr.ioStreams.Out, "no inventory objects found")
@@ -260,8 +263,13 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 		return err
 	}
 	inv := live.WrapInventoryInfoObj(rgInv)
+	err = updateOwningInventoryAnnotation(mr.rgProvider.Factory(), cmObjs, oldID, inv.ID())
+	if err != nil {
+		return err
+	}
 	_, err = rgInvClient.Merge(inv, cmObjs)
 	if err != nil {
+		fmt.Fprintln(mr.ioStreams.Out, "failed", err.Error())
 		return err
 	}
 	fmt.Fprintln(mr.ioStreams.Out, "success")
@@ -326,4 +334,37 @@ func findResourceGroupInv(objs []*unstructured.Unstructured) (*unstructured.Unst
 		}
 	}
 	return nil, fmt.Errorf("resource group inventory object not found")
+}
+
+func updateOwningInventoryAnnotation(f cmdutil.Factory, objMetas []object.ObjMetadata, old, new string) error {
+	d, err := f.DynamicClient()
+	if err != nil {
+		return err
+	}
+	mapper, err := f.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+	c := client.NewClient(d, mapper)
+	for _, meta := range objMetas {
+		obj, err := c.Get(context.TODO(), meta)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			return err
+		}
+		changed, err := client.UpdateAnnotation(obj, old, new)
+		if err != nil {
+			return err
+		}
+		if !changed {
+			continue
+		}
+		err = c.Update(context.TODO(), meta, obj, &metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
