@@ -427,8 +427,8 @@ assertContains "namespace/test-namespace created (preview)"
 assertContains "pod/pod-a created (preview)"
 assertContains "pod/pod-b created (preview)"
 assertContains "pod/pod-c created (preview)"
-assertContains "4 resource(s) applied. 4 created, 0 unchanged, 0 configured"
-assertContains "0 resource(s) pruned, 0 skipped"
+assertContains "4 resource(s) applied. 4 created, 0 unchanged, 0 configured, 0 failed"
+assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
 printResult
 
 # Test 3: Basic kpt live apply
@@ -442,8 +442,8 @@ assertContains "namespace/test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
-assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured"
-assertContains "0 resource(s) pruned, 0 skipped"
+assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
+assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
 wait 2
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
@@ -461,9 +461,9 @@ assertContains "namespace/test-namespace configured (preview)"
 assertContains "pod/pod-b configured (preview)"
 assertContains "pod/pod-c configured (preview)"
 assertContains "pod/pod-d created (preview)"
-assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured (preview)"
+assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured, 0 failed (preview)"
 assertContains "pod/pod-a pruned (preview)"
-assertContains "1 resource(s) pruned, 0 skipped (preview)"
+assertContains "1 resource(s) pruned, 0 skipped, 0 failed (preview)"
 wait 2
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
@@ -482,9 +482,9 @@ assertContains "namespace/test-namespace unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
 assertContains "pod/pod-d created"
-assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured"
+assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured, 0 failed"
 assertContains "pod/pod-a pruned"
-assertContains "1 resource(s) pruned, 0 skipped"
+assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
 wait 2
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
@@ -552,8 +552,8 @@ assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
-assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured"
-assertContains "0 resource(s) pruned, 0 skipped"
+assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
+assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
 # Validate resources in the cluster
 assertCMInventory "test-rg-namespace" "4"
 assertPodExists "pod-a" "test-rg-namespace"
@@ -613,8 +613,8 @@ assertContains "namespace/test-rg-namespace configured (preview)"
 assertContains "pod/pod-a configured (preview)"
 assertContains "pod/pod-b configured (preview)"
 assertContains "pod/pod-c configured (preview)"
-assertContains "4 resource(s) applied. 0 created, 0 unchanged, 4 configured (preview)"
-assertContains "0 resource(s) pruned, 0 skipped (preview)"
+assertContains "4 resource(s) applied. 0 created, 0 unchanged, 4 configured, 0 failed (preview)"
+assertContains "0 resource(s) pruned, 0 skipped, 0 failed (preview)"
 # Validate resources in the cluster
 assertRGInventory "test-rg-namespace"
 assertPodExists "pod-a" "test-rg-namespace"
@@ -634,8 +634,8 @@ assertContains "pod/pod-a pruned"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
 assertContains "pod/pod-d created"
-assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured"
-assertContains "1 resource(s) pruned, 0 skipped"
+assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured, 0 failed"
+assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
 # Validate resources in the cluster
 assertRGInventory "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
@@ -664,7 +664,7 @@ cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
 echo "Testing kpt live init for Kptfile (ResourceGroup inventory)"
 echo "kpt live init e2e/live/testdata/migrate-error"
 ${BIN_DIR}/kpt live init e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
-assertContains "namespace: test-rg-namespace is used for inventory object"
+assertContains "namespace: test-namespace-migrate-error is used for inventory object"
 assertContains "Initialized: "
 assertContains "Kptfile"
 # Difference in Kptfile should have inventory data

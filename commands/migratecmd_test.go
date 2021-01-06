@@ -308,7 +308,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
 			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
-			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{})
+			err := migrateRunner.migrateObjs(tc.objs, "", strings.NewReader(tc.invObj), []string{})
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
