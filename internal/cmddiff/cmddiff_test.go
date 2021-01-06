@@ -45,7 +45,7 @@ func TestCmdInvalidDiffTool(t *testing.T) {
 }
 
 func TestCmdExecute(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()

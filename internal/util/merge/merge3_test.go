@@ -133,10 +133,10 @@ func TestMerge3_Nested_packages(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			original := pkgbuilder.ExpandPkg(t, test.original)
-			updated := pkgbuilder.ExpandPkg(t, test.upstream)
-			local := pkgbuilder.ExpandPkg(t, test.local)
-			expected := pkgbuilder.ExpandPkg(t, test.expected)
+			original := pkgbuilder.ExpandPkg(t, test.original, map[string]string{})
+			updated := pkgbuilder.ExpandPkg(t, test.upstream, map[string]string{})
+			local := pkgbuilder.ExpandPkg(t, test.local, map[string]string{})
+			expected := pkgbuilder.ExpandPkg(t, test.expected, map[string]string{})
 			err := Merge3{
 				OriginalPath:       original,
 				UpdatedPath:        updated,

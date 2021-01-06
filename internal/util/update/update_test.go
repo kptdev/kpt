@@ -1464,7 +1464,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		for i := range strategies {
 			strategy := strategies[i]
 			t.Run(fmt.Sprintf("%s#%s", test.name, string(strategy)), func(t *testing.T) {
-				dir := pkgbuilder.ExpandPkg(t, test.initialUpstream)
+				var emptyMap map[string]string
+				dir := pkgbuilder.ExpandPkg(t, test.initialUpstream, emptyMap)
 
 				g := &testutil.TestSetupManager{
 					T: t,
@@ -1521,9 +1522,9 @@ func TestCommand_Run_subpackages(t *testing.T) {
 
 				var expectedPath string
 				if test.initialUpstream.HasKptfile() {
-					expectedPath = pkgbuilder.ExpandPkg(t, result.expectedLocal)
+					expectedPath = pkgbuilder.ExpandPkg(t, result.expectedLocal, emptyMap)
 				} else {
-					expectedPath = pkgbuilder.ExpandPkgWithName(t, result.expectedLocal, g.LocalWorkspace.PackageDir)
+					expectedPath = pkgbuilder.ExpandPkgWithName(t, result.expectedLocal, g.LocalWorkspace.PackageDir, emptyMap)
 				}
 
 				if !g.AssertLocalDataEquals(expectedPath) {
