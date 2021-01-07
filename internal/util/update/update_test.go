@@ -53,10 +53,17 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			g := &testutil.TestSetupManager{
 				T: t,
 				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
+				UpstreamChanges: []testutil.Content{
+					{
+						Data: testutil.Dataset2,
+					},
+				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -96,7 +103,10 @@ func TestCommand_Run_subDir(t *testing.T) {
 				GetSubDirectory: "java",
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -143,7 +153,10 @@ func TestCommand_Run_noChanges(t *testing.T) {
 				T: t,
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -187,7 +200,10 @@ func TestCommand_Run_noCommit(t *testing.T) {
 				T: t,
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -227,7 +243,10 @@ func TestCommand_Run_noAdd(t *testing.T) {
 				T: t,
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -312,7 +331,10 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				t.FailNow()
 			}
 
@@ -373,7 +395,10 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -422,7 +447,10 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -470,7 +498,10 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				t.FailNow()
 			}
 
@@ -519,7 +550,10 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -587,7 +621,10 @@ func TestCommand_Run_emitPatch(t *testing.T) {
 		UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 	}
 	defer g.Clean()
-	if !g.Init(testutil.Dataset1) {
+	if !g.Init(testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}) {
 		return
 	}
 
@@ -647,7 +684,10 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Dataset1) {
+			if !g.Init(testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			}) {
 				return
 			}
 
@@ -679,7 +719,10 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 		UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
 	}
 	defer g.Clean()
-	if !g.Init(testutil.Dataset1) {
+	if !g.Init(testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}) {
 		return
 	}
 
@@ -1481,7 +1524,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						test.updatedLocal,
 					}
 				}
-				if !g.Init(dir) {
+				if !g.Init(testutil.Content{
+					Data:   dir,
+					Branch: "master",
+				}) {
 					return
 				}
 

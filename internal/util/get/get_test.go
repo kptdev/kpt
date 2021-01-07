@@ -44,7 +44,10 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 // - destination directory should match the base name of the repo
 // - KptFile should be populated with values pointing to the origin
 func TestCommand_Run(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -94,7 +97,10 @@ func TestCommand_Run(t *testing.T) {
 // - KptFile should have the subdir listed
 func TestCommand_Run_subdir(t *testing.T) {
 	subdir := "java"
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -140,7 +146,10 @@ func TestCommand_Run_subdir(t *testing.T) {
 // than using the name of the source repo.
 func TestCommand_Run_destination(t *testing.T) {
 	dest := "my-dataset"
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -193,7 +202,10 @@ func TestCommand_Run_destination(t *testing.T) {
 func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	subdir := "java"
 	dest := "new-java"
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -247,7 +259,10 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 // 4. clone the new branch
 // 5. verify contents match the new branch
 func TestCommand_Run_branch(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -314,7 +329,10 @@ func TestCommand_Run_branch(t *testing.T) {
 // 4. clone at the tag
 // 5. verify the clone has the data from the tagged version
 func TestCommand_Run_tag(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -385,7 +403,10 @@ func TestCommand_Run_tag(t *testing.T) {
 // 3. clone the master branch again
 // 4. verify the new master branch data is present
 func TestCommand_Run_clean(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -486,7 +507,10 @@ func TestCommand_Run_clean(t *testing.T) {
 // 2. clone a non-existing branch
 // 3. verify the master branch data is still present
 func TestCommand_Run_failClean(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -580,7 +604,10 @@ func TestCommand_Run_failClean(t *testing.T) {
 // TestCommand_Run_failExistingDir verifies that command will fail without changing anything if the
 // directory already exists
 func TestCommand_Run_failExistingDir(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -669,7 +696,10 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
-	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
@@ -690,7 +720,10 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidBranch(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
@@ -714,7 +747,10 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 }
 
 func TestCommand_Run_failInvalidTag(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1, map[string]string{})
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	}, map[string]string{})
 	defer clean()
 
 	err := Command{
@@ -871,7 +907,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			}
 
 			dir := pkgbuilder.ExpandPkg(t, pkgbuilder.NewRootPkg(), repoPaths)
-			g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, dir, repoPaths)
+			g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+				Data:   dir,
+				Branch: "master",
+			}, repoPaths)
 			defer clean()
 
 			err = testutil.UpdateGitDir(t, g, []testutil.Content{test.upstream}, repoPaths)
