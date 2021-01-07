@@ -350,7 +350,12 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
 func (g *TestGitRepo) SetupTestGitRepo(data []Content, repoPaths map[string]string) error {
-	err := g.createEmptyGitRepo()
+	defaultBranch := "main"
+	if len(data) > 0 && len(data[0].Branch) > 0 {
+		defaultBranch = data[0].Branch
+	}
+
+	err := g.createEmptyGitRepo(defaultBranch)
 	if err != nil {
 		return err
 	}
@@ -365,7 +370,7 @@ func (g *TestGitRepo) SetupTestGitRepo(data []Content, repoPaths map[string]stri
 	return UpdateGitDir(g.T, g, data, repoPaths)
 }
 
-func (g *TestGitRepo) createEmptyGitRepo() error {
+func (g *TestGitRepo) createEmptyGitRepo(defaultBranch string) error {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-upstream-", TmpDirPrefix))
 	if err != nil {
 		return err
@@ -373,7 +378,8 @@ func (g *TestGitRepo) createEmptyGitRepo() error {
 	g.RepoDirectory = dir
 	g.RepoName = filepath.Base(g.RepoDirectory)
 
-	cmd := exec.Command("git", "init")
+	cmd := exec.Command("git", "init",
+		fmt.Sprintf("--initial-branch=%s", defaultBranch))
 	cmd.Dir = dir
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
@@ -427,14 +433,10 @@ func CopyKptfile(t *testing.T, src, dest string) {
 
 // SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
 // returns a cleanup function to remove the git repo and workspace.
-func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string, repoPaths map[string]string) (*TestGitRepo, *TestWorkspace, func()) {
+func SetupDefaultRepoAndWorkspace(t *testing.T, content Content, repoPaths map[string]string) (*TestGitRepo, *TestWorkspace, func()) {
 	// setup the repo to clone from
 	g := &TestGitRepo{T: t}
-	err := g.SetupTestGitRepo([]Content{
-		{
-			Data: dataset,
-		},
-	}, repoPaths)
+	err := g.SetupTestGitRepo([]Content{content}, repoPaths)
 	assert.NoError(t, err)
 
 	// setup the directory to clone to
@@ -446,15 +448,6 @@ func SetupDefaultRepoAndWorkspace(t *testing.T, dataset string, repoPaths map[st
 	if !assert.NoError(t, gr.Run("init")) {
 		assert.FailNowf(t, "%s %s", gr.Stdout.String(), gr.Stderr.String())
 	}
-
-	// make sure that both master and main branches are created in the test repo
-	// do not error if they already exist or
-	_ = g.CheckoutBranch("master", true)
-	_ = g.CheckoutBranch("main", true)
-
-	// checkout to master branch
-	err = g.CheckoutBranch("master", false)
-	assert.NoError(t, err)
 
 	return g, w, func() {
 		// ignore cleanup failures

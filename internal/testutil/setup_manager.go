@@ -77,7 +77,7 @@ type Content struct {
 // - Setup a new cache location for git repos and update the environment variable
 // - Setup fetch the upstream package to a local package
 // - Verify the local package contains the upstream content
-func (g *TestSetupManager) Init(dataset string) bool {
+func (g *TestSetupManager) Init(content Content) bool {
 	// Default optional values
 	if g.GetRef == "" {
 		g.GetRef = "master"
@@ -108,7 +108,7 @@ func (g *TestSetupManager) Init(dataset string) bool {
 	}
 
 	// Setup a "remote" source repo, and a "local" destination repo
-	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = SetupDefaultRepoAndWorkspace(g.T, dataset, repoPaths)
+	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = SetupDefaultRepoAndWorkspace(g.T, content, repoPaths)
 	if g.GetSubDirectory == "/" {
 		g.targetDir = filepath.Base(g.UpstreamRepo.RepoName)
 	} else {
@@ -143,7 +143,7 @@ func (g *TestSetupManager) Init(dataset string) bool {
 	}
 
 	// Verify the local package has the correct dataset
-	if same := g.AssertLocalDataEquals(filepath.Join(dataset, g.GetSubDirectory)); !same {
+	if same := g.AssertLocalDataEquals(filepath.Join(content.Data, g.GetSubDirectory)); !same {
 		return same
 	}
 
