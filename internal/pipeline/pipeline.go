@@ -21,6 +21,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"regexp"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -79,6 +81,55 @@ func (p *Pipeline) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
+// Validate will validate the Pipeline `p`. This function will validate
+// fields 'apiVersion', 'kind', 'sources', 'generators', 'transformers'
+// and 'validators'.
+//
+// 'sources' are valid if and only if every source is:
+// 1. a relative path to local package OR
+// 2. '.' OR
+// 3. './*'
+//
+// 'generators', 'transformers' and 'validators' share same schema and
+// they are valid if all functions in them are ALL valid.
+func (p *Pipeline) Validate() error {
+	if p.APIVersion != kptAPIVersion {
+		return fmt.Errorf("apiVersion %s is not valid, should be %s",
+			p.APIVersion, kptAPIVersion)
+	}
+	if p.Kind != pipelineKind {
+		return fmt.Errorf("kind %s is not valid, should be %s",
+			p.Kind, pipelineKind)
+	}
+	for _, s := range p.Sources {
+		if s == "." || s == "./*" {
+			continue
+		}
+		if filepath.IsAbs(s) {
+			return fmt.Errorf("source path must be relative: %s", s)
+		}
+	}
+	for _, f := range p.Generators {
+		err := f.Validate()
+		if err != nil {
+			return fmt.Errorf("generator %s is not valid: %w", f.Image, err)
+		}
+	}
+	for _, f := range p.Transformers {
+		err := f.Validate()
+		if err != nil {
+			return fmt.Errorf("transformer %s is not valid: %w", f.Image, err)
+		}
+	}
+	for _, f := range p.Validators {
+		err := f.Validate()
+		if err != nil {
+			return fmt.Errorf("validator %s is not valid: %w", f.Image, err)
+		}
+	}
+	return nil
+}
+
 // New returns a pointer to a new default Pipeline.
 // The default Pipeline should be:
 // apiVersion: kpt.dev/v1alpha1
@@ -86,7 +137,7 @@ func (p *Pipeline) String() string {
 // metadata:
 //   name: pipeline
 // sources:
-//   - '.*'
+//   - './*'
 func New() *Pipeline {
 	return &Pipeline{
 		ResourceMeta: yaml.ResourceMeta{
@@ -163,4 +214,73 @@ type Function struct {
 
 	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.
 	ConfigMap map[string]string `yaml:"configMap,omitempty"`
+}
+
+// Validate will validate the function `f`. A function is valid if:
+// 1. 'image' is a valid function name OR a fully qualified name of a function AND
+// 2. have zero OR one of 'config', 'configPath' and 'configMap' AND
+// 3. if 'configPath' is used, the value MUST be a relative path
+func (f *Function) Validate() error {
+	err := ValidateFunctionName(f.Image)
+	if err != nil {
+		return fmt.Errorf("function name is not valid: %w", err)
+	}
+	var cnt = 0
+	if f.ConfigPath != "" {
+		cnt++
+	}
+	if len(f.ConfigMap) != 0 {
+		cnt++
+	}
+	if !isNodeZero(&f.Config) {
+		cnt++
+	}
+	if cnt > 1 {
+		return fmt.Errorf("only zero or one config is allowed, %d provided", cnt)
+	}
+	if f.ConfigPath != "" && filepath.IsAbs(f.ConfigPath) {
+		return fmt.Errorf("configPath must be relative: %s", f.ConfigPath)
+	}
+
+	return nil
+}
+
+// ValidateFunctionName validates the function name.
+// According to Docker implementation
+// https://github.com/docker/distribution/blob/master/reference/reference.go. A valid
+// name definition is:
+//	name                            := [domain '/'] path-component ['/' path-component]*
+//	domain                          := domain-component ['.' domain-component]* [':' port-number]
+//	domain-component                := /([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])/
+//	port-number                     := /[0-9]+/
+//	path-component                  := alpha-numeric [separator alpha-numeric]*
+// 	alpha-numeric                   := /[a-z0-9]+/
+//	separator                       := /[_.]|__|[-]*/
+func ValidateFunctionName(name string) error {
+	pathComponentRegexp := `(?:[a-z0-9](?:(?:[_.]|__|[-]*)[a-z0-9]+)*)`
+	domainComponentRegexp := `(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`
+	domainRegexp := fmt.Sprintf(`%s(?:\.%s)*(?:\:[0-9]+)?`, domainComponentRegexp, domainComponentRegexp)
+	nameRegexp := fmt.Sprintf(`^(?:%s\/)?%s(?:\/%s)*$`, domainRegexp,
+		pathComponentRegexp, pathComponentRegexp)
+	matched, err := regexp.MatchString(nameRegexp, name)
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return fmt.Errorf("function name %s isn't valid", name)
+	}
+	return nil
+}
+
+// IsNodeZero returns true if all the public fields in the Node are empty.
+// Which means it's not initialized and should be omitted when marshal.
+// The Node itself has a method IsZero but it is not released
+// in yaml.v3. https://pkg.go.dev/gopkg.in/yaml.v3#Node.IsZero
+// TODO: Use `IsYNodeZero` method from kyaml when kyaml has been updated to
+// >= 0.10.5
+func isNodeZero(n *yaml.Node) bool {
+	return n != nil && n.Kind == 0 && n.Style == 0 && n.Tag == "" && n.Value == "" &&
+		n.Anchor == "" && n.Alias == nil && n.Content == nil &&
+		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" &&
+		n.Line == 0 && n.Column == 0
 }

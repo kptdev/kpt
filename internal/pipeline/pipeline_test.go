@@ -315,3 +315,205 @@ func isPipelineEqual(t *testing.T, p1, p2 Pipeline) bool {
 
 	return true
 }
+
+func TestValidateFunctionName(t *testing.T) {
+	type input struct {
+		Name  string
+		Valid bool
+	}
+	inputs := []input{
+		{
+			Name:  "gcr.io/kpt-functions/generate-folders",
+			Valid: true,
+		},
+		{
+			Name:  "patch-strategic-merge",
+			Valid: true,
+		},
+		{
+			Name:  "a.b.c:1234/foo/bar/generate-folders",
+			Valid: true,
+		},
+		{
+			Name:  "ab-.b/c",
+			Valid: false,
+		},
+		{
+			Name:  "a/a/",
+			Valid: false,
+		},
+		{
+			Name:  "a//a/a",
+			Valid: false,
+		},
+		{
+			Name:  "example.com/.dots/myimage",
+			Valid: false,
+		},
+		{
+			Name:  "registry.io/foo/project--id.module--name.ver---sion--name",
+			Valid: true,
+		},
+		{
+			Name:  "Foo/FarB",
+			Valid: false,
+		},
+	}
+
+	for _, n := range inputs {
+		err := ValidateFunctionName(n.Name)
+		if n.Valid && err != nil {
+			t.Fatalf("function name %s should be valid", n.Name)
+		}
+		if !n.Valid && err == nil {
+			t.Fatalf("function name %s should not be valid", n.Name)
+		}
+	}
+}
+
+func TestPipelineValidate(t *testing.T) {
+	type input struct {
+		Name  string
+		Input string
+		Valid bool
+	}
+	cases := []input{
+		{
+			Name: "no sources, no functions",
+			Input: `
+apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline
+`,
+			Valid: true,
+		},
+		{
+			Name: "have sources, no functions",
+			Input: `
+apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline
+sources:
+- ./base
+`,
+			Valid: true,
+		},
+		{
+			Name: "have sources and functions",
+			Input: `
+apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline
+sources:
+- ./base
+- ./*
+
+generators:
+- image: gcr.io/kpt-functions/generate-folders
+  config:
+    apiVersion: cft.dev/v1alpha1
+    kind: ResourceHierarchy
+    metadata:
+      name: root-hierarchy
+      namespace: hierarchy # {"$kpt-set":"namespace"}
+transformers:
+- image: patch-strategic-merge
+  configPath: ./patch.yaml
+- image: gcr.io/kpt-functions/set-annotation
+  configMap:
+    environment: dev
+
+validators:
+- image: gcr.io/kpt-functions/policy-controller-validate
+`,
+			Valid: true,
+		},
+		{
+			Name: "invalid apiversion",
+			Input: `
+apiVersion: kpt.dev/v1
+kind: Pipeline
+metadata:
+  name: pipeline
+sources:
+- ./base
+`,
+			Valid: false,
+		},
+		{
+			Name: "absolute source path",
+			Input: `
+apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline
+sources:
+- /foo/bar
+`,
+			Valid: false,
+		},
+		{
+			Name: "invalid function name",
+			Input: `
+apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline
+sources:
+- ./*
+transformers:
+- image: patch@_@strategic-merge
+  configPath: ./patch.yaml
+`,
+			Valid: false,
+		},
+		{
+			Name: "more than 1 config",
+			Input: `
+apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline
+sources:
+- ./*
+transformers:
+- image: patch-strategic-merge
+  configPath: ./patch.yaml
+  configMap:
+    environment: dev
+`,
+			Valid: false,
+		},
+		{
+			Name: "absolute config path",
+			Input: `
+apiVersion: kpt.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline
+sources:
+- ./*
+transformers:
+- image: patch-strategic-merge
+  configPath: /patch.yaml
+`,
+			Valid: false,
+		},
+	}
+
+	for _, c := range cases {
+		b := bytes.NewBufferString(c.Input)
+		p, err := FromReader(b)
+		assert.NoError(t, err)
+		err = p.Validate()
+		if c.Valid && err != nil {
+			t.Fatalf("%s: pipeline should be valid, %s", c.Name, err)
+		}
+		if !c.Valid && err == nil {
+			t.Fatalf("%s: pipeline should not be valid", c.Name)
+		}
+	}
+}
