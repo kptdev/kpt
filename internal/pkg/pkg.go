@@ -23,69 +23,78 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 )
 
-// pkg represents the static metadata for a kpt package.
-type pkg struct {
+// Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
+type Pkg struct {
 	// Absolute unique OS-defined path to the package directory.
 	UniquePath string
 
 	// Relative slash-separated path to the package directory.
 	// This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
-	// be used for display purposes.
-	DisplayPath string
+	// be used for display purposes and is subject to change.
+	displayPath string
 
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
-	Kptfile *kptfile.KptFile
+	kptfile       *kptfile.KptFile
+	kptfileLoaded bool
 
 	// A package can contain zero or one Pipeline meta resource.
-	Pipeline *pipeline.Pipeline
+	pipeline       *pipeline.Pipeline
+	pipelineLoaded bool
 }
 
 // New returns a pkg given an absolute or relative OS-defined path.
 // Use ReadKptfile or ReadPipeline on the return value to read meta resources from filesystem.
-func New(path string) (pkg, error) {
+func New(path string) (*Pkg, error) {
 	p := filepath.Clean(path)
 
 	u, err := filepath.EvalSymlinks(p)
 	if err != nil {
-		return pkg{}, err
+		return nil, err
 	}
 
 	u, err = filepath.Abs(u)
 	if err != nil {
-		return pkg{}, err
+		return nil, err
 	}
 
 	var d string
 	if filepath.IsAbs(p) {
 		wd, err := os.Getwd()
 		if err != nil {
-			return pkg{}, err
+			return nil, err
 		}
 		d, err = filepath.Rel(wd, p)
 		if err != nil {
-			return pkg{}, err
+			return nil, err
 		}
 	}
 	d = filepath.ToSlash(d)
-	return pkg{UniquePath: u, DisplayPath: d}, nil
+	return &Pkg{UniquePath: u, displayPath: d}, nil
 }
 
-// ReadKptfile reads the Kptfile meta resource from filesystem.
-func (p *pkg) ReadKptfile() *pkg {
-	// TODO
-	// p.Kptfile = ...
-	return p
+// Kptfile returns the Kptfile meta resource by lazy loading it from the filessytem.
+// A nil value represents an implicit package.
+func (p *Pkg) Kptfile() *kptfile.KptFile {
+	if !p.kptfileLoaded {
+		// TODO
+		// p.kptfile = ...
+		p.kptfileLoaded = true
+	}
+	return p.kptfile
 }
 
-// ReadPipeline reads the Pipeline meta resource from filesystem.
-func (p *pkg) ReadPipeline() *pkg {
-	// TODO
-	// p.Pipeline = ...
-	return p
+// Pipeline returns the Pipeline meta resource by lazy loading it from the filesystem.
+func (p *Pkg) Pipeline() *pipeline.Pipeline {
+	if !p.pipelineLoaded {
+		// TODO
+		// p.pipeline = ...
+		p.pipelineLoaded = true
+	}
+	return p.pipeline
 }
 
 // String returns the slash-seperated relative path to the package.
-func (p *pkg) String() string {
-	return p.DisplayPath
+func (p *Pkg) String() string {
+	return p.displayPath
 }

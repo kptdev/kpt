@@ -43,7 +43,7 @@ var defaultSources []string = []string{"./*"}
 type Pipeline struct {
 	yaml.ResourceMeta `yaml:",inline"`
 	//  1. Sources to resolve as input to the pipeline. Possible values:
-	//  a) A slash-seprated, OS-agnostic relative package path which may include '.' and '..' e.g. './base', '../foo'
+	//  a) A slash-separated, OS-agnostic relative package path which may include '.' and '..' e.g. './base', '../foo'
 	//     The source package is resolved recursively.
 	//  b) Resources in this package using '.'. Meta resources such as the Kptfile, Pipeline, and function configs
 	//     are excluded.
