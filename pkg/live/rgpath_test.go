@@ -229,3 +229,22 @@ func getInventoryAnnotations(inv *unstructured.Unstructured) map[string]string {
 	}
 	return accessor.GetAnnotations()
 }
+
+func TestResourceGroupUnstructured(t *testing.T) {
+	name := "name"
+	namespace := "test"
+	id := "random-id"
+	rg := ResourceGroupUnstructured(name, namespace, id)
+	if rg == nil {
+		t.Fatal("resourcegroup shouldn't be nil")
+	}
+	if rg.GetName() != name {
+		t.Fatalf("resourcegroup name expected %s, but got %s", name, rg.GetName())
+	}
+	if rg.GetNamespace() != namespace {
+		t.Fatalf("resourcegroup namespace expected %s, but got %s", namespace, rg.GetNamespace())
+	}
+	if rg.GetLabels()[common.InventoryLabel] != id {
+		t.Fatalf("resourcegroup inventory id expected %s, but got %s", id, rg.GetLabels()[common.InventoryLabel])
+	}
+}
