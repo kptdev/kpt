@@ -506,9 +506,8 @@ transformers:
 
 	for _, c := range cases {
 		b := bytes.NewBufferString(c.Input)
-		p, err := FromReader(b)
-		assert.NoError(t, err)
-		err = p.Validate()
+		// FromReader will validate the pipeline
+		_, err := FromReader(b)
 		if c.Valid && err != nil {
 			t.Fatalf("%s: pipeline should be valid, %s", c.Name, err)
 		}
