@@ -2,7 +2,6 @@ package update
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -66,21 +65,6 @@ func subPkgFirstSorter(paths []string) func(i, j int) bool {
 	return func(i, j int) bool {
 		return !sorter(i, j)
 	}
-}
-
-// lookupCommit looks up the sha of the current commit on the repo at the
-// provided path.
-func lookupCommit(repoPath string) (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
-	cmd.Dir = repoPath
-	cmd.Env = os.Environ()
-	cmd.Stderr = os.Stderr
-	b, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	commit := strings.TrimSpace(string(b))
-	return commit, nil
 }
 
 // exists returns true if a file or directory exists on the provided path,

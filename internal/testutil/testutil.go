@@ -583,6 +583,7 @@ func replaceData(repo, data string) error {
 				return err
 			}
 			dataKptfile.Upstream = repoKptfile.Upstream
+			dataKptfile.Name = repoKptfile.Name
 			err = kptfileutil.WriteFile(repoKptfileDir, dataKptfile)
 			if err != nil {
 				return err

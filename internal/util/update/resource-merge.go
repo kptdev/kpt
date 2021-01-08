@@ -65,7 +65,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	defer os.RemoveAll(updated.AbsPath())
 
 	// local package controls the upstream field
-	commit, err := lookupCommit(updated.AbsPath())
+	commit, err := git.LookupCommit(updated.AbsPath())
 	if err != nil {
 		return err
 	}
