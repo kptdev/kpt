@@ -58,23 +58,7 @@ func generateInventoryObj(inv *kptfile.Inventory) (*unstructured.Unstructured, e
 		return nil, err
 	}
 	// Create and return ResourceGroup custom resource as inventory object.
-	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
-	var inventoryObj = &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": groupVersion,
-			"kind":       ResourceGroupGVK.Kind,
-			"metadata": map[string]interface{}{
-				"name":      inv.Name,
-				"namespace": inv.Namespace,
-				"labels": map[string]interface{}{
-					common.InventoryLabel: inv.InventoryID,
-				},
-			},
-			"spec": map[string]interface{}{
-				"resources": []interface{}{},
-			},
-		},
-	}
+	var inventoryObj = ResourceGroupUnstructured(inv.Name, inv.Namespace, inv.InventoryID)
 	labels := inv.Labels
 	if labels == nil {
 		labels = make(map[string]string)
@@ -83,4 +67,25 @@ func generateInventoryObj(inv *kptfile.Inventory) (*unstructured.Unstructured, e
 	inventoryObj.SetLabels(labels)
 	inventoryObj.SetAnnotations(inv.Annotations)
 	return inventoryObj, nil
+}
+
+func ResourceGroupUnstructured(name, namespace, id string) *unstructured.Unstructured {
+	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
+	inventoryObj := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": groupVersion,
+			"kind":       ResourceGroupGVK.Kind,
+			"metadata": map[string]interface{}{
+				"name":      name,
+				"namespace": namespace,
+				"labels": map[string]interface{}{
+					common.InventoryLabel: id,
+				},
+			},
+			"spec": map[string]interface{}{
+				"resources": []interface{}{},
+			},
+		},
+	}
+	return inventoryObj
 }
