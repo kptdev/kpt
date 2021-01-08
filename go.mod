@@ -6,6 +6,8 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
+	github.com/go-openapi/strfmt v0.19.5
+	github.com/go-openapi/validate v0.19.8
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
@@ -15,6 +17,7 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gotest.tools v2.2.0+incompatible
+	k8s.io/api v0.18.10
 	k8s.io/apimachinery v0.18.10
 	k8s.io/cli-runtime v0.18.10
 	k8s.io/client-go v0.18.10
