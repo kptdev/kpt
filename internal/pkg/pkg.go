@@ -23,15 +23,18 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 )
 
+// Absolute unique OS-defined path to the package directory on the filesystem.
+type UniquePath string
+
+// Slash-separated path to the package directory on the filesytem relative to current working directory.
+// This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
+// be used for display purposes and is subject to change.
+type DisplayPath string
+
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
-	// Absolute unique OS-defined path to the package directory.
-	UniquePath string
-
-	// Relative slash-separated path to the package directory.
-	// This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
-	// be used for display purposes and is subject to change.
-	displayPath string
+	UniquePath  UniquePath
+	DisplayPath DisplayPath
 
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
@@ -70,10 +73,10 @@ func New(path string) (*Pkg, error) {
 		}
 	}
 	d = filepath.ToSlash(d)
-	return &Pkg{UniquePath: u, displayPath: d}, nil
+	return &Pkg{UniquePath: UniquePath(u), DisplayPath: DisplayPath(d)}, nil
 }
 
-// Kptfile returns the Kptfile meta resource by lazy loading it from the filessytem.
+// Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() *kptfile.KptFile {
 	if !p.kptfileLoaded {
@@ -96,5 +99,5 @@ func (p *Pkg) Pipeline() *pipeline.Pipeline {
 
 // String returns the slash-seperated relative path to the package.
 func (p *Pkg) String() string {
-	return p.displayPath
+	return string(p.DisplayPath)
 }
