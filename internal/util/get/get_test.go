@@ -24,6 +24,8 @@ import (
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -791,24 +793,29 @@ func TestCommand_DefaultValues_AtVersion(t *testing.T) {
 
 func TestCommand_Run_subpackages(t *testing.T) {
 	testCases := []struct {
-		name            string
-		directory       string
-		ref             string
-		upstream        testutil.Content
-		refRepos        map[string][]testutil.Content
-		expectedResults *pkgbuilder.RootPkg
+		name           string
+		directory      string
+		ref            string
+		upstream       testutil.Content
+		refRepos       map[string][]testutil.Content
+		expectedResult *pkgbuilder.RootPkg
+		expectedErrMsg string
 	}{
 		{
 			name:      "basic package",
 			directory: "/",
 			ref:       "master",
 			upstream: testutil.Content{
+				Branch: "master",
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile().
 					WithResource(pkgbuilder.DeploymentResource),
 			},
-			expectedResults: pkgbuilder.NewRootPkg().
-				WithKptfile().
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master"),
+				).
 				WithResource(pkgbuilder.DeploymentResource),
 		},
 		{
@@ -816,6 +823,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			directory: "/",
 			ref:       "master",
 			upstream: testutil.Content{
+				Branch: "master",
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile().
 					WithResource(pkgbuilder.DeploymentResource).
@@ -825,8 +833,11 @@ func TestCommand_Run_subpackages(t *testing.T) {
 							WithResource(pkgbuilder.ConfigMapResource),
 					),
 			},
-			expectedResults: pkgbuilder.NewRootPkg().
-				WithKptfile().
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master"),
+				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpkg").
@@ -835,15 +846,16 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				),
 		},
 		{
-			name:      "package with remote subpackages",
+			name:      "package with local and remote subpackages",
 			directory: "/",
 			ref:       "master",
 			upstream: testutil.Content{
+				Branch: "master",
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
 							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward"),
+								pkgbuilder.NewSubpackage("foo", "/", "main", "fast-forward", "foo"),
 							),
 					).
 					WithResource(pkgbuilder.DeploymentResource).
@@ -863,7 +875,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 									WithKptfile(
 										pkgbuilder.NewKptfile().
 											WithSubpackages(
-												pkgbuilder.NewSubpackage("bar", "/foobar", "v1.2", "fast-forward"),
+												pkgbuilder.NewSubpackage("bar", "/", "main", "fast-forward", "bar"),
 											),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
@@ -878,18 +890,268 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					},
 				},
 			},
-			expectedResults: pkgbuilder.NewRootPkg().
+			expectedResult: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward"),
-						),
+							pkgbuilder.NewSubpackage("foo", "/", "main", "fast-forward", "foo"),
+						).
+						WithUpstreamRef("upstream", "/", "master"),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "main"),
+						).
+						WithResource(pkgbuilder.DeploymentResource).
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(
+									pkgbuilder.NewKptfile().
+										WithSubpackages(
+											pkgbuilder.NewSubpackage("bar", "/", "main", "fast-forward", "bar"),
+										),
+								).
+								WithResource(pkgbuilder.ConfigMapResource).
+								WithSubPackages(
+									pkgbuilder.NewSubPkg("bar").
+										WithKptfile(
+											pkgbuilder.NewKptfile().
+												WithUpstreamRef("bar", "/", "main"),
+										).
+										WithResource(pkgbuilder.DeploymentResource),
+								),
+						),
 					pkgbuilder.NewSubPkg("subpkg").
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
+		},
+		{
+			name:      "fetch subpackage on a different branch than master",
+			directory: "/bar",
+			ref:       "main",
+			upstream: testutil.Content{
+				Branch: "main",
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithSubpackages(
+								pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
+							),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/bar", "main"),
+				).
+				WithResource(pkgbuilder.ConfigMapResource),
+		},
+		{
+			name:      "package with remote subpackage with a tag reference",
+			directory: "/",
+			ref:       "main",
+			upstream: testutil.Content{
+				Branch: "main",
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithSubpackages(
+								pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
+							),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile().
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Tag: "v1.2",
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithSubpackages(
+							pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
+						).
+						WithUpstreamRef("upstream", "/", "main"),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("bar").
+						WithKptfile().
+						WithResource(pkgbuilder.ConfigMapResource),
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/subpkg", "v1.2"),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+		},
+		{
+			name:      "same remote subpackage referenced multiple times",
+			directory: "/",
+			ref:       "master",
+			upstream: testutil.Content{
+				Branch: "master",
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithSubpackages(
+								pkgbuilder.NewSubpackage("foo", "/subpkg", "subpkg/v1.2", "fast-forward", "foo-sub"),
+								pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo-root"),
+							),
+					),
+			},
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile().
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Tag: "subpkg/v1.2",
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithSubpackages(
+							pkgbuilder.NewSubpackage("foo", "/subpkg", "subpkg/v1.2", "fast-forward", "foo-sub"),
+							pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo-root"),
+						).
+						WithUpstreamRef("upstream", "/", "master"),
+				).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo-sub").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/subpkg", "subpkg/v1.2"),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+					pkgbuilder.NewSubPkg("foo-root").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master"),
+						).
+						WithResource(pkgbuilder.ConfigMapResource).
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile().
+								WithResource(pkgbuilder.DeploymentResource),
+						),
+				),
+		},
+		{
+			name:      "conflict between local and remote subpackage",
+			directory: "/",
+			ref:       "master",
+			upstream: testutil.Content{
+				Branch: "master",
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithSubpackages(
+								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward", "foo"),
+							),
+					).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo").
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+			},
+			expectedErrMsg: "local subpackage in directory \"foo\" already exist",
+		},
+		{
+			name:      "conflict between two remote subpackages",
+			directory: "/",
+			ref:       "master",
+			upstream: testutil.Content{
+				Branch: "master",
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithSubpackages(
+								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward", "subpkg"),
+								pkgbuilder.NewSubpackage("bar", "/", "master", "fast-forward", "subpkg"),
+							),
+					),
+			},
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+				"bar": {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+			},
+			expectedErrMsg: "multiple remote subpackages with localDir \"subpkg\"",
 		},
 	}
 
@@ -906,17 +1168,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				repoPaths[name] = tgr.RepoDirectory
 			}
 
-			dir := pkgbuilder.ExpandPkg(t, pkgbuilder.NewRootPkg(), repoPaths)
-			g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
-				Data:   dir,
-				Branch: "master",
-			}, repoPaths)
+			g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, test.upstream, repoPaths)
 			defer clean()
-
-			err = testutil.UpdateGitDir(t, g, []testutil.Content{test.upstream}, repoPaths)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
 
 			var targetDir string
 			if test.directory == "/" {
@@ -935,12 +1188,37 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				},
 				Destination: destinationDir,
 			}.Run()
+
+			if test.expectedErrMsg != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				assert.Contains(t, err.Error(), test.expectedErrMsg)
+				return
+			}
+
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			expectedPath := pkgbuilder.ExpandPkg(t, test.expectedResults, repoPaths)
-			testutil.AssertPkgEqual(t, expectedPath, w.FullPackagePath())
+			// Format the Kptfiles so we can diff the output without
+			// formatting issues.
+			rw := &kio.LocalPackageReadWriter{
+				NoDeleteFiles:  true,
+				PackagePath:    w.FullPackagePath(),
+				MatchFilesGlob: []string{kptfile.KptFileName},
+			}
+			err = kio.Pipeline{
+				Inputs:  []kio.Reader{rw},
+				Filters: []kio.Filter{filters.FormatFilter{}},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			expectedPath := pkgbuilder.ExpandPkgWithName(t, test.expectedResult, targetDir, repoPaths)
+			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
 		})
 	}
 }

@@ -15,7 +15,6 @@
 package update
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -31,7 +30,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Updater updates a package to a new upstream version.
@@ -246,31 +244,17 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 	orgKf.Upstream = kptfile.Upstream{}
 
 	orgKf.Name = localKf.Name
-	identical, err := isIdentical(localKf, orgKf)
+	equal, err := kptfileutil.Equal(localKf, orgKf)
 	if err != nil {
 		return false, err
 	}
 
-	return !identical, nil
+	return !equal, nil
 }
 
 func isDefaultKptfile(localKf kptfile.KptFile, name string) (bool, error) {
 	defaultKf := kptfileutil.DefaultKptfile(name)
-	return isIdentical(localKf, defaultKf)
-}
-
-func isIdentical(localKf, orgKf kptfile.KptFile) (bool, error) {
-	localKfBytes, err := yaml.Marshal(localKf)
-	if err != nil {
-		return false, err
-	}
-
-	orgKfBytes, err := yaml.Marshal(orgKf)
-	if err != nil {
-		return false, err
-	}
-
-	return bytes.Equal(localKfBytes, orgKfBytes), nil
+	return kptfileutil.Equal(localKf, defaultKf)
 }
 
 // DiffError is returned if the local package and upstream package contents do not match.

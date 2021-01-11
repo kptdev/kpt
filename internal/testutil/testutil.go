@@ -67,11 +67,13 @@ type TestGitRepo struct {
 
 var AssertNoError = assertnow.NilError
 
-var KptfileSet = func() sets.String {
+var KptfileSet = diffSet(kptfile.KptFileName)
+
+func diffSet(path string) sets.String {
 	s := sets.String{}
-	s.Insert(kptfile.KptFileName)
+	s.Insert(path)
 	return s
-}()
+}
 
 // AssertEqual verifies the contents of a source package matches the contents of the
 // destination package it was fetched to.
@@ -92,6 +94,61 @@ func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
 	}
 	diff = diff.Difference(KptfileSet)
 	return assert.Empty(t, diff.List())
+}
+
+// KptfileAwarePkgEqual compares two packages (including any subpackages)
+// and has special handling of Kptfiles to handle fields that contain
+// values which cannot easily be specified in the golden package.
+func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
+	diff, err := Diff(pkg1, pkg2)
+	if !assert.NoError(t, err) {
+		return false
+	}
+
+	for _, s := range diff.List() {
+		if !strings.HasSuffix(s, kptfile.KptFileName) {
+			continue
+		}
+
+		pkg1Path := filepath.Join(pkg1, s)
+		pkg1KfExists := kptfileExists(t, pkg1Path)
+
+		pkg2Path := filepath.Join(pkg2, s)
+		pkg2KfExists := kptfileExists(t, pkg2Path)
+
+		if !pkg1KfExists || !pkg2KfExists {
+			continue
+		}
+
+		// Read the Kptfiles and set the Commit field to an empty
+		// string before we compare.
+		pkg1kf, _ := kptfileutil.ReadFile(filepath.Dir(pkg1Path))
+		pkg1kf.Upstream.Git.Commit = ""
+
+		pkg2kf, _ := kptfileutil.ReadFile(filepath.Dir(pkg2Path))
+		pkg2kf.Upstream.Git.Commit = ""
+
+		equal, err := kptfileutil.Equal(pkg1kf, pkg2kf)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		// If the two files are considered equal after we have compared
+		// them with Kptfile-specific rules, we remove the path from the
+		// diff set.
+		if equal {
+			diff = diff.Difference(diffSet(s))
+		}
+	}
+	return assert.Empty(t, diff.List())
+}
+
+func kptfileExists(t *testing.T, path string) bool {
+	_, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		assert.NoError(t, err)
+		t.FailNow()
+	}
+	return !os.IsNotExist(err)
 }
 
 // Diff returns a list of files that differ between the source and destination.
@@ -438,6 +495,7 @@ func SetupDefaultRepoAndWorkspace(t *testing.T, content Content, repoPaths map[s
 	g := &TestGitRepo{T: t}
 	err := g.SetupTestGitRepo([]Content{content}, repoPaths)
 	assert.NoError(t, err)
+	repoPaths["upstream"] = g.RepoDirectory
 
 	// setup the directory to clone to
 	w := &TestWorkspace{}
