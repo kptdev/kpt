@@ -21,8 +21,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	"path"
 	"regexp"
+	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -81,15 +82,7 @@ func (p *Pipeline) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-// Validate will validate the Pipeline `p`. This function will validate
-// fields 'apiVersion', 'kind', 'sources', 'generators', 'transformers'
-// and 'validators'.
-//
-// 'sources' are valid if and only if every source is:
-// 1. a relative path to local package OR
-// 2. '.' OR
-// 3. './*'
-//
+// Validate will validate all fields in the Pipeline `p`
 // 'generators', 'transformers' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
 func (p *Pipeline) Validate() error {
@@ -105,26 +98,20 @@ func (p *Pipeline) Validate() error {
 		if s == "." || s == "./*" {
 			continue
 		}
-		if filepath.IsAbs(s) {
-			return fmt.Errorf("source path must be relative: %s", s)
+		if err := ValidatePath(s); err != nil {
+			return fmt.Errorf("source path invalid: %w", err)
 		}
 	}
-	for _, f := range p.Generators {
-		err := f.Validate()
-		if err != nil {
-			return fmt.Errorf("generator %s is not valid: %w", f.Image, err)
+	fns := []Function{}
+	for _, fs := range [][]Function{p.Generators, p.Transformers, p.Validators} {
+		for _, fn := range fs {
+			fns = append(fns, fn)
 		}
 	}
-	for _, f := range p.Transformers {
+	for _, f := range fns {
 		err := f.Validate()
 		if err != nil {
-			return fmt.Errorf("transformer %s is not valid: %w", f.Image, err)
-		}
-	}
-	for _, f := range p.Validators {
-		err := f.Validate()
-		if err != nil {
-			return fmt.Errorf("validator %s is not valid: %w", f.Image, err)
+			return fmt.Errorf("function %s is not valid: %w", f.Image, err)
 		}
 	}
 	return nil
@@ -211,30 +198,29 @@ type Function struct {
 	ConfigMap map[string]string `yaml:"configMap,omitempty"`
 }
 
-// Validate will validate the function `f`. A function is valid if:
-// 1. 'image' is a valid function name OR a fully qualified name of a function AND
-// 2. have zero OR one of 'config', 'configPath' and 'configMap' AND
-// 3. if 'configPath' is used, the value MUST be a relative path
+// Validate will validate the function `f`.
 func (f *Function) Validate() error {
 	err := ValidateFunctionName(f.Image)
 	if err != nil {
 		return fmt.Errorf("function name is not valid: %w", err)
 	}
-	var cnt = 0
+	// configCnt is used to count the number of configs provided. More than one
+	// config is not allowed.
+	var configCnt = 0
 	if f.ConfigPath != "" {
-		cnt++
+		configCnt++
+		if err := ValidatePath(f.ConfigPath); err != nil {
+			return fmt.Errorf("configPath is invalid: %w", err)
+		}
 	}
 	if len(f.ConfigMap) != 0 {
-		cnt++
+		configCnt++
 	}
 	if !isNodeZero(&f.Config) {
-		cnt++
+		configCnt++
 	}
-	if cnt > 1 {
-		return fmt.Errorf("only zero or one config is allowed, %d provided", cnt)
-	}
-	if f.ConfigPath != "" && filepath.IsAbs(f.ConfigPath) {
-		return fmt.Errorf("configPath must be relative: %s", f.ConfigPath)
+	if configCnt > 1 {
+		return fmt.Errorf("only zero or one config is allowed, %d provided", configCnt)
 	}
 
 	return nil
@@ -278,4 +264,18 @@ func isNodeZero(n *yaml.Node) bool {
 		n.Anchor == "" && n.Alias == nil && n.Content == nil &&
 		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" &&
 		n.Line == 0 && n.Column == 0
+}
+
+// ValidatePath validates `path` and return an error if it's invalid
+func ValidatePath(p string) error {
+	if path.IsAbs(p) {
+		return fmt.Errorf("path is not relative: %s", p)
+	}
+	if path.Clean(p) != p {
+		return fmt.Errorf("path is not clean: %s", p)
+	}
+	if strings.Contains(p, "\\") {
+		return fmt.Errorf("path cannot have backslash: %s", p)
+	}
+	return nil
 }

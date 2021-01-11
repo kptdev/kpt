@@ -516,3 +516,53 @@ transformers:
 		}
 	}
 }
+
+func TestValidatePath(t *testing.T) {
+	type input struct {
+		Path  string
+		Valid bool
+	}
+
+	cases := []input{
+		{
+			Path:  "a/b/c",
+			Valid: true,
+		},
+		{
+			Path:  "/a/b",
+			Valid: false,
+		},
+		{
+			Path:  ".",
+			Valid: true,
+		},
+		{
+			Path:  "a\\b",
+			Valid: false,
+		},
+		{
+			Path:  "a:\\b\\c",
+			Valid: false,
+		},
+		{
+			Path:  "../a/../b",
+			Valid: false,
+		},
+		{
+			Path:  "a//b",
+			Valid: false,
+		},
+		{
+			Path:  "a/b/.",
+			Valid: false,
+		},
+	}
+
+	for _, c := range cases {
+		ret := ValidatePath(c.Path)
+		if (ret == nil) != c.Valid {
+			t.Fatalf("returned value for path %s should be %t, got %t",
+				c.Path, c.Valid, (ret == nil))
+		}
+	}
+}
