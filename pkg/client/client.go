@@ -61,10 +61,10 @@ func (uc *client) resourceInterface(meta object.ObjMetadata) (dynamic.ResourceIn
 	return namespacedClient, nil
 }
 
-// UpdateAnnotation updates the object owning inventory annotation
+// ReplaceOwningInventoryID updates the object owning inventory annotation
 // to the new ID when the owning inventory annotation is either empty or the old ID.
-// It returns if the annotation is updated.
-func UpdateAnnotation(obj *unstructured.Unstructured, oldID, newID string) (bool, error) {
+// It returns true if the annotation is updated.
+func ReplaceOwningInventoryID(obj *unstructured.Unstructured, oldID, newID string) (bool, error) {
 	key := "config.k8s.io/owning-inventory"
 	annotations := obj.GetAnnotations()
 	if annotations == nil {
@@ -73,19 +73,25 @@ func UpdateAnnotation(obj *unstructured.Unstructured, oldID, newID string) (bool
 	val, found := annotations[key]
 	if !found || val == oldID {
 		annotations[key] = newID
-		// Since the annotation is updated, we also need to update the
-		// last applied configuration annotation.
-		u := getOriginalObj(obj)
-		if u != nil {
-			u.SetAnnotations(annotations)
-			err := util.CreateOrUpdateAnnotation(false, u, scheme.DefaultJSONEncoder())
-			obj.SetAnnotations(u.GetAnnotations())
-			return true, err
-		}
-		obj.SetAnnotations(annotations)
-		return true, nil
+		return true, UpdateAnnotation(obj, annotations)
 	}
 	return false, nil
+}
+
+// UpdateAnnotation updates .metadata.annotations field of obj to use the passed in annotations
+// as well as updates the last-applied-configuration annotations.
+func UpdateAnnotation(obj *unstructured.Unstructured, annotations map[string]string) error {
+	u := getOriginalObj(obj)
+	if u != nil {
+		u.SetAnnotations(annotations)
+		// Since the annotation is updated, we also need to update the
+		// last applied configuration annotation.
+		err := util.CreateOrUpdateAnnotation(true, u, scheme.DefaultJSONEncoder())
+		obj.SetAnnotations(u.GetAnnotations())
+		return err
+	}
+	obj.SetAnnotations(annotations)
+	return nil
 }
 
 func getOriginalObj(obj *unstructured.Unstructured) *unstructured.Unstructured {
