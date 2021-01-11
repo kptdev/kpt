@@ -96,7 +96,7 @@ func (c Command) Run() error {
 	}
 
 	// create or update the KptFile with the values from git
-	if err = (&c).upsertKptfile(r); err != nil {
+	if err = upsertKptfile(c.Destination, c.Name, r); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil
@@ -258,30 +258,30 @@ func (c *Command) DefaultValues() error {
 
 // upsertKptfile populates the KptFile values, merging any cloned KptFile and the
 // cloneFrom values.
-func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
+func upsertKptfile(path, name string, spec *git.RepoSpec) error {
 	// read KptFile cloned with the package if it exists
-	kpgfile, err := kptfileutil.ReadFile(c.Destination)
+	kpgfile, err := kptfileutil.ReadFile(path)
 	if err != nil {
 		// no KptFile present, create a default
-		kpgfile = kptfileutil.DefaultKptfile(c.Name)
+		kpgfile = kptfileutil.DefaultKptfile(name)
 	}
+	kpgfile.Name = name
 
 	// find the git commit sha that we cloned the package at so we can write it to the KptFile
-	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
-	cmd.Dir = spec.AbsPath()
-	cmd.Env = os.Environ()
-	cmd.Stderr = os.Stderr
-	b, err := cmd.Output()
+	commit, err := git.LookupCommit(spec.AbsPath())
 	if err != nil {
 		return err
 	}
-	commit := strings.TrimSpace(string(b))
 
 	// populate the cloneFrom values so we know where the package came from
 	kpgfile.Upstream = kptfile.Upstream{
 		Type: kptfile.GitOrigin,
-		Git:  c.Git,
+		Git: kptfile.Git{
+			Repo:      spec.OrgRepo,
+			Directory: spec.Path,
+			Ref:       spec.Ref,
+		},
 	}
 	kpgfile.Upstream.Git.Commit = commit
-	return kptfileutil.WriteFile(c.Destination, kpgfile)
+	return kptfileutil.WriteFile(path, kpgfile)
 }

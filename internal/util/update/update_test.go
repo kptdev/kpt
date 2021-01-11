@@ -1566,12 +1566,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					t.FailNow()
 				}
 
-				var expectedPath string
-				if test.initialUpstream.HasKptfile() {
-					expectedPath = pkgbuilder.ExpandPkg(t, result.expectedLocal, emptyMap)
-				} else {
-					expectedPath = pkgbuilder.ExpandPkgWithName(t, result.expectedLocal, g.LocalWorkspace.PackageDir, emptyMap)
-				}
+				expectedPath := pkgbuilder.ExpandPkgWithName(t, result.expectedLocal, g.LocalWorkspace.PackageDir, emptyMap)
 
 				if !g.AssertLocalDataEquals(expectedPath) {
 					t.FailNow()
@@ -1580,6 +1575,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
+
 				if !g.AssertKptfileEquals(expectedPath, commit, "master") {
 					t.FailNow()
 				}

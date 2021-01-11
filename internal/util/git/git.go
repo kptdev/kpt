@@ -16,6 +16,8 @@
 package git
 
 import (
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -69,4 +71,19 @@ func isAzureHost(host string) bool {
 // https://docs.aws.amazon.com/codecommit/latest/userguide/regions.html
 func isAWSHost(host string) bool {
 	return strings.Contains(host, "amazonaws.com")
+}
+
+// lookupCommit looks up the sha of the current commit on the repo at the
+// provided path.
+func LookupCommit(repoPath string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
+	cmd.Dir = repoPath
+	cmd.Env = os.Environ()
+	cmd.Stderr = os.Stderr
+	b, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	commit := strings.TrimSpace(string(b))
+	return commit, nil
 }

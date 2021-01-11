@@ -72,14 +72,14 @@ func (u FastForwardUpdater) Update(options UpdateOptions) error {
 	}
 	defer os.RemoveAll(updated.AbsPath())
 
-	commit, err := lookupCommit(updated.AbsPath())
+	commit, err := git.LookupCommit(updated.AbsPath())
 	if err != nil {
 		return err
 	}
 
 	// Verify that there are no local changes that would prevent us from
 	// using the FastForward strategy.
-	if err := u.checkForLocalChanges(options.AbsPackagePath, original.AbsPath(), options.KptFile); err != nil {
+	if err := u.checkForLocalChanges(options.AbsPackagePath, original.AbsPath()); err != nil {
 		return err
 	}
 
@@ -168,7 +168,7 @@ func (u FastForwardUpdater) Update(options UpdateOptions) error {
 	return kptfileutil.WriteFile(options.AbsPackagePath, options.KptFile)
 }
 
-func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string, kf kptfile.KptFile) error {
+func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string) error {
 	subPkgPaths, err := findAllSubpackages(localPath, originalPath)
 	if err != nil {
 		return err
@@ -194,27 +194,16 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string,
 		if err != nil {
 			return err
 		}
-
 		// If the original package didn't have a Kptfile, one was created
 		// in local, but we don't consider that a change unless the user
 		// has made additional changes.
 		if d.Has(kptfile.KptFileName) && subPkgPath == "." {
-			_, err := os.Stat(filepath.Join(originalSubPkgPath, kptfile.KptFileName))
+			hasDiff, err := hasKfDiff(localSubPkgPath, originalSubPkgPath)
 			if err != nil {
-				if os.IsNotExist(err) {
-					// We know that there aren't any Kptfile in the original
-					// package, so we ignore the diff if the local Kptfile
-					// is just the minimal Kptfile generated automatically.
-					isDefault, err := isDefaultKptfile(kf, filepath.Base(localSubPkgPath))
-					if err != nil {
-						return err
-					}
-					if isDefault {
-						d = d.Difference(kptfileSet)
-					}
-				} else {
-					return err
-				}
+				return err
+			}
+			if !hasDiff {
+				d = d.Difference(kptfileSet)
 			}
 		}
 
@@ -228,19 +217,60 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string,
 	return nil
 }
 
-func isDefaultKptfile(kf kptfile.KptFile, name string) (bool, error) {
-	kf.Upstream = kptfile.Upstream{}
-	defaultKf, err := yaml.Marshal(kptfileutil.DefaultKptfile(name))
+func hasKfDiff(localPath, orgPath string) (bool, error) {
+	localKf, err := kptfileutil.ReadFile(localPath)
+	if err != nil {
+		return false, err
+	}
+	localKf.Upstream = kptfile.Upstream{}
+
+	_, err = os.Stat(filepath.Join(orgPath, kptfile.KptFileName))
+	if err != nil {
+		if os.IsNotExist(err) {
+			// We know that there aren't any Kptfile in the original
+			// package, so we ignore the diff if the local Kptfile
+			// is just the minimal Kptfile generated automatically.
+			isDefault, err := isDefaultKptfile(localKf, filepath.Base(localPath))
+			if err != nil {
+				return false, err
+			}
+			return !isDefault, nil
+		}
+		return false, err
+	}
+
+	orgKf, err := kptfileutil.ReadFile(orgPath)
+	if err != nil {
+		return false, err
+	}
+	orgKf.Upstream = kptfile.Upstream{}
+
+	orgKf.Name = localKf.Name
+	identical, err := isIdentical(localKf, orgKf)
 	if err != nil {
 		return false, err
 	}
 
-	currKf, err := yaml.Marshal(kf)
+	return !identical, nil
+}
+
+func isDefaultKptfile(localKf kptfile.KptFile, name string) (bool, error) {
+	defaultKf := kptfileutil.DefaultKptfile(name)
+	return isIdentical(localKf, defaultKf)
+}
+
+func isIdentical(localKf, orgKf kptfile.KptFile) (bool, error) {
+	localKfBytes, err := yaml.Marshal(localKf)
 	if err != nil {
 		return false, err
 	}
 
-	return bytes.Equal(defaultKf, currKf), nil
+	orgKfBytes, err := yaml.Marshal(orgKf)
+	if err != nil {
+		return false, err
+	}
+
+	return bytes.Equal(localKfBytes, orgKfBytes), nil
 }
 
 // DiffError is returned if the local package and upstream package contents do not match.
