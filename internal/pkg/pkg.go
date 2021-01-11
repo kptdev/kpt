@@ -97,7 +97,7 @@ func (p *Pkg) Pipeline() *pipeline.Pipeline {
 	return p.pipeline
 }
 
-// String returns the slash-seperated relative path to the package.
+// String returns the slash-separated relative path to the package.
 func (p *Pkg) String() string {
 	return string(p.DisplayPath)
 }
