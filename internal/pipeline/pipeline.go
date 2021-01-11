@@ -94,20 +94,19 @@ func (p *Pipeline) Validate() error {
 		return fmt.Errorf("kind %s is not valid, should be %s",
 			p.Kind, pipelineKind)
 	}
-	for _, s := range p.Sources {
-		if s == "." || s == "./*" {
+	for i, s := range p.Sources {
+		if s == "./*" {
 			continue
 		}
 		if err := ValidatePath(s); err != nil {
 			return fmt.Errorf("source path invalid: %w", err)
 		}
+		p.Sources[i] = path.Clean(s)
 	}
 	fns := []Function{}
-	for _, fs := range [][]Function{p.Generators, p.Transformers, p.Validators} {
-		for _, fn := range fs {
-			fns = append(fns, fn)
-		}
-	}
+	fns = append(fns, p.Generators...)
+	fns = append(fns, p.Transformers...)
+	fns = append(fns, p.Validators...)
 	for _, f := range fns {
 		err := f.Validate()
 		if err != nil {
@@ -270,9 +269,6 @@ func isNodeZero(n *yaml.Node) bool {
 func ValidatePath(p string) error {
 	if path.IsAbs(p) {
 		return fmt.Errorf("path is not relative: %s", p)
-	}
-	if path.Clean(p) != p {
-		return fmt.Errorf("path is not clean: %s", p)
 	}
 	if strings.Contains(p, "\\") {
 		return fmt.Errorf("path cannot have backslash: %s", p)

@@ -67,7 +67,7 @@ func checkOutput(t *testing.T, name string, tc testcase, actual *Pipeline, err e
 	} else if !assert.NoError(t, err, "error is not expected. Test case: %s", name) {
 		t.FailNow()
 	}
-	if !assert.Truef(t, isPipelineEqual(t, *actual, tc.Expected),
+	if !assert.Truef(t, isPipelineEqual(t, tc.Expected, *actual),
 		"pipelines don't equal. Test case: %s", name) {
 		t.FailNow()
 	}
@@ -150,6 +150,7 @@ metadata:
 sources:
 - ./base
 - ./*
+- .
 `,
 		Expected: Pipeline{
 			ResourceMeta: yaml.ResourceMeta{
@@ -164,8 +165,9 @@ sources:
 				},
 			},
 			Sources: []string{
-				"./base",
+				"base",
 				"./*",
+				".",
 			},
 		},
 	},
@@ -210,7 +212,7 @@ validators:
 				},
 			},
 			Sources: []string{
-				"./base",
+				"base",
 				"./*",
 			},
 			Generators: []Function{
@@ -529,8 +531,20 @@ func TestValidatePath(t *testing.T) {
 			Valid: true,
 		},
 		{
+			Path:  "a/b/",
+			Valid: true,
+		},
+		{
 			Path:  "/a/b",
 			Valid: false,
+		},
+		{
+			Path:  "./a",
+			Valid: true,
+		},
+		{
+			Path:  "./a/.../b",
+			Valid: true,
 		},
 		{
 			Path:  ".",
@@ -546,15 +560,15 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			Path:  "../a/../b",
-			Valid: false,
+			Valid: true,
 		},
 		{
 			Path:  "a//b",
-			Valid: false,
+			Valid: true,
 		},
 		{
 			Path:  "a/b/.",
-			Valid: false,
+			Valid: true,
 		},
 	}
 
