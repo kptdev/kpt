@@ -113,6 +113,16 @@ shift $((OPTIND-1))
 #  Helper functions
 ###########################################################################
 
+function downloadPreviousKpt {
+  set -e
+  echo "Downloading latest kpt binary..."
+  curl https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt -o latestkpt 2>&1
+  chmod +x latestkpt
+  mv latestkpt $BIN_DIR/.
+  echo "Downloading latest kpt binary...SUCCESS"
+  set +e
+}
+
 # buildKpt builds the kpt binary, storing it in the temporary directory.
 # To check the stdout output of the build check $OUTPUT_DIR/kptbuild.
 # stderr output will be output to the terminal.
@@ -375,6 +385,8 @@ echo "Temp Dir: $TMP_DIR"
 echo
 
 buildKpt
+
+downloadPreviousKpt
 
 echo
 set +e                          # Do not stop the test for errors
@@ -750,6 +762,113 @@ assertContains "example-inventory"
 # Finally, add the ResourceGroup CRD again, and check it says it already exists.
 ${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status 2>&1
 assertContains "...already installed...success"
+printResult
+
+###########################################################################
+#  Tests for Apply/Prune with different versions of kpt
+###########################################################################
+
+waitForDefaultServiceAccount
+
+# Test 16: Test apply/prune with different versions of kpt
+echo "Testing Apply prune with different"
+echo "latestkpt live apply e2e/live/testdata/test-case-1a"
+# First init and apply with the latest version of kpt
+unset RESOURCE_GROUP_INVENTORY  # In case this was set before; clear it
+git restore e2e/live/testdata/test-case-1a/Kptfile
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1a/inventory-template.yaml
+${BIN_DIR}/latestkpt live apply e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
+assertContains "namespace/test-namespace"
+assertContains "pod/pod-a created"
+assertContains "pod/pod-b created"
+assertContains "pod/pod-c created"
+assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured"
+assertContains "0 resource(s) pruned, 0 skipped"
+wait 2
+# Validate resources in the cluster
+# ConfigMap inventory with four inventory items.
+assertCMInventory "test-namespace" "4"
+printResult
+
+# Test 17: kpt live preview of apply/prune with the built kpt
+# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
+echo "Testing basic preview for package applied previously by latestkpt"
+echo "kpt live preview e2e/live/testdata/test-case-1b"
+# Prerequisite: set up the ConfigMap inventory file
+git restore e2e/live/testdata/test-case-1b/Kptfile
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
+${BIN_DIR}/kpt live preview e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
+assertContains "namespace/test-namespace configured (preview)"
+assertContains "pod/pod-b configured (preview)"
+assertContains "pod/pod-c configured (preview)"
+assertContains "pod/pod-d created (preview)"
+assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured, 0 failed (preview)"
+assertContains "pod/pod-a pruned (preview)"
+assertContains "1 resource(s) pruned, 0 skipped, 0 failed (preview)"
+wait 2
+# Validate resources in the cluster
+# ConfigMap inventory with four inventory items.
+assertCMInventory "test-namespace" "4"
+assertPodExists "pod-a" "test-namespace"
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+printResult
+
+# Test 18: Basic kpt live apply/prune with the built kpt
+# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
+echo "Testing basic prune for package applied previously by latestkpt"
+echo "kpt live apply e2e/live/testdata/test-case-1b"
+${BIN_DIR}/kpt live apply e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
+assertContains "namespace/test-namespace configured"
+assertContains "pod/pod-b configured"
+assertContains "pod/pod-c configured"
+assertContains "pod/pod-d created"
+assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured, 0 failed"
+assertContains "pod/pod-a pruned"
+assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
+wait 2
+# Validate resources in the cluster
+# ConfigMap inventory with four inventory items.
+assertCMInventory "test-namespace" "4"
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+assertPodExists "pod-d" "test-namespace"
+assertPodNotExists "pod-a" "test-namespace"
+printResult
+
+# Basic kpt live preview --destroy
+echo "Testing basic preview destroy"
+echo "kpt live preview --destroy e2e/live/testdata/test-case-1b"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
+${BIN_DIR}/kpt live preview --destroy e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
+assertContains "pod/pod-d deleted (preview)"
+assertContains "pod/pod-c deleted (preview)"
+assertContains "pod/pod-b deleted (preview)"
+assertContains "namespace/test-namespace deleted (preview)"
+assertContains "4 resource(s) deleted, 0 skipped (preview)"
+# Validate resources NOT DESTROYED in the cluster
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+assertPodExists "pod-d" "test-namespace"
+printResult
+
+# Test 19: Basic kpt live destroy
+# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
+echo "Testing basic destroy"
+echo "kpt live destroy e2e/live/testdata/test-case-1b"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
+${BIN_DIR}/kpt live destroy e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
+assertContains "pod/pod-d deleted"
+assertContains "pod/pod-c deleted"
+assertContains "pod/pod-b deleted"
+assertContains "namespace/test-namespace deleted"
+assertContains "4 resource(s) deleted, 0 skipped"
+# Validate resources NOT in the cluster
+assertPodNotExists "pod-b" "test-namespace"
+assertPodNotExists "pod-c" "test-namespace"
+assertPodNotExists "pod-d" "test-namespace"
 printResult
 
 # Clean-up the k8s cluster
