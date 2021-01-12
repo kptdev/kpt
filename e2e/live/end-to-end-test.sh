@@ -116,10 +116,11 @@ shift $((OPTIND-1))
 function downloadPreviousKpt {
   set -e
   echo "Downloading latest kpt binary..."
-  curl https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt -o latestkpt 2>&1
-  chmod +x latestkpt
-  mv latestkpt $BIN_DIR/.
+  curl -LJO https://github.com/GoogleContainerTools/kpt/releases/download/v0.37.1/kpt_linux_amd64-0.37.1.tar.gz 2>&1
+  tar -xvf kpt_linux_amd64-0.37.1.tar.gz
+  mv kpt $BIN_DIR/latestkpt
   echo "Downloading latest kpt binary...SUCCESS"
+  rm kpt_linux_amd64-0.37.1.tar.gz LICENSES.txt lib.zip
   set +e
 }
 
