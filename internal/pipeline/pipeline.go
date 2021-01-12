@@ -82,16 +82,16 @@ func (p *Pipeline) String() string {
 	return fmt.Sprintf("%+v", *p)
 }
 
-// Validate will validate all fields in the Pipeline `p`
+// Validate will validate all fields in the Pipeline
 // 'generators', 'transformers' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
 func (p *Pipeline) Validate() error {
 	if p.APIVersion != kptAPIVersion {
-		return fmt.Errorf("apiVersion %s is not valid, should be %s",
+		return fmt.Errorf("'apiVersion' %s is not valid, should be %s",
 			p.APIVersion, kptAPIVersion)
 	}
 	if p.Kind != pipelineKind {
-		return fmt.Errorf("kind %s is not valid, should be %s",
+		return fmt.Errorf("'kind' %s is not valid, should be %s",
 			p.Kind, pipelineKind)
 	}
 	for i, s := range p.Sources {
@@ -99,7 +99,7 @@ func (p *Pipeline) Validate() error {
 			continue
 		}
 		if err := ValidatePath(s); err != nil {
-			return fmt.Errorf("source path invalid: %w", err)
+			return fmt.Errorf("'sources[%d]' invalid: %w", i, err)
 		}
 		p.Sources[i] = path.Clean(s)
 	}
@@ -197,29 +197,29 @@ type Function struct {
 	ConfigMap map[string]string `yaml:"configMap,omitempty"`
 }
 
-// Validate will validate the function `f`.
+// Validate will validate all fields in function.
 func (f *Function) Validate() error {
 	err := ValidateFunctionName(f.Image)
 	if err != nil {
-		return fmt.Errorf("function name is not valid: %w", err)
+		return fmt.Errorf("'image' is not valid: %w", err)
 	}
-	// configCnt is used to count the number of configs provided. More than one
-	// config is not allowed.
-	var configCnt = 0
+
+	var configFields []string
 	if f.ConfigPath != "" {
-		configCnt++
 		if err := ValidatePath(f.ConfigPath); err != nil {
-			return fmt.Errorf("configPath is invalid: %w", err)
+			return fmt.Errorf("'configPath' is invalid: %w", err)
 		}
+		configFields = append(configFields, "configPath")
 	}
 	if len(f.ConfigMap) != 0 {
-		configCnt++
+		configFields = append(configFields, "configMap")
 	}
 	if !isNodeZero(&f.Config) {
-		configCnt++
+		configFields = append(configFields, "config")
 	}
-	if configCnt > 1 {
-		return fmt.Errorf("only zero or one config is allowed, %d provided", configCnt)
+	if len(configFields) > 1 {
+		return fmt.Errorf("only zero or one config is allowed but got [%s]",
+			strings.Join(configFields, ", "))
 	}
 
 	return nil
@@ -247,7 +247,7 @@ func ValidateFunctionName(name string) error {
 		return err
 	}
 	if !matched {
-		return fmt.Errorf("function name %s isn't valid", name)
+		return fmt.Errorf("function name %s is invalid", name)
 	}
 	return nil
 }
@@ -265,7 +265,7 @@ func isNodeZero(n *yaml.Node) bool {
 		n.Line == 0 && n.Column == 0
 }
 
-// ValidatePath validates `path` and return an error if it's invalid
+// ValidatePath validates input path and return an error if it's invalid
 func ValidatePath(p string) error {
 	if path.IsAbs(p) {
 		return fmt.Errorf("path is not relative: %s", p)

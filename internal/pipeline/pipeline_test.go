@@ -325,40 +325,40 @@ func TestValidateFunctionName(t *testing.T) {
 	}
 	inputs := []input{
 		{
-			Name:  "gcr.io/kpt-functions/generate-folders",
-			Valid: true,
+			"gcr.io/kpt-functions/generate-folders",
+			true,
 		},
 		{
-			Name:  "patch-strategic-merge",
-			Valid: true,
+			"patch-strategic-merge",
+			true,
 		},
 		{
-			Name:  "a.b.c:1234/foo/bar/generate-folders",
-			Valid: true,
+			"a.b.c:1234/foo/bar/generate-folders",
+			true,
 		},
 		{
-			Name:  "ab-.b/c",
-			Valid: false,
+			"ab-.b/c",
+			false,
 		},
 		{
-			Name:  "a/a/",
-			Valid: false,
+			"a/a/",
+			false,
 		},
 		{
-			Name:  "a//a/a",
-			Valid: false,
+			"a//a/a",
+			false,
 		},
 		{
-			Name:  "example.com/.dots/myimage",
-			Valid: false,
+			"example.com/.dots/myimage",
+			false,
 		},
 		{
-			Name:  "registry.io/foo/project--id.module--name.ver---sion--name",
-			Valid: true,
+			"registry.io/foo/project--id.module--name.ver---sion--name",
+			true,
 		},
 		{
-			Name:  "Foo/FarB",
-			Valid: false,
+			"Foo/FarB",
+			false,
 		},
 	}
 
@@ -527,48 +527,76 @@ func TestValidatePath(t *testing.T) {
 
 	cases := []input{
 		{
-			Path:  "a/b/c",
-			Valid: true,
+			"a/b/c",
+			true,
 		},
 		{
-			Path:  "a/b/",
-			Valid: true,
+			"a/b/",
+			true,
 		},
 		{
-			Path:  "/a/b",
-			Valid: false,
+			"/a/b",
+			false,
 		},
 		{
-			Path:  "./a",
-			Valid: true,
+			"./a",
+			true,
 		},
 		{
-			Path:  "./a/.../b",
-			Valid: true,
+			"./a/.../b",
+			true,
 		},
 		{
-			Path:  ".",
-			Valid: true,
+			".",
+			true,
 		},
 		{
-			Path:  "a\\b",
-			Valid: false,
+			"a\\b",
+			false,
 		},
 		{
-			Path:  "a:\\b\\c",
-			Valid: false,
+			"a:\\b\\c",
+			false,
 		},
 		{
-			Path:  "../a/../b",
-			Valid: true,
+			"../a/../b",
+			true,
 		},
 		{
-			Path:  "a//b",
-			Valid: true,
+			"a//b",
+			true,
 		},
 		{
-			Path:  "a/b/.",
-			Valid: true,
+			"a/b/.",
+			true,
+		},
+		{
+			"a/*/b",
+			true,
+		},
+		{
+			"./*",
+			true,
+		},
+		{
+			"a/b\\c",
+			false,
+		},
+		{
+			"././././",
+			true,
+		},
+		{
+			"./!&^%$/#(@)/_-=+|<;>?:'\"/'`",
+			true,
+		},
+		{
+			"",
+			true,
+		},
+		{
+			"\t \n",
+			true,
 		},
 	}
 
