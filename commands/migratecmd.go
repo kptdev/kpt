@@ -354,7 +354,7 @@ func updateOwningInventoryAnnotation(f cmdutil.Factory, objMetas []object.ObjMet
 			}
 			return err
 		}
-		changed, err := client.UpdateAnnotation(obj, old, new)
+		changed, err := client.ReplaceOwningInventoryID(obj, old, new)
 		if err != nil {
 			return err
 		}

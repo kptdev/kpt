@@ -4,12 +4,15 @@
 package client
 
 import (
+	"reflect"
 	"testing"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/kubectl/pkg/scheme"
+	"k8s.io/kubectl/pkg/util"
 )
 
-func TestUpdateAnnotation(t *testing.T) {
+func TestReplaceOwningInventoryID(t *testing.T) {
 	testcases := []struct {
 		name         string
 		annotations  map[string]string
@@ -55,7 +58,7 @@ func TestUpdateAnnotation(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		deployment.SetAnnotations(tc.annotations)
-		updated, err := UpdateAnnotation(deployment, tc.oldID, tc.newID)
+		updated, err := ReplaceOwningInventoryID(deployment, tc.oldID, tc.newID)
 		if err != nil {
 			t.Errorf("unexpected error %v", err)
 		}
@@ -68,6 +71,61 @@ func TestUpdateAnnotation(t *testing.T) {
 			}
 		} else if updated {
 			t.Errorf("owning-inventory shouldn't be changed")
+		}
+	}
+}
+
+func TestUpdateAnnotation(t *testing.T) {
+	testcases := []struct {
+		name        string
+		annotations map[string]string
+	}{
+		{
+			name: "add new annotations",
+			annotations: map[string]string{
+				"config.k8s.io/owning-inventory": "new",
+				"random-key":                     "value",
+			},
+		},
+		{
+			name: "remove existing annotations",
+			annotations: map[string]string{
+				"random-key": "value",
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		u := &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "apps/v1",
+				"kind":       "Deployment",
+				"metadata": map[string]interface{}{
+					"name":      "deployment",
+					"namespace": "test",
+					"annotations": map[string]interface{}{
+						"config.k8s.io/owning-inventory": "old",
+					},
+				},
+			},
+		}
+		uCloned := u.DeepCopy()
+		uCloned.SetAnnotations(tc.annotations)
+		err := util.CreateOrUpdateAnnotation(true, uCloned, scheme.DefaultJSONEncoder())
+		if err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+		err = util.CreateOrUpdateAnnotation(true, u, scheme.DefaultJSONEncoder())
+		if err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+		err = UpdateAnnotation(u, tc.annotations)
+		if err != nil {
+			t.Errorf("unexpected error %v", err)
+		}
+
+		if !reflect.DeepEqual(u, uCloned) {
+			t.Errorf("%s failed: expected %v, but got %v", tc.name, uCloned, u)
 		}
 	}
 }
