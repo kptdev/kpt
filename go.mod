@@ -15,12 +15,13 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gotest.tools v2.2.0+incompatible
+	k8s.io/api v0.18.10
 	k8s.io/apimachinery v0.18.10
 	k8s.io/cli-runtime v0.18.10
 	k8s.io/client-go v0.18.10
 	k8s.io/klog v1.0.0
 	k8s.io/kubectl v0.18.10
-	sigs.k8s.io/cli-utils v0.22.2-0.20201210231122-103e4dc4231a
+	sigs.k8s.io/cli-utils v0.22.4-0.20210108175429-beb6f88a4384
 	sigs.k8s.io/kustomize/cmd/config v0.8.7-0.20201211170716-cc43a2d732d1
-	sigs.k8s.io/kustomize/kyaml v0.10.4-0.20201211170716-cc43a2d732d1
+	sigs.k8s.io/kustomize/kyaml v0.10.5
 )
