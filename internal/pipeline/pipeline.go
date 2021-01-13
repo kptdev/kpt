@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
+
 // Package pipeline provides struct definitions for Pipeline and utility
 // methods to read and write a pipeline resource.
 package pipeline
@@ -99,7 +99,7 @@ func (p *Pipeline) Validate() error {
 			continue
 		}
 		if err := ValidatePath(s); err != nil {
-			return fmt.Errorf("'sources[%d]' invalid: %w", i, err)
+			return fmt.Errorf("'sources[%d]': path %q is invalid: %w", i, s, err)
 		}
 		p.Sources[i] = path.Clean(s)
 	}
@@ -207,7 +207,7 @@ func (f *Function) Validate() error {
 	var configFields []string
 	if f.ConfigPath != "" {
 		if err := ValidatePath(f.ConfigPath); err != nil {
-			return fmt.Errorf("'configPath' is invalid: %w", err)
+			return fmt.Errorf("'configPath' %q is invalid: %w", f.ConfigPath, err)
 		}
 		configFields = append(configFields, "configPath")
 	}
@@ -268,17 +268,19 @@ func isNodeZero(n *yaml.Node) bool {
 // ValidatePath validates input path and return an error if it's invalid
 func ValidatePath(p string) error {
 	if path.IsAbs(p) {
-		return fmt.Errorf("path %q is not relative", p)
+		return fmt.Errorf("path is not relative")
 	}
 	if strings.TrimSpace(p) == "" {
-		return fmt.Errorf("path %q cannot have only white spaces", p)
+		return fmt.Errorf("path cannot have only white spaces")
 	}
 	if p != "./*" && strings.Contains(p, "*") {
-		return fmt.Errorf("path %q contains asterisk, asterisk is only allowed in './*'", p)
+		return fmt.Errorf("path contains asterisk, asterisk is only allowed in './*'")
 	}
+	// backslash (\\), alert bell (\a), backspace (\b), form feed (\f), vertical tab(\v) are
+	// unlikely to be in a valid path
 	for _, c := range "\\\a\b\f\v" {
 		if strings.Contains(p, string(c)) {
-			return fmt.Errorf("path %q cannot have character %q", p, c)
+			return fmt.Errorf("path cannot have character %q", c)
 		}
 	}
 	return nil
