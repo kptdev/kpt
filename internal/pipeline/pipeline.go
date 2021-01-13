@@ -87,11 +87,11 @@ func (p *Pipeline) String() string {
 // they are valid if all functions in them are ALL valid.
 func (p *Pipeline) Validate() error {
 	if p.APIVersion != kptAPIVersion {
-		return fmt.Errorf("'apiVersion' %s is not valid, should be %s",
+		return fmt.Errorf("'apiVersion' %q is invalid, should be %q",
 			p.APIVersion, kptAPIVersion)
 	}
 	if p.Kind != pipelineKind {
-		return fmt.Errorf("'kind' %s is not valid, should be %s",
+		return fmt.Errorf("'kind' %q is invalid, should be %q",
 			p.Kind, pipelineKind)
 	}
 	for i, s := range p.Sources {
@@ -110,7 +110,7 @@ func (p *Pipeline) Validate() error {
 	for _, f := range fns {
 		err := f.Validate()
 		if err != nil {
-			return fmt.Errorf("function %s is not valid: %w", f.Image, err)
+			return fmt.Errorf("function %q is invalid: %w", f.Image, err)
 		}
 	}
 	return nil
@@ -201,7 +201,7 @@ type Function struct {
 func (f *Function) Validate() error {
 	err := ValidateFunctionName(f.Image)
 	if err != nil {
-		return fmt.Errorf("'image' is not valid: %w", err)
+		return fmt.Errorf("'image' is invalid: %w", err)
 	}
 
 	var configFields []string
@@ -218,7 +218,7 @@ func (f *Function) Validate() error {
 		configFields = append(configFields, "config")
 	}
 	if len(configFields) > 1 {
-		return fmt.Errorf("only zero or one config is allowed but got [%s]",
+		return fmt.Errorf("following fields are mutually exclusive: 'config', 'configMap', 'configPath'. Got %q",
 			strings.Join(configFields, ", "))
 	}
 
@@ -247,7 +247,7 @@ func ValidateFunctionName(name string) error {
 		return err
 	}
 	if !matched {
-		return fmt.Errorf("function name %s is invalid", name)
+		return fmt.Errorf("function name %q is invalid", name)
 	}
 	return nil
 }
@@ -268,10 +268,18 @@ func isNodeZero(n *yaml.Node) bool {
 // ValidatePath validates input path and return an error if it's invalid
 func ValidatePath(p string) error {
 	if path.IsAbs(p) {
-		return fmt.Errorf("path is not relative: %s", p)
+		return fmt.Errorf("path %q is not relative", p)
 	}
-	if strings.Contains(p, "\\") {
-		return fmt.Errorf("path cannot have backslash: %s", p)
+	if strings.TrimSpace(p) == "" {
+		return fmt.Errorf("path %q cannot have only white spaces", p)
+	}
+	if p != "./*" && strings.Contains(p, "*") {
+		return fmt.Errorf("path %q contains asterisk, asterisk is only allowed in './*'", p)
+	}
+	for _, c := range "\\\a\b\f\v" {
+		if strings.Contains(p, string(c)) {
+			return fmt.Errorf("path %q cannot have character %q", p, c)
+		}
 	}
 	return nil
 }

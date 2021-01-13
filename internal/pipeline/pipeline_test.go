@@ -555,6 +555,14 @@ func TestValidatePath(t *testing.T) {
 			false,
 		},
 		{
+			"a\b",
+			false,
+		},
+		{
+			"a\v",
+			false,
+		},
+		{
 			"a:\\b\\c",
 			false,
 		},
@@ -572,7 +580,7 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"a/*/b",
-			true,
+			false,
 		},
 		{
 			"./*",
@@ -592,11 +600,15 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"",
-			true,
+			false,
 		},
 		{
 			"\t \n",
-			true,
+			false,
+		},
+		{
+			"*",
+			false,
 		},
 	}
 
