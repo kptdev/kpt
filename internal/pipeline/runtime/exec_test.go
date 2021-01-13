@@ -28,7 +28,7 @@ func TestExecRunner(t *testing.T) {
 		input          string
 		expectedOutput string
 		expectedError  string
-		instance       runtime.ExecRunner
+		instance       runtime.ExecFn
 	}{
 		{
 			name: "exec_sed",
@@ -53,7 +53,7 @@ metadata:
   name: service-foo
 `,
 			expectedError: "",
-			instance: runtime.ExecRunner{
+			instance: runtime.ExecFn{
 				Path: "sed",
 				Args: []string{"s/Deployment/StatefulSet/g"},
 			},

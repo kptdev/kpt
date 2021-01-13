@@ -59,7 +59,7 @@ metadata:
 	}
 
 	for _, tt := range tests {
-		instance := runtime.ContainerRunner{}
+		instance := runtime.ContainerFn{}
 		instance.Exec.Path = tt.execPath
 		instance.Exec.Args = tt.execArgs
 		input := bytes.NewBufferString(tt.input)

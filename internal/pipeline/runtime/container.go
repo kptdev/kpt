@@ -28,25 +28,25 @@ const (
 	networkNameHost containerNetworkName = "host"
 )
 
-type containerFunctionPermission struct {
+type containerFnPermission struct {
 	AllowNetwork  bool
 	AsCurrentUser bool
 }
 
-// ContainerRunner implements a KRMFn which run a containerized
+// ContainerFn implements a KRMFn which run a containerized
 // KRM function
-type ContainerRunner struct {
+type ContainerFn struct {
 	// Image is the container image to run
 	Image string
 
-	Exec ExecRunner
+	Exec ExecFn
 
-	containerFunctionPermission
+	perm containerFnPermission
 }
 
 // Run implements KRMFn. It will run the container function with
 // stdin from r and write the output to w
-func (f *ContainerRunner) Run(r io.Reader, w io.Writer) error {
+func (f *ContainerFn) Run(r io.Reader, w io.Writer) error {
 	err := f.setupExec()
 	if err != nil {
 		return fmt.Errorf("error when setup exec: %w", err)
@@ -54,33 +54,23 @@ func (f *ContainerRunner) Run(r io.Reader, w io.Writer) error {
 	return f.Exec.Run(r, w)
 }
 
-func (f *ContainerRunner) setupExec() error {
+func (f *ContainerFn) setupExec() error {
 	// don't init 2x
 	if f.Exec.Path != "" {
 		return nil
 	}
-
-	path, args, err := f.getCommand()
-	if err != nil {
-		return fmt.Errorf("error when get command and args: %w", err)
-	}
-	f.Exec.Path = path
-	f.Exec.Args = args
-	return nil
-}
-
-// getCommand returns the command + args to run to spawn the container
-func (f *ContainerRunner) getCommand() (string, []string, error) {
 	// run the container using docker.  this is simpler than using the docker
 	// libraries, and ensures things like auth work the same as if the container
 	// was run from the cli.
+	f.Exec.Path = "docker"
+
 	network := networkNameNone
-	if f.AllowNetwork {
+	if f.perm.AllowNetwork {
 		network = networkNameHost
 	}
-	UIDGID, err := getUIDGID(f.AsCurrentUser)
+	UIDGID, err := getUIDGID(f.perm.AsCurrentUser)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to get current UID and GID: %w", err)
+		return fmt.Errorf("failed to get current UID and GID: %w", err)
 	}
 	args := []string{"run",
 		"--rm",                                              // delete the container afterward
@@ -90,8 +80,10 @@ func (f *ContainerRunner) getCommand() (string, []string, error) {
 		"--security-opt=no-new-privileges", // don't allow the user to escalate privileges
 		// note: don't make fs readonly because things like heredoc rely on writing tmp files
 	}
-	a := append(args, f.Image)
-	return "docker", a, nil
+	args = append(args, f.Image)
+	f.Exec.Args = args
+
+	return nil
 }
 
 // getUIDGID will return "nobody" if asCurrentUser is false. Otherwise
@@ -108,4 +100,4 @@ func getUIDGID(asCurrentUser bool) (string, error) {
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
-// TODO: Create ContainerRunner instance from a pipeline.Function
+// TODO: Create ContainerFn instance from a pipeline.Function

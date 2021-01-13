@@ -15,23 +15,38 @@
 package runtime
 
 import (
+	"context"
 	"io"
 	"os"
 	"os/exec"
+	"time"
 )
 
-// ExecRunner runs a exec command
-type ExecRunner struct {
+const (
+	// default timeout for ExecFn is 5 minutes
+	defaultTimeout = 300 * time.Second
+)
+
+// ExecFn runs a exec command
+type ExecFn struct {
 	// Path is the path to the executable to run
 	Path string `yaml:"path,omitempty"`
 
 	// Args are the arguments to the executable
 	Args []string `yaml:"args,omitempty"`
+
+	Timeout time.Duration
 }
 
 // Run runs the command
-func (c *ExecRunner) Run(reader io.Reader, writer io.Writer) error {
-	cmd := exec.Command(c.Path, c.Args...)
+func (c *ExecFn) Run(reader io.Reader, writer io.Writer) error {
+	timeout := defaultTimeout
+	if c.Timeout != 0 {
+		timeout = c.Timeout
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, c.Path, c.Args...)
 	cmd.Stdin = reader
 	cmd.Stdout = writer
 	cmd.Stderr = os.Stderr
