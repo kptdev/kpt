@@ -75,9 +75,10 @@ func TestReplaceOwningInventoryID(t *testing.T) {
 	}
 }
 
-func TestUpdateAnnotation(t *testing.T) {
+func TestUpdateLabelsAndAnnotations(t *testing.T) {
 	testcases := []struct {
 		name        string
+		labels      map[string]string
 		annotations map[string]string
 	}{
 		{
@@ -93,6 +94,19 @@ func TestUpdateAnnotation(t *testing.T) {
 				"random-key": "value",
 			},
 		},
+		{
+			name: "add new labels",
+			labels: map[string]string{
+				"old-key":    "old-value",
+				"random-key": "value",
+			},
+		},
+		{
+			name: "remove existing labels",
+			labels: map[string]string{
+				"random-key": "value",
+			},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -103,6 +117,9 @@ func TestUpdateAnnotation(t *testing.T) {
 				"metadata": map[string]interface{}{
 					"name":      "deployment",
 					"namespace": "test",
+					"labels": map[string]interface{}{
+						"old-key": "old-value",
+					},
 					"annotations": map[string]interface{}{
 						"config.k8s.io/owning-inventory": "old",
 					},
@@ -110,7 +127,12 @@ func TestUpdateAnnotation(t *testing.T) {
 			},
 		}
 		uCloned := u.DeepCopy()
-		uCloned.SetAnnotations(tc.annotations)
+		if tc.annotations != nil {
+			uCloned.SetAnnotations(tc.annotations)
+		}
+		if tc.labels != nil {
+			uCloned.SetLabels(tc.labels)
+		}
 		err := util.CreateOrUpdateAnnotation(true, uCloned, scheme.DefaultJSONEncoder())
 		if err != nil {
 			t.Errorf("unexpected error %v", err)
@@ -119,7 +141,11 @@ func TestUpdateAnnotation(t *testing.T) {
 		if err != nil {
 			t.Errorf("unexpected error %v", err)
 		}
-		err = UpdateAnnotation(u, tc.annotations)
+		if tc.labels != nil {
+			err = UpdateLabelsAndAnnotations(u, tc.labels, u.GetAnnotations())
+		} else if tc.annotations != nil {
+			err = UpdateLabelsAndAnnotations(u, u.GetLabels(), tc.annotations)
+		}
 		if err != nil {
 			t.Errorf("unexpected error %v", err)
 		}
