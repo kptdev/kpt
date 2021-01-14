@@ -26,7 +26,7 @@ reference for advanced usecases.
 <!--mdtogo:Long-->
 
 ```sh
-kpt fn run DIR [flags]
+kpt fn run [DIR] [flags]
 ```
 
 If the container exits with non-zero status code, run will fail and print the
@@ -63,6 +63,12 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 # discover functions in DIR and run them against Resource in DIR.
 # functions may be scoped to a subset of Resources -- see `kpt help fn run`
 kpt fn run DIR/
+```
+
+```sh
+# pipe a resource from stdin and execute a function against it.
+# print the results to stdout
+kpt fn source . | kpt fn run --image gcr.io/example.com/my-fn
 ```
 
 <!--mdtogo-->
