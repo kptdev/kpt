@@ -14,6 +14,10 @@
 
 package runtime
 
+// some of these codes are copied from
+// - https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/fn/runtime/container/container.go
+// - https://github.com/kubernetes-sigs/kustomize/blob/master/kyaml/fn/runtime/exec/exec.go
+
 import (
 	"context"
 	"fmt"
