@@ -1,3 +1,5 @@
+// +build docker
+
 // Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,54 +24,43 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestContainerRunner(t *testing.T) {
+func TestContainerFn(t *testing.T) {
 	// use sed to test instead of calling real docker
 	var tests = []struct {
-		input    string
-		execPath string
-		execArgs []string
-		output   string
+		input  string
+		image  string
+		output string
+		name   string
+		err    bool
 	}{
 		{
-			input: `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: deployment-foo
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: service-foo
-`,
-			execPath: "sed",
-			execArgs: []string{"s/Deployment/StatefulSet/g"},
-			output: `
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: deployment-foo
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: service-foo
-`,
+			name:  "simple busybox",
+			image: "gcr.io/google-containers/busybox",
+		},
+		{
+			name:  "non-existing image",
+			image: "foobar",
+			err:   true,
 		},
 	}
 
 	for _, tt := range tests {
-		instance := runtime.ContainerFn{}
-		instance.Exec.Path = tt.execPath
-		instance.Exec.Args = tt.execArgs
-		input := bytes.NewBufferString(tt.input)
-		output := &bytes.Buffer{}
-		err := instance.Run(input, output)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		if !assert.Equal(t, tt.output, output.String()) {
-			t.FailNow()
-		}
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			instance := runtime.ContainerFn{}
+			instance.Image = tt.image
+			input := bytes.NewBufferString(tt.input)
+			output := &bytes.Buffer{}
+			err := instance.Run(input, output)
+			if tt.err && !assert.Error(t, err) {
+				t.FailNow()
+			}
+			if !tt.err && !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, tt.output, output.String()) {
+				t.FailNow()
+			}
+		})
 	}
 }

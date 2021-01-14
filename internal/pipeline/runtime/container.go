@@ -15,20 +15,27 @@
 package runtime
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"os"
+	"os/exec"
 	"os/user"
+	"time"
 )
 
-// ContainerNetworkName is a type for network name used in container
+// containerNetworkName is a type for network name used in container
 type containerNetworkName string
 
 const (
 	networkNameNone containerNetworkName = "none"
 	networkNameHost containerNetworkName = "host"
+	defaultTimeout  time.Duration        = 5 * time.Minute
 )
 
-type containerFnPermission struct {
+// ContainerFnPermission contains the permission of container
+// function such as network access.
+type ContainerFnPermission struct {
 	AllowNetwork  bool
 	AsCurrentUser bool
 }
@@ -38,37 +45,25 @@ type containerFnPermission struct {
 type ContainerFn struct {
 	// Image is the container image to run
 	Image string
-
-	Exec ExecFn
-
-	perm containerFnPermission
+	// Container function will be killed after this timeour.
+	// The default value is 5 minutes.
+	Timeout time.Duration
+	Perm    ContainerFnPermission
 }
 
 // Run implements KRMFn. It will run the container function with
 // stdin from r and write the output to w
 func (f *ContainerFn) Run(r io.Reader, w io.Writer) error {
-	err := f.setupExec()
-	if err != nil {
-		return fmt.Errorf("error when setup exec: %w", err)
-	}
-	return f.Exec.Run(r, w)
-}
-
-func (f *ContainerFn) setupExec() error {
-	// don't init 2x
-	if f.Exec.Path != "" {
-		return nil
-	}
 	// run the container using docker.  this is simpler than using the docker
 	// libraries, and ensures things like auth work the same as if the container
 	// was run from the cli.
-	f.Exec.Path = "docker"
+	path := "docker"
 
 	network := networkNameNone
-	if f.perm.AllowNetwork {
+	if f.Perm.AllowNetwork {
 		network = networkNameHost
 	}
-	UIDGID, err := getUIDGID(f.perm.AsCurrentUser)
+	UIDGID, err := getUIDGID(f.Perm.AsCurrentUser)
 	if err != nil {
 		return fmt.Errorf("failed to get current UID and GID: %w", err)
 	}
@@ -81,9 +76,18 @@ func (f *ContainerFn) setupExec() error {
 		// note: don't make fs readonly because things like heredoc rely on writing tmp files
 	}
 	args = append(args, f.Image)
-	f.Exec.Args = args
 
-	return nil
+	timeout := defaultTimeout
+	if f.Timeout != 0 {
+		timeout = f.Timeout
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, path, args...)
+	cmd.Stdin = r
+	cmd.Stdout = w
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // getUIDGID will return "nobody" if asCurrentUser is false. Otherwise
