@@ -1079,7 +1079,7 @@ executables which are run against the contents of a package.</p>
 reference for advanced usecases.</p>
 <h2 id="synopsis">Synopsis</h2>
 <!--mdtogo:Long-->
-<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run DIR <span style="color:#ce5c00;font-weight:bold">[</span>flags<span style="color:#ce5c00;font-weight:bold">]</span>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kpt fn run <span style="color:#ce5c00;font-weight:bold">[</span>DIR<span style="color:#ce5c00;font-weight:bold">]</span> <span style="color:#ce5c00;font-weight:bold">[</span>flags<span style="color:#ce5c00;font-weight:bold">]</span>
 </code></pre></div><p>If the container exits with non-zero status code, run will fail and print the
 container <code>STDERR</code>.</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">DIR:
@@ -1097,6 +1097,9 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 </code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># discover functions in DIR and run them against Resource in DIR.</span>
 <span style="color:#8f5902;font-style:italic"># functions may be scoped to a subset of Resources -- see `kpt help fn run`</span>
 kpt fn run DIR/
+</code></pre></div><div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># pipe a resource from stdin and execute a function against it.</span>
+<span style="color:#8f5902;font-style:italic"># print the results to stdout</span>
+kpt fn <span style="color:#204a87">source</span> . <span style="color:#000;font-weight:bold">|</span> kpt fn run --image gcr.io/example.com/my-fn
 </code></pre></div><!--mdtogo-->
 <h2 id="structured-results">Structured Results</h2>
 <p>Functions may emit results using the structure defined in the
@@ -1429,7 +1432,7 @@ declarative functions will be <strong>ignored</strong>.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 6, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/de9963f2f133f9b6283552691bbfa73f8b87cf72">docs: update network option in function config (de9963f2)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified January 15, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/139154899c715bb42b1826af77cb5746b115e7ec">Update `fn run` docs. (#1361) (13915489)</a>
 </div>
 </div>
 
