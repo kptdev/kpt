@@ -15,6 +15,7 @@
 package kptfileutil
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -132,6 +133,20 @@ func ValidateInventory(inv *kptfile.Inventory) (bool, error) {
 		return false, fmt.Errorf("kptfile inventory missing inventoryID")
 	}
 	return true, nil
+}
+
+func Equal(kf1, kf2 kptfile.KptFile) (bool, error) {
+	kf1Bytes, err := yaml.Marshal(kf1)
+	if err != nil {
+		return false, err
+	}
+
+	kf2Bytes, err := yaml.Marshal(kf2)
+	if err != nil {
+		return false, err
+	}
+
+	return bytes.Equal(kf1Bytes, kf2Bytes), nil
 }
 
 // DefaultKptfile returns a new minimal Kptfile.

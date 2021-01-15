@@ -31,6 +31,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 )
 
 // Command fetches a package from a git repository and copies it to a local directory.
@@ -67,39 +68,147 @@ func (c Command) Run() error {
 	// define where we are going to clone the package from
 	r := &git.RepoSpec{OrgRepo: c.Repo, Path: c.Directory, Ref: c.Ref}
 
-	defaultRef, err := gitutil.DefaultRef(c.Repo)
+	err := cloneAndCopy(r, c.Destination, c.Name, c.Clean)
 	if err != nil {
 		return err
 	}
 
-	// clone the repo to a tmp directory.
-	// delete the tmp directory later.
-	err = ClonerUsingGitExec(r, defaultRef)
+	if err = c.fetchRemoteSubpackages(); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+// fetchRemoteSubpackages goes through the root package and its subpackages
+// and fetches any remote subpackages referenced. It will also handle situations
+// where a remote subpackage references other remote subpackages.
+func (c Command) fetchRemoteSubpackages() error {
+	// Create a stack to keep track of all Kptfiles that needs to be checked
+	// for remote subpackages.
+	stack := newStack()
+
+	paths, err := pathutil.DirsWithFile(c.Destination, kptfile.KptFileName, true)
 	if err != nil {
+		return err
+	}
+	for _, p := range paths {
+		stack.push(p)
+	}
+
+	for stack.len() > 0 {
+		p := stack.pop()
+		kf, err := kptfileutil.ReadFile(p)
+		if err != nil {
+			return err
+		}
+
+		remoteSubPkgDirs := make(map[string]bool)
+		for i := range kf.Subpackages {
+			sp := kf.Subpackages[i]
+
+			if _, found := remoteSubPkgDirs[sp.LocalDir]; found {
+				return fmt.Errorf("multiple remote subpackages with localDir %q", sp.LocalDir)
+			}
+			remoteSubPkgDirs[sp.LocalDir] = true
+
+			gitInfo := sp.Git
+			localPath := filepath.Join(p, sp.LocalDir)
+
+			_, err = os.Stat(localPath)
+			// If we get an error and it is something different than that the
+			// directory doesn't exist, we just return the error.
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+			// Check if the folder already exist by checking if err is nil. Due
+			// to the check above, err here can only be IsNotExist or nil. So
+			// if err is nil it means the folder already exists.
+			// If it does, we return an error with a specific error message.
+			if err == nil {
+				return fmt.Errorf("local subpackage in directory %q already exists. Either"+
+					"rename the local subpackage or use a different directory for the remote subpackage", sp.LocalDir)
+			}
+
+			r := &git.RepoSpec{OrgRepo: gitInfo.Repo, Path: gitInfo.Directory, Ref: gitInfo.Ref}
+			err := cloneAndCopy(r, localPath, sp.LocalDir, false)
+			if err != nil {
+				return err
+			}
+
+			subPaths, err := pathutil.DirsWithFile(localPath, kptfile.KptFileName, true)
+			if err != nil {
+				return err
+			}
+			for _, subp := range subPaths {
+				if subp == localPath {
+					continue
+				}
+				stack.push(subp)
+			}
+		}
+	}
+	return nil
+}
+
+// cloneAndCopy fetches the provided repo and copies the content into the
+// directory specified by dest. The provided name is set as `metadata.name`
+// of the Kptfile of the package.
+func cloneAndCopy(r *git.RepoSpec, dest, name string, clean bool) error {
+	defaultRef, err := gitutil.DefaultRef(r.OrgRepo)
+	if err != nil {
+		return err
+	}
+
+	if err := ClonerUsingGitExec(r, defaultRef); err != nil {
 		return errors.Errorf("failed to clone git repo: %v", err)
 	}
 	defer os.RemoveAll(r.Dir)
 
 	// delete the existing package if it exists
-	if c.Clean {
-		err = os.RemoveAll(c.Destination)
+	if clean {
+		err = os.RemoveAll(dest)
 		if err != nil {
 			return errors.Wrap(err)
 		}
 	}
 
-	// copy the git sub directory to the destination
-	err = copyutil.CopyDir(r.AbsPath(), c.Destination)
-	if err != nil {
+	if err := copyutil.CopyDir(r.AbsPath(), dest); err != nil {
 		return errors.WrapPrefixf(err, "missing subdirectory %s in repo %s at ref %s\n",
 			r.Path, r.OrgRepo, r.Ref)
 	}
 
-	// create or update the KptFile with the values from git
-	if err = upsertKptfile(c.Destination, c.Name, r); err != nil {
+	if err := upsertKptfile(dest, name, r); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil
+}
+
+func newStack() *stack {
+	return &stack{
+		slice: make([]string, 0),
+	}
+}
+
+type stack struct {
+	slice []string
+}
+
+func (s *stack) push(str string) {
+	s.slice = append(s.slice, str)
+}
+
+func (s *stack) pop() string {
+	l := len(s.slice)
+	if l == 0 {
+		panic(fmt.Errorf("can't pop an empty stack"))
+	}
+	str := s.slice[l-1]
+	s.slice = s.slice[:l-1]
+	return str
+}
+
+func (s *stack) len() int {
+	return len(s.slice)
 }
 
 // Cloner is a function that can clone a git repo.

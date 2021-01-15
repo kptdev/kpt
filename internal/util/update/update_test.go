@@ -1359,12 +1359,12 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			name: "Merging of Kptfile in nested package",
 			initialUpstream: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/foo/bar", "somebranch"),
+					WithUpstream("github.com/foo/bar", "/", "somebranch"),
 				).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpkg").
 						WithKptfile(pkgbuilder.NewKptfile().
-							WithUpstream("gitlab.com/comp/proj", "1234abcd").
+							WithUpstream("gitlab.com/comp/proj", "/", "1234abcd").
 							WithSetters(
 								pkgbuilder.NewSetter("setter1", "value1"),
 							),
@@ -1373,12 +1373,12 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			updatedUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(pkgbuilder.NewKptfile().
-						WithUpstream("github.com/foo/bar", "somebranch"),
+						WithUpstream("github.com/foo/bar", "/", "somebranch"),
 					).
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("subpkg").
 							WithKptfile(pkgbuilder.NewKptfile().
-								WithUpstream("gitlab.com/comp/proj", "abcd1234").
+								WithUpstream("gitlab.com/comp/proj", "/", "abcd1234").
 								WithSetters(
 									pkgbuilder.NewSetter("setter1", "value1"),
 									pkgbuilder.NewSetter("setter2", "value2"),
@@ -1391,12 +1391,12 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					strategies: []StrategyType{KResourceMerge, FastForward},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(pkgbuilder.NewKptfile().
-							WithUpstream("github.com/foo/bar", "somebranch"),
+							WithUpstream("github.com/foo/bar", "/", "somebranch"),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("subpkg").
 								WithKptfile(pkgbuilder.NewKptfile().
-									WithUpstream("gitlab.com/comp/proj", "abcd1234").
+									WithUpstream("gitlab.com/comp/proj", "/", "abcd1234").
 									WithSetters(
 										pkgbuilder.NewSetter("setter1", "value1"),
 										pkgbuilder.NewSetter("setter2", "value2"),

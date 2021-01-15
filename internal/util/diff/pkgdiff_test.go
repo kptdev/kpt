@@ -79,7 +79,7 @@ func TestPkgDiff(t *testing.T) {
 			name: "different upstream in Kptfile is not a diff",
 			pkg1: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/GoogleContainerTools/kpt", "master").
+					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master").
 					WithSetters(
 						pkgbuilder.NewSetter("foo", "bar"),
 					),
@@ -87,7 +87,7 @@ func TestPkgDiff(t *testing.T) {
 				WithResource(pkgbuilder.DeploymentResource),
 			pkg2: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/GoogleContainerTools/kpt", "kpt/v1").
+					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "kpt/v1").
 					WithSetters(
 						pkgbuilder.NewSetter("foo", "bar"),
 					),

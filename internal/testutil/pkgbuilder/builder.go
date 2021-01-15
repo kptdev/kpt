@@ -135,6 +135,8 @@ func (p *pkg) withSubPackages(ps ...*SubPkg) {
 	p.subPkgs = append(p.subPkgs, ps...)
 }
 
+// allReferencedRepos traverses the root package and all subpackages to
+// capture all references to other repos.
 func (p *pkg) allReferencedRepos(collector map[string]bool) {
 	for i := range p.subPkgs {
 		p.subPkgs[i].pkg.allReferencedRepos(collector)
@@ -142,7 +144,7 @@ func (p *pkg) allReferencedRepos(collector map[string]bool) {
 	if p.Kptfile != nil {
 		for i := range p.Kptfile.Subpackages {
 			sp := p.Kptfile.Subpackages[i]
-			collector[sp.Name] = true
+			collector[sp.RepoRef] = true
 		}
 	}
 }
@@ -294,8 +296,7 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 type Kptfile struct {
 	Setters     []Setter
 	Subpackages []RemoteSubpackage
-	Repo        string
-	Ref         string
+	Upstream    Upstream
 }
 
 func NewKptfile() *Kptfile {
@@ -305,10 +306,33 @@ func NewKptfile() *Kptfile {
 // WithUpstream adds information about the upstream information to the Kptfile.
 // The upstream section of the Kptfile is only added if this information is
 // provided.
-func (k *Kptfile) WithUpstream(repo, ref string) *Kptfile {
-	k.Repo = repo
-	k.Ref = ref
+func (k *Kptfile) WithUpstream(repo, dir, ref string) *Kptfile {
+	k.Upstream = Upstream{
+		Repo: repo,
+		Dir:  dir,
+		Ref:  ref,
+	}
 	return k
+}
+
+// WithUpstreamRef adds information about the upstream information to the
+// Kptfile. Unlike WithUpstream, this function allows providing just a
+// reference to the repo rather than the actual path. The reference will
+// be resolved to an actual path when the package is written to disk.
+func (k *Kptfile) WithUpstreamRef(repoRef, dir, ref string) *Kptfile {
+	k.Upstream = Upstream{
+		RepoRef: repoRef,
+		Dir:     dir,
+		Ref:     ref,
+	}
+	return k
+}
+
+type Upstream struct {
+	Repo    string
+	RepoRef string
+	Dir     string
+	Ref     string
 }
 
 func (k *Kptfile) WithSubpackages(subpackages ...RemoteSubpackage) *Kptfile {
@@ -322,19 +346,21 @@ type RemoteSubpackage struct {
 	// Name is the name of the remote subpackage. It will be used as the value
 	// for the LocalDir property and also used to resolve the Repo path from
 	// other defined repos.
-	Name      string
+	RepoRef   string
 	Repo      string
 	Directory string
 	Ref       string
 	Strategy  string
+	LocalDir  string
 }
 
-func NewSubpackage(name, directory, ref, strategy string) RemoteSubpackage {
+func NewSubpackage(repoRef, directory, ref, strategy, localDir string) RemoteSubpackage {
 	return RemoteSubpackage{
-		Name:      name,
+		RepoRef:   repoRef,
 		Directory: directory,
 		Ref:       ref,
 		Strategy:  strategy,
+		LocalDir:  localDir,
 	}
 }
 
@@ -482,7 +508,7 @@ subpackages:
     directory: {{.Directory}}
     ref: {{.Ref}}
     repo: {{.Repo}}
-  localDir: {{.Name}}
+  localDir: {{.LocalDir}}
   updateStrategy: {{.Strategy}}
 {{- end }}
 {{- end }}
@@ -500,28 +526,37 @@ openAPI:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- if gt (len .Pkg.Kptfile.Repo) 0 }}
+{{- if gt (len .Pkg.Kptfile.Upstream.Repo) 0 }}
 upstream:
   type: git
   git:
-    ref: {{.Pkg.Kptfile.Ref}}
-    repo: {{.Pkg.Kptfile.Repo}}
+    directory: {{.Pkg.Kptfile.Upstream.Dir}}
+    ref: {{.Pkg.Kptfile.Upstream.Ref}}
+    repo: {{.Pkg.Kptfile.Upstream.Repo}}
 {{- end }}
 `
 
 func buildKptfile(pkg *pkg, pkgName string, repoPaths map[string]string) string {
 	for i := range pkg.Kptfile.Subpackages {
-		name := pkg.Kptfile.Subpackages[i].Name
+		repoRef := pkg.Kptfile.Subpackages[i].RepoRef
 		found := false
 		for n, repoPath := range repoPaths {
-			if n == name {
+			if n == repoRef {
 				pkg.Kptfile.Subpackages[i].Repo = repoPath
 				found = true
 			}
 		}
 		if !found {
-			panic(fmt.Errorf("paths for package %s not found", name))
+			panic(fmt.Errorf("paths for package %s not found", repoRef))
 		}
+	}
+	if pkg.Kptfile.Upstream.RepoRef != "" {
+		repoRef := pkg.Kptfile.Upstream.RepoRef
+		repo, found := repoPaths[repoRef]
+		if !found {
+			panic(fmt.Errorf("paths for package %s not found", repoRef))
+		}
+		pkg.Kptfile.Upstream.Repo = repo
 	}
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {
