@@ -15,9 +15,11 @@
 package kptfileutil
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -32,7 +34,7 @@ func ReadFile(dir string) (kptfile.KptFile, error) {
 
 	// if we are in a package subdirectory, find the parent dir with the Kptfile.
 	// this is necessary to parse the duck-commands for sub-directories of a package
-	for os.IsNotExist(err) && filepath.Dir(dir) != dir {
+	for os.IsNotExist(err) && filepath.Base(dir) == kptfile.KptFileName {
 		dir = filepath.Dir(dir)
 		f, err = os.Open(filepath.Join(dir, kptfile.KptFileName))
 	}
@@ -109,4 +111,25 @@ func ReadFileStrict(pkgPath string) (kptfile.KptFile, error) {
 		}
 	}
 	return kf, nil
+}
+
+// ValidateInventory returns true and a nil error if the passed inventory
+// is valid; otherwise, false and the reason the inventory is not valid
+// is returned. A valid inventory must have a non-empty namespace, name,
+// and id.
+func ValidateInventory(inv *kptfile.Inventory) (bool, error) {
+	if inv == nil {
+		return false, fmt.Errorf("kptfile missing inventory section")
+	}
+	// Validate the name, namespace, and inventory id
+	if strings.TrimSpace(inv.Name) == "" {
+		return false, fmt.Errorf("kptfile inventory empty name")
+	}
+	if strings.TrimSpace(inv.Namespace) == "" {
+		return false, fmt.Errorf("kptfile inventory empty namespace")
+	}
+	if strings.TrimSpace(inv.InventoryID) == "" {
+		return false, fmt.Errorf("kptfile inventory missing inventoryID")
+	}
+	return true, nil
 }

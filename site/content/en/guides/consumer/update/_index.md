@@ -47,7 +47,8 @@ See [update strategies] for more choices on how to merge upstream changes.
 Following is a short explanation of the command that will be demonstrated
 in this guide.
 
-- Copy the staging/cockroachdb subdirectory out of the [kubernetes examples] git repo
+- Copy the staging/cockroachdb subdirectory out of the [kubernetes examples]
+  git repo
 - Edit the local package contents
 - Commit the changes
 - Update the local package with upstream changes from a new version
@@ -56,9 +57,6 @@ in this guide.
 
 ## Steps
 
-- [Topics](#topics)
-- [`kpt pkg update` explained](#kpt-pkg-update-explained)
-- [Steps](#steps)
 - [Fetch a remote package](#fetch-a-remote-package)
   - [Fetch Command](#fetch-command)
   - [Fetch Output](#fetch-output)
@@ -74,8 +72,17 @@ in this guide.
 
 ## Fetch a remote package
 
-Packages can be fetched at specific versions defined by git tags, and have
-updated to later versions to merge in upstream changes.
+Packages can be fetched at specific versions defined by git tags, and then
+updated to later versions by merging in upstream changes.
+
+### Initialize local Repository
+
+<!-- @InitRepo @verifyGuides-->
+```sh
+mkdir workspace
+cd workspace
+git init
+```
 
 ### Fetch Command
 
@@ -102,6 +109,14 @@ resolve the subdirectory version.
 `package-examples/helloworld-set/v0.3.0` if it exists, otherwise it is
 resolved to the tag `v0.3.0`.
 {{% /pageinfo %}}
+
+### Commit Local Repository 1st Version
+
+<!-- @commitLocalRepository @verifyGuides-->
+```sh
+git add .
+git commit -m "init"
+```
 
 ## Edit the contents
 
@@ -168,9 +183,8 @@ has uncommitted changes.
 
 <!-- @commitLocalChanges @verifyGuides-->
 ```sh
-git init
 git add .
-git commit -m "add helloworld package at v0.3.0"
+git commit -m "local package edits"
 ```
 
 ## Merge upstream changes
@@ -286,3 +300,4 @@ and local modifications (additional environment variable).
 
 [kpt pkg update]: ../../../reference/pkg/update/
 [update strategies]: ../../../reference/pkg/update/#flags
+[kubernetes examples]: https://github.com/kubernetes/examples

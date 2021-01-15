@@ -48,6 +48,10 @@ docker run gcr.io/kpt-dev/kpt version
 
 See the [docs] for more information on how to use `kpt`.
 
+### [Roadmap][roadmap]
+
+See the [roadmap] for more information about new features planned for `kpt`.
+
 ---
 
 [linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
@@ -56,3 +60,4 @@ See the [docs] for more information on how to use `kpt`.
 [docs]: https://googlecontainertools.github.io/kpt
 [release]: https://github.com/GoogleContainerTools/kpt/releases/latest
 [gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
+[roadmap]: https://github.com/GoogleContainerTools/kpt/blob/master/docs/ROADMAP.md

@@ -15,6 +15,7 @@
 package openapi
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 
@@ -61,7 +62,7 @@ func FetchOpenAPISchemaFromCluster(f util.Factory) ([]byte, error) {
 		return nil, err
 	}
 	data, err := restClient.Get().AbsPath("/openapi/v2").
-		SetHeader("Accept", "application/json").Do().Raw()
+		SetHeader("Accept", "application/json").Do(context.Background()).Raw()
 	if err != nil {
 		return nil, err
 	}

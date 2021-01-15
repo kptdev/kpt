@@ -17,10 +17,8 @@ package live
 import (
 	"testing"
 
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/resource"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/object"
 )
@@ -29,9 +27,9 @@ var testNamespace = "test-inventory-namespace"
 var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
-var inventoryObj = unstructured.Unstructured{
+var inventoryObj = &unstructured.Unstructured{
 	Object: map[string]interface{}{
-		"apiVersion": "configmanagement.gke.io/v1beta1",
+		"apiVersion": "kpt.dev/v1alpha1",
 		"kind":       "ResourceGroup",
 		"metadata": map[string]interface{}{
 			"name":      inventoryObjName,
@@ -44,24 +42,6 @@ var inventoryObj = unstructured.Unstructured{
 			"resources": []interface{}{},
 		},
 	},
-}
-
-var invInfo = &resource.Info{
-	Namespace: testNamespace,
-	Name:      inventoryObjName,
-	Mapping: &meta.RESTMapping{
-		Scope: meta.RESTScopeNamespace,
-	},
-	Object: &inventoryObj,
-}
-
-var invInfoNilObject = &resource.Info{
-	Namespace: testNamespace,
-	Name:      inventoryObjName,
-	Mapping: &meta.RESTMapping{
-		Scope: meta.RESTScopeNamespace,
-	},
-	Object: nil,
 }
 
 var testDeployment = object.ObjMetadata{
@@ -93,37 +73,32 @@ var testPod = object.ObjMetadata{
 
 func TestLoadStore(t *testing.T) {
 	tests := map[string]struct {
-		invInfo *resource.Info
+		inv     *unstructured.Unstructured
 		objs    []object.ObjMetadata
 		isError bool
 	}{
 		"Nil inventory is error": {
-			invInfo: nil,
-			objs:    []object.ObjMetadata{},
-			isError: true,
-		},
-		"Inventory with nil object is error": {
-			invInfo: invInfoNilObject,
+			inv:     nil,
 			objs:    []object.ObjMetadata{},
 			isError: true,
 		},
 		"No inventory objects is valid": {
-			invInfo: invInfo,
+			inv:     inventoryObj,
 			objs:    []object.ObjMetadata{},
 			isError: false,
 		},
 		"Simple test": {
-			invInfo: invInfo,
+			inv:     inventoryObj,
 			objs:    []object.ObjMetadata{testPod},
 			isError: false,
 		},
 		"Test two objects": {
-			invInfo: invInfo,
+			inv:     inventoryObj,
 			objs:    []object.ObjMetadata{testDeployment, testService},
 			isError: false,
 		},
 		"Test three objects": {
-			invInfo: invInfo,
+			inv:     inventoryObj,
 			objs:    []object.ObjMetadata{testDeployment, testService, testPod},
 			isError: false,
 		},
@@ -131,7 +106,7 @@ func TestLoadStore(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			wrapped := WrapInventoryObj(tc.invInfo)
+			wrapped := WrapInventoryObj(tc.inv)
 			_ = wrapped.Store(tc.objs)
 			invStored, err := wrapped.GetObject()
 			if tc.isError {
@@ -152,6 +127,63 @@ func TestLoadStore(t *testing.T) {
 			}
 			if !object.SetEquals(tc.objs, objs) {
 				t.Fatalf("expected inventory objs (%v), got (%v)", tc.objs, objs)
+			}
+		})
+	}
+}
+
+var cmInvObj = &unstructured.Unstructured{
+	Object: map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "ConfigMap",
+		"metadata": map[string]interface{}{
+			"name":      inventoryObjName,
+			"namespace": testNamespace,
+			"labels": map[string]interface{}{
+				common.InventoryLabel: testInventoryLabel,
+			},
+		},
+	},
+}
+
+func TestIsResourceGroupInventory(t *testing.T) {
+	tests := map[string]struct {
+		invObj   *unstructured.Unstructured
+		expected bool
+		isError  bool
+	}{
+		"Nil inventory is error": {
+			invObj:   nil,
+			expected: false,
+			isError:  true,
+		},
+		"ConfigMap inventory is false": {
+			invObj:   cmInvObj,
+			expected: false,
+			isError:  false,
+		},
+		"ResourceGroup inventory is false": {
+			invObj:   inventoryObj,
+			expected: true,
+			isError:  false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual, err := IsResourceGroupInventory(tc.invObj)
+			if tc.isError {
+				if err == nil {
+					t.Fatalf("expected error but received none")
+				}
+				return
+			}
+			if !tc.isError && err != nil {
+				t.Fatalf("unexpected error %v received", err)
+				return
+			}
+			if tc.expected != actual {
+				t.Errorf("expected inventory as (%t), got (%t)", tc.expected, actual)
 			}
 		})
 	}

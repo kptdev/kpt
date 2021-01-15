@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -37,7 +36,6 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
 var pgr []string
@@ -90,13 +88,6 @@ func GetMain() *cobra.Command {
 			return err
 		}
 
-		if len(args) > 0 {
-			// add openAPI definitions from Kptfile to configured openAPI
-			if addErr := openapi.AddSchemaFromFile(filepath.Join(args[0], kptfile.KptFileName)); addErr != nil {
-				// do not throw error if schema doesn't exist or not readable from Kptfile
-				return nil
-			}
-		}
 		return nil
 	}
 

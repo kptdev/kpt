@@ -21,7 +21,7 @@ import (
 	"gotest.tools/assert"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 )
 
 type testCase struct {

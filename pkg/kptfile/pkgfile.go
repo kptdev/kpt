@@ -20,12 +20,17 @@ import (
 )
 
 // KptFileName is the name of the KptFile
-const KptFileName = "Kptfile"
+const (
+	KptFileName       = "Kptfile"
+	KptFileGroup      = "kpt.dev"
+	KptFileVersion    = "v1alpha1"
+	KptFileAPIVersion = KptFileGroup + "/" + KptFileVersion
+)
 
 // TypeMeta is the TypeMeta for KptFile instances.
 var TypeMeta = yaml.ResourceMeta{
 	TypeMeta: yaml.TypeMeta{
-		APIVersion: "kpt.dev/v1alpha1",
+		APIVersion: KptFileAPIVersion,
 		Kind:       KptFileName,
 	},
 }
@@ -52,7 +57,7 @@ type KptFile struct {
 	Functions Functions `yaml:"functions,omitempty"`
 
 	// Parameters for inventory object.
-	Inventory Inventory `yaml:"inventory,omitempty"`
+	Inventory *Inventory `yaml:"inventory,omitempty"`
 }
 
 // Inventory encapsulates the parameters for the inventory object. All of the

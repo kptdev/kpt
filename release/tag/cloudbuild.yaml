@@ -147,14 +147,6 @@ steps:
     dir: 'kpt'
     args: [ 'tag', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}',  'gcr.io/$PROJECT_ID/kpt:latest' ]
 
-  - name: 'gcr.io/cloud-builders/docker'
-    dir: 'kpt'
-    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/example-functions:${TAG_NAME}', '-f', 'functions/examples/Dockerfile', '.' ]
-
-  - name: 'gcr.io/cloud-builders/docker'
-    dir: 'kpt'
-    args: [ 'tag', 'gcr.io/$PROJECT_ID/example-functions:${TAG_NAME}',  'gcr.io/$PROJECT_ID/example-functions:latest' ]
-
   # push the container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}']
@@ -162,13 +154,5 @@ steps:
   # update latest tag on release
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/kpt:latest']
-
-  # push the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/example-functions:${TAG_NAME}']
-
-  # update latest tag on release
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/example-functions:latest']
 
 timeout: '60m'

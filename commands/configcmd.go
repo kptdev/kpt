@@ -15,16 +15,15 @@
 package commands
 
 import (
-	"fmt"
+	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdsearch"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/cfgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/functions"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	kyamlsetters "sigs.k8s.io/kustomize/kyaml/setters"
 )
 
 const ShortHandRef = "$kpt-set"
@@ -100,6 +99,8 @@ func GetConfigCommand(name string) *cobra.Command {
 
 	set := SetCommand(name)
 
+	search := cmdsearch.SearchCommand(name)
+
 	tree := configcobra.Tree(name)
 	tree.Short = cfgdocs.TreeShort
 	tree.Long = cfgdocs.TreeShort + "\n" + cfgdocs.TreeLong
@@ -107,6 +108,10 @@ func GetConfigCommand(name string) *cobra.Command {
 
 	cfgCmd.AddCommand(an, cat, count, createSetter, deleteSetter, deleteSubstitution, createSubstitution, fmt,
 		grep, listSetters, set, tree)
+
+	if enableSearchCmd := os.Getenv("KPT_ENABLE_SEARCH_CMD"); enableSearchCmd != "" {
+		cfgCmd.AddCommand(search)
+	}
 	return cfgCmd
 }
 
@@ -145,7 +150,6 @@ func SetCommand(parent string) *cobra.Command {
 	setCmd.Flags().BoolVar(&autoRun, "auto-run", true,
 		`Automatically run functions after setting (if enabled for the package)`)
 	setCmd.RunE = func(c *cobra.Command, args []string) error {
-		warnIfSetterV1(args[0])
 		kustomizeCmd.SetArgs(args)
 		if err := kustomizeCmd.Execute(); err != nil {
 			return err
@@ -172,22 +176,4 @@ func SetCommand(parent string) *cobra.Command {
 		return nil
 	}
 	return &setCmd
-}
-
-// warnIfSetterV1 checks if the package is using V1 kyaml setters and prints
-// warning message to upgrade them using kpt pkg fix command
-func warnIfSetterV1(pkgPath string) {
-	l := kyamlsetters.LookupSetters{}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.LocalPackageReader{PackagePath: pkgPath}},
-		Filters: []kio.Filter{&l},
-	}.Execute()
-	if err != nil {
-		// do not throw error as it is just to warn users
-		return
-	}
-	if len(l.SetterCounts) > 0 {
-		fmt.Println("Warning: This package is using older version of setters which " +
-			"will be deprecated soon, please use 'kpt pkg fix -h' for instructions about upgrading it")
-	}
 }

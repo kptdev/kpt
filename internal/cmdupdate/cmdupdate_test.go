@@ -15,8 +15,10 @@
 package cmdupdate_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
@@ -32,13 +34,13 @@ import (
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
-	dest := filepath.Join(dir, g.RepoName)
+	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
 	getCmd := cmdget.NewRunner("kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -46,7 +48,7 @@ func TestCmd_execute(t *testing.T) {
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
 		return
 	}
-	gitRunner := gitutil.NewLocalGitRunner(dir)
+	gitRunner := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, gitRunner.Run("add", ".")) {
 		return
 	}
@@ -64,7 +66,7 @@ func TestCmd_execute(t *testing.T) {
 
 	// update the cloned package
 	updateCmd := cmdupdate.NewRunner("kpt")
-	if !assert.NoError(t, os.Chdir(dir)) {
+	if !assert.NoError(t, os.Chdir(w.WorkspaceDirectory)) {
 		return
 	}
 	updateCmd.Command.SetArgs([]string{g.RepoName, "--strategy", "fast-forward"})
@@ -106,13 +108,13 @@ func TestCmd_execute(t *testing.T) {
 }
 
 func TestCmd_failUnCommitted(t *testing.T) {
-	g, dir, clean := testutil.SetupDefaultRepoAndWorkspace(t)
+	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Dataset1)
 	defer clean()
-	dest := filepath.Join(dir, g.RepoName)
+	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
 	getCmd := cmdget.NewRunner("kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dir})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -132,7 +134,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 
 	// update the cloned package
 	updateCmd := cmdupdate.NewRunner("kpt")
-	if !assert.NoError(t, os.Chdir(dir)) {
+	if !assert.NoError(t, os.Chdir(w.WorkspaceDirectory)) {
 		return
 	}
 	updateCmd.Command.SetArgs([]string{g.RepoName})
@@ -223,5 +225,99 @@ func TestCmd_fail(t *testing.T) {
 	err := r.Command.Execute()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "no such file or directory")
+	}
+}
+
+func TestCmd_path(t *testing.T) {
+	var pathPrefix string
+	if runtime.GOOS == "darwin" {
+		pathPrefix = "/private"
+	}
+
+	dir, err := ioutil.TempDir("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	testCases := []struct {
+		name                    string
+		currentWD               string
+		path                    string
+		expectedPath            string
+		expectedFullPackagePath string
+		expectedErrMsg          string
+	}{
+		{
+			name:                    "update package in current directory",
+			currentWD:               dir,
+			path:                    ".",
+			expectedPath:            ".",
+			expectedFullPackagePath: filepath.Join(pathPrefix, dir),
+		},
+		{
+			name:                    "update package in subfolder of current directory",
+			currentWD:               filepath.Dir(dir),
+			path:                    filepath.Base(dir),
+			expectedPath:            filepath.Base(dir),
+			expectedFullPackagePath: filepath.Join(pathPrefix, dir),
+		},
+		{
+			name:                    "update package with full absolute path",
+			currentWD:               filepath.Dir(dir),
+			path:                    filepath.Join(pathPrefix, dir),
+			expectedPath:            filepath.Base(dir),
+			expectedFullPackagePath: filepath.Join(pathPrefix, dir),
+		},
+		{
+			name:           "package must exist as a subdirectory of cwd",
+			currentWD:      filepath.Dir(dir),
+			path:           "/var/user/temp",
+			expectedErrMsg: "package path must be under current working directory",
+		},
+	}
+
+	for i := range testCases {
+		test := testCases[i]
+		t.Run(test.name, func(t *testing.T) {
+			currentWD, err := os.Getwd()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			defer func() {
+				_ = os.Chdir(currentWD)
+			}()
+			err = os.Chdir(test.currentWD)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			r := cmdupdate.NewRunner("kpt")
+			r.Command.RunE = func(cmd *cobra.Command, args []string) error {
+				if !assert.Equal(t, test.expectedPath, r.Update.Path) {
+					t.FailNow()
+				}
+				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.FullPackagePath) {
+					t.FailNow()
+				}
+				return nil
+			}
+			r.Command.SetArgs([]string{test.path})
+			err = r.Command.Execute()
+
+			if test.expectedErrMsg != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				assert.Contains(t, err.Error(), test.expectedErrMsg)
+				return
+			}
+
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+		})
 	}
 }

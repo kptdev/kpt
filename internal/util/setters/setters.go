@@ -27,10 +27,8 @@ import (
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
-	"sigs.k8s.io/kustomize/kyaml/setters"
 	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -95,64 +93,9 @@ func (a AutoSet) SetGcloudAutoSetters() error {
 			continue
 		}
 
-		err = SetV1AutoSetter(fmt.Sprintf("gcloud.%s", c), v, a.PackagePath)
-		if err != nil {
-			return err
-		}
-
 		err = SetV2AutoSetter(fmt.Sprintf("gcloud.%s", c), v, a.PackagePath, a.Writer)
 		if err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-// SetV1AutoSetter sets the input auto setter recursively in all the sub-packages of root
-// Sets GcloudProjectNumber as well, if input setter is GcloudProject
-func SetV1AutoSetter(name, value, path string) error {
-	setter := &setters.PerformSetters{
-		Name:  name,
-		Value: value,
-		SetBy: "kpt",
-	}
-	rw := &kio.LocalPackageReadWriter{
-		PackagePath:           path,
-		KeepReaderAnnotations: false,
-		IncludeSubpackages:    true,
-	}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{rw},
-		Filters: []kio.Filter{setter},
-		Outputs: []kio.Writer{rw},
-	}.Execute()
-	if err != nil {
-		return err
-	}
-
-	if name == GcloudProject && setter.Count > 0 {
-		// set the projectNumber if we set the projectID
-		projectID := value
-		projectNumber, err := GetProjectNumberFromProjectID(projectID)
-		if err != nil {
-			return err
-		}
-		if projectNumber != "" {
-			rw := &kio.LocalPackageReadWriter{
-				PackagePath:           path,
-				KeepReaderAnnotations: false,
-				IncludeSubpackages:    true,
-			}
-			err = kio.Pipeline{
-				Inputs: []kio.Reader{rw},
-				Filters: []kio.Filter{&setters.PerformSetters{
-					Name:  GcloudProjectNumber,
-					Value: projectNumber, SetBy: "kpt"}},
-				Outputs: []kio.Writer{rw},
-			}.Execute()
-			if err != nil {
-				return err
-			}
 		}
 	}
 	return nil
@@ -247,22 +190,6 @@ func (a AutoSet) SetEnvAutoSetters() error {
 		k, v := strings.TrimPrefix(parts[0], "KPT_SET_"), parts[1]
 
 		for _, resourcesPath := range resourcePackagesPaths {
-			rw := &kio.LocalPackageReadWriter{
-				PackagePath:     resourcesPath,
-				PackageFileName: kptfile.KptFileName,
-			}
-
-			setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
-			err := kio.Pipeline{
-				Inputs:  []kio.Reader{rw},
-				Filters: []kio.Filter{setter},
-				Outputs: []kio.Writer{rw},
-			}.Execute()
-
-			if err != nil {
-				return err
-			}
-
 			if !DefExists(resourcesPath, k) || isSet(k, filepath.Join(resourcesPath, kptfile.KptFileName)) {
 				continue
 			}
@@ -312,10 +239,6 @@ func (a AutoSet) SetInheritedSetters() error {
 			continue
 		}
 
-		if err := openapi.AddSchemaFromFile(parentKptfilePath); err != nil {
-			return err
-		}
-
 		targetPkgRefs, err := openapi.DefinitionRefs(filepath.Join(targetPath, kptfile.KptFileName))
 		if err != nil {
 			return err
@@ -324,47 +247,57 @@ func (a AutoSet) SetInheritedSetters() error {
 		// for each setter in target path, derive the setter values from parent package
 		// openAPI schema definitions and set them
 		for _, ref := range targetPkgRefs {
-			sch := openapi.Schema().Definitions[ref]
-			cliExt, err := setters2.GetExtFromSchema(&sch)
-			if cliExt == nil || cliExt.Setter == nil || err != nil {
-				// if the ref doesn't exist in global schema or if it is not a setter
-				// continue, as there might be setters which are not present global schema
-				continue
-			}
-			kptfilePath := filepath.Join(targetPath, kptfile.KptFileName)
-			if isSet(cliExt.Setter.Name, kptfilePath) {
-				// skip if the setter is already set on local
-				continue
-			}
-			fs := &settersutil.FieldSetter{
-				Name:            cliExt.Setter.Name,
-				Value:           cliExt.Setter.Value,
-				ListValues:      cliExt.Setter.ListValues,
-				OpenAPIPath:     kptfilePath,
-				OpenAPIFileName: kptfile.KptFileName,
-				ResourcesPath:   targetPath,
-				// turn isSet to true on child Kptfile iff the value derived from parent
-				// is set by user, don't set isSet to true for inheriting default values from parent
-				IsSet: isSet(cliExt.Setter.Name, parentKptfilePath),
-			}
-
-			count, err := fs.Set()
+			err := a.setInheritedSettersForPkg(targetPath, parentKptfilePath, ref)
 			if err != nil {
-				fmt.Fprintf(a.Writer, "failed to set %q automatically in package %q with error: %s\n", cliExt.Setter.Name, targetPath, err.Error())
-			} else {
-
-				format := "automatically set %d field(s) for setter %q to value %q in package %q derived from parent %q\n"
-
-				if len(cliExt.Setter.ListValues) == 0 {
-					fmt.Fprintf(a.Writer, format, count, cliExt.Setter.Name, cliExt.Setter.Value, targetPath, parentKptfilePath)
-				} else {
-					fmt.Fprintf(a.Writer, format, count, cliExt.Setter.Name, cliExt.Setter.ListValues, targetPath, parentKptfilePath)
-				}
+				return err
 			}
 		}
+	}
+	return nil
+}
 
-		if err := openapi.DeleteSchemaInFile(parentKptfilePath); err != nil {
-			return err
+// setInheritedSettersForPkg inherits the setter value of setterRef to pkgPath from parentKptfilePath
+func (a AutoSet) setInheritedSettersForPkg(pkgPath, parentKptfilePath, setterRef string) error {
+	sc, err := openapi.SchemaFromFile(parentKptfilePath)
+	if err != nil {
+		return err
+	}
+	sch := sc.Definitions[setterRef]
+	cliExt, err := setters2.GetExtFromSchema(&sch)
+	if cliExt == nil || cliExt.Setter == nil || err != nil {
+		// if the ref doesn't exist in global schema or if it is not a setter
+		// continue, as there might be setters which are not present global schema
+		return nil
+	}
+	kptfilePath := filepath.Join(pkgPath, kptfile.KptFileName)
+	if isSet(cliExt.Setter.Name, kptfilePath) {
+		// skip if the setter is already set on local
+		return nil
+	}
+
+	fs := &settersutil.FieldSetter{
+		Name:            cliExt.Setter.Name,
+		Value:           cliExt.Setter.Value,
+		ListValues:      cliExt.Setter.ListValues,
+		OpenAPIPath:     kptfilePath,
+		OpenAPIFileName: kptfile.KptFileName,
+		ResourcesPath:   pkgPath,
+		// turn isSet to true on child Kptfile iff the value derived from parent
+		// is set by user, don't set isSet to true for inheriting default values from parent
+		IsSet: isSet(cliExt.Setter.Name, parentKptfilePath),
+	}
+
+	count, err := fs.Set()
+	if err != nil {
+		fmt.Fprintf(a.Writer, "failed to set %q automatically in package %q with error: %s\n", cliExt.Setter.Name, pkgPath, err.Error())
+	} else {
+
+		format := "automatically set %d field(s) for setter %q to value %q in package %q derived from parent %q\n"
+
+		if len(cliExt.Setter.ListValues) == 0 {
+			fmt.Fprintf(a.Writer, format, count, cliExt.Setter.Name, cliExt.Setter.Value, pkgPath, parentKptfilePath)
+		} else {
+			fmt.Fprintf(a.Writer, format, count, cliExt.Setter.Name, cliExt.Setter.ListValues, pkgPath, parentKptfilePath)
 		}
 	}
 	return nil
@@ -420,13 +353,35 @@ func parentDirWithKptfile(parentPath string) (string, error) {
 
 // DefExists returns true if the setterName exists in Kptfile definitions
 func DefExists(resourcePath, setterName string) bool {
-	if err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, kptfile.KptFileName)); err != nil {
+	sc, err := openapi.SchemaFromFile(filepath.Join(resourcePath, kptfile.KptFileName))
+	if err != nil {
 		return false
 	}
 	ref, err := spec.NewRef(fieldmeta.DefinitionsPrefix + fieldmeta.SetterDefinitionPrefix + setterName)
 	if err != nil {
 		return false
 	}
-	setter, _ := openapi.Resolve(&ref)
+	setter, _ := openapi.Resolve(&ref, sc)
 	return setter != nil
+}
+
+// CheckForRequiredSetters takes the package path, checks if there is a KrmFile
+// and checks if all the required setters are set
+func CheckForRequiredSetters(path string) error {
+	kptFilePath := filepath.Join(path, kptfile.KptFileName)
+	_, err := os.Stat(kptFilePath)
+	if err != nil {
+		// if file is not readable or doesn't exist, exit without error
+		// as there might be packages without KrmFile
+		return nil
+	}
+	settersSchema, err := openapi.SchemaFromFile(kptFilePath)
+	if err != nil {
+		return err
+	}
+	if settersSchema == nil {
+		// this happens when there is Kptfile but no setter definitions
+		return nil
+	}
+	return setters2.CheckRequiredSettersSet(settersSchema)
 }

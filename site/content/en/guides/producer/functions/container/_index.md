@@ -67,5 +67,5 @@ the example.
 [kpt-functions-sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
 [go libraries]: ../golang/
 [Functions Developer Guide]: ../
-[functions concepts]: ../../../../../concepts/functions/
+[functions concepts]: ../../../../concepts/functions/
 [fn command reference]: ../../../../reference/fn/

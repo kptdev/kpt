@@ -4,7 +4,7 @@ linkTitle: "Functions"
 weight: 4
 type: docs
 description: >
-   Writing config functions to generated, transform, and validate resources.
+   Writing config functions to generate, transform, and validate resources.
 ---
 
 ## Functions Developer Guide
@@ -20,13 +20,13 @@ embedded in other systems. For example, functions could be:
 
 - manually run locally
 - automatically run locally as part of _make_, _mvn_, _go generate_, etc
-- automatically run in CICD systems
+- automatically run in CI/CD systems
 - run by controllers as reconcile implementations
 
 {{< svg src="images/fn" >}}
 
 {{% pageinfo color="primary" %}}
-Unlikely pure-templating and DSL approaches, functions must be able to both
+Unlike pure-templating and DSL approaches, functions must be able to both
 _read_ and _write_ resources, and specifically should be able to read resources
 they have previously written -- updating the inputs rather generating new
 resources.
@@ -166,8 +166,8 @@ results:
 [Go Fn Lib]: ./golang/
 [TS SDK]: ./ts/
 [`kpt fn source`]: ../../../reference/fn/source/
-[`helm-template`]: gcr.io/kpt-functions/helm-template/
-[`kpt fn sink`]: ../../../refernce/fn/sink/
+[`helm-template`]: https://gcr.io/kpt-functions/helm-template/
+[`kpt fn sink`]: ../../../reference/fn/sink/
 [run functions]: ../../consumer/function/
 [functions concepts]: ../../../concepts/functions/
 [fn command reference]: ../../../reference/fn/
