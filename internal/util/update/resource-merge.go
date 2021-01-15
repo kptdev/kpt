@@ -224,8 +224,12 @@ func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, originalPat
 	}
 
 	// keep the local OpenAPI values
-	err = updatedKf.MergeOpenAPI(localKf, originalKf)
-	localKf.OpenAPI = updatedKf.OpenAPI
+	mergedOpenAPI, err := kptfile.MergeOpenAPI(localKf.OpenAPI, updatedKf.OpenAPI, originalKf.OpenAPI)
+	if err != nil {
+		return localKf, err
+	}
+
+	localKf.OpenAPI = mergedOpenAPI
 	localKf.Upstream = updatedKf.Upstream
 	return localKf, err
 }

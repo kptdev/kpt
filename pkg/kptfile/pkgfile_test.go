@@ -519,10 +519,11 @@ openAPI:
 				t.FailNow()
 			}
 
-			err := kUpdated.MergeOpenAPI(kLocal, kOriginal)
+			mergedOpenAPI, err := MergeOpenAPI(kLocal.OpenAPI, kUpdated.OpenAPI, kOriginal.OpenAPI)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
+			kUpdated.OpenAPI = mergedOpenAPI
 
 			b, err := yaml.Marshal(kUpdated)
 			if !assert.NoError(t, err) {
