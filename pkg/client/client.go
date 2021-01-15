@@ -17,21 +17,22 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
-// client is the client to update object in the API server.
-type client struct {
+// Client is the client to update object in the API server.
+type Client struct {
 	client     dynamic.Interface
 	restMapper meta.RESTMapper
 }
 
-func NewClient(d dynamic.Interface, mapper meta.RESTMapper) *client {
-	return &client{
+// NewClient returns a client to get and update an object.
+func NewClient(d dynamic.Interface, mapper meta.RESTMapper) *Client {
+	return &Client{
 		client:     d,
 		restMapper: mapper,
 	}
 }
 
 // Update updates an object using dynamic client
-func (uc *client) Update(ctx context.Context, meta object.ObjMetadata, obj *unstructured.Unstructured, options *metav1.UpdateOptions) error {
+func (uc *Client) Update(ctx context.Context, meta object.ObjMetadata, obj *unstructured.Unstructured, options *metav1.UpdateOptions) error {
 	r, err := uc.resourceInterface(meta)
 	if err != nil {
 		return err
@@ -44,7 +45,7 @@ func (uc *client) Update(ctx context.Context, meta object.ObjMetadata, obj *unst
 }
 
 // Get fetches the requested object into the input obj using dynamic client
-func (uc *client) Get(ctx context.Context, meta object.ObjMetadata) (*unstructured.Unstructured, error) {
+func (uc *Client) Get(ctx context.Context, meta object.ObjMetadata) (*unstructured.Unstructured, error) {
 	r, err := uc.resourceInterface(meta)
 	if err != nil {
 		return nil, err
@@ -52,7 +53,7 @@ func (uc *client) Get(ctx context.Context, meta object.ObjMetadata) (*unstructur
 	return r.Get(ctx, meta.Name, metav1.GetOptions{})
 }
 
-func (uc *client) resourceInterface(meta object.ObjMetadata) (dynamic.ResourceInterface, error) {
+func (uc *Client) resourceInterface(meta object.ObjMetadata) (dynamic.ResourceInterface, error) {
 	mapping, err := uc.restMapper.RESTMapping(meta.GroupKind)
 	if err != nil {
 		return nil, err
@@ -73,14 +74,14 @@ func ReplaceOwningInventoryID(obj *unstructured.Unstructured, oldID, newID strin
 	val, found := annotations[key]
 	if !found || val == oldID {
 		annotations[key] = newID
-		return true, UpdateAnnotation(obj, annotations)
+		return true, updateAnnotations(obj, annotations)
 	}
 	return false, nil
 }
 
-// UpdateAnnotation updates .metadata.annotations field of obj to use the passed in annotations
+// updateAnnotations updates .metadata.annotations field of obj to use the passed in annotations
 // as well as updates the last-applied-configuration annotations.
-func UpdateAnnotation(obj *unstructured.Unstructured, annotations map[string]string) error {
+func updateAnnotations(obj *unstructured.Unstructured, annotations map[string]string) error {
 	u := getOriginalObj(obj)
 	if u != nil {
 		u.SetAnnotations(annotations)
@@ -90,6 +91,26 @@ func UpdateAnnotation(obj *unstructured.Unstructured, annotations map[string]str
 		obj.SetAnnotations(u.GetAnnotations())
 		return err
 	}
+	obj.SetAnnotations(annotations)
+	return nil
+}
+
+// UpdateLabelsAndAnnotations updates .metadata.labels and .metadata.annotations fields of obj to use
+// the passed in labels and annotations.
+// It also updates the last-applied-configuration annotations.
+func UpdateLabelsAndAnnotations(obj *unstructured.Unstructured, labels, annotations map[string]string) error {
+	u := getOriginalObj(obj)
+	if u != nil {
+		u.SetAnnotations(annotations)
+		u.SetLabels(labels)
+		// Since the annotation is updated, we also need to update the
+		// last applied configuration annotation.
+		err := util.CreateOrUpdateAnnotation(true, u, scheme.DefaultJSONEncoder())
+		obj.SetLabels(u.GetLabels())
+		obj.SetAnnotations(u.GetAnnotations())
+		return err
+	}
+	obj.SetLabels(labels)
 	obj.SetAnnotations(annotations)
 	return nil
 }
