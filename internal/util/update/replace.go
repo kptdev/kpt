@@ -14,7 +14,10 @@
 
 package update
 
-import "github.com/GoogleContainerTools/kpt/internal/util/get"
+import (
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
+)
 
 // Updater updates a package to a new upstream version.
 //
@@ -25,5 +28,13 @@ type ReplaceUpdater struct{}
 func (u ReplaceUpdater) Update(options UpdateOptions) error {
 	options.KptFile.Upstream.Git.Ref = options.ToRef
 	options.KptFile.Upstream.Git.Repo = options.ToRepo
-	return get.Command{Destination: options.PackagePath, Clean: true, Git: options.KptFile.Upstream.Git}.Run()
+	return fetch.Command{
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: options.KptFile.Upstream.Git.Repo,
+			Ref:     options.KptFile.Upstream.Git.Ref,
+			Path:    options.KptFile.Upstream.Git.Directory,
+		},
+		Destination: options.PackagePath,
+		Clean:       true,
+	}.Run()
 }

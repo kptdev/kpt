@@ -122,10 +122,16 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
 
 		// Read the Kptfiles and set the Commit field to an empty
 		// string before we compare.
-		pkg1kf, _ := kptfileutil.ReadFile(filepath.Dir(pkg1Path))
+		pkg1kf, err := kptfileutil.ReadFile(filepath.Dir(pkg1Path))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
 		pkg1kf.Upstream.Git.Commit = ""
 
-		pkg2kf, _ := kptfileutil.ReadFile(filepath.Dir(pkg2Path))
+		pkg2kf, err := kptfileutil.ReadFile(filepath.Dir(pkg2Path))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
 		pkg2kf.Upstream.Git.Commit = ""
 
 		equal, err := kptfileutil.Equal(pkg1kf, pkg2kf)

@@ -22,7 +22,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
@@ -157,8 +158,12 @@ func (c Command) get(dependency kptfile.Dependency) error {
 		return nil
 	}
 
-	return get.Command{
-		Git:         dependency.Git,
+	return fetch.Command{
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: dependency.Git.Repo,
+			Ref:     dependency.Git.Ref,
+			Path:    dependency.Git.Directory,
+		},
 		Destination: path,
 		Name:        dependency.Name,
 	}.Run()

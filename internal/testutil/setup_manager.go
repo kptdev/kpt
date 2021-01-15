@@ -22,7 +22,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
@@ -120,12 +121,12 @@ func (g *TestSetupManager) Init(content Content) bool {
 		return false
 	}
 
-	if !assert.NoError(g.T, get.Command{
+	if !assert.NoError(g.T, fetch.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
-		Git: kptfile.Git{
-			Repo:      g.UpstreamRepo.RepoDirectory,
-			Ref:       g.GetRef,
-			Directory: g.GetSubDirectory,
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.UpstreamRepo.RepoDirectory,
+			Ref:     g.GetRef,
+			Path:    g.GetSubDirectory,
 		}}.Run()) {
 		return false
 	}

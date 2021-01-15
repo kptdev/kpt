@@ -27,8 +27,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
-	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -70,9 +70,14 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = get.Command{Git: kptfile.Git{
-		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
-		Destination: filepath.Base(g.RepoDirectory)}.Run()
+	err = fetch.Command{
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/tags/v2",
+			Path:    "/",
+		},
+		Destination: filepath.Base(g.RepoDirectory),
+	}.Run()
 	assert.NoError(t, err)
 
 	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
@@ -148,9 +153,14 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit2)
 
 	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = get.Command{Git: kptfile.Git{
-		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
-		Destination: localPkg}.Run()
+	err = fetch.Command{
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/tags/v2",
+			Path:    "/",
+		},
+		Destination: localPkg,
+	}.Run()
 	assert.NoError(t, err)
 
 	diffOutput := &bytes.Buffer{}
@@ -218,9 +228,14 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 
 	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = get.Command{Git: kptfile.Git{
-		Repo: g.RepoDirectory, Ref: "refs/tags/v2", Directory: "/"},
-		Destination: localPkg}.Run()
+	err = fetch.Command{
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/tags/v2",
+			Path:    "/",
+		},
+		Destination: localPkg,
+	}.Run()
 	assert.NoError(t, err)
 
 	// make changes in local package
