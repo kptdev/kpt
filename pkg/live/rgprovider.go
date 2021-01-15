@@ -50,7 +50,7 @@ func (f *ResourceGroupProvider) ManifestReader(reader io.Reader, args []string) 
 		return nil, fmt.Errorf("unable to build ManifestReader without both reader or args")
 	}
 	if len(args) > 1 {
-		return nil, fmt.Errorf("expected one directory argument allowed; got (%s)", args)
+		return nil, fmt.Errorf("expected one directory argument allowed; got '%s'", args)
 	}
 	// Create ReaderOptions for subsequent ManifestReader.
 	namespace, enforceNamespace, err := f.factory.ToRawKubeConfigLoader().Namespace()

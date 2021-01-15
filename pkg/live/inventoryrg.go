@@ -87,7 +87,7 @@ func (icm *InventoryResourceGroup) Load() ([]object.ObjMetadata, error) {
 			Group: strings.TrimSpace(group),
 			Kind:  strings.TrimSpace(kind),
 		}
-		klog.V(4).Infof("creating obj metadata: %s/%s/%s", namespace, name, groupKind)
+		klog.V(4).Infof("creating obj metadata: '%s/%s/%s'", namespace, name, groupKind)
 		objMeta, err := object.CreateObjMetadata(namespace, name, groupKind)
 		if err != nil {
 			return []object.ObjMetadata{}, err
@@ -125,7 +125,7 @@ func (icm *InventoryResourceGroup) GetObject() (*resource.Info, error) {
 	klog.V(4).Infof("Creating list of %d resources", len(icm.objMetas))
 	var objs []interface{}
 	for _, objMeta := range icm.objMetas {
-		klog.V(4).Infof("storing inventory obj refercence: %s/%s", objMeta.Namespace, objMeta.Name)
+		klog.V(4).Infof("storing inventory obj refercence: '%s/%s'", objMeta.Namespace, objMeta.Name)
 		objs = append(objs, map[string]interface{}{
 			"group":     objMeta.GroupKind.Group,
 			"kind":      objMeta.GroupKind.Kind,

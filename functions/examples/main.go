@@ -79,7 +79,7 @@ func (d *Dispatcher) Filter(inputs []*yaml.RNode) ([]*yaml.RNode, error) {
 	// find the implementation for this API
 	fn := dispatchTable[meta.Kind]
 	if fn == nil {
-		return nil, fmt.Errorf("unsupported API type: %s", meta.Kind)
+		return nil, fmt.Errorf("unsupported API type: '%s'", meta.Kind)
 	}
 
 	// dispatch to the implementation

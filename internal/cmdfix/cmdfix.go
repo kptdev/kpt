@@ -68,7 +68,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 			"kpt packages must be tracked by git before making fix to revert unwanted changes: %v", err)
 	}
 	if strings.TrimSpace(g.Stdout.String()) != "" {
-		return errors.Errorf("must commit package changes to git %s before attempting to fix it",
+		return errors.Errorf("must commit package changes to git '%s' before attempting to fix it",
 			args[0])
 	}
 	return nil

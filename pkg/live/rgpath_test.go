@@ -186,7 +186,7 @@ func getInventoryLabel(inv *resource.Info) (string, error) {
 	labels := accessor.GetLabels()
 	inventoryLabel, exists := labels[common.InventoryLabel]
 	if !exists {
-		return "", fmt.Errorf("inventory label does not exist for inventory object: %s", common.InventoryLabel)
+		return "", fmt.Errorf("inventory label does not exist for inventory object: '%s'", common.InventoryLabel)
 	}
 	return inventoryLabel, nil
 }

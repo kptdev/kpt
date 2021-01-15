@@ -80,9 +80,9 @@ func TestIsInsideDirectory(t *testing.T) {
 	)
 
 	_, err := IsInsideDir("resources", ".")
-	assert.Error(t, err, "argument `path` (resources) is not an absolute path")
+	assert.Error(t, err, "argument `path` ('resources') is not an absolute path")
 	_, err = IsInsideDir("/resources", ".")
-	assert.Error(t, err, "argument `directory` (.) is not an absolute path")
+	assert.Error(t, err, "argument `directory` ('.') is not an absolute path")
 
 	result, err := IsInsideDir(path.Join(base, "."), base)
 	assert.NilError(t, err)

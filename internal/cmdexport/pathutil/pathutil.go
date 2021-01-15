@@ -55,14 +55,14 @@ func Exists(path string) bool {
 func IsInsideDir(path string, directory string) (isInside bool, err error) {
 	if !filepath.IsAbs(path) {
 		err = fmt.Errorf(
-			"argument `path` (%s) is not an absolute path",
+			"argument `path` ('%s') is not an absolute path",
 			path,
 		)
 		return
 	}
 	if !filepath.IsAbs(directory) {
 		err = fmt.Errorf(
-			"argument `directory` (%s) is not an absolute path",
+			"argument `directory` ('%s') is not an absolute path",
 			directory,
 		)
 		return

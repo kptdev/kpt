@@ -37,7 +37,7 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*resource.Info, error) {
 		return []*resource.Info{}, err
 	}
 	inv := kf.Inventory
-	klog.V(4).Infof("generating ResourceGroup inventory object %s/%s/%s", inv.Namespace, inv.Name, inv.InventoryID)
+	klog.V(4).Infof("generating ResourceGroup inventory object '%s/%s/%s'", inv.Namespace, inv.Name, inv.InventoryID)
 	invInfo, err := generateInventoryObj(inv.Name, inv.Namespace, inv.InventoryID)
 	if err != nil {
 		return []*resource.Info{}, err

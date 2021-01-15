@@ -43,14 +43,14 @@ func ConfigureOpenAPI(factory util.Factory, k8sSchemaSource, k8sSchemaPath strin
 	case SchemaSourceFile:
 		openAPISchema, err := ReadOpenAPISchemaFromDisk(k8sSchemaPath)
 		if err != nil {
-			return fmt.Errorf("error reading file at path %s: %v",
+			return fmt.Errorf("error reading file at path '%s': %v",
 				k8sSchemaPath, err)
 		}
 		return ConfigureOpenAPISchema(openAPISchema)
 	case SchemaSourceBuiltin:
 		return nil
 	default:
-		return fmt.Errorf("unknown schema source %s. Must be one of file, cluster, builtin",
+		return fmt.Errorf("unknown schema source '%s'. Must be one of file, cluster, builtin",
 			k8sSchemaSource)
 	}
 }

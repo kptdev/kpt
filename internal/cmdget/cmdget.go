@@ -80,7 +80,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return getioreader.Get(args[1], r.FilenamePattern, c.InOrStdin())
 	}
 
-	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
+	fmt.Fprintf(c.OutOrStdout(), "fetching package '%s' from '%s' to '%s'\n",
 		r.Get.Directory, r.Get.Repo, r.Get.Destination)
 	if err := r.Get.Run(); err != nil {
 		return err
