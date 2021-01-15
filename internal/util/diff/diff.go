@@ -25,7 +25,8 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -285,7 +286,7 @@ type PkgGetter interface {
 	GetPkg(repo, path, ref string) (dir string, err error)
 }
 
-// defaultPkgGetter uses get.Command abstraction to implement PkgGetter.
+// defaultPkgGetter uses fetch.Command abstraction to implement PkgGetter.
 type defaultPkgGetter struct{}
 
 func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
@@ -293,8 +294,12 @@ func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 	if err != nil {
 		return dir, err
 	}
-	cmdGet := &get.Command{
-		Git:         kptfile.Git{Repo: repo, Directory: path, Ref: ref},
+	cmdGet := &fetch.Command{
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: repo,
+			Ref:     ref,
+			Path:    path,
+		},
 		Destination: dir,
 		Clean:       true,
 	}

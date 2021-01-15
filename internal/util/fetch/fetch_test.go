@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package get_test
+package fetch_test
 
 import (
 	"fmt"
@@ -20,24 +20,22 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	. "github.com/GoogleContainerTools/kpt/internal/util/get"
+	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
 func TestCommand_Run_failEmptyRepo(t *testing.T) {
-	err := Command{}.Run()
+	err := Command{RepoSpec: &git.RepoSpec{}}.Run()
 	assert.EqualError(t, err, "must specify repo")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
 func TestCommand_Run_failNoRevision(t *testing.T) {
-	err := Command{Git: kptfile.Git{Repo: "foo"}}.Run()
+	err := Command{RepoSpec: &git.RepoSpec{OrgRepo: "foo"}}.Run()
 	assert.EqualError(t, err, "must specify ref")
 }
 
@@ -55,10 +53,10 @@ func TestCommand_Run(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{Git: kptfile.Git{
-		Repo:      "file://" + g.RepoDirectory,
-		Ref:       "master",
-		Directory: "/",
+	err := Command{RepoSpec: &git.RepoSpec{
+		OrgRepo: "file://" + g.RepoDirectory,
+		Ref:     "master",
+		Path:    "/",
 	},
 		Destination: absPath}.Run()
 	assert.NoError(t, err)
@@ -108,8 +106,11 @@ func TestCommand_Run_subdir(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err := Command{Git: kptfile.Git{
-		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
+	err := Command{
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory, Ref: "refs/heads/master",
+			Path: subdir,
+		},
 		Destination: absPath,
 	}.Run()
 	assert.NoError(t, err)
@@ -158,10 +159,10 @@ func TestCommand_Run_destination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "master",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -214,10 +215,10 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: subdir,
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "master",
+			Path:    subdir,
 		},
 		Destination: absPath,
 	}.Run()
@@ -286,10 +287,10 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "refs/heads/exp",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/heads/exp",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -361,10 +362,10 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "refs/tags/v2",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/tags/v2",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -415,10 +416,10 @@ func TestCommand_Run_clean(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "master",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -466,10 +467,10 @@ func TestCommand_Run_clean(t *testing.T) {
 
 	// configure clone to clean the existing dir
 	err = Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "master",
+			Path:    "/",
 		},
 		Destination: absPath,
 		Clean:       true,
@@ -519,10 +520,10 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "master",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -559,10 +560,10 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	// configure clone to clean the existing dir, but fail
 	err = Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "refs/heads/not-real",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/heads/not-real",
+			Path:    "/",
 		},
 		Destination: absPath,
 		Clean:       true,
@@ -616,10 +617,10 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "master",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -662,10 +663,10 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// try to clone and expect a failure
 	err = Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "master",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -706,10 +707,10 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      "foo",
-			Directory: "/",
-			Ref:       "refs/heads/master",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: "foo",
+			Ref:     "refs/heads/master",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -730,10 +731,10 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Directory: "/",
-			Ref:       "refs/heads/foo",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/heads/foo",
+			Path:    "/",
 		},
 		Destination: absPath,
 	}.Run()
@@ -756,10 +757,10 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		Git: kptfile.Git{
-			Repo:      g.RepoDirectory,
-			Directory: "/",
-			Ref:       "refs/tags/foo",
+		RepoSpec: &git.RepoSpec{
+			OrgRepo: g.RepoDirectory,
+			Ref:     "refs/tags/foo",
+			Path:    "/",
 		},
 		Destination: filepath.Join(w.WorkspaceDirectory, g.RepoDirectory),
 	}.Run()
@@ -774,434 +775,19 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	}
 }
 
-func TestCommand_Run_subpackages(t *testing.T) {
-	testCases := []struct {
-		name           string
-		directory      string
-		ref            string
-		upstream       testutil.Content
-		refRepos       map[string][]testutil.Content
-		expectedResult *pkgbuilder.RootPkg
-		expectedErrMsg string
-	}{
-		{
-			name:      "basic package",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithResource(pkgbuilder.DeploymentResource),
-			},
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master"),
-				).
-				WithResource(pkgbuilder.DeploymentResource),
-		},
-		{
-			name:      "package with subpackages",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("subpkg").
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
-			},
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master"),
-				).
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("subpkg").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-		},
-		{
-			name:      "package with local and remote subpackages",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/", "main", "fast-forward", "foo"),
-							),
-					).
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("subpkg").
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithKptfile().
-							WithResource(pkgbuilder.DeploymentResource).
-							WithSubPackages(
-								pkgbuilder.NewSubPkg("subpkg").
-									WithKptfile(
-										pkgbuilder.NewKptfile().
-											WithSubpackages(
-												pkgbuilder.NewSubpackage("bar", "/", "main", "fast-forward", "bar"),
-											),
-									).
-									WithResource(pkgbuilder.ConfigMapResource),
-							),
-					},
-				},
-				"bar": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithKptfile().
-							WithResource(pkgbuilder.DeploymentResource),
-					},
-				},
-			},
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/", "main", "fast-forward", "foo"),
-						).
-						WithUpstreamRef("upstream", "/", "master"),
-				).
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "main"),
-						).
-						WithResource(pkgbuilder.DeploymentResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("subpkg").
-								WithKptfile(
-									pkgbuilder.NewKptfile().
-										WithSubpackages(
-											pkgbuilder.NewSubpackage("bar", "/", "main", "fast-forward", "bar"),
-										),
-								).
-								WithResource(pkgbuilder.ConfigMapResource).
-								WithSubPackages(
-									pkgbuilder.NewSubPkg("bar").
-										WithKptfile(
-											pkgbuilder.NewKptfile().
-												WithUpstreamRef("bar", "/", "main"),
-										).
-										WithResource(pkgbuilder.DeploymentResource),
-								),
-						),
-					pkgbuilder.NewSubPkg("subpkg").
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-		},
-		{
-			name:      "fetch subpackage on a different branch than master",
-			directory: "/bar",
-			ref:       "main",
-			upstream: testutil.Content{
-				Branch: "main",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
-							),
-					).
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithKptfile().
-							WithResource(pkgbuilder.DeploymentResource),
-					},
-				},
-			},
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/bar", "main"),
-				).
-				WithResource(pkgbuilder.ConfigMapResource),
-		},
-		{
-			name:      "package with remote subpackage with a tag reference",
-			directory: "/",
-			ref:       "main",
-			upstream: testutil.Content{
-				Branch: "main",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
-							),
-					).
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource).
-							WithSubPackages(
-								pkgbuilder.NewSubPkg("subpkg").
-									WithKptfile().
-									WithResource(pkgbuilder.DeploymentResource),
-							),
-						Tag: "v1.2",
-					},
-				},
-			},
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
-						).
-						WithUpstreamRef("upstream", "/", "main"),
-				).
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource),
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/subpkg", "v1.2"),
-						).
-						WithResource(pkgbuilder.DeploymentResource),
-				),
-		},
-		{
-			name:      "same remote subpackage referenced multiple times",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/subpkg", "subpkg/v1.2", "fast-forward", "foo-sub"),
-								pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo-root"),
-							),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource).
-							WithSubPackages(
-								pkgbuilder.NewSubPkg("subpkg").
-									WithKptfile().
-									WithResource(pkgbuilder.DeploymentResource),
-							),
-						Tag: "subpkg/v1.2",
-					},
-				},
-			},
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/subpkg", "subpkg/v1.2", "fast-forward", "foo-sub"),
-							pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo-root"),
-						).
-						WithUpstreamRef("upstream", "/", "master"),
-				).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo-sub").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/subpkg", "subpkg/v1.2"),
-						).
-						WithResource(pkgbuilder.DeploymentResource),
-					pkgbuilder.NewSubPkg("foo-root").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "master"),
-						).
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("subpkg").
-								WithKptfile().
-								WithResource(pkgbuilder.DeploymentResource),
-						),
-				),
-		},
-		{
-			name:      "conflict between local and remote subpackage",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward", "foo"),
-							),
-					).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("foo").
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-				},
-			},
-			expectedErrMsg: "local subpackage in directory \"foo\" already exist",
-		},
-		{
-			name:      "conflict between two remote subpackages",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward", "subpkg"),
-								pkgbuilder.NewSubpackage("bar", "/", "master", "fast-forward", "subpkg"),
-							),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-				},
-				"bar": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-				},
-			},
-			expectedErrMsg: "multiple remote subpackages with localDir \"subpkg\"",
-		},
-	}
+func TestCommand_DefaultValues_AtVersion(t *testing.T) {
+	c := Command{RepoSpec: &git.RepoSpec{OrgRepo: "foo", Path: "/", Ref: "r"}, Destination: "/"}
+	assert.NoError(t, c.DefaultValues())
 
-	for i := range testCases {
-		test := testCases[i]
-		t.Run(test.name, func(t *testing.T) {
-			refRepos, err := testutil.SetupRepos(t, test.refRepos)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+	c = Command{RepoSpec: &git.RepoSpec{OrgRepo: "foo", Path: "bar"}, Destination: "/"}
+	assert.EqualError(t, c.DefaultValues(), "must specify ref")
 
-			repoPaths := make(map[string]string)
-			for name, tgr := range refRepos {
-				repoPaths[name] = tgr.RepoDirectory
-			}
+	c = Command{RepoSpec: &git.RepoSpec{Ref: "foo", OrgRepo: "bar"}, Destination: "/"}
+	assert.EqualError(t, c.DefaultValues(), "must specify path")
 
-			g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, test.upstream, repoPaths)
-			defer clean()
+	c = Command{RepoSpec: &git.RepoSpec{Ref: "foo", Path: "bar"}, Destination: "/"}
+	assert.EqualError(t, c.DefaultValues(), "must specify repo")
 
-			var targetDir string
-			if test.directory == "/" {
-				targetDir = filepath.Base(g.RepoName)
-			} else {
-				targetDir = filepath.Base(test.directory)
-			}
-			w.PackageDir = targetDir
-			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
-
-			err = Command{
-				Git: kptfile.Git{
-					Repo:      g.RepoDirectory,
-					Directory: test.directory,
-					Ref:       test.ref,
-				},
-				Destination: destinationDir,
-			}.Run()
-
-			if test.expectedErrMsg != "" {
-				if !assert.Error(t, err) {
-					t.FailNow()
-				}
-				assert.Contains(t, err.Error(), test.expectedErrMsg)
-				return
-			}
-
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			// Format the Kptfiles so we can diff the output without
-			// formatting issues.
-			rw := &kio.LocalPackageReadWriter{
-				NoDeleteFiles:  true,
-				PackagePath:    w.FullPackagePath(),
-				MatchFilesGlob: []string{kptfile.KptFileName},
-			}
-			err = kio.Pipeline{
-				Inputs:  []kio.Reader{rw},
-				Filters: []kio.Filter{filters.FormatFilter{}},
-				Outputs: []kio.Writer{rw},
-			}.Execute()
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			expectedPath := pkgbuilder.ExpandPkgWithName(t, test.expectedResult, targetDir, repoPaths)
-			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
-		})
-	}
+	c = Command{RepoSpec: &git.RepoSpec{OrgRepo: "foo", Path: "/", Ref: "r"}}
+	assert.EqualError(t, c.DefaultValues(), "must specify destination")
 }
