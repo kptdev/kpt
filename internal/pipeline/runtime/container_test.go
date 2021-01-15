@@ -25,7 +25,6 @@ import (
 )
 
 func TestContainerFn(t *testing.T) {
-	// use sed to test instead of calling real docker
 	var tests = []struct {
 		input  string
 		image  string
