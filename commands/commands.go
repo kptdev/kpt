@@ -54,12 +54,13 @@ func GetKptCommands(name string, f util.Factory) []*cobra.Command {
 	var c []*cobra.Command
 	cfgCmd := GetConfigCommand(name)
 	fnCmd := GetFnCommand(name)
+	pipelineCmd := GetPipelineCommand(name)
 	pkgCmd := GetPkgCommand(name)
 	ttlCmd := GetTTLCommand(name)
 	liveCmd := GetLiveCommand(name, f)
 	guideCmd := GetGuideCommand(name)
 
-	c = append(c, cfgCmd, pkgCmd, fnCmd, ttlCmd, liveCmd, guideCmd)
+	c = append(c, cfgCmd, pkgCmd, fnCmd, pipelineCmd, ttlCmd, liveCmd, guideCmd)
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)

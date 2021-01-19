@@ -32,9 +32,12 @@ const (
 	kptAPIVersion string = "kpt.dev/v1alpha1"
 	pipelineKind  string = "Pipeline"
 	defaultName   string = "pipeline"
+
+	sourceAllSubPkgs string = "./*"
+	sourceCurrentPkg string = "."
 )
 
-var defaultSources []string = []string{"./*"}
+var defaultSources []string = []string{sourceAllSubPkgs}
 
 // Pipeline declares a pipeline of functions used to generate, transform,
 // or validate resources. A kpt package contains zero or one pipeline declration.
@@ -95,7 +98,7 @@ func (p *Pipeline) Validate() error {
 			p.Kind, pipelineKind)
 	}
 	for i, s := range p.Sources {
-		if s == "./*" {
+		if s == sourceAllSubPkgs {
 			continue
 		}
 		if err := ValidatePath(s); err != nil {
@@ -273,7 +276,7 @@ func ValidatePath(p string) error {
 	if strings.TrimSpace(p) == "" {
 		return fmt.Errorf("path cannot have only white spaces")
 	}
-	if p != "./*" && strings.Contains(p, "*") {
+	if p != sourceAllSubPkgs && strings.Contains(p, "*") {
 		return fmt.Errorf("path contains asterisk, asterisk is only allowed in './*'")
 	}
 	// backslash (\\), alert bell (\a), backspace (\b), form feed (\f), vertical tab(\v) are
