@@ -92,6 +92,6 @@ func transformKptfile(resource []byte) (*unstructured.Unstructured, error) {
 		return nil, fmt.Errorf("invalid kptfile type: %q", kptFileTemplate.ResourceMeta.TypeMeta)
 	}
 	inv := kptFileTemplate.Inventory
-	klog.V(4).Infof("generating ResourceGroup inventory object \"%s/%s/%s\"", inv.Namespace, inv.Name, inv.InventoryID)
+	klog.V(4).Infof(`generating ResourceGroup inventory object "%s/%s/%s"`, inv.Namespace, inv.Name, inv.InventoryID)
 	return generateInventoryObj(inv)
 }
