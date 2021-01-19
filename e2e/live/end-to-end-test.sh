@@ -555,11 +555,10 @@ export RESOURCE_GROUP_INVENTORY=1
 echo "Testing kpt live apply with ConfigMap inventory"
 echo "kpt live apply e2e/live/testdata/migrate-case-1a"
 # Prerequisite: set up the ConfigMap inventory file
-cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
 # Copy Kptfile into "migrate-case-1a" WITHOUT inventory information. This ensures
 # the apply uses the ConfigMap inventory-template.yaml during the apply.
-cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-case-1a
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
+cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
 ${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a created"
@@ -704,9 +703,9 @@ printResult
 
 # Now test kpt live migrate with --force flag, which overwrites inventory
 # info in the Kptfile.
-cp -f e2e/live/testdata/inventory-template.yaml e2e/live/testdata/migrate-error
 echo "Testing kpt live migrate with --force flag"
 echo "kpt live migrate --force e2e/live/testdata/migrate-error"
+cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-error/inventory-template.yaml
 ${BIN_DIR}/kpt live migrate --force e2e/live/testdata/migrate-error > $OUTPUT_DIR/status 2>&1
 # Does not contain "values already exist"
 assertContains "updating Kptfile inventory values...success"
