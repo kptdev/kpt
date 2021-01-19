@@ -1,13 +1,12 @@
 package setters
 
 import (
-	"io/ioutil"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/openapi"
+	"github.com/go-errors/errors"
 	"github.com/go-openapi/spec"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // FieldSetter sets the value for a field setter.
@@ -40,48 +39,30 @@ type FieldSetter struct {
 	SettersSchema *spec.Schema
 }
 
-func (fs *FieldSetter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
-	fs.Count, _ = fs.Set()
-	return nil, nil
-}
-
 // Set updates the OpenAPI definitions and resources with the new setter value
 func (fs FieldSetter) Set() (int, error) {
-	// Update the OpenAPI definitions
-	soa := SetOpenAPI{
-		Name:        fs.Name,
-		Value:       fs.Value,
-		ListValues:  fs.ListValues,
-		Description: fs.Description,
-		SetBy:       fs.SetBy,
-		IsSet:       fs.IsSet,
-	}
-
 	// the input field value is updated in the openAPI file and then parsed
 	// at to get the value and set it to resource files, but if there is error
 	// after updating openAPI file and while updating resources, the openAPI
 	// file should be reverted, as set operation failed
-	stat, err := os.Stat(fs.OpenAPIPath)
+	_, err := os.Stat(fs.OpenAPIPath)
 	if err != nil {
 		return 0, err
 	}
 
-	curOpenAPI, err := ioutil.ReadFile(fs.OpenAPIPath)
-	if err != nil {
-		return 0, err
-	}
-
-	// write the new input value to openAPI file
-	if err := soa.UpdateFile(fs.OpenAPIPath); err != nil {
-		return 0, err
-	}
-
-	// Load the updated definitions
+	// Load the setter definitions
 	sc, err := openapi.SchemaFromFile(fs.OpenAPIPath)
 	if err != nil {
 		return 0, err
 	}
+	if sc == nil {
+		return 0, nil
+	}
+
 	fs.SettersSchema = sc
+	if _, ok := sc.Definitions[fs.Name]; !ok {
+		return 0, errors.Errorf("setter %q is not found", fs.Name)
+	}
 
 	// Update the resources with the new value
 	// Set NoDeleteFiles to true as SetAll will return only the nodes of files which should be updated and
@@ -94,11 +75,5 @@ func (fs FieldSetter) Set() (int, error) {
 		Outputs: []kio.Writer{inout},
 	}.Execute()
 
-	// revert openAPI file if set operation fails
-	if err != nil {
-		if writeErr := ioutil.WriteFile(fs.OpenAPIPath, curOpenAPI, stat.Mode().Perm()); writeErr != nil {
-			return 0, writeErr
-		}
-	}
 	return s.Count, err
 }

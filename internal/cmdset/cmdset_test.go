@@ -25,20 +25,16 @@ func TestSetCommand(t *testing.T) {
 	}{
 		{
 			name: "set replicas",
-			args: []string{"--value", "replicas=4", "--description", "hi there", "--set-by", "pw"},
+			args: []string{"--value", "replicas=4"},
 			out:  "set 1 field(s)\n",
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
-openAPI:
-  definitions:
-    io.k8s.cli.setters.replicas:
-      description: hello world
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "3"
-          setBy: me
+definitions:
+  replicas:
+    description: replicas description.
+    type: integer
+    default: 4
  `,
 			input: `
 apiVersion: apps/v1
@@ -51,16 +47,11 @@ spec:
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
-openAPI:
-  definitions:
-    io.k8s.cli.setters.replicas:
-      description: hi there
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "4"
-          setBy: pw
-          isSet: true
+definitions:
+  replicas:
+    description: replicas description.
+    type: integer
+    default: 4
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -72,20 +63,51 @@ spec:
  `,
 		},
 		{
+			name: "set setter pattern",
+			args: []string{"--value", "image=ubuntu"},
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment # {"$kpt-set":"${image}-${kind}"}
+spec:
+  replicas: 3
+ `,
+			inputOpenAPI: `apiVersion: v1alpha1
+kind: Kptfile
+definitions:
+  image:
+    default: ubuntu
+  kind:
+    default: service
+  `,
+			out: `set 1 field(s) `,
+			expectedOpenAPI: `apiVersion: v1alpha1
+kind: Kptfile
+definitions:
+  image:
+    default: ubuntu
+  kind:
+    default: service`,
+			expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu-service # {"$kpt-set":"${image}-${kind}"}
+spec:
+  replicas: 3
+ `,
+		},
+		{
 			name: "set list values",
 			args: []string{"--value", "list=[10, 11]"},
 			out:  "set 1 field(s)\n",
 			inputOpenAPI: `
 kind: Kptfile
-openAPI:
-  definitions:
-    io.k8s.cli.setters.list:
-      type: array
-      x-k8s-cli:
-        setter:
-          name: list
-          listValues:
-          - 0
+definitions:
+  list:
+    type: array
+    default: [10, 11]
  `,
 			input: `
 apiVersion: example.com/v1beta1
@@ -96,17 +118,10 @@ spec:
  `,
 			expectedOpenAPI: `
 kind: Kptfile
-openAPI:
-  definitions:
-    io.k8s.cli.setters.list:
-      type: array
-      x-k8s-cli:
-        setter:
-          name: list
-          listValues:
-          - "10"
-          - "11"
-          isSet: true
+definitions:
+  list:
+    type: array
+    default: [10, 11]
  `,
 			expectedResources: `
 apiVersion: example.com/v1beta1
@@ -124,13 +139,9 @@ spec:
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
-openAPI:
-  definitions:
-    io.k8s.cli.setters.replicas:
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "3"
+definitions:
+  replicas:
+    default: 3
  `,
 			input: `
 apiVersion: apps/v1
@@ -143,13 +154,9 @@ spec:
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
-openAPI:
-  definitions:
-    io.k8s.cli.setters.replicas:
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "3"
+definitions:
+  replicas:
+    default: 3
  `,
 			expectedResources: `
 apiVersion: apps/v1
@@ -168,13 +175,9 @@ spec:
 			inputOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
-openAPI:
-  definitions:
-    io.k8s.cli.setters.replicas:
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "3"
+definitions:
+  replicas:
+    default: 3
  `,
 			input: `
 apiVersion: apps/v1
@@ -187,13 +190,9 @@ spec:
 			expectedOpenAPI: `
 apiVersion: v1alpha1
 kind: Example
-openAPI:
-  definitions:
-    io.k8s.cli.setters.replicas:
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "3"
+definitions:
+  replicas:
+    default: 3
  `,
 			expectedResources: `
 apiVersion: apps/v1

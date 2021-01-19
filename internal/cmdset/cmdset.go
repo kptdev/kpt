@@ -62,25 +62,21 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 
 	// r.KeyValue holds SETTER_NAME=SETTER_VALUE, split them into name and value
 	keyValue := strings.SplitN(r.KeyValue, "=", 2)
-
 	if len(keyValue) < 2 {
 		return errors.Errorf(`input to value flag must follow the format "SETTER_NAME=SETTER_VALUE"`)
 	}
+
 	r.Name = keyValue[0]
 	setterValue := keyValue[1]
 
-	// if values is a list e.g. [a, b, c], this is array input, so populate r.Listvalues
-	// instead
-	if strings.HasPrefix(setterValue, "[") && strings.HasSuffix(setterValue, "]") {
-		commaSepVals := strings.TrimSuffix(strings.TrimPrefix(setterValue, "["), "]")
-		r.ListValues = strings.Split(commaSepVals, ",")
-		for i := range r.ListValues {
-			r.ListValues[i] = strings.TrimSpace(r.ListValues[i])
-		}
-	} else {
-		// else it is a scalar value
+	// get the list values from the input
+	r.ListValues = setters.ListValues(setterValue, ",")
+	// check if the input is not a list
+	if r.ListValues == nil {
+		// the input is a scalar value
 		r.Value = setterValue
 	}
+
 	return nil
 }
 
