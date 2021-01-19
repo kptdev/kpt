@@ -1,18 +1,27 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package setters
 
 import (
 	"fmt"
 	"strings"
-	"text/template"
 
 	"github.com/go-openapi/spec"
-	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/validate"
-	goyaml "gopkg.in/yaml.v3"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -26,9 +35,7 @@ type Set struct {
 	// Count is the number of fields that were updated by calling Filter
 	Count int
 
-	// SetAll if set to true will set all setters regardless of name
-	SetAll bool
-
+	// SettersSchema is openapi schema of all the setters in the packages from Kptfile
 	SettersSchema *spec.Schema
 }
 
@@ -37,38 +44,44 @@ func (s *Set) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	return object, accept(s, object, s.SettersSchema)
 }
 
-// isMatch returns true if the setter with name should have the field
-// value set
-func (s *Set) isMatch(name string) bool {
-	return s.SetAll || s.Name == name
-}
-
-func (s *Set) visitMapping(_ *yaml.RNode, p string, _ *openapi.ResourceSchema) error {
+func (s *Set) visitMapping(_ *yaml.RNode, p string, _ *SetterInfos) error {
 	return nil
 }
 
-// visitSequence will perform setters for sequences
-func (s *Set) visitSequence(object *yaml.RNode, p string, fieldSchema *openapi.ResourceSchema) error {
-	ext, err := getExtFromComment(fieldSchema)
-	if err != nil {
-		return err
+// isMatch checks if the the name of the input setter matches with any of the
+// setters present in the setterInfos
+// e.g. is input setter name is "image" and the comment on the yaml node is
+// ${image}-${tag} there is a match
+func (s *Set) isMatch(setterInfos *SetterInfos) bool {
+	if setterInfos == nil {
+		return false
 	}
-	if ext == nil || ext.Setter == nil || !s.isMatch(ext.Setter.Name) ||
-		len(ext.Setter.ListValues) == 0 {
-		// setter was not invoked for this sequence
+	nameMatch := false
+	for k := range setterInfos.SetterDefinitions {
+		if s.Name == k {
+			nameMatch = true
+		}
+	}
+	return nameMatch
+}
+
+// visitSequence will perform setters for sequences
+func (s *Set) visitSequence(object *yaml.RNode, p string, setterInfos *SetterInfos) error {
+	if !s.isMatch(setterInfos) {
 		return nil
 	}
 	s.Count++
-
 	// set the values on the sequences
 	var elements []*yaml.Node
-	if len(ext.Setter.ListValues) > 0 {
-		if err := validateAgainstSchema(ext, fieldSchema.Schema); err != nil {
-			return err
-		}
+	if len(setterInfos.SetterDefinitions) > 1 {
+		return nil
 	}
-	for i := range ext.Setter.ListValues {
-		v := ext.Setter.ListValues[i]
+	var listValues []string
+	for _, schema := range setterInfos.SetterDefinitions {
+		listValues = ListValues(fmt.Sprintf("%v", schema.Default), " ")
+	}
+	for i := range listValues {
+		v := listValues[i]
 		n := yaml.NewScalarRNode(v).YNode()
 		n.Style = yaml.DoubleQuotedStyle
 		elements = append(elements, n)
@@ -79,289 +92,32 @@ func (s *Set) visitSequence(object *yaml.RNode, p string, fieldSchema *openapi.R
 }
 
 // visitScalar
-func (s *Set) visitScalar(object *yaml.RNode, p string, oa, fieldSchema *openapi.ResourceSchema) error {
-	// get the openAPI for this field describing how to apply the setter
-	ext, err := getExtFromComment(fieldSchema)
-	if err != nil {
-		return err
-	}
-	if ext == nil {
+func (s *Set) visitScalar(object *yaml.RNode, p string, setterInfos *SetterInfos) error {
+	if !s.isMatch(setterInfos) {
 		return nil
 	}
-
-	var k8sSchema *spec.Schema
-	if oa != nil {
-		k8sSchema = oa.Schema
-	}
-
+	s.Count++
 	// perform a direct set of the field if it matches
-	ok, err := s.set(object, ext, k8sSchema, fieldSchema.Schema)
-	if err != nil {
-		return err
-	}
-	if ok {
-		s.Count++
-		return nil
-	}
-
+	s.set(object, setterInfos)
 	return nil
 }
 
 // set applies the value from ext to field if its name matches s.Name
-func (s *Set) set(field *yaml.RNode, ext *CliExtension, k8sSch, sch *spec.Schema) (bool, error) {
+func (s *Set) set(field *yaml.RNode, setterInfos *SetterInfos) {
 	// check full setter
-	if ext.Setter == nil || !s.isMatch(ext.Setter.Name) {
-		return false, nil
-	}
+	fieldValue := setterInfos.SetterPattern
+	for setterName, setterSchema := range setterInfos.SetterDefinitions {
+		// this has a full setter, set its value
+		fieldValue = strings.ReplaceAll(fieldValue, fmt.Sprintf("${%s}", setterName), fmt.Sprintf("%v", setterSchema.Default))
 
-	if err := validateAgainstSchema(ext, sch); err != nil {
-		return false, err
-	}
-
-	if val, found := ext.Setter.EnumValues[ext.Setter.Value]; found {
-		// the setter has an enum-map.  we should replace the marker with the
-		// enum value looked up from the map rather than the enum key
-		field.YNode().Value = val
-		return true, nil
-	}
-
-	// this has a full setter, set its value
-	field.YNode().Value = ext.Setter.Value
-
-	// format the node so it is quoted if it is a string. If there is
-	// type information on the setter schema, we use it. Otherwise we
-	// fall back to the field schema if it exists.
-	if len(sch.Type) > 0 {
-		yaml.FormatNonStringStyle(field.YNode(), *sch)
-	} else if k8sSch != nil {
-		yaml.FormatNonStringStyle(field.YNode(), *k8sSch)
-	}
-	return true, nil
-}
-
-// validateAgainstSchema validates the input setter value against user provided
-// openAI schema
-func validateAgainstSchema(ext *CliExtension, sch *spec.Schema) error {
-	fixSchemaTypes(sch)
-	sc := spec.Schema{}
-	sc.Properties = map[string]spec.Schema{}
-	sc.Properties[ext.Setter.Name] = *sch
-
-	var inputYAML string
-	if len(ext.Setter.ListValues) > 0 {
-		// tmplText contains the template we will use to produce a yaml
-		// document that we can use for validation.
-		var tmplText string
-		if sch.Items != nil && sch.Items.Schema != nil &&
-			sch.Items.Schema.Type.Contains("string") {
-			// If string is one of the legal types for the value, we
-			// output it with quotes in the yaml document to make sure it
-			// is later parsed as a string.
-			tmplText = `{{.key}}:{{block "list" .values}}{{"\n"}}{{range .}}{{printf "- %q\n" .}}{{end}}{{end}}`
-		} else {
-			// If string is not specifically set as the type, we just
-			// let the yaml unmarshaller detect the correct type. Thus, we
-			// do not add quotes around the value.
-			tmplText = `{{.key}}:{{block "list" .values}}{{"\n"}}{{range .}}{{println "-" .}}{{end}}{{end}}`
-		}
-
-		tmpl, err := template.New("validator").Parse(tmplText)
-		if err != nil {
-			return err
-		}
-		var builder strings.Builder
-		err = tmpl.Execute(&builder, map[string]interface{}{
-			"key":    ext.Setter.Name,
-			"values": ext.Setter.ListValues,
-		})
-		if err != nil {
-			return err
-		}
-		inputYAML = builder.String()
-	} else {
-		var format string
-		// Only add quotes around the value is string is one of the
-		// types in the schema.
-		if sch.Type.Contains("string") {
-			format = "%s: \"%s\""
-		} else {
-			format = "%s: %s"
-		}
-		inputYAML = fmt.Sprintf(format, ext.Setter.Name, ext.Setter.Value)
-	}
-
-	input := map[string]interface{}{}
-	err := goyaml.Unmarshal([]byte(inputYAML), &input)
-	if err != nil {
-		return err
-	}
-	err = validate.AgainstSchema(&sc, input, strfmt.Default)
-	if err != nil {
-		return errors.Errorf("The input value doesn't validate against provided OpenAPI schema: %v\n", err.Error())
-	}
-	return nil
-}
-
-// fixSchemaTypes traverses the schema and checks for some common
-// errors for the type field. This currently involves users using
-// 'int' instead of 'integer' and 'bool' instead of 'boolean'. Early versions
-// of setters didn't validate this, so there are users that have invalid
-// types in their packages.
-func fixSchemaTypes(sc *spec.Schema) {
-	for i := range sc.Type {
-		currentType := sc.Type[i]
-		if currentType == "int" {
-			sc.Type[i] = "integer"
-		}
-		if currentType == "bool" {
-			sc.Type[i] = "boolean"
+		// format the node so it is quoted if it is a string. If there is
+		// type information on the setter schema, we use it. Otherwise we
+		// fall back to the field schema if it exists.
+		if len(setterSchema.Type) > 0 {
+			yaml.FormatNonStringStyle(field.YNode(), *setterSchema)
 		}
 	}
-
-	if items := sc.Items; items != nil {
-		if items.Schema != nil {
-			fixSchemaTypes(items.Schema)
-		}
-		for i := range items.Schemas {
-			schema := items.Schemas[i]
-			fixSchemaTypes(&schema)
-		}
-	}
-}
-
-// SetOpenAPI updates a setter value
-type SetOpenAPI struct {
-	// Name is the name of the setter to add
-	Name string `yaml:"name"`
-	// Value is the current value of the setter
-	Value string `yaml:"value"`
-
-	// ListValue is the current value for a list of items
-	ListValues []string `yaml:"listValue"`
-
-	Description string `yaml:"description"`
-
-	SetBy string `yaml:"setBy"`
-
-	IsSet bool `yaml:"isSet"`
-}
-
-// UpdateFile updates the OpenAPI definitions in a file with the given setter value.
-func (s SetOpenAPI) UpdateFile(path string) error {
-	return yaml.UpdateFile(s, path)
-}
-
-func (s SetOpenAPI) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	key := SetterDefinitionPrefix + s.Name
-	oa, err := object.Pipe(yaml.Lookup("openAPI", "definitions", key))
-	if err != nil {
-		return nil, err
-	}
-	if oa == nil {
-		return nil, errors.Errorf("setter %q is not found", s.Name)
-	}
-	def, err := oa.Pipe(yaml.Lookup("x-k8s-cli", "setter"))
-	if err != nil {
-		return nil, err
-	}
-	if def == nil {
-		return nil, errors.Errorf("setter %q is not found", s.Name)
-	}
-
-	// record the OpenAPI type for the setter
-	var t string
-	if n := oa.Field("type"); n != nil {
-		t = n.Value.YNode().Value
-	}
-
-	// if the setter contains an enumValues map, then ensure the set value appears
-	// as a key in the map
-	if values, err := def.Pipe(
-		yaml.Lookup("enumValues")); err != nil {
-		// error looking up the enumValues
-		return nil, err
-	} else if values != nil {
-		// contains enumValues map -- validate the set value against the map entries
-
-		// get the enumValues keys
-		fields, err := values.Fields()
-		if err != nil {
-			return nil, err
-		}
-
-		// search for the user provided value in the set of allowed values
-		var match bool
-		for i := range fields {
-			if fields[i] == s.Value {
-				// found a match, we are good
-				match = true
-				break
-			}
-		}
-		if !match {
-			// no match found -- provide an informative error to the user
-			return nil, errors.Errorf("%s does not match the possible values for %s: [%s]",
-				s.Value, s.Name, strings.Join(fields, ","))
-		}
-	}
-
-	v := yaml.NewScalarRNode(s.Value)
-	// values are always represented as strings the OpenAPI
-	// since the are unmarshalled into strings.  Use double quote style to
-	// ensure this consistently.
-	v.YNode().Tag = yaml.NodeTagString
-	v.YNode().Style = yaml.DoubleQuotedStyle
-
-	if t != "array" {
-		// set a scalar value
-		if err := def.PipeE(&yaml.FieldSetter{Name: "value", Value: v}); err != nil {
-			return nil, err
-		}
-	} else {
-		// set a list value
-		if err := def.PipeE(&yaml.FieldClearer{Name: "value"}); err != nil {
-			return nil, err
-		}
-		// create the list values
-		var elements []*yaml.Node
-		for i := range s.ListValues {
-			v := s.ListValues[i]
-			n := yaml.NewScalarRNode(v).YNode()
-			n.Style = yaml.DoubleQuotedStyle
-			elements = append(elements, n)
-		}
-		l := yaml.NewRNode(&yaml.Node{
-			Kind:    yaml.SequenceNode,
-			Content: elements,
-		})
-		def.YNode().Style = yaml.FoldedStyle
-		if err := def.PipeE(&yaml.FieldSetter{Name: "listValues", Value: l}); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := def.PipeE(&yaml.FieldSetter{Name: "setBy", StringValue: s.SetBy}); err != nil {
-		return nil, err
-	}
-
-	if s.IsSet {
-		if err := def.PipeE(&yaml.FieldSetter{Name: "isSet", StringValue: "true"}); err != nil {
-			return nil, err
-		}
-	}
-
-	if s.Description != "" {
-		d, err := object.Pipe(yaml.LookupCreate(
-			yaml.MappingNode, "openAPI", "definitions", key))
-		if err != nil {
-			return nil, err
-		}
-		if err := d.PipeE(&yaml.FieldSetter{Name: "description", StringValue: s.Description}); err != nil {
-			return nil, err
-		}
-	}
-
-	return object, nil
+	field.YNode().Value = fieldValue
 }
 
 // SetAll applies the set filter for all yaml nodes and only returns the nodes whose
@@ -398,4 +154,18 @@ func SetAll(s *Set) kio.Filter {
 		}
 		return nodesInUpdatedFiles, nil
 	})
+}
+
+// ListValues takes a list in the form of string and returns the list values based on delimiter
+// returns nil, if the input is not enclosed in []
+func ListValues(setterValue, delimiter string) []string {
+	if !strings.HasPrefix(setterValue, "[") || !strings.HasSuffix(setterValue, "]") {
+		return nil
+	}
+	commaSepVals := strings.TrimSuffix(strings.TrimPrefix(setterValue, "["), "]")
+	listValues := strings.Split(commaSepVals, delimiter)
+	for i := range listValues {
+		listValues[i] = strings.TrimSpace(listValues[i])
+	}
+	return listValues
 }

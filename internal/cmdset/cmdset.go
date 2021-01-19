@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cmdset
 
 import (
@@ -62,25 +76,21 @@ func (r *SetRunner) preRunE(c *cobra.Command, args []string) error {
 
 	// r.KeyValue holds SETTER_NAME=SETTER_VALUE, split them into name and value
 	keyValue := strings.SplitN(r.KeyValue, "=", 2)
-
 	if len(keyValue) < 2 {
 		return errors.Errorf(`input to value flag must follow the format "SETTER_NAME=SETTER_VALUE"`)
 	}
+
 	r.Name = keyValue[0]
 	setterValue := keyValue[1]
 
-	// if values is a list e.g. [a, b, c], this is array input, so populate r.Listvalues
-	// instead
-	if strings.HasPrefix(setterValue, "[") && strings.HasSuffix(setterValue, "]") {
-		commaSepVals := strings.TrimSuffix(strings.TrimPrefix(setterValue, "["), "]")
-		r.ListValues = strings.Split(commaSepVals, ",")
-		for i := range r.ListValues {
-			r.ListValues[i] = strings.TrimSpace(r.ListValues[i])
-		}
-	} else {
-		// else it is a scalar value
+	// get the list values from the input
+	r.ListValues = setters.ListValues(setterValue, ",")
+	// check if the input is not a list
+	if r.ListValues == nil {
+		// the input is a scalar value
 		r.Value = setterValue
 	}
+
 	return nil
 }
 

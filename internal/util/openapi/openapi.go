@@ -16,12 +16,16 @@ package openapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
+	"github.com/go-openapi/spec"
 	"k8s.io/kubectl/pkg/cmd/util"
+	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -85,4 +89,56 @@ func ConfigureOpenAPISchema(openAPISchema []byte) error {
 	// TODO: Refactor the openapi package in kyaml so we don't need to
 	// know the name of the kustomize asset here.
 	return openapi.AddSchema(kustomizationapi.MustAsset("kustomizationapi/swagger.json"))
+}
+
+func SchemaFromFile(path string) (*spec.Schema, error) {
+	object, err := parseOpenAPI(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return schemaFromNode(object)
+}
+
+// parseOpenAPI reads openAPIPath yaml and converts it to RNode
+func parseOpenAPI(openAPIPath string) (*yaml.RNode, error) {
+	b, err := ioutil.ReadFile(openAPIPath)
+	if err != nil {
+		return nil, err
+	}
+
+	object, err := yaml.Parse(string(b))
+	if err != nil {
+		return nil, errors.Errorf("invalid file %q: %v", openAPIPath, err)
+	}
+	return object, nil
+}
+
+// addSchemaUsingField parses the OpenAPI definitions from the specified field.
+// If field is the empty string, use the whole document as OpenAPI.
+func schemaFromNode(object *yaml.RNode) (*spec.Schema, error) {
+	oAPI, err := object.String()
+	if err != nil {
+		return nil, err
+	}
+
+	// convert the yaml openAPI to a JSON string by unmarshalling it to an
+	// interface{} and the marshalling it to a string
+	var o interface{}
+	err = yaml.Unmarshal([]byte(oAPI), &o)
+	if err != nil {
+		return nil, err
+	}
+	j, err := json.Marshal(o)
+	if err != nil {
+		return nil, err
+	}
+
+	var sc spec.Schema
+	err = sc.UnmarshalJSON(j)
+	if err != nil {
+		return nil, err
+	}
+
+	return &sc, nil
 }
