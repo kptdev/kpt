@@ -75,6 +75,9 @@ if (!doNotTrack) {
 
 
 <link rel="stylesheet" type="text/css" href="https://googlecontainertools.github.io/kpt//css/asciinema-player.css" />
+<script src="/kpt/js/swagger-ui-bundle.js"></script>
+<script src="/kpt/js/swagger-ui-standalone-preset.js"></script>
+<link rel="stylesheet" type="text/css" href="/kpt/css/swagger-ui.css">
 
     <title>Kptfile | Kpt</title>
     <link rel="stylesheet" type="text/css" href="/css/swagger-ui.css">
@@ -299,7 +302,7 @@ if (!doNotTrack) {
 <script>
 window.onload = function() {
   const ui = SwaggerUIBundle({
-    url: "/openapi/kptfile.yaml",
+    url: "/kpt/openapi/kptfile.yaml",
     dom_id: '#ohpen_swagger_ui',
     presets: [
       SwaggerUIBundle.presets.apis,
@@ -327,7 +330,7 @@ window.onload = function() {
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified March 18, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b6557dc5d43f4d95becaa24385a5202417005da5">Fix docsy hugo theme (b6557dc5)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified January 19, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e0e7b9efe97e4ee3e7c102e7f1554bb15ee4b973">Docs: Add swagger to kptfile markdown. (#1359) (e0e7b9ef)</a>
 </div>
 </div>
 
