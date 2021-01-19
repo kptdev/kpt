@@ -40,7 +40,7 @@ spec:
         - containerPort: 8081
 =======
         - containerPort: 80
->>>>>>> update from 'master' to 'master'
+>>>>>>> update from "master" to "master"
         envFrom:
         - configMapRef:
             name: app-config

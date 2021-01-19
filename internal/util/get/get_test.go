@@ -571,7 +571,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	err = Command{
 		Git:         kptfile.Git{Repo: g.RepoDirectory, Ref: "master", Directory: "/"},
 		Destination: filepath.Base(g.RepoDirectory)}.Run()
-	assert.EqualError(t, err, fmt.Sprintf("destination directory '%s' already exists", g.RepoName))
+	assert.EqualError(t, err, fmt.Sprintf("destination directory %q already exists", g.RepoName))
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)

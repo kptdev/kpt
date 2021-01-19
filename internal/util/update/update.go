@@ -162,14 +162,14 @@ func (u Command) Run() error {
 			"kpt packages must be checked into a git repo before they are updated: %v", err)
 	}
 	if strings.TrimSpace(g.Stdout.String()) != "" {
-		return errors.Errorf("must commit package '%s' to git before attempting to update",
+		return errors.Errorf("must commit package %q to git before attempting to update",
 			u.Path)
 	}
 
 	// update
 	updater, found := strategies[u.Strategy]
 	if !found {
-		return errors.Errorf("unrecognized update strategy '%s'", u.Strategy)
+		return errors.Errorf("unrecognized update strategy %q", u.Strategy)
 	}
 	err = updater().Update(UpdateOptions{
 		KptFile:        kptfile,

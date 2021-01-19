@@ -54,11 +54,11 @@ spec:
 kind: Kustomization`,
 
 			expectedOut: `processing resource configs to identify possible fixes... 
-created setter with name 'cluster'
-created setter with name 'profile'
-created setter with name 'project'
+created setter with name "cluster"
+created setter with name "profile"
+created setter with name "project"
 created 3 setters in total
-created substitution with name 'project-cluster-54235872'
+created substitution with name "project-cluster-54235872"
 created 1 substitution in total
 `,
 
@@ -120,11 +120,11 @@ spec:
   cluster: "someproj/someclus" # {"type":"string","x-kustomize":{"partialSetters":[{"name":"project","value":"someproj"},{"name":"cluster","value":"someclus"}]}}
 `,
 			expectedOut: `processing resource configs to identify possible fixes...  (dry-run)
-created setter with name 'cluster' (dry-run)
-created setter with name 'profile' (dry-run)
-created setter with name 'project' (dry-run)
+created setter with name "cluster" (dry-run)
+created setter with name "profile" (dry-run)
+created setter with name "project" (dry-run)
 created 3 setters in total (dry-run)
-created substitution with name 'project-cluster-54235872' (dry-run)
+created substitution with name "project-cluster-54235872" (dry-run)
 created 1 substitution in total (dry-run)
 `,
 			expectedOutput: `apiVersion: install.istio.io/v1alpha2

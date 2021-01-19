@@ -77,7 +77,7 @@ func ParseFieldPath(path string) ([]string, error) {
 		}
 		p := strings.Split(parts[i], "[")
 		if len(p) != 2 {
-			return nil, errors.Errorf("unrecognized path element: '%s'.  "+
+			return nil, errors.Errorf("unrecognized path element: %q.  "+
 				"Should be of the form 'list[field=value]'", parts[i])
 		}
 		p[1] = "[" + p[1]

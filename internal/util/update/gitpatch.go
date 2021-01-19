@@ -116,12 +116,12 @@ func (u *GitPatchUpdater) patchLocalPackage() error {
 	// add the cached update as an upstream so git can figure out how to do the
 	// 3-way merge when it looks for the commits in the patch file.
 	fmt.Fprintf(os.Stderr,
-		"fetching upstream updates locally staged at '%s'\n", u.gitRunner.RepoDir)
+		"fetching upstream updates locally staged at %q\n", u.gitRunner.RepoDir)
 	// TODO(pwittrock): consider fetching directly without adding using git fetch <path>
 	//                  and determine if there are any benefits in doing so over this approach.
 	if err := g.Run(
 		"remote", "add", alphaGitPatchRemote, u.gitRunner.RepoDir); err != nil {
-		return errors.Errorf("update failed: failure running git remote '%v': %s %s",
+		return errors.Errorf("update failed: failure running git remote %q: %s %s",
 			err, g.Stderr.String(), g.Stdout.String())
 	}
 	defer func() {
@@ -136,7 +136,7 @@ func (u *GitPatchUpdater) patchLocalPackage() error {
 		return err
 	}
 	if err := g.Run("fetch", alphaGitPatchRemote, defaultRef); err != nil {
-		return errors.Errorf("update failed: failure running git fetch '%v': %s %s",
+		return errors.Errorf("update failed: failure running git fetch %q: %s %s",
 			err, g.Stderr.String(), g.Stdout.String())
 	}
 
@@ -148,7 +148,7 @@ func (u *GitPatchUpdater) patchLocalPackage() error {
 		return err
 	}
 	if err := g.Run("am", "-3", "--directory", u.PackagePath); err != nil {
-		return errors.Errorf("update failed: failure running git am: '%v': %s %s",
+		return errors.Errorf("update failed: failure running git am: %q: %s %s",
 			err, g.Stderr.String(), g.Stdout.String())
 	}
 	return nil
@@ -161,7 +161,7 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 	// reset hard to where we are updating from
 	if err := u.gitRunner.Run(
 		"reset", "--hard", u.UpdateOptions.KptFile.Upstream.Git.Commit); err != nil {
-		return errors.Errorf("update failed: failure running git reset --hard: '%v': %s %s",
+		return errors.Errorf("update failed: failure running git reset --hard: %q: %s %s",
 			err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 
@@ -183,14 +183,14 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 	// write the Kptfile so the patch sees the updates to it.  use the version we read
 	// locally so there aren't merge conflicts if the remote was changed.
 	if err := kptfileutil.WriteFile(u.gitRunner.Dir, pf); err != nil {
-		return errors.Errorf("update failed: unable to write Kptfile: '%v'", err)
+		return errors.Errorf("update failed: unable to write Kptfile: %q", err)
 	}
 	if err := u.gitRunner.Run("add", "Kptfile"); err != nil {
-		return errors.Errorf("update failed: unable to add Kptfile: '%v': %s %s",
+		return errors.Errorf("update failed: unable to add Kptfile: %q: %s %s",
 			err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 	if err := u.gitRunner.Run("commit", "-m", "write from KptFile"); err != nil {
-		return errors.Errorf("update failed: unable to commit source: '%v': %s %s",
+		return errors.Errorf("update failed: unable to commit source: %q: %s %s",
 			err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 	return nil
@@ -201,7 +201,7 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 func (u *GitPatchUpdater) commitTargetFiles() error {
 	// checkout the files we want to update to
 	if err := u.gitRunner.Run("checkout", u.toCommit, "./"); err != nil {
-		return errors.Errorf("update failed: unable to checkout update target '%s': '%v': %s %s",
+		return errors.Errorf("update failed: unable to checkout update target %q: %q: %s %s",
 			u.toCommit, err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 
@@ -219,22 +219,22 @@ func (u *GitPatchUpdater) commitTargetFiles() error {
 	updatedKptfile.Upstream.Git.Ref = u.UpdateOptions.ToRef   // set the ref we are updating to
 	updatedKptfile.Upstream.Git.Repo = u.UpdateOptions.ToRepo // set the repo we are using for the update
 	if err := kptfileutil.WriteFile(u.gitRunner.Dir, updatedKptfile); err != nil {
-		return errors.Errorf("update failed: unable to write Kptfile: '%v'", err)
+		return errors.Errorf("update failed: unable to write Kptfile: %q", err)
 	}
 
 	// add and commit the files and Kptfile so we can create a patch for them
 	if err := u.gitRunner.Run("add", "."); err != nil {
-		return errors.Errorf("update failed: unable to add update target: '%v': %s %s",
+		return errors.Errorf("update failed: unable to add update target: %q: %s %s",
 			err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 	var msg string
 	if u.SimpleMessage {
-		msg = fmt.Sprintf("update from '%s' to '%s'",
+		msg = fmt.Sprintf("update from %q to %q",
 			u.UpdateOptions.KptFile.Upstream.Git.Ref, // ref we are updating from
 			u.UpdateOptions.ToRef,                    // ref we are updating to
 		)
 	} else {
-		msg = fmt.Sprintf("update '%s' (%s) from '%s' (%s) to '%s' (%s)",
+		msg = fmt.Sprintf("update %q (%s) from %q (%s) to %q (%s)",
 			u.UpdateOptions.KptFile.Name,             // name of the package
 			u.UpdateOptions.ToRepo,                   // repo used for the update
 			u.UpdateOptions.KptFile.Upstream.Git.Ref, // ref we are updating from
@@ -249,7 +249,7 @@ func (u *GitPatchUpdater) commitTargetFiles() error {
 	}
 
 	if err := u.gitRunner.Run("commit", "-m", msg); err != nil {
-		return errors.Errorf("update failed: unable to commit update target: '%v': %s %s",
+		return errors.Errorf("update failed: unable to commit update target: %q: %s %s",
 			err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 	return nil
@@ -259,7 +259,7 @@ func (u *GitPatchUpdater) commitTargetFiles() error {
 func (u *GitPatchUpdater) formatPatch() error {
 	if err := u.gitRunner.Run(
 		"format-patch", "--stdout", "-n", "HEAD^", "--relative", "./"); err != nil {
-		return errors.Errorf("update failed: unable to create patch: '%v': %s %s",
+		return errors.Errorf("update failed: unable to create patch: %q: %s %s",
 			err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 	u.patch = u.gitRunner.Stdout.String()
@@ -277,13 +277,13 @@ func (u *GitPatchUpdater) destinationRefToCommitSha() error {
 		if err = u.gitRunner.Run("reset", "--hard", u.ToRef); err != nil {
 			// this works for branches
 			if err = u.gitRunner.Run("reset", "--hard", "origin/"+u.ToRef); err != nil {
-				return errors.Errorf("update failed: unable to reset to update target: '%v': %s %s",
+				return errors.Errorf("update failed: unable to reset to update target: %q: %s %s",
 					err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 			}
 		}
 	}
 	if err := u.gitRunner.Run("rev-parse", "--verify", "HEAD"); err != nil {
-		return errors.Errorf("update failed: unable to parse update target commit: '%v': %s %s",
+		return errors.Errorf("update failed: unable to parse update target commit: %q: %s %s",
 			err, u.gitRunner.Stderr.String(), u.gitRunner.Stdout.String())
 	}
 	u.toCommit = strings.TrimSpace(u.gitRunner.Stdout.String())

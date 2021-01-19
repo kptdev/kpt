@@ -214,7 +214,7 @@ packageMetadata:
 		StdOut:         b,
 	}
 	err = instance.Run()
-	if !assert.EqualError(t, err, fmt.Sprintf("no manual entry for '%s'", d)) {
+	if !assert.EqualError(t, err, fmt.Sprintf("no manual entry for %q", d)) {
 		return
 	}
 	if !assert.Equal(t, ``, b.String()) {
@@ -275,7 +275,7 @@ packageMetadata:
 		StdOut:         b,
 	}
 	err = instance.Run()
-	assert.EqualError(t, err, fmt.Sprintf("invalid manual location for '%s'", d))
+	assert.EqualError(t, err, fmt.Sprintf("invalid manual location for %q", d))
 	assert.Equal(t, ``, b.String())
 }
 

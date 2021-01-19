@@ -94,10 +94,10 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if len(r.Update.Ref) > 0 {
-		fmt.Fprintf(c.ErrOrStderr(), "updating package '%s' to %s\n",
+		fmt.Fprintf(c.ErrOrStderr(), "updating package %q to %s\n",
 			r.Update.Path, r.Update.Ref)
 	} else {
-		fmt.Fprintf(c.ErrOrStderr(), "updating package '%s'\n",
+		fmt.Fprintf(c.ErrOrStderr(), "updating package %q\n",
 			r.Update.Path)
 	}
 	if err := r.Update.Run(); err != nil {

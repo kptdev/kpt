@@ -68,7 +68,7 @@ func main() {
 			case "--strategy=guide":
 				strategy = guideStrategy
 			default:
-				fmt.Fprintf(os.Stderr, "Invalid strategy '%s'\n", a)
+				fmt.Fprintf(os.Stderr, "Invalid strategy %q\n", a)
 				os.Exit(1)
 			}
 		}

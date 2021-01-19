@@ -86,11 +86,11 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 func (r *Runner) runE(c *cobra.Command, args []string) error {
 	var err error
 	if _, err = os.Stat(args[0]); os.IsNotExist(err) {
-		return errors.Errorf("'%s' does not exist", err)
+		return errors.Errorf("%q does not exist", err)
 	}
 
 	if _, err = os.Stat(filepath.Join(args[0], "Kptfile")); os.IsNotExist(err) {
-		fmt.Fprintf(c.OutOrStdout(), "writing '%s'\n", filepath.Join(args[0], "Kptfile"))
+		fmt.Fprintf(c.OutOrStdout(), "writing %q\n", filepath.Join(args[0], "Kptfile"))
 		k := kptfile.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
 				ObjectMeta: yaml.ObjectMeta{
@@ -127,7 +127,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	if _, err = os.Stat(filepath.Join(args[0], man.ManFilename)); os.IsNotExist(err) {
-		fmt.Fprintf(c.OutOrStdout(), "writing '%s'\n", filepath.Join(args[0], man.ManFilename))
+		fmt.Fprintf(c.OutOrStdout(), "writing %q\n", filepath.Join(args[0], man.ManFilename))
 		buff := &bytes.Buffer{}
 		t, err := template.New("man").Parse(manTemplate)
 		if err != nil {
