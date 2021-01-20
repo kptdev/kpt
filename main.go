@@ -23,17 +23,33 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/logs"
 	"sigs.k8s.io/cli-utils/pkg/errors"
 )
 
 func main() {
+	var logFlags flag.FlagSet
+
 	cmd := run.GetMain()
 	logs.InitLogs()
 	defer logs.FlushLogs()
+
+	// Enable commandline flags for klog.
+	// logging will help in collecting debugging information from users
+	// Note(droot): There are too many flags exposed that makes the command
+	// usage verbose but couldn't find a way to make it less verbose.
+	klog.InitFlags(&logFlags)
+	cmd.Flags().AddGoFlagSet(&logFlags)
+	// By default klog v1 logs to stderr, switch that off
+	_ = cmd.Flags().Set("logtostderr", "false")
+	_ = cmd.Flags().Set("alsologtostderr", "false")
+
 	if err := cmd.Execute(); err != nil {
 		cmdutil.PrintErrorStacktrace(err)
 		// TODO: find a way to avoid having to provide `kpt live` as a
