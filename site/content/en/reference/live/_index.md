@@ -20,4 +20,6 @@ description: >
 
 Live contains the next-generation versions of apply related commands for
 deploying local configuration packages to a cluster.
+
+Inventory object upgrade [instructions (alpha)](./alpha).
 <!--mdtogo-->
