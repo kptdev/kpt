@@ -14,6 +14,135 @@
     
     
     <item>
+      <title>Reference: Inventory Object Upgrade (alpha)</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/alpha/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/alpha/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Instructions (alpha) to upgrade to next generation inventory object
+--&gt;
+&lt;h3 id=&#34;how-to-upgrade-to-the-next-generation-inventory-object-alpha&#34;&gt;How to Upgrade to the Next Generation Inventory Object (Alpha)&lt;/h3&gt;
+&lt;h4 id=&#34;what-is-an-inventory-object&#34;&gt;What is an Inventory Object&lt;/h4&gt;
+&lt;p&gt;An inventory object is the automatically generated object which keeps track
+of the set of objects applied together. The current inventory object type
+is a &lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;,
+and it is usually defined in a package file called
+&lt;strong&gt;inventory-template.yaml&lt;/strong&gt;. This file is created from an invocation of
+&lt;code&gt;kpt live init&lt;/code&gt;. A typical use of the inventory object is to prune (delete)
+objects omitted locally.&lt;/p&gt;
+&lt;h4 id=&#34;what-is-a-next-generation-inventory-object&#34;&gt;What is a Next Generation Inventory Object&lt;/h4&gt;
+&lt;p&gt;The next generation inventory object is a &lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource
+replacing the current &lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;.
+Because the new inventory object is a
+custom resource, you must have permissions to add a custom resource
+definition (CRD) to the cluster.&lt;/p&gt;
+&lt;h4 id=&#34;upgrade-scenario-1-new-uninitialized-packages&#34;&gt;Upgrade Scenario 1: New (Uninitialized) Packages&lt;/h4&gt;
+&lt;p&gt;Packages which are newly downloaded and uninitialized should follow the
+following steps:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;export RESOURCE_GROUP_INVENTORY=1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;kpt live init &amp;lt;PACKAGE DIR&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;The &lt;code&gt;init&lt;/code&gt; step adds an &lt;code&gt;inventory&lt;/code&gt; section in the
+package Kptfile. The package is now eligible to be applied
+with &lt;code&gt;kpt live apply &amp;lt;PACKAGE DIR&amp;gt;&lt;/code&gt;. This command will
+automatically apply the &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD if it has not
+already been applied.&lt;/p&gt;
+&lt;h4 id=&#34;upgrade-scenario-2-existing-initialized-packages&#34;&gt;Upgrade Scenario 2: Existing (Initialized) Packages&lt;/h4&gt;
+&lt;p&gt;Existing packages which have already been initialized, should follow
+the following steps:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;export RESOURCE_GROUP_INVENTORY=1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;kpt live migrate &amp;lt;PACKAGE DIR&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Initially, the &lt;code&gt;migrate&lt;/code&gt; command applies the &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD.
+Then the &lt;code&gt;migrate&lt;/code&gt; command replaces the
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+inventory object in the cluster (if it exists) with a &lt;strong&gt;ResourceGroup&lt;/strong&gt;
+custom resource. The &lt;code&gt;migrate&lt;/code&gt; command also deletes the local inventory
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+config file (usually &lt;strong&gt;inventory-template.yaml&lt;/strong&gt;). If this local
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+file is stored in a github repository, the removal
+needs to be committed to the repository to finalize the removal.
+Finally, the &lt;code&gt;migrate&lt;/code&gt; command adds an &lt;code&gt;inventory&lt;/code&gt;
+section to the Kptfile if it did not already exist. Updates to
+the package can now be applied using &lt;code&gt;kpt live apply &amp;lt;PACKAGE DIR&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;new-alpha-commands&#34;&gt;New (Alpha) Commands&lt;/h3&gt;
+&lt;h4 id=&#34;migrate&#34;&gt;Migrate&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&#34;./migrate&#34;&gt;kpt live migrate&lt;/a&gt;&lt;/p&gt;
+&lt;h4 id=&#34;install-resource-group&#34;&gt;Install Resource Group&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&#34;./install-resource-group&#34;&gt;kpt live install-resource-group&lt;/a&gt; The &lt;strong&gt;ResourceGroup&lt;/strong&gt;
+CRD is added to the cluster as a side effect of &lt;code&gt;kpt live apply&lt;/code&gt;. However, this
+&lt;code&gt;install-resource-group&lt;/code&gt; command allows the user to only apply the
+&lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD without applying other resources.&lt;/p&gt;
+&lt;h3 id=&#34;updated-existing-commands&#34;&gt;Updated Existing Commands&lt;/h3&gt;
+&lt;h4 id=&#34;init&#34;&gt;Init&lt;/h4&gt;
+&lt;p&gt;&lt;a href=&#34;./init&#34;&gt;kpt live init&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;troubleshooting-and-verifying&#34;&gt;Troubleshooting and Verifying&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Error: unable to apply &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kpt live apply &amp;lt;PACKAGE_DIR&amp;gt;
+error: unable to add resourcegroups.kpt.dev
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This message means the user does not have permissions to add the
+&lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD to the cluster. Once the RBAC permissions have
+been updated, the user can manually install the CRD with the following
+command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kpt live install-resource-group
+installing ResourceGroup custom resource definition...success
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The user can verify the CRD was successfully added with the following
+command (using default namespace):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kubectl get resourcegroups.kpt.dev
+No resources found in default namespace.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Until the user is able to update permissions to
+apply the CRD, the user can continue to use the previous
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+inventory object by unsetting the environment variable:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#204a87&#34;&gt;unset&lt;/span&gt; RESOURCE_GROUP_INVENTORY
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;Error: configuration already created initialization error&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kpt live init &amp;lt;PACKAGE DIR&amp;gt;
+error: ResourceGroup configuration has already been created. Changing
+them after a package has been applied to the cluster can lead to
+undesired results. Use the --force flag to suppress this error.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This message means the &lt;strong&gt;ResourceGroup&lt;/strong&gt; initialization has
+&lt;em&gt;already&lt;/em&gt; happened. Unless, you want to &lt;code&gt;--force&lt;/code&gt; new values,
+this can safely be ignored.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;How to check if the &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD has &lt;em&gt;not&lt;/em&gt; been
+successfully applied to the cluster&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kubectl get resourcegroups.kpt.dev
+error: the server doesn&lt;span style=&#34;color:#a40000&#34;&gt;&amp;#39;&lt;/span&gt;t have a resource &lt;span style=&#34;color:#204a87&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;resourcegroups&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If a &lt;code&gt;No resources found&lt;/code&gt; message is returned, the
+&lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD &lt;em&gt;has&lt;/em&gt; been successfully applied,
+but there are no &lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resources
+found in the namespace. Example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kubectl get resourcegroups.kpt.dev
+No resources found in default namespace.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;How to check if the applied inventory object in the cluster has
+been upgraded to a &lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kubectl get resourcegroups.kpt.dev -n &amp;lt;PKG NAMESPACE&amp;gt; --selector&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;cli-utils.sigs.k8s.io/inventory-id&amp;#39;&lt;/span&gt; -o name
+resourcegroup.kpt.dev/inventory-62308923
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;How to check if the applied inventory object in the cluster is
+not upgraded and is still a &lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ kubectl get cm -n &amp;lt;PKG NAMESPACE&amp;gt; --selector&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#39;cli-utils.sigs.k8s.io/inventory-id&amp;#39;&lt;/span&gt; -o name
+configmap/inventory-62308923
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+      </description>
+    </item>
+    
+    <item>
       <title>Reference: Apply</title>
       <link>https://googlecontainertools.github.io/kpt/reference/live/apply/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -514,6 +643,199 @@ kpt live init --namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;
   namespace for the inventory object. If not provided, kpt will check if all the resources
   in the package belong in the same namespace. If they are, that namespace will be used. If
   they are not, the namespace in the user&#39;s context will be chosen.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Init (alpha)</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/init/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/init/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Initialize a package with a object to track previously applied resources
+--&gt;
+
+
+&lt;p&gt;
+    
+    &lt;asciinema-player
+            src=&#34;https://googlecontainertools.github.io/kpt//casts/live-init.cast&#34;
+            
+            preload=&#34;1&#34;
+            
+            start-at=&#34;0&#34;
+            speed=&#34;1&#34;
+            
+            
+            
+            
+            
+            
+            
+            
+    &gt;&lt;/asciinema-player&gt;
+        &lt;script&gt;
+        let c=document.getElementsByClassName(&#34;td-content&#34;)
+        if (c &amp;&amp; c.length &gt; 0) {
+            let w = c[0].clientWidth
+            let p=document.getElementsByTagName(&#39;asciinema-player&#39;)
+            if (p &amp;&amp; p.length &gt; 0) {
+                p.cols = w
+            }
+        }
+    &lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: This alpha version of the command is for the new ResourceGroup as
+inventory object functionality. The alpha version of this command is not
+available unless the &lt;code&gt;RESOURCE_GROUP_INVENTORY&lt;/code&gt; environment variable is set.&lt;/p&gt;
+&lt;p&gt;The init command will initialize a package using the next generation inventory
+object (&lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource). See commands &lt;a href=&#34;./migrate&#34;&gt;&lt;code&gt;migrate&lt;/code&gt;&lt;/a&gt; and
+&lt;a href=&#34;./install-resource-group&#34;&gt;&lt;code&gt;install-resource-group&lt;/code&gt;&lt;/a&gt; for more information. A Kptfile
+is required in the package directory.&lt;/p&gt;
+&lt;p&gt;The inventory object is required by other live commands
+such as apply, preview and destroy.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package with the next generation inventory metadata&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;RESOURCE_GROUP_INVENTORY&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+kpt live init my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package with a specific name for the group of resources&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;RESOURCE_GROUP_INVENTORY&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+kpt live init --namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;test-namespace my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live init DIRECTORY [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Path to a package directory. The package directory must contain a Kptfile.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--inventory-id:
+  Identifier for group of applied resources. Must be composed of valid label characters.
+--namespace:
+  namespace for the inventory object. If not provided, kpt will check if all the resources
+  in the package belong in the same namespace. If they are, that namespace will be used. If
+  they are not, the namespace in the user&#39;s context will be chosen.
+&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Install-resource-group (alpha)</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/install-resource-group/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/install-resource-group/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Apply ResourceGroup custom resource definition to the cluster
+--&gt;
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: This is an alpha command for the new ResourceGroup as inventory object
+functionality. This alpha command is not available unless the &lt;code&gt;RESOURCE_GROUP_INVENTORY&lt;/code&gt;
+environment variable is set.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;install-resource-group&lt;/code&gt; command applies the &lt;strong&gt;ResourceGroup&lt;/strong&gt;
+custom resource definition (CRD) to the cluster. This CRD allows
+&lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resources to be created, acting as inventory
+objects. The &lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource is the next generation
+inventory object after the
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# install the ResourceGroup CRD&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;RESOURCE_GROUP_INVENTORY&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+kpt live install-resource-group
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live install-resource-group
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;p&gt;None&lt;/p&gt;
+&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;p&gt;None&lt;/p&gt;
+&lt;!--mdtogo--&gt;
+
+      </description>
+    </item>
+    
+    <item>
+      <title>Reference: Migrate (alpha)</title>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/migrate/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/migrate/</guid>
+      <description>
+        
+        
+        &lt;!--mdtogo:Short
+    Migrate the package inventory object to a ResourceGroup custom resource
+--&gt;
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: This is an alpha command for the new ResourceGroup as inventory object
+functionality. This alpha command is not available unless the &lt;code&gt;RESOURCE_GROUP_INVENTORY&lt;/code&gt;
+environment variable is set.&lt;/p&gt;
+&lt;p&gt;The migrate command upgrades the inventory object from a
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+to a &lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource. The migrate performs the following steps:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Applies the &lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource definition (see
+&lt;code&gt;kpt live install-resource-group&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;If a
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+inventory object exists in the cluster, the inventory
+object is upgraded to a &lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource (deleting the
+previous
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+).&lt;/li&gt;
+&lt;li&gt;If it has not already been created, the Kptfile inventory section
+is filled in. These values are used to create the &lt;strong&gt;ResourceGroup&lt;/strong&gt;
+custom resource inventory object when the package is applied.&lt;/li&gt;
+&lt;li&gt;Deletes the local
+&lt;a href=&#34;https://kubernetes.io/docs/concepts/configuration/configmap/&#34;&gt;&lt;strong&gt;ConfigMap&lt;/strong&gt;&lt;/a&gt;
+file (usually &lt;strong&gt;inventory-template.yaml&lt;/strong&gt;).&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
+&lt;!--mdtogo:Examples--&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# migrate from ConfigMap to ResourceGroup inventory object&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;RESOURCE_GROUP_INVENTORY&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+kpt live migrate my-dir/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# check the steps that will occur for the migrate, but&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# do not actually run them.&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;RESOURCE_GROUP_INVENTORY&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+kpt live migrate my-dir/ --dry-run
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# migrate from ConfigMap to ResourceGroup inventory object, forcing&lt;/span&gt;
+&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# new values for the inventory object to be written to the Kptfile.&lt;/span&gt;
+&lt;span style=&#34;color:#204a87&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;RESOURCE_GROUP_INVENTORY&lt;/span&gt;&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#0000cf;font-weight:bold&#34;&gt;1&lt;/span&gt;
+kpt live migrate my-dir/ --force
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
+&lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
+&lt;!--mdtogo:Long--&gt;
+&lt;pre&gt;&lt;code&gt;kpt live migrate DIRECTORY [flags]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;DIR:
+  Path to a package directory. The package must contain a Kptfile.
+  If the package directory contains a ConfigMap inventory template
+  file (usually named inventory-template.yaml), then this file
+  will be deleted.
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;flags&#34;&gt;Flags&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;--dry-run:
+  Do not actually run the migrate; only print out the steps that
+  will occur.
+--force:
+  Set inventory values even if already set in Kptfile.
+--name:
+  Set the inventory object name, instead of default generated
+  name (e.g. inventory-62308923). The user must make sure the
+  inventory name does not collide with other inventory objects
+  in the same namespace.
 &lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
 
       </description>
