@@ -64,11 +64,6 @@ func (u FastForwardUpdater) Update(options UpdateOptions) error {
 	}
 	defer os.RemoveAll(updated.AbsPath())
 
-	commit, err := git.LookupCommit(updated.AbsPath())
-	if err != nil {
-		return err
-	}
-
 	// Verify that there are no local changes that would prevent us from
 	// using the FastForward strategy.
 	if err := u.checkForLocalChanges(options.AbsPackagePath, original.AbsPath()); err != nil {
@@ -154,10 +149,7 @@ func (u FastForwardUpdater) Update(options UpdateOptions) error {
 		}
 	}
 
-	options.KptFile.Upstream.Git.Commit = commit
-	options.KptFile.Upstream.Git.Ref = options.ToRef
-	options.KptFile.Upstream.Git.Repo = options.ToRepo
-	return kptfileutil.WriteFile(options.AbsPackagePath, options.KptFile)
+	return fetch.UpsertKptfile(options.AbsPackagePath, filepath.Base(options.AbsPackagePath), updated)
 }
 
 func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string) error {

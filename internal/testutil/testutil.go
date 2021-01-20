@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -521,11 +522,56 @@ func SetupDefaultRepoAndWorkspace(t *testing.T, content Content, repoPaths map[s
 }
 
 // SetupRepos creates repos and returns a mapping from name to TestGitRepos.
+// This only creates the first version of each repo as given by the first item
+// in the repoContent slice.
 func SetupRepos(t *testing.T, repoContent map[string][]Content) (map[string]*TestGitRepo, error) {
-	// Since the different repos might references each other as remote
-	// subpackages, we need to create them in the correct order. We do a
-	// topological sort to make sure we create a repo before any other repos
-	// that references it.
+	refRepos := make(map[string]*TestGitRepo)
+
+	ordering, err := findRepoOrdering(repoContent)
+	if err != nil {
+		return refRepos, err
+	}
+
+	// Create the repos in correct order.
+	repoPaths := make(map[string]string)
+	for _, name := range ordering {
+		data := repoContent[name]
+		if len(data) < 1 {
+			continue
+		}
+		tgr := &TestGitRepo{T: t}
+		if err := tgr.SetupTestGitRepo(data[:1], repoPaths); err != nil {
+			return refRepos, err
+		}
+		refRepos[name] = tgr
+		repoPaths[name] = tgr.RepoDirectory
+	}
+	return refRepos, nil
+}
+
+// UpdateRefRepos updates the existing repos with any additional Content
+// items in the repoContent slice.
+func UpdateRefRepos(t *testing.T, repos map[string]*TestGitRepo, repoContent map[string][]Content, repoPaths map[string]string) error {
+	for name := range repoContent {
+		data := repoContent[name]
+		if len(data) < 1 {
+			continue
+		}
+
+		r := repos[name]
+		err := UpdateGitDir(t, r, data[1:], repoPaths)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// findRepoOrdering orders the repos based on their dependencies. So if repo
+// A includes repo B as a subpackage, we can create repo B before we create
+// repo B. This is done with a topological sort. If there are any circular
+// dependencies between the repos, it will return an error.
+func findRepoOrdering(repoContent map[string][]Content) ([]string, error) {
 	var repoNames []string
 	for n := range repoContent {
 		repoNames = append(repoNames, n)
@@ -533,6 +579,9 @@ func SetupRepos(t *testing.T, repoContent map[string][]Content) (map[string]*Tes
 
 	topo := toposort.NewGraph(len(repoNames))
 	topo.AddNodes(repoNames...)
+	// Keep track of which edges have been added to topo. The library doesn't
+	// handle the same edge added multiple times.
+	added := make(map[string]string)
 	for n, contents := range repoContent {
 		for _, c := range contents {
 			if c.Pkg == nil {
@@ -541,28 +590,19 @@ func SetupRepos(t *testing.T, repoContent map[string][]Content) (map[string]*Tes
 			pkg := c.Pkg
 			refRepos := pkg.AllReferencedRepos()
 			for _, refRepo := range refRepos {
+				if v, ok := added[refRepo]; ok && v == n {
+					continue
+				}
 				topo.AddEdge(refRepo, n)
+				added[refRepo] = n
 			}
 		}
 	}
 	ordering, ok := topo.Toposort()
 	if !ok {
-		return map[string]*TestGitRepo{}, fmt.Errorf("unable to sort repo references. Cycles are not allowed")
+		return nil, fmt.Errorf("unable to sort repo references. Cycles are not allowed")
 	}
-
-	// Create the repos in correct order.
-	refRepos := make(map[string]*TestGitRepo)
-	repoPaths := make(map[string]string)
-	for _, name := range ordering {
-		data := repoContent[name]
-		tgr := &TestGitRepo{T: t}
-		if err := tgr.SetupTestGitRepo(data, repoPaths); err != nil {
-			return refRepos, err
-		}
-		refRepos[name] = tgr
-		repoPaths[name] = tgr.RepoDirectory
-	}
-	return refRepos, nil
+	return ordering, nil
 }
 
 func checkoutBranch(repo string, branch string, create bool) error {
@@ -634,9 +674,9 @@ func replaceData(repo, data string) error {
 			return nil
 		}
 
-		// For Kptfiles we need to keep the Upstream section even if we replace
-		// the file.
-		if rel == "Kptfile" {
+		// For Kptfiles we want to keep the Upstream section if the Kptfile
+		// in the data directory doesn't already include one.
+		if filepath.Base(path) == "Kptfile" {
 			dataKptfile, err := kptfileutil.ReadFile(filepath.Dir(path))
 			if err != nil {
 				return err
@@ -646,7 +686,11 @@ func replaceData(repo, data string) error {
 			if err != nil {
 				return err
 			}
-			dataKptfile.Upstream = repoKptfile.Upstream
+			// Only copy over the Upstream section from the existing
+			// Kptfile if other values hasn't been provided.
+			if reflect.DeepEqual(dataKptfile.Upstream, kptfile.Upstream{}) {
+				dataKptfile.Upstream = repoKptfile.Upstream
+			}
 			dataKptfile.Name = repoKptfile.Name
 			err = kptfileutil.WriteFile(repoKptfileDir, dataKptfile)
 			if err != nil {

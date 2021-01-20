@@ -87,7 +87,7 @@ func cloneAndCopy(r *git.RepoSpec, dest, name string, clean bool) error {
 			r.Path, r.OrgRepo, r.Ref)
 	}
 
-	if err := upsertKptfile(dest, name, r); err != nil {
+	if err := UpsertKptfile(dest, name, r); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil
@@ -259,9 +259,9 @@ func (c *Command) DefaultValues() error {
 	return nil
 }
 
-// upsertKptfile populates the KptFile values, merging any cloned KptFile and the
+// UpsertKptfile populates the KptFile values, merging any cloned KptFile and the
 // cloneFrom values.
-func upsertKptfile(path, name string, spec *git.RepoSpec) error {
+func UpsertKptfile(path, name string, spec *git.RepoSpec) error {
 	// read KptFile cloned with the package if it exists
 	kpgfile, err := kptfileutil.ReadFile(path)
 	if err != nil {

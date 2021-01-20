@@ -22,10 +22,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -57,6 +55,8 @@ type TestSetupManager struct {
 	RefRepos map[string]*TestGitRepo
 
 	LocalWorkspace *TestWorkspace
+
+	RepoPaths map[string]string
 
 	cleanTestRepo func()
 	cacheDir      string
@@ -103,13 +103,13 @@ func (g *TestSetupManager) Init(content Content) bool {
 	g.RefRepos = refRepos
 
 	// Create the mapping from repo name to path.
-	repoPaths := make(map[string]string)
+	g.RepoPaths = make(map[string]string)
 	for name, tgr := range refRepos {
-		repoPaths[name] = tgr.RepoDirectory
+		g.RepoPaths[name] = tgr.RepoDirectory
 	}
 
 	// Setup a "remote" source repo, and a "local" destination repo
-	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = SetupDefaultRepoAndWorkspace(g.T, content, repoPaths)
+	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = SetupDefaultRepoAndWorkspace(g.T, content, g.RepoPaths)
 	if g.GetSubDirectory == "/" {
 		g.targetDir = filepath.Base(g.UpstreamRepo.RepoName)
 	} else {
@@ -117,16 +117,18 @@ func (g *TestSetupManager) Init(content Content) bool {
 	}
 	g.LocalWorkspace.PackageDir = g.targetDir
 
-	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamInit, repoPaths); err != nil {
+	// Update the upstream repo with the init content.
+	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamInit, g.RepoPaths); err != nil {
 		return false
 	}
 
-	if !assert.NoError(g.T, fetch.Command{
+	// Get the content from the upstream repo into the local workspace.
+	if !assert.NoError(g.T, get.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: g.UpstreamRepo.RepoDirectory,
-			Ref:     g.GetRef,
-			Path:    g.GetSubDirectory,
+		Git: kptfile.Git{
+			Repo:      g.UpstreamRepo.RepoDirectory,
+			Ref:       g.GetRef,
+			Directory: g.GetSubDirectory,
 		}}.Run()) {
 		return false
 	}
@@ -139,16 +141,17 @@ func (g *TestSetupManager) Init(content Content) bool {
 	}
 
 	// Modify source repository state after fetching it
-	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamChanges, repoPaths); err != nil {
+	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamChanges, g.RepoPaths); err != nil {
 		return false
 	}
 
-	// Verify the local package has the correct dataset
-	if same := g.AssertLocalDataEquals(filepath.Join(content.Data, g.GetSubDirectory)); !same {
-		return same
+	// Modify local workspace after initial fetch.
+	if err := UpdateGitDir(g.T, g.LocalWorkspace, g.LocalChanges, g.RepoPaths); err != nil {
+		return false
 	}
 
-	if err := UpdateGitDir(g.T, g.LocalWorkspace, g.LocalChanges, repoPaths); err != nil {
+	// Modify other repos after initial fetch.
+	if err := UpdateRefRepos(g.T, refRepos, g.RefReposChanges, g.RepoPaths); err != nil {
 		return false
 	}
 
@@ -226,19 +229,6 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string) bool {
 
 	return g.UpstreamRepo.AssertKptfile(
 		g.T, filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir), expectedKptfile)
-}
-
-func (g *TestSetupManager) AssertKptfileEquals(path, commit, ref string) bool {
-	kf, err := kptfileutil.ReadFile(path)
-	if !assert.NoError(g.T, err) {
-		g.T.FailNow()
-	}
-	kf.Upstream.Type = kptfile.GitOrigin
-	kf.Upstream.Git.Directory = g.GetSubDirectory
-	kf.Upstream.Git.Commit = commit
-	kf.Upstream.Git.Ref = ref
-	kf.Upstream.Git.Repo = g.UpstreamRepo.RepoDirectory
-	return g.UpstreamRepo.AssertKptfile(g.T, g.LocalWorkspace.FullPackagePath(), kf)
 }
 
 func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {

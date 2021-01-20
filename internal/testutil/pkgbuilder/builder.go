@@ -455,6 +455,13 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, repoPaths map[string]str
 	for _, ri := range pkg.resources {
 		m := ri.resourceInfo.manifest
 		r := yaml.MustParse(m)
+
+		for _, m := range ri.mutators {
+			if err := r.PipeE(m); err != nil {
+				return err
+			}
+		}
+
 		for _, setterRef := range ri.setterRefs {
 			n, err := r.Pipe(yaml.PathGetter{
 				Path: setterRef.Path,
@@ -463,12 +470,6 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, repoPaths map[string]str
 				return err
 			}
 			n.YNode().LineComment = fmt.Sprintf(`{"$openapi":"%s"}`, setterRef.Name)
-		}
-
-		for _, m := range ri.mutators {
-			if err := r.PipeE(m); err != nil {
-				return err
-			}
 		}
 
 		filePath := filepath.Join(pkgPath, ri.resourceInfo.filename)

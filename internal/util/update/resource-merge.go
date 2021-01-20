@@ -41,11 +41,9 @@ type ResourceMergeUpdater struct{}
 
 func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	g := options.KptFile.Upstream.Git
-	g.Ref = options.ToRef
-	g.Repo = options.ToRepo
 
 	// get the original repo
-	original := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Commit}
+	original := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: g.Commit}
 	if err := fetch.ClonerUsingGitExec(original); err != nil {
 		return errors.Errorf("failed to clone git repo: original source: %v", err)
 	}
@@ -57,12 +55,6 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		return errors.Errorf("failed to clone git repo: updated source: %v", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
-
-	// local package controls the upstream field
-	commit, err := git.LookupCommit(updated.AbsPath())
-	if err != nil {
-		return err
-	}
 
 	// Find all subpackages in local, upstream and original. They are sorted
 	// in increasing order based on the depth of the subpackage relative to the
@@ -85,17 +77,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		}
 	}
 
-	// Update the kptfile in the local copy to reference the correct
-	// upstream after the update.
-	options.KptFile.Upstream.Git.Commit = commit
-	options.KptFile.Upstream.Git.Ref = options.ToRef
-	options.KptFile.Upstream.Git.Repo = options.ToRepo
-	err = kptfileutil.WriteFile(options.AbsPackagePath, options.KptFile)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return fetch.UpsertKptfile(options.AbsPackagePath, filepath.Base(options.AbsPackagePath), updated)
 }
 
 // updatePackage updates the package in the location specified by localPath
@@ -229,6 +211,13 @@ func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, originalPat
 		return localKf, err
 	}
 
+	// merge the subpackage information from upstream and local.
+	mergedSubpackages, err := kptfile.MergeSubpackages(localKf.Subpackages, updatedKf.Subpackages, originalKf.Subpackages)
+	if err != nil {
+		return localKf, err
+	}
+
+	localKf.Subpackages = mergedSubpackages
 	localKf.OpenAPI = mergedOpenAPI
 	localKf.Upstream = updatedKf.Upstream
 	return localKf, err
