@@ -69,7 +69,7 @@ func branchExists(repo, branch string) (bool, error) {
 	if err != nil {
 		// stdErr contains the error message for os related errors, git permission errors
 		// and if repo doesn't exist
-		return false, errors.Errorf("failed to lookup master(or main) branch %v: %s", err, strings.TrimSpace(stdErr.String()))
+		return false, errors.Errorf("failed to lookup master(or main) branch %q: %s", err, strings.TrimSpace(stdErr.String()))
 	}
 	// stdOut contains the branch information if the branch is present in remote repo
 	// stdOut is empty if the repo doesn't have the input branch
@@ -219,7 +219,7 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 			// verify we got the commit
 			if err = gitRunner.Run("show", s); err != nil {
 				return "", errors.Errorf(
-					"failed to clone git repo: trouble fetching origin %s: %v, "+
+					"failed to clone git repo: trouble fetching origin %q: %v, "+
 						"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", s, err)
 			}
 		}

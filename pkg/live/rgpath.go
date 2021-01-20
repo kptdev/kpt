@@ -41,7 +41,7 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	inv := kf.Inventory
 	invObj, err := generateInventoryObj(inv)
 	if err == nil {
-		klog.V(4).Infof("from Kptfile generating ResourceGroup inventory object %s/%s/%s",
+		klog.V(4).Infof(`from Kptfile generating ResourceGroup inventory object "%s/%s/%s"`,
 			inv.Namespace, inv.Name, inv.InventoryID)
 		objs = append(objs, invObj)
 	} else {

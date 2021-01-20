@@ -59,21 +59,21 @@ func (c Command) fixV1Setters() error {
 	}
 
 	for _, setter := range sfr.CreatedSetters {
-		printFunc("created setter with name %s", setter)
+		printFunc("created setter with name %q", setter)
 	}
 	printFunc("created %d setters in total", len(sfr.CreatedSetters))
 
 	for _, subst := range sfr.CreatedSubst {
-		printFunc("created substitution with name %s", subst)
+		printFunc("created substitution with name %q", subst)
 	}
 	printFunc("created %d substitution in total", len(sfr.CreatedSubst))
 
 	for setter, err := range sfr.FailedSetters {
-		printFunc("failed to create setter with name %s: %v", setter, err)
+		printFunc("failed to create setter with name %q: %v", setter, err)
 	}
 
 	for subst, err := range sfr.FailedSubst {
-		printFunc("failed to create substitution with name %s: %v", subst, err)
+		printFunc("failed to create substitution with name %q: %v", subst, err)
 	}
 
 	return err

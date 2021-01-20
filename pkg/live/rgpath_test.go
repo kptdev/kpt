@@ -217,7 +217,7 @@ func getInventoryLabel(inv *unstructured.Unstructured) (string, error) {
 	labels := accessor.GetLabels()
 	inventoryLabel, exists := labels[common.InventoryLabel]
 	if !exists {
-		return "", fmt.Errorf("inventory label does not exist for inventory object: %s", common.InventoryLabel)
+		return "", fmt.Errorf("inventory label does not exist for inventory object: %q", common.InventoryLabel)
 	}
 	return inventoryLabel, nil
 }
@@ -239,12 +239,12 @@ func TestResourceGroupUnstructured(t *testing.T) {
 		t.Fatal("resourcegroup shouldn't be nil")
 	}
 	if rg.GetName() != name {
-		t.Fatalf("resourcegroup name expected %s, but got %s", name, rg.GetName())
+		t.Fatalf("resourcegroup name expected %q, but got %q", name, rg.GetName())
 	}
 	if rg.GetNamespace() != namespace {
-		t.Fatalf("resourcegroup namespace expected %s, but got %s", namespace, rg.GetNamespace())
+		t.Fatalf("resourcegroup namespace expected %q, but got %q", namespace, rg.GetNamespace())
 	}
 	if rg.GetLabels()[common.InventoryLabel] != id {
-		t.Fatalf("resourcegroup inventory id expected %s, but got %s", id, rg.GetLabels()[common.InventoryLabel])
+		t.Fatalf("resourcegroup inventory id expected %q, but got %q", id, rg.GetLabels()[common.InventoryLabel])
 	}
 }
