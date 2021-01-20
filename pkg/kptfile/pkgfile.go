@@ -70,59 +70,68 @@ type Inventory struct {
 	Annotations map[string]string `yaml:"annotations,omitempty"`
 }
 
-// MergeOpenAPI adds the OpenAPI definitions from localKf to updatedKf.
-// It takes originalKf as a reference for 3-way merge
+// MergeOpenAPI takes the openAPI information from local, updated and original
+// and does a 3-way merge. It doesn't change any of the parameters, but returns
+// a new data structure with the merge openapi information.
 // This function is very complex due to serialization issues with yaml.Node.
-func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
-	if localKf.OpenAPI == nil {
-		// no OpenAPI to copy -- do nothing
-		return nil
+func MergeOpenAPI(localOA, updatedOA, originalOA interface{}) (interface{}, error) {
+	// toRNode turns a data structure containing openAPI information into
+	// a RNode reference.
+	toRNode := func(s interface{}) (*yaml.RNode, error) {
+		b, err := yaml.Marshal(s)
+		if err != nil {
+			return nil, err
+		}
+		return yaml.Parse(string(b))
 	}
-	if updatedKf.OpenAPI == nil {
-		// no openAPI at the destination -- just copy it
-		updatedKf.OpenAPI = localKf.OpenAPI
-		return nil
+
+	// clone makes a new copy of the data structure by marshalling it to
+	// yaml and then unmarshalling into a different object.
+	clone := func(s interface{}) (interface{}, error) {
+		b, err := yaml.Marshal(s)
+		if err != nil {
+			return nil, err
+		}
+		var i interface{}
+		err = yaml.Unmarshal(b, &i)
+		return i, err
+	}
+
+	if localOA == nil {
+		return clone(updatedOA)
+	}
+
+	if updatedOA == nil {
+		return clone(localOA)
 	}
 
 	// turn the exiting openapi into yaml.Nodes for processing
 	// they aren't yaml.Nodes natively due to serialization bugs in the yaml libs
-	bUpdated, err := yaml.Marshal(updatedKf.OpenAPI)
+	local, err := toRNode(localOA)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	updated, err := yaml.Parse(string(bUpdated))
+	updated, err := toRNode(updatedOA)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	bLocal, err := yaml.Marshal(localKf.OpenAPI)
+	original, err := toRNode(originalOA)
 	if err != nil {
-		return err
-	}
-	local, err := yaml.Parse(string(bLocal))
-	if err != nil {
-		return err
-	}
-
-	bOriginal, err := yaml.Marshal(originalKf.OpenAPI)
-	if err != nil {
-		return err
-	}
-	original, err := yaml.Parse(string(bOriginal))
-	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// get the definitions for the source and destination
 	updatedDef := updated.Field("definitions")
 	if updatedDef == nil {
-		// no definitions on the destination, just copy the OpenAPI from the source
-		updatedKf.OpenAPI = localKf.OpenAPI
-		return nil
+		// no definitions from updated, just return the openapi defs from
+		// local
+		return clone(localOA)
 	}
 	localDef := local.Field("definitions")
 	if localDef == nil {
-		// no OpenAPI definitions on the source -- do nothings
-		return nil
+		// no openapi defs on local. Just return the openapi defs from
+		// updated.
+		return clone(updatedOA)
 	}
 	oriDef := original.Field("definitions")
 	if oriDef == nil {
@@ -133,18 +142,17 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 	// merge the definitions
 	err = mergeDef(updatedDef, localDef, oriDef)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// convert the result back to type interface{} and set it on the Kptfile
 	s, err := updated.String()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var newOpenAPI interface{}
-	updatedKf.OpenAPI = newOpenAPI
-	err = yaml.Unmarshal([]byte(s), &updatedKf.OpenAPI)
-	return err
+	err = yaml.Unmarshal([]byte(s), &newOpenAPI)
+	return newOpenAPI, err
 }
 
 // mergeDef takes localDef, originalDef and updateDef, it iterates through the unique keys of localDef

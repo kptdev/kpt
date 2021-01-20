@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -174,10 +175,11 @@ func (u *GitPatchUpdater) hardResetSourceFiles() error {
 		// since it is owned locally
 		pf.Upstream = u.UpdateOptions.KptFile.Upstream
 		// also keep the local OpenAPI which may have been modified.
-		err = pf.MergeOpenAPI(u.UpdateOptions.KptFile, u.UpdateOptions.KptFile)
+		mergedOpenAPI, err := kptfile.MergeOpenAPI(u.UpdateOptions.KptFile.OpenAPI, pf.OpenAPI, u.UpdateOptions.KptFile.OpenAPI)
 		if err != nil {
 			return err
 		}
+		pf.OpenAPI = mergedOpenAPI
 	}
 
 	// write the Kptfile so the patch sees the updates to it.  use the version we read
