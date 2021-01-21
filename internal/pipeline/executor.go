@@ -16,11 +16,14 @@ package pipeline
 
 import (
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"k8s.io/klog"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -125,9 +128,8 @@ func (p *pkg) Pipeline() *Pipeline {
 	return p.pipeline
 }
 
-// expands takes a list of sources (./*, ./, ...) and current pkg path
+// resolveSources takes a list of sources (./*, ./, ...) and current pkg path
 // and returns list of package paths that this pkg depends on.
-// TODO(droot): implement this with tests
 // This is one of the critical pieces of code
 func (p *pkg) resolveSources() []string {
 	pipeline := p.Pipeline()
@@ -139,9 +141,19 @@ func (p *pkg) resolveSources() []string {
 			// include only this pkg sources
 			pkgPaths = append(pkgPaths, p.Path())
 		case sourceAllSubPkgs:
-			// TODO(droot): figure out how to enumerate sub packages for current pkgPath.
-			// For now including current pkg
+			// For now including current pkg and subpkgs in current directory
 			pkgPaths = append(pkgPaths, p.Path())
+			files, _ := ioutil.ReadDir(p.Path())
+			for _, f := range files {
+				if f.IsDir() {
+					// A directory is a package if it has a Kptfile.
+					// This may change as the concept of a package is expanded such that
+					// every directory is its own kpt package
+					subPaths, _ := pathutil.DirsWithFile(p.Path()+"/"+f.Name(), "Kptfile", false)
+					sort.Strings(subPaths)
+					pkgPaths = append(pkgPaths, subPaths...)
+				}
+			}
 		default:
 			// s points to a specific sub pkg
 			pkgPaths = append(pkgPaths, s)
