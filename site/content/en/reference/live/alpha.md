@@ -70,11 +70,11 @@ the package can now be applied using `kpt live apply <PACKAGE DIR>`.
 
 #### Migrate
 
-[kpt live migrate](./migrate)
+[kpt live migrate](./alpha/migrate)
 
 #### Install Resource Group
 
-[kpt live install-resource-group](./install-resource-group) The **ResourceGroup**
+[kpt live install-resource-group](./alpha/install-resource-group) The **ResourceGroup**
 CRD is added to the cluster as a side effect of `kpt live apply`. However, this
 `install-resource-group` command allows the user to only apply the
 **ResourceGroup** CRD without applying other resources.
@@ -83,7 +83,7 @@ CRD is added to the cluster as a side effect of `kpt live apply`. However, this
 
 #### Init
 
-[kpt live init](./init)
+[kpt live init](./alpha/init)
 
 ### Troubleshooting and Verifying
 
