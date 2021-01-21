@@ -17,6 +17,7 @@ package pipeline
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"k8s.io/klog"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -267,9 +268,17 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 	return resources, err
 }
 
-// TODO(droot): filter kpt metadata files such as pipeline, Kptfile, permissions etc.
+// filterMetaData filters kpt metadata files such as pipeline,
+// Kptfile, permissions etc.
 func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
-	return resources
+	var filtered []*yaml.RNode
+	for _, r := range resources {
+		meta, _ := r.GetMeta()
+		if !strings.Contains(meta.APIVersion, "kpt.dev") {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
 }
 
 // fnFilters returns chain of functions that are applicable
