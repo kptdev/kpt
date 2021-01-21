@@ -8,14 +8,21 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/pkg/live/preprocess"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/apply"
+	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
+)
+
+const (
+	inventoryPolicyFlag = "inventory-policy"
+	strictPolicy        = "strict"
 )
 
 // Get ApplyRunner returns a wrapper around the cli-utils apply command ApplyRunner. Sets
@@ -24,7 +31,7 @@ func GetApplyRunner(provider provider.Provider, loader manifestreader.ManifestLo
 	applyRunner := apply.GetApplyRunner(provider, loader, ioStreams)
 	w := &ApplyRunnerWrapper{
 		applyRunner: applyRunner,
-		factory:     provider.Factory(),
+		provider:    provider,
 	}
 	// Set the wrapper run to be the RunE function for the wrapped command.
 	applyRunner.Command.RunE = w.RunE
@@ -36,7 +43,7 @@ func GetApplyRunner(provider provider.Provider, loader manifestreader.ManifestLo
 // as structures necessary to run.
 type ApplyRunnerWrapper struct {
 	applyRunner *apply.ApplyRunner
-	factory     cmdutil.Factory
+	provider    provider.Provider
 }
 
 // Command returns the wrapped ApplyRunner cobraCommand structure.
@@ -60,11 +67,16 @@ func (w *ApplyRunnerWrapper) PreRunE(_ *cobra.Command, args []string) error {
 func (w *ApplyRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
 	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
 		klog.V(4).Infoln("wrapper applyRunner detected environment variable")
-		err := live.ApplyResourceGroupCRD(w.factory)
+		err := live.ApplyResourceGroupCRD(w.provider.Factory())
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			return err
 		}
 	}
 	klog.V(4).Infoln("wrapper applyRunner run...")
+	if w.Command().Flag(inventoryPolicyFlag).Value.String() == strictPolicy {
+		w.applyRunner.PreProcess = func(inv inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error) {
+			return preprocess.PreProcess(w.provider, inv, strategy)
+		}
+	}
 	return w.applyRunner.RunE(cmd, args)
 }
