@@ -875,7 +875,7 @@ printResult
 # Test 20: kpt live apply continue-on-error
 echo "Testing continue-on-error"
 echo "kpt live apply e2e/live/testdata/continue-on-error"
-${BIN_DIR}/kpt live destroy e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
 assertCMInventory "test-namespace" "1"
 assertPodExists "pod-a" "test-namespace"
 assertPodNotExists "pod-B" "test-namespace"
