@@ -49,17 +49,16 @@ type InventoryResourceGroup struct {
 var _ inventory.Inventory = &InventoryResourceGroup{}
 var _ inventory.InventoryInfo = &InventoryResourceGroup{}
 
-// WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
+// WrapInventoryObj takes a passed ResourceGroup (as an unstructured),
 // wraps it with the InventoryResourceGroup and upcasts the wrapper as
 // an the Inventory interface.
 func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Inventory {
-	if obj != nil {
-		klog.V(4).Infof("wrapping Inventory obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
-	}
-	return &InventoryResourceGroup{inv: obj}
+	return WrapInventoryResourceGroup(obj)
 }
 
-func WrapInventoryInfoObj(obj *unstructured.Unstructured) inventory.InventoryInfo {
+// WrapInventoryResourceGroup takes a passed ResourceGroup (as an unstructured),
+// wraps it with the InventoryResourceGroup.
+func WrapInventoryResourceGroup(obj *unstructured.Unstructured) *InventoryResourceGroup {
 	if obj != nil {
 		klog.V(4).Infof("wrapping InventoryInfo obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
 	}
