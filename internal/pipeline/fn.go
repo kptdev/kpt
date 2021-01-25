@@ -80,6 +80,9 @@ type fnRunner struct {
 	// ids book keeping of resources to preserve comments
 	// during the transformation.
 	ids map[string]*yaml.RNode
+
+	// fnConfig contains the configs for this function
+	fnConfig *yaml.RNode
 }
 
 func (f *fnRunner) Filter(resources []*yaml.RNode) (output []*yaml.RNode, err error) {

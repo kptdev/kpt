@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/pipeline/runtime"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -117,6 +118,24 @@ func (p *Pipeline) Validate() error {
 		}
 	}
 	return nil
+}
+
+// fnChain returns a slice of function runners from the
+// functions and configs defined in pipeline.
+func (p *Pipeline) fnChain() ([]*fnRunner, error) {
+	fns := []Function{}
+	fns = append(fns, p.Generators...)
+	fns = append(fns, p.Transformers...)
+	fns = append(fns, p.Validators...)
+	var runners []*fnRunner
+	for _, fn := range fns {
+		r, err := fn.runner()
+		if err != nil {
+			return nil, err
+		}
+		runners = append(runners, r)
+	}
+	return runners, nil
 }
 
 // New returns a pointer to a new default Pipeline.
@@ -226,6 +245,64 @@ func (f *Function) Validate() error {
 	}
 
 	return nil
+}
+
+// runner returns a fnRunner from the image and configs of
+// this function.
+func (f *Function) runner() (*fnRunner, error) {
+	config, err := f.config()
+	if err != nil {
+		return nil, err
+	}
+	return &fnRunner{
+		fn: &runtime.ContainerFn{
+			Image: f.Image,
+		},
+		fnConfig: config,
+	}, nil
+}
+
+func (f *Function) config() (*yaml.RNode, error) {
+	var dataNode *yaml.RNode
+	switch {
+	case f.ConfigPath != "":
+		file, err := os.Open(f.ConfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open config file path %s: %w", f.ConfigPath, err)
+		}
+		b, err := ioutil.ReadAll(file)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read content from config file: %w", err)
+		}
+		dataNode, err = yaml.Parse(string(b))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse config %s: %w", string(b), err)
+		}
+	case !isNodeZero(&f.Config):
+		dataNode = yaml.NewRNode(&f.Config)
+	case len(f.ConfigMap) != 0:
+		dataNode = yaml.NewMapRNode(&f.ConfigMap)
+	default:
+		dataNode = nil
+	}
+
+	configNode, err := yaml.Parse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {}
+`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse function config skeleton: %w", err)
+	}
+	if dataNode != nil {
+		err = configNode.PipeE(yaml.SetField("data", dataNode))
+		if err != nil {
+			return nil, fmt.Errorf("failed to set 'data' field: %w", err)
+		}
+	}
+	return configNode, nil
 }
 
 // ValidateFunctionName validates the function name.

@@ -281,12 +281,17 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 	// TODO(droot): parameterize the sink-mode (hctx.sinkMode) to determine whether to
 	// write it in-place or not. Currently in-place.
 	pkgWriter := &kio.LocalPackageWriter{PackagePath: p.Path()}
+	// we will gather filters from the pipeline
+	filters, err := fnFilters(p.Pipeline())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get function filters: %w", err)
+	}
 	// create a kio pipeline from kyaml library to execute the function chains
 	kioPipeline := kio.Pipeline{
 		Inputs: []kio.Reader{
 			&kio.PackageBuffer{Nodes: input},
 		},
-		Filters: fnFilters(p.Pipeline()),         // we will gather filters from the pipeline
+		Filters: filters,
 		Outputs: []kio.Writer{pkgWriter, output}, // here may be we don't want to write to the fs yet
 	}
 	err = kioPipeline.Execute()
@@ -318,18 +323,22 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 
 // fnFilters returns chain of functions that are applicable
 // to a given pipeline.
-func fnFilters(_ *Pipeline) []kio.Filter {
-	fn := &annotator{
-		key:   "builtin/setter-1",
-		value: "test",
+func fnFilters(p *Pipeline) ([]kio.Filter, error) {
+	filters, err := p.fnChain()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}
 
-	// TODO(droot): Implement this with the logic to create
-	// function chain from a pipeline
-	// hardcoding built-in set-annotation function for testing
-	return []kio.Filter{
-		&fnRunner{
-			fn: fn,
-		},
+	var ans []kio.Filter
+	for _, f := range filters {
+		ans = append(ans, f)
 	}
+
+	ans = append(ans, &fnRunner{
+		fn: &annotator{
+			key:   "builtin/setter-1",
+			value: "test",
+		},
+	})
+	return ans, nil
 }

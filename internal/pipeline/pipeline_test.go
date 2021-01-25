@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package pipeline_test
+package pipeline
 
 import (
 	"bytes"
@@ -20,7 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/GoogleContainerTools/kpt/internal/pipeline"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -618,5 +617,89 @@ func TestValidatePath(t *testing.T) {
 			t.Fatalf("returned value for path %s should be %t, got %t",
 				c.Path, c.Valid, (ret == nil))
 		}
+	}
+}
+
+func TestFunctionConfig(t *testing.T) {
+	type input struct {
+		name              string
+		fn                Function
+		configFileContent string
+		expected          string
+	}
+
+	cases := []input{
+		{
+			name: "no config",
+			fn:   Function{},
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {}
+`,
+		},
+		{
+			name: "inline config",
+			fn: Function{
+				Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
+kind: ResourceHierarchy
+metadata:
+  name: root-hierarchy
+  namespace: hierarchy`).YNode(),
+			},
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {apiVersion: cft.dev/v1alpha1, kind: ResourceHierarchy, metadata: {name: root-hierarchy,
+    namespace: hierarchy}}
+`,
+		},
+		{
+			name: "file config",
+			fn:   Function{},
+			configFileContent: `apiVersion: cft.dev/v1alpha1
+kind: ResourceHierarchy
+metadata:
+  name: root-hierarchy
+  namespace: hierarchy`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {apiVersion: cft.dev/v1alpha1, kind: ResourceHierarchy, metadata: {name: root-hierarchy,
+    namespace: hierarchy}}
+`,
+		},
+		{
+			name: "map config",
+			fn: Function{
+				ConfigMap: map[string]string{
+					"foo": "bar",
+				},
+			},
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {foo: bar}
+`,
+		},
+	}
+
+	for _, c := range cases {
+		if c.configFileContent != "" {
+			tmp, err := ioutil.TempFile("", "kpt-pipeline-*")
+			assert.NoErrorf(t, err, "%s: unexpected error", c.name)
+			_, err = tmp.WriteString(c.configFileContent)
+			assert.NoErrorf(t, err, "%s: unexpected error", c.name)
+			c.fn.ConfigPath = tmp.Name()
+		}
+		cn, err := c.fn.config()
+		assert.NoErrorf(t, err, "%s: unexpected error", c.name)
+		actual, err := cn.String()
+		assert.NoErrorf(t, err, "%s: unexpected error", c.name)
+		assert.Equalf(t, c.expected, actual, "%s: unexpected result", c.name)
 	}
 }
