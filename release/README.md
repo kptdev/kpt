@@ -34,3 +34,17 @@ also updated with the `latest` tag for tagged releases.
 - `kpt-dev` release buckets
   - `gs://kpt-dev/latest`
   - `gs://kpt-dev/releases`
+
+# Dry-Run Goreleaser
+
+To test local changes to the [`goreleaser.yaml`](./tag/goreleaser.yaml) config. You may
+[install goreleaser](https://goreleaser.com/install/) locally and provide the
+`--skip-verify --skip-publish` flags.
+
+From the kpt directory you would run:
+
+```sh
+goreleaser release --skip-validate --skip-publish -f release/tag/goreleaser.yaml
+```
+
+The resulting release artifacts will be stored in the `./dist` directory.
