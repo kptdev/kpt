@@ -83,7 +83,7 @@ CRD is added to the cluster as a side effect of `kpt live apply`. However, this
 
 #### Init
 
-[kpt live init](../init)
+[kpt live init](../init-alpha)
 
 ### Troubleshooting and Verifying
 
