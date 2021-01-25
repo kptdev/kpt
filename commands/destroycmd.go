@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/cmd/destroy"
+	"sigs.k8s.io/cli-utils/cmd/flagutils"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
@@ -41,7 +42,7 @@ func (w *DestroyRunnerWrapper) Command() *cobra.Command {
 
 // RunE wraps the destroyRunner.RunE with the pre-processing for inventory policy.
 func (w *DestroyRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
-	if w.Command().Flag(inventoryPolicyFlag).Value.String() == strictPolicy {
+	if w.Command().Flag(flagutils.InventoryPolicyFlag).Value.String() == flagutils.InventoryPolicyStrict {
 		w.destroyRunner.PreProcess = func(inv inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error) {
 			return preprocess.PreProcess(w.provider, inv, strategy)
 		}

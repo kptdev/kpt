@@ -14,15 +14,11 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
 	"sigs.k8s.io/cli-utils/cmd/apply"
+	"sigs.k8s.io/cli-utils/cmd/flagutils"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
-)
-
-const (
-	inventoryPolicyFlag = "inventory-policy"
-	strictPolicy        = "strict"
 )
 
 // Get ApplyRunner returns a wrapper around the cli-utils apply command ApplyRunner. Sets
@@ -73,7 +69,7 @@ func (w *ApplyRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
 		}
 	}
 	klog.V(4).Infoln("wrapper applyRunner run...")
-	if w.Command().Flag(inventoryPolicyFlag).Value.String() == strictPolicy {
+	if w.Command().Flag(flagutils.InventoryPolicyFlag).Value.String() == flagutils.InventoryPolicyStrict {
 		w.applyRunner.PreProcess = func(inv inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error) {
 			return preprocess.PreProcess(w.provider, inv, strategy)
 		}
