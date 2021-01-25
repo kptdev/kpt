@@ -74,15 +74,15 @@ section to the Kptfile if it did not already exist. Updates to
 the package can now be applied using &lt;code&gt;kpt live apply &amp;lt;PACKAGE DIR&amp;gt;&lt;/code&gt;.&lt;/p&gt;
 &lt;h3 id=&#34;new-alpha-commands&#34;&gt;New (Alpha) Commands&lt;/h3&gt;
 &lt;h4 id=&#34;migrate&#34;&gt;Migrate&lt;/h4&gt;
-&lt;p&gt;&lt;a href=&#34;./alpha/migrate&#34;&gt;kpt live migrate&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../migrate&#34;&gt;kpt live migrate&lt;/a&gt;&lt;/p&gt;
 &lt;h4 id=&#34;install-resource-group&#34;&gt;Install Resource Group&lt;/h4&gt;
-&lt;p&gt;&lt;a href=&#34;./alpha/install-resource-group&#34;&gt;kpt live install-resource-group&lt;/a&gt; The &lt;strong&gt;ResourceGroup&lt;/strong&gt;
+&lt;p&gt;&lt;a href=&#34;../install-resource-group&#34;&gt;kpt live install-resource-group&lt;/a&gt; The &lt;strong&gt;ResourceGroup&lt;/strong&gt;
 CRD is added to the cluster as a side effect of &lt;code&gt;kpt live apply&lt;/code&gt;. However, this
 &lt;code&gt;install-resource-group&lt;/code&gt; command allows the user to only apply the
 &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD without applying other resources.&lt;/p&gt;
 &lt;h3 id=&#34;updated-existing-commands&#34;&gt;Updated Existing Commands&lt;/h3&gt;
 &lt;h4 id=&#34;init&#34;&gt;Init&lt;/h4&gt;
-&lt;p&gt;&lt;a href=&#34;./alpha/init&#34;&gt;kpt live init&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../init&#34;&gt;kpt live init&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&#34;troubleshooting-and-verifying&#34;&gt;Troubleshooting and Verifying&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Error: unable to apply &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD&lt;/li&gt;
