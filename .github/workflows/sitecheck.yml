@@ -22,5 +22,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: filiph/linkcheck-action@v1
-          with:
-            arguments: https://googlecontainertools.github.io/kpt/
+        with:
+          arguments: https://googlecontainertools.github.io/kpt/
