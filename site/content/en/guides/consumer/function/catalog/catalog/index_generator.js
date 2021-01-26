@@ -83,6 +83,6 @@ ${tableByType(name.toLowerCase())}
 
 - Learn more ways of using the kpt fn command from the [reference] doc.
 
-[reference]: ../../../reference/fn/run/`;
+[reference]: ../../../../reference/fn/run/`;
 
 console.log(README);
