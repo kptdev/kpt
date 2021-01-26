@@ -82,7 +82,7 @@ CRD is added to the cluster as a side effect of &lt;code&gt;kpt live apply&lt;/c
 &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD without applying other resources.&lt;/p&gt;
 &lt;h3 id=&#34;updated-existing-commands&#34;&gt;Updated Existing Commands&lt;/h3&gt;
 &lt;h4 id=&#34;init&#34;&gt;Init&lt;/h4&gt;
-&lt;p&gt;&lt;a href=&#34;../init&#34;&gt;kpt live init&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;../init-alpha&#34;&gt;kpt live init&lt;/a&gt;&lt;/p&gt;
 &lt;h3 id=&#34;troubleshooting-and-verifying&#34;&gt;Troubleshooting and Verifying&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Error: unable to apply &lt;strong&gt;ResourceGroup&lt;/strong&gt; CRD&lt;/li&gt;
@@ -650,10 +650,10 @@ kpt live init --namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;
     
     <item>
       <title>Reference: Init (alpha)</title>
-      <link>https://googlecontainertools.github.io/kpt/reference/live/init/</link>
+      <link>https://googlecontainertools.github.io/kpt/reference/live/init-alpha/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://googlecontainertools.github.io/kpt/reference/live/init/</guid>
+      <guid>https://googlecontainertools.github.io/kpt/reference/live/init-alpha/</guid>
       <description>
         
         
