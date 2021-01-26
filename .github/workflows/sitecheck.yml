@@ -22,11 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: |
+      - name: Start building site
+        run: |
           make servedocs &
-      - uses: jakejarvis/wait-action@master
+      - name: Wait for site to build
+        uses: jakejarvis/wait-action@master
         with:
-          time: '45s'
-      - uses: filiph/linkcheck@v2.0.15+1
+          time: '15s'
+      - name: Check for broken links
+        uses: filiph/linkcheck@v2.0.15+1
         with:
           arguments: http://localhost:1313/kpt
