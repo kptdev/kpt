@@ -30,13 +30,15 @@ jobs:
           pub global activate linkcheck
           go run github.com/gohugoio/hugo
         working-directory: ./site
+      - name: Copy site content
+        run: |
+          mkdir built-site && mkdir built-site/kpt
+          cp -r docs built-site/kpt
       - name: Crawl site
         run: |
-          mkdir kpt
-          mv !(kpt) kpt
           python -m SimpleHTTPServer 1313 & sleep 5s
           $HOME/.pub-cache/bin/linkcheck localhost:1313/kpt
-        working-directory: ./docs
+        working-directory: ./built-site
       # - name: Wait for site to build
       #   uses: jakejarvis/wait-action@master
       #   with:
