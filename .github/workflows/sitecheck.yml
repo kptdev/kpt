@@ -28,10 +28,10 @@ jobs:
       - name: Start building site
         run: |
           pub global activate linkcheck
-          go run github.com/gohugoio/hugo
+          (cd site && go run github.com/gohugoio/hugo)
+          cd docs
           python -m SimpleHTTPServer 1313 & sleep 5
           $HOME/.pub-cache/bin/linkcheck localhost:1313/kpt
-        working-directory: ./site
       # - name: Wait for site to build
       #   uses: jakejarvis/wait-action@master
       #   with:
