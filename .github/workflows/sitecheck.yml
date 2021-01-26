@@ -29,4 +29,4 @@ jobs:
           time: '45s'
       - uses: filiph/linkcheck@v2.0.15+1
         with:
-          args: localhost:1313/kpt
+          arguments: http://localhost:1313/kpt
