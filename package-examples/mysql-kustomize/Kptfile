@@ -48,7 +48,7 @@ openAPI:
     io.k8s.cli.substitutions.skip-grant-tables:
       x-k8s-cli:
         substitution:
-          name: mysql-database
+          name: skip-grant-tables
           pattern: "skip-grant-tables=SKIP_GRANT_TABLES_SETTER"
           values:
           - marker: SKIP_GRANT_TABLES_SETTER

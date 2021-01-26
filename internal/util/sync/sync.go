@@ -49,12 +49,12 @@ type Command struct {
 func (c Command) Run() error {
 	b, err := ioutil.ReadFile(filepath.Join(c.Dir, kptfile.KptFileName))
 	if err != nil {
-		return errors.WrapPrefixf(err, "failed to read Kptfile under %s", c.Dir)
+		return errors.WrapPrefixf(err, "failed to read Kptfile under %q", c.Dir)
 	}
 	k := &kptfile.KptFile{}
 
 	if err := yaml.Unmarshal(b, k); err != nil {
-		return errors.WrapPrefixf(err, "failed to unmarshal Kptfile under %s", c.Dir)
+		return errors.WrapPrefixf(err, "failed to unmarshal Kptfile under %q", c.Dir)
 	}
 
 	// validate dependencies are well formed
@@ -124,12 +124,12 @@ func (c Command) sync(dependency kptfile.Dependency) error {
 	// verify the dep is well formed
 	if !f.IsDir() {
 		// place where dep should be fetched exists and is not a directory
-		return errors.Errorf("cannot sync to %s, non-directory file exists", path)
+		return errors.Errorf("cannot sync to %q, non-directory file exists", path)
 	}
 	_, err = os.Stat(filepath.Join(path, kptfile.KptFileName))
 	if os.IsNotExist(err) {
 		// dep doesn't have a Kptfile -- something is wrong
-		return errors.Errorf("expected Kptfile under dependency %s", path)
+		return errors.Errorf("expected Kptfile under dependency %q", path)
 	}
 	if err != nil {
 		return errors.Wrap(err)
@@ -156,7 +156,7 @@ func (c Command) sync(dependency kptfile.Dependency) error {
 // get fetches the dependency
 func (c Command) get(dependency kptfile.Dependency) error {
 	path := filepath.Join(c.Dir, dependency.Name)
-	fmt.Fprintf(c.StdOut, "fetching %s (%s)\n", dependency.Name, path)
+	fmt.Fprintf(c.StdOut, "fetching %q from %q\n", dependency.Name, path)
 	if c.DryRun {
 		return nil
 	}
@@ -171,7 +171,7 @@ func (c Command) get(dependency kptfile.Dependency) error {
 // update updates the version of the fetched dependency to match
 func (c Command) update(dependency kptfile.Dependency, k *kptfile.KptFile) error {
 	path := filepath.Join(c.Dir, dependency.Name)
-	fmt.Fprintf(c.StdOut, "updating %s (%s) from %s to %s\n",
+	fmt.Fprintf(c.StdOut, "updating %q (%s) from %q to %q\n",
 		dependency.Name, path, k.Upstream.Git.Ref, dependency.Git.Ref)
 	if c.DryRun {
 		return nil
@@ -194,7 +194,7 @@ func (c Command) update(dependency kptfile.Dependency, k *kptfile.KptFile) error
 // delete removes the dependency if it exists
 func (c Command) delete(dependency kptfile.Dependency) error {
 	path := filepath.Join(c.Dir, dependency.Name)
-	fmt.Fprintf(c.StdOut, "deleting %s (%s)\n", dependency.Name, path)
+	fmt.Fprintf(c.StdOut, "deleting %q from %q\n", dependency.Name, path)
 	if c.DryRun {
 		return nil
 	}

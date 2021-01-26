@@ -20,9 +20,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
-  name: resourcegroups.configmanagement.gke.io
+  name: resourcegroups.kpt.dev
 spec:
-  group: configmanagement.gke.io
+  group: kpt.dev
   names:
     kind: ResourceGroup
     listKind: ResourceGroupList
@@ -48,25 +48,25 @@ spec:
         metadata:
           type: object
         spec:
-          description: ResourceGroupSpec defines the desired state of ResourceGroup
+          description: spec defines the desired state of ResourceGroup
           properties:
             descriptor:
-              description: Descriptor regroups the information and metadata about
+              description: descriptor regroups the information and metadata about
                 a resource group
               properties:
                 description:
-                  description: Description is a brief description of a group of resources
+                  description: description is a brief description of a group of resources
                   type: string
                 links:
-                  description: Links are a list of descriptive URLs intended to be
+                  description: links are a list of descriptive URLs intended to be
                     used to surface additional information
                   items:
                     properties:
                       description:
-                        description: Description explains the purpose of the link
+                        description: description explains the purpose of the link
                         type: string
                       url:
-                        description: Url is the URL of the link
+                        description: url is the URL of the link
                         type: string
                     required:
                     - description
@@ -74,17 +74,18 @@ spec:
                     type: object
                   type: array
                 revision:
-                  description: Revision is an optional revision for a group of resources
+                  description: revision is an optional revision for a group of resources
                   type: string
                 type:
-                  description: Type can contain prefix, such as Application/WordPress
+                  description: type can contain prefix, such as Application/WordPress
                     or Service/Spanner
                   type: string
               type: object
             resources:
-              description: Resources contains a list of resources that form the resource group
+              description: resources contains a list of resources that form the resource
+                group
               items:
-                description: ObjMetadata organizes and stores the identifying information
+                description: each item organizes and stores the identifying information
                   for an object. This struct (as a string) is stored in a grouping
                   object to keep track of sets of applied objects.
                 properties:
@@ -103,12 +104,28 @@ spec:
                 - namespace
                 type: object
               type: array
+            subgroups:
+              description: subgroups contains a list of sub groups that the current
+                group includes.
+              items:
+                description: Each item organizes and stores the identifying information
+                  for a ResourceGroup object. It includes name and namespace.
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+              type: array
           type: object
         status:
-          description: ResourceGroupStatus defines the observed state of ResourceGroup
+          description: status defines the observed state of ResourceGroup
           properties:
             conditions:
-              description: Conditions lists the conditions of the current status for
+              description: conditions lists the conditions of the current status for
                 the group
               items:
                 properties:
@@ -122,14 +139,14 @@ spec:
                       transition
                     type: string
                   reason:
-                    description: one-word CamelCase reason for the condition's last
+                    description: one-word CamelCase reason for the condition’s last
                       transition
                     type: string
                   status:
-                    description: Status of the condition
+                    description: status of the condition
                     type: string
                   type:
-                    description: Type of the condition
+                    description: type of the condition
                     type: string
                 required:
                 - status
@@ -137,18 +154,18 @@ spec:
                 type: object
               type: array
             observedGeneration:
-              description: ObservedGeneration is the most recent generation observed.
+              description: observedGeneration is the most recent generation observed.
                 It corresponds to the Object's generation, which is updated on mutation
                 by the API Server. Everytime the controller does a successful reconcile,
-                it sets ObservedGeneration to match ResourceGroup.metadata.generation.
+                it sets observedGeneration to match ResourceGroup.metadata.generation.
               format: int64
               type: integer
             resourceStatuses:
-              description: ResourceStatuses lists the status for each resource in
+              description: resourceStatuses lists the status for each resource in
                 the group
               items:
-                description: ResourceStatus contains the status of a given resource
-                  uniquely identified by its group, kind, name and namespace.
+                description: each item contains the status of a given resource uniquely
+                  identified by its group, kind, name and namespace.
                 properties:
                   conditions:
                     items:
@@ -167,10 +184,10 @@ spec:
                             last transition
                           type: string
                         status:
-                          description: Status of the condition
+                          description: status of the condition
                           type: string
                         type:
-                          description: Type of the condition
+                          description: type of the condition
                           type: string
                       required:
                       - status
@@ -196,13 +213,59 @@ spec:
                 - status
                 type: object
               type: array
+            subgroupStatuses:
+              description: subgroupStatuses lists the status for each subgroup.
+              items:
+                description: Each item contains the status of a given group uniquely
+                  identified by its name and namespace.
+                properties:
+                  conditions:
+                    items:
+                      properties:
+                        lastTransitionTime:
+                          description: last time the condition transit from one status
+                            to another
+                          format: date-time
+                          type: string
+                        message:
+                          description: human-readable message indicating details about
+                            last transition
+                          type: string
+                        reason:
+                          description: one-word CamelCase reason for the condition’s
+                            last transition
+                          type: string
+                        status:
+                          description: status of the condition
+                          type: string
+                        type:
+                          description: type of the condition
+                          type: string
+                      required:
+                      - status
+                      - type
+                      type: object
+                    type: array
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                  status:
+                    description: Status describes the status of a resource
+                    type: string
+                required:
+                - name
+                - namespace
+                - status
+                type: object
+              type: array
           required:
           - observedGeneration
           type: object
       type: object
-  version: v1beta1
+  version: v1alpha1
   versions:
-  - name: v1beta1
+  - name: v1alpha1
     served: true
     storage: true
 status:

@@ -76,9 +76,9 @@ Run the function:
 kpt fn run . --image gcr.io/kpt-functions/label-namespace -- label_name=color label_value=orange
 ```
 
-Arguments specified after `--` will be provided to the function as a
-`ConfigMap` input containing `data: {label_name: color, label_value: orange}`.
-This is used to parameterize the behavior of the function.
+Arguments specified after `--` will be provided as input to the function as a
+`ConfigMap` containing `data: {label_name: color, label_value: orange}`.  This
+is used to parameterize the behavior of the function.
 
 If the package directory `.` is not specified, the source will default to STDIN
 and sink will default to STDOUT.
@@ -86,9 +86,9 @@ and sink will default to STDOUT.
 **Example:** This is equivalent to the preceding example
 
 ```sh
-kpt source . |
+kpt fn source . |
   kpt fn run --image gcr.io/kpt-functions/label-namespace -- label_name=color label_value=orange |
-  kpt sink .
+  kpt fn sink .
 ```
 
 The above example commands will:

@@ -1,4 +1,4 @@
-// Copyright 2020 The Kubernetes Authors.
+// Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
 package live
@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -58,6 +58,25 @@ inventory:
   namespace: test-namespace
   name: inventory-obj-name
 `
+var kptFileWithAnnotations = `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: test1
+upstream:
+  type: git
+  git:
+    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
+    repo: git@github.com:seans3/blueprint-helloworld
+    directory: /
+    ref: master
+inventory:
+  namespace: test-namespace
+  name: inventory-obj-name
+  inventoryID: XXXXXXXXXX-FOOOOOO
+  annotations:
+    random-key: random-value
+`
 
 var podA = `
 apiVersion: v1
@@ -84,25 +103,26 @@ spec:
 
 func TestInvGenPathManifestReader_Read(t *testing.T) {
 	testCases := map[string]struct {
-		manifests map[string]string
-		numInfos  int
-		isError   bool
+		manifests  map[string]string
+		numObjs    int
+		hasKptfile bool
+		annotated  bool
 	}{
-		"Kptfile missing inventory id is error": {
+		"Kptfile missing inventory id returns only Pod": {
 			manifests: map[string]string{
 				"Kptfile":    kptFileMissingID,
 				"pod-a.yaml": podA,
 			},
-			numInfos: 0,
-			isError:  true,
+			numObjs:    1,
+			hasKptfile: false,
 		},
 		"Basic ResourceGroup inventory object created": {
 			manifests: map[string]string{
 				"Kptfile":    kptFile,
 				"pod-a.yaml": podA,
 			},
-			numInfos: 2,
-			isError:  false,
+			numObjs:    2,
+			hasKptfile: true,
 		},
 		"ResourceGroup inventory object created, multiple objects": {
 			manifests: map[string]string{
@@ -110,16 +130,26 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numInfos: 3,
-			isError:  false,
+			numObjs:    3,
+			hasKptfile: true,
 		},
 		"ResourceGroup inventory object created, Kptfile last": {
 			manifests: map[string]string{
 				"deployment-a.yaml": deploymentA,
 				"Kptfile":           kptFile,
 			},
-			numInfos: 2,
-			isError:  false,
+			numObjs:    2,
+			hasKptfile: true,
+		},
+		"ResourceGroup inventory object created with annotation, multiple objects": {
+			manifests: map[string]string{
+				"Kptfile":           kptFileWithAnnotations,
+				"pod-a.yaml":        podA,
+				"deployment-a.yaml": deploymentA,
+			},
+			numObjs:    3,
+			hasKptfile: true,
+			annotated:  true,
 		},
 	}
 
@@ -127,6 +157,11 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
 			defer tf.Cleanup()
+
+			mapper, err := tf.ToRESTMapper()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
 			// Set up the yaml manifests (including Kptfile) in temp dir.
 			dir, err := ioutil.TempDir("", "path-reader-test")
@@ -142,7 +177,7 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 			pathReader := &manifestreader.PathManifestReader{
 				Path: dir,
 				ReaderOptions: manifestreader.ReaderOptions{
-					Factory:          tf,
+					Mapper:           mapper,
 					Namespace:        inventoryNamespace,
 					EnforceNamespace: false,
 				},
@@ -150,43 +185,66 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 			rgPathReader := &ResourceGroupPathManifestReader{
 				pathReader: pathReader,
 			}
-			readInfos, err := rgPathReader.Read()
-
-			// Validate the returned values are correct.
-			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
+			readObjs, err := rgPathReader.Read()
+			assert.NoError(t, err)
+			assert.Equal(t, len(readObjs), tc.numObjs)
+			for _, obj := range readObjs {
+				assert.Equal(t, inventoryNamespace, obj.GetNamespace())
+			}
+			if tc.hasKptfile {
+				invObj, _, err := inventory.SplitUnstructureds(readObjs)
+				assert.NoError(t, err)
+				assert.Equal(t, inventoryName, invObj.GetName())
+				actualID, err := getInventoryLabel(invObj)
+				assert.NoError(t, err)
+				assert.Equal(t, inventoryID, actualID)
+				actualAnnotations := getInventoryAnnotations(invObj)
+				if tc.annotated {
+					assert.Equal(t, map[string]string{"random-key": "random-value"}, actualAnnotations)
+				} else {
+					assert.Equal(t, map[string]string(nil), actualAnnotations)
 				}
-				return
 			}
-			assert.NoError(t, err)
-			assert.Equal(t, len(readInfos), tc.numInfos)
-			for _, info := range readInfos {
-				assert.Equal(t, inventoryNamespace, info.Namespace)
-			}
-			invInfo, _, err := inventory.SplitInfos(readInfos)
-			assert.NoError(t, err)
-			assert.Equal(t, inventoryName, invInfo.Name)
-			actualID, err := getInventoryLabel(invInfo)
-			assert.NoError(t, err)
-			assert.Equal(t, inventoryID, actualID)
 		})
 	}
 }
 
-func getInventoryLabel(inv *resource.Info) (string, error) {
-	obj := inv.Object
-	if obj == nil {
-		return "", fmt.Errorf("inventory object is nil")
-	}
-	accessor, err := meta.Accessor(obj)
+func getInventoryLabel(inv *unstructured.Unstructured) (string, error) {
+	accessor, err := meta.Accessor(inv)
 	if err != nil {
 		return "", err
 	}
 	labels := accessor.GetLabels()
 	inventoryLabel, exists := labels[common.InventoryLabel]
 	if !exists {
-		return "", fmt.Errorf("inventory label does not exist for inventory object: %s", common.InventoryLabel)
+		return "", fmt.Errorf("inventory label does not exist for inventory object: %q", common.InventoryLabel)
 	}
 	return inventoryLabel, nil
+}
+
+func getInventoryAnnotations(inv *unstructured.Unstructured) map[string]string {
+	accessor, err := meta.Accessor(inv)
+	if err != nil {
+		return nil
+	}
+	return accessor.GetAnnotations()
+}
+
+func TestResourceGroupUnstructured(t *testing.T) {
+	name := "name"
+	namespace := "test"
+	id := "random-id"
+	rg := ResourceGroupUnstructured(name, namespace, id)
+	if rg == nil {
+		t.Fatal("resourcegroup shouldn't be nil")
+	}
+	if rg.GetName() != name {
+		t.Fatalf("resourcegroup name expected %q, but got %q", name, rg.GetName())
+	}
+	if rg.GetNamespace() != namespace {
+		t.Fatalf("resourcegroup namespace expected %q, but got %q", namespace, rg.GetNamespace())
+	}
+	if rg.GetLabels()[common.InventoryLabel] != id {
+		t.Fatalf("resourcegroup inventory id expected %q, but got %q", id, rg.GetLabels()[common.InventoryLabel])
+	}
 }

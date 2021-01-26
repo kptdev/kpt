@@ -6,4 +6,4 @@ type: swagger
 description: >
    Reference for the Kptfile schema
 ---
-{{< swaggerui src="/openapi/kptfile.yaml" >}}
+{{< swaggerui src="/kpt/openapi/kptfile.yaml" >}}

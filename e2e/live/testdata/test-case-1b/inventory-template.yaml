@@ -1,0 +1,48 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# NOTE: auto-generated. Some fields should NOT be modified.
+# Date: 2020-11-17 02:17:32 PST
+#
+# Contains the "inventory object" template ConfigMap.
+# When this object is applied, it is handled specially,
+# storing the metadata of all the other objects applied.
+# This object and its stored inventory is subsequently
+# used to calculate the set of objects to automatically
+# delete (prune), when an object is omitted from further
+# applies. When applied, this "inventory object" is also
+# used to identify the entire set of objects to delete.
+#
+# NOTE: The name of this inventory template file
+# does NOT have any impact on group-related functionality
+# such as deletion or pruning.
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # DANGER: Do not change the inventory object namespace.
+  # Changing the namespace will cause a loss of continuity
+  # with previously applied grouped objects. Set deletion
+  # and pruning functionality will be impaired.
+  namespace: test-namespace
+  # NOTE: The name of the inventory object does NOT have
+  # any impact on group-related functionality such as
+  # deletion or pruning.
+  name: inventory-40897991
+  labels:
+    # DANGER: Do not change the value of this label.
+    # Changing this value will cause a loss of continuity
+    # with previously applied grouped objects. Set deletion
+    # and pruning functionality will be impaired.
+    cli-utils.sigs.k8s.io/inventory-id: 0d433e0b-d9dd-4313-a58c-53f939a38fe1

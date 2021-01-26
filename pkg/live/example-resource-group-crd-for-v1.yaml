@@ -1,0 +1,272 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: resourcegroups.kpt.dev
+spec:
+  conversion:
+    strategy: None
+  group: kpt.dev
+  names:
+    kind: ResourceGroup
+    listKind: ResourceGroupList
+    plural: resourcegroups
+    singular: resourcegroup
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ResourceGroup is the Schema for the resourcegroups API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: spec defines the desired state of ResourceGroup
+            properties:
+              descriptor:
+                description: descriptor regroups the information and metadata about
+                  a resource group
+                properties:
+                  description:
+                    description: description is a brief description of a group of resources
+                    type: string
+                  links:
+                    description: links are a list of descriptive URLs intended to be
+                      used to surface additional information
+                    items:
+                      properties:
+                        description:
+                          description: description explains the purpose of the link
+                          type: string
+                        url:
+                          description: url is the URL of the link
+                          type: string
+                      required:
+                      - description
+                      - url
+                      type: object
+                    type: array
+                  revision:
+                    description: revision is an optional revision for a group of resources
+                    type: string
+                  type:
+                    description: type can contain prefix, such as Application/WordPress
+                      or Service/Spanner
+                    type: string
+                type: object
+              resources:
+                description: resources contains a list of resources that form the resource
+                  group
+                items:
+                  description: each item organizes and stores the identifying information
+                    for an object. This struct (as a string) is stored in a grouping
+                    object to keep track of sets of applied objects.
+                  properties:
+                    group:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                  - group
+                  - kind
+                  - name
+                  - namespace
+                  type: object
+                type: array
+              subgroups:
+                description: subgroups contains a list of sub groups that the current
+                  group includes.
+                items:
+                  description: Each item organizes and stores the identifying information
+                    for a ResourceGroup object. It includes name and namespace.
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                  required:
+                  - name
+                  - namespace
+                  type: object
+                type: array
+            type: object
+          status:
+            description: status defines the observed state of ResourceGroup
+            properties:
+              conditions:
+                description: conditions lists the conditions of the current status for
+                  the group
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: last time the condition transit from one status to
+                        another
+                      format: date-time
+                      type: string
+                    message:
+                      description: human-readable message indicating details about last
+                        transition
+                      type: string
+                    reason:
+                      description: one-word CamelCase reason for the condition’s last
+                        transition
+                      type: string
+                    status:
+                      description: status of the condition
+                      type: string
+                    type:
+                      description: type of the condition
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              observedGeneration:
+                description: observedGeneration is the most recent generation observed.
+                  It corresponds to the Object's generation, which is updated on mutation
+                  by the API Server. Everytime the controller does a successful reconcile,
+                  it sets observedGeneration to match ResourceGroup.metadata.generation.
+                format: int64
+                type: integer
+              resourceStatuses:
+                description: resourceStatuses lists the status for each resource in
+                  the group
+                items:
+                  description: each item contains the status of a given resource uniquely
+                    identified by its group, kind, name and namespace.
+                  properties:
+                    conditions:
+                      items:
+                        properties:
+                          lastTransitionTime:
+                            description: last time the condition transit from one status
+                              to another
+                            format: date-time
+                            type: string
+                          message:
+                            description: human-readable message indicating details about
+                              last transition
+                            type: string
+                          reason:
+                            description: one-word CamelCase reason for the condition’s
+                              last transition
+                            type: string
+                          status:
+                            description: status of the condition
+                            type: string
+                          type:
+                            description: type of the condition
+                            type: string
+                        required:
+                        - status
+                        - type
+                        type: object
+                      type: array
+                    group:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    status:
+                      description: Status describes the status of a resource
+                      type: string
+                  required:
+                  - group
+                  - kind
+                  - name
+                  - namespace
+                  - status
+                  type: object
+                type: array
+              subgroupStatuses:
+                description: subgroupStatuses lists the status for each subgroup.
+                items:
+                  description: Each item contains the status of a given group uniquely
+                    identified by its name and namespace.
+                  properties:
+                    conditions:
+                      items:
+                        properties:
+                          lastTransitionTime:
+                            description: last time the condition transit from one status
+                              to another
+                            format: date-time
+                            type: string
+                          message:
+                            description: human-readable message indicating details about
+                              last transition
+                            type: string
+                          reason:
+                            description: one-word CamelCase reason for the condition’s
+                              last transition
+                            type: string
+                          status:
+                            description: status of the condition
+                            type: string
+                          type:
+                            description: type of the condition
+                            type: string
+                        required:
+                        - status
+                        - type
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    status:
+                      description: Status describes the status of a resource
+                      type: string
+                  required:
+                  - name
+                  - namespace
+                  - status
+                  type: object
+                type: array
+            required:
+            - observedGeneration
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

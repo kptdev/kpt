@@ -11,7 +11,10 @@ import (
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/cli-utils/pkg/provider"
 )
+
+var _ provider.Provider = &ResourceGroupProvider{}
 
 // ResourceGroupProvider implements the Provider interface, returning
 // ResourceGroup versions of some kpt live apply structures.
@@ -34,7 +37,7 @@ func (f *ResourceGroupProvider) Factory() util.Factory {
 // InventoryClient returns the InventoryClient created using the
 // ResourceGroup inventory object wrapper function.
 func (f *ResourceGroupProvider) InventoryClient() (inventory.InventoryClient, error) {
-	return inventory.NewInventoryClient(f.factory, WrapInventoryObj)
+	return inventory.NewInventoryClient(f.factory, WrapInventoryObj, InvToUnstructuredFunc)
 }
 
 // ToRESTMapper returns the RESTMapper or an erro if one occurred.
@@ -50,15 +53,20 @@ func (f *ResourceGroupProvider) ManifestReader(reader io.Reader, args []string) 
 		return nil, fmt.Errorf("unable to build ManifestReader without both reader or args")
 	}
 	if len(args) > 1 {
-		return nil, fmt.Errorf("expected one directory argument allowed; got (%s)", args)
+		return nil, fmt.Errorf("expected one directory argument allowed; got %q", args)
 	}
 	// Create ReaderOptions for subsequent ManifestReader.
 	namespace, enforceNamespace, err := f.factory.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
 		return nil, err
 	}
+	mapper, err := f.factory.ToRESTMapper()
+	if err != nil {
+		return nil, err
+	}
+
 	readerOptions := manifestreader.ReaderOptions{
-		Factory:          f.factory,
+		Mapper:           mapper,
 		Namespace:        namespace,
 		EnforceNamespace: enforceNamespace,
 	}

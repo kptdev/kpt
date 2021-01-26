@@ -64,7 +64,7 @@ func (m Command) Run() error {
 	if k.PackageMeta.Man == "" {
 		_, err := os.Stat(filepath.Join(m.Path, ManFilename))
 		if err != nil {
-			return errors.Errorf("no manual entry for %s", m.Path)
+			return errors.Errorf("no manual entry for %q", m.Path)
 		}
 		k.PackageMeta.Man = filepath.Join(ManFilename)
 	}
@@ -83,7 +83,7 @@ func (m Command) Run() error {
 		return err
 	}
 	if !strings.HasPrefix(apMan, apPkg) {
-		return errors.Errorf("invalid manual location for %s", m.Path)
+		return errors.Errorf("invalid manual location for %q", m.Path)
 	}
 
 	// write the formatted manual to a tmp file so it can be displayed

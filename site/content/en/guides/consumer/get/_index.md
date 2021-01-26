@@ -257,8 +257,8 @@ the [kpt live] command.
 
 ## View the applied package
 
-Once applied to the cluster, the remote resources can be displayed using
-the common tools such as `kubectl get`.
+Once applied to the cluster, the remote resources can be displayed using common
+tools such as `kubectl get`.
 
 ### Applied Package Command
 

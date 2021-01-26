@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/run"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -182,12 +183,12 @@ func TestKptGetSet(t *testing.T) {
 				// diff requires a kptfile exists
 				testutil.CopyKptfile(t, localDir, upstreamGit.RepoDirectory)
 
-				testutil.AssertEqual(t, upstreamGit,
+				testutil.AssertPkgEqual(t, upstreamGit,
 					filepath.Join(expected, test.subdir), localDir)
 				return
 			}
 
-			testutil.AssertEqual(t, upstreamGit,
+			testutil.AssertPkgEqual(t, upstreamGit,
 				filepath.Join(expected, test.subdir), localDir)
 
 			// Run Set
@@ -212,7 +213,7 @@ func TestKptGetSet(t *testing.T) {
 			testutil.Compare(t,
 				filepath.Join(expected, test.subdir, "Kptfile"),
 				filepath.Join(localDir, "Kptfile"))
-			testutil.AssertEqual(t, upstreamGit,
+			testutil.AssertPkgEqual(t, upstreamGit,
 				filepath.Join(expected, test.subdir),
 				localDir)
 		})
@@ -466,6 +467,143 @@ spec:
 			if !assert.Equal(t,
 				strings.TrimSpace(test.expectedOpenAPI),
 				strings.TrimSpace(string(actualOpenAPI))) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestLiveCommands(t *testing.T) {
+	var tests = []struct {
+		name         string
+		inputOpenAPI string
+		command      string
+		args         []string
+		out          string
+		errMsg       string
+	}{
+		{
+			name:    "test preview command setters pre-check",
+			command: "preview",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: false
+ `,
+			errMsg: `setter replicas is required but not set, please set it to new value and try again`,
+		},
+		{
+			name:    "test apply command setters pre-check",
+			command: "apply",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: false
+ `,
+			errMsg: `setter replicas is required but not set, please set it to new value and try again`,
+		},
+		{
+			name:    "preview command setters pre-check pass",
+			command: "preview",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: true
+ `,
+		},
+		{
+			name:    "apply command setters pre-check pass",
+			command: "apply",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: true
+ `,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			// reset the openAPI afterward
+			openapi.ResetOpenAPI()
+			defer openapi.ResetOpenAPI()
+
+			dir, err := ioutil.TempDir("", "")
+			if err != nil {
+				t.FailNow()
+			}
+			defer os.RemoveAll(dir)
+
+			err = ioutil.WriteFile(dir+"/Kptfile", []byte(test.inputOpenAPI), 0600)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			cmd := run.GetMain()
+
+			subCommand, _, err := cmd.Find([]string{"live", test.command})
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			subCommand.RunE = func(_ *cobra.Command, _ []string) error {
+				return nil
+			}
+
+			args := []string{"live", test.command, dir}
+			args = append(args, test.args...)
+			cmd.SetArgs(args)
+			err = cmd.Execute()
+
+			if test.errMsg != "" {
+				if !assert.NotNil(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), test.errMsg) {
+					t.FailNow()
+				}
+			}
+
+			if test.errMsg == "" && !assert.NoError(t, err) {
 				t.FailNow()
 			}
 		})

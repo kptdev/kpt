@@ -50,4 +50,8 @@ DIR:
 
 [source function]: ../../../concepts/functions/#source-function
 [functions concepts]: ../../../concepts/functions/
+<<<<<<< HEAD
 [catalog]: ../../../guides/consumer/function/catalog/sources/
+=======
+[catalog]: ../../../guides/consumer/function/catalog/sources
+>>>>>>> dffd348f87e2f1ecdf5dfeb3d81b9d9da9d37980

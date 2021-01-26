@@ -168,9 +168,9 @@ will print arbitrary fields by providing the `--field` flag.
 kpt cfg grep "spec.replicas>3" examples | kpt cfg tree --replicas
 ```
 
-Grep can be used to filter resources by field values.  The output of
-[`kpt cfg grep`][kpt cfg grep] is the matching full resource configuration, which
-may be piped to tree for rendering.
+Grep can be used to filter resources by field values.  The output of [`kpt cfg
+grep`][kpt cfg grep] is the matching full resource configuration, which may be
+piped to [`kpt cfg tree`][kpt cfg tree] for rendering.
 
 ### Filter Output
 
@@ -194,8 +194,6 @@ may be piped to tree for rendering.
 <!-- @catCockroachdb @verifyGuides-->
 ```sh
 kpt cfg cat examples/cockroachdb
-# Temporary workaround for https://github.com/GoogleContainerTools/kpt/issues/1050
-echo "\n"
 ```
 
 The raw YAML configuration may be dumped using [`kpt cfg cat`][kpt cfg cat].

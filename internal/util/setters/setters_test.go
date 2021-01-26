@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
@@ -104,7 +105,6 @@ func TestSetV2AutoSetter(t *testing.T) {
 			expectedDataset: "dataset-with-autosetters-set",
 			expectedOut: `automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql" derived from gcloud config
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql" derived from gcloud config
-failed to set "gcloud.core.project" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.core.project" is not found
 automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql/storage" derived from gcloud config
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql/storage" derived from gcloud config
 `,
@@ -172,10 +172,8 @@ func TestEnvironmentSetters(t *testing.T) {
 				"KPT_SET_gcloud.project.projectNumber=1234"},
 			expectedDataset: "dataset-with-autosetters-set",
 			expectedOut: `automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql" derived from environment
-failed to set "gcloud.core.project" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.core.project" is not found
 automatically set 1 field(s) for setter "gcloud.core.project" to value "my-project" in package "${baseDir}/mysql/storage" derived from environment
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql" derived from environment
-failed to set "gcloud.project.projectNumber" automatically in package "${baseDir}/mysql/nosetters" with error: setter "gcloud.project.projectNumber" is not found
 automatically set 1 field(s) for setter "gcloud.project.projectNumber" to value "1234" in package "${baseDir}/mysql/storage" derived from environment
 `,
 		},
@@ -261,11 +259,17 @@ openAPI:
         setter:
           name: namespace
           value: parent_namespace
-          isSet: true`,
+          isSet: true
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: parent_name`,
 			nestedConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}
+  name: child_name # {"$kpt-set":"name"}`,
 			nestedKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -277,11 +281,17 @@ openAPI:
         setter:
           name: namespace
           value: child_namespace
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: child_name
 `,
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}
+  name: child_name # {"$kpt-set":"name"}`,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -293,6 +303,11 @@ openAPI:
         setter:
           name: namespace
           value: child_namespace
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: child_name
 `,
 			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
@@ -306,14 +321,22 @@ openAPI:
           name: namespace
           value: parent_namespace
           isSet: true
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: parent_name
 `,
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: parent_namespace # {"$openapi":"namespace"}
+  namespace: parent_namespace # {"$kpt-set":"namespace"}
+  name: parent_name # {"$kpt-set":"name"}
 `,
 			expectedOut: `automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
+automatically set 1 field(s) for setter "name" to value "parent_name" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
 automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${nestedPkg}" derived from parent "${childPkg}/Kptfile"
+automatically set 1 field(s) for setter "name" to value "parent_name" in package "${nestedPkg}" derived from parent "${childPkg}/Kptfile"
 `,
 		},
 		{
@@ -334,7 +357,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
@@ -363,7 +386,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 		},
 		{
@@ -384,7 +407,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
@@ -415,7 +438,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}
+  namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
 			expectedOut: `failed to set "namespace" automatically in package "${childPkg}" with error: ` +
 				`The input value doesn't validate against provided OpenAPI schema: validation failure list:
@@ -441,7 +464,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -471,7 +494,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
 		},
 		{
 			name:       "inherit-defalut-values-from-parent",
@@ -491,7 +514,7 @@ openAPI:
 			childConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: child_namespace # {"$openapi":"namespace"}`,
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
 			childKptfile: `apiVersion: krm.dev/v1alpha1
 kind: Kptfile
 metadata:
@@ -519,7 +542,7 @@ openAPI:
 			expectedChildConfigFile: `apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: parent_namespace # {"$openapi":"namespace"}
+  namespace: parent_namespace # {"$kpt-set":"namespace"}
 `,
 			expectedOut: `automatically set 1 field(s) for setter "namespace" to value "parent_namespace" in package "${childPkg}" derived from parent "${parentPkgKptfile}"
 `,
@@ -527,6 +550,7 @@ metadata:
 	}
 	for i := range tests {
 		test := tests[i]
+		fieldmeta.SetShortHandRef("$kpt-set")
 		t.Run(test.name, func(t *testing.T) {
 			// reset the openAPI afterward
 			openapi.ResetOpenAPI()
@@ -634,6 +658,73 @@ metadata:
 			expectedOut = strings.ReplaceAll(expectedOut, "${parentPkgKptfile}", filepath.Join(parentPkg, kptfile.KptFileName))
 
 			if !assert.Equal(t, expectedOut, out.String()) {
+				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestCheckRequiredSettersSet(t *testing.T) {
+	var tests = []struct {
+		name             string
+		inputOpenAPIfile string
+		expectedError    bool
+	}{
+		{
+			name: "required true, isSet false",
+			inputOpenAPIfile: `
+apiVersion: v1alpha1
+kind: OpenAPIfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.gcloud.project.projectNumber:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: gcloud.project.projectNumber
+          value: "123"
+          setBy: me
+    io.k8s.cli.setters.replicas:
+      description: hello world
+      x-k8s-cli:
+        setter:
+          name: replicas
+          value: "3"
+          setBy: me
+          required: true
+          isSet: false
+ `,
+			expectedError: true,
+		},
+		{
+			name:             "no file, no error",
+			inputOpenAPIfile: ``,
+			expectedError:    false,
+		},
+		{
+			name: "no setter defs, no error",
+			inputOpenAPIfile: `apiVersion: v1alpha1
+kind: OpenAPIfile`,
+			expectedError: false,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", "")
+			assert.NoError(t, err)
+			defer os.RemoveAll(dir)
+			if test.inputOpenAPIfile != "" {
+				err = ioutil.WriteFile(filepath.Join(dir, "Kptfile"), []byte(test.inputOpenAPIfile), 0600)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+			}
+			err = CheckForRequiredSetters(dir)
+			if test.expectedError && !assert.Error(t, err) {
+				t.FailNow()
+			}
+			if !test.expectedError && !assert.NoError(t, err) {
 				t.FailNow()
 			}
 		})

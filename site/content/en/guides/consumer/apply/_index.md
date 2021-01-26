@@ -22,10 +22,10 @@ cd $TEST_HOME
 
 [kpt live apply]
 
-Because kpt packages are composed of resource configuration can be applied with
-`kubectl apply -R -f DIR`, however kpt includes the next-generation **apply**
-commands developed out of the Kubernetes [cli-utils] repository as the
-[kpt live apply] command.
+Because kpt packages are composed of resource configuration, they can be
+applied with `kubectl apply -R -f DIR`. However, kpt includes the
+next-generation **apply** commands developed out of the Kubernetes [cli-utils]
+repository as the [kpt live apply] command.
 
 Kpt live apply provides additional functionality beyond what is provided by
 `kubectl apply`, such as communicating back resource status and pruning
@@ -35,8 +35,6 @@ resources for deleted configuration.
 
 ## Steps
 
-- [Topics](#topics)
-- [Steps](#steps)
 - [Fetch a remote package](#fetch-a-remote-package)
   - [Command](#command)
   - [Output](#output)
@@ -224,8 +222,8 @@ the resources.
 
 ## Prune resources
 
-Resources can be deleted from the cluster by deleting them from the
-resource configuration.sh
+Resources can be deleted from the cluster by deleting the corresponding
+resource configuration.
 
 ### Prune Command
 

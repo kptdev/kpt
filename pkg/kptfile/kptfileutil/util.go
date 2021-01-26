@@ -15,9 +15,11 @@
 package kptfileutil
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -32,19 +34,19 @@ func ReadFile(dir string) (kptfile.KptFile, error) {
 
 	// if we are in a package subdirectory, find the parent dir with the Kptfile.
 	// this is necessary to parse the duck-commands for sub-directories of a package
-	for os.IsNotExist(err) && filepath.Dir(dir) != dir {
+	for os.IsNotExist(err) && filepath.Base(dir) == kptfile.KptFileName {
 		dir = filepath.Dir(dir)
 		f, err = os.Open(filepath.Join(dir, kptfile.KptFileName))
 	}
 	if err != nil {
-		return kptfile.KptFile{}, errors.Errorf("unable to read %s: %v", kptfile.KptFileName, err)
+		return kptfile.KptFile{}, errors.Errorf("unable to read %q: %v", kptfile.KptFileName, err)
 	}
 	defer f.Close()
 
 	d := yaml.NewDecoder(f)
 	d.KnownFields(true)
 	if err = d.Decode(&kpgfile); err != nil {
-		return kptfile.KptFile{}, errors.Errorf("unable to parse %s: %v", kptfile.KptFileName, err)
+		return kptfile.KptFile{}, errors.Errorf("unable to parse %q: %v", kptfile.KptFileName, err)
 	}
 	return kpgfile, nil
 }
@@ -85,28 +87,49 @@ func ReadFileStrict(pkgPath string) (kptfile.KptFile, error) {
 	if kf.Upstream.Type == kptfile.GitOrigin {
 		git := kf.Upstream.Git
 		if git.Repo == "" {
-			return kptfile.KptFile{}, errors.Errorf("%s Kptfile missing upstream.git.repo", pkgPath)
+			return kptfile.KptFile{}, errors.Errorf("%q Kptfile missing upstream.git.repo", pkgPath)
 		}
 		if git.Commit == "" {
-			return kptfile.KptFile{}, errors.Errorf("%s Kptfile missing upstream.git.commit", pkgPath)
+			return kptfile.KptFile{}, errors.Errorf("%q Kptfile missing upstream.git.commit", pkgPath)
 		}
 		if git.Ref == "" {
-			return kptfile.KptFile{}, errors.Errorf("%s Kptfile missing upstream.git.ref", pkgPath)
+			return kptfile.KptFile{}, errors.Errorf("%q Kptfile missing upstream.git.ref", pkgPath)
 		}
 		if git.Directory == "" {
-			return kptfile.KptFile{}, errors.Errorf("%s Kptfile missing upstream.git.directory", pkgPath)
+			return kptfile.KptFile{}, errors.Errorf("%q Kptfile missing upstream.git.directory", pkgPath)
 		}
 	}
 	if kf.Upstream.Type == kptfile.StdinOrigin {
 		stdin := kf.Upstream.Stdin
 		if stdin.FilenamePattern == "" {
 			return kptfile.KptFile{}, errors.Errorf(
-				"%s Kptfile missing upstream.stdin.filenamePattern", pkgPath)
+				"%q Kptfile missing upstream.stdin.filenamePattern", pkgPath)
 		}
 		if stdin.Original == "" {
 			return kptfile.KptFile{}, errors.Errorf(
-				"%s Kptfile missing upstream.stdin.original", pkgPath)
+				"%q Kptfile missing upstream.stdin.original", pkgPath)
 		}
 	}
 	return kf, nil
+}
+
+// ValidateInventory returns true and a nil error if the passed inventory
+// is valid; otherwise, false and the reason the inventory is not valid
+// is returned. A valid inventory must have a non-empty namespace, name,
+// and id.
+func ValidateInventory(inv *kptfile.Inventory) (bool, error) {
+	if inv == nil {
+		return false, fmt.Errorf("kptfile missing inventory section")
+	}
+	// Validate the name, namespace, and inventory id
+	if strings.TrimSpace(inv.Name) == "" {
+		return false, fmt.Errorf("kptfile inventory empty name")
+	}
+	if strings.TrimSpace(inv.Namespace) == "" {
+		return false, fmt.Errorf("kptfile inventory empty namespace")
+	}
+	if strings.TrimSpace(inv.InventoryID) == "" {
+		return false, fmt.Errorf("kptfile inventory missing inventoryID")
+	}
+	return true, nil
 }

@@ -4,7 +4,7 @@ linkTitle: "Package Consumers"
 weight: 1
 type: docs
 description: >
-    Guides for workflows related to consume packages published by other
+    Guides for workflows related to consuming packages published by other
     teams or organizations.
 ---
 
@@ -13,7 +13,7 @@ description: >
 - Fetch a local copy of a remote package
 - Modify the local copy
   - Either using user-friendly editing commands
-  - Or direclty modifying the files with a text editor
+  - Or directly modifying the files with a text editor
 - (Optional) Push the local package to a project / team repo
 - (Optional) Automation makes last-mile changes before pushing
 - Automation pushes by applying to a cluster

@@ -15,6 +15,7 @@
 package openapi
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 
@@ -43,14 +44,14 @@ func ConfigureOpenAPI(factory util.Factory, k8sSchemaSource, k8sSchemaPath strin
 	case SchemaSourceFile:
 		openAPISchema, err := ReadOpenAPISchemaFromDisk(k8sSchemaPath)
 		if err != nil {
-			return fmt.Errorf("error reading file at path %s: %v",
+			return fmt.Errorf("error reading file at path %q: %v",
 				k8sSchemaPath, err)
 		}
 		return ConfigureOpenAPISchema(openAPISchema)
 	case SchemaSourceBuiltin:
 		return nil
 	default:
-		return fmt.Errorf("unknown schema source %s. Must be one of file, cluster, builtin",
+		return fmt.Errorf("unknown schema source %q. Must be one of file, cluster, builtin",
 			k8sSchemaSource)
 	}
 }
@@ -61,7 +62,7 @@ func FetchOpenAPISchemaFromCluster(f util.Factory) ([]byte, error) {
 		return nil, err
 	}
 	data, err := restClient.Get().AbsPath("/openapi/v2").
-		SetHeader("Accept", "application/json").Do().Raw()
+		SetHeader("Accept", "application/json").Do(context.Background()).Raw()
 	if err != nil {
 		return nil, err
 	}
