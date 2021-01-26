@@ -27,10 +27,10 @@ jobs:
       - name: Start building site
         run: |
           make servedocs & sleep 10s
-      - name: Wait for site to build
-        uses: jakejarvis/wait-action@master
-        with:
-          time: '15s'
+      # - name: Wait for site to build
+      #   uses: jakejarvis/wait-action@master
+      #   with:
+      #     time: '15s'
       - name: Check for broken links
         uses: filiph/linkcheck@v2.0.15+1
         with:
