@@ -26,12 +26,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: Start building site
         run: |
-          make servedocs & sleep 10s
+          pub global activate linkcheck
+          make servedocs & (sleep 10s && linkcheck localhost:1313/kpt)
       # - name: Wait for site to build
       #   uses: jakejarvis/wait-action@master
       #   with:
       #     time: '15s'
-      - name: Check for broken links
-        uses: filiph/linkcheck@v2.0.15+1
-        with:
-          arguments: http://localhost:1313/kpt
+      # - name: Check for broken links
+      #   uses: filiph/linkcheck@v2.0.15+1
+      #   with:
+      #     arguments: http://localhost:1313/kpt
