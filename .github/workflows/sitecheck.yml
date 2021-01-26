@@ -17,8 +17,8 @@ on:
   pull_request:
     branches:
       - master
-    # paths:
-    #   - "site/**"
+    paths:
+      - "site/**"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -40,11 +40,3 @@ jobs:
           python -m SimpleHTTPServer 1313 & sleep 5s
           $HOME/.pub-cache/bin/linkcheck localhost:1313/kpt
         working-directory: ./built-site
-      # - name: Wait for site to build
-      #   uses: jakejarvis/wait-action@master
-      #   with:
-      #     time: '15s'
-      # - name: Check for broken links
-      #   uses: filiph/linkcheck@v2.0.15+1
-      #   with:
-      #     arguments: http://localhost:1313/kpt
