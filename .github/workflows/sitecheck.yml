@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          make servedocs
+          make servedocs &&
       - uses: jakejarvis/wait-action@master
         with:
           time: '45s'
