@@ -33,7 +33,8 @@ jobs:
       - name: Copy site content
         run: |
           mkdir built-site && mkdir built-site/kpt
-          cp -r docs built-site/kpt
+          cd docs
+          cp -r . ../built-site/kpt
       - name: Crawl site
         run: |
           python -m SimpleHTTPServer 1313 & sleep 5s
