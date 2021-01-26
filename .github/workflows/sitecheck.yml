@@ -28,7 +28,8 @@ jobs:
       - name: Start building site
         run: |
           pub global activate linkcheck
-          make servedocs & (sleep 10s && linkcheck localhost:1313/kpt)
+          make servedocs & sleep 20s
+          $HOME/.pub-cache/bin/linkcheck localhost:1313/kpt
       # - name: Wait for site to build
       #   uses: jakejarvis/wait-action@master
       #   with:
