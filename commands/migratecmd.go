@@ -262,7 +262,7 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, oldID string, 
 	if err != nil {
 		return err
 	}
-	inv := live.WrapInventoryInfoObj(rgInv)
+	inv := live.WrapInventoryResourceGroup(rgInv)
 	err = updateOwningInventoryAnnotation(mr.rgProvider.Factory(), cmObjs, oldID, inv.ID())
 	if err != nil {
 		return err
