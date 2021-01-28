@@ -48,10 +48,7 @@ type KptFile struct {
 	Dependencies []Dependency `yaml:"dependencies,omitempty"`
 
 	// OpenAPI contains additional schema for the resources in this package
-	// Uses interface{} instead of Node to work around yaml serialization issues
-	// See https://github.com/go-yaml/yaml/issues/518 and
-	// https://github.com/go-yaml/yaml/issues/575
-	OpenAPI interface{} `yaml:"openAPI,omitempty"`
+	OpenAPI *yaml.Node `yaml:"openAPI,omitempty"`
 
 	// Functions contains configuration for running functions
 	Functions Functions `yaml:"functions,omitempty"`
@@ -102,31 +99,15 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 
 	// turn the exiting openapi into yaml.Nodes for processing
 	// they aren't yaml.Nodes natively due to serialization bugs in the yaml libs
-	bUpdated, err := yaml.Marshal(updatedKf.OpenAPI)
-	if err != nil {
-		return err
+	updated := &yaml.RNode{}
+	updated.SetYNode(updatedKf.OpenAPI)
+	local := &yaml.RNode{}
+	local.SetYNode(localKf.OpenAPI)
+	original := &yaml.RNode{}
+	if originalKf.OpenAPI == nil {
+		originalKf.OpenAPI = &yaml.Node{}
 	}
-	updated, err := yaml.Parse(string(bUpdated))
-	if err != nil {
-		return err
-	}
-	bLocal, err := yaml.Marshal(localKf.OpenAPI)
-	if err != nil {
-		return err
-	}
-	local, err := yaml.Parse(string(bLocal))
-	if err != nil {
-		return err
-	}
-
-	bOriginal, err := yaml.Marshal(originalKf.OpenAPI)
-	if err != nil {
-		return err
-	}
-	original, err := yaml.Parse(string(bOriginal))
-	if err != nil {
-		return err
-	}
+	original.SetYNode(originalKf.OpenAPI)
 
 	// get the definitions for the source and destination
 	updatedDef := updated.Field("definitions")
@@ -147,7 +128,7 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 	}
 
 	// merge the definitions
-	err = mergeDef(updatedDef, localDef, oriDef)
+	err := mergeDef(updatedDef, localDef, oriDef)
 	if err != nil {
 		return err
 	}
@@ -157,9 +138,8 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 	if err != nil {
 		return err
 	}
-	var newOpenAPI interface{}
-	updatedKf.OpenAPI = newOpenAPI
-	err = yaml.Unmarshal([]byte(s), &updatedKf.OpenAPI)
+	n, err := yaml.Parse(s)
+	updatedKf.OpenAPI = n.YNode()
 	return err
 }
 

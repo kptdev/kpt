@@ -17,6 +17,7 @@ package kptfile_test
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -96,30 +97,6 @@ upstream:
 	assert.Equal(t, KptFile{}, f)
 }
 
-// TestReadFile_failUnmarshal verifies an error is returned if the file contains any unrecognized fields.
-func TestReadFile_failUnmarshal(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", testutil.TmpDirPrefix))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstreamBadField:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := kptfileutil.ReadFile(dir)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "upstreamBadField not found")
-	assert.Equal(t, KptFile{}, f)
-}
-
 func TestKptFile_MergeOpenAPI(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -131,6 +108,8 @@ func TestKptFile_MergeOpenAPI(t *testing.T) {
 		{
 			name: "add one delete one",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -140,6 +119,8 @@ openAPI:
           value: "nginx"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -149,6 +130,8 @@ openAPI:
           value: "1.7.9"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -158,18 +141,8 @@ openAPI:
           value: "1.7.9"
 `,
 			expected: `
-openAPI:
-    definitions:
-        io.k8s.cli.setters.image:
-            x-k8s-cli:
-                setter:
-                    name: image
-                    value: nginx
-`,
-		},
-		{
-			name: "keep locally changed value",
-			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -177,6 +150,21 @@ openAPI:
         setter:
           name: "image"
           value: "nginx"
+`,
+		},
+		{
+			name: "keep locally changed value",
+			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+          isSet: true
     io.k8s.cli.setters.tag:
       x-k8s-cli:
         setter:
@@ -184,6 +172,8 @@ openAPI:
           value: "1.7.9"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -193,6 +183,8 @@ openAPI:
           value: "1.8.0"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -202,23 +194,28 @@ openAPI:
           value: "1.7.9"
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.image:
-            x-k8s-cli:
-                setter:
-                    name: image
-                    value: nginx
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.0
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+          isSet: true
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
 `,
 		},
 		{
 			name: "and one and copy value from updated to local",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -233,6 +230,8 @@ openAPI:
           value: "1.8.1"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -242,6 +241,8 @@ openAPI:
           value: "1.8.0"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -251,25 +252,31 @@ openAPI:
           value: "1.8.0"
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.image:
-            x-k8s-cli:
-                setter:
-                    name: image
-                    value: nginx
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.1
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.1"
 `,
 		},
 		{
 			name: "keep local",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -279,20 +286,26 @@ openAPI:
           value: "1.8.0"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.0
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
 `,
 		},
 		{
 			name: "add definition from updated",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -302,22 +315,30 @@ openAPI:
           value: "1.8.0"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.0
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
 `,
 		},
 		{
 			name: "local, updated, original diverged",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -327,6 +348,8 @@ openAPI:
           value: "nginx"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -336,6 +359,8 @@ openAPI:
           value: "1.7.9"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.nomatch:
@@ -345,23 +370,27 @@ openAPI:
           value: "something"
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.image:
-            x-k8s-cli:
-                setter:
-                    name: image
-                    value: nginx
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.7.9
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.7.9"
 `,
 		},
 		{
 			name: "delete updated",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -371,6 +400,8 @@ openAPI:
           value: "nginx"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -385,6 +416,8 @@ openAPI:
           value: "1.8.0"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -399,18 +432,22 @@ openAPI:
           value: "1.8.0"
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.image:
-            x-k8s-cli:
-                setter:
-                    name: image
-                    value: nginx
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
 `,
 		},
 		{
 			name: "keep deleted",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -425,6 +462,8 @@ openAPI:
           value: "1.7.9"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -434,6 +473,8 @@ openAPI:
           value: "1.8.0"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -448,18 +489,22 @@ openAPI:
           value: "1.7.9"
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.0
+  definitions:
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.0"
 `,
 		},
 		{
 			name: "no defs in origin",
 			updated: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.image:
@@ -474,6 +519,8 @@ openAPI:
           value: "1.8.1"
 `,
 			local: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.tag:
@@ -483,20 +530,24 @@ openAPI:
           value: "1.8.0"
 `,
 			original: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 `,
 			expected: `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
-    definitions:
-        io.k8s.cli.setters.image:
-            x-k8s-cli:
-                setter:
-                    name: image
-                    value: nginx
-        io.k8s.cli.setters.tag:
-            x-k8s-cli:
-                setter:
-                    name: tag
-                    value: 1.8.1
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: "image"
+          value: "nginx"
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: "tag"
+          value: "1.8.1"
 `,
 		},
 	}
@@ -504,27 +555,58 @@ openAPI:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			kUpdated := KptFile{}
-			if !assert.NoError(t, yaml.Unmarshal([]byte(test.updated), &kUpdated)) {
+			uDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-
-			kLocal := KptFile{}
-			if !assert.NoError(t, yaml.Unmarshal([]byte(test.local), &kLocal)) {
+			defer os.RemoveAll(uDir)
+			lDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-
-			kOriginal := KptFile{}
-			if !assert.NoError(t, yaml.Unmarshal([]byte(test.original), &kOriginal)) {
+			defer os.RemoveAll(lDir)
+			oDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-
-			err := kUpdated.MergeOpenAPI(kLocal, kOriginal)
+			defer os.RemoveAll(oDir)
+			err = ioutil.WriteFile(filepath.Join(uDir, KptFileName), []byte(test.updated), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = ioutil.WriteFile(filepath.Join(lDir, KptFileName), []byte(test.local), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = ioutil.WriteFile(filepath.Join(oDir, KptFileName), []byte(test.original), 0700)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			b, err := yaml.Marshal(kUpdated)
+			kUpdated, err := kptfileutil.ReadFile(uDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			kLocal, err := kptfileutil.ReadFile(lDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			kOriginal, err := kptfileutil.ReadFile(oDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = kUpdated.MergeOpenAPI(kLocal, kOriginal)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = kptfileutil.WriteFile(uDir, kUpdated)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			b, err := ioutil.ReadFile(filepath.Join(uDir, KptFileName))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

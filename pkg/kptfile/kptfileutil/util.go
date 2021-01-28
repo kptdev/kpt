@@ -29,26 +29,46 @@ import (
 // ReadFile reads the KptFile in the given directory
 func ReadFile(dir string) (kptfile.KptFile, error) {
 	kpgfile := kptfile.KptFile{ResourceMeta: kptfile.TypeMeta}
-
-	f, err := os.Open(filepath.Join(dir, kptfile.KptFileName))
+	_, err := os.Stat(filepath.Join(dir, kptfile.KptFileName))
 
 	// if we are in a package subdirectory, find the parent dir with the Kptfile.
 	// this is necessary to parse the duck-commands for sub-directories of a package
 	for os.IsNotExist(err) && filepath.Base(dir) == kptfile.KptFileName {
 		dir = filepath.Dir(dir)
-		f, err = os.Open(filepath.Join(dir, kptfile.KptFileName))
+		_, err = os.Open(filepath.Join(dir, kptfile.KptFileName))
 	}
 	if err != nil {
 		return kptfile.KptFile{}, errors.Errorf("unable to read %q: %v", kptfile.KptFileName, err)
 	}
-	defer f.Close()
+	contents, err := ioutil.ReadFile(filepath.Join(dir, kptfile.KptFileName))
+	if err != nil {
+		return kptfile.KptFile{}, errors.Errorf("unable to read %q: %v", kptfile.KptFileName, err)
+	}
 
-	d := yaml.NewDecoder(f)
-	d.KnownFields(true)
-	if err = d.Decode(&kpgfile); err != nil {
+	if err = yaml.Unmarshal(contents, &kpgfile); err != nil {
 		return kptfile.KptFile{}, errors.Errorf("unable to parse %q: %v", kptfile.KptFileName, err)
 	}
-	return kpgfile, nil
+
+	kpgfile.OpenAPI, err = parseOpenAPI(string(contents))
+	return kpgfile, err
+}
+
+// handle openAPI parsing separately as yaml.Unmarshal has issues with parsing
+// See https://github.com/go-yaml/yaml/issues/518 and
+// https://github.com/go-yaml/yaml/issues/575
+func parseOpenAPI(contents string) (*yaml.Node, error) {
+	node, err := yaml.Parse(contents)
+	if err != nil {
+		return &yaml.Node{}, err
+	}
+	openAPI, err := node.Pipe(yaml.Lookup("openAPI"))
+	if err != nil {
+		return &yaml.Node{}, err
+	}
+	if openAPI == nil || openAPI.YNode() == nil {
+		return nil, nil
+	}
+	return openAPI.YNode(), nil
 }
 
 func WriteFile(dir string, k kptfile.KptFile) error {
