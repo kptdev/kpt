@@ -165,6 +165,15 @@ func TestCmd_fail(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to lookup master(or main) branch")
 }
 
+// TestCmd_git tests that if a package path contains .git, it is still parsed correctly
+func TestCmd_git(t *testing.T) {
+	r := cmdget.NewRunner("kpt")
+	r.Command.SetArgs([]string{"https://github.com/GoogleContainerTools/kpt/.github/workflows", "./"})
+	err := r.Command.Execute()
+	assert.NoError(t, err)
+	assert.NoError(t, os.RemoveAll("workflows"))
+}
+
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
 var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }
 

@@ -36,11 +36,14 @@ func GitParseArgs(args []string) (Target, error) {
 		return g, nil
 	}
 
-	// Simple parsing if contains .git
-	if strings.Contains(args[0], ".git") {
+	// Simple parsing if repo name ends in .git
+	if strings.Contains(args[0], ".git/") ||
+		strings.HasSuffix(args[0], ".git") {
+
 		var repo, dir, version string
 		parts := strings.Split(args[0], ".git")
 		repo = strings.TrimSuffix(parts[0], "/")
+
 		switch {
 		case len(parts) == 1:
 			// do nothing
