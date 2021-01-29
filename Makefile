@@ -69,9 +69,6 @@ license-check:
 test:
 	go test -cover ./...
 
-test-docker:
-	go test -cover --tags=docker ./...
-
 vet:
 	go vet ./...
 
