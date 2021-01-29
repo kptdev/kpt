@@ -263,7 +263,7 @@ func (f *Function) runner() (*fnRunner, error) {
 }
 
 func (f *Function) config() (*yaml.RNode, error) {
-	var dataNode *yaml.RNode
+	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":
 		file, err := os.Open(f.ConfigPath)
@@ -274,18 +274,22 @@ func (f *Function) config() (*yaml.RNode, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to read content from config file: %w", err)
 		}
-		dataNode, err = yaml.Parse(string(b))
+		node, err = yaml.Parse(string(b))
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse config %s: %w", string(b), err)
 		}
+		// directly use the config from file
+		return node, nil
 	case !isNodeZero(&f.Config):
-		dataNode = yaml.NewRNode(&f.Config)
+		// directly use the inline config
+		return yaml.NewRNode(&f.Config), nil
 	case len(f.ConfigMap) != 0:
-		dataNode = yaml.NewMapRNode(&f.ConfigMap)
+		node = yaml.NewMapRNode(&f.ConfigMap)
 	default:
-		dataNode = nil
+		node = nil
 	}
 
+	// create a ConfigMap only for configMap config
 	configNode, err := yaml.Parse(`
 apiVersion: v1
 kind: ConfigMap
@@ -296,8 +300,8 @@ data: {}
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse function config skeleton: %w", err)
 	}
-	if dataNode != nil {
-		err = configNode.PipeE(yaml.SetField("data", dataNode))
+	if node != nil {
+		err = configNode.PipeE(yaml.SetField("data", node))
 		if err != nil {
 			return nil, fmt.Errorf("failed to set 'data' field: %w", err)
 		}

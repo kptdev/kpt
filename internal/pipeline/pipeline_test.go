@@ -665,12 +665,11 @@ metadata:
   name: root-hierarchy
   namespace: hierarchy`).YNode(),
 			},
-			expected: `apiVersion: v1
-kind: ConfigMap
+			expected: `apiVersion: cft.dev/v1alpha1
+kind: ResourceHierarchy
 metadata:
-  name: function-input
-data: {apiVersion: cft.dev/v1alpha1, kind: ResourceHierarchy, metadata: {name: root-hierarchy,
-    namespace: hierarchy}}
+  name: root-hierarchy
+  namespace: hierarchy
 `,
 		},
 		{
@@ -681,12 +680,11 @@ kind: ResourceHierarchy
 metadata:
   name: root-hierarchy
   namespace: hierarchy`,
-			expected: `apiVersion: v1
-kind: ConfigMap
+			expected: `apiVersion: cft.dev/v1alpha1
+kind: ResourceHierarchy
 metadata:
-  name: function-input
-data: {apiVersion: cft.dev/v1alpha1, kind: ResourceHierarchy, metadata: {name: root-hierarchy,
-    namespace: hierarchy}}
+  name: root-hierarchy
+  namespace: hierarchy
 `,
 		},
 		{
