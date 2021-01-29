@@ -57,26 +57,30 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func checkOutput(t *testing.T, name string, tc testcase, actual *Pipeline, err error) {
+func checkOutput(t *testing.T, tc testcase, actual *Pipeline, err error) {
 	if tc.Error {
-		if !assert.Errorf(t, err, "error is expected. Test case: %s", name) {
+		if !assert.Error(t, err, "error is expected.") {
 			t.FailNow()
 		}
 		return
-	} else if !assert.NoError(t, err, "error is not expected. Test case: %s", name) {
+	} else if !assert.NoError(t, err, "error is not expected.") {
 		t.FailNow()
 	}
-	if !assert.Truef(t, isPipelineEqual(t, tc.Expected, *actual),
-		"pipelines don't equal. Test case: %s", name) {
+	if !assert.True(t, isPipelineEqual(t, tc.Expected, *actual),
+		"pipelines don't equal.") {
 		t.FailNow()
 	}
 }
 
 func TestFromReader(t *testing.T) {
 	for name, tc := range testcases {
-		r := bytes.NewBufferString(tc.Input)
-		actual, err := FromReader(r)
-		checkOutput(t, name, tc, actual, err)
+		tc := tc
+		name := name
+		t.Run(name, func(t *testing.T) {
+			r := bytes.NewBufferString(tc.Input)
+			actual, err := FromReader(r)
+			checkOutput(t, tc, actual, err)
+		})
 	}
 }
 
@@ -94,13 +98,18 @@ func preparePipelineFile(s string) (string, error) {
 
 func TestFromFile(t *testing.T) {
 	for name, tc := range testcases {
-		path, err := preparePipelineFile(tc.Input)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		actual, err := FromFile(path)
-		checkOutput(t, name, tc, actual, err)
-		os.Remove(path)
+		tc := tc
+		name := name
+		t.Run(name, func(t *testing.T) {
+			path, err := preparePipelineFile(tc.Input)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actual, err := FromFile(path)
+			checkOutput(t, tc, actual, err)
+			os.Remove(path)
+		})
+
 	}
 }
 
@@ -362,13 +371,17 @@ func TestValidateFunctionName(t *testing.T) {
 	}
 
 	for _, n := range inputs {
-		err := ValidateFunctionName(n.Name)
-		if n.Valid && err != nil {
-			t.Fatalf("function name %s should be valid", n.Name)
-		}
-		if !n.Valid && err == nil {
-			t.Fatalf("function name %s should not be valid", n.Name)
-		}
+		n := n
+		t.Run(n.Name, func(t *testing.T) {
+			err := ValidateFunctionName(n.Name)
+			if n.Valid && err != nil {
+				t.Fatalf("function name %s should be valid", n.Name)
+			}
+			if !n.Valid && err == nil {
+				t.Fatalf("function name %s should not be valid", n.Name)
+			}
+		})
+
 	}
 }
 
@@ -506,15 +519,19 @@ transformers:
 	}
 
 	for _, c := range cases {
-		b := bytes.NewBufferString(c.Input)
-		// FromReader will validate the pipeline
-		_, err := FromReader(b)
-		if c.Valid && err != nil {
-			t.Fatalf("%s: pipeline should be valid, %s", c.Name, err)
-		}
-		if !c.Valid && err == nil {
-			t.Fatalf("%s: pipeline should not be valid", c.Name)
-		}
+		c := c
+		t.Run(c.Name, func(t *testing.T) {
+			b := bytes.NewBufferString(c.Input)
+			// FromReader will validate the pipeline
+			_, err := FromReader(b)
+			if c.Valid && err != nil {
+				t.Fatalf("pipeline should be valid, %s", err)
+			}
+			if !c.Valid && err == nil {
+				t.Fatal("pipeline should not be valid")
+			}
+		})
+
 	}
 }
 
@@ -689,17 +706,20 @@ data: {foo: bar}
 	}
 
 	for _, c := range cases {
-		if c.configFileContent != "" {
-			tmp, err := ioutil.TempFile("", "kpt-pipeline-*")
-			assert.NoErrorf(t, err, "%s: unexpected error", c.name)
-			_, err = tmp.WriteString(c.configFileContent)
-			assert.NoErrorf(t, err, "%s: unexpected error", c.name)
-			c.fn.ConfigPath = tmp.Name()
-		}
-		cn, err := c.fn.config()
-		assert.NoErrorf(t, err, "%s: unexpected error", c.name)
-		actual, err := cn.String()
-		assert.NoErrorf(t, err, "%s: unexpected error", c.name)
-		assert.Equalf(t, c.expected, actual, "%s: unexpected result", c.name)
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			if c.configFileContent != "" {
+				tmp, err := ioutil.TempFile("", "kpt-pipeline-*")
+				assert.NoError(t, err, "unexpected error")
+				_, err = tmp.WriteString(c.configFileContent)
+				assert.NoError(t, err, "unexpected error")
+				c.fn.ConfigPath = tmp.Name()
+			}
+			cn, err := c.fn.config()
+			assert.NoError(t, err, "unexpected error")
+			actual, err := cn.String()
+			assert.NoError(t, err, "unexpected error")
+			assert.Equal(t, c.expected, actual, "unexpected result")
+		})
 	}
 }
