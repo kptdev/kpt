@@ -11,12 +11,14 @@ description: >
 
 {{< asciinema key="live-init" rows="10" preload="1" >}}
 
+<!--mdtogo:Long-->
 The init command initializes a package with a template resource which will
 be used to track previously applied resources so that they can be pruned
 when they are deleted.
 
 The template resource is required by other live commands
 such as apply, preview and destroy.
+<!--mdtogo-->
 
 ### Examples
 <!--mdtogo:Examples-->
@@ -32,7 +34,7 @@ kpt live init --namespace=test my-dir/
 <!--mdtogo-->
 
 ### Synopsis
-<!--mdtogo:Long-->
+
 ```
 kpt live init DIRECTORY [flags]
 ```
@@ -55,4 +57,3 @@ DIR:
   in the package belong in the same namespace. If they are, that namespace will be used. If
   they are not, the namespace in the user's context will be chosen.
 ```
-<!--mdtogo-->
