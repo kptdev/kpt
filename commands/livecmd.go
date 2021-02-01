@@ -24,7 +24,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/cli-utils/cmd/destroy"
 	"sigs.k8s.io/cli-utils/cmd/diff"
 	"sigs.k8s.io/cli-utils/cmd/initcmd"
 	"sigs.k8s.io/cli-utils/cmd/status"
@@ -99,7 +98,7 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
 	diffCmd.Example = livedocs.DiffExamples
 
-	destroyCmd := destroy.GetDestroyRunner(p, l, ioStreams).Command
+	destroyCmd := GetDestroyRunner(p, l, ioStreams).Command()
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples

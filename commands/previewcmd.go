@@ -16,10 +16,13 @@ package commands
 
 import (
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
+	"github.com/GoogleContainerTools/kpt/pkg/live/preprocess"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"sigs.k8s.io/cli-utils/cmd/flagutils"
 	"sigs.k8s.io/cli-utils/cmd/preview"
+	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
@@ -30,7 +33,7 @@ func GetPreviewRunner(provider provider.Provider, loader manifestreader.Manifest
 	previewRunner := preview.GetPreviewRunner(provider, loader, ioStreams)
 	w := &PreviewRunnerWrapper{
 		previewRunner: previewRunner,
-		factory:       provider.Factory(),
+		provider:      provider,
 	}
 	// Set the wrapper run to be the RunE function for the wrapped command.
 	previewRunner.Command.RunE = w.RunE
@@ -42,7 +45,7 @@ func GetPreviewRunner(provider provider.Provider, loader manifestreader.Manifest
 // as structures necessary to run.
 type PreviewRunnerWrapper struct {
 	previewRunner *preview.PreviewRunner
-	factory       cmdutil.Factory
+	provider      provider.Provider
 }
 
 // Command returns the wrapped PreviewRunner cobraCommand structure.
@@ -63,5 +66,10 @@ func (w *PreviewRunnerWrapper) PreRunE(_ *cobra.Command, args []string) error {
 // exists in the package path. Then the wrapped PreviewRunner is
 // invoked. Returns an error if one happened.
 func (w *PreviewRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
+	if w.Command().Flag(flagutils.InventoryPolicyFlag).Value.String() == flagutils.InventoryPolicyStrict {
+		w.previewRunner.PreProcess = func(inv inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error) {
+			return preprocess.PreProcess(w.provider, inv, strategy)
+		}
+	}
 	return w.previewRunner.RunE(cmd, args)
 }
