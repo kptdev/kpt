@@ -617,11 +617,13 @@ kpt live fetch-k8s-schema --context&lt;span style=&#34;color:#ce5c00;font-weight
     &lt;/script&gt;
 &lt;/p&gt;
 
+&lt;!--mdtogo:Long--&gt;
 &lt;p&gt;The init command initializes a package with a template resource which will
 be used to track previously applied resources so that they can be pruned
 when they are deleted.&lt;/p&gt;
 &lt;p&gt;The template resource is required by other live commands
 such as apply, preview and destroy.&lt;/p&gt;
+&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;examples&#34;&gt;Examples&lt;/h3&gt;
 &lt;!--mdtogo:Examples--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;# initialize a package&lt;/span&gt;
@@ -630,7 +632,6 @@ kpt live init my-dir/
 kpt live init --namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#204a87&#34;&gt;test&lt;/span&gt; my-dir/
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;!--mdtogo--&gt;
 &lt;h3 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h3&gt;
-&lt;!--mdtogo:Long--&gt;
 &lt;pre&gt;&lt;code&gt;kpt live init DIRECTORY [flags]
 &lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;args&#34;&gt;Args&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;DIR:
@@ -643,8 +644,7 @@ kpt live init --namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;
   namespace for the inventory object. If not provided, kpt will check if all the resources
   in the package belong in the same namespace. If they are, that namespace will be used. If
   they are not, the namespace in the user&#39;s context will be chosen.
-&lt;/code&gt;&lt;/pre&gt;&lt;!--mdtogo--&gt;
-
+&lt;/code&gt;&lt;/pre&gt;
       </description>
     </item>
     

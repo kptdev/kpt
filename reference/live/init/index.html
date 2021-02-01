@@ -1102,11 +1102,13 @@ if (!doNotTrack) {
     </script>
 </p>
 
+<!--mdtogo:Long-->
 <p>The init command initializes a package with a template resource which will
 be used to track previously applied resources so that they can be pruned
 when they are deleted.</p>
 <p>The template resource is required by other live commands
 such as apply, preview and destroy.</p>
+<!--mdtogo-->
 <h3 id="examples">Examples</h3>
 <!--mdtogo:Examples-->
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#8f5902;font-style:italic"># initialize a package</span>
@@ -1115,7 +1117,6 @@ kpt live init my-dir/
 kpt live init --namespace<span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#204a87">test</span> my-dir/
 </code></pre></div><!--mdtogo-->
 <h3 id="synopsis">Synopsis</h3>
-<!--mdtogo:Long-->
 <pre><code>kpt live init DIRECTORY [flags]
 </code></pre><h4 id="args">Args</h4>
 <pre><code>DIR:
@@ -1128,8 +1129,7 @@ kpt live init --namespace<span style="color:#ce5c00;font-weight:bold">=</span><s
   namespace for the inventory object. If not provided, kpt will check if all the resources
   in the package belong in the same namespace. If they are, that namespace will be used. If
   they are not, the namespace in the user's context will be chosen.
-</code></pre><!--mdtogo-->
-
+</code></pre>
         <div class="section-index">
     
     
@@ -1218,7 +1218,7 @@ kpt live init --namespace<span style="color:#ce5c00;font-weight:bold">=</span><s
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified September 14, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/886c564b371999a533b6fbd1e4ce13a46e575acc">docs: Update documentation for kpt live init (886c564b)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified February 1, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/8af1eae7f514721eba424afe373e30cb74ead444">Update kpt live init documentation. (#1397) (8af1eae7)</a>
 </div>
 </div>
 
