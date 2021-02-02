@@ -36,14 +36,19 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 			return filePaths, err
 		}
 	} else {
-		files, err := ioutil.ReadDir(source)
-		if err != nil {
-			return filePaths, err
-		}
-		for _, info := range files {
-			if filepath.Ext(info.Name()) == ".md" {
-				path := filepath.Join(source, info.Name())
-				filePaths = append(filePaths, path)
+		if filepath.Ext(source) == ".md" {
+			filePaths = append(filePaths, source)
+
+		} else {
+			files, err := ioutil.ReadDir(source)
+			if err != nil {
+				return filePaths, err
+			}
+			for _, info := range files {
+				if filepath.Ext(info.Name()) == ".md" {
+					path := filepath.Join(source, info.Name())
+					filePaths = append(filePaths, path)
+				}
 			}
 		}
 	}
