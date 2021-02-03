@@ -41,39 +41,58 @@ func ParseCmdDocs(files []string) []doc {
 }
 
 var (
-	mdtogoTag         = regexp.MustCompile(`<!--mdtogo:(Short|Long|Examples)-->([\s\S]*?)<!--mdtogo-->`)
-	mdtogoInternalTag = regexp.MustCompile(`<!--mdtogo:(Short|Long|Examples)\s+?([\s\S]*?)-->`)
+	mdtogoTag         = regexp.MustCompile(`<!--mdtogo:(\S*)(Short|Long|Examples)-->([\s\S]*?)<!--mdtogo-->`)
+	mdtogoInternalTag = regexp.MustCompile(`<!--mdtogo:(\S*)(Short|Long|Examples)\s+?([\s\S]*?)-->`)
 )
 
 func parse(path, value string) []doc {
 	pathDir := filepath.Dir(path)
 	_, name := filepath.Split(pathDir)
 
-	name = strings.Title(name)
-	name = strings.ReplaceAll(name, "-", "")
+	name = cleanName(name)
 
 	matches := mdtogoTag.FindAllStringSubmatch(value, -1)
 	matches = append(matches, mdtogoInternalTag.FindAllStringSubmatch(value, -1)...)
 
-	var docs []doc
-	var doc doc
+	docsByName := make(map[string]doc)
+	var docBuilder doc
 	for _, match := range matches {
-		switch match[1] {
-		case "Short":
-			val := strings.TrimSpace(match[2])
-			doc.Short = val
-		case "Long":
-			val := cleanUpContent(match[2])
-			doc.Long = val
-		case "Examples":
-			val := cleanUpContent(match[2])
-			doc.Examples = val
-		}
-	}
-	doc.Name = name
 
-	docs = append(docs, doc)
+		if match[1] == "" {
+			docBuilder = docsByName[name]
+			docBuilder.Name = name
+		} else {
+			cleanedMatchName := cleanName(match[1])
+			docBuilder = docsByName[cleanedMatchName]
+			docBuilder.Name = cleanedMatchName
+		}
+
+		switch match[2] {
+		case "Short":
+			val := strings.TrimSpace(match[3])
+			docBuilder.Short = val
+		case "Long":
+			val := cleanUpContent(match[3])
+			docBuilder.Long = val
+		case "Examples":
+			val := cleanUpContent(match[3])
+			docBuilder.Examples = val
+		}
+
+		docsByName[docBuilder.Name] = docBuilder
+	}
+
+	var docs []doc
+	for _, parsedDoc := range docsByName {
+		docs = append(docs, parsedDoc)
+	}
 	return docs
+}
+
+func cleanName(name string) string {
+	name = strings.Title(name)
+	name = strings.ReplaceAll(name, "-", "")
+	return name
 }
 
 func cleanUpContent(text string) string {

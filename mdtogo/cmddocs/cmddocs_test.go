@@ -67,3 +67,49 @@ example_bin arg1
 	assert.Equal(t, "\nWith\nlong\ndocumentation.\n", docs[0].Long)
 	assert.Equal(t, "\n  \n  # An example invocation\n  example_bin arg1\n", docs[0].Examples)
 }
+
+func TestParsingDocWithNameFromComment(t *testing.T) {
+	testDir := path.Join(t.TempDir(), "example")
+	dirErr := os.Mkdir(testDir, os.ModePerm)
+	assert.NoError(t, dirErr)
+	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
+	assert.NoError(t, err)
+
+	testData := []byte(`
+<!--mdtogo:FirstShort
+Short documentation.
+-->
+Test document.
+
+# Documentation
+<!--mdtogo:SecondLong-->
+With
+long
+documentation.
+<!--mdtogo-->
+
+# Examples
+<!--mdtogo:firstExamples-->` +
+		"```sh\n" +
+		`
+# An example invocation
+example_bin arg1
+` +
+		"```\n" +
+		`
+
+<!--mdtogo-->
+	`)
+
+	err = os.WriteFile(exampleMd.Name(), testData, os.WritePermission)
+	assert.NoError(t, err)
+
+	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
+	assert.Equal(t, 2, len(docs))
+	assert.Equal(t, "Second", docs[0].Name)
+	assert.Equal(t, "\nWith\nlong\ndocumentation.\n", docs[0].Long)
+
+	assert.Equal(t, "First", docs[1].Name)
+	assert.Equal(t, "Short documentation.", docs[1].Short)
+	assert.Equal(t, "\n  \n  # An example invocation\n  example_bin arg1\n", docs[1].Examples)
+}
