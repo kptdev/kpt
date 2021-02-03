@@ -33,9 +33,9 @@ func ParseCmdDocs(files []string) []doc {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
 		}
-		parsedDoc := parse(path, string(b))
+		parsedDocs := parse(path, string(b))
 
-		docs = append(docs, parsedDoc)
+		docs = append(docs, parsedDocs...)
 	}
 	return docs
 }
@@ -45,7 +45,7 @@ var (
 	mdtogoInternalTag = regexp.MustCompile(`<!--mdtogo:(Short|Long|Examples)\s+?([\s\S]*?)-->`)
 )
 
-func parse(path, value string) doc {
+func parse(path, value string) []doc {
 	pathDir := filepath.Dir(path)
 	_, name := filepath.Split(pathDir)
 
@@ -55,6 +55,7 @@ func parse(path, value string) doc {
 	matches := mdtogoTag.FindAllStringSubmatch(value, -1)
 	matches = append(matches, mdtogoInternalTag.FindAllStringSubmatch(value, -1)...)
 
+	var docs []doc
 	var doc doc
 	for _, match := range matches {
 		switch match[1] {
@@ -70,7 +71,9 @@ func parse(path, value string) doc {
 		}
 	}
 	doc.Name = name
-	return doc
+
+	docs = append(docs, doc)
+	return docs
 }
 
 func cleanUpContent(text string) string {
