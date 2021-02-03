@@ -1,0 +1,30 @@
+diff --git a/.expected/config.yaml b/.expected/config.yaml
+index 04229ba..2df37b4 100644
+--- a/.expected/config.yaml
++++ b/.expected/config.yaml
+@@ -1,2 +1,5 @@
+ exitCode: 0
+ network: false
++metadata:
++  annotations:
++    builtin/setter-1: 'test'
+diff --git a/configs/resources.yaml b/configs/resources.yaml
+index 7a6a566..301000e 100644
+--- a/configs/resources.yaml
++++ b/configs/resources.yaml
+@@ -2,10 +2,15 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  annotations:
++    builtin/setter-1: 'test'
+ spec:
+   replicas: 3
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
++metadata:
++  annotations:
++    builtin/setter-1: 'test'
+ spec:
+   image: nginx:1.2.3
