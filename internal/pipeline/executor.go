@@ -16,11 +16,16 @@ package pipeline
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"k8s.io/klog"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -125,29 +130,55 @@ func (p *pkg) Pipeline() *Pipeline {
 	return p.pipeline
 }
 
-// expands takes a list of sources (./*, ./, ...) and current pkg path
+// resolveSources takes a list of sources (./*, ./, ...) and current pkg path
 // and returns list of package paths that this pkg depends on.
-// TODO(droot): implement this with tests
 // This is one of the critical pieces of code
-func (p *pkg) resolveSources() []string {
+func (p *pkg) resolveSources() ([]string, error) {
 	pipeline := p.Pipeline()
 
 	var pkgPaths []string
 	for _, s := range pipeline.Sources {
-		switch s {
-		case sourceCurrentPkg:
-			// include only this pkg sources
-			pkgPaths = append(pkgPaths, p.Path())
-		case sourceAllSubPkgs:
-			// TODO(droot): figure out how to enumerate sub packages for current pkgPath.
-			// For now including current pkg
-			pkgPaths = append(pkgPaths, p.Path())
-		default:
-			// s points to a specific sub pkg
-			pkgPaths = append(pkgPaths, s)
+		paths, err := resolveSource(s, p.Path())
+		if err != nil {
+			return nil, err
 		}
+		pkgPaths = append(pkgPaths, paths...)
 	}
-	return pkgPaths
+	return pkgPaths, nil
+}
+
+func resolveSource(source string, pkgPath string) ([]string, error) {
+	switch source {
+	case sourceCurrentPkg:
+		// include only this pkg sources
+		return []string{pkgPath}, nil
+	case sourceAllSubPkgs:
+		// including current pkg and subpkgs in current directory
+		var paths []string
+		paths = append(paths, pkgPath)
+		files, err := ioutil.ReadDir(pkgPath)
+		if err != nil {
+			return nil, err
+		}
+		for _, f := range files {
+			if f.IsDir() {
+				// A directory is a package if it has a Kptfile.
+				// This may change as the concept of a package is expanded such that
+				// every directory is its own kpt package
+				absolutePath := path.Join(pkgPath, f.Name())
+				subPaths, err := pathutil.DirsWithFile(absolutePath, kptfile.KptFileName, false)
+				if err != nil {
+					return nil, err
+				}
+				sort.Strings(subPaths)
+				paths = append(paths, subPaths...)
+			}
+		}
+		return paths, nil
+	default:
+		// s points to a specific sub pkg
+		return []string{source}, nil
+	}
 }
 
 // localResources reads
@@ -214,7 +245,11 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 	// input resources for current pkg's hydration
 	var input []*yaml.RNode
 	// here we explore the p.sources to determine sub packages etc.
-	for _, s := range p.resolveSources() {
+	sources, err := p.resolveSources()
+	if err != nil {
+		return resources, err
+	}
+	for _, s := range sources {
 		// TODO(droot): sync with pipeline's defaults once Donny's PR is merged
 		if s == p.Path() {
 			var currPkgResources []*yaml.RNode
