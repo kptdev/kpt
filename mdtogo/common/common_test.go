@@ -15,6 +15,7 @@
 package common_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -23,7 +24,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReadingDirectMarkdownNonRecursively(t *testing.T) {
+func TestReadingMarkdownDirectoryRecursively(t *testing.T) {
+	parentTestDir := t.TempDir()
+	childTestDir, dirErr := ioutil.TempDir(parentTestDir, "test") // os.Mkdir(childTestDir, os.ReadPermission|os.WritePermission)
+	assert.NoError(t, dirErr)
+
+	firstTestFile, _ := os.Create(path.Join(parentTestDir, "example1.md"))
+	secondTestFile, _ := os.Create(path.Join(childTestDir, "example2.md"))
+	files, err := common.ReadFiles(parentTestDir, true)
+	assert.NoError(t, err)
+	assert.Equal(t, len(files), 2)
+	assert.Contains(t, files, firstTestFile.Name(), secondTestFile.Name())
+}
+
+func TestReadingMarkdownDirectoryNonrecursively(t *testing.T) {
+	testDir := t.TempDir()
+	firstTestFile, _ := os.Create(path.Join(testDir, "example1.md"))
+	secondTestFile, _ := os.Create(path.Join(testDir, "example2.md"))
+	files, err := common.ReadFiles(testDir, false)
+	assert.NoError(t, err)
+	assert.Equal(t, len(files), 2)
+	assert.Contains(t, files, firstTestFile.Name(), secondTestFile.Name())
+}
+
+func TestReadingMarkdownFileNonrecursively(t *testing.T) {
 	testDir := t.TempDir()
 	testFile, _ := os.Create(path.Join(testDir, "examples.md"))
 	files, err := common.ReadFiles(testFile.Name(), false)
