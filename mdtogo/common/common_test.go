@@ -26,15 +26,16 @@ import (
 
 func TestReadingMarkdownDirectoryRecursively(t *testing.T) {
 	parentTestDir := t.TempDir()
-	childTestDir, dirErr := ioutil.TempDir(parentTestDir, "test") // os.Mkdir(childTestDir, os.ReadPermission|os.WritePermission)
+	childTestDir, dirErr := ioutil.TempDir(parentTestDir, "test")
 	assert.NoError(t, dirErr)
 
 	firstTestFile, _ := os.Create(path.Join(parentTestDir, "example1.md"))
 	secondTestFile, _ := os.Create(path.Join(childTestDir, "example2.md"))
 	files, err := common.ReadFiles(parentTestDir, true)
 	assert.NoError(t, err)
-	assert.Equal(t, len(files), 2)
-	assert.Contains(t, files, firstTestFile.Name(), secondTestFile.Name())
+	assert.Equal(t, 2, len(files))
+	assert.Contains(t, files, firstTestFile.Name())
+	assert.Contains(t, files, secondTestFile.Name())
 }
 
 func TestReadingMarkdownDirectoryNonrecursively(t *testing.T) {
@@ -43,8 +44,9 @@ func TestReadingMarkdownDirectoryNonrecursively(t *testing.T) {
 	secondTestFile, _ := os.Create(path.Join(testDir, "example2.md"))
 	files, err := common.ReadFiles(testDir, false)
 	assert.NoError(t, err)
-	assert.Equal(t, len(files), 2)
-	assert.Contains(t, files, firstTestFile.Name(), secondTestFile.Name())
+	assert.Equal(t, 2, len(files))
+	assert.Contains(t, files, firstTestFile.Name())
+	assert.Contains(t, files, secondTestFile.Name())
 }
 
 func TestReadingMarkdownFileNonrecursively(t *testing.T) {
@@ -52,7 +54,7 @@ func TestReadingMarkdownFileNonrecursively(t *testing.T) {
 	testFile, _ := os.Create(path.Join(testDir, "examples.md"))
 	files, err := common.ReadFiles(testFile.Name(), false)
 	assert.NoError(t, err)
-	assert.Equal(t, len(files), 1)
+	assert.Equal(t, 1, len(files))
 	assert.Contains(t, files, testFile.Name())
 }
 
@@ -61,6 +63,6 @@ func TestReadingMarkdownFileRecursively(t *testing.T) {
 	testFile, _ := os.Create(path.Join(testDir, "examples.md"))
 	files, err := common.ReadFiles(testFile.Name(), true)
 	assert.NoError(t, err)
-	assert.Equal(t, len(files), 1)
+	assert.Equal(t, 1, len(files))
 	assert.Contains(t, files, testFile.Name())
 }
