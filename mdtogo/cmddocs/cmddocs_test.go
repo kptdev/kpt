@@ -58,7 +58,7 @@ example_bin arg1
 <!--mdtogo-->
 	`)
 
-	err = os.WriteFile(exampleMd.Name(), testData, os.WritePermission)
+	err = ioutil.WriteFile(exampleMd.Name(), testData, os.WritePermission)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
@@ -102,7 +102,7 @@ example_bin arg1
 <!--mdtogo-->
 	`)
 
-	err = os.WriteFile(exampleMd.Name(), testData, os.WritePermission)
+	err = ioutil.WriteFile(exampleMd.Name(), testData, os.WritePermission)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
