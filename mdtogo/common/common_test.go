@@ -55,3 +55,12 @@ func TestReadingMarkdownFileNonrecursively(t *testing.T) {
 	assert.Equal(t, len(files), 1)
 	assert.Contains(t, files, testFile.Name())
 }
+
+func TestReadingMarkdownFileRecursively(t *testing.T) {
+	testDir := t.TempDir()
+	testFile, _ := os.Create(path.Join(testDir, "examples.md"))
+	files, err := common.ReadFiles(testFile.Name(), true)
+	assert.NoError(t, err)
+	assert.Equal(t, len(files), 1)
+	assert.Contains(t, files, testFile.Name())
+}
