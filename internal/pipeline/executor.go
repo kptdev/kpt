@@ -329,16 +329,11 @@ func fnFilters(p *Pipeline) ([]kio.Filter, error) {
 		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}
 
-	var fns []kio.Filter
-	for _, f := range filters {
-		fns = append(fns, f)
-	}
-
-	fns = append(fns, &fnRunner{
+	filters = append(filters, &fnRunner{
 		fn: &annotator{
 			key:   "builtin/setter-1",
 			value: "test",
 		},
 	})
-	return fns, nil
+	return filters, nil
 }

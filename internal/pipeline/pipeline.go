@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pipeline/runtime"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -122,12 +123,12 @@ func (p *Pipeline) Validate() error {
 
 // fnChain returns a slice of function runners from the
 // functions and configs defined in pipeline.
-func (p *Pipeline) fnChain() ([]*fnRunner, error) {
+func (p *Pipeline) fnChain() ([]kio.Filter, error) {
 	fns := []Function{}
 	fns = append(fns, p.Generators...)
 	fns = append(fns, p.Transformers...)
 	fns = append(fns, p.Validators...)
-	var runners []*fnRunner
+	var runners []kio.Filter
 	for _, fn := range fns {
 		r, err := fn.runner()
 		if err != nil {
@@ -249,7 +250,7 @@ func (f *Function) Validate() error {
 
 // runner returns a fnRunner from the image and configs of
 // this function.
-func (f *Function) runner() (*fnRunner, error) {
+func (f *Function) runner() (kio.Filter, error) {
 	config, err := f.config()
 	if err != nil {
 		return nil, err
