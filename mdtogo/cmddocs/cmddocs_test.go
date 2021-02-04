@@ -78,11 +78,14 @@ func TestParsingDocWithNameFromComment(t *testing.T) {
 
 	testData := []byte(`
 <!--mdtogo:FirstShort
-Short documentation.
+First short documentation.
 -->
 Test document.
 
 # Documentation
+<!--mdtogo:SecondShort
+Second short documentation.
+-->
 <!--mdtogo:SecondLong-->
 With
 long
@@ -110,9 +113,10 @@ example_bin arg1
 	assert.Equal(t, 2, len(docs))
 
 	assert.Equal(t, "First", docs[0].Name)
-	assert.Equal(t, "Short documentation.", docs[0].Short)
+	assert.Equal(t, "First short documentation.", docs[0].Short)
 	assert.Equal(t, "\n  \n  # An example invocation\n  example_bin arg1\n", docs[0].Examples)
 
 	assert.Equal(t, "Second", docs[1].Name)
+	assert.Equal(t, "Second short documentation.", docs[1].Short)
 	assert.Equal(t, "\nWith\nlong\ndocumentation.\n", docs[1].Long)
 }
