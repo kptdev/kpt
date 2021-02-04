@@ -90,12 +90,14 @@ func (f *Function) Validate() error {
 func (f *Function) runner() (kio.Filter, error) {
 	// TODO: remove this builtin placeholder function
 	if f.Image == builtinSetAnnotatorImage {
-		return &fnRunner{
-			fn: &annotator{
-				key:   "builtin/setter-1",
-				value: "test",
-			},
-		}, nil
+		for k, v := range f.ConfigMap {
+			return &fnRunner{
+				fn: &annotator{
+					key:   k,
+					value: v,
+				},
+			}, nil
+		}
 	}
 	config, err := f.config()
 	if err != nil {
