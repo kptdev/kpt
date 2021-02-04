@@ -141,6 +141,132 @@ spec:
 	}
 }
 
+func TestFilterFnConfig(t *testing.T) {
+	tests := map[string]struct {
+		resources []string
+		expected  []string
+	}{
+		"no resources": {
+			resources: nil,
+			expected:  nil,
+		},
+
+		"nothing to filter": {
+			resources: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}`,
+				`
+apiVersion: custom.io/v1
+kind: Custom
+spec:
+  image: nginx:1.2.3`,
+			},
+			expected: []string{
+				`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}
+`,
+				`apiVersion: custom.io/v1
+kind: Custom
+spec:
+  image: nginx:1.2.3
+`,
+			},
+		},
+
+		"filter out function config": {
+			resources: []string{`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}`,
+				`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-func-config
+  annotations:
+    config.kubernetes.io/function: |
+      container:
+        image: gcr.io/kpt-fn-contrib/helm-inflator:unstable
+data:
+  name: chart
+  local-chart-path: /source`,
+				`
+apiVersion: custom.io/v1
+kind: Custom
+spec:
+  image: nginx:1.2.3`,
+  				`
+kind: ConfigMap 
+apiVersion: v1 
+metadata:
+  name: configmap 
+data:
+  database: mongodb`,
+			},
+			expected: []string{
+				`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3 # {"$kpt-set":"replicas"}
+`,
+				`apiVersion: custom.io/v1
+kind: Custom
+spec:
+  image: nginx:1.2.3
+`,
+				`kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: configmap
+data:
+  database: mongodb
+`,
+			},
+		},
+	}
+
+	for name := range tests {
+		test := tests[name]
+		t.Run(name, func(t *testing.T) {
+			var nodes []*yaml.RNode
+
+			for _, r := range test.resources {
+				res, err := yaml.Parse(r)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				nodes = append(nodes, res)
+			}
+
+			filteredRes := filterFnConfig(nodes)
+			if len(filteredRes) != len(test.expected) {
+				t.Fatal("length of filtered resources not equal to expected")
+			}
+
+			for i, r := range filteredRes {
+				res, err := r.String()
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+				assert.Equal(t, test.expected[i], res)
+			}
+		})
+	}
+}
+
 // creates a directory and writes a Kptfile
 func writePkg(path string) (*pkg, error) {
 	dir, err := ioutil.TempDir(path, "")

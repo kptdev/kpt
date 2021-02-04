@@ -190,8 +190,8 @@ func (p *pkg) localResources(includeMetadata bool) (resources []*yaml.RNode, err
 		err = fmt.Errorf("failed to read resources for pkg %s %w", p.Path(), err)
 		return resources, err
 	}
+	resources = filterFnConfig(resources)
 	if !includeMetadata {
-		// TODO(droot): this will be the place where we filter kpt resources
 		resources = filterMetaData(resources)
 	}
 	return resources, err
@@ -308,8 +308,32 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 	var filtered []*yaml.RNode
 	for _, r := range resources {
-		meta, _ := r.GetMeta()
-		if !strings.Contains(meta.APIVersion, "kpt.dev") {
+		m, _ := r.GetMeta()
+		if !strings.Contains(m.APIVersion, "kpt.dev") {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
+}
+
+// filterFnConfig filters out function configs
+func filterFnConfig(resources []*yaml.RNode) []*yaml.RNode {
+	var filtered []*yaml.RNode
+	for _, r := range resources {
+		var mn *yaml.MapNode
+		metaData := r.Field(yaml.MetadataField)
+		if metaData != nil {
+			mn = metaData.Value.Field(yaml.AnnotationsField)
+		}
+		annotations := map[string]string{}
+		if !mn.IsNilOrEmpty() {
+			_ = mn.Value.VisitFields(func(node *yaml.MapNode) error {
+				annotations[yaml.GetValue(node.Key)] = yaml.GetValue(node.Value)
+				return nil
+			})
+		}
+		m, _ := r.GetMeta()
+		if _, ok := annotations["config.kubernetes.io/function"]; !ok || m.Kind != "ConfigMap" {
 			filtered = append(filtered, r)
 		}
 	}
