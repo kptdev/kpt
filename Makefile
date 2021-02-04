@@ -69,6 +69,8 @@ license-check:
 test:
 	go test -cover ./...
 
+# This target is used to run Go tests that require docker runtime.
+# Some tests, like pipeline tests, need to have docker available to run.
 test-docker:	
 	go test -cover --tags=docker ./...	
 
