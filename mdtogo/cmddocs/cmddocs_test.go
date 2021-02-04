@@ -120,3 +120,62 @@ example_bin arg1
 	assert.Equal(t, "Second short documentation.", docs[1].Short)
 	assert.Equal(t, "\nWith\nlong\ndocumentation.\n", docs[1].Long)
 }
+
+func TestParsingMultipleDocsFromSameFolder(t *testing.T) {
+	testDir := path.Join(t.TempDir(), "example")
+	dirErr := os.Mkdir(testDir, os.ModePerm)
+	assert.NoError(t, dirErr)
+	firstExampleMd, err := ioutil.TempFile(testDir, "first_index.md")
+	assert.NoError(t, err)
+	secondExampleMd, err := ioutil.TempFile(testDir, "second_index.md")
+	assert.NoError(t, err)
+
+	firstTestData := []byte(`
+<!--mdtogo:FirstShort
+First short documentation.
+-->
+Test document.
+
+# Examples
+<!--mdtogo:firstExamples-->` +
+		"```sh\n" +
+		`
+# An example invocation
+example_bin arg1
+` +
+		"```\n" +
+		`
+
+<!--mdtogo-->
+	`)
+
+	secondTestData := []byte(`
+Test document.
+
+# Documentation
+<!--mdtogo:SecondShort
+Second short documentation.
+-->
+<!--mdtogo:SecondLong-->
+With
+long
+documentation.
+<!--mdtogo-->
+	`)
+
+	err = ioutil.WriteFile(firstExampleMd.Name(), firstTestData, os.ModePerm)
+	err = ioutil.WriteFile(secondExampleMd.Name(), secondTestData, os.ModePerm)
+	assert.NoError(t, err)
+
+	docs := cmddocs.ParseCmdDocs([]string{firstExampleMd.Name(), secondExampleMd.Name()})
+	sort.Slice(docs, func(i, j int) bool { return docs[i].Name < docs[j].Name })
+	assert.Equal(t, 2, len(docs))
+
+	assert.Equal(t, "First", docs[0].Name)
+	assert.Equal(t, "First short documentation.", docs[0].Short)
+	assert.Equal(t, "\n  \n  # An example invocation\n  example_bin arg1\n", docs[0].Examples)
+
+	assert.Equal(t, "Second", docs[1].Name)
+	assert.Equal(t, "Second short documentation.", docs[1].Short)
+	assert.Equal(t, "\nWith\nlong\ndocumentation.\n", docs[1].Long)
+}
