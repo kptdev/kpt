@@ -306,6 +306,12 @@ const (
 	// GitOrigin specifies a package as having been cloned from a git repository
 	GitOrigin   OriginType = "git"
 	StdinOrigin OriginType = "stdin"
+	UpstreamKey            = "upstream"
+	Directory              = "directory"
+	Type                   = "type"
+	Ref                    = "ref"
+	Commit                 = "commit"
+	Repo                   = "repo"
 )
 
 // Upstream defines where a package was cloned from

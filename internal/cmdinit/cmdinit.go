@@ -30,7 +30,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // NewRunner returns a command runner.
@@ -48,8 +47,6 @@ func NewRunner(parent string) *Runner {
 
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
 	c.Flags().StringVar(&r.Name, "name", "", "package name.  defaults to the directory base name.")
-	c.Flags().StringSliceVar(&r.Tags, "tag", []string{}, "list of tags for the package.")
-	c.Flags().StringVar(&r.URL, "url", "", "link to page with information about the package.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -90,36 +87,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	if _, err = os.Stat(filepath.Join(args[0], "Kptfile")); os.IsNotExist(err) {
-		fmt.Fprintf(c.OutOrStdout(), "writing %q\n", filepath.Join(args[0], "Kptfile"))
-		k := kptfile.KptFile{
-			ResourceMeta: yaml.ResourceMeta{
-				ObjectMeta: yaml.ObjectMeta{
-					NameMeta: yaml.NameMeta{
-						Name: r.Name,
-					},
-				},
-			},
-			PackageMeta: kptfile.PackageMeta{
-				ShortDescription: r.Description,
-				URL:              r.URL,
-				Tags:             r.Tags,
-			},
-		}
+		fmt.Fprintf(c.OutOrStdout(), "writing %q\n", filepath.Join(args[0], kptfile.KptFileName))
 
-		// serialize the gvk when writing the Kptfile
-		k.Kind = kptfile.TypeMeta.Kind
-		k.APIVersion = kptfile.TypeMeta.APIVersion
+		k := fmt.Sprintf(kptfileTemplate, r.Name, r.Description)
 
 		err = func() error {
-			f, err := os.Create(filepath.Join(args[0], "Kptfile"))
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-			e := yaml.NewEncoder(f)
-
-			defer e.Close()
-			return e.Encode(k)
+			return ioutil.WriteFile(filepath.Join(args[0], kptfile.KptFileName), []byte(k), 0600)
 		}()
 		if err != nil {
 			return err
@@ -183,4 +156,12 @@ kpt live init {{.Name}}
 kpt live apply {{.Name}} --reconcile-timeout=2m --output=table
 '''
 Details: https://googlecontainertools.github.io/kpt/reference/live/
+`
+
+var kptfileTemplate = `apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: %s
+packageMetadata:
+  shortDescription: %s
 `

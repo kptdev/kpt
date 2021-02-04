@@ -16,6 +16,7 @@ package cmdget_test
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -27,7 +28,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestCmd_execute tests that get is correctly invoked.
@@ -45,28 +45,21 @@ func TestCmd_execute(t *testing.T) {
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, dest, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      "file://" + g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+
+	contents, err := ioutil.ReadFile(filepath.Join(dest, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(`apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: %s
+upstream:
+  type: git
+  git:
+    commit: %s
+    repo: file://%s
+    directory: /
+    ref: master
+`, g.RepoName, commit, g.RepoDirectory), string(contents))
 }
 
 // TestCmdMainBranch_execute tests that get is correctly invoked if default branch
@@ -94,28 +87,21 @@ func TestCmdMainBranch_execute(t *testing.T) {
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, dest, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      "file://" + g.RepoDirectory,
-				Ref:       "main",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+
+	contents, err := ioutil.ReadFile(filepath.Join(dest, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(`apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: %s
+upstream:
+  type: git
+  git:
+    commit: %s
+    repo: file://%s
+    directory: /
+    ref: main
+`, g.RepoName, commit, g.RepoDirectory), string(contents))
 
 }
 

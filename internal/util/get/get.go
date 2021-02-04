@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -257,22 +256,15 @@ func (c *Command) DefaultValues() error {
 // cloneFrom values.
 func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	// read KptFile cloned with the package if it exists
-	kpgfile, err := kptfileutil.ReadFile(c.Destination)
+	var contents []byte
+	contents, err := ioutil.ReadFile(filepath.Join(c.Destination, kptfile.KptFileName))
 	if err != nil {
-		// no KptFile present, create a default
-		kpgfile = kptfile.KptFile{
-			ResourceMeta: yaml.ResourceMeta{
-				TypeMeta: yaml.TypeMeta{
-					APIVersion: kptfile.TypeMeta.APIVersion,
-					Kind:       kptfile.TypeMeta.Kind,
-				},
-				ObjectMeta: yaml.ObjectMeta{
-					NameMeta: yaml.NameMeta{
-						Name: c.Name,
-					},
-				},
-			},
-		}
+		contents = []byte(fmt.Sprintf(kptfileTemplate, c.Name))
+	}
+
+	kfNode, err := yaml.Parse(string(contents))
+	if err != nil {
+		return err
 	}
 
 	// find the git commit sha that we cloned the package at so we can write it to the KptFile
@@ -287,10 +279,67 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	commit := strings.TrimSpace(string(b))
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.Upstream = kptfile.Upstream{
-		Type: kptfile.GitOrigin,
-		Git:  c.Git,
+	// use the base kfNode and add yaml nodes in order
+	upstream, err := kfNode.Pipe(yaml.LookupCreate(yaml.MappingNode, kptfile.UpstreamKey))
+	if err != nil {
+		return err
 	}
-	kpgfile.Upstream.Git.Commit = commit
-	return kptfileutil.WriteFile(c.Destination, kpgfile)
+
+	err = upstream.PipeE(yaml.FieldSetter{
+		Name:        kptfile.Type,
+		StringValue: string(kptfile.GitOrigin),
+	})
+	if err != nil {
+		return err
+	}
+
+	gitNode, err := upstream.Pipe(yaml.LookupCreate(yaml.MappingNode, string(kptfile.GitOrigin)))
+	if err != nil {
+		return err
+	}
+
+	err = gitNode.PipeE(yaml.FieldSetter{
+		Name:        kptfile.Commit,
+		StringValue: commit,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = gitNode.PipeE(yaml.FieldSetter{
+		Name:        kptfile.Repo,
+		StringValue: c.Git.Repo,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = gitNode.PipeE(yaml.FieldSetter{
+		Name:        kptfile.Directory,
+		StringValue: c.Git.Directory,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = gitNode.PipeE(yaml.FieldSetter{
+		Name:        kptfile.Ref,
+		StringValue: c.Git.Ref,
+	})
+	if err != nil {
+		return err
+	}
+
+	kf, err := kfNode.String()
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(filepath.Join(c.Destination, kptfile.KptFileName), []byte(kf), 0700)
 }
+
+var kptfileTemplate = `apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: %s
+`

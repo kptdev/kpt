@@ -35,7 +35,7 @@ func TestCmd(t *testing.T) {
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 
 	r := cmdinit.NewRunner("kpt")
-	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description", "--tag", "app.kpt.dev/cockroachdb"})
+	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 
@@ -47,8 +47,6 @@ kind: Kptfile
 metadata:
   name: my-pkg
 packageMetadata:
-  tags:
-  - app.kpt.dev/cockroachdb
   shortDescription: my description
 `, string(b))
 
@@ -107,7 +105,7 @@ func TestCmd_currentDir(t *testing.T) {
 		}()
 
 		r := cmdinit.NewRunner("kpt")
-		r.Command.SetArgs([]string{".", "--description", "my description", "--tag", "app.kpt.dev/cockroachdb"})
+		r.Command.SetArgs([]string{".", "--description", "my description"})
 		return r.Command.Execute()
 	}()
 	assert.NoError(t, err)
@@ -120,8 +118,6 @@ kind: Kptfile
 metadata:
   name: my-pkg
 packageMetadata:
-  tags:
-  - app.kpt.dev/cockroachdb
   shortDescription: my description
 `, string(b))
 }
@@ -132,7 +128,7 @@ func TestCmd_failNotExists(t *testing.T) {
 	assert.NoError(t, err)
 
 	r := cmdinit.NewRunner("kpt")
-	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description", "--tag", "app.kpt.dev/cockroachdb"})
+	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "does not exist")
