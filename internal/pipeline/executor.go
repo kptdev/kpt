@@ -328,12 +328,5 @@ func fnFilters(p *Pipeline) ([]kio.Filter, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}
-
-	filters = append(filters, &fnRunner{
-		fn: &annotator{
-			key:   "builtin/setter-1",
-			value: "test",
-		},
-	})
 	return filters, nil
 }
