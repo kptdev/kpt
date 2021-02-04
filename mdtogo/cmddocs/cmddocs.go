@@ -41,7 +41,9 @@ func ParseCmdDocs(files []string) []doc {
 }
 
 var (
-	mdtogoTag         = regexp.MustCompile(`<!--mdtogo:(\S*)(Short|Long|Examples)-->([\s\S]*?)<!--mdtogo-->`)
+	// Capture content between opening and closing tags like <!--mdtogo:(Variable)(Short)>(Content)<!--mdtogo-->
+	mdtogoTag = regexp.MustCompile(`<!--mdtogo:(\S*)(Short|Long|Examples)-->([\s\S]*?)<!--mdtogo-->`)
+	// Capture content within a tag like <!--mdtogo:(Variable)(Short) (Content)-->
 	mdtogoInternalTag = regexp.MustCompile(`<!--mdtogo:(\S*)(Short|Long|Examples)\s+?([\s\S]*?)-->`)
 )
 
