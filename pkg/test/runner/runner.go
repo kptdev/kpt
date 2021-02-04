@@ -42,22 +42,86 @@ func NewRunner(testCase TestCase) (*Runner, error) {
 }
 
 // Run runs the test.
-func (r *Runner) Run(cmd string, args []string, t *testing.T) error {
+func (r *Runner) Run(cmd string, t *testing.T) error {
+	if cmd == "fn" {
+		return r.runFn()
+	}
+	return r.runPipeline(t)
+}
+
+func (r *Runner) runFn() error {
 	fmt.Printf("Running test against package %s\n", r.pkgName)
-	tmpDir, err := ioutil.TempDir("", "kpt-fn-catalog-e2e-*")
+	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+	tmpPkgPath := filepath.Join(tmpDir, r.pkgName)
+	// create result dir
+	resultsPath := filepath.Join(tmpDir, "results")
+	err = os.Mkdir(resultsPath, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create results dir %s: %w", resultsPath, err)
+	}
+
+	// copy package to temp directory
+	err = copyDir(r.testCase.Path, tmpPkgPath)
+	if err != nil {
+		return fmt.Errorf("failed to copy package: %w", err)
+	}
+
+	// init and commit package files
+	err = r.preparePackage(tmpPkgPath)
+	if err != nil {
+		return fmt.Errorf("failed to prepare package: %w", err)
+	}
+
+	// run function
+	kptArgs := []string{"fn", "run", tmpPkgPath, "--results-dir", resultsPath}
+	if r.testCase.Config.Network {
+		kptArgs = append(kptArgs, "--network")
+	}
+	var output string
+	var fnErr error
+	for i := 0; i < r.testCase.Config.RunTimes; i++ {
+		output, fnErr = runCommand("", "kpt", kptArgs)
+		if fnErr != nil {
+			// if kpt fn run returns error, we should compare
+			// the result
+			break
+		}
+	}
+
+	// run formatter
+	_, err = runCommand("", "kpt", []string{"cfg", "fmt", tmpPkgPath})
+	if err != nil {
+		return fmt.Errorf("failed to run kpt cfg fmt: %w", err)
+	}
+
+	// compare results
+	err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
+	if err != nil {
+		return fmt.Errorf("%w\nkpt output:\n%s", err, output)
+	}
+	return nil
+}
+
+func (r *Runner) runPipeline (t *testing.T) error {
+	fmt.Printf("Running test against package %s\n", r.pkgName)
+	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
 	tmpPkgPath := filepath.Join(tmpDir, r.pkgName)
 	// create dir to store untouched pkg to compare against
-	orgPkgPath := filepath.Join(tmpDir, "results")
+	orgPkgPath := filepath.Join(tmpDir, "original")
 	err = os.Mkdir(orgPkgPath, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create results dir %s: %w", orgPkgPath, err)
+		return fmt.Errorf("failed to create original dir %s: %w", orgPkgPath, err)
 	}
 
-	// copy package to temp and results directory
+	// copy package to temp directory
 	err = copyDir(r.testCase.Path, tmpPkgPath)
 	if err != nil {
 		return fmt.Errorf("failed to copy package: %w", err)
@@ -73,31 +137,17 @@ func (r *Runner) Run(cmd string, args []string, t *testing.T) error {
 		return fmt.Errorf("failed to prepare package: %w", err)
 	}
 
+	// run function
 	command := run.GetMain()
-	kptArgs := []string{cmd, "run", tmpPkgPath}
-	kptArgs = append(kptArgs, args...)
-	if r.testCase.Config.Network {
-		kptArgs = append(kptArgs, "--network")
-	}
-	var output string
-	var fnErr error
+	kptArgs := []string{"pipeline", "run", tmpPkgPath}
 	for i := 0; i < r.testCase.Config.RunTimes; i++ {
 		command.SetArgs(kptArgs)
 		e2e.Exec(t, command)
 	}
 
-	// run formatter
-	command = run.GetMain()
-	kptArgs = []string{"cfg", "fmt", tmpPkgPath}
-	command.SetArgs(kptArgs)
-	e2e.Exec(t, command)
-
 	// compare results
-	err = r.compareResult(fnErr, tmpPkgPath, orgPkgPath)
-	if err != nil {
-		return fmt.Errorf("%w\nkpt output:\n%s", err, output)
-	}
-	return nil
+	err = r.compareResult(nil, tmpPkgPath, orgPkgPath)
+	return err
 }
 
 func (r *Runner) preparePackage(pkgPath string) error {

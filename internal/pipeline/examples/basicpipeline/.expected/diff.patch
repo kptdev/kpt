@@ -9,10 +9,10 @@ index 04229ba..2df37b4 100644
 +  annotations:
 +    builtin/setter-1: 'test'
 diff --git a/configs/resources.yaml b/configs/resources.yaml
-index 7a6a566..301000e 100644
+index 7a6a566..0c06341 100644
 --- a/configs/resources.yaml
 +++ b/configs/resources.yaml
-@@ -2,10 +2,15 @@ apiVersion: apps/v1
+@@ -2,6 +2,8 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -21,10 +21,10 @@ index 7a6a566..301000e 100644
  spec:
    replicas: 3
  ---
- apiVersion: custom.io/v1
+@@ -9,3 +11,6 @@ apiVersion: custom.io/v1
  kind: Custom
+ spec:
+   image: nginx:1.2.3
 +metadata:
 +  annotations:
 +    builtin/setter-1: 'test'
- spec:
-   image: nginx:1.2.3

@@ -24,21 +24,21 @@ import (
 	"github.com/GoogleContainerTools/kpt/e2e"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
-	"github.com/GoogleContainerTools/kpt/pkg/runner"
+	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
-// for these tests to pass, a version of kpt supporting the pipeline run
-// command will be installed, because they call the kpt binary
 func TestPipeline(t *testing.T) {
 	runPipelineTests(t, "../internal/pipeline/examples/")
 }
 
-// runTests will scan test cases in 'path' and run all the
-// tests in it. It returns an error if any of the tests fails.
+// runTests will scan test cases in 'path', run the command
+// `kpt pipeline run` on all of the packages in path, and test that
+// the diff between the results and the original package is as
+// expected
 func runPipelineTests(t *testing.T, path string) {
 	cases, err := runner.ScanTestCases(path)
 	if err != nil {
@@ -52,7 +52,7 @@ func runPipelineTests(t *testing.T, path string) {
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}
-			err = r.Run("pipeline", nil, t)
+			err = r.Run("pipeline", t)
 			if err != nil {
 				t.Fatalf("failed to run test: %s", err)
 			}
