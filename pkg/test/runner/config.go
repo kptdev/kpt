@@ -24,7 +24,7 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 		return TestCaseConfig{
 			ExitCode: 0,
 			Network:  false,
-			RunTimes: 2,
+			RunTimes: 1,
 		}, nil
 	}
 	if err != nil {
@@ -37,7 +37,7 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 		return config, fmt.Errorf("failed to unmarshal config file: %s\n: %w", string(b), err)
 	}
 	if config.RunTimes == 0 {
-		config.RunTimes = 2
+		config.RunTimes = 1
 	}
 	return config, nil
 }
