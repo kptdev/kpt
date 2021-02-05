@@ -164,6 +164,7 @@ documentation.
 	`)
 
 	err = ioutil.WriteFile(firstExampleMd.Name(), firstTestData, os.ModePerm)
+	assert.NoError(t, err)
 	err = ioutil.WriteFile(secondExampleMd.Name(), secondTestData, os.ModePerm)
 	assert.NoError(t, err)
 
