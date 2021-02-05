@@ -16,6 +16,7 @@
 package kptfile
 
 import (
+	"github.com/go-errors/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -58,6 +59,96 @@ type KptFile struct {
 
 	// Parameters for inventory object.
 	Inventory *Inventory `yaml:"inventory,omitempty"`
+
+	// rNode is the yaml.RNode representation of Kptfile
+	rNode *yaml.RNode `yaml:"inventory,omitempty"`
+}
+
+// SetUpstream sets the upstream object in the kptfile
+func (kf *KptFile) SetUpstream(upstream *Upstream) error {
+	if kf.rNode == nil {
+		return errors.Errorf("rNode representation of Kptfile must not be nil")
+	}
+	upNode, err := kf.rNode.Pipe(yaml.LookupCreate(yaml.MappingNode, UpstreamKey))
+	if err != nil {
+		return err
+	}
+
+	err = setValue(upNode, Type, string(GitOrigin))
+	if err != nil {
+		return err
+	}
+
+	gitNode, err := upNode.Pipe(yaml.LookupCreate(yaml.MappingNode, string(GitOrigin)))
+	if err != nil {
+		return err
+	}
+
+	err = setValue(gitNode, Commit, upstream.Git.Commit)
+	if err != nil {
+		return err
+	}
+	err = setValue(gitNode, Repo, upstream.Git.Repo)
+	if err != nil {
+		return err
+	}
+	err = setValue(gitNode, Directory, upstream.Git.Directory)
+	if err != nil {
+		return err
+	}
+	err = setValue(gitNode, Ref, upstream.Git.Ref)
+	if err != nil {
+		return err
+	}
+
+	if upstream.Stdin.FilenamePattern != "" {
+		stdInNode, err := upNode.Pipe(yaml.LookupCreate(yaml.MappingNode, StdIn))
+		if err != nil {
+			return err
+		}
+
+		err = setValue(stdInNode, FilenamePattern, upstream.Stdin.FilenamePattern)
+		if err != nil {
+			return err
+		}
+		err = setValue(stdInNode, Original, upstream.Stdin.Original)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// setValue sets the key-value as child to parent node
+func setValue(parent *yaml.RNode, key, value string) error {
+	child, err := parent.Pipe(yaml.Lookup(key))
+	if child == nil || err != nil {
+		err = parent.PipeE(yaml.FieldSetter{
+			Name:        key,
+			StringValue: value,
+		})
+		if err != nil {
+			return err
+		}
+	} else {
+		if child.Field(key) == nil || child.Field(key).Value == nil {
+			return errors.Errorf("error while parsing %s node", key)
+		}
+		// just update the value if the node already exists
+		child.Field(key).Value.YNode().Value = value
+	}
+	return nil
+}
+
+// SetRNode sets RNode in kptfile
+func (kf *KptFile) SetRNode(kfNode *yaml.RNode) {
+	kf.rNode = kfNode
+}
+
+// RNode gets RNode in kptfile
+func (kf *KptFile) RNode() *yaml.RNode {
+	return kf.rNode
 }
 
 // Inventory encapsulates the parameters for the inventory object. All of the
@@ -89,20 +180,20 @@ type StarlarkFunction struct {
 // MergeOpenAPI adds the OpenAPI definitions from localKf to updatedKf.
 // It takes originalKf as a reference for 3-way merge
 // This function is very complex due to serialization issues with yaml.Node.
-func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
+func (kf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 	if localKf.OpenAPI == nil {
 		// no OpenAPI to copy -- do nothing
 		return nil
 	}
-	if updatedKf.OpenAPI == nil {
+	if kf.OpenAPI == nil {
 		// no openAPI at the destination -- just copy it
-		updatedKf.OpenAPI = localKf.OpenAPI
+		kf.OpenAPI = localKf.OpenAPI
 		return nil
 	}
 
 	// turn the exiting openapi into yaml.Nodes for processing
 	// they aren't yaml.Nodes natively due to serialization bugs in the yaml libs
-	bUpdated, err := yaml.Marshal(updatedKf.OpenAPI)
+	bUpdated, err := yaml.Marshal(kf.OpenAPI)
 	if err != nil {
 		return err
 	}
@@ -132,7 +223,7 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 	updatedDef := updated.Field("definitions")
 	if updatedDef == nil {
 		// no definitions on the destination, just copy the OpenAPI from the source
-		updatedKf.OpenAPI = localKf.OpenAPI
+		kf.OpenAPI = localKf.OpenAPI
 		return nil
 	}
 	localDef := local.Field("definitions")
@@ -158,8 +249,8 @@ func (updatedKf *KptFile) MergeOpenAPI(localKf, originalKf KptFile) error {
 		return err
 	}
 	var newOpenAPI interface{}
-	updatedKf.OpenAPI = newOpenAPI
-	err = yaml.Unmarshal([]byte(s), &updatedKf.OpenAPI)
+	kf.OpenAPI = newOpenAPI
+	err = yaml.Unmarshal([]byte(s), &kf.OpenAPI)
 	return err
 }
 
@@ -304,8 +395,17 @@ type OriginType string
 
 const (
 	// GitOrigin specifies a package as having been cloned from a git repository
-	GitOrigin   OriginType = "git"
-	StdinOrigin OriginType = "stdin"
+	GitOrigin       OriginType = "git"
+	StdinOrigin     OriginType = "stdin"
+	UpstreamKey                = "upstream"
+	Directory                  = "directory"
+	Type                       = "type"
+	Ref                        = "ref"
+	Commit                     = "commit"
+	Repo                       = "repo"
+	StdIn                      = "stdin"
+	FilenamePattern            = "filenamePattern"
+	Original                   = "original"
 )
 
 // Upstream defines where a package was cloned from

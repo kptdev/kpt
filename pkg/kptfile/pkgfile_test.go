@@ -33,7 +33,7 @@ import (
 func TestReadFile(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", testutil.TmpDirPrefix))
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
+	kf := `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: cockroachdb
@@ -44,10 +44,16 @@ upstream:
     directory: staging/cockroachdb
     ref: refs/heads/owners-update
     repo: https://github.com/kubernetes/examples
-`), 0600)
+`
+	err = ioutil.WriteFile(filepath.Join(dir, KptFileName), []byte(kf), 0600)
 	assert.NoError(t, err)
 
 	f, err := kptfileutil.ReadFile(dir)
+	assert.NoError(t, err)
+	kfRead, err := f.RNode().String()
+	assert.NoError(t, err)
+	assert.Equal(t, kf, kfRead)
+	f.SetRNode(nil)
 	assert.NoError(t, err)
 	assert.Equal(t, KptFile{
 		ResourceMeta: yaml.ResourceMeta{
@@ -93,30 +99,6 @@ upstream:
 	f, err := kptfileutil.ReadFile(dir)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "no such file or directory")
-	assert.Equal(t, KptFile{}, f)
-}
-
-// TestReadFile_failUnmarshal verifies an error is returned if the file contains any unrecognized fields.
-func TestReadFile_failUnmarshal(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", testutil.TmpDirPrefix))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstreamBadField:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := kptfileutil.ReadFile(dir)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "upstreamBadField not found")
 	assert.Equal(t, KptFile{}, f)
 }
 

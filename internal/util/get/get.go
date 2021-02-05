@@ -260,19 +260,12 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	kpgfile, err := kptfileutil.ReadFile(c.Destination)
 	if err != nil {
 		// no KptFile present, create a default
-		kpgfile = kptfile.KptFile{
-			ResourceMeta: yaml.ResourceMeta{
-				TypeMeta: yaml.TypeMeta{
-					APIVersion: kptfile.TypeMeta.APIVersion,
-					Kind:       kptfile.TypeMeta.Kind,
-				},
-				ObjectMeta: yaml.ObjectMeta{
-					NameMeta: yaml.NameMeta{
-						Name: c.Name,
-					},
-				},
-			},
+		contents := []byte(fmt.Sprintf(kptfileTemplate, c.Name))
+		kfNode, err := yaml.Parse(string(contents))
+		if err != nil {
+			return err
 		}
+		kpgfile.SetRNode(kfNode)
 	}
 
 	// find the git commit sha that we cloned the package at so we can write it to the KptFile
@@ -286,11 +279,21 @@ func (c *Command) upsertKptfile(spec *git.RepoSpec) error {
 	}
 	commit := strings.TrimSpace(string(b))
 
+	c.Git.Commit = commit
+
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.Upstream = kptfile.Upstream{
+	err = kpgfile.SetUpstream(&kptfile.Upstream{
 		Type: kptfile.GitOrigin,
 		Git:  c.Git,
+	})
+	if err != nil {
+		return err
 	}
-	kpgfile.Upstream.Git.Commit = commit
-	return kptfileutil.WriteFile(c.Destination, kpgfile)
+	return kptfileutil.WriteFileRNode(c.Destination, kpgfile)
 }
+
+var kptfileTemplate = `apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: %s
+`

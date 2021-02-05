@@ -30,24 +30,33 @@ import (
 func ReadFile(dir string) (kptfile.KptFile, error) {
 	kpgfile := kptfile.KptFile{ResourceMeta: kptfile.TypeMeta}
 
-	f, err := os.Open(filepath.Join(dir, kptfile.KptFileName))
+	_, err := os.Stat(filepath.Join(dir, kptfile.KptFileName))
 
 	// if we are in a package subdirectory, find the parent dir with the Kptfile.
 	// this is necessary to parse the duck-commands for sub-directories of a package
 	for os.IsNotExist(err) && filepath.Base(dir) == kptfile.KptFileName {
 		dir = filepath.Dir(dir)
-		f, err = os.Open(filepath.Join(dir, kptfile.KptFileName))
 	}
 	if err != nil {
 		return kptfile.KptFile{}, errors.Errorf("unable to read %q: %v", kptfile.KptFileName, err)
 	}
-	defer f.Close()
 
-	d := yaml.NewDecoder(f)
-	d.KnownFields(true)
-	if err = d.Decode(&kpgfile); err != nil {
+	contents, err := ioutil.ReadFile(filepath.Join(dir, kptfile.KptFileName))
+	if err != nil {
+		return kptfile.KptFile{}, errors.Errorf("unable to read %q: %v", kptfile.KptFileName, err)
+	}
+
+	if err = yaml.Unmarshal(contents, &kpgfile); err != nil {
 		return kptfile.KptFile{}, errors.Errorf("unable to parse %q: %v", kptfile.KptFileName, err)
 	}
+
+	node, err := yaml.Parse(string(contents))
+	if err != nil {
+		return kptfile.KptFile{}, errors.Errorf("unable to parse Kptfile to RNode %q: %v", kptfile.KptFileName, err)
+	}
+
+	kpgfile.SetRNode(node)
+
 	return kpgfile, nil
 }
 
@@ -74,6 +83,18 @@ func WriteFile(dir string, k kptfile.KptFile) error {
 
 	// fyi: perm is ignored if the file already exists
 	return ioutil.WriteFile(filepath.Join(dir, kptfile.KptFileName), []byte(kptFileStr), 0600)
+}
+
+func WriteFileRNode(dir string, k kptfile.KptFile) error {
+	s, err := k.RNode().String()
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(filepath.Join(dir, kptfile.KptFileName)); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	// fyi: perm is ignored if the file already exists
+	return ioutil.WriteFile(filepath.Join(dir, kptfile.KptFileName), []byte(s), 0600)
 }
 
 // ReadFileStrict reads a Kptfile for a package and validates that it contains required

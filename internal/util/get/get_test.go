@@ -16,6 +16,7 @@ package get_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -23,7 +24,6 @@ import (
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -57,32 +57,14 @@ func TestCommand_Run(t *testing.T) {
 	// verify the cloned contents matches the repository
 	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-
-	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      "file://" + g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+
+	// verify the KptFile contains the expected values
+	assert.NoError(t, err)
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, "file://"+g.RepoDirectory, "/", "master"), string(contents))
 }
 
 // TestCommand_Run_subdir verifies that Command will clone a subdirectory of a repo.
@@ -107,28 +89,10 @@ func TestCommand_Run_subdir(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: subdir,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Commit:    commit,
-				Directory: subdir,
-				Ref:       "refs/heads/master",
-				Repo:      g.RepoDirectory,
-			},
-		},
-	})
+
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, subdir, commit, g.RepoDirectory, subdir, "refs/heads/master"), string(contents))
 }
 
 // TestCommand_Run_destination verifies Command clones the repo to a destination with a specific name rather
@@ -148,28 +112,10 @@ func TestCommand_Run_destination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: dest,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit,
-			},
-		},
-	})
+
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, dest, commit, g.RepoDirectory, "/", "master"), string(contents))
 }
 
 // TestCommand_Run_subdirAndDestination verifies that Command will copy a subdirectory of a repo to a
@@ -195,28 +141,10 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: dest,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Commit:    commit,
-				Directory: subdir,
-				Ref:       "master",
-				Repo:      g.RepoDirectory,
-			},
-		},
-	})
+
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, dest, commit, g.RepoDirectory, subdir, "master"), string(contents))
 }
 
 // TestCommand_Run_branch verifies Command can clone a git branch
@@ -254,29 +182,9 @@ func TestCommand_Run_branch(t *testing.T) {
 	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
 
-	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "refs/heads/exp",
-				Commit:    commit,
-			},
-		},
-	})
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "refs/heads/exp"), string(contents))
 }
 
 // TestCommand_Run_tag verifies Command can clone from a git tag
@@ -320,28 +228,11 @@ func TestCommand_Run_tag(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "refs/tags/v2",
-				Commit:    commit,
-			},
-		},
-	})
+
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "refs/tags/v2"), string(contents))
+
 }
 
 // TestCommand_Run_clean verifies that the Command delete the existing directory if Clean is set.
@@ -367,28 +258,9 @@ func TestCommand_Run_clean(t *testing.T) {
 	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
 
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "master"), string(contents))
 
 	// update the data that would be cloned
 	err = g.ReplaceData(testutil.Dataset2)
@@ -408,28 +280,10 @@ func TestCommand_Run_clean(t *testing.T) {
 
 	// verify files are updated
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+	contents, err = ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "master"), string(contents))
+
 }
 
 // TestCommand_Run_failClean verifies that the Command will not clean the existing directory if it
@@ -455,28 +309,10 @@ func TestCommand_Run_failClean(t *testing.T) {
 	// verify the cloned contents matches the repository
 	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "master"), string(contents))
 
 	// configure clone to clean the existing dir, but fail
 	err = Command{
@@ -496,28 +332,9 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	// verify files weren't deleted
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+	contents, err = ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "master"), string(contents))
 }
 
 // TestCommand_Run_failExistingDir verifies that command will fail without changing anything if the
@@ -538,28 +355,9 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	// verify the cloned contents matches the repository
 	r := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+	contents, err := ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "master"), string(contents))
 
 	// update the data that would be cloned
 	err = g.ReplaceData(testutil.Dataset2)
@@ -575,28 +373,9 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), r)
-	g.AssertKptfile(t, r, kptfile.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
-		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
-			Type: "git",
-			Git: kptfile.Git{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
+	contents, err = ioutil.ReadFile(filepath.Join(r, kptfile.KptFileName))
+	assert.NoError(t, err)
+	assert.Equal(t, fmt.Sprintf(kptfileTemplate, g.RepoName, commit, g.RepoDirectory, "/", "master"), string(contents))
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
@@ -660,3 +439,16 @@ func TestCommand_DefaultValues_AtVersion(t *testing.T) {
 	c = Command{Git: kptfile.Git{Repo: "foo", Directory: "/", Ref: "r"}}
 	assert.EqualError(t, c.DefaultValues(), "must specify destination")
 }
+
+var kptfileTemplate = `apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: %s
+upstream:
+  type: git
+  git:
+    commit: %s
+    repo: %s
+    directory: %s
+    ref: %s
+`
