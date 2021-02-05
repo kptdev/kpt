@@ -20,6 +20,8 @@ import (
 	"path/filepath"
 )
 
+const markdownExtension = ".md"
+
 func ReadFiles(source string, recursive bool) ([]string, error) {
 	filePaths := make([]string, 0)
 	if recursive {
@@ -27,7 +29,7 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if filepath.Ext(info.Name()) == ".md" {
+			if filepath.Ext(info.Name()) == markdownExtension {
 				filePaths = append(filePaths, path)
 			}
 			return nil
@@ -36,14 +38,19 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 			return filePaths, err
 		}
 	} else {
-		files, err := ioutil.ReadDir(source)
-		if err != nil {
-			return filePaths, err
-		}
-		for _, info := range files {
-			if filepath.Ext(info.Name()) == ".md" {
-				path := filepath.Join(source, info.Name())
-				filePaths = append(filePaths, path)
+		if filepath.Ext(source) == markdownExtension {
+			filePaths = append(filePaths, source)
+
+		} else {
+			files, err := ioutil.ReadDir(source)
+			if err != nil {
+				return filePaths, err
+			}
+			for _, info := range files {
+				if filepath.Ext(info.Name()) == markdownExtension {
+					path := filepath.Join(source, info.Name())
+					filePaths = append(filePaths, path)
+				}
 			}
 		}
 	}

@@ -26,7 +26,8 @@
 // The first are for content that should show up in the rendered HTML, while
 // the second is for content that should be hidden in the rendered HTML.
 //
-// <VARIABLE_NAME> must be one of Short, Long or Examples.
+// <VARIABLE_NAME> must be suffixed with Short, Long or Examples; <VARIABLE_NAME>s without
+// a prefix will have an assumed prefix of the parent directory of the markdown file.
 //
 // Flags:
 //   --recursive=true
