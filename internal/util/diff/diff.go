@@ -103,6 +103,7 @@ func (c *Command) Run() error {
 	}
 
 	// Stage current package
+	// This prevents prepareForDiff from modifying the local package
 	currPkg, err := ioutil.TempDir("", "kpt-")
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
@@ -117,11 +118,17 @@ func (c *Command) Run() error {
 	if err != nil {
 		return errors.Errorf("failed to stage current package: %v", err)
 	}
+	fmt.Printf("Staging %s at %s\n", c.Path, currPkg)
 
 	// get the upstreamPkg at current version
 	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
 		kptFile.Upstream.Git.Commit)
+	fmt.Printf("Staging %s/%s:%s at %s\n",
+		kptFile.Upstream.Git.Repo,
+		kptFile.Upstream.Git.Directory,
+		"PackageVersion",
+		upstreamPkg)
 	if err != nil {
 		return err
 	}
@@ -150,6 +157,11 @@ func (c *Command) Run() error {
 		if err != nil {
 			return err
 		}
+		fmt.Printf("Staging %s/%s:%s at %s\n",
+			kptFile.Upstream.Git.Repo,
+			kptFile.Upstream.Git.Directory,
+			c.Ref,
+			upstreamTargetPkg)
 		defer func() {
 			if !c.Debug {
 				defer os.RemoveAll(upstreamTargetPkg)
@@ -288,8 +300,18 @@ type PkgGetter interface {
 // defaultPkgGetter uses get.Command abstraction to implement PkgGetter.
 type defaultPkgGetter struct{}
 
+// GetPkg checks out a repository into a temporary directory for diffing
+// and returns the directory containing the checked out package or an error.
+// repo is the git repository the package was cloned from.  e.g. https://
+// path is the sub directory of the git repository that the package was cloned from
+// ref is the git ref the package was cloned from
 func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
-	dir, err := ioutil.TempDir("", "kpt-")
+	repoSrc := strings.Split(repo, "/") // For github repo's this will be the project name
+	pkgSrc := strings.Split(path, "/")  // This will be the directory the package is contained in
+	tmpPath := fmt.Sprintf("kpt-%s-%s-",
+		repoSrc[len(repoSrc)-1],
+		pkgSrc[len(pkgSrc)-1])
+	dir, err := ioutil.TempDir("", tmpPath)
 	if err != nil {
 		return dir, err
 	}
