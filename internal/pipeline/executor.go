@@ -320,20 +320,8 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 func filterFnConfig(resources []*yaml.RNode) []*yaml.RNode {
 	var filtered []*yaml.RNode
 	for _, r := range resources {
-		var mn *yaml.MapNode
-		metaData := r.Field(yaml.MetadataField)
-		if metaData != nil {
-			mn = metaData.Value.Field(yaml.AnnotationsField)
-		}
-		annotations := map[string]string{}
-		if !mn.IsNilOrEmpty() {
-			_ = mn.Value.VisitFields(func(node *yaml.MapNode) error {
-				annotations[yaml.GetValue(node.Key)] = yaml.GetValue(node.Value)
-				return nil
-			})
-		}
 		m, _ := r.GetMeta()
-		if _, ok := annotations["config.kubernetes.io/function"]; !ok || m.Kind != "ConfigMap" {
+		if _, ok := m.Annotations["config.kubernetes.io/function"]; !ok || m.Kind != "ConfigMap" {
 			filtered = append(filtered, r)
 		}
 	}
