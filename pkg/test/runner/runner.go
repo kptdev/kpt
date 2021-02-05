@@ -7,9 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"testing"
 
-	"github.com/GoogleContainerTools/kpt/e2e"
 	"github.com/GoogleContainerTools/kpt/run"
 )
 
@@ -17,6 +15,7 @@ import (
 type Runner struct {
 	pkgName  string
 	testCase TestCase
+	cmd      string
 }
 
 const (
@@ -24,10 +23,13 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
+
+	CommandFn          string = "fn"
+	CommandPipeline    string = "pipeline"
 )
 
 // NewRunner returns a new runner for pkg
-func NewRunner(testCase TestCase) (*Runner, error) {
+func NewRunner(testCase TestCase, c string) (*Runner, error) {
 	info, err := os.Stat(testCase.Path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open path %s: %w", testCase.Path, err)
@@ -38,15 +40,16 @@ func NewRunner(testCase TestCase) (*Runner, error) {
 	return &Runner{
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
+		cmd:      c,
 	}, nil
 }
 
 // Run runs the test.
-func (r *Runner) Run(cmd string, t *testing.T) error {
-	if cmd == "fn" {
+func (r *Runner) Run() error {
+	if r.cmd == CommandFn {
 		return r.runFn()
 	}
-	return r.runPipeline(t)
+	return r.runPipeline()
 }
 
 func (r *Runner) runFn() error {
@@ -77,7 +80,7 @@ func (r *Runner) runFn() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "run", tmpPkgPath, "--results-dir", resultsPath}
+	kptArgs := []string{r.cmd, "run", tmpPkgPath, "--results-dir", resultsPath}
 	if r.testCase.Config.Network {
 		kptArgs = append(kptArgs, "--network")
 	}
@@ -106,7 +109,7 @@ func (r *Runner) runFn() error {
 	return nil
 }
 
-func (r *Runner) runPipeline (t *testing.T) error {
+func (r *Runner) runPipeline () error {
 	fmt.Printf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
 	if err != nil {
@@ -139,14 +142,14 @@ func (r *Runner) runPipeline (t *testing.T) error {
 
 	// run function
 	command := run.GetMain()
-	kptArgs := []string{"pipeline", "run", tmpPkgPath}
+	kptArgs := []string{r.cmd, "run", tmpPkgPath}
 	for i := 0; i < r.testCase.Config.RunTimes; i++ {
 		command.SetArgs(kptArgs)
-		e2e.Exec(t, command)
+		err = command.Execute()
 	}
 
 	// compare results
-	err = r.compareResult(nil, tmpPkgPath, orgPkgPath)
+	err = r.compareResult(err, tmpPkgPath, orgPkgPath)
 	return err
 }
 
