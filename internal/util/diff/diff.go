@@ -104,7 +104,7 @@ func (c *Command) Run() error {
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	currPkg, err := ioutil.TempDir("", "kpt-")
+	currPkg, err := ioutil.TempDir("", "kpt-local-")
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
@@ -308,7 +308,7 @@ type defaultPkgGetter struct{}
 func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 	repoSrc := strings.Split(repo, "/") // For github repo's this will be the project name
 	pkgSrc := strings.Split(path, "/")  // This will be the directory the package is contained in
-	tmpPath := fmt.Sprintf("kpt-%s-%s-",
+	tmpPath := fmt.Sprintf("kpt-upstream-%s-%s-",
 		repoSrc[len(repoSrc)-1],
 		pkgSrc[len(pkgSrc)-1])
 	dir, err := ioutil.TempDir("", tmpPath)
