@@ -45,10 +45,7 @@ type KRMFn interface {
 // Built-in functions that are compiled into kpt
 
 // annotator is built kpt function for annotating KRM resources.
-type annotator struct {
-	key   string
-	value string
-}
+type annotator struct{}
 
 func (a *annotator) Run(r io.Reader, w io.Writer) error {
 	rw := &kio.ByteReadWriter{
@@ -62,9 +59,30 @@ func (a *annotator) Run(r io.Reader, w io.Writer) error {
 		return err
 	}
 
+	fnConfig := rw.FunctionConfig
+	if fnConfig == nil {
+		return nil
+	}
+	dataMapsNode, err := fnConfig.Pipe(yaml.Lookup("data"))
+	if err != nil {
+		return err
+	}
+	keyValues := make(map[string]string)
+	err = dataMapsNode.VisitFields(func(node *yaml.MapNode) error {
+		key := node.Key.YNode().Value
+		val := node.Value.YNode().Value
+		keyValues[key] = val
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
 	for i := range items {
-		if err := items[i].PipeE(yaml.SetAnnotation(a.key, a.value)); err != nil {
-			return err
+		for k, v := range keyValues {
+			if err := items[i].PipeE(yaml.SetAnnotation(k, v)); err != nil {
+				return err
+			}
 		}
 		klog.Infof("processing file: %v", items[i])
 	}
@@ -105,6 +123,7 @@ func (f *fnRunner) Filter(resources []*yaml.RNode) (output []*yaml.RNode, err er
 		WrappingKind:          kio.ResourceListKind,
 		Writer:                fnInput,
 		KeepReaderAnnotations: true,
+		FunctionConfig:        f.fnConfig,
 	}.Write(resources)
 	if err != nil {
 		err = fmt.Errorf("failed to write resource list %w", err)

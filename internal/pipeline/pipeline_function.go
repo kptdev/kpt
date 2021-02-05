@@ -88,25 +88,21 @@ func (f *Function) Validate() error {
 // runner returns a fnRunner from the image and configs of
 // this function.
 func (f *Function) runner() (kio.Filter, error) {
-	// TODO: remove this builtin placeholder function
-	if f.Image == builtinSetAnnotatorImage {
-		for k, v := range f.ConfigMap {
-			return &fnRunner{
-				fn: &annotator{
-					key:   k,
-					value: v,
-				},
-			}, nil
-		}
-	}
 	config, err := f.config()
 	if err != nil {
 		return nil, err
 	}
-	return &fnRunner{
-		fn: &runtime.ContainerFn{
+	var fn KRMFn
+	// TODO: remove this builtin placeholder function
+	if f.Image == builtinSetAnnotatorImage {
+		fn = &annotator{}
+	} else {
+		fn = &runtime.ContainerFn{
 			Image: f.Image,
-		},
+		}
+	}
+	return &fnRunner{
+		fn:       fn,
 		fnConfig: config,
 	}, nil
 }
