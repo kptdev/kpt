@@ -104,7 +104,7 @@ func (c *Command) Run() error {
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	currPkg, err := ioutil.TempDir("", "kpt-local-")
+	currPkg, err := ioutil.TempDir("", "kpt-")
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
@@ -123,7 +123,8 @@ func (c *Command) Run() error {
 	// get the upstreamPkg at current version
 	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
-		kptFile.Upstream.Git.Commit)
+		kptFile.Upstream.Git.Commit,
+		"PackageVersion")
 	fmt.Printf("Staging %s/%s:%s at %s\n",
 		kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
@@ -153,6 +154,7 @@ func (c *Command) Run() error {
 		// get the upstream pkg at the target version
 		upstreamTargetPkg, err = c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
 			kptFile.Upstream.Git.Directory,
+			c.Ref,
 			c.Ref)
 		if err != nil {
 			return err
@@ -294,7 +296,7 @@ func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
 
 // PkgGetter knows how to fetch a package given a git repo, path and ref.
 type PkgGetter interface {
-	GetPkg(repo, path, ref string) (dir string, err error)
+	GetPkg(repo, path, ref, refDesc string) (dir string, err error)
 }
 
 // defaultPkgGetter uses get.Command abstraction to implement PkgGetter.
@@ -305,12 +307,14 @@ type defaultPkgGetter struct{}
 // repo is the git repository the package was cloned from.  e.g. https://
 // path is the sub directory of the git repository that the package was cloned from
 // ref is the git ref the package was cloned from
-func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
+// refDesc is a human readable name of the reference
+func (pg defaultPkgGetter) GetPkg(repo, path, ref, refDesc string) (string, error) {
 	repoSrc := strings.Split(repo, "/") // For github repo's this will be the project name
 	pkgSrc := strings.Split(path, "/")  // This will be the directory the package is contained in
-	tmpPath := fmt.Sprintf("kpt-upstream-%s-%s-",
+	tmpPath := fmt.Sprintf("kpt-upstream-%s-%s-%s-",
 		repoSrc[len(repoSrc)-1],
-		pkgSrc[len(pkgSrc)-1])
+		pkgSrc[len(pkgSrc)-1],
+		refDesc)
 	dir, err := ioutil.TempDir("", tmpPath)
 	if err != nil {
 		return dir, err
