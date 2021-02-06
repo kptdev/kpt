@@ -190,9 +190,8 @@ func (p *pkg) localResources(includeMetadata bool) (resources []*yaml.RNode, err
 		err = fmt.Errorf("failed to read resources for pkg %s %w", p.Path(), err)
 		return resources, err
 	}
-	resources = filterFnConfig(resources)
 	if !includeMetadata {
-		resources = filterMetaData(resources)
+		resources = filterMetaResources(resources)
 	}
 	return resources, err
 }
@@ -303,29 +302,23 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 	return resources, err
 }
 
-// filterMetaData filters kpt metadata files such as pipeline,
+// filterMetaResources filters kpt metadata files such as pipeline,
 // Kptfile, permissions etc.
-func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
+func filterMetaResources(resources []*yaml.RNode) []*yaml.RNode {
 	var filtered []*yaml.RNode
 	for _, r := range resources {
 		m, _ := r.GetMeta()
-		if !strings.Contains(m.APIVersion, "kpt.dev") {
+		if !strings.Contains(m.APIVersion, "kpt.dev") && !isFnConfig(&m) {
 			filtered = append(filtered, r)
 		}
 	}
 	return filtered
 }
 
-// filterFnConfig filters out function configs
-func filterFnConfig(resources []*yaml.RNode) []*yaml.RNode {
-	var filtered []*yaml.RNode
-	for _, r := range resources {
-		m, _ := r.GetMeta()
-		if _, ok := m.Annotations["config.kubernetes.io/function"]; !ok || m.Kind != "ConfigMap" {
-			filtered = append(filtered, r)
-		}
-	}
-	return filtered
+// isFnConfig filters out function configs
+func isFnConfig(m *yaml.ResourceMeta) bool {
+	_, hasFnAnnotation := m.Annotations["config.kubernetes.io/function"]
+	return m.Kind == "ConfigMap" && hasFnAnnotation
 }
 
 // fnFilters returns chain of functions that are applicable
