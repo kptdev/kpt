@@ -262,6 +262,9 @@ func (a AutoSet) setInheritedSettersForPkg(pkgPath, parentKptfilePath, setterRef
 	if err != nil {
 		return err
 	}
+	if sc == nil {
+		return nil
+	}
 	sch := sc.Definitions[setterRef]
 	cliExt, err := setters2.GetExtFromSchema(&sch)
 	if cliExt == nil || cliExt.Setter == nil || err != nil {
