@@ -496,6 +496,51 @@ kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}`,
 		},
+
+		{
+			name:       "no setter definitions in parent",
+			parentPath: "${baseDir}/parentPath",
+			childPath:  "${baseDir}/parentPath/somedir/childPath",
+			parentKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: parent`,
+			childConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
+			childKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+          isSet: true
+`,
+			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: child
+openAPI:
+  definitions:
+    io.k8s.cli.setters.namespace:
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: child_namespace
+          isSet: true
+`,
+			expectedChildConfigFile: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: child_namespace # {"$kpt-set":"namespace"}`,
+		},
+
 		{
 			name:       "inherit-defalut-values-from-parent",
 			parentPath: "${baseDir}/parentPath",
