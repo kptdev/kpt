@@ -161,7 +161,7 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 			for sn, sv := range settersValues {
 				pattern = strings.ReplaceAll(clean(pattern), clean(sv), fmt.Sprintf("${%s}", sn))
 			}
-			node.LineComment = fmt.Sprintf(`{"$kpt-set":%q}`, pattern)
+			node.LineComment = fmt.Sprintf(`kpt-set: %s`, pattern)
 		}
 
 		if sr.filePath != "" {
