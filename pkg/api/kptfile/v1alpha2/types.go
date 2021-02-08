@@ -30,7 +30,7 @@ const (
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline"`
 
-	// UpstreamLock is a resolved locator for the last fetch of the packgae.
+	// UpstreamLock is a resolved locator for the last fetch of the package.
 	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty"`
 
 	// Info contains metadata such as license, documentation, etc.
@@ -126,7 +126,7 @@ type PackageInfo struct {
 	Man string `yaml:"man,omitempty"`
 
 	// Description contains a short description of the package.
-	description string `yaml:"description,omitempty"`
+	Description string `yaml:"description,omitempty"`
 }
 
 // Subpackages declares a local or remote subpackage.
