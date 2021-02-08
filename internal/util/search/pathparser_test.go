@@ -82,6 +82,12 @@ var tests = []test{
 		traversedPath: "a.c[2].c[0].d.e[1].f",
 		shouldMatch:   false,
 	},
+	{
+		name:          "compare normal path with array path",
+		byPath:        "a.c",
+		traversedPath: "a.c[0]",
+		shouldMatch:   false,
+	},
 }
 
 func TestPathMatch(t *testing.T) {

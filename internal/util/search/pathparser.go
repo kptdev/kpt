@@ -99,7 +99,7 @@ func elementMatch(elem, pattern string) bool {
 		if patternParts[0] != "*" && elemParts[0] != patternParts[0] {
 			return false
 		}
-		return patternParts[1] == "*]" || elemParts[1] == patternParts[1]
+		return len(patternParts) > 1 && (patternParts[1] == "*]" || elemParts[1] == patternParts[1])
 	}
 	return false
 }
