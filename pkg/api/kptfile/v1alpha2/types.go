@@ -30,11 +30,11 @@ const (
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline"`
 
-	// Upstream is a reference to where the package is fetched from.
-	Upstream Upstream `yaml:"upstream,omitempty"`
+	// UpstreamLock is a resolved locator for the last fetch of the packgae.
+	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty"`
 
-	// PackageMeta contains metadata such as license, documentation, etc.
-	PackageMeta PackageMeta `yaml:"packageMeta,omitempty"`
+	// Info contains metadata such as license, documentation, etc.
+	Info *PackageInfo `yaml:"info,omitempty"`
 
 	// Subpackages declares the list of subpackages.
 	Subpackages []Subpackage `yaml:"subpackages,omitempty"`
@@ -46,7 +46,7 @@ type KptFile struct {
 	Inventory *Inventory `yaml:"inventory,omitempty"`
 }
 
-// OriginType defines the type of origin for a package
+// OriginType defines the type of origin for a package.
 type OriginType string
 
 const (
@@ -68,21 +68,45 @@ const (
 	ForceDeleteReplace UpdateStrategyType = "force-delete-replace"
 )
 
-// Upstream is a reference to where the package is fetched from.
+// Upstream is a user-specified upstream locator for a package.
 type Upstream struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty"`
 
-	// Git contains information on the origin of packages fetched from a git repository.
+	// Git is the locator for a package stored on Git.
 	Git Git `yaml:"git,omitempty"`
 
-	// UpdateStrategy defines how a package is updated from upstream.
+	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty"`
 }
 
-// PackageMeta contains metadata such as license, documentation, etc.
+// UpstreamLock is a resolved locator for the last fetch of the packgae.
+type UpstreamLock struct {
+	// Type is the type of origin.
+	Type OriginType `yaml:"type,omitempty"`
+
+	// Git is the locator for a package stored on Git.
+	Git Git `yaml:"git,omitempty"`
+}
+
+// Git contains information on the origin of packages fetched from a git repository.
+type Git struct {
+	// Repo is the git repository the package was cloned from.  e.g. https://
+	Repo string `yaml:"repo,omitempty"`
+
+	// Directory is the sub directory of the git repository that the package was cloned from
+	Directory string `yaml:"directory,omitempty"`
+
+	// Ref can be a Git branch, tag, or commit ID.
+	Ref string `yaml:"ref,omitempty"`
+
+	// Commit is the git commit that the package was fetched at
+	Commit string `yaml:"commit,omitempty"`
+}
+
+// PackageInfo contains metadata such as license, documentation, etc.
 // These fields are not used for any functionality in kpt and are simply passed through.
-type PackageMeta struct {
+type PackageInfo struct {
 	// URL is the location of the package.  e.g. https://github.com/example/com
 	URL string `yaml:"url,omitempty"`
 
@@ -101,8 +125,8 @@ type PackageMeta struct {
 	// Man is the path to documentation about the package
 	Man string `yaml:"man,omitempty"`
 
-	// ShortDescription contains a short description of the package.
-	ShortDescription string `yaml:"shortDescription,omitempty"`
+	// Description contains a short description of the package.
+	description string `yaml:"description,omitempty"`
 }
 
 // Subpackages declares a local or remote subpackage.
@@ -111,24 +135,10 @@ type Subpackage struct {
 	// either exists (local subpackages) or will be fetched to (remote subpckages).
 	// This must be unique across all subpckages of a package.
 	LocalDir string `yaml:"localDir,omitempty"`
+
+	// Upstream is a reference to where the subpackage should be fetched from.
 	// Whether a subpackage is local or remote is determined by whether Upstream is specified.
-	// Upstream is a reference to where the package is fetched from.
-	Upstream Upstream `yaml:"upstream,omitempty"`
-}
-
-// Git contains information on the origin of packages fetched from a git repository.
-type Git struct {
-	// Commit is the git commit that the package was fetched at
-	Commit string `yaml:"commit,omitempty"`
-
-	// Repo is the git repository the package was cloned from.  e.g. https://
-	Repo string `yaml:"repo,omitempty"`
-
-	// Directory is the sub directory of the git repository that the package was cloned from
-	Directory string `yaml:"directory,omitempty"`
-
-	// Ref is the git ref the package was cloned from
-	Ref string `yaml:"ref,omitempty"`
+	Upstream *Upstream `yaml:"upstream,omitempty"`
 }
 
 // Pipeline declares a pipeline of functions used to mutate or validate resources.
@@ -177,7 +187,7 @@ type Function struct {
 
 	// `Config` specifies an inline k8s resource used as the function config.
 	// Config, ConfigPath, and ConfigMap fields are mutually exclusive.
-	Config yaml.Node `yaml:"config,omitempty"`
+	Config *yaml.Node `yaml:"config,omitempty"`
 
 	// `ConfigPath` specifies a relative path to a file in the current directory
 	// containing a K8S resource used as the function config. This resource is
