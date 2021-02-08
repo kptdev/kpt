@@ -1,0 +1,16 @@
+# This pod definition has errors and will fail to deploy
+
+apiVersion: v1
+kind: Pod
+metadata:
+  # It is invalid for a pod to be named with a capital letter
+  # Expected error:
+  #   The Pod "pod-B" is invalid: metadata.name: Invalid value: "pod-B"
+  name: pod-B
+  namespace: test-namespace
+  labels:
+    name: test-pod-label-foo
+spec:
+  containers:
+  - name: kubernetes-pause
+    image: k8s.gcr.io/pause:2.0

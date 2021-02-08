@@ -871,6 +871,15 @@ assertPodNotExists "pod-c" "test-namespace"
 assertPodNotExists "pod-d" "test-namespace"
 printResult
 
+# Test 20: kpt live apply continue-on-error
+echo "Testing continue-on-error"
+echo "kpt live apply e2e/live/testdata/continue-on-error"
+${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
+assertCMInventory "test-namespace" "1"
+assertPodExists "pod-a" "test-namespace"
+assertPodNotExists "pod-B" "test-namespace"
+printResult
+
 # Clean-up the k8s cluster
 echo "Cleaning up cluster"
 kind delete cluster

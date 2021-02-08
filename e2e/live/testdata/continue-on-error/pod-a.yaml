@@ -1,0 +1,13 @@
+# This pod description should be valid and is expected to successfully deploy
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-a
+  namespace: test-namespace
+  labels:
+    name: test-pod-label-foo
+spec:
+  containers:
+  - name: kubernetes-pause
+    image: k8s.gcr.io/pause:2.0
