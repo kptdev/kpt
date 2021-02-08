@@ -24,11 +24,41 @@ import (
 	"github.com/GoogleContainerTools/kpt/e2e"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
+
+func TestPipeline(t *testing.T) {
+	runPipelineTests(t, "../internal/pipeline/examples/")
+}
+
+// runTests will scan test cases in 'path', run the command
+// `kpt pipeline run` on all of the packages in path, and test that
+// the diff between the results and the original package is as
+// expected
+func runPipelineTests(t *testing.T, path string) {
+	cases, err := runner.ScanTestCases(path)
+	if err != nil {
+		t.Fatalf("failed to scan test cases: %s", err)
+	}
+	for _, c := range *cases {
+		c := c // capture range variable
+		t.Run(c.Path, func(t *testing.T) {
+			t.Parallel()
+			r, err := runner.NewRunner(c, runner.CommandPipeline)
+			if err != nil {
+				t.Fatalf("failed to create test runner: %s", err)
+			}
+			err = r.Run()
+			if err != nil {
+				t.Fatalf("failed when running test: %s", err)
+			}
+		})
+	}
+}
 
 func TestKptGetSet(t *testing.T) {
 	type testCase struct {
