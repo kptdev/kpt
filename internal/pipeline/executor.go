@@ -1,17 +1,3 @@
-// Copyright 2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package pipeline
 
 import (
@@ -281,12 +267,17 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 	// TODO(droot): parameterize the sink-mode (hctx.sinkMode) to determine whether to
 	// write it in-place or not. Currently in-place.
 	pkgWriter := &kio.LocalPackageWriter{PackagePath: p.Path()}
+
+	filters, err := fnFilters(p.Pipeline())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get function filters: %w", err)
+	}
 	// create a kio pipeline from kyaml library to execute the function chains
 	kioPipeline := kio.Pipeline{
 		Inputs: []kio.Reader{
 			&kio.PackageBuffer{Nodes: input},
 		},
-		Filters: fnFilters(p.Pipeline()),         // we will gather filters from the pipeline
+		Filters: filters,
 		Outputs: []kio.Writer{pkgWriter, output}, // here may be we don't want to write to the fs yet
 	}
 	err = kioPipeline.Execute()
@@ -318,18 +309,10 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 
 // fnFilters returns chain of functions that are applicable
 // to a given pipeline.
-func fnFilters(_ *Pipeline) []kio.Filter {
-	fn := &annotator{
-		key:   "builtin/setter-1",
-		value: "test",
+func fnFilters(p *Pipeline) ([]kio.Filter, error) {
+	filters, err := p.fnChain()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}
-
-	// TODO(droot): Implement this with the logic to create
-	// function chain from a pipeline
-	// hardcoding built-in set-annotation function for testing
-	return []kio.Filter{
-		&fnRunner{
-			fn: fn,
-		},
-	}
+	return filters, nil
 }

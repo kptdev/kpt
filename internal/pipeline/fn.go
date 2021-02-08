@@ -42,34 +42,6 @@ type KRMFn interface {
 // ExecFn: that can execute a binary on local machine
 // NetworkFn: that can invoke a endpoint remotely
 // ContainerFn: that can execute a container locally
-// Built-in functions that are compiled into kpt
-
-// annotator is built kpt function for annotating KRM resources.
-type annotator struct {
-	key   string
-	value string
-}
-
-func (a *annotator) Run(r io.Reader, w io.Writer) error {
-	rw := &kio.ByteReadWriter{
-		Reader:                r,
-		Writer:                w,
-		KeepReaderAnnotations: true,
-	}
-
-	items, err := rw.Read()
-	if err != nil {
-		return err
-	}
-
-	for i := range items {
-		if err := items[i].PipeE(yaml.SetAnnotation(a.key, a.value)); err != nil {
-			return err
-		}
-		klog.Infof("processing file: %v", items[i])
-	}
-	return rw.Write(items)
-}
 
 // fnRunner adapts a given KRMFn into into kio.Filter to that
 // it can be run as a filter in a kio.Pipeline. Another way to think
@@ -80,6 +52,9 @@ type fnRunner struct {
 	// ids book keeping of resources to preserve comments
 	// during the transformation.
 	ids map[string]*yaml.RNode
+
+	// fnConfig contains the configs for this function
+	fnConfig *yaml.RNode
 }
 
 func (f *fnRunner) Filter(resources []*yaml.RNode) (output []*yaml.RNode, err error) {
@@ -102,6 +77,7 @@ func (f *fnRunner) Filter(resources []*yaml.RNode) (output []*yaml.RNode, err er
 		WrappingKind:          kio.ResourceListKind,
 		Writer:                fnInput,
 		KeepReaderAnnotations: true,
+		FunctionConfig:        f.fnConfig,
 	}.Write(resources)
 	if err != nil {
 		err = fmt.Errorf("failed to write resource list %w", err)

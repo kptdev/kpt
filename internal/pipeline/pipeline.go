@@ -22,9 +22,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
-	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -101,7 +100,7 @@ func (p *Pipeline) Validate() error {
 		if s == sourceAllSubPkgs {
 			continue
 		}
-		if err := ValidatePath(s); err != nil {
+		if err := validatePath(s); err != nil {
 			return fmt.Errorf("'sources[%d]': path %q is invalid: %w", i, s, err)
 		}
 		p.Sources[i] = path.Clean(s)
@@ -117,6 +116,25 @@ func (p *Pipeline) Validate() error {
 		}
 	}
 	return nil
+}
+
+// fnChain returns a slice of function runners from the
+// functions and configs defined in pipeline.
+func (p *Pipeline) fnChain() ([]kio.Filter, error) {
+	fns := []Function{}
+	fns = append(fns, p.Generators...)
+	fns = append(fns, p.Transformers...)
+	// TODO: Validators cannot modify resources.
+	fns = append(fns, p.Validators...)
+	var runners []kio.Filter
+	for _, fn := range fns {
+		r, err := fn.runner()
+		if err != nil {
+			return nil, err
+		}
+		runners = append(runners, r)
+	}
+	return runners, nil
 }
 
 // New returns a pointer to a new default Pipeline.
@@ -174,117 +192,4 @@ func FromFile(path string) (*Pipeline, error) {
 		return nil, fmt.Errorf("failed to open path %s: %w", path, err)
 	}
 	return FromReader(f)
-}
-
-// Function defines an item in the pipeline function list
-type Function struct {
-	// `Image` is the path of the function container image
-	// Image name can be a "built-in" function: kpt can be configured to use a image
-	// registry host-path that will be used to resolve the full image path in case
-	// the image path is missing (Defaults to gcr.io/kpt-functions-trusted).
-	// For example, the following resolves to gcr.io/kpt-functions-trusted/patch-strategic-merge.
-	//		image: patch-strategic-merge
-	Image string `yaml:"image,omitempty"`
-
-	// `Config` specifies an inline k8s resource used as the function config.
-	// Config, ConfigPath, and ConfigMap fields are mutually exclusive.
-	Config yaml.Node `yaml:"config,omitempty"`
-
-	// `ConfigPath` specifies a relative path to a file in the current directory
-	// containing a K8S resource used as the function config. This resource is
-	// excluded when resolving 'sources', and as a result cannot be operated on
-	// by the pipeline.
-	ConfigPath string `yaml:"configPath,omitempty"`
-
-	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.
-	ConfigMap map[string]string `yaml:"configMap,omitempty"`
-}
-
-// Validate will validate all fields in function.
-func (f *Function) Validate() error {
-	err := ValidateFunctionName(f.Image)
-	if err != nil {
-		return fmt.Errorf("'image' is invalid: %w", err)
-	}
-
-	var configFields []string
-	if f.ConfigPath != "" {
-		if err := ValidatePath(f.ConfigPath); err != nil {
-			return fmt.Errorf("'configPath' %q is invalid: %w", f.ConfigPath, err)
-		}
-		configFields = append(configFields, "configPath")
-	}
-	if len(f.ConfigMap) != 0 {
-		configFields = append(configFields, "configMap")
-	}
-	if !isNodeZero(&f.Config) {
-		configFields = append(configFields, "config")
-	}
-	if len(configFields) > 1 {
-		return fmt.Errorf("following fields are mutually exclusive: 'config', 'configMap', 'configPath'. Got %q",
-			strings.Join(configFields, ", "))
-	}
-
-	return nil
-}
-
-// ValidateFunctionName validates the function name.
-// According to Docker implementation
-// https://github.com/docker/distribution/blob/master/reference/reference.go. A valid
-// name definition is:
-//	name                            := [domain '/'] path-component ['/' path-component]*
-//	domain                          := domain-component ['.' domain-component]* [':' port-number]
-//	domain-component                := /([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])/
-//	port-number                     := /[0-9]+/
-//	path-component                  := alpha-numeric [separator alpha-numeric]*
-// 	alpha-numeric                   := /[a-z0-9]+/
-//	separator                       := /[_.]|__|[-]*/
-func ValidateFunctionName(name string) error {
-	pathComponentRegexp := `(?:[a-z0-9](?:(?:[_.]|__|[-]*)[a-z0-9]+)*)`
-	domainComponentRegexp := `(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`
-	domainRegexp := fmt.Sprintf(`%s(?:\.%s)*(?:\:[0-9]+)?`, domainComponentRegexp, domainComponentRegexp)
-	nameRegexp := fmt.Sprintf(`^(?:%s\/)?%s(?:\/%s)*$`, domainRegexp,
-		pathComponentRegexp, pathComponentRegexp)
-	matched, err := regexp.MatchString(nameRegexp, name)
-	if err != nil {
-		return err
-	}
-	if !matched {
-		return fmt.Errorf("function name %q is invalid", name)
-	}
-	return nil
-}
-
-// IsNodeZero returns true if all the public fields in the Node are empty.
-// Which means it's not initialized and should be omitted when marshal.
-// The Node itself has a method IsZero but it is not released
-// in yaml.v3. https://pkg.go.dev/gopkg.in/yaml.v3#Node.IsZero
-// TODO: Use `IsYNodeZero` method from kyaml when kyaml has been updated to
-// >= 0.10.5
-func isNodeZero(n *yaml.Node) bool {
-	return n != nil && n.Kind == 0 && n.Style == 0 && n.Tag == "" && n.Value == "" &&
-		n.Anchor == "" && n.Alias == nil && n.Content == nil &&
-		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" &&
-		n.Line == 0 && n.Column == 0
-}
-
-// ValidatePath validates input path and return an error if it's invalid
-func ValidatePath(p string) error {
-	if path.IsAbs(p) {
-		return fmt.Errorf("path is not relative")
-	}
-	if strings.TrimSpace(p) == "" {
-		return fmt.Errorf("path cannot have only white spaces")
-	}
-	if p != sourceAllSubPkgs && strings.Contains(p, "*") {
-		return fmt.Errorf("path contains asterisk, asterisk is only allowed in './*'")
-	}
-	// backslash (\\), alert bell (\a), backspace (\b), form feed (\f), vertical tab(\v) are
-	// unlikely to be in a valid path
-	for _, c := range "\\\a\b\f\v" {
-		if strings.Contains(p, string(c)) {
-			return fmt.Errorf("path cannot have character %q", c)
-		}
-	}
-	return nil
 }

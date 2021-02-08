@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package pipeline_test
+package pipeline
 
 import (
 	"bytes"
@@ -20,7 +20,6 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/GoogleContainerTools/kpt/internal/pipeline"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -58,26 +57,30 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func checkOutput(t *testing.T, name string, tc testcase, actual *Pipeline, err error) {
+func checkOutput(t *testing.T, tc testcase, actual *Pipeline, err error) {
 	if tc.Error {
-		if !assert.Errorf(t, err, "error is expected. Test case: %s", name) {
+		if !assert.Error(t, err, "error is expected.") {
 			t.FailNow()
 		}
 		return
-	} else if !assert.NoError(t, err, "error is not expected. Test case: %s", name) {
+	} else if !assert.NoError(t, err, "error is not expected.") {
 		t.FailNow()
 	}
-	if !assert.Truef(t, isPipelineEqual(t, tc.Expected, *actual),
-		"pipelines don't equal. Test case: %s", name) {
+	if !assert.True(t, isPipelineEqual(t, tc.Expected, *actual),
+		"pipelines don't equal.") {
 		t.FailNow()
 	}
 }
 
 func TestFromReader(t *testing.T) {
 	for name, tc := range testcases {
-		r := bytes.NewBufferString(tc.Input)
-		actual, err := FromReader(r)
-		checkOutput(t, name, tc, actual, err)
+		tc := tc
+		name := name
+		t.Run(name, func(t *testing.T) {
+			r := bytes.NewBufferString(tc.Input)
+			actual, err := FromReader(r)
+			checkOutput(t, tc, actual, err)
+		})
 	}
 }
 
@@ -95,13 +98,18 @@ func preparePipelineFile(s string) (string, error) {
 
 func TestFromFile(t *testing.T) {
 	for name, tc := range testcases {
-		path, err := preparePipelineFile(tc.Input)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		actual, err := FromFile(path)
-		checkOutput(t, name, tc, actual, err)
-		os.Remove(path)
+		tc := tc
+		name := name
+		t.Run(name, func(t *testing.T) {
+			path, err := preparePipelineFile(tc.Input)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actual, err := FromFile(path)
+			checkOutput(t, tc, actual, err)
+			os.Remove(path)
+		})
+
 	}
 }
 
@@ -316,307 +324,4 @@ func isPipelineEqual(t *testing.T, p1, p2 Pipeline) bool {
 	}
 
 	return true
-}
-
-func TestValidateFunctionName(t *testing.T) {
-	type input struct {
-		Name  string
-		Valid bool
-	}
-	inputs := []input{
-		{
-			"gcr.io/kpt-functions/generate-folders",
-			true,
-		},
-		{
-			"patch-strategic-merge",
-			true,
-		},
-		{
-			"a.b.c:1234/foo/bar/generate-folders",
-			true,
-		},
-		{
-			"ab-.b/c",
-			false,
-		},
-		{
-			"a/a/",
-			false,
-		},
-		{
-			"a//a/a",
-			false,
-		},
-		{
-			"example.com/.dots/myimage",
-			false,
-		},
-		{
-			"registry.io/foo/project--id.module--name.ver---sion--name",
-			true,
-		},
-		{
-			"Foo/FarB",
-			false,
-		},
-	}
-
-	for _, n := range inputs {
-		err := ValidateFunctionName(n.Name)
-		if n.Valid && err != nil {
-			t.Fatalf("function name %s should be valid", n.Name)
-		}
-		if !n.Valid && err == nil {
-			t.Fatalf("function name %s should not be valid", n.Name)
-		}
-	}
-}
-
-func TestPipelineValidate(t *testing.T) {
-	type input struct {
-		Name  string
-		Input string
-		Valid bool
-	}
-	cases := []input{
-		{
-			Name: "no sources, no functions",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-`,
-			Valid: true,
-		},
-		{
-			Name: "have sources, no functions",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./base
-`,
-			Valid: true,
-		},
-		{
-			Name: "have sources and functions",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./base
-- ./*
-
-generators:
-- image: gcr.io/kpt-functions/generate-folders
-  config:
-    apiVersion: cft.dev/v1alpha1
-    kind: ResourceHierarchy
-    metadata:
-      name: root-hierarchy
-      namespace: hierarchy # {"$kpt-set":"namespace"}
-transformers:
-- image: patch-strategic-merge
-  configPath: ./patch.yaml
-- image: gcr.io/kpt-functions/set-annotation
-  configMap:
-    environment: dev
-
-validators:
-- image: gcr.io/kpt-functions/policy-controller-validate
-`,
-			Valid: true,
-		},
-		{
-			Name: "invalid apiversion",
-			Input: `
-apiVersion: kpt.dev/v1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./base
-`,
-			Valid: false,
-		},
-		{
-			Name: "absolute source path",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- /foo/bar
-`,
-			Valid: false,
-		},
-		{
-			Name: "invalid function name",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./*
-transformers:
-- image: patch@_@strategic-merge
-  configPath: ./patch.yaml
-`,
-			Valid: false,
-		},
-		{
-			Name: "more than 1 config",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./*
-transformers:
-- image: patch-strategic-merge
-  configPath: ./patch.yaml
-  configMap:
-    environment: dev
-`,
-			Valid: false,
-		},
-		{
-			Name: "absolute config path",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./*
-transformers:
-- image: patch-strategic-merge
-  configPath: /patch.yaml
-`,
-			Valid: false,
-		},
-	}
-
-	for _, c := range cases {
-		b := bytes.NewBufferString(c.Input)
-		// FromReader will validate the pipeline
-		_, err := FromReader(b)
-		if c.Valid && err != nil {
-			t.Fatalf("%s: pipeline should be valid, %s", c.Name, err)
-		}
-		if !c.Valid && err == nil {
-			t.Fatalf("%s: pipeline should not be valid", c.Name)
-		}
-	}
-}
-
-func TestValidatePath(t *testing.T) {
-	type input struct {
-		Path  string
-		Valid bool
-	}
-
-	cases := []input{
-		{
-			"a/b/c",
-			true,
-		},
-		{
-			"a/b/",
-			true,
-		},
-		{
-			"/a/b",
-			false,
-		},
-		{
-			"./a",
-			true,
-		},
-		{
-			"./a/.../b",
-			true,
-		},
-		{
-			".",
-			true,
-		},
-		{
-			"a\\b",
-			false,
-		},
-		{
-			"a\b",
-			false,
-		},
-		{
-			"a\v",
-			false,
-		},
-		{
-			"a:\\b\\c",
-			false,
-		},
-		{
-			"../a/../b",
-			true,
-		},
-		{
-			"a//b",
-			true,
-		},
-		{
-			"a/b/.",
-			true,
-		},
-		{
-			"a/*/b",
-			false,
-		},
-		{
-			"./*",
-			true,
-		},
-		{
-			"a/b\\c",
-			false,
-		},
-		{
-			"././././",
-			true,
-		},
-		{
-			"./!&^%$/#(@)/_-=+|<;>?:'\"/'`",
-			true,
-		},
-		{
-			"",
-			false,
-		},
-		{
-			"\t \n",
-			false,
-		},
-		{
-			"*",
-			false,
-		},
-	}
-
-	for _, c := range cases {
-		ret := ValidatePath(c.Path)
-		if (ret == nil) != c.Valid {
-			t.Fatalf("returned value for path %s should be %t, got %t",
-				c.Path, c.Valid, (ret == nil))
-		}
-	}
 }
