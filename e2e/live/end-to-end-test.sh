@@ -853,7 +853,18 @@ assertPodExists "pod-c" "test-namespace"
 assertPodExists "pod-d" "test-namespace"
 printResult
 
-# Test 19: Basic kpt live destroy
+# Test 19: kpt live apply continue-on-error
+echo "Testing continue-on-error"
+echo "kpt live apply e2e/live/testdata/continue-on-error"
+${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
+assertCMInventory "test-namespace" "2"
+assertContains "pod/pod-a created"
+assertContains "pod/pod-B failed"
+assertPodExists "pod-a" "test-namespace"
+assertPodNotExists "pod-B" "test-namespace"
+printResult
+
+# Test 20: Basic kpt live destroy
 # "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing basic destroy"
 echo "kpt live destroy e2e/live/testdata/test-case-1b"
@@ -869,15 +880,6 @@ assertContains "4 resource(s) deleted, 0 skipped"
 assertPodNotExists "pod-b" "test-namespace"
 assertPodNotExists "pod-c" "test-namespace"
 assertPodNotExists "pod-d" "test-namespace"
-printResult
-
-# Test 20: kpt live apply continue-on-error
-echo "Testing continue-on-error"
-echo "kpt live apply e2e/live/testdata/continue-on-error"
-${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
-assertCMInventory "test-namespace" "1"
-assertPodExists "pod-a" "test-namespace"
-assertPodNotExists "pod-B" "test-namespace"
 printResult
 
 # Clean-up the k8s cluster
