@@ -23,9 +23,8 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
-
-	CommandFn          string = "fn"
-	CommandPipeline    string = "pipeline"
+	CommandFn           string = "fn"
+	CommandPipeline     string = "pipeline"
 )
 
 // NewRunner returns a new runner for pkg
@@ -109,7 +108,7 @@ func (r *Runner) runFn() error {
 	return nil
 }
 
-func (r *Runner) runPipeline () error {
+func (r *Runner) runPipeline() error {
 	fmt.Printf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
 	if err != nil {

@@ -29,10 +29,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const (
-	builtinSetAnnotatorImage string = "builtin/set-annotator"
-)
-
 // Function defines an item in the pipeline function list
 type Function struct {
 	// `Image` is the path of the function container image
@@ -92,17 +88,10 @@ func (f *Function) runner() (kio.Filter, error) {
 	if err != nil {
 		return nil, err
 	}
-	var fn KRMFn
-	// TODO: remove this builtin placeholder function
-	if f.Image == builtinSetAnnotatorImage {
-		fn = &annotator{}
-	} else {
-		fn = &runtime.ContainerFn{
-			Image: f.Image,
-		}
-	}
 	return &fnRunner{
-		fn:       fn,
+		fn: &runtime.ContainerFn{
+			Image: f.Image,
+		},
 		fnConfig: config,
 	}, nil
 }

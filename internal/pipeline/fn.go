@@ -42,52 +42,6 @@ type KRMFn interface {
 // ExecFn: that can execute a binary on local machine
 // NetworkFn: that can invoke a endpoint remotely
 // ContainerFn: that can execute a container locally
-// Built-in functions that are compiled into kpt
-
-// annotator is built kpt function for annotating KRM resources.
-type annotator struct{}
-
-func (a *annotator) Run(r io.Reader, w io.Writer) error {
-	rw := &kio.ByteReadWriter{
-		Reader:                r,
-		Writer:                w,
-		KeepReaderAnnotations: true,
-	}
-
-	items, err := rw.Read()
-	if err != nil {
-		return err
-	}
-
-	fnConfig := rw.FunctionConfig
-	if fnConfig == nil {
-		return nil
-	}
-	dataMapsNode, err := fnConfig.Pipe(yaml.Lookup("data"))
-	if err != nil {
-		return err
-	}
-	keyValues := make(map[string]string)
-	err = dataMapsNode.VisitFields(func(node *yaml.MapNode) error {
-		key := node.Key.YNode().Value
-		val := node.Value.YNode().Value
-		keyValues[key] = val
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	for i := range items {
-		for k, v := range keyValues {
-			if err := items[i].PipeE(yaml.SetAnnotation(k, v)); err != nil {
-				return err
-			}
-		}
-		klog.Infof("processing file: %v", items[i])
-	}
-	return rw.Write(items)
-}
 
 // fnRunner adapts a given KRMFn into into kio.Filter to that
 // it can be run as a filter in a kio.Pipeline. Another way to think
