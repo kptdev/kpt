@@ -50,7 +50,7 @@ type KptFile struct {
 type OriginType string
 
 const (
-	// GitOrigin specifies a package as having been cloned from a git repository
+	// GitOrigin specifies a package as having been cloned from a git repository.
 	GitOrigin OriginType = "git"
 )
 
@@ -80,7 +80,7 @@ type Upstream struct {
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty"`
 }
 
-// UpstreamLock is a resolved locator for the last fetch of the packgae.
+// UpstreamLock is a resolved locator for the last fetch of the package.
 type UpstreamLock struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty"`
@@ -122,7 +122,7 @@ type PackageInfo struct {
 	// Tags enables humans and tools to attach arbitrary package metadata.
 	Tags []string `yaml:"tags,omitempty"`
 
-	// Man is the path to documentation about the package
+	// Man is the path to documentation about the package.
 	Man string `yaml:"man,omitempty"`
 
 	// Description contains a short description of the package.
@@ -199,12 +199,14 @@ type Function struct {
 	ConfigMap map[string]string `yaml:"configMap,omitempty"`
 }
 
-// Inventory encapsulates the parameters for the inventory object. All of the
-// the parameters are required if any are set.
+// Inventory encapsulates the parameters for the inventory resource applied to a cluster.
+// All of the the parameters are required if any are set.
 type Inventory struct {
+	// Namespace for the inventory resource.
 	Namespace string `yaml:"namespace,omitempty"`
-	Name      string `yaml:"name,omitempty"`
-	// Unique label to identify inventory object in cluster.
+	// Name of the inventory resource.
+	Name string `yaml:"name,omitempty"`
+	// Unique label to identify inventory resource in cluster.
 	InventoryID string            `yaml:"inventoryID,omitempty"`
 	Labels      map[string]string `yaml:"labels,omitempty"`
 	Annotations map[string]string `yaml:"annotations,omitempty"`
