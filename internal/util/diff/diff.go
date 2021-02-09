@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -123,12 +124,11 @@ func (c *Command) Run() error {
 	// get the upstreamPkg at current version
 	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
-		kptFile.Upstream.Git.Commit,
-		"PackageVersion")
-	fmt.Printf("Staging %s/%s:%s at %s\n",
+		kptFile.Upstream.Git.Commit)
+	fmt.Printf("Staging %s/%s@%s at %s\n",
 		kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
-		"PackageVersion",
+		kptFile.Upstream.Git.Commit,
 		upstreamPkg)
 	if err != nil {
 		return err
@@ -154,12 +154,11 @@ func (c *Command) Run() error {
 		// get the upstream pkg at the target version
 		upstreamTargetPkg, err = c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
 			kptFile.Upstream.Git.Directory,
-			c.Ref,
 			c.Ref)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Staging %s/%s:%s at %s\n",
+		fmt.Printf("Staging %s/%s@%s at %s\n",
 			kptFile.Upstream.Git.Repo,
 			kptFile.Upstream.Git.Directory,
 			c.Ref,
@@ -296,7 +295,7 @@ func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
 
 // PkgGetter knows how to fetch a package given a git repo, path and ref.
 type PkgGetter interface {
-	GetPkg(repo, path, ref, refDesc string) (dir string, err error)
+	GetPkg(repo, path, ref string) (dir string, err error)
 }
 
 // defaultPkgGetter uses get.Command abstraction to implement PkgGetter.
@@ -308,13 +307,9 @@ type defaultPkgGetter struct{}
 // path is the sub directory of the git repository that the package was cloned from
 // ref is the git ref the package was cloned from
 // refDesc is a human readable name of the reference
-func (pg defaultPkgGetter) GetPkg(repo, path, ref, refDesc string) (string, error) {
-	repoSrc := strings.Split(repo, "/") // For github repo's this will be the project name
-	pkgSrc := strings.Split(path, "/")  // This will be the directory the package is contained in
-	tmpPath := fmt.Sprintf("kpt-upstream-%s-%s-%s-",
-		repoSrc[len(repoSrc)-1],
-		pkgSrc[len(pkgSrc)-1],
-		refDesc)
+func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
+	tmpPath := fmt.Sprintf("kpt-upstream-%s-",
+		ref[0:int(math.Min(float64(len(ref)), 7))])
 	dir, err := ioutil.TempDir("", tmpPath)
 	if err != nil {
 		return dir, err
