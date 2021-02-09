@@ -103,17 +103,21 @@ func (c *Command) Run() error {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
 
+	// Create a staging directory to store all compared packages
+	stagingDirectory, err := ioutil.TempDir("", "kpt-")
+	defer func() {
+		// Cleanup staged content after diff. Ignore cleanup if debugging.
+		if !c.Debug {
+			defer os.RemoveAll(stagingDirectory)
+		}
+	}()
+
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	currPkg, err := ioutil.TempDir("", "kpt-local-")
+	currPkg, err := stageDirectory(stagingDirectory, "local-package")
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
-	defer func() {
-		if !c.Debug {
-			defer os.RemoveAll(currPkg)
-		}
-	}()
 
 	err = copyutil.CopyDir(c.Path, currPkg)
 	if err != nil {
@@ -122,7 +126,8 @@ func (c *Command) Run() error {
 	fmt.Printf("Staging %s at %s\n", c.Path, currPkg)
 
 	// get the upstreamPkg at current version
-	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
+	upstreamPkg, err := c.PkgGetter.GetPkg(stagingDirectory,
+		kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
 		kptFile.Upstream.Git.Commit)
 	fmt.Printf("Staging %s/%s@%s at %s\n",
@@ -133,11 +138,6 @@ func (c *Command) Run() error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if !c.Debug {
-			defer os.RemoveAll(upstreamPkg)
-		}
-	}()
 
 	var upstreamTargetPkg string
 
@@ -152,7 +152,8 @@ func (c *Command) Run() error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkg, err = c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
+		upstreamTargetPkg, err = c.PkgGetter.GetPkg(stagingDirectory,
+			kptFile.Upstream.Git.Repo,
 			kptFile.Upstream.Git.Directory,
 			c.Ref)
 		if err != nil {
@@ -163,11 +164,6 @@ func (c *Command) Run() error {
 			kptFile.Upstream.Git.Directory,
 			c.Ref,
 			upstreamTargetPkg)
-		defer func() {
-			if !c.Debug {
-				defer os.RemoveAll(upstreamTargetPkg)
-			}
-		}()
 	}
 
 	if c.Debug {
@@ -295,7 +291,7 @@ func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
 
 // PkgGetter knows how to fetch a package given a git repo, path and ref.
 type PkgGetter interface {
-	GetPkg(repo, path, ref string) (dir string, err error)
+	GetPkg(stagingDir, repo, path, ref string) (dir string, err error)
 }
 
 // defaultPkgGetter uses get.Command abstraction to implement PkgGetter.
@@ -307,10 +303,9 @@ type defaultPkgGetter struct{}
 // path is the sub directory of the git repository that the package was cloned from
 // ref is the git ref the package was cloned from
 // refDesc is a human readable name of the reference
-func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
-	tmpPath := fmt.Sprintf("kpt-upstream-%s-",
-		ref[0:int(math.Min(float64(len(ref)), 7))])
-	dir, err := ioutil.TempDir("", tmpPath)
+func (pg defaultPkgGetter) GetPkg(stagingDir, repo, path, ref string) (string, error) {
+	tmpPath := fmt.Sprintf("upstream-%s", shortSha(ref))
+	dir, err := stageDirectory(stagingDir, tmpPath)
 	if err != nil {
 		return dir, err
 	}
@@ -321,4 +316,18 @@ func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 	}
 	err = cmdGet.Run()
 	return dir, err
+}
+
+// shortSha returns a shortened version of a commit SHA
+func shortSha(sha string) string {
+	return sha[0:int(math.Min(float64(len(sha)), 7))]
+}
+
+// stageDirectory creates a subdirectory of the provided path for temporary operations
+// path is the parent staged directory and should already exist
+// subpath is the subdirectory that should be created inside path
+func stageDirectory(path, subpath string) (string, error) {
+	targetPath := filepath.Join(path, subpath)
+	err := os.Mkdir(targetPath, os.ModePerm)
+	return targetPath, err
 }
