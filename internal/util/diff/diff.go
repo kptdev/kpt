@@ -105,6 +105,9 @@ func (c *Command) Run() error {
 
 	// Create a staging directory to store all compared packages
 	stagingDirectory, err := ioutil.TempDir("", "kpt-")
+	if err != nil {
+		return errors.Errorf("failed to create stage dir: %v", err)
+	}
 	defer func() {
 		// Cleanup staged content after diff. Ignore cleanup if debugging.
 		if !c.Debug {
