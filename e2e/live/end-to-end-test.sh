@@ -882,6 +882,39 @@ assertPodNotExists "pod-c" "test-namespace"
 assertPodNotExists "pod-d" "test-namespace"
 printResult
 
+# Test 21: RBAC error applying a resource
+echo "Testing RBAC error during apply"
+echo "kpt live apply e2e/live/testdata/rbac-error-step-1"
+echo "kpt live apply e2e/live/testdata/rbac-error-step-2"
+# Setup: create a service account and bind a Role to it so it has administrative
+# privileges on the "test" namespace, but no permissions on the default
+# namespace.
+kubectl apply -f e2e/live/testdata/rbac-error-step-1 > $OUTPUT_DIR/status
+assertContains "namespace/rbac-error created"
+assertContains "rolebinding.rbac.authorization.k8s.io/admin created"
+assertContains "serviceaccount/user created"
+wait 2
+
+# Setup: use the service account just created. It does not have permissions
+# on the default namespace, so it will give a permissions error on apply
+# for anything attempted to apply to the default namespace.
+kubectl config set-credentials user --token="$(kubectl get secrets -ojsonpath='{.data.token}' \
+  "$(kubectl get sa user -ojsonpath='{.secrets[0].name}')" \
+  | base64 -d)" > $OUTPUT_DIR/status
+kubectl config set-context kind-kind:user --cluster=kind-kind --user=user > $OUTPUT_DIR/status
+kubectl config use-context kind-kind:user > $OUTPUT_DIR/status
+wait 2
+
+# Attempt to apply two ConfigMaps: one in the default namespace (fails), and one
+# in the test namespace (succeeds).
+${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status
+assertCMInventory "rbac-error" "1"
+assertContains "configmap/error-config-map failed"
+assertContains "configmap/valid-config-map created"
+assertContains "2 resource(s) applied. 1 created, 0 unchanged, 0 configured, 1 failed"
+assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
+printResult
+
 # Clean-up the k8s cluster
 echo "Cleaning up cluster"
 kind delete cluster
