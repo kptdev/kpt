@@ -37,7 +37,7 @@ openAPI:
           value: "3"`,
 		out: `${baseDir}/${filePath}
 fieldPath: spec.replicas
-value: 3 # {"$kpt-set":"${replicas}"}
+value: 3 # kpt-set: ${replicas}
 
 Mutated 1 field(s)
 `,
@@ -47,7 +47,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 3 # {"$kpt-set":"${replicas}"}
+  replicas: 3 # kpt-set: ${replicas}
  `,
 	},
 	{
@@ -77,7 +77,7 @@ openAPI:
           value: "deployment"`,
 		out: `${baseDir}/${filePath}
 fieldPath: metadata.name
-value: nginx-deployment # {"$kpt-set":"${image}-${kind}"}
+value: nginx-deployment # kpt-set: ${image}-${kind}
 
 Mutated 1 field(s)
 `,
@@ -85,7 +85,7 @@ Mutated 1 field(s)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment # {"$kpt-set":"${image}-${kind}"}
+  name: nginx-deployment # kpt-set: ${image}-${kind}
 spec:
   replicas: 3
  `,
@@ -113,11 +113,11 @@ openAPI:
           value: "my-project"`,
 		out: `${baseDir}/${filePath}
 fieldPath: metadata.name
-value: my-project-deployment # {"$kpt-set":"${project}-deployment"}
+value: my-project-deployment # kpt-set: ${project}-deployment
 
 ${baseDir}/${filePath}
 fieldPath: metadata.namespace
-value: my-project-namespace # {"$kpt-set":"${project}-namespace"}
+value: my-project-namespace # kpt-set: ${project}-namespace
 
 Mutated 2 field(s)
 `,
@@ -125,8 +125,8 @@ Mutated 2 field(s)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-project-deployment # {"$kpt-set":"${project}-deployment"}
-  namespace: my-project-namespace # {"$kpt-set":"${project}-namespace"}
+  name: my-project-deployment # kpt-set: ${project}-deployment
+  namespace: my-project-namespace # kpt-set: ${project}-namespace
 spec:
   replicas: 3
  `,
@@ -168,7 +168,7 @@ openAPI:
           value: "my-space"`,
 		out: `${baseDir}/${filePath}
 fieldPath: metadata.name
-value: dev/my-project/nginx # {"$kpt-set":"${env}/${project}/${name}"}
+value: dev/my-project/nginx # kpt-set: ${env}/${project}/${name}
 
 Mutated 1 field(s)
 `,
@@ -176,7 +176,7 @@ Mutated 1 field(s)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dev/my-project/nginx # {"$kpt-set":"${env}/${project}/${name}"}
+  name: dev/my-project/nginx # kpt-set: ${env}/${project}/${name}
 spec:
   replicas: 3
  `,
