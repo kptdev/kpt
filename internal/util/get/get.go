@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -70,18 +71,18 @@ func (c Command) Run() error {
 func (c Command) fetchRemoteSubpackages() error {
 	// Create a stack to keep track of all Kptfiles that needs to be checked
 	// for remote subpackages.
-	stack := newStack()
+	s := stack.New()
 
 	paths, err := pathutil.DirsWithFile(c.Destination, kptfile.KptFileName, true)
 	if err != nil {
 		return err
 	}
 	for _, p := range paths {
-		stack.push(p)
+		s.Push(p)
 	}
 
-	for stack.len() > 0 {
-		p := stack.pop()
+	for s.Len() > 0 {
+		p := s.Pop()
 		kf, err := kptfileutil.ReadFile(p)
 		if err != nil {
 			return err
@@ -130,40 +131,12 @@ func (c Command) fetchRemoteSubpackages() error {
 				return err
 			}
 			for _, subp := range subPaths {
-				if subp == localPath {
+				if subp == p {
 					continue
 				}
-				stack.push(subp)
+				s.Push(subp)
 			}
 		}
 	}
 	return nil
-}
-
-func newStack() *stack {
-	return &stack{
-		slice: make([]string, 0),
-	}
-}
-
-type stack struct {
-	slice []string
-}
-
-func (s *stack) push(str string) {
-	s.slice = append(s.slice, str)
-}
-
-func (s *stack) pop() string {
-	l := len(s.slice)
-	if l == 0 {
-		panic(fmt.Errorf("can't pop an empty stack"))
-	}
-	str := s.slice[l-1]
-	s.slice = s.slice[:l-1]
-	return str
-}
-
-func (s *stack) len() int {
-	return len(s.slice)
 }

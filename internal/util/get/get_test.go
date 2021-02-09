@@ -1151,6 +1151,11 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				repoPaths[name] = tgr.RepoDirectory
 			}
 
+			err = testutil.UpdateRefRepos(t, refRepos, test.refRepos, repoPaths)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
 			g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, test.upstream, repoPaths)
 			defer clean()
 

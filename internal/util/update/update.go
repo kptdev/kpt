@@ -16,12 +16,16 @@
 package update
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/setters"
+	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -142,17 +146,17 @@ func (u Command) Run() error {
 		u.Output = os.Stdout
 	}
 
-	kptfile, err := kptfileutil.ReadFileStrict(u.FullPackagePath)
+	rootKf, err := kptfileutil.ReadFileStrict(u.FullPackagePath)
 	if err != nil {
 		return errors.Errorf("unable to read package Kptfile: %v", err)
 	}
 
 	// default arguments
 	if u.Repo == "" {
-		u.Repo = kptfile.Upstream.Git.Repo
+		u.Repo = rootKf.Upstream.Git.Repo
 	}
 	if u.Ref == "" {
-		u.Ref = kptfile.Upstream.Git.Ref
+		u.Ref = rootKf.Upstream.Git.Ref
 	}
 
 	// require package is checked into git before trying to update it
@@ -166,13 +170,13 @@ func (u Command) Run() error {
 			u.Path)
 	}
 
-	// update
+	// update root package
 	updater, found := strategies[u.Strategy]
 	if !found {
 		return errors.Errorf("unrecognized update strategy %s", u.Strategy)
 	}
-	err = updater().Update(UpdateOptions{
-		KptFile:        kptfile,
+	if err := updater().Update(UpdateOptions{
+		KptFile:        rootKf,
 		ToRef:          u.Ref,
 		ToRepo:         u.Repo,
 		PackagePath:    u.Path,
@@ -182,10 +186,74 @@ func (u Command) Run() error {
 		SimpleMessage:  u.SimpleMessage,
 		Output:         u.Output,
 		AutoSet:        u.AutoSet,
-	})
-
-	if err != nil {
+	}); err != nil {
 		return err
+	}
+
+	// Use stack to keep track of paths with a Kptfile that might contain
+	// information about remote subpackages.
+	s := stack.New()
+	s.Push(u.FullPackagePath)
+
+	for s.Len() > 0 {
+		p := s.Pop()
+
+		kf, err := kptfileutil.ReadFile(p)
+		if err != nil {
+			return err
+		}
+
+		for _, sp := range kf.Subpackages {
+			spFilePath := filepath.Join(p, sp.LocalDir)
+
+			_, err := os.Stat(spFilePath)
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+
+			if os.IsNotExist(err) {
+				if err := (get.Command{
+					Git:         sp.Git,
+					Destination: spFilePath,
+					Name:        sp.LocalDir,
+					Clean:       false,
+				}).Run(); err != nil {
+					return err
+				}
+				continue
+			}
+
+			spKptfile, err := kptfileutil.ReadFile(spFilePath)
+			if err != nil {
+				return err
+			}
+
+			// If either the repo or the directory of the current local package
+			// doesn't match the remote subpackage spec in the Kptfile, it must
+			// be a local subpackage.
+			if sp.Git.Repo != spKptfile.Upstream.Git.Repo ||
+				sp.Git.Directory != spKptfile.Upstream.Git.Directory {
+				return fmt.Errorf("subpackage already exists in directory %s", sp.LocalDir)
+			}
+
+			updater, found := strategies[StrategyType(sp.UpdateStrategy)]
+			if !found {
+				return errors.Errorf("unrecognized update strategy %s", u.Strategy)
+			}
+			if err := updater().Update(UpdateOptions{
+				KptFile:        spKptfile,
+				ToRef:          sp.Git.Ref,
+				ToRepo:         sp.Git.Repo,
+				AbsPackagePath: spFilePath,
+				DryRun:         u.DryRun,
+				Verbose:        u.Verbose,
+				SimpleMessage:  u.SimpleMessage,
+				Output:         u.Output,
+			}); err != nil {
+				return err
+			}
+			s.Push(spFilePath)
+		}
 	}
 
 	// perform auto-setters after the package is updated

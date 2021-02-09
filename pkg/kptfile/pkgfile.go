@@ -16,6 +16,9 @@
 package kptfile
 
 import (
+	"fmt"
+	"reflect"
+
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -257,6 +260,94 @@ func shouldRemoveValue(updatedDef, localDef, originalDef *yaml.MapNode, key stri
 	}
 
 	return false
+}
+
+// MergeSubpackages takes the subpackage information from local, updated
+// and original and does a 3-way merge. The result is returned as a new slice.
+// The passed in data structures are not changed.
+func MergeSubpackages(local, updated, original []Subpackage) ([]Subpackage, error) {
+	// find is a helper function that returns a subpackage with the provided
+	// key from the slice.
+	find := func(key string, slice []Subpackage) (Subpackage, bool) {
+		for i := range slice {
+			sp := slice[i]
+			if sp.LocalDir == key {
+				return sp, true
+			}
+		}
+		return Subpackage{}, false
+	}
+
+	// Create a new slice to contain the merged result.
+	var merged []Subpackage
+
+	// If local is empty, we can just use the slice from updated.
+	if len(local) == 0 {
+		merged = append(merged, updated...)
+		return merged, nil
+	}
+
+	// If updated is empty, we can just use the slice from local.
+	if len(updated) == 0 {
+		merged = append(merged, local...)
+		return merged, nil
+	}
+
+	// Create a slice that contains all keys available from both updated
+	// and local. We add keys from updated first, so subpackages added
+	// locally will be at the end of the slice after merge.
+	var dirKeys []string
+	for _, sp := range updated {
+		dirKeys = append(dirKeys, sp.LocalDir)
+	}
+	for _, sp := range local {
+		dirKeys = append(dirKeys, sp.LocalDir)
+	}
+
+	// The slice of keys might contain duplicates, so keep track of which
+	// keys we have seen.
+	seen := make(map[string]bool)
+	for _, key := range dirKeys {
+		// Skip subpackages that we have already merged.
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+
+		// Look up the package with the given name from all three sources.
+		l, lok := find(key, local)
+		u, uok := find(key, updated)
+		o, ook := find(key, original)
+
+		// If we find a remote subpackage defined in both local and updated, but
+		// not in the original, it must have been added both in local and updated.
+		// This is an error and the user must resolve this.
+		if !ook && uok && lok {
+			return merged, fmt.Errorf("remote subpackage with localDir %s added in both local and upstream", key)
+		}
+
+		if !lok && !uok {
+			continue
+		}
+
+		// If key not found in local, we use the version from updated.
+		if !lok {
+			merged = append(merged, u)
+		}
+		// If key not found in updated, we use the version from local.
+		if !uok {
+			merged = append(merged, l)
+		}
+
+		// If we changes to local compared with original, we keep the local
+		// version. Otherwise, we take hte version from updated.
+		if reflect.DeepEqual(o, l) {
+			merged = append(merged, u)
+		} else {
+			merged = append(merged, l)
+		}
+	}
+	return merged, nil
 }
 
 type Dependency struct {

@@ -21,10 +21,52 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
-// walkPackage walks the package defined at src and provides a callback for
+type RemoteSubPkgInfo struct {
+	PackagePath          string
+	DeclaringKptfilePath string
+}
+
+// FindLocalSubpackages returns a slice with the paths to all local subpackages
+// under the provided path. Any remote subpackages are excluded.
+func FindLocalSubpackages(path string) ([]string, error) {
+	var localSubPkgs []string
+	var remoteSubPkgs []string
+	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		for _, dir := range remoteSubPkgs {
+			if strings.HasPrefix(p, dir) {
+				return nil
+			}
+		}
+
+		if filepath.Base(p) != kptfile.KptFileName {
+			return nil
+		}
+
+		pkgPath := filepath.Dir(p)
+		localSubPkgs = append(localSubPkgs, pkgPath)
+
+		kf, err := kptfileutil.ReadFile(pkgPath)
+		if err != nil {
+			return err
+		}
+		for _, sp := range kf.Subpackages {
+			spPath := filepath.Join(pkgPath, sp.LocalDir)
+			remoteSubPkgs = append(remoteSubPkgs, spPath)
+		}
+		return nil
+	})
+	return localSubPkgs, err
+}
+
+// WalkPackage walks the package defined at src and provides a callback for
 // every folder and file. Any subpackages and the .git folder are excluded.
 func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 	excludedDirs := make(map[string]bool)

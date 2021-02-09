@@ -37,9 +37,32 @@ func (f FieldPathSetter) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
 		Path: f.Path,
 	})
 	if err != nil {
-		return n, err
+		return rn, err
 	}
 
 	n.YNode().Value = f.Value
 	return rn, nil
+}
+
+// SetAnnotation returns a new AnnotationSetters that sets an annotation
+// with the given name and value.
+func SetAnnotation(name, value string) AnnotationSetter {
+	return AnnotationSetter{
+		Name:  name,
+		Value: value,
+	}
+}
+
+type AnnotationSetter struct {
+	Name string
+
+	Value string
+}
+
+func (a AnnotationSetter) Filter(rn *yaml.RNode) (*yaml.RNode, error) {
+	err := rn.PipeE(yaml.AnnotationSetter{
+		Key:   a.Name,
+		Value: a.Value,
+	})
+	return rn, err
 }

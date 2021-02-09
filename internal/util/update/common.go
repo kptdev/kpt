@@ -20,8 +20,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 )
 
 // findAllSubpackages traverses the provided package paths
@@ -31,8 +30,9 @@ import (
 // relative to the root package.
 func findAllSubpackages(pkgPaths ...string) ([]string, error) {
 	uniquePaths := make(map[string]bool)
+	uniquePaths["."] = true
 	for _, path := range pkgPaths {
-		paths, err := pathutil.DirsWithFile(path, kptfile.KptFileName, true)
+		paths, err := pkgutil.FindLocalSubpackages(path)
 		if err != nil {
 			return []string{}, err
 		}
