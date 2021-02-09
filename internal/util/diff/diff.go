@@ -105,7 +105,7 @@ func (c *Command) Run() error {
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	currPkg, err := ioutil.TempDir("", "kpt-")
+	currPkg, err := ioutil.TempDir("", "kpt-local-")
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
