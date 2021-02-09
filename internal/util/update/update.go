@@ -41,9 +41,6 @@ type UpdateOptions struct {
 	// ToRepo is the repo to use for updating
 	ToRepo string
 
-	// PackagePath is the relative path to the local package
-	PackagePath string
-
 	// AbsPackagePath is the absolute path to the local package
 	AbsPackagePath string
 
@@ -70,7 +67,6 @@ type Updater interface {
 }
 
 var strategies = map[StrategyType]func() Updater{
-	AlphaGitPatch:      func() Updater { return GitPatchUpdater{} },
 	Default:            func() Updater { return ResourceMergeUpdater{} },
 	FastForward:        func() Updater { return FastForwardUpdater{} },
 	ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
@@ -92,9 +88,6 @@ const (
 	// a remote repository
 	ForceDeleteReplace StrategyType = "force-delete-replace"
 
-	// AlphaGitPatch will merge upstream changes using `git format-patch` and `git am`.
-	AlphaGitPatch StrategyType = "alpha-git-patch"
-
 	KResourceMerge StrategyType = "resource-merge"
 
 	// Default defaults to the recommended strategy, which is FailOnChanges.
@@ -103,7 +96,7 @@ const (
 )
 
 var Strategies = []string{
-	string(FastForward), string(ForceDeleteReplace), string(AlphaGitPatch), string(KResourceMerge),
+	string(FastForward), string(ForceDeleteReplace), string(KResourceMerge),
 }
 
 // Command updates the contents of a local package to a different version.
@@ -179,7 +172,6 @@ func (u Command) Run() error {
 		KptFile:        rootKf,
 		ToRef:          u.Ref,
 		ToRepo:         u.Repo,
-		PackagePath:    u.Path,
 		AbsPackagePath: u.FullPackagePath,
 		DryRun:         u.DryRun,
 		Verbose:        u.Verbose,

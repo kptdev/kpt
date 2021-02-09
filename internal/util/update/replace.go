@@ -34,7 +34,7 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 			Ref:     options.KptFile.Upstream.Git.Ref,
 			Path:    options.KptFile.Upstream.Git.Directory,
 		},
-		Destination: options.PackagePath,
+		Destination: options.AbsPackagePath,
 		Clean:       true,
 	}.Run()
 }

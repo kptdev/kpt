@@ -15,7 +15,6 @@
 package update_test
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -612,47 +611,6 @@ func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestCommand_Run_emitPatch(t *testing.T) {
-	// Setup the test upstream and local packages
-	g := &testutil.TestSetupManager{
-		T:               t,
-		UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
-	}
-	defer g.Clean()
-	if !g.Init(testutil.Content{
-		Data:   testutil.Dataset1,
-		Branch: "master",
-	}) {
-		return
-	}
-
-	f, err := ioutil.TempFile("", "*.patch")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(f.Name())
-
-	// Update the local package
-	b := &bytes.Buffer{}
-	err = Command{
-		Path:            g.UpstreamRepo.RepoName,
-		FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-		Strategy:        AlphaGitPatch,
-		DryRun:          true,
-		Output:          b,
-	}.Run()
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	assert.Contains(t, b.String(), `-          initialDelaySeconds: 30
--          periodSeconds: 10
-+          initialDelaySeconds: 45
-+          periodSeconds: 15
-           timeoutSeconds: 5
-`)
 }
 
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid

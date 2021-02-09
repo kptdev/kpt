@@ -24,7 +24,7 @@ func ExampleCommand() {
 	err := update.Command{
 		Path:     filepath.Join("path", "to", "package"),
 		Ref:      "v1.2",
-		Strategy: update.AlphaGitPatch,
+		Strategy: update.KResourceMerge,
 	}.Run()
 	if err != nil {
 		// handle error
