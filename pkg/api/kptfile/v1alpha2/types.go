@@ -74,7 +74,7 @@ type Upstream struct {
 	Type OriginType `yaml:"type,omitempty"`
 
 	// Git is the locator for a package stored on Git.
-	Git Git `yaml:"git,omitempty"`
+	Git *Git `yaml:"git,omitempty"`
 
 	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty"`
@@ -86,7 +86,7 @@ type UpstreamLock struct {
 	Type OriginType `yaml:"type,omitempty"`
 
 	// Git is the locator for a package stored on Git.
-	Git Git `yaml:"git,omitempty"`
+	Git *Git `yaml:"git,omitempty"`
 }
 
 // Git contains information on the origin of packages fetched from a git repository.
@@ -104,8 +104,8 @@ type Git struct {
 	Commit string `yaml:"commit,omitempty"`
 }
 
-// PackageInfo contains metadata such as license, documentation, etc.
-// These fields are not used for any functionality in kpt and are simply passed through.
+// PackageInfo contains information such as license, documentation, etc.
+// These fields are not consumed by any functionality in kpt and are simply passed through.
 type PackageInfo struct {
 	// URL is the location of the package.  e.g. https://github.com/example/com
 	URL string `yaml:"url,omitempty"`
@@ -116,7 +116,7 @@ type PackageInfo struct {
 	// License is the package license
 	License string `yaml:"license,omitempty"`
 
-	// Version is a logical package version (ignored by kpt)
+	// Version is a logical package version
 	Version string `yaml:"version,omitempty"`
 
 	// Tags enables humans and tools to attach arbitrary package metadata.
@@ -189,7 +189,7 @@ type Function struct {
 	// Config, ConfigPath, and ConfigMap fields are mutually exclusive.
 	Config *yaml.Node `yaml:"config,omitempty"`
 
-	// `ConfigPath` specifies a relative path to a file in the current directory
+	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
 	// containing a K8S resource used as the function config. This resource is
 	// excluded when resolving 'sources', and as a result cannot be operated on
 	// by the pipeline.
