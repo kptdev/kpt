@@ -184,7 +184,7 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 	if e, ok := exitErr.(*exec.ExitError); ok {
 		exitCode = e.ExitCode()
 	} else if exitErr != nil {
-		return fmt.Errorf("cannot get exit code from %w", exitErr)
+		return fmt.Errorf("cannot get exit code, received error '%w'", exitErr)
 	}
 
 	if exitCode != r.testCase.Config.ExitCode {
