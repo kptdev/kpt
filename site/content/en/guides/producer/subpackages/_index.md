@@ -214,4 +214,4 @@ Go through the [consumer guide] to consume the published package
 [auto-setter]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters
 [cfg]: https://googlecontainertools.github.io/kpt/reference/cfg/
 [subpackage]: https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages
-[consumer guide]: https://googlecontainertools.github.io/kpt/guides/producer/subpackages/
+[consumer guide]: https://googlecontainertools.github.io/kpt/guides/consumer/subpackages
