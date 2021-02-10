@@ -108,7 +108,7 @@ data: {foo: bar}
 				assert.NoError(t, err, "unexpected error")
 				c.fn.ConfigPath = tmp.Name()
 			}
-			cn, err := c.fn.config()
+			cn, err := newFnConfig(&c.fn)
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")
@@ -200,8 +200,6 @@ apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./base
 `,
 			Valid: true,
 		},
@@ -212,11 +210,8 @@ apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./base
-- ./*
 
-generators:
+mutators:
 - image: gcr.io/kpt-functions/generate-folders
   config:
     apiVersion: cft.dev/v1alpha1
@@ -224,7 +219,6 @@ generators:
     metadata:
       name: root-hierarchy
       namespace: hierarchy # {"$kpt-set":"namespace"}
-transformers:
 - image: patch-strategic-merge
   configPath: ./patch.yaml
 - image: gcr.io/kpt-functions/set-annotation
@@ -243,20 +237,6 @@ apiVersion: kpt.dev/v1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./base
-`,
-			Valid: false,
-		},
-		{
-			Name: "absolute source path",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- /foo/bar
 `,
 			Valid: false,
 		},
@@ -267,9 +247,7 @@ apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./*
-transformers:
+mutators:
 - image: patch@_@strategic-merge
   configPath: ./patch.yaml
 `,
@@ -282,9 +260,7 @@ apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./*
-transformers:
+mutators:
 - image: patch-strategic-merge
   configPath: ./patch.yaml
   configMap:
@@ -299,9 +275,7 @@ apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./*
-transformers:
+mutators:
 - image: patch-strategic-merge
   configPath: /patch.yaml
 `,

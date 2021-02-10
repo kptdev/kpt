@@ -120,16 +120,14 @@ func (p *pkg) Pipeline() *Pipeline {
 // and returns list of package paths that this pkg depends on.
 // This is one of the critical pieces of code
 func (p *pkg) resolveSources() ([]string, error) {
-	pipeline := p.Pipeline()
-
 	var pkgPaths []string
-	for _, s := range pipeline.Sources {
-		paths, err := resolveSource(s, p.Path())
-		if err != nil {
-			return nil, err
-		}
-		pkgPaths = append(pkgPaths, paths...)
+	// TODO: since we are considering only support './*', we can simplify
+	// this part
+	paths, err := resolveSource(sourceAllSubPkgs, p.Path())
+	if err != nil {
+		return nil, err
 	}
+	pkgPaths = append(pkgPaths, paths...)
 	return pkgPaths, nil
 }
 
@@ -310,7 +308,7 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 // fnFilters returns chain of functions that are applicable
 // to a given pipeline.
 func fnFilters(p *Pipeline) ([]kio.Filter, error) {
-	filters, err := p.fnChain()
+	filters, err := fnChain(p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}

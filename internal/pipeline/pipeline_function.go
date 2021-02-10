@@ -53,8 +53,8 @@ type Function struct {
 	ConfigMap map[string]string `yaml:"configMap,omitempty"`
 }
 
-// Validate will validate all fields in function.
-func (f *Function) Validate() error {
+// validateFunction will validate all fields in function.
+func validateFunction(f *Function) error {
 	err := validateFunctionName(f.Image)
 	if err != nil {
 		return fmt.Errorf("'image' is invalid: %w", err)
@@ -81,10 +81,10 @@ func (f *Function) Validate() error {
 	return nil
 }
 
-// runner returns a fnRunner from the image and configs of
+// newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func (f *Function) runner() (kio.Filter, error) {
-	config, err := f.config()
+func newFnRunner(f *Function) (kio.Filter, error) {
+	config, err := newFnConfig(f)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (f *Function) runner() (kio.Filter, error) {
 	}, nil
 }
 
-func (f *Function) config() (*yaml.RNode, error) {
+func newFnConfig(f *Function) (*yaml.RNode, error) {
 	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":

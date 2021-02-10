@@ -27,7 +27,7 @@ import (
 func TestString(t *testing.T) {
 	expected := "{ResourceMeta:{TypeMeta:{APIVersion:kpt.dev/v1alpha1 Kind:Pipeline} " +
 		"ObjectMeta:{NameMeta:{Name:pipeline Namespace:} Labels:map[] Annotations:map[]}} " +
-		"Sources:[./*] Generators:[] Transformers:[] Validators:[]}"
+		"Mutators:[] Validators:[]}"
 	actual := New().String()
 	if !assert.EqualValues(t, expected, actual) {
 		t.Fatalf("unexpected string value")
@@ -47,9 +47,6 @@ func TestNew(t *testing.T) {
 					Name: "pipeline",
 				},
 			},
-		},
-		Sources: []string{
-			"./*",
 		},
 	}
 	if !assert.True(t, isPipelineEqual(t, *p, expected)) {
@@ -146,7 +143,6 @@ metadata:
 					},
 				},
 			},
-			Sources: []string{"./*"},
 		},
 	},
 	"with sources": {
@@ -155,10 +151,6 @@ apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./base
-- ./*
-- .
 `,
 		Expected: Pipeline{
 			ResourceMeta: yaml.ResourceMeta{
@@ -172,11 +164,6 @@ sources:
 					},
 				},
 			},
-			Sources: []string{
-				"base",
-				"./*",
-				".",
-			},
 		},
 	},
 	"complex": {
@@ -185,11 +172,8 @@ apiVersion: kpt.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline
-sources:
-- ./base
-- ./*
 
-generators:
+mutators:
 - image: gcr.io/kpt-functions/generate-folders
   config:
     apiVersion: cft.dev/v1alpha1
@@ -197,7 +181,6 @@ generators:
     metadata:
       name: root-hierarchy
       namespace: hierarchy # {"$kpt-set":"namespace"}
-transformers:
 - image: patch-strategic-merge
   configPath: ./patch.yaml
 - image: gcr.io/kpt-functions/set-annotation
@@ -219,11 +202,7 @@ validators:
 					},
 				},
 			},
-			Sources: []string{
-				"base",
-				"./*",
-			},
-			Generators: []Function{
+			Mutators: []Function{
 				{
 					Image: "gcr.io/kpt-functions/generate-folders",
 					Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
@@ -232,8 +211,6 @@ metadata:
   name: root-hierarchy
   namespace: hierarchy # {"$kpt-set":"namespace"}`).YNode(),
 				},
-			},
-			Transformers: []Function{
 				{
 					Image:      "patch-strategic-merge",
 					ConfigPath: "./patch.yaml",
@@ -295,19 +272,11 @@ func isFunctionSliceEqual(t *testing.T, fs1, fs2 []Function) bool {
 }
 
 func isPipelineEqual(t *testing.T, p1, p2 Pipeline) bool {
-	if !isFunctionSliceEqual(t, p1.Transformers, p2.Transformers) {
-		return false
-	}
-
-	if !isFunctionSliceEqual(t, p1.Generators, p2.Generators) {
+	if !isFunctionSliceEqual(t, p1.Mutators, p2.Mutators) {
 		return false
 	}
 
 	if !isFunctionSliceEqual(t, p1.Validators, p2.Validators) {
-		return false
-	}
-
-	if !assert.EqualValues(t, p1.Sources, p2.Sources) {
 		return false
 	}
 
