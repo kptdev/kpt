@@ -80,53 +80,73 @@ type Upstream struct {
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty"`
 }
 
+// Git is the user-specified locator for a package on Git.
+type Git struct {
+	// Repo is the git repository the package.
+	// e.g. 'https://github.com/kubernetes/examples.git'
+	Repo string `yaml:"repo,omitempty"`
+
+	// Directory is the sub directory of the git repository.
+	// e.g. 'staging/cockroachdb'
+	Directory string `yaml:"directory,omitempty"`
+
+	// Ref can be a Git branch, tag, or a commit SHA-1.
+	Ref string `yaml:"ref,omitempty"`
+}
+
 // UpstreamLock is a resolved locator for the last fetch of the package.
 type UpstreamLock struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty"`
 
-	// Git is the locator for a package stored on Git.
-	Git *Git `yaml:"git,omitempty"`
+	// GitLock is the resolved locator for a package on Git.
+	GitLock *GitLock `yaml:"git,omitempty"`
 }
 
-// Git contains information on the origin of packages fetched from a git repository.
-type Git struct {
-	// Repo is the git repository the package was cloned from.  e.g. https://
+// GitLock is the resolved locator for a package on Git.
+type GitLock struct {
+	// Repo is the git repository that was fetched.
+	// e.g. 'https://github.com/kubernetes/examples.git'
 	Repo string `yaml:"repo,omitempty"`
 
-	// Directory is the sub directory of the git repository that the package was cloned from
+	// Directory is the sub directory of the git repository that was fetched.
+	// e.g. 'staging/cockroachdb'
 	Directory string `yaml:"directory,omitempty"`
 
-	// Ref can be a Git branch, tag, or commit ID.
+	// Ref can be a Git branch, tag, or a commit SHA-1 that was fetched.
+	// e.g. 'master'
 	Ref string `yaml:"ref,omitempty"`
 
-	// Commit is the git commit that the package was fetched at
+	// Commit is the SHA-1 for the last fetch of the package.
+	// This is set by kpt for bookkeeping purposes.
 	Commit string `yaml:"commit,omitempty"`
 }
 
-// PackageInfo contains information such as license, documentation, etc.
+// PackageInfo contains optional information about the package such as license, documentation, etc.
 // These fields are not consumed by any functionality in kpt and are simply passed through.
+// Note that like any other KRM resource, humans and automation can also use `metadata.labels` and
+// `metadata.annotations` as the extrension mechanism.
 type PackageInfo struct {
-	// URL is the location of the package.  e.g. https://github.com/example/com
-	URL string `yaml:"url,omitempty"`
+	// Site is the URL for package web page.
+	Site string `yaml:"site,omitempty"`
 
-	// Email is the email of the package maintainer
-	Email string `yaml:"email,omitempty"`
+	// Email is the list of emails for the package authors.
+	Emails []string `yaml:"emails,omitempty"`
 
-	// License is the package license
+	// SPDX license identifier (e.g. "Apache-2.0"). See: https://spdx.org/licenses/
 	License string `yaml:"license,omitempty"`
 
-	// Version is a logical package version
-	Version string `yaml:"version,omitempty"`
+	// Relative slash-delimited path to the license file (e.g. LICENSE.txt)
+	LicenseFile string `yaml:"licenseFile,omitempty"`
 
-	// Tags enables humans and tools to attach arbitrary package metadata.
-	Tags []string `yaml:"tags,omitempty"`
-
-	// Man is the path to documentation about the package.
-	Man string `yaml:"man,omitempty"`
+	// Doc is the path to documentation about the package.
+	Doc string `yaml:"doc,omitempty"`
 
 	// Description contains a short description of the package.
 	Description string `yaml:"description,omitempty"`
+
+	// Keywrods is a list of keywords for this package.
+	Keywords []string `yaml:"keywords,omitempty"`
 }
 
 // Subpackages declares a local or remote subpackage.
@@ -185,12 +205,12 @@ type Function struct {
 	//	image: set-label
 	Image string `yaml:"image,omitempty"`
 
-	// `Config` specifies an inline k8s resource used as the function config.
+	// `Config` specifies an inline KRM resource used as the function config.
 	// Config, ConfigPath, and ConfigMap fields are mutually exclusive.
 	Config *yaml.Node `yaml:"config,omitempty"`
 
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
-	// containing a K8S resource used as the function config. This resource is
+	// containing a KRM resource used as the function config. This resource is
 	// excluded when resolving 'sources', and as a result cannot be operated on
 	// by the pipeline.
 	ConfigPath string `yaml:"configPath,omitempty"`
