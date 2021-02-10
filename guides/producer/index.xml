@@ -1309,7 +1309,7 @@ git init&lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;;&lt;/span&gt; g
 git remote add origin &amp;lt;YOUR_GIT_REPO_LINK&amp;gt;
 git push origin master
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;next-steps&#34;&gt;Next steps&lt;/h2&gt;
-&lt;p&gt;Go through the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/producer/subpackages/&#34;&gt;consumer guide&lt;/a&gt; to consume the published package&lt;/p&gt;
+&lt;p&gt;Go through the &lt;a href=&#34;https://googlecontainertools.github.io/kpt/guides/consumer/subpackages&#34;&gt;consumer guide&lt;/a&gt; to consume the published package&lt;/p&gt;
 
       </description>
     </item>
