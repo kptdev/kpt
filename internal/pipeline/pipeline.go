@@ -93,7 +93,7 @@ func validatePipeline(p *Pipeline) error {
 
 // fnChain returns a slice of function runners from the
 // functions and configs defined in pipeline.
-func fnChain(p *Pipeline) ([]kio.Filter, error) {
+func fnChain(p *Pipeline, pkgPath string) ([]kio.Filter, error) {
 	fns := []Function{}
 	fns = append(fns, p.Mutators...)
 	// TODO: Validators cannot modify resources.
@@ -101,7 +101,7 @@ func fnChain(p *Pipeline) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFnRunner(&fn)
+		r, err := newFnRunner(&fn, pkgPath)
 		if err != nil {
 			return nil, err
 		}

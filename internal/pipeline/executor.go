@@ -266,7 +266,7 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 	// write it in-place or not. Currently in-place.
 	pkgWriter := &kio.LocalPackageWriter{PackagePath: p.Path()}
 
-	filters, err := fnFilters(p.Pipeline())
+	filters, err := fnFilters(p.Pipeline(), p.Path())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function filters: %w", err)
 	}
@@ -307,8 +307,8 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 
 // fnFilters returns chain of functions that are applicable
 // to a given pipeline.
-func fnFilters(p *Pipeline) ([]kio.Filter, error) {
-	filters, err := fnChain(p)
+func fnFilters(p *Pipeline, pkgPath string) ([]kio.Filter, error) {
+	filters, err := fnChain(p, pkgPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}

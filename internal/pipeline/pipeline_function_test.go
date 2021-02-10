@@ -31,6 +31,8 @@ package pipeline
 import (
 	"bytes"
 	"io/ioutil"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -106,9 +108,9 @@ data: {foo: bar}
 				assert.NoError(t, err, "unexpected error")
 				_, err = tmp.WriteString(c.configFileContent)
 				assert.NoError(t, err, "unexpected error")
-				c.fn.ConfigPath = tmp.Name()
+				c.fn.ConfigPath = path.Base(tmp.Name())
 			}
-			cn, err := newFnConfig(&c.fn)
+			cn, err := newFnConfig(&c.fn, os.TempDir())
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")

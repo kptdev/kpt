@@ -83,8 +83,8 @@ func validateFunction(f *Function) error {
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(f *Function) (kio.Filter, error) {
-	config, err := newFnConfig(f)
+func newFnRunner(f *Function, pkgPath string) (kio.Filter, error) {
+	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -96,11 +96,12 @@ func newFnRunner(f *Function) (kio.Filter, error) {
 	}, nil
 }
 
-func newFnConfig(f *Function) (*yaml.RNode, error) {
+func newFnConfig(f *Function, pkgPath string) (*yaml.RNode, error) {
 	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":
-		file, err := os.Open(f.ConfigPath)
+		path := path.Join(pkgPath, f.ConfigPath)
+		file, err := os.Open(path)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open config file path %s: %w", f.ConfigPath, err)
 		}
