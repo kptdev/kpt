@@ -19,7 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/pipeline"
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 )
 
@@ -42,7 +42,7 @@ type Pkg struct {
 	kptfileLoaded bool
 
 	// A package can contain zero or one Pipeline meta resource.
-	pipeline       *pipeline.Pipeline
+	pipeline       *v1alpha2.Pipeline
 	pipelineLoaded bool
 }
 
@@ -88,7 +88,7 @@ func (p *Pkg) Kptfile() *kptfile.KptFile {
 }
 
 // Pipeline returns the Pipeline meta resource by lazy loading it from the filesystem.
-func (p *Pkg) Pipeline() *pipeline.Pipeline {
+func (p *Pkg) Pipeline() *v1alpha2.Pipeline {
 	if !p.pipelineLoaded {
 		// TODO
 		// p.pipeline = ...

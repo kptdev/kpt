@@ -25,36 +25,13 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pipeline/runtime"
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// Function defines an item in the pipeline function list
-type Function struct {
-	// `Image` is the path of the function container image
-	// Image name can be a "built-in" function: kpt can be configured to use a image
-	// registry host-path that will be used to resolve the full image path in case
-	// the image path is missing (Defaults to gcr.io/kpt-functions-trusted).
-	// For example, the following resolves to gcr.io/kpt-functions-trusted/patch-strategic-merge.
-	//		image: patch-strategic-merge
-	Image string `yaml:"image,omitempty"`
-
-	// `Config` specifies an inline k8s resource used as the function config.
-	// Config, ConfigPath, and ConfigMap fields are mutually exclusive.
-	Config yaml.Node `yaml:"config,omitempty"`
-
-	// `ConfigPath` specifies a relative path to a file in the current directory
-	// containing a K8S resource used as the function config. This resource is
-	// excluded when resolving 'sources', and as a result cannot be operated on
-	// by the pipeline.
-	ConfigPath string `yaml:"configPath,omitempty"`
-
-	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.
-	ConfigMap map[string]string `yaml:"configMap,omitempty"`
-}
-
 // validateFunction will validate all fields in function.
-func validateFunction(f *Function) error {
+func validateFunction(f *v1alpha2.Function) error {
 	err := validateFunctionName(f.Image)
 	if err != nil {
 		return fmt.Errorf("'image' is invalid: %w", err)
@@ -83,7 +60,7 @@ func validateFunction(f *Function) error {
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(f *Function, pkgPath string) (kio.Filter, error) {
+func newFnRunner(f *v1alpha2.Function, pkgPath string) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -96,7 +73,7 @@ func newFnRunner(f *Function, pkgPath string) (kio.Filter, error) {
 	}, nil
 }
 
-func newFnConfig(f *Function, pkgPath string) (*yaml.RNode, error) {
+func newFnConfig(f *v1alpha2.Function, pkgPath string) (*yaml.RNode, error) {
 	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":

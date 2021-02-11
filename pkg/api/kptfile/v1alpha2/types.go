@@ -16,6 +16,8 @@
 package v1alpha2
 
 import (
+	"fmt"
+
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -190,6 +192,12 @@ type Pipeline struct {
 	Validators []Function `yaml:"validators,omitempty"`
 }
 
+// String returns the string representation of Pipeline struct
+// The string returned is the struct content in Go default format
+func (p *Pipeline) String() string {
+	return fmt.Sprintf("%+v", *p)
+}
+
 // Function specifies a KRM function.
 type Function struct {
 	// `Image` specifies the function container image.
@@ -207,7 +215,7 @@ type Function struct {
 
 	// `Config` specifies an inline KRM resource used as the function config.
 	// Config, ConfigPath, and ConfigMap fields are mutually exclusive.
-	Config *yaml.Node `yaml:"config,omitempty"`
+	Config yaml.Node `yaml:"config,omitempty"`
 
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
 	// containing a KRM resource used as the function config. This resource is

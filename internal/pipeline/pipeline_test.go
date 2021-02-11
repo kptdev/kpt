@@ -14,47 +14,15 @@
 package pipeline
 
 import (
-	"bytes"
-	"io/ioutil"
-	"os"
 	"reflect"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func TestString(t *testing.T) {
-	expected := "{ResourceMeta:{TypeMeta:{APIVersion:kpt.dev/v1alpha1 Kind:Pipeline} " +
-		"ObjectMeta:{NameMeta:{Name:pipeline Namespace:} Labels:map[] Annotations:map[]}} " +
-		"Mutators:[] Validators:[]}"
-	actual := New().String()
-	if !assert.EqualValues(t, expected, actual) {
-		t.Fatalf("unexpected string value")
-	}
-}
-
-func TestNew(t *testing.T) {
-	p := New()
-	expected := Pipeline{
-		ResourceMeta: yaml.ResourceMeta{
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: "kpt.dev/v1alpha1",
-				Kind:       "Pipeline",
-			},
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: "pipeline",
-				},
-			},
-		},
-	}
-	if !assert.True(t, isPipelineEqual(t, *p, expected)) {
-		t.FailNow()
-	}
-}
-
-func checkOutput(t *testing.T, tc testcase, actual *Pipeline, err error) {
+func checkOutput(t *testing.T, tc testcase, actual *v1alpha2.Pipeline, err error) {
 	if tc.Error {
 		if !assert.Error(t, err, "error is expected.") {
 			t.FailNow()
@@ -63,116 +31,22 @@ func checkOutput(t *testing.T, tc testcase, actual *Pipeline, err error) {
 	} else if !assert.NoError(t, err, "error is not expected.") {
 		t.FailNow()
 	}
-	if !assert.True(t, isPipelineEqual(t, tc.Expected, *actual),
+	if !assert.True(t, isPipelineEqual(t, *tc.Expected, *actual),
 		"pipelines don't equal.") {
 		t.FailNow()
 	}
 }
 
-func TestFromReader(t *testing.T) {
-	for name, tc := range testcases {
-		tc := tc
-		name := name
-		t.Run(name, func(t *testing.T) {
-			r := bytes.NewBufferString(tc.Input)
-			actual, err := FromReader(r)
-			checkOutput(t, tc, actual, err)
-		})
+func TestPipelineValidate(t *testing.T) {
+	type input struct {
+		Name  string
+		Input string
+		Valid bool
 	}
-}
-
-func preparePipelineFile(s string) (string, error) {
-	tmp, err := ioutil.TempFile("", "kpt-pipeline-*")
-	if err != nil {
-		return "", err
-	}
-	_, err = tmp.WriteString(s)
-	if err != nil {
-		return "", err
-	}
-	return tmp.Name(), nil
-}
-
-func TestFromFile(t *testing.T) {
-	for name, tc := range testcases {
-		tc := tc
-		name := name
-		t.Run(name, func(t *testing.T) {
-			path, err := preparePipelineFile(tc.Input)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			actual, err := FromFile(path)
-			checkOutput(t, tc, actual, err)
-			os.Remove(path)
-		})
-
-	}
-}
-
-func TestFromFileError(t *testing.T) {
-	_, err := FromFile("not-exist")
-	if err == nil {
-		t.Fatalf("expect an error when open non-exist file")
-	}
-}
-
-type testcase struct {
-	Input    string
-	Expected Pipeline
-	Error    bool
-}
-
-var testcases map[string]testcase = map[string]testcase{
-	"simple": {
-		Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-`,
-		Expected: Pipeline{
-			ResourceMeta: yaml.ResourceMeta{
-				TypeMeta: yaml.TypeMeta{
-					APIVersion: "kpt.dev/v1alpha1",
-					Kind:       "Pipeline",
-				},
-				ObjectMeta: yaml.ObjectMeta{
-					NameMeta: yaml.NameMeta{
-						Name: "pipeline",
-					},
-				},
-			},
-		},
-	},
-	"with sources": {
-		Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-`,
-		Expected: Pipeline{
-			ResourceMeta: yaml.ResourceMeta{
-				TypeMeta: yaml.TypeMeta{
-					APIVersion: "kpt.dev/v1alpha1",
-					Kind:       "Pipeline",
-				},
-				ObjectMeta: yaml.ObjectMeta{
-					NameMeta: yaml.NameMeta{
-						Name: "pipeline",
-					},
-				},
-			},
-		},
-	},
-	"complex": {
-		Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-
+	cases := []input{
+		{
+			Name: "have functions",
+			Input: `
 mutators:
 - image: gcr.io/kpt-functions/generate-folders
   config:
@@ -190,19 +64,85 @@ mutators:
 validators:
 - image: gcr.io/kpt-functions/policy-controller-validate
 `,
-		Expected: Pipeline{
-			ResourceMeta: yaml.ResourceMeta{
-				TypeMeta: yaml.TypeMeta{
-					APIVersion: "kpt.dev/v1alpha1",
-					Kind:       "Pipeline",
-				},
-				ObjectMeta: yaml.ObjectMeta{
-					NameMeta: yaml.NameMeta{
-						Name: "pipeline",
-					},
-				},
-			},
-			Mutators: []Function{
+			Valid: true,
+		},
+		{
+			Name: "invalid function name",
+			Input: `
+mutators:
+- image: patch@_@strategic-merge
+  configPath: ./patch.yaml
+`,
+			Valid: false,
+		},
+		{
+			Name: "more than 1 config",
+			Input: `
+mutators:
+- image: patch-strategic-merge
+  configPath: ./patch.yaml
+  configMap:
+    environment: dev
+`,
+			Valid: false,
+		},
+		{
+			Name: "absolute config path",
+			Input: `
+mutators:
+- image: patch-strategic-merge
+  configPath: /patch.yaml
+`,
+			Valid: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.Name, func(t *testing.T) {
+			// FromReader will validate the pipeline
+			p, err := fromString(c.Input)
+			assert.NoError(t, err)
+			err = ValidatePipeline(p)
+			if c.Valid && err != nil {
+				t.Fatalf("pipeline should be valid, %s", err)
+			}
+			if !c.Valid && err == nil {
+				t.Fatal("pipeline should not be valid")
+			}
+		})
+
+	}
+}
+
+type testcase struct {
+	Input    string
+	Expected *v1alpha2.Pipeline
+	Error    bool
+}
+
+var testcases map[string]testcase = map[string]testcase{
+	"complex": {
+		Input: `
+mutators:
+- image: gcr.io/kpt-functions/generate-folders
+  config:
+    apiVersion: cft.dev/v1alpha1
+    kind: ResourceHierarchy
+    metadata:
+      name: root-hierarchy
+      namespace: hierarchy # {"$kpt-set":"namespace"}
+- image: patch-strategic-merge
+  configPath: ./patch.yaml
+- image: gcr.io/kpt-functions/set-annotation
+  configMap:
+    environment: dev
+
+validators:
+- image: gcr.io/kpt-functions/policy-controller-validate
+`,
+		Expected: &v1alpha2.Pipeline{
+			Mutators: []v1alpha2.Function{
 				{
 					Image: "gcr.io/kpt-functions/generate-folders",
 					Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
@@ -222,7 +162,7 @@ metadata:
 					},
 				},
 			},
-			Validators: []Function{
+			Validators: []v1alpha2.Function{
 				{
 					Image: "gcr.io/kpt-functions/policy-controller-validate",
 				},
@@ -241,7 +181,18 @@ unknown
 	},
 }
 
-func isFunctionEqual(t *testing.T, f1, f2 Function) bool {
+func TestFromString(t *testing.T) {
+	for name, tc := range testcases {
+		tc := tc
+		name := name
+		t.Run(name, func(t *testing.T) {
+			actual, err := fromString(tc.Input)
+			checkOutput(t, tc, actual, err)
+		})
+	}
+}
+
+func isFunctionEqual(t *testing.T, f1, f2 v1alpha2.Function) bool {
 	if reflect.DeepEqual(f1.Config, f2.Config) {
 		return reflect.DeepEqual(f1, f2)
 	}
@@ -259,7 +210,7 @@ func isFunctionEqual(t *testing.T, f1, f2 Function) bool {
 	return result
 }
 
-func isFunctionSliceEqual(t *testing.T, fs1, fs2 []Function) bool {
+func isFunctionSliceEqual(t *testing.T, fs1, fs2 []v1alpha2.Function) bool {
 	if len(fs1) != len(fs2) {
 		return false
 	}
@@ -271,24 +222,12 @@ func isFunctionSliceEqual(t *testing.T, fs1, fs2 []Function) bool {
 	return true
 }
 
-func isPipelineEqual(t *testing.T, p1, p2 Pipeline) bool {
+func isPipelineEqual(t *testing.T, p1, p2 v1alpha2.Pipeline) bool {
 	if !isFunctionSliceEqual(t, p1.Mutators, p2.Mutators) {
 		return false
 	}
 
 	if !isFunctionSliceEqual(t, p1.Validators, p2.Validators) {
-		return false
-	}
-
-	if !assert.EqualValues(t, p1.Name, p2.Name) {
-		return false
-	}
-
-	if !assert.EqualValues(t, p1.Kind, p2.Kind) {
-		return false
-	}
-
-	if !assert.EqualValues(t, p1.APIVersion, p2.APIVersion) {
 		return false
 	}
 
