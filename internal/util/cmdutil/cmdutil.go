@@ -15,6 +15,7 @@
 package cmdutil
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -87,8 +88,14 @@ func ResolveAbsAndRelPaths(path string) (string, string, error) {
 // DockerCmdAvailable runs `docker ps` to check that the docker command is
 // available, and returns an error with installation instructions if it is not
 func DockerCmdAvailable() error {
-	_, err := exec.Command("docker", "ps").Output()
+	cmd := exec.Command("docker", "ps")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	err := cmd.Run()
 	if err != nil {
+		if strings.Contains(stderr.String(), "Cannot connect to the Docker daemon") {
+			return fmt.Errorf(stderr.String())
+		}
 		return fmt.Errorf("docker is required to run this command\n" +
 			"To install docker, please follow the instructions on the docker installation page.\n" +
 			"Docker installation instructions can be found here:\n" +
