@@ -140,6 +140,9 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 			// TODO: pmarupaka Check if the new value honors the openAPI schema and/or
 			// current field type, throw error if it doesn't
 			node.Value = sr.PutLiteral
+			// When encoding, if this tag is unset the value type will be
+			// implied from the node properties
+			node.Tag = yaml.NodeTagEmpty
 		}
 
 		if sr.PutPattern != "" {
@@ -180,7 +183,11 @@ func (sr *SearchReplace) putLiteral(object *yaml.RNode) error {
 		return errors.Wrap(err)
 	}
 	// set the last path element key with the input value
-	err = node.PipeE(yaml.SetField(path[len(path)-1], yaml.NewScalarRNode(sr.PutLiteral)))
+	sn := yaml.NewScalarRNode(sr.PutLiteral)
+	// When encoding, if this tag is unset the value type will be
+	// implied from the node properties
+	sn.YNode().Tag = yaml.NodeTagEmpty
+	err = node.PipeE(yaml.SetField(path[len(path)-1], sn))
 	if err != nil {
 		return errors.Wrap(err)
 	}
