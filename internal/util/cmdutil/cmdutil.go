@@ -93,13 +93,9 @@ func DockerCmdAvailable() error {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		if strings.Contains(stderr.String(), "Cannot connect to the Docker daemon") {
-			return fmt.Errorf(stderr.String())
-		}
-		return fmt.Errorf("docker is required to run this command\n" +
-			"To install docker, please follow the instructions on the docker installation page.\n" +
-			"Docker installation instructions can be found here:\n" +
-			"https://docs.docker.com/get-docker/")
+		return fmt.Errorf(stderr.String() +
+			`Docker is required to run this command. 
+To install docker, follow the instructions at https://docs.docker.com/get-docker/`)
 	}
 	return nil
 }
