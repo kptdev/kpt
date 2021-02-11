@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/get/getioreader"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
-	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
@@ -48,8 +47,6 @@ func NewRunner(parent string) *Runner {
 May contain the following formatting verbs
 %n: metadata.name, %s: metadata.namespace, %k: kind
 `)
-	c.Flags().BoolVar(&r.AutoSet, "auto-set", true,
-		`Automatically perform setters based off the environment`)
 	return r
 }
 
@@ -62,7 +59,6 @@ type Runner struct {
 	Get             get.Command
 	Command         *cobra.Command
 	FilenamePattern string
-	AutoSet         bool
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -90,16 +86,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		r.Get.Directory, r.Get.Repo, r.Get.Destination)
 	if err := r.Get.Run(); err != nil {
 		return err
-	}
-
-	if r.AutoSet {
-		a := setters.AutoSet{
-			Writer:      c.OutOrStdout(),
-			PackagePath: r.Get.Destination,
-		}
-		if err := a.PerformAutoSetters(); err != nil {
-			return err
-		}
 	}
 
 	return nil

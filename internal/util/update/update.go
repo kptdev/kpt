@@ -24,7 +24,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/internal/util/setters"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -59,9 +58,6 @@ type UpdateOptions struct {
 	SimpleMessage bool
 
 	Output io.Writer
-
-	// Perform setters automatically based on environment
-	AutoSet bool
 }
 
 // Updater updates a local package
@@ -135,9 +131,6 @@ type Command struct {
 
 	// Output is where dry-run information is written
 	Output io.Writer
-
-	// Perform setters automatically based on environment
-	AutoSet bool
 }
 
 // Run runs the Command.
@@ -185,7 +178,6 @@ func (u Command) Run() error {
 		Verbose:        u.Verbose,
 		SimpleMessage:  u.SimpleMessage,
 		Output:         u.Output,
-		AutoSet:        u.AutoSet,
 	}); err != nil {
 		return err
 	}
@@ -255,11 +247,5 @@ func (u Command) Run() error {
 			s.Push(spFilePath)
 		}
 	}
-
-	// perform auto-setters after the package is updated
-	a := setters.AutoSet{
-		Writer:      u.Output,
-		PackagePath: u.FullPackagePath,
-	}
-	return a.PerformAutoSetters()
+	return nil
 }
