@@ -188,7 +188,6 @@ func (c Command) update(dependency kptfile.Dependency, k *kptfile.KptFile) error
 		Repo:     dependency.Git.Repo,
 		Strategy: update.StrategyType(dependency.Strategy),
 		Verbose:  c.Verbose,
-		AutoSet:  dependency.AutoSet,
 	}.Run()
 }
 

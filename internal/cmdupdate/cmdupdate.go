@@ -47,8 +47,6 @@ func NewRunner(parent string) *Runner {
 			strings.Join(update.Strategies, ","))
 	c.Flags().BoolVar(&r.Update.DryRun, "dry-run", false,
 		"print the git patch rather than merging it.")
-	c.Flags().BoolVar(&r.AutoSet, "auto-set", true,
-		"automatically perform setters based off the environment")
 	c.Flags().BoolVar(&r.Update.Verbose, "verbose", false,
 		"print verbose logging information.")
 	cmdutil.FixDocs("kpt", parent, c)
@@ -64,7 +62,6 @@ func NewCommand(parent string) *cobra.Command {
 // TODO, support listing versions
 type Runner struct {
 	strategy string
-	AutoSet  bool
 	Update   update.Command
 	Command  *cobra.Command
 }
@@ -89,8 +86,6 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	if len(parts) > 1 {
 		r.Update.Ref = parts[1]
 	}
-	r.Update.AutoSet = r.AutoSet
-
 	return nil
 }
 
