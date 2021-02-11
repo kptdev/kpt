@@ -204,9 +204,21 @@ type Pipeline struct {
 }
 
 // String returns the string representation of Pipeline struct
-// The string returned is the struct content in Go default format
+// The string returned is the struct content in Go default format.
 func (p *Pipeline) String() string {
 	return fmt.Sprintf("%+v", *p)
+}
+
+// IsEmpty returns true if the pipeline doesn't contain any functions in any of
+// the function chains (mutators, validators).
+func (p *Pipeline) IsEmpty() bool {
+	if p == nil {
+		return true
+	}
+	if len(p.Mutators) == 0 && len(p.Validators) == 0 {
+		return true
+	}
+	return false
 }
 
 // Function specifies a KRM function.

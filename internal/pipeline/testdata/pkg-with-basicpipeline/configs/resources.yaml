@@ -7,5 +7,7 @@ spec:
 ---
 apiVersion: custom.io/v1
 kind: Custom
+metadata:
+  name: custom
 spec:
   image: nginx:1.2.3

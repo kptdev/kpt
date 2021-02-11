@@ -1,0 +1,31 @@
+diff --git a/configs/resources.yaml b/configs/resources.yaml
+index 62f8744..c268dd0 100644
+--- a/configs/resources.yaml
++++ b/configs/resources.yaml
+@@ -1,13 +1,26 @@
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
++  labels:
++    tier: backend
+   name: nginx-deployment
++  namespace: staging
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
++  template:
++    metadata:
++      labels:
++        tier: backend
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
++  labels:
++    tier: backend
+   name: custom
++  namespace: staging
+ spec:
+   image: nginx:1.2.3
