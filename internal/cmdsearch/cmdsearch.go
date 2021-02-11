@@ -100,7 +100,6 @@ func (r *SearchRunner) runE(c *cobra.Command, args []string) error {
 		RecurseSubPackages: r.RecurseSubPackages,
 		CmdRunner:          r,
 		RootPkgPath:        args[0],
-		NeedOpenAPI:        true,
 		SkipPkgPathPrint:   true,
 	}
 	err := e.Execute()
