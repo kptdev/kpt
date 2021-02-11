@@ -47,6 +47,16 @@ const (
 	DiffType3Way DiffType = "3way"
 )
 
+// A collection of user-readable "source" definitions for diffed packages.
+const (
+	// localPackageSource represents the local package
+	localPackageSource string = "local"
+	// remotePackageSource represents the remote version of the package
+	remotePackageSource string = "remote"
+	// targetRemotePackageSource represents the targeted remote version of a package
+	targetRemotePackageSource string = "target"
+)
+
 // String implements Stringer.
 func (dt DiffType) String() string {
 	return string(dt)
@@ -117,7 +127,10 @@ func (c *Command) Run() error {
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	currPkg, err := stageDirectory(stagingDirectory, "local-package")
+	localPkgName := nameStagingDirectory(localPackageSource,
+		kptFile.Upstream.Git.Ref,
+		kptFile.Upstream.Git.Commit)
+	currPkg, err := stageDirectory(stagingDirectory, localPkgName)
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
@@ -129,7 +142,11 @@ func (c *Command) Run() error {
 	fmt.Printf("Staging %s at %s\n", c.Path, currPkg)
 
 	// get the upstreamPkg at current version
+	upstreamPkgName := nameStagingDirectory(remotePackageSource,
+		kptFile.Upstream.Git.Ref,
+		kptFile.Upstream.Git.Commit)
 	upstreamPkg, err := c.PkgGetter.GetPkg(stagingDirectory,
+		upstreamPkgName,
 		kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
 		kptFile.Upstream.Git.Commit)
@@ -155,7 +172,11 @@ func (c *Command) Run() error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
+		upstreamTargetPkgName := nameStagingDirectory(targetRemotePackageSource,
+			c.Ref,
+			c.Ref)
 		upstreamTargetPkg, err = c.PkgGetter.GetPkg(stagingDirectory,
+			upstreamTargetPkgName,
 			kptFile.Upstream.Git.Repo,
 			kptFile.Upstream.Git.Directory,
 			c.Ref)
@@ -294,7 +315,7 @@ func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
 
 // PkgGetter knows how to fetch a package given a git repo, path and ref.
 type PkgGetter interface {
-	GetPkg(stagingDir, repo, path, ref string) (dir string, err error)
+	GetPkg(stagingDir, targetDir, repo, path, ref string) (dir string, err error)
 }
 
 // defaultPkgGetter uses get.Command abstraction to implement PkgGetter.
@@ -306,9 +327,8 @@ type defaultPkgGetter struct{}
 // path is the sub directory of the git repository that the package was cloned from
 // ref is the git ref the package was cloned from
 // refDesc is a human readable name of the reference
-func (pg defaultPkgGetter) GetPkg(stagingDir, repo, path, ref string) (string, error) {
-	tmpPath := fmt.Sprintf("upstream-%s", shortSha(ref))
-	dir, err := stageDirectory(stagingDir, tmpPath)
+func (pg defaultPkgGetter) GetPkg(stagingDir, targetDir, repo, path, ref string) (string, error) {
+	dir, err := stageDirectory(stagingDir, targetDir)
 	if err != nil {
 		return dir, err
 	}
@@ -333,4 +353,21 @@ func stageDirectory(path, subpath string) (string, error) {
 	targetPath := filepath.Join(path, subpath)
 	err := os.Mkdir(targetPath, os.ModePerm)
 	return targetPath, err
+}
+
+// nameStagingDirectory assigns a name that matches the package source information
+func nameStagingDirectory(source, branch, sha string) string {
+	// The branch and sha may not always be known simultaneously
+	// In these cases the values will be the same. Collapse these references
+	// when this occurs to avoid confusion/duplicate info.
+	// This occurs during a remote target operation for example.
+	if branch == sha {
+		return fmt.Sprintf("%s-%s",
+			source,
+			branch)
+	}
+	return fmt.Sprintf("%s-%s-%s",
+		source,
+		branch,
+		shortSha(sha))
 }
