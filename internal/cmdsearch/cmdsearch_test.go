@@ -32,7 +32,6 @@ import (
 type test struct {
 	name              string
 	input             string
-	inputKptfile      string
 	args              []string
 	out               string
 	expectedResources string
@@ -61,19 +60,6 @@ func TestSearchCommand(t *testing.T) {
 				err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
 				if !assert.NoError(t, err) {
 					t.FailNow()
-				}
-
-				if test.inputKptfile != "" {
-					err = ioutil.WriteFile(filepath.Join(baseDir, kptfile.KptFileName), []byte(test.inputKptfile), 0600)
-					if !assert.NoError(t, err) {
-						t.FailNow()
-					}
-				} else {
-					err = ioutil.WriteFile(filepath.Join(baseDir, kptfile.KptFileName), []byte(`apiVersion: v1alpha1
-kind: Kptfile`), 0600)
-					if !assert.NoError(t, err) {
-						t.FailNow()
-					}
 				}
 
 				runner := NewSearchRunner("")

@@ -21,11 +21,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
-	"sigs.k8s.io/kustomize/kyaml/setters2"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -146,21 +143,7 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 		}
 
 		if sr.PutPattern != "" {
-			// derive setters and values from input pattern
-			settersValues, err := sr.settersValues()
-			if err != nil {
-				return err
-			}
-			pattern := node.Value
-			// derive the pattern from the field value by replacing setter values
-			// with setter name markers
-			// e.g. if field value is "my-project-foo", input PutPattern is "${project]-*", and
-			// value for setter "project" is "my-project",
-			// the pattern to be added as comment is ${project]-foo
-			for sn, sv := range settersValues {
-				pattern = strings.ReplaceAll(clean(pattern), clean(sv), fmt.Sprintf("${%s}", sn))
-			}
-			node.LineComment = fmt.Sprintf(`kpt-set: %s`, pattern)
+			node.LineComment = fmt.Sprintf(`kpt-set: %s`, sr.PutPattern)
 		}
 
 		if sr.filePath != "" {
@@ -220,38 +203,4 @@ func (sr *SearchReplace) shouldPutLiteralByPath() bool {
 		sr.ByValue == "" &&
 		sr.ByValueRegex == "" &&
 		sr.PutLiteral != ""
-}
-
-// settersValues returns the values for the setters present in PutPattern,
-// returns error if PutPattern is invalid or setter value is not a valid literal
-func (sr *SearchReplace) settersValues() (map[string]string, error) {
-	// extract setter name tokens from pattern enclosed in ${}
-	re := regexp.MustCompile(`\$\{([^}]*)\}`)
-	markers := re.FindAllString(sr.PutPattern, -1)
-	if len(markers) == 0 {
-		return nil, errors.Errorf("unable to find setter names in pattern, " +
-			"setter names must be enclosed in ${}")
-	}
-	res := make(map[string]string)
-	for _, marker := range markers {
-		name := strings.TrimSuffix(strings.TrimPrefix(marker, "${"), "}")
-		sch := openapi.Schema().Definitions[fieldmeta.SetterDefinitionPrefix+name]
-		cliExt, err := setters2.GetExtFromSchema(&sch)
-		if err != nil {
-			return res, err
-		}
-		if cliExt == nil || cliExt.Setter == nil {
-			return res, errors.Errorf("setter %q doesn't exist, please create setter definition and try again", name)
-		}
-		if cliExt.Setter.Value == "" && len(cliExt.Setter.ListValues) > 0 {
-			return res, errors.Errorf("setter pattern should not refer to array type setters: %q", name)
-		}
-		res[name] = cliExt.Setter.Value
-	}
-	return res, nil
-}
-
-// clean trims the string and removes quotes around it
-func clean(input string) string {
-	return strings.Trim(strings.TrimSpace(input), `"`)
 }
