@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -240,22 +239,6 @@ func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {
 	}
 	destDir := filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir)
 	return g.UpstreamRepo.AssertEqual(g.T, sourceDir, destDir)
-}
-
-func (g *TestSetupManager) SetLocalData(path string) bool {
-	if !assert.NoError(g.T, copyutil.CopyDir(
-		filepath.Join(g.UpstreamRepo.DatasetDirectory, path),
-		filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.UpstreamRepo.RepoName))) {
-		return false
-	}
-	localGit := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
-	if !assert.NoError(g.T, localGit.Run("add", ".")) {
-		return false
-	}
-	if !assert.NoError(g.T, localGit.Run("commit", "-m", "add files")) {
-		return false
-	}
-	return true
 }
 
 func (g *TestSetupManager) Clean() {
