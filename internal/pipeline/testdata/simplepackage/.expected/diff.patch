@@ -8,7 +8,7 @@ index 0dabe44..0124a57 100644
    name: nginx-deployment
 +  namespace: staging
 +  labels:
-+    tier: db
++    tier: backend
  spec:
    replicas: 3
  ---
@@ -19,4 +19,4 @@ index 0dabe44..0124a57 100644
 +metadata:
 +  namespace: staging
 +  labels:
-+    tier: db
++    tier: backend
