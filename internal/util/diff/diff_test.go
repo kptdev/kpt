@@ -282,6 +282,7 @@ func TestStagingDirectoryNames(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt // Account for scopelint checks
 		t.Run(tt.expected, func(t *testing.T) {
 			result := NameStagingDirectory(tt.source, tt.branch, tt.sha)
 			if result != tt.expected {
