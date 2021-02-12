@@ -1,3 +1,17 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package pipeline
 
 import (
@@ -122,8 +136,6 @@ func (p *pkg) Pipeline() *v1alpha2.Pipeline {
 // This is one of the critical pieces of code
 func (p *pkg) resolveSources() ([]string, error) {
 	var pkgPaths []string
-	// TODO: since we are considering only support './*', we can simplify
-	// this part
 	paths, err := resolveSource(sourceAllSubPkgs, p.Path())
 	if err != nil {
 		return nil, err
@@ -308,8 +320,8 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 
 // fnFilters returns chain of functions that are applicable
 // to a given pipeline.
-func fnFilters(p *v1alpha2.Pipeline, pkgPath string) ([]kio.Filter, error) {
-	filters, err := fnChain(p, pkgPath)
+func fnFilters(pl *v1alpha2.Pipeline, pkgPath string) ([]kio.Filter, error) {
+	filters, err := fnChain(pl, pkgPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}

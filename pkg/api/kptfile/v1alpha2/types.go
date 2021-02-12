@@ -215,6 +215,8 @@ type Function struct {
 
 	// `Config` specifies an inline KRM resource used as the function config.
 	// Config, ConfigPath, and ConfigMap fields are mutually exclusive.
+	// We cannot use a pointer to yaml.Node because it will cause errors when
+	// we try to unmarshal the YAML.
 	Config yaml.Node `yaml:"config,omitempty"`
 
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
