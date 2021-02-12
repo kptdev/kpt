@@ -139,7 +139,6 @@ func (c *Command) Run() error {
 	if err != nil {
 		return errors.Errorf("failed to stage current package: %v", err)
 	}
-	fmt.Printf("Staging %s at %s\n", c.Path, currPkg)
 
 	// get the upstreamPkg at current version
 	upstreamPkgName := NameStagingDirectory(remotePackageSource,
@@ -150,11 +149,6 @@ func (c *Command) Run() error {
 		kptFile.Upstream.Git.Repo,
 		kptFile.Upstream.Git.Directory,
 		kptFile.Upstream.Git.Commit)
-	fmt.Printf("Staging %s/%s@%s at %s\n",
-		kptFile.Upstream.Git.Repo,
-		kptFile.Upstream.Git.Directory,
-		kptFile.Upstream.Git.Commit,
-		upstreamPkg)
 	if err != nil {
 		return err
 	}
@@ -183,11 +177,6 @@ func (c *Command) Run() error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Staging %s/%s@%s at %s\n",
-			kptFile.Upstream.Git.Repo,
-			kptFile.Upstream.Git.Directory,
-			c.Ref,
-			upstreamTargetPkg)
 	}
 
 	if c.Debug {
