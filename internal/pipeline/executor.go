@@ -1,3 +1,17 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package pipeline
 
 import (
@@ -8,6 +22,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"k8s.io/klog"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -76,7 +91,7 @@ type pkg struct {
 	path string
 
 	// pipeline contained in the pkg
-	pipeline *Pipeline
+	pipeline *v1alpha2.Pipeline
 
 	// resources post hydration
 	resources []*yaml.RNode
@@ -102,16 +117,16 @@ func (p *pkg) Read() error {
 	// Read the pipeline for the current package else assume default
 	// TODO(droot): integrate with Donny's code once that is merged
 	// and read an actual pipeline
-	p.pipeline = New()
+	p.pipeline = &v1alpha2.Pipeline{}
 
 	return nil
 }
 
 // TODO: This will be replaced with the pkg abstraction PR.
-func (p *pkg) Pipeline() *Pipeline {
+func (p *pkg) Pipeline() *v1alpha2.Pipeline {
 	if p.pipeline == nil {
 		// READ the pipeline in the pkg.
-		p.pipeline = New()
+		p.pipeline = &v1alpha2.Pipeline{}
 	}
 	return p.pipeline
 }
@@ -120,16 +135,12 @@ func (p *pkg) Pipeline() *Pipeline {
 // and returns list of package paths that this pkg depends on.
 // This is one of the critical pieces of code
 func (p *pkg) resolveSources() ([]string, error) {
-	pipeline := p.Pipeline()
-
 	var pkgPaths []string
-	for _, s := range pipeline.Sources {
-		paths, err := resolveSource(s, p.Path())
-		if err != nil {
-			return nil, err
-		}
-		pkgPaths = append(pkgPaths, paths...)
+	paths, err := resolveSource(sourceAllSubPkgs, p.Path())
+	if err != nil {
+		return nil, err
 	}
+	pkgPaths = append(pkgPaths, paths...)
 	return pkgPaths, nil
 }
 
@@ -268,7 +279,7 @@ func hydrate(p *pkg, hctx *hydrationContext) (resources []*yaml.RNode, err error
 	// write it in-place or not. Currently in-place.
 	pkgWriter := &kio.LocalPackageWriter{PackagePath: p.Path()}
 
-	filters, err := fnFilters(p.Pipeline())
+	filters, err := fnFilters(p.Pipeline(), p.Path())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function filters: %w", err)
 	}
@@ -309,8 +320,8 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 
 // fnFilters returns chain of functions that are applicable
 // to a given pipeline.
-func fnFilters(p *Pipeline) ([]kio.Filter, error) {
-	filters, err := p.fnChain()
+func fnFilters(pl *v1alpha2.Pipeline, pkgPath string) ([]kio.Filter, error) {
+	filters, err := fnChain(pl, pkgPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function chain: %w", err)
 	}

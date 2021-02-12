@@ -29,10 +29,12 @@
 package pipeline
 
 import (
-	"bytes"
 	"io/ioutil"
+	"os"
+	"path"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -40,7 +42,7 @@ import (
 func TestFunctionConfig(t *testing.T) {
 	type input struct {
 		name              string
-		fn                Function
+		fn                v1alpha2.Function
 		configFileContent string
 		expected          string
 	}
@@ -48,12 +50,12 @@ func TestFunctionConfig(t *testing.T) {
 	cases := []input{
 		{
 			name:     "no config",
-			fn:       Function{},
+			fn:       v1alpha2.Function{},
 			expected: "",
 		},
 		{
 			name: "inline config",
-			fn: Function{
+			fn: v1alpha2.Function{
 				Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
 kind: ResourceHierarchy
 metadata:
@@ -69,7 +71,7 @@ metadata:
 		},
 		{
 			name: "file config",
-			fn:   Function{},
+			fn:   v1alpha2.Function{},
 			configFileContent: `apiVersion: cft.dev/v1alpha1
 kind: ResourceHierarchy
 metadata:
@@ -84,7 +86,7 @@ metadata:
 		},
 		{
 			name: "map config",
-			fn: Function{
+			fn: v1alpha2.Function{
 				ConfigMap: map[string]string{
 					"foo": "bar",
 				},
@@ -106,324 +108,13 @@ data: {foo: bar}
 				assert.NoError(t, err, "unexpected error")
 				_, err = tmp.WriteString(c.configFileContent)
 				assert.NoError(t, err, "unexpected error")
-				c.fn.ConfigPath = tmp.Name()
+				c.fn.ConfigPath = path.Base(tmp.Name())
 			}
-			cn, err := c.fn.config()
+			cn, err := newFnConfig(&c.fn, os.TempDir())
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")
 			assert.Equal(t, c.expected, actual, "unexpected result")
 		})
-	}
-}
-
-func TestValidateFunctionName(t *testing.T) {
-	type input struct {
-		Name  string
-		Valid bool
-	}
-	inputs := []input{
-		{
-			"gcr.io/kpt-functions/generate-folders",
-			true,
-		},
-		{
-			"patch-strategic-merge",
-			true,
-		},
-		{
-			"a.b.c:1234/foo/bar/generate-folders",
-			true,
-		},
-		{
-			"ab-.b/c",
-			false,
-		},
-		{
-			"a/a/",
-			false,
-		},
-		{
-			"a//a/a",
-			false,
-		},
-		{
-			"example.com/.dots/myimage",
-			false,
-		},
-		{
-			"registry.io/foo/project--id.module--name.ver---sion--name",
-			true,
-		},
-		{
-			"Foo/FarB",
-			false,
-		},
-	}
-
-	for _, n := range inputs {
-		n := n
-		t.Run(n.Name, func(t *testing.T) {
-			err := validateFunctionName(n.Name)
-			if n.Valid && err != nil {
-				t.Fatalf("function name %s should be valid", n.Name)
-			}
-			if !n.Valid && err == nil {
-				t.Fatalf("function name %s should not be valid", n.Name)
-			}
-		})
-
-	}
-}
-
-func TestPipelineValidate(t *testing.T) {
-	type input struct {
-		Name  string
-		Input string
-		Valid bool
-	}
-	cases := []input{
-		{
-			Name: "no sources, no functions",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-`,
-			Valid: true,
-		},
-		{
-			Name: "have sources, no functions",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./base
-`,
-			Valid: true,
-		},
-		{
-			Name: "have sources and functions",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./base
-- ./*
-
-generators:
-- image: gcr.io/kpt-functions/generate-folders
-  config:
-    apiVersion: cft.dev/v1alpha1
-    kind: ResourceHierarchy
-    metadata:
-      name: root-hierarchy
-      namespace: hierarchy # {"$kpt-set":"namespace"}
-transformers:
-- image: patch-strategic-merge
-  configPath: ./patch.yaml
-- image: gcr.io/kpt-functions/set-annotation
-  configMap:
-    environment: dev
-
-validators:
-- image: gcr.io/kpt-functions/policy-controller-validate
-`,
-			Valid: true,
-		},
-		{
-			Name: "invalid apiversion",
-			Input: `
-apiVersion: kpt.dev/v1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./base
-`,
-			Valid: false,
-		},
-		{
-			Name: "absolute source path",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- /foo/bar
-`,
-			Valid: false,
-		},
-		{
-			Name: "invalid function name",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./*
-transformers:
-- image: patch@_@strategic-merge
-  configPath: ./patch.yaml
-`,
-			Valid: false,
-		},
-		{
-			Name: "more than 1 config",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./*
-transformers:
-- image: patch-strategic-merge
-  configPath: ./patch.yaml
-  configMap:
-    environment: dev
-`,
-			Valid: false,
-		},
-		{
-			Name: "absolute config path",
-			Input: `
-apiVersion: kpt.dev/v1alpha1
-kind: Pipeline
-metadata:
-  name: pipeline
-sources:
-- ./*
-transformers:
-- image: patch-strategic-merge
-  configPath: /patch.yaml
-`,
-			Valid: false,
-		},
-	}
-
-	for _, c := range cases {
-		c := c
-		t.Run(c.Name, func(t *testing.T) {
-			b := bytes.NewBufferString(c.Input)
-			// FromReader will validate the pipeline
-			_, err := FromReader(b)
-			if c.Valid && err != nil {
-				t.Fatalf("pipeline should be valid, %s", err)
-			}
-			if !c.Valid && err == nil {
-				t.Fatal("pipeline should not be valid")
-			}
-		})
-
-	}
-}
-
-func TestValidatePath(t *testing.T) {
-	type input struct {
-		Path  string
-		Valid bool
-	}
-
-	cases := []input{
-		{
-			"a/b/c",
-			true,
-		},
-		{
-			"a/b/",
-			true,
-		},
-		{
-			"/a/b",
-			false,
-		},
-		{
-			"./a",
-			true,
-		},
-		{
-			"./a/.../b",
-			true,
-		},
-		{
-			".",
-			true,
-		},
-		{
-			"a\\b",
-			false,
-		},
-		{
-			"a\b",
-			false,
-		},
-		{
-			"a\v",
-			false,
-		},
-		{
-			"a:\\b\\c",
-			false,
-		},
-		{
-			"../a/../b",
-			true,
-		},
-		{
-			"a//b",
-			true,
-		},
-		{
-			"a/b/.",
-			true,
-		},
-		{
-			"a/*/b",
-			false,
-		},
-		{
-			"./*",
-			true,
-		},
-		{
-			"a/b\\c",
-			false,
-		},
-		{
-			"././././",
-			true,
-		},
-		{
-			"./!&^%$/#(@)/_-=+|<;>?:'\"/'`",
-			true,
-		},
-		{
-			"",
-			false,
-		},
-		{
-			"\t \n",
-			false,
-		},
-		{
-			"*",
-			false,
-		},
-	}
-
-	for _, c := range cases {
-		ret := validatePath(c.Path)
-		if (ret == nil) != c.Valid {
-			t.Fatalf("returned value for path %s should be %t, got %t",
-				c.Path, c.Valid, (ret == nil))
-		}
 	}
 }
