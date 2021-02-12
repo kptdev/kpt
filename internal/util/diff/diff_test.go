@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/diff"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
@@ -264,4 +265,29 @@ func filterDiffMetadata(r io.Reader) string {
 		b.WriteString("\n")
 	}
 	return b.String()
+}
+
+func TestStagingDirectoryNames(t *testing.T) {
+	var tests = []struct {
+		source   string
+		branch   string
+		sha      string
+		expected string
+	}{
+		{"source", "branch", "sha", "source-branch-sha"},
+		{"source", "branch", "shortenedSha", "source-branch-shorten"},
+		{"source", "duplicate", "duplicate", "source-duplicate"},
+		{"source", "refs/tags/version", "sha", "source-version-sha"},
+		{"source", "refs/tags/version", "shortenedSha", "source-version-shorten"},
+		{"source", "refs/tags/version", "refs/tags/version", "source-version"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			result := diff.NameStagingDirectory(tt.source, tt.branch, tt.sha)
+			if result != tt.expected {
+				t.Errorf("got %s, want %s", result, tt.expected)
+			}
+		})
+	}
 }

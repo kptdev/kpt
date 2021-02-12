@@ -127,7 +127,7 @@ func (c *Command) Run() error {
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	localPkgName := nameStagingDirectory(localPackageSource,
+	localPkgName := NameStagingDirectory(localPackageSource,
 		kptFile.Upstream.Git.Ref,
 		kptFile.Upstream.Git.Commit)
 	currPkg, err := stageDirectory(stagingDirectory, localPkgName)
@@ -142,7 +142,7 @@ func (c *Command) Run() error {
 	fmt.Printf("Staging %s at %s\n", c.Path, currPkg)
 
 	// get the upstreamPkg at current version
-	upstreamPkgName := nameStagingDirectory(remotePackageSource,
+	upstreamPkgName := NameStagingDirectory(remotePackageSource,
 		kptFile.Upstream.Git.Ref,
 		kptFile.Upstream.Git.Commit)
 	upstreamPkg, err := c.PkgGetter.GetPkg(stagingDirectory,
@@ -172,7 +172,7 @@ func (c *Command) Run() error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkgName := nameStagingDirectory(targetRemotePackageSource,
+		upstreamTargetPkgName := NameStagingDirectory(targetRemotePackageSource,
 			c.Ref,
 			c.Ref)
 		upstreamTargetPkg, err = c.PkgGetter.GetPkg(stagingDirectory,
@@ -355,19 +355,26 @@ func stageDirectory(path, subpath string) (string, error) {
 	return targetPath, err
 }
 
-// nameStagingDirectory assigns a name that matches the package source information
-func nameStagingDirectory(source, branch, sha string) string {
+// NameStagingDirectory assigns a name that matches the package source information
+func NameStagingDirectory(source, branch, sha string) string {
+	// Using tags may result in references like /refs/tags/version
+	// To avoid creating additional directory's use only the last name after a /
+	splitBranch := strings.Split(branch, "/")
+	splitSha := strings.Split(sha, "/")
+	reducedBranch := splitBranch[len(splitBranch)-1]
+	reducedSha := splitSha[len(splitSha)-1]
+
 	// The branch and sha may not always be known simultaneously
 	// In these cases the values will be the same. Collapse these references
 	// when this occurs to avoid confusion/duplicate info.
 	// This occurs during a remote target operation for example.
-	if branch == sha {
+	if reducedBranch == reducedSha {
 		return fmt.Sprintf("%s-%s",
 			source,
-			branch)
+			reducedBranch)
 	}
 	return fmt.Sprintf("%s-%s-%s",
 		source,
-		branch,
-		shortSha(sha))
+		reducedBranch,
+		shortSha(reducedSha))
 }
