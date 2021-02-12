@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdfix"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
-	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/spf13/cobra"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -31,7 +30,6 @@ import (
 func GetAnthosCommands(name string) []*cobra.Command {
 	c := []*cobra.Command{cmddesc.NewCommand(name),
 		cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdsync.NewCommand(name),
 		cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
 		cmdfix.NewCommand(name),
 	}
