@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/diff"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
@@ -284,7 +283,7 @@ func TestStagingDirectoryNames(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
-			result := diff.NameStagingDirectory(tt.source, tt.branch, tt.sha)
+			result := NameStagingDirectory(tt.source, tt.branch, tt.sha)
 			if result != tt.expected {
 				t.Errorf("got %s, want %s", result, tt.expected)
 			}
