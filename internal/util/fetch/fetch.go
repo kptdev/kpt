@@ -26,7 +26,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -277,14 +277,14 @@ func UpsertKptfile(path, name string, spec *git.RepoSpec) error {
 	}
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.Upstream = kptfile.Upstream{
-		Type: kptfile.GitOrigin,
-		Git: kptfile.Git{
+	kpgfile.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
+		Type: kptfilev1alpha2.GitOrigin,
+		GitLock: &kptfilev1alpha2.GitLock{
 			Repo:      spec.OrgRepo,
 			Directory: spec.Path,
 			Ref:       spec.Ref,
 		},
 	}
-	kpgfile.Upstream.Git.Commit = commit
+	kpgfile.UpstreamLock.GitLock.Commit = commit
 	return kptfileutil.WriteFile(path, kpgfile)
 }

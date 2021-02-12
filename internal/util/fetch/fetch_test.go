@@ -22,7 +22,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -67,7 +67,7 @@ func TestCommand_Run(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -75,13 +75,13 @@ func TestCommand_Run(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -121,7 +121,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -129,13 +129,13 @@ func TestCommand_Run_subdir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
@@ -174,7 +174,7 @@ func TestCommand_Run_destination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -182,13 +182,13 @@ func TestCommand_Run_destination(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -230,7 +230,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -238,13 +238,13 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "master",
@@ -300,7 +300,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -308,13 +308,13 @@ func TestCommand_Run_branch(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
@@ -375,7 +375,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -383,13 +383,13 @@ func TestCommand_Run_tag(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
@@ -432,7 +432,7 @@ func TestCommand_Run_clean(t *testing.T) {
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
 
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -440,13 +440,13 @@ func TestCommand_Run_clean(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -479,7 +479,7 @@ func TestCommand_Run_clean(t *testing.T) {
 
 	// verify files are updated
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -487,13 +487,13 @@ func TestCommand_Run_clean(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -535,7 +535,7 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -543,13 +543,13 @@ func TestCommand_Run_failClean(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -580,7 +580,7 @@ func TestCommand_Run_failClean(t *testing.T) {
 
 	// verify files weren't deleted
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -588,13 +588,13 @@ func TestCommand_Run_failClean(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -632,7 +632,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -640,13 +640,13 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -674,7 +674,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
-	g.AssertKptfile(t, absPath, kptfile.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -682,13 +682,13 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",

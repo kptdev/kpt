@@ -24,7 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"gotest.tools/assert"
 )
 
@@ -38,14 +38,13 @@ func TestDesc_Execute(t *testing.T) {
 	}()
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: cockroachdb_perf
-packageMetadata: {}
-upstream:
-  git:
+upstreamLock:
+  gitLock:
     commit: 9b6aeba0f9c2f8c44c712848b6f147f15ca3344f
     directory: cloud/kubernetes/performance
     ref: master

@@ -19,8 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
 // Absolute unique OS-defined path to the package directory on the filesystem.
@@ -38,11 +37,11 @@ type Pkg struct {
 
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
-	kptfile       *kptfile.KptFile
+	kptfile       *kptfilev1alpha2.KptFile
 	kptfileLoaded bool
 
 	// A package can contain zero or one Pipeline meta resource.
-	pipeline       *v1alpha2.Pipeline
+	pipeline       *kptfilev1alpha2.Pipeline
 	pipelineLoaded bool
 }
 
@@ -78,7 +77,7 @@ func New(path string) (*Pkg, error) {
 
 // Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
 // A nil value represents an implicit package.
-func (p *Pkg) Kptfile() *kptfile.KptFile {
+func (p *Pkg) Kptfile() *kptfilev1alpha2.KptFile {
 	if !p.kptfileLoaded {
 		// TODO
 		// p.kptfile = ...
@@ -88,7 +87,7 @@ func (p *Pkg) Kptfile() *kptfile.KptFile {
 }
 
 // Pipeline returns the Pipeline meta resource by lazy loading it from the filesystem.
-func (p *Pkg) Pipeline() *v1alpha2.Pipeline {
+func (p *Pkg) Pipeline() *kptfilev1alpha2.Pipeline {
 	if !p.pipelineLoaded {
 		// TODO
 		// p.pipeline = ...

@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/olekukonko/tablewriter"
 )
@@ -47,7 +47,7 @@ func (c Command) Run() error {
 			if err != nil {
 				return err
 			}
-			if info.Name() != kptfile.KptFileName {
+			if info.Name() != kptfilev1alpha2.KptFileName {
 				return nil
 			}
 			kptFile, err := kptfileutil.ReadFile(filepath.Dir(path))
@@ -95,10 +95,10 @@ func (c Command) printPkgs(w io.Writer, pkgs []pkgInfo) {
 		table.Append([]string{
 			pkg.Name,
 			p,
-			pkg.Upstream.Git.Repo,
-			pkg.Upstream.Git.Directory,
-			pkg.Upstream.Git.Ref,
-			shortSHA(pkg.Upstream.Git.Commit),
+			pkg.UpstreamLock.GitLock.Repo,
+			pkg.UpstreamLock.GitLock.Directory,
+			pkg.UpstreamLock.GitLock.Ref,
+			shortSHA(pkg.UpstreamLock.GitLock.Commit),
 		})
 	}
 	table.Render()
@@ -115,5 +115,5 @@ func shortSHA(sha string) string {
 // pkgInfo wraps KptFile with local directory path info.
 type pkgInfo struct {
 	localDir string
-	kptfile.KptFile
+	kptfilev1alpha2.KptFile
 }

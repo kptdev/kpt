@@ -34,7 +34,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -42,7 +42,7 @@ import (
 func TestFunctionConfig(t *testing.T) {
 	type input struct {
 		name              string
-		fn                v1alpha2.Function
+		fn                kptfilev1alpha2.Function
 		configFileContent string
 		expected          string
 	}
@@ -50,12 +50,12 @@ func TestFunctionConfig(t *testing.T) {
 	cases := []input{
 		{
 			name:     "no config",
-			fn:       v1alpha2.Function{},
+			fn:       kptfilev1alpha2.Function{},
 			expected: "",
 		},
 		{
 			name: "inline config",
-			fn: v1alpha2.Function{
+			fn: kptfilev1alpha2.Function{
 				Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
 kind: ResourceHierarchy
 metadata:
@@ -71,7 +71,7 @@ metadata:
 		},
 		{
 			name: "file config",
-			fn:   v1alpha2.Function{},
+			fn:   kptfilev1alpha2.Function{},
 			configFileContent: `apiVersion: cft.dev/v1alpha1
 kind: ResourceHierarchy
 metadata:
@@ -86,7 +86,7 @@ metadata:
 		},
 		{
 			name: "map config",
-			fn: v1alpha2.Function{
+			fn: kptfilev1alpha2.Function{
 				ConfigMap: map[string]string{
 					"foo": "bar",
 				},

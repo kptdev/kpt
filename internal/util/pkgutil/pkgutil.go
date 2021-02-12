@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -47,7 +47,7 @@ func FindLocalSubpackages(path string) ([]string, error) {
 			}
 		}
 
-		if filepath.Base(p) != kptfile.KptFileName {
+		if filepath.Base(p) != kptfilev1alpha2.KptFileName {
 			return nil
 		}
 
@@ -90,7 +90,7 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 		}
 
 		if info.IsDir() {
-			_, err := os.Stat(filepath.Join(path, kptfile.KptFileName))
+			_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
 			if err != nil && !os.IsNotExist(err) {
 				return c(path, info, err)
 			}
@@ -158,7 +158,7 @@ func CheckForParentPackage(src string) (string, bool, error) {
 
 var emptyFunc = func() error { return nil }
 
-type kptFunc = func(string, kptfile.KptFile) (kptfile.KptFile, error)
+type kptFunc = func(string, kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error)
 
 // UpdateParentKptfile provides the basics for making changes to the Kptfile
 // of a parent package. It takes a path to the current pakcage and a mutator

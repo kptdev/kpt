@@ -32,18 +32,10 @@ func TestPkgDiff(t *testing.T) {
 		{
 			name: "equal packages doesn't have a diff",
 			pkg1: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile().
-					WithSetters(
-						pkgbuilder.NewSetter("foo", "bar"),
-					),
-				).
+				WithKptfile(pkgbuilder.NewKptfile()).
 				WithResource(pkgbuilder.DeploymentResource),
 			pkg2: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile().
-					WithSetters(
-						pkgbuilder.NewSetter("foo", "bar"),
-					),
-				).
+				WithKptfile(pkgbuilder.NewKptfile()).
 				WithResource(pkgbuilder.DeploymentResource),
 			diff: toStringSet(),
 		},
@@ -58,40 +50,14 @@ func TestPkgDiff(t *testing.T) {
 			diff: toStringSet("configmap.yaml", "deployment.yaml"),
 		},
 		{
-			name: "different setters in Kptfile is a diff",
-			pkg1: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile().
-					WithSetters(
-						pkgbuilder.NewSetter("foo", "bar"),
-					),
-				).
-				WithResource(pkgbuilder.DeploymentResource),
-			pkg2: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile().
-					WithSetters(
-						pkgbuilder.NewSetter("foo", "notBar"),
-					),
-				).
-				WithResource(pkgbuilder.DeploymentResource),
-			diff: toStringSet("Kptfile"),
-		},
-		{
 			name: "different upstream in Kptfile is not a diff",
 			pkg1: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master").
-					WithSetters(
-						pkgbuilder.NewSetter("foo", "bar"),
-					),
-				).
+					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master")).
 				WithResource(pkgbuilder.DeploymentResource),
 			pkg2: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "kpt/v1").
-					WithSetters(
-						pkgbuilder.NewSetter("foo", "bar"),
-					),
-				).
+					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "kpt/v1")).
 				WithResource(pkgbuilder.DeploymentResource),
 			diff: toStringSet(),
 		},
@@ -102,11 +68,7 @@ func TestPkgDiff(t *testing.T) {
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpackage").
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetter("foo", "bar"),
-							),
-						).
+						WithKptfile(pkgbuilder.NewKptfile()).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			pkg2: pkgbuilder.NewRootPkg().

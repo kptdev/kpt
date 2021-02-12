@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/cpuguy83/go-md2man/v2/md2man"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -61,17 +62,21 @@ func (m Command) Run() error {
 	if err != nil {
 		return err
 	}
-	if k.PackageMeta.Man == "" {
+	if k.Info == nil {
+		k.Info = &v1alpha2.PackageInfo{}
+	}
+
+	if k.Info.Man == "" {
 		_, err := os.Stat(filepath.Join(m.Path, ManFilename))
 		if err != nil {
-			return errors.Errorf("no manual entry for %s", m.Path)
+			return errors.Errorf("no manual entry for %q", m.Path)
 		}
-		k.PackageMeta.Man = filepath.Join(ManFilename)
+		k.Info.Man = filepath.Join(ManFilename)
 	}
 
 	// the path separator needs to converted to the OS path.
 	// e.g. the separator will be different for windows.
-	p := filepath.Join(path.Split(k.PackageMeta.Man))
+	p := filepath.Join(path.Split(k.Info.Man))
 
 	// verify the man page is in the package
 	apPkg, err := filepath.Abs(m.Path)
@@ -83,7 +88,7 @@ func (m Command) Run() error {
 		return err
 	}
 	if !strings.HasPrefix(apMan, apPkg) {
-		return errors.Errorf("invalid manual location for %s", m.Path)
+		return errors.Errorf("invalid manual location for %q", m.Path)
 	}
 
 	// write the formatted manual to a tmp file so it can be displayed

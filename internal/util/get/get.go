@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
@@ -34,7 +34,7 @@ import (
 // directory, and expands any remote subpackages.
 type Command struct {
 	// Git contains information about the git repo to fetch
-	kptfile.Git
+	kptfilev1alpha2.GitLock
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -79,27 +79,29 @@ func (c Command) Run() error {
 // parent. It adds the new package to the parent. The function returns a function
 // that makes it possible to revert the change if fetching the package fails.
 func (c Command) updateParentKptfile() (func() error, error) {
-	return pkgutil.UpdateParentKptfile(c.Destination, func(parentPath string, kf kptfile.KptFile) (kptfile.KptFile, error) {
+	return pkgutil.UpdateParentKptfile(c.Destination, func(parentPath string, kf kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
 		for _, subPkg := range kf.Subpackages {
 			absPath := filepath.Join(parentPath, subPkg.LocalDir)
 			if absPath == c.Destination {
-				return kptfile.KptFile{}, fmt.Errorf("subpackage with localDir %q already exist", subPkg.LocalDir)
+				return kptfilev1alpha2.KptFile{}, fmt.Errorf("subpackage with localDir %q already exist", subPkg.LocalDir)
 			}
 		}
 
 		relPkgPath, err := filepath.Rel(parentPath, c.Destination)
 		if err != nil {
-			return kptfile.KptFile{}, err
+			return kptfilev1alpha2.KptFile{}, err
 		}
 
-		kf.Subpackages = append(kf.Subpackages, kptfile.Subpackage{
+		kf.Subpackages = append(kf.Subpackages, kptfilev1alpha2.Subpackage{
 			LocalDir: relPkgPath,
-			Git: kptfile.Git{
-				Repo:      c.Repo,
-				Directory: c.Directory,
-				Ref:       c.Ref,
+			Upstream: &kptfilev1alpha2.Upstream{
+				Git: &kptfilev1alpha2.Git{
+					Repo:      c.Repo,
+					Directory: c.Directory,
+					Ref:       c.Ref,
+				},
+				UpdateStrategy: "resource-merge",
 			},
-			UpdateStrategy: "resource-merge",
 		})
 		return kf, nil
 	})
@@ -113,7 +115,7 @@ func (c Command) fetchRemoteSubpackages() error {
 	// for remote subpackages.
 	s := stack.New()
 
-	paths, err := pathutil.DirsWithFile(c.Destination, kptfile.KptFileName, true)
+	paths, err := pathutil.DirsWithFile(c.Destination, kptfilev1alpha2.KptFileName, true)
 	if err != nil {
 		return err
 	}
@@ -137,7 +139,7 @@ func (c Command) fetchRemoteSubpackages() error {
 			}
 			remoteSubPkgDirs[sp.LocalDir] = true
 
-			gitInfo := sp.Git
+			gitInfo := sp.Upstream.Git
 			localPath := filepath.Join(p, sp.LocalDir)
 
 			_, err = os.Stat(localPath)
@@ -166,7 +168,7 @@ func (c Command) fetchRemoteSubpackages() error {
 				return err
 			}
 
-			subPaths, err := pathutil.DirsWithFile(localPath, kptfile.KptFileName, true)
+			subPaths, err := pathutil.DirsWithFile(localPath, kptfilev1alpha2.KptFileName, true)
 			if err != nil {
 				return err
 			}

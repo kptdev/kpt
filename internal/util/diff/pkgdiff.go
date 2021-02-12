@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -51,7 +51,7 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 		}
 
 		fileName := filepath.Base(f)
-		if fileName == kptfile.KptFileName {
+		if fileName == kptfilev1alpha2.KptFileName {
 			equal, err := kptfilesEqual(pkg1, pkg2, f)
 			if err != nil {
 				return diff, err
@@ -86,8 +86,8 @@ func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
 		return false, err
 	}
 
-	pkg1Kf.Upstream = kptfile.Upstream{}
-	pkg2Kf.Upstream = kptfile.Upstream{}
+	pkg1Kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{}
+	pkg2Kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{}
 
 	pkg1Bytes, err := yaml.Marshal(pkg1Kf)
 	if err != nil {

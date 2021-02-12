@@ -22,8 +22,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"k8s.io/klog"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
@@ -91,7 +90,7 @@ type pkg struct {
 	path string
 
 	// pipeline contained in the pkg
-	pipeline *v1alpha2.Pipeline
+	pipeline *kptfilev1alpha2.Pipeline
 
 	// resources post hydration
 	resources []*yaml.RNode
@@ -117,16 +116,16 @@ func (p *pkg) Read() error {
 	// Read the pipeline for the current package else assume default
 	// TODO(droot): integrate with Donny's code once that is merged
 	// and read an actual pipeline
-	p.pipeline = &v1alpha2.Pipeline{}
+	p.pipeline = &kptfilev1alpha2.Pipeline{}
 
 	return nil
 }
 
 // TODO: This will be replaced with the pkg abstraction PR.
-func (p *pkg) Pipeline() *v1alpha2.Pipeline {
+func (p *pkg) Pipeline() *kptfilev1alpha2.Pipeline {
 	if p.pipeline == nil {
 		// READ the pipeline in the pkg.
-		p.pipeline = &v1alpha2.Pipeline{}
+		p.pipeline = &kptfilev1alpha2.Pipeline{}
 	}
 	return p.pipeline
 }
@@ -163,7 +162,7 @@ func resolveSource(source string, pkgPath string) ([]string, error) {
 				// This may change as the concept of a package is expanded such that
 				// every directory is its own kpt package
 				absolutePath := path.Join(pkgPath, f.Name())
-				subPaths, err := pathutil.DirsWithFile(absolutePath, kptfile.KptFileName, false)
+				subPaths, err := pathutil.DirsWithFile(absolutePath, kptfilev1alpha2.KptFileName, false)
 				if err != nil {
 					return nil, err
 				}
@@ -320,7 +319,7 @@ func filterMetaData(resources []*yaml.RNode) []*yaml.RNode {
 
 // fnFilters returns chain of functions that are applicable
 // to a given pipeline.
-func fnFilters(pl *v1alpha2.Pipeline, pkgPath string) ([]kio.Filter, error) {
+func fnFilters(pl *kptfilev1alpha2.Pipeline, pkgPath string) ([]kio.Filter, error) {
 	filters, err := fnChain(pl, pkgPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get function chain: %w", err)

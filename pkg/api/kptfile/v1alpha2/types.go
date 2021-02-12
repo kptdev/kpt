@@ -28,6 +28,14 @@ const (
 	KptFileAPIVersion = KptFileGroup + "/" + KptFileVersion
 )
 
+// TypeMeta is the TypeMeta for KptFile instances.
+var TypeMeta = yaml.ResourceMeta{
+	TypeMeta: yaml.TypeMeta{
+		APIVersion: KptFileAPIVersion,
+		Kind:       KptFileName,
+	},
+}
+
 // KptFile contains information about a package managed with kpt.
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline"`
@@ -102,7 +110,7 @@ type UpstreamLock struct {
 	Type OriginType `yaml:"type,omitempty"`
 
 	// GitLock is the resolved locator for a package on Git.
-	GitLock *GitLock `yaml:"git,omitempty"`
+	GitLock *GitLock `yaml:"gitLock,omitempty"`
 }
 
 // GitLock is the resolved locator for a package on Git.
@@ -147,8 +155,11 @@ type PackageInfo struct {
 	// Description contains a short description of the package.
 	Description string `yaml:"description,omitempty"`
 
-	// Keywrods is a list of keywords for this package.
+	// Keywords is a list of keywords for this package.
 	Keywords []string `yaml:"keywords,omitempty"`
+
+	// Man is the path to documentation about the package
+	Man string `yaml:"man,omitempty"`
 }
 
 // Subpackages declares a local or remote subpackage.

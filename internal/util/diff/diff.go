@@ -27,7 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -120,9 +120,9 @@ func (c *Command) Run() error {
 	}
 
 	// get the upstreamPkg at current version
-	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
-		kptFile.Upstream.Git.Directory,
-		kptFile.Upstream.Git.Commit)
+	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.UpstreamLock.GitLock.Repo,
+		kptFile.UpstreamLock.GitLock.Directory,
+		kptFile.UpstreamLock.GitLock.Commit)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func (c *Command) Run() error {
 	var upstreamTargetPkg string
 
 	if c.Ref == "" {
-		c.Ref, err = gitutil.DefaultRef(kptFile.Upstream.Git.Repo)
+		c.Ref, err = gitutil.DefaultRef(kptFile.UpstreamLock.GitLock.Repo)
 		if err != nil {
 			return err
 		}
@@ -145,8 +145,8 @@ func (c *Command) Run() error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkg, err = c.PkgGetter.GetPkg(kptFile.Upstream.Git.Repo,
-			kptFile.Upstream.Git.Directory,
+		upstreamTargetPkg, err = c.PkgGetter.GetPkg(kptFile.UpstreamLock.GitLock.Repo,
+			kptFile.UpstreamLock.GitLock.Directory,
 			c.Ref)
 		if err != nil {
 			return err
@@ -271,7 +271,7 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 // prepareForDiff removes metadata such as .git and Kptfile from a staged package
 // to exclude them from diffing.
 func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
-	excludePaths := []string{".git", kptfile.KptFileName}
+	excludePaths := []string{".git", kptfilev1alpha2.KptFileName}
 	for _, path := range excludePaths {
 		path = filepath.Join(dir, path)
 		if err := os.RemoveAll(path); err != nil {

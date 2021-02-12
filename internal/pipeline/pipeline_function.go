@@ -23,14 +23,14 @@ import (
 	"path"
 
 	"github.com/GoogleContainerTools/kpt/internal/pipeline/runtime"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(f *v1alpha2.Function, pkgPath string) (kio.Filter, error) {
+func newFnRunner(f *kptfilev1alpha2.Function, pkgPath string) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func newFnRunner(f *v1alpha2.Function, pkgPath string) (kio.Filter, error) {
 	}, nil
 }
 
-func newFnConfig(f *v1alpha2.Function, pkgPath string) (*yaml.RNode, error) {
+func newFnConfig(f *kptfilev1alpha2.Function, pkgPath string) (*yaml.RNode, error) {
 	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":
@@ -62,7 +62,7 @@ func newFnConfig(f *v1alpha2.Function, pkgPath string) (*yaml.RNode, error) {
 		}
 		// directly use the config from file
 		return node, nil
-	case !v1alpha2.IsNodeZero(&f.Config):
+	case !kptfilev1alpha2.IsNodeZero(&f.Config):
 		// directly use the inline config
 		return yaml.NewRNode(&f.Config), nil
 	case len(f.ConfigMap) != 0:

@@ -25,13 +25,13 @@ var (
 )
 
 var kptFile = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
-upstream:
+upstreamLock:
   type: git
-  git:
+  gitLock:
     commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
@@ -47,9 +47,9 @@ apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: test1
-upstream:
+upstreamLock:
   type: git
-  git:
+  gitLock:
     commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
@@ -63,9 +63,9 @@ apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: test1
-upstream:
+upstreamLock:
   type: git
-  git:
+  gitLock:
     commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /

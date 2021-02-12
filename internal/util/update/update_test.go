@@ -17,16 +17,14 @@ package update_test
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -322,7 +320,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				if err != nil {
 					return "", err
 				}
-				return f.Upstream.Git.Commit, nil
+				return f.UpstreamLock.GitLock.Commit, nil
 			},
 		},
 		"update using force-delete-replace strategy with local changes": {
@@ -607,86 +605,6 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			}
 			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "v1.0") {
 				t.FailNow()
-			}
-		})
-	}
-}
-
-// TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
-// it was updated to with local values set to different values in upstream.
-func TestCommand_ResourceMerge_WithSetters_TagRef(t *testing.T) {
-	strategies := []StrategyType{KResourceMerge}
-	for i := range strategies {
-		strategy := strategies[i]
-		t.Run(string(strategy), func(t *testing.T) {
-			// Setup the test upstream and local packages
-			g := &testutil.TestSetupManager{
-				T: t,
-				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{
-					{Data: testutil.Dataset4, Tag: "v1.0"},
-				},
-			}
-			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
-				return
-			}
-
-			// append setters to local Kptfile with values in local package different from upstream(Dataset4)
-			file, err := os.OpenFile(filepath.Join(g.LocalWorkspace.FullPackagePath(), "/Kptfile"),
-				os.O_WRONLY|os.O_APPEND, 0644)
-			if !assert.NoError(t, err) {
-				return
-			}
-			defer file.Close()
-
-			_, err = file.WriteString(`openAPI:
-  definitions:
-    io.k8s.cli.setters.name:
-      x-k8s-cli:
-        setter:
-          name: name
-          value: "app-config"
-    io.k8s.cli.setters.replicas:
-      x-k8s-cli:
-        setter:
-          name: replicas
-          value: "3"`)
-
-			if !assert.NoError(t, err) {
-				return
-			}
-
-			localGit := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
-			if !assert.NoError(g.T, localGit.Run("add", ".")) {
-				t.FailNow()
-			}
-			if !assert.NoError(g.T, localGit.Run("commit", "-m", "add files")) {
-				t.FailNow()
-			}
-
-			// Update the local package
-			if !assert.NoError(t, Command{
-				Path:            g.UpstreamRepo.RepoName,
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        strategy,
-				Ref:             "v1.0",
-			}.Run()) {
-				return
-			}
-
-			// Expect the local package to have Dataset2
-			// Dataset2 is replica of Dataset4 but with setter values same as local package
-			// This tests the feature https://github.com/GoogleContainerTools/kpt/issues/284
-			if !g.AssertLocalDataEquals(testutil.Dataset2) {
-				return
-			}
-
-			if !assert.NoError(t, g.UpstreamRepo.CheckoutBranch("v1.0", false)) {
-				return
 			}
 		})
 	}
@@ -1017,12 +935,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		{
 			name: "new setters are added in upstream",
 			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile().
-					WithSetters(
-						pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
-						pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
-					),
-				).
+				WithKptfile(pkgbuilder.NewKptfile()).
 				WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
 					pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
 					pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
@@ -1032,12 +945,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile().
 						WithResource(pkgbuilder.DeploymentResource),
 					pkgbuilder.NewSubPkg("storage").
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
-								pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
-							),
-						).
+						WithKptfile(pkgbuilder.NewKptfile()).
 						WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
 							pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
 							pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
@@ -1045,31 +953,17 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				),
 			updatedUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(pkgbuilder.NewKptfile().
-						WithSetters(
-							pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
-							pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
-						),
-					).
+					WithKptfile(pkgbuilder.NewKptfile()).
 					WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
 						pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
 						pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
 					}).
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("nosetters").
-							WithKptfile(pkgbuilder.NewKptfile().
-								WithSetters(
-									pkgbuilder.NewSetter("new-setter", "some-value"),
-								),
-							).
+							WithKptfile(pkgbuilder.NewKptfile()).
 							WithResource(pkgbuilder.DeploymentResource),
 						pkgbuilder.NewSubPkg("storage").
-							WithKptfile(pkgbuilder.NewKptfile().
-								WithSetters(
-									pkgbuilder.NewSetter("gcloud.core.project", "PROJECT_ID"),
-									pkgbuilder.NewSetter("gcloud.project.projectNumber", "PROJECT_NUMBER"),
-								),
-							).
+							WithKptfile(pkgbuilder.NewKptfile()).
 							WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
 								pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
 								pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
@@ -1078,12 +972,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(pkgbuilder.NewKptfile().
-						WithSetters(
-							pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
-							pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
-						),
-					).
+					WithKptfile(pkgbuilder.NewKptfile()).
 					WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
 						pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
 						pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
@@ -1096,12 +985,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
 						pkgbuilder.NewSubPkg("storage").
-							WithKptfile(pkgbuilder.NewKptfile().
-								WithSetters(
-									pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
-									pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
-								),
-							).
+							WithKptfile(pkgbuilder.NewKptfile()).
 							WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
 								pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
 								pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
@@ -1116,10 +1000,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					strategies: []StrategyType{KResourceMerge},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
-								pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
-							).
 							WithUpstreamRef("upstream", "/", "master"),
 						).
 						WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
@@ -1131,19 +1011,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("nosetters").
-								WithKptfile(pkgbuilder.NewKptfile().
-									WithSetters(
-										pkgbuilder.NewSetter("new-setter", "some-value"),
-									),
-								).
+								WithKptfile(pkgbuilder.NewKptfile()).
 								WithResource(pkgbuilder.DeploymentResource),
 							pkgbuilder.NewSubPkg("storage").
-								WithKptfile(pkgbuilder.NewKptfile().
-									WithSetters(
-										pkgbuilder.NewSetSetter("gcloud.core.project", "my-project"),
-										pkgbuilder.NewSetSetter("gcloud.project.projectNumber", "a1234"),
-									),
-								).
+								WithKptfile(pkgbuilder.NewKptfile()).
 								WithResourceAndSetters(pkgbuilder.DeploymentResource, []pkgbuilder.SetterRef{
 									pkgbuilder.NewSetterRef("gcloud.core.project", "metadata", "namespace"),
 									pkgbuilder.NewSetterRef("gcloud.project.projectNumber", "spec", "foo"),
@@ -1165,11 +1036,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				WithKptfile().
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetter("name", "my-name"),
-							),
-						).
+						WithKptfile(pkgbuilder.NewKptfile()).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			updatedUpstream: testutil.Content{
@@ -1193,11 +1060,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
-								WithKptfile(pkgbuilder.NewKptfile().
-									WithSetters(
-										pkgbuilder.NewSetter("name", "my-name"),
-									),
-								).
+								WithKptfile(pkgbuilder.NewKptfile()).
 								WithResource(pkgbuilder.DeploymentResource),
 						),
 				},
@@ -1237,11 +1100,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					WithKptfile().
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("bar").
-							WithKptfile(pkgbuilder.NewKptfile().
-								WithSetters(
-									pkgbuilder.NewSetter("name", "my-name"),
-								),
-							).
+							WithKptfile(pkgbuilder.NewKptfile()).
 							WithResource(pkgbuilder.DeploymentResource),
 					),
 			},
@@ -1255,11 +1114,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
-								WithKptfile(pkgbuilder.NewKptfile().
-									WithSetters(
-										pkgbuilder.NewSetter("name", "my-name"),
-									),
-								).
+								WithKptfile(pkgbuilder.NewKptfile()).
 								WithResource(pkgbuilder.DeploymentResource).
 								WithResource(pkgbuilder.ConfigMapResource),
 						),
@@ -1276,11 +1131,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				WithKptfile().
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetter("foo", "val"),
-							),
-						).
+						WithKptfile(pkgbuilder.NewKptfile()).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			updatedUpstream: testutil.Content{
@@ -1304,11 +1155,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				WithKptfile().
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetter("foo", "val"),
-							),
-						).
+						WithKptfile(pkgbuilder.NewKptfile()).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			updatedUpstream: testutil.Content{
@@ -1320,11 +1167,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					WithKptfile().
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("bar").
-							WithKptfile(pkgbuilder.NewKptfile().
-								WithSetters(
-									pkgbuilder.NewSetter("foo", "val"),
-								),
-							).
+							WithKptfile(pkgbuilder.NewKptfile()).
 							WithResource(pkgbuilder.DeploymentResource,
 								pkgbuilder.SetFieldPath("34", "spec", "replicas")),
 					),
@@ -1339,11 +1182,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
-								WithKptfile(pkgbuilder.NewKptfile().
-									WithSetters(
-										pkgbuilder.NewSetter("foo", "val"),
-									),
-								).
+								WithKptfile(pkgbuilder.NewKptfile()).
 								WithResource(pkgbuilder.DeploymentResource,
 									pkgbuilder.SetFieldPath("34", "spec", "replicas")),
 						),
@@ -1351,57 +1190,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				{
 					strategies:     []StrategyType{FastForward},
 					expectedErrMsg: "use a different update --strategy",
-				},
-			},
-		},
-		{
-			name: "merging of Kptfile in nested package",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/foo/bar", "/", "somebranch"),
-				).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("subpkg").
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithUpstream("gitlab.com/comp/proj", "/", "1234abcd").
-							WithSetters(
-								pkgbuilder.NewSetter("setter1", "value1"),
-							),
-						),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(pkgbuilder.NewKptfile().
-						WithUpstream("github.com/foo/bar", "/", "somebranch"),
-					).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("subpkg").
-							WithKptfile(pkgbuilder.NewKptfile().
-								WithUpstream("gitlab.com/comp/proj", "/", "abcd1234").
-								WithSetters(
-									pkgbuilder.NewSetter("setter1", "value1"),
-									pkgbuilder.NewSetter("setter2", "value2"),
-								),
-							),
-					),
-			},
-			expectedResults: []resultForStrategy{
-				{
-					strategies: []StrategyType{KResourceMerge, FastForward},
-					expectedLocal: pkgbuilder.NewRootPkg().
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithUpstreamRef("upstream", "/", "master"),
-						).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("subpkg").
-								WithKptfile(pkgbuilder.NewKptfile().
-									WithUpstream("gitlab.com/comp/proj", "/", "abcd1234").
-									WithSetters(
-										pkgbuilder.NewSetter("setter1", "value1"),
-										pkgbuilder.NewSetter("setter2", "value2"),
-									),
-								),
-						),
 				},
 			},
 		},
@@ -1511,19 +1299,12 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			name: "updated setters on root package",
 			initialUpstream: pkgbuilder.NewRootPkg().
 				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithSetters(
-							pkgbuilder.NewSetter("my-setter", "foo"),
-						),
+					pkgbuilder.NewKptfile(),
 				),
 			updatedUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetter("my-setter", "bar"),
-							),
-					),
+						pkgbuilder.NewKptfile()),
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -1531,11 +1312,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", "master").
-								WithSetters(
-									pkgbuilder.NewSetter("my-setter", "bar"),
-								),
-						),
+								WithUpstreamRef("upstream", "/", "master")),
 				},
 			},
 		},
@@ -1880,7 +1657,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				rw := &kio.LocalPackageReadWriter{
 					NoDeleteFiles:  true,
 					PackagePath:    g.LocalWorkspace.FullPackagePath(),
-					MatchFilesGlob: []string{kptfile.KptFileName},
+					MatchFilesGlob: []string{kptfilev1alpha2.KptFileName},
 				}
 				err = kio.Pipeline{
 					Inputs:  []kio.Reader{rw},
@@ -2239,7 +2016,7 @@ func TestCommand_Run_updateSubpackage(t *testing.T) {
 			rw := &kio.LocalPackageReadWriter{
 				NoDeleteFiles:  true,
 				PackagePath:    g.LocalWorkspace.FullPackagePath(),
-				MatchFilesGlob: []string{kptfile.KptFileName},
+				MatchFilesGlob: []string{kptfilev1alpha2.KptFileName},
 			}
 			err = kio.Pipeline{
 				Inputs:  []kio.Reader{rw},

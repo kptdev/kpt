@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -130,7 +130,7 @@ func (io *KptInitOptions) updateKptfile() error {
 		return err
 	}
 	// Finally, set the inventory parameters in the Kptfile and write it.
-	kf.Inventory = &kptfile.Inventory{
+	kf.Inventory = &kptfilev1alpha2.Inventory{
 		Namespace:   io.namespace,
 		Name:        io.name,
 		InventoryID: io.inventoryID,
@@ -160,7 +160,7 @@ func (io *KptInitOptions) validate() error {
 
 // kptfileInventoryEmpty returns true if the Inventory structure
 // in the Kptfile is empty; false otherwise.
-func kptfileInventoryEmpty(inv *kptfile.Inventory) bool {
+func kptfileInventoryEmpty(inv *kptfilev1alpha2.Inventory) bool {
 	return inv == nil
 }
 

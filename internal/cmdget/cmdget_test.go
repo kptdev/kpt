@@ -15,7 +15,6 @@
 package cmdget_test
 
 import (
-	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,7 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -52,7 +51,7 @@ func TestCmd_execute(t *testing.T) {
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, dest, kptfile.KptFile{
+	g.AssertKptfile(t, dest, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -60,13 +59,12 @@ func TestCmd_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -102,7 +100,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, dest, kptfile.KptFile{
+	g.AssertKptfile(t, dest, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -110,13 +108,12 @@ func TestCmdMainBranch_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "main",
@@ -125,39 +122,6 @@ func TestCmdMainBranch_execute(t *testing.T) {
 		},
 	})
 
-}
-
-func TestCmd_stdin(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt")
-	if !assert.NoError(t, err) {
-		return
-	}
-	defer os.RemoveAll(d)
-	b := bytes.NewBufferString(`
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo1
-  namespace: bar
-`)
-
-	r := cmdget.NewRunner("kpt")
-	r.Command.SetIn(b)
-	r.Command.SetArgs([]string{"-", d, "--pattern", "%k.yaml"})
-	err = r.Command.Execute()
-	if !assert.NoError(t, err) {
-		return
-	}
-	actual, err := ioutil.ReadFile(filepath.Join(d, "deployment.yaml"))
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: foo1
-  namespace: bar
-`, string(actual))
 }
 
 // TestCmd_fail verifies that that command returns an error rather than exiting the process

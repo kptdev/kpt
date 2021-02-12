@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -44,7 +44,7 @@ func TestSearchCommand(t *testing.T) {
 			test := tests[i]
 			t.Run(test.name, func(t *testing.T) {
 				ext.KRMFileName = func() string {
-					return kptfile.KptFileName
+					return kptfilev1alpha2.KptFileName
 				}
 				baseDir, err := ioutil.TempDir("", "")
 				if !assert.NoError(t, err) {
@@ -163,7 +163,7 @@ Matched 1 field(s)
 				t.FailNow()
 			}
 			ext.KRMFileName = func() string {
-				return kptfile.KptFileName
+				return kptfilev1alpha2.KptFileName
 			}
 			defer os.RemoveAll(baseDir)
 			runner := NewSearchRunner("")
