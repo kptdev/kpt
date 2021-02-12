@@ -453,6 +453,18 @@ func (g *TestGitRepo) createEmptyGitRepo(defaultBranch string) error {
 	return g.Commit("initial commit")
 }
 
+func GetTestResource(dataset, path string) (string, error) {
+	testPath, err := GetTestDataPath()
+	if err != nil {
+		return "", err
+	}
+	c, err := ioutil.ReadFile(filepath.Join(testPath, dataset, path))
+	if err != nil {
+		return "", err
+	}
+	return string(c), nil
+}
+
 func GetTestDataPath() (string, error) {
 	filename, err := getTestUtilGoFilePath()
 	if err != nil {
@@ -624,6 +636,7 @@ func checkoutBranch(repo string, branch string, create bool) error {
 	return nil
 }
 
+// nolint:gocyclo
 func replaceData(repo, data string) error {
 	// If the path is absolute we assume it is the full path to the
 	// testdata. If it is relative, we assume it refers to one of the
@@ -723,6 +736,11 @@ func replaceData(repo, data string) error {
 		}
 		// We skip anything that is inside the .git folder
 		if strings.HasPrefix(rel, ".git") {
+			return nil
+		}
+
+		// Never delete the Kptfile in the root package.
+		if rel == kptfile.KptFileName {
 			return nil
 		}
 

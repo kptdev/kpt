@@ -108,6 +108,18 @@ func (p *pkg) withResource(resourceName string, mutators ...yaml.Filter) {
 	})
 }
 
+// withRawResource configures the package to include the provided resource
+func (p *pkg) withRawResource(resourceName, manifest string, mutators ...yaml.Filter) {
+	p.resources = append(p.resources, resourceInfoWithSetters{
+		resourceInfo: resourceInfo{
+			filename: resourceName,
+			manifest: manifest,
+		},
+		setterRefs: []SetterRef{},
+		mutators:   mutators,
+	})
+}
+
 // withResourceAndSetters configures the package to have the provided resource.
 // It also allows for specifying setterRefs for the resource and a set of
 // mutators that will update the content of the resource.
@@ -194,6 +206,12 @@ func (rp *RootPkg) WithResource(resourceName string, mutators ...yaml.Filter) *R
 	return rp
 }
 
+// WithRawResource configures the package to include the provided resource
+func (rp *RootPkg) WithRawResource(resourceName, manifest string, mutators ...yaml.Filter) *RootPkg {
+	rp.pkg.withRawResource(resourceName, manifest, mutators...)
+	return rp
+}
+
 // WithResourceAndSetters configures the package to have the provided resource.
 // It also allows for specifying setterRefs for the resource and a set of
 // mutators that will update the content of the resource.
@@ -267,6 +285,12 @@ func (sp *SubPkg) WithKptfile(kf ...*Kptfile) *SubPkg {
 // WithResource configures the package to include the provided resource
 func (sp *SubPkg) WithResource(resourceName string, mutators ...yaml.Filter) *SubPkg {
 	sp.pkg.withResource(resourceName, mutators...)
+	return sp
+}
+
+// WithRawResource configures the package to include the provided resource
+func (sp *SubPkg) WithRawResource(resourceName, manifest string, mutators ...yaml.Filter) *SubPkg {
+	sp.pkg.withRawResource(resourceName, manifest, mutators...)
 	return sp
 }
 

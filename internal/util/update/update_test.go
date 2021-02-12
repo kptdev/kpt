@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
@@ -271,104 +272,182 @@ func TestCommand_Run_noAdd(t *testing.T) {
 	}
 }
 
-// TestCommand_Run_localPackageChanges updates a package that has been locally modified
-// - Get a package using  a branch ref
-// - Modify upstream with new content
-// - Modify local package with new content
-// - Update the local package to fetch the upstream content
 func TestCommand_Run_localPackageChanges(t *testing.T) {
-	updates := []struct {
-		updater        StrategyType // update strategy type
-		expectedData   string       // expect
-		expectedErr    string
-		expectedCommit func(writer *testutil.TestSetupManager) string
+	testCases := map[string]struct {
+		strategy        StrategyType
+		initialUpstream testutil.Content
+		updatedUpstream testutil.Content
+		updatedLocal    testutil.Content
+		expectedLocal   testutil.Content
+		expectedErr     string
+		expectedCommit  func(writer *testutil.TestSetupManager) (string, error)
 	}{
-		{FastForward,
-			testutil.Dataset3,                        // expect no changes to the data
-			"local package files have been modified", // expect an error
-			func(writer *testutil.TestSetupManager) string { // expect Kptfile to keep the commit
-				f, err := kptfileutil.ReadFile(filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, writer.UpstreamRepo.RepoName))
-				if !assert.NoError(writer.T, err) {
-					return ""
-				}
-				return f.Upstream.Git.Commit
+		"update using resource-merge strategy with local changes": {
+			strategy: KResourceMerge,
+			initialUpstream: testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			},
+			updatedUpstream: testutil.Content{
+				Data: testutil.Dataset2,
+			},
+			updatedLocal: testutil.Content{
+				Data: testutil.Dataset3,
+			},
+			expectedLocal: testutil.Content{
+				Data: testutil.DatasetMerged,
+			},
+			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
+				return writer.UpstreamRepo.GetCommit()
 			},
 		},
-		// // forcedeletereplace should reset hard to dataset 2 -- upstream modified copy
-		// {ForceDeleteReplace,
-		//	 testutil.Dataset2, // expect the upstream changes
-		//	 "",                // expect no error
-		//	 func(writer *testutil.TestSetupManager) string {
-		// 		c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit
-		// 		return c
-		//	 },
-		// },
-		// // gitpatch should create a merge conflict between 2 and 3
-		// {AlphaGitPatch,
-		// 	 testutil.UpdateMergeConflict,     // expect a merge conflict
-		//	 "Failed to merge in the changes", // expect an error
-		//	 func(writer *testutil.TestSetupManager) string {
-		// 		c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit as a staged change
-		// 		return c
-		// 	 },
-		// },
-		{KResourceMerge,
-			testutil.DatasetMerged, // expect a merge conflict
-			"",                     // expect an error
-			func(writer *testutil.TestSetupManager) string {
-				c, _ := writer.UpstreamRepo.GetCommit() // expect the upstream commit as a staged change
-				return c
+		"update using fast-forward strategy with local changes": {
+			strategy: FastForward,
+			initialUpstream: testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			},
+			updatedUpstream: testutil.Content{
+				Data: testutil.Dataset2,
+			},
+			updatedLocal: testutil.Content{
+				Data: testutil.Dataset3,
+			},
+			expectedLocal: testutil.Content{
+				Data: testutil.Dataset3,
+			},
+			expectedErr: "local package files have been modified",
+			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
+				f, err := kptfileutil.ReadFile(filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, writer.UpstreamRepo.RepoName))
+				if err != nil {
+					return "", err
+				}
+				return f.Upstream.Git.Commit, nil
+			},
+		},
+		"update using force-delete-replace strategy with local changes": {
+			strategy: ForceDeleteReplace,
+			initialUpstream: testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			},
+			updatedUpstream: testutil.Content{
+				Data: testutil.Dataset2,
+			},
+			updatedLocal: testutil.Content{
+				Data: testutil.Dataset3,
+			},
+			expectedLocal: testutil.Content{
+				Data: testutil.Dataset2,
+			},
+			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
+				return writer.UpstreamRepo.GetCommit()
+			},
+		},
+		"conflicting field with resource-merge strategy": {
+			strategy: KResourceMerge,
+			initialUpstream: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: "master",
+			},
+			updatedUpstream: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("21", "spec", "replicas")),
+			},
+			expectedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+			},
+			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
+				return writer.UpstreamRepo.GetCommit()
+			},
+		},
+		"conflicting field with force-delete-replace strategy": {
+			strategy: ForceDeleteReplace,
+			initialUpstream: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: "master",
+			},
+			updatedUpstream: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("21", "spec", "replicas")),
+			},
+			expectedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+			},
+			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
+				return writer.UpstreamRepo.GetCommit()
 			},
 		},
 	}
-	for i := range updates {
-		u := updates[i]
-		t.Run(string(u.updater), func(t *testing.T) {
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
 			g := &testutil.TestSetupManager{
-				T: t,
-				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
+				T:               t,
+				UpstreamChanges: []testutil.Content{tc.updatedUpstream},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
-				t.FailNow()
+
+			if !reflect.DeepEqual(tc.updatedLocal, testutil.Content{}) {
+				g.LocalChanges = []testutil.Content{tc.updatedLocal}
 			}
 
-			// Modify local data to Dataset3
-			if !g.SetLocalData(testutil.Dataset3) {
+			if !g.Init(tc.initialUpstream) {
 				t.FailNow()
 			}
 
 			// record the expected commit after update
-			expectedCommit := u.expectedCommit(g)
+			expectedCommit, err := tc.expectedCommit(g)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
 			// run the command
-			err := Command{
+			err = Command{
 				Path:            g.UpstreamRepo.RepoName,
 				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
 				Ref:             "master",
-				Strategy:        u.updater,
-				SimpleMessage:   true, // so merge conflict marks are predictable
+				Strategy:        tc.strategy,
 			}.Run()
 
 			// check the error response
-			if u.expectedErr == "" {
-				if !assert.NoError(t, err, u.updater) {
+			if tc.expectedErr == "" {
+				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
 			} else {
 				if !assert.Error(t, err) {
 					t.FailNow()
 				}
-				if !assert.Contains(t, err.Error(), u.expectedErr) {
+				if !assert.Contains(t, err.Error(), tc.expectedErr) {
 					t.FailNow()
 				}
 			}
 
-			if !g.AssertLocalDataEquals(u.expectedData) {
+			expectedPath := tc.expectedLocal.Data
+			if tc.expectedLocal.Pkg != nil {
+				expectedPath = pkgbuilder.ExpandPkgWithName(t, tc.expectedLocal.Pkg,
+					g.LocalWorkspace.PackageDir, g.RepoPaths)
+			}
+
+			if !g.AssertLocalDataEquals(expectedPath) {
 				t.FailNow()
 			}
 			if !g.AssertKptfile(g.UpstreamRepo.RepoName, expectedCommit, "master") {
