@@ -102,6 +102,78 @@ foo:
  `,
 	},
 	{
+		name: "search replace by value to different type 1",
+		args: []string{"--by-value", "3", "--put-literal", "four"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+foo:
+  bar: 3
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: spec.replicas
+value: four
+
+${baseDir}/${filePath}
+fieldPath: foo.bar
+value: four
+
+Mutated 2 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: four
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+foo:
+  bar: four
+ `,
+	},
+	{
+		name: "search replace by value to different type 2",
+		args: []string{"--by-value", "four", "--put-literal", "4"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo: four
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: spec.foo
+value: 4
+
+Mutated 1 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo: 4
+ `,
+	},
+	{
 		name: "search replace multiple deployments",
 		args: []string{"--by-value", "3", "--put-literal", "4"},
 		input: `
@@ -327,6 +399,52 @@ fieldPath: spec.foo[1]
 value: b
 
 Matched 1 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - b
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+ `,
+	},
+	{
+		name: "search by array path all elements",
+		args: []string{"--by-path", "spec.foo[*]"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  foo:
+  - a
+  - b
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: spec.foo[0]
+value: a
+
+${baseDir}/${filePath}
+fieldPath: spec.foo[1]
+value: b
+
+Matched 2 field(s)
 `,
 		expectedResources: `
 apiVersion: apps/v1
