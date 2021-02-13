@@ -165,3 +165,20 @@ func DefaultKptfile(name string) kptfile.KptFile {
 		},
 	}
 }
+
+// HasKptfile checks if there exists a Kptfile on the provided path.
+func HasKptfile(path string) (bool, error) {
+	_, err := os.Stat(filepath.Join(path, kptfile.KptFileName))
+
+	// If we got an error that wasn't IsNotExist, something went wrong and
+	// we don't really know if the file exists or not.
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	// If the error is IsNotExist, we know the file doesn't exist.
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, nil
+}

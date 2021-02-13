@@ -61,7 +61,7 @@ type Runner struct {
 	FilenamePattern string
 }
 
-func (r *Runner) preRunE(c *cobra.Command, args []string) error {
+func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	t, err := parse.GitParseArgs(args)
 	if err != nil {
 		return err

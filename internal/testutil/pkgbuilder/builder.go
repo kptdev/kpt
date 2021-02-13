@@ -558,6 +558,7 @@ upstream:
     directory: {{.Pkg.Kptfile.Upstream.Dir}}
     ref: {{.Pkg.Kptfile.Upstream.Ref}}
     repo: {{.Pkg.Kptfile.Upstream.Repo}}
+    commit: abc123
 {{- end }}
 `
 

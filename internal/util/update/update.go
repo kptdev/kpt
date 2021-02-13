@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -161,6 +162,12 @@ func (u Command) Run() error {
 	if !found {
 		return errors.Errorf("unrecognized update strategy %s", u.Strategy)
 	}
+
+	revertFunc, err := u.updateParentKptfile()
+	if err != nil {
+		return err
+	}
+
 	if err := updater().Update(UpdateOptions{
 		KptFile:        rootKf,
 		ToRef:          u.Ref,
@@ -171,6 +178,7 @@ func (u Command) Run() error {
 		SimpleMessage:  u.SimpleMessage,
 		Output:         u.Output,
 	}); err != nil {
+		_ = revertFunc()
 		return err
 	}
 
@@ -240,4 +248,28 @@ func (u Command) Run() error {
 		}
 	}
 	return nil
+}
+
+// updateParentKptfile searches the parent folders of a Kptfile. If it finds
+// a Kptfile, it means the parent Kptfile should be updated with the new
+// information about the remote subpackage. The function returns a function
+// that makes it possible to revert the change if fetching the package fails.
+func (u Command) updateParentKptfile() (func() error, error) {
+	return pkgutil.UpdateParentKptfile(u.FullPackagePath, func(parentPath string, kf kptfile.KptFile) (kptfile.KptFile, error) {
+		var found bool
+		for i := range kf.Subpackages {
+			absPath := filepath.Join(parentPath, kf.Subpackages[i].LocalDir)
+			if absPath == u.FullPackagePath {
+				kf.Subpackages[i].Git.Repo = u.Repo
+				kf.Subpackages[i].Git.Ref = u.Ref
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return kptfile.KptFile{}, fmt.Errorf("subpackage at %q not listed in parent Kptfile", u.FullPackagePath)
+		}
+		return kf, nil
+	})
 }
