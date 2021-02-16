@@ -14,9 +14,9 @@ index 0dabe44..0124a57 100644
  ---
 @@ -9,4 +12,8 @@ apiVersion: custom.io/v1
  kind: Custom
- spec:
-   image: nginx:1.2.3
 +metadata:
 +  namespace: staging
 +  labels:
 +    tier: backend
+ spec:
+   image: nginx:1.2.3

@@ -140,15 +140,23 @@ func (r *Runner) runPipeline() error {
 	}
 
 	// run function
+	var fnErr error
 	command := run.GetMain()
 	kptArgs := []string{r.cmd, "run", tmpPkgPath}
 	for i := 0; i < r.testCase.Config.RunTimes; i++ {
 		command.SetArgs(kptArgs)
-		err = command.Execute()
+		fnErr = command.Execute()
+	}
+
+	// run formatter
+	command.SetArgs([]string{"cfg", "fmt", tmpPkgPath})
+	err = command.Execute()
+	if err != nil {
+		return fmt.Errorf("failed to run kpt cfg fmt: %w", err)
 	}
 
 	// compare results
-	err = r.compareResult(err, tmpPkgPath, orgPkgPath)
+	err = r.compareResult(fnErr, tmpPkgPath, orgPkgPath)
 	return err
 }
 
