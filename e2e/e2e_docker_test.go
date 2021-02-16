@@ -24,7 +24,7 @@ import (
 
 // These e2e tests currently fail. When pipeline is implemented they should pass.
 func TestPipeline(t *testing.T) {
-	runPipelineTests(t, "../internal/pipeline/examples/")
+	runPipelineTests(t, "../internal/pipeline/testdata/")
 }
 
 // runTests will scan test cases in 'path', run the command
