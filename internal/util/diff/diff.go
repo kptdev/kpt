@@ -58,7 +58,11 @@ const (
 )
 
 const (
-	exitCodeDiffWarning string = "\nThe selected diff tool (%s) exited with an error. It may not support the chosen diff type (%s). To use a different diff tool please provide the tool using the --diff-tool flag. \n\nFor more information about using kpt's diff command please see the commands --help.\n"
+	exitCodeDiffWarning string = "\nThe selected diff tool (%s) exited with an " +
+		"error. It may not support the chosen diff type (%s). To use a different " +
+		"diff tool please provide the tool using the --diff-tool flag. \n\nFor " +
+		"more information about using kpt's diff command please see the commands " +
+		"--help.\n"
 )
 
 // String implements Stringer.
