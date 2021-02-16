@@ -23,6 +23,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/setters2"
+	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -146,7 +148,15 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 		}
 
 		if sr.PutPattern != "" {
-			node.LineComment = fmt.Sprintf(`kpt-set: %s`, sr.PutPattern)
+			var err error
+			pattern := sr.PutPattern
+			if sr.ByValueRegex != "" {
+				pattern, err = setterPatternFromRegex(node.Value, sr.ByValueRegex, sr.PutPattern)
+				if err != nil {
+					return err
+				}
+			}
+			node.LineComment = fmt.Sprintf(`kpt-set: %s`, pattern)
 		}
 
 		if sr.filePath != "" {
@@ -210,4 +220,67 @@ func (sr *SearchReplace) shouldPutLiteralByPath() bool {
 		sr.ByValue == "" &&
 		sr.ByValueRegex == "" &&
 		sr.PutLiteral != ""
+}
+
+// setterPatternFromRegex takes the field value of a node, valueRegex provided by
+// user from --by-value-regex, patternRegex provided by user from --put-pattern,
+// and makes best effort to derive the corresponding setter pattern comment to be
+// added as line comment to the node.
+// e.g. fieldValue: my-project-foo, valueRegex: my-project-*, patternRegex: ${project-id}-*
+// the output pattern will be ${project-id}-foo
+// in case the valueRegex is vague and not enough to derive the setter values, it
+// returns an error
+func setterPatternFromRegex(fieldValue, valueRegex, patternRegex string) (string, error) {
+	settersValues, err := settersValues(valueRegex, patternRegex)
+	if err != nil {
+		return "", err
+	}
+
+	pattern := fieldValue
+	// derive the pattern from the field value by replacing setter values
+	// with setter name markers
+	// e.g. if field value is "my-project-foo", input PutPattern is "${project]-*", and
+	// value for setter "project" is "my-project",
+	// the pattern to be added as comment is ${project]-foo
+	for sn, sv := range settersValues {
+		pattern = strings.ReplaceAll(clean(pattern), clean(sv), clean(sn))
+	}
+
+	return pattern, nil
+}
+
+// settersValues returns the values for the setters present in patternRegex,
+// returns error if the setter values can't be derived from the pattern
+// e.g. valueRegex = my-project-*, patternRegex = ${project-id}-* returns
+// map[project-id]my-project
+// e.g. valueRegex = nginx-*, patternRegex = ${image}:${tag}-* returns error
+// as setter values can't be derived from valueRegex
+func settersValues(valueRegex, patternRegex string) (map[string]string, error) {
+	// extract setter name tokens from pattern enclosed in ${}
+	re := regexp.MustCompile(`\$\{([^}]*)\}`)
+	markers := re.FindAllString(patternRegex, -1)
+	if len(markers) == 0 {
+		return nil, errors.Errorf("unable to find setter names in pattern, " +
+			"setter names must be enclosed in ${}")
+	}
+	sc := settersutil.SubstitutionCreator{
+		FieldValue: valueRegex,
+		Pattern:    patternRegex,
+	}
+	for _, m := range markers {
+		sc.Values = append(sc.Values, setters2.Value{
+			Marker: m,
+		})
+	}
+	res, err := sc.GetValuesForMarkers()
+	if err != nil {
+		return nil, errors.Errorf("unable to derive setter values from the provided pattern, " +
+			"please ensure value-regex matches provided setter pattern")
+	}
+	return res, nil
+}
+
+// clean trims the string and removes quotes around it
+func clean(input string) string {
+	return strings.Trim(strings.TrimSpace(input), `"`)
 }

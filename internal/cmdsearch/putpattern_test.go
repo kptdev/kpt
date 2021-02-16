@@ -93,4 +93,67 @@ spec:
   replicas: 3
  `,
 	},
+	{
+		name: "put pattern by regex",
+		args: []string{"--by-value-regex", "my-project-*", "--put-pattern", "${project}-*"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-project-deployment
+  namespace: my-project-namespace
+spec:
+  replicas: 3
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: my-project-deployment # kpt-set: ${project}-deployment
+
+${baseDir}/${filePath}
+fieldPath: metadata.namespace
+value: my-project-namespace # kpt-set: ${project}-namespace
+
+Mutated 2 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-project-deployment # kpt-set: ${project}-deployment
+  namespace: my-project-namespace # kpt-set: ${project}-namespace
+spec:
+  replicas: 3
+ `,
+	},
+	{
+		name: "put pattern by regex, error when unable to derive values",
+		args: []string{"--by-value-regex", "something/*", "--put-pattern", "*/${image}:${tag}"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: something/nginx:1.7.9
+ `,
+		errMsg: `unable to derive setter values from the provided pattern`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: something/nginx:1.7.9
+ `,
+	},
 }
