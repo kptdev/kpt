@@ -31,13 +31,26 @@ import (
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
 func TestCommand_Run_failEmptyRepo(t *testing.T) {
-	err := Command{}.Run()
+	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{}, map[string]string{})
+	defer clean()
+
+	err := Command{
+		Destination: w.WorkspaceDirectory,
+	}.Run()
 	assert.EqualError(t, err, "must specify repo")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
 func TestCommand_Run_failNoRevision(t *testing.T) {
-	err := Command{Git: kptfile.Git{Repo: "foo"}}.Run()
+	_, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{}, map[string]string{})
+	defer clean()
+
+	err := Command{
+		Git: kptfile.Git{
+			Repo: "foo",
+		},
+		Destination: w.WorkspaceDirectory,
+	}.Run()
 	assert.EqualError(t, err, "must specify ref")
 }
 
@@ -1207,6 +1220,229 @@ func TestCommand_Run_subpackages(t *testing.T) {
 
 			expectedPath := pkgbuilder.ExpandPkgWithName(t, test.expectedResult, targetDir, repoPaths)
 			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
+		})
+	}
+}
+
+func TestCommand_Run_fetchIntoSubpackage(t *testing.T) {
+	testCases := map[string]struct {
+		initialUpstream *pkgbuilder.RootPkg
+		refRepos        map[string][]testutil.Content
+		subPkgPath      string
+		repoRef         string
+		directory       string
+		ref             string
+		expectedResult  *pkgbuilder.RootPkg
+		expectedErrMsg  string
+	}{
+		"fetching a subpackage should update parent Kptfile": {
+			initialUpstream: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "master",
+					},
+				},
+			},
+			subPkgPath: "foo",
+			repoRef:    "foo",
+			directory:  "/",
+			ref:        "master",
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master").
+						WithSubpackages(
+							pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master"),
+						).
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+		},
+		"Kptfile should be updated when parent is not in the immediate parent folder": {
+			initialUpstream: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("nested").
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Branch: "main",
+						Tag:    "my-tag",
+					},
+				},
+			},
+			subPkgPath: "deeply/nested/package",
+			repoRef:    "foo",
+			directory:  "nested",
+			ref:        "my-tag",
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master").
+						WithSubpackages(
+							pkgbuilder.NewSubpackage("foo", "nested", "my-tag", "resource-merge", "deeply/nested/package"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("deeply").
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("nested").
+								WithSubPackages(
+									pkgbuilder.NewSubPkg("package").
+										WithKptfile(
+											pkgbuilder.NewKptfile().
+												WithUpstreamRef("foo", "nested", "my-tag"),
+										).
+										WithResource(pkgbuilder.ConfigMapResource),
+								),
+						),
+				),
+		},
+		"it is an error if there is already another subpackage in the specified path": {
+			initialUpstream: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithSubpackages(
+							pkgbuilder.NewSubpackage("bar", "/", "master", "fast-forward", "sub"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "main",
+					},
+				},
+				"bar": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "master",
+					},
+				},
+			},
+			subPkgPath:     "sub",
+			repoRef:        "foo",
+			directory:      "/",
+			ref:            "main",
+			expectedErrMsg: "subpackage with localDir \"sub\" already exist",
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master").
+						WithSubpackages(
+							pkgbuilder.NewSubpackage("bar", "/", "master", "fast-forward", "sub"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("sub").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("bar", "/", "master"),
+						).
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+		},
+		"if the package can't be fetched, we roll back the change to the Kptfile": {
+			initialUpstream: pkgbuilder.NewRootPkg().
+				WithResource(pkgbuilder.DeploymentResource),
+			refRepos: map[string][]testutil.Content{
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "main",
+					},
+				},
+			},
+			subPkgPath:     "sub",
+			repoRef:        "foo",
+			directory:      "/",
+			ref:            "unknownRef",
+			expectedErrMsg: "failed to clone git repo",
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			g := &testutil.TestSetupManager{
+				T:               t,
+				RefReposChanges: tc.refRepos,
+			}
+			defer g.Clean()
+			if !g.Init(testutil.Content{
+				Pkg:    tc.initialUpstream,
+				Branch: "master",
+			}) {
+				return
+			}
+
+			repoPath, found := g.RepoPaths[tc.repoRef]
+			if !found {
+				t.Errorf("expected to found a path for repoRef %q, but didn't", tc.repoRef)
+			}
+			fullSubPkgPath := filepath.Join(g.LocalWorkspace.FullPackagePath(), tc.subPkgPath)
+			err := Command{
+				Git: kptfile.Git{
+					Repo:      repoPath,
+					Directory: tc.directory,
+					Ref:       tc.ref,
+				},
+				Destination: fullSubPkgPath,
+			}.Run()
+
+			if tc.expectedErrMsg != "" {
+				if assert.Error(t, err) {
+					assert.Contains(t, err.Error(), tc.expectedErrMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+
+			// Format the Kptfiles so we can diff the output without
+			// formatting issues.
+			rw := &kio.LocalPackageReadWriter{
+				NoDeleteFiles:  true,
+				PackagePath:    g.LocalWorkspace.FullPackagePath(),
+				MatchFilesGlob: []string{kptfile.KptFileName},
+			}
+			err = kio.Pipeline{
+				Inputs:  []kio.Reader{rw},
+				Filters: []kio.Filter{filters.FormatFilter{}},
+				Outputs: []kio.Writer{rw},
+			}.Execute()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			expectedPath := pkgbuilder.ExpandPkgWithName(t, tc.expectedResult, g.UpstreamRepo.RepoName, g.RepoPaths)
+			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
 		})
 	}
 }

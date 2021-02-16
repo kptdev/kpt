@@ -15,6 +15,7 @@
 package pkgutil
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -132,4 +133,73 @@ func CopyPackage(src, dst string) error {
 
 		return nil
 	})
+}
+
+// CheckForParentPackage checks the parent folder of the provided path and
+// looks for a Kptfile. It will return the path to the closest Kptfile if
+// one is found.
+func CheckForParentPackage(src string) (string, bool, error) {
+	path := src
+	for {
+		previous := path
+		path = filepath.Dir(path)
+		if path == previous {
+			return "", false, nil
+		}
+		found, err := kptfileutil.HasKptfile(path)
+		if err != nil {
+			return "", false, err
+		}
+		if found {
+			return path, true, nil
+		}
+	}
+}
+
+var emptyFunc = func() error { return nil }
+
+type kptFunc = func(string, kptfile.KptFile) (kptfile.KptFile, error)
+
+// UpdateParentKptfile provides the basics for making changes to the Kptfile
+// of a parent package. It takes a path to the current pakcage and a mutator
+// function that is allows to make changes to the Kptfile of the parent package
+// if one is found. This function returns a function that can be used to revert
+// the changes to the Kptfile if needed.
+func UpdateParentKptfile(path string, f kptFunc) (func() error, error) {
+	if !filepath.IsAbs(path) {
+		return emptyFunc, fmt.Errorf("path must be absolute")
+	}
+
+	parentPath, found, err := CheckForParentPackage(path)
+	if err != nil {
+		return emptyFunc, err
+	}
+
+	if found {
+		kf, err := kptfileutil.ReadFile(parentPath)
+		if err != nil {
+			return emptyFunc, err
+		}
+
+		// Read the file again so we have a copy that we can use
+		// to restore the original content if fetching the package fails.
+		orgKf, err := kptfileutil.ReadFile(parentPath)
+		if err != nil {
+			return emptyFunc, err
+		}
+
+		newKf, err := f(parentPath, kf)
+		if err != nil {
+			return emptyFunc, err
+		}
+
+		err = kptfileutil.WriteFile(parentPath, newKf)
+		if err != nil {
+			return emptyFunc, err
+		}
+		return func() error {
+			return kptfileutil.WriteFile(parentPath, orgKf)
+		}, nil
+	}
+	return emptyFunc, nil
 }

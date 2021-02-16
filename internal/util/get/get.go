@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -48,14 +49,22 @@ type Command struct {
 
 // Run runs the Command.
 func (c Command) Run() error {
+	revertFunc, err := c.updateParentKptfile()
+	if err != nil {
+		return err
+	}
+
 	r := &git.RepoSpec{OrgRepo: c.Repo, Path: c.Directory, Ref: c.Ref}
-	err := (&fetch.Command{
+	err = (&fetch.Command{
 		RepoSpec:    r,
 		Destination: c.Destination,
 		Name:        c.Name,
 		Clean:       c.Clean,
 	}).Run()
 	if err != nil {
+		// Ignore the error here. If this happens, it just means that
+		// we weren't able to roll back the change to the parent Kptfile.
+		_ = revertFunc()
 		return err
 	}
 
@@ -63,6 +72,37 @@ func (c Command) Run() error {
 		return errors.Wrap(err)
 	}
 	return nil
+}
+
+// updateParentKptfile searches the parent folders of a Kptfile. If it finds
+// a Kptfile, it means the package should be registered as a subpackage of the
+// parent. It adds the new package to the parent. The function returns a function
+// that makes it possible to revert the change if fetching the package fails.
+func (c Command) updateParentKptfile() (func() error, error) {
+	return pkgutil.UpdateParentKptfile(c.Destination, func(parentPath string, kf kptfile.KptFile) (kptfile.KptFile, error) {
+		for _, subPkg := range kf.Subpackages {
+			absPath := filepath.Join(parentPath, subPkg.LocalDir)
+			if absPath == c.Destination {
+				return kptfile.KptFile{}, fmt.Errorf("subpackage with localDir %q already exist", subPkg.LocalDir)
+			}
+		}
+
+		relPkgPath, err := filepath.Rel(parentPath, c.Destination)
+		if err != nil {
+			return kptfile.KptFile{}, err
+		}
+
+		kf.Subpackages = append(kf.Subpackages, kptfile.Subpackage{
+			LocalDir: relPkgPath,
+			Git: kptfile.Git{
+				Repo:      c.Repo,
+				Directory: c.Directory,
+				Ref:       c.Ref,
+			},
+			UpdateStrategy: "resource-merge",
+		})
+		return kf, nil
+	})
 }
 
 // fetchRemoteSubpackages goes through the root package and its subpackages
