@@ -85,7 +85,7 @@ func (r *Runner) runFn() error {
 	}
 	var output string
 	var fnErr error
-	for i := 0; i < r.testCase.Config.RunTimes; i++ {
+	for i := 0; i < r.testCase.Config.RunCount; i++ {
 		output, fnErr = runCommand("", "kpt", kptArgs)
 		if fnErr != nil {
 			// if kpt fn run returns error, we should compare
@@ -142,7 +142,7 @@ func (r *Runner) runPipeline() error {
 	// run function
 	command := run.GetMain()
 	kptArgs := []string{r.cmd, "run", tmpPkgPath}
-	for i := 0; i < r.testCase.Config.RunTimes; i++ {
+	for i := 0; i < r.testCase.Config.RunCount; i++ {
 		command.SetArgs(kptArgs)
 		err = command.Execute()
 	}

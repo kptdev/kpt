@@ -13,7 +13,7 @@ import (
 type TestCaseConfig struct {
 	ExitCode int  `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
 	Network  bool `json:"network,omitempty" yaml:"network,omitempty"`
-	RunTimes int  `json:"runTimes,omitempty" yaml:"runTimes,omitempty"`
+	RunCount int  `json:"runCount,omitempty" yaml:"runCount,omitempty"`
 }
 
 func newTestCaseConfig(path string) (TestCaseConfig, error) {
@@ -24,7 +24,7 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 		return TestCaseConfig{
 			ExitCode: 0,
 			Network:  false,
-			RunTimes: 1,
+			RunCount: 1,
 		}, nil
 	}
 	if err != nil {
@@ -36,8 +36,8 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	if err != nil {
 		return config, fmt.Errorf("failed to unmarshal config file: %s\n: %w", string(b), err)
 	}
-	if config.RunTimes == 0 {
-		config.RunTimes = 1
+	if config.RunCount == 0 {
+		config.RunCount = 1
 	}
 	return config, nil
 }
