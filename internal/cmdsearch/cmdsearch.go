@@ -46,10 +46,12 @@ func NewSearchRunner(name string) *SearchRunner {
 			"value of the field by default without requiring start (^) and end ($) characters.")
 	c.Flags().StringVar(&r.ByPath, "by-path", "",
 		"Match by path expression of a field.")
-	c.Flags().StringVar(&r.PutLiteral, "put-literal", "",
-		"Set or update the value of the matching fields with the given literal value.")
-	c.Flags().StringVar(&r.PutPattern, "put-pattern", "",
-		"Put the setter pattern as a line comment for matching fields.")
+	c.Flags().StringVar(&r.PutValue, "put-value", "",
+		"Set or update the value of the matching fields. Input can be a pattern "+
+			"for which the capture groups are resolved using --by-value-regex input.")
+	c.Flags().StringVar(&r.PutComment, "put-comment", "",
+		"Set or update the line comment for matching fields. Input can be a pattern "+
+			"for which the capture groups are resolved using --by-value-regex input.")
 	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
 		"search recursively in all the nested subpackages")
 
@@ -72,15 +74,15 @@ type SearchRunner struct {
 	ByValue            string
 	ByValueRegex       string
 	ByPath             string
-	PutLiteral         string
-	PutPattern         string
+	PutValue           string
+	PutComment         string
 	RecurseSubPackages bool
 	MatchCount         int
 	Writer             io.Writer
 }
 
 func (r *SearchRunner) preRunE(c *cobra.Command, args []string) error {
-	if c.Flag("put-literal").Changed &&
+	if c.Flag("put-value").Changed &&
 		!c.Flag("by-value").Changed &&
 		!c.Flag("by-value-regex").Changed &&
 		!c.Flag("by-path").Changed {
@@ -107,7 +109,7 @@ func (r *SearchRunner) runE(c *cobra.Command, args []string) error {
 		return err
 	}
 	var action string
-	if r.PutPattern != "" || r.PutLiteral != "" {
+	if r.PutComment != "" || r.PutValue != "" {
 		action = "Mutated"
 	} else {
 		action = "Matched"
@@ -122,8 +124,8 @@ func (r *SearchRunner) ExecuteCmd(_ io.Writer, pkgPath string) error {
 		ByValueRegex: r.ByValueRegex,
 		ByPath:       r.ByPath,
 		Count:        0,
-		PutLiteral:   r.PutLiteral,
-		PutPattern:   r.PutPattern,
+		PutValue:     r.PutValue,
+		PutComment:   r.PutComment,
 		PackagePath:  pkgPath,
 	}
 	err := s.Perform(pkgPath)

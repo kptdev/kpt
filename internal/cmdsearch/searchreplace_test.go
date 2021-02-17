@@ -59,7 +59,7 @@ metadata:
 	},
 	{
 		name: "search replace by value",
-		args: []string{"--by-value", "3", "--put-literal", "4"},
+		args: []string{"--by-value", "3", "--put-value", "4"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -103,7 +103,7 @@ foo:
 	},
 	{
 		name: "search replace by value to different type 1",
-		args: []string{"--by-value", "3", "--put-literal", "four"},
+		args: []string{"--by-value", "3", "--put-value", "four"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -147,7 +147,7 @@ foo:
 	},
 	{
 		name: "search replace by value to different type 2",
-		args: []string{"--by-value", "four", "--put-literal", "4"},
+		args: []string{"--by-value", "four", "--put-value", "4"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -175,7 +175,7 @@ spec:
 	},
 	{
 		name: "search replace multiple deployments",
-		args: []string{"--by-value", "3", "--put-literal", "4"},
+		args: []string{"--by-value", "3", "--put-value", "4"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -219,7 +219,7 @@ spec:
 	},
 	{
 		name: "search replace multiple deployments different value",
-		args: []string{"--by-value", "3", "--put-literal", "4"},
+		args: []string{"--by-value", "3", "--put-value", "4"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -285,7 +285,7 @@ spec:
 	},
 	{
 		name: "search replace by regex",
-		args: []string{"--by-value-regex", "nginx-*", "--put-literal", "ubuntu-deployment"},
+		args: []string{"--by-value-regex", "nginx-*", "--put-value", "ubuntu-deployment"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -311,7 +311,7 @@ spec:
 	},
 	{
 		name: "search replace by regex helm template and empty values",
-		args: []string{"--by-value-regex", "nginx-*", "--put-literal", "ubuntu-deployment"},
+		args: []string{"--by-value-regex", "nginx-*", "--put-value", "ubuntu-deployment"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -465,7 +465,7 @@ metadata:
 	},
 	{
 		name: "search replace by array path regex",
-		args: []string{"--by-path", "spec.foo[1]", "--put-literal", "c"},
+		args: []string{"--by-path", "spec.foo[1]", "--put-value", "c"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -497,7 +497,7 @@ spec:
 	},
 	{
 		name: "search replace by array path out of bounds",
-		args: []string{"--by-path", "spec.foo[2]", "--put-literal", "c"},
+		args: []string{"--by-path", "spec.foo[2]", "--put-value", "c"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -525,7 +525,7 @@ spec:
 	},
 	{
 		name: "search replace by array objects path",
-		args: []string{"--by-path", "spec.foo[1].c", "--put-literal", "thing-new"},
+		args: []string{"--by-path", "spec.foo[1].c", "--put-value", "thing-new"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -559,7 +559,7 @@ spec:
 	},
 	{
 		name: "replace by path and value",
-		args: []string{"--by-path", "spec.replicas", "--by-value", "3", "--put-literal", "4"},
+		args: []string{"--by-path", "spec.replicas", "--by-value", "3", "--put-value", "4"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -597,7 +597,7 @@ metadata:
 	},
 	{
 		name: "add non-existing field",
-		args: []string{"--by-path", "metadata.namespace", "--put-literal", "myspace"},
+		args: []string{"--by-path", "metadata.namespace", "--put-value", "myspace"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -624,7 +624,7 @@ spec:
 	},
 	{
 		name: "put literal error",
-		args: []string{"--put-literal", "something"},
+		args: []string{"--put-value", "something"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -642,6 +642,35 @@ spec:
   replicas: 3
  `,
 		errMsg: `at least one of ["by-value", "by-value-regex", "by-path"] must be provided`,
+	},
+	{
+		name: "put value by regex capture groups",
+		args: []string{"--by-value-regex", `(\w+)-dev-(\w+)-us-east-1-(\w+)`,
+			"--put-value", "${1}-prod-${2}-us-central-1-${3}"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo1-dev-bar1-us-east-1-baz1
+  namespace: foo2-dev-bar2-us-east-1-baz2
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: foo1-prod-bar1-us-central-1-baz1
+
+${baseDir}/${filePath}
+fieldPath: metadata.namespace
+value: foo2-prod-bar2-us-central-1-baz2
+
+Mutated 2 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo1-prod-bar1-us-central-1-baz1
+  namespace: foo2-prod-bar2-us-central-1-baz2
+ `,
 	},
 	{
 		name: "error when both by-value and by-regex provided",
