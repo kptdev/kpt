@@ -696,8 +696,8 @@ kpt live init --namespace&lt;span style=&#34;color:#ce5c00;font-weight:bold&#34;
 inventory object functionality. The alpha version of this command is not
 available unless the &lt;code&gt;RESOURCE_GROUP_INVENTORY&lt;/code&gt; environment variable is set.&lt;/p&gt;
 &lt;p&gt;The init command will initialize a package using the next generation inventory
-object (&lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource). See commands &lt;a href=&#34;./migrate&#34;&gt;&lt;code&gt;migrate&lt;/code&gt;&lt;/a&gt; and
-&lt;a href=&#34;./install-resource-group&#34;&gt;&lt;code&gt;install-resource-group&lt;/code&gt;&lt;/a&gt; for more information. A Kptfile
+object (&lt;strong&gt;ResourceGroup&lt;/strong&gt; custom resource). See commands &lt;a href=&#34;../migrate&#34;&gt;&lt;code&gt;migrate&lt;/code&gt;&lt;/a&gt; and
+&lt;a href=&#34;../install-resource-group&#34;&gt;&lt;code&gt;install-resource-group&lt;/code&gt;&lt;/a&gt; for more information. A Kptfile
 is required in the package directory.&lt;/p&gt;
 &lt;p&gt;The inventory object is required by other live commands
 such as apply, preview and destroy.&lt;/p&gt;
