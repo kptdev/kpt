@@ -538,3 +538,389 @@ openAPI:
 		})
 	}
 }
+
+func TestKptFile_MergeSubpackages(t *testing.T) {
+	testCases := map[string]struct {
+		updated  string
+		local    string
+		original string
+		expected string
+	}{
+		"no updates in upstream or local": {
+			updated: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			local: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			original: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+		},
+
+		"additional subpackage added in local": {
+			updated: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			local: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			original: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+`,
+		},
+
+		"additional subpackage added in upstream": {
+			updated: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+`,
+			local: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			original: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+`,
+		},
+
+		"subpackage removed from upstream": {
+			updated: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			local: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			original: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+		},
+
+		"subpackage removed from local": {
+			updated: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			local: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			original: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+		},
+
+		"all subpackages removed from local": {
+			updated: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			local: `[]`,
+			original: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `[]`,
+		},
+
+		"all subpackages removed from upstream": {
+			updated: `[]`,
+			local: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			original: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `[]`,
+		},
+
+		"subpackage deleted from upstream but changed in local": {
+			updated: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+`,
+			local: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: v1.0
+  updateStrategy: resource-merge
+`,
+			original: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: master
+  updateStrategy: resource-merge
+`,
+			expected: `
+- localDir: bar
+  git:
+      repo: k8s.io/kubernetes
+      directory: /pkg
+      ref: master
+  updateStrategy: fast-forward
+- localDir: foo
+  git:
+      repo: github.com/GoogleContainerTools/kpt
+      directory: /
+      ref: v1.0
+  updateStrategy: resource-merge
+`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			var updated []Subpackage
+			if !assert.NoError(t, yaml.Unmarshal([]byte(tc.updated), &updated)) {
+				t.FailNow()
+			}
+
+			var local []Subpackage
+			if !assert.NoError(t, yaml.Unmarshal([]byte(tc.local), &local)) {
+				t.FailNow()
+			}
+
+			var original []Subpackage
+			if !assert.NoError(t, yaml.Unmarshal([]byte(tc.original), &original)) {
+				t.FailNow()
+			}
+
+			res, err := MergeSubpackages(local, updated, original)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			b, err := yaml.Marshal(res)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if !assert.Equal(t,
+				strings.TrimSpace(tc.expected),
+				strings.TrimSpace(string(b))) {
+				t.FailNow()
+			}
+		})
+	}
+}

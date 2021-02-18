@@ -281,18 +281,6 @@ func MergeSubpackages(local, updated, original []Subpackage) ([]Subpackage, erro
 	// Create a new slice to contain the merged result.
 	var merged []Subpackage
 
-	// If local is empty, we can just use the slice from updated.
-	if len(local) == 0 {
-		merged = append(merged, updated...)
-		return merged, nil
-	}
-
-	// If updated is empty, we can just use the slice from local.
-	if len(updated) == 0 {
-		merged = append(merged, local...)
-		return merged, nil
-	}
-
 	// Create a slice that contains all keys available from both updated
 	// and local. We add keys from updated first, so subpackages added
 	// locally will be at the end of the slice after merge.
@@ -326,17 +314,33 @@ func MergeSubpackages(local, updated, original []Subpackage) ([]Subpackage, erro
 			return merged, fmt.Errorf("remote subpackage with localDir %s added in both local and upstream", key)
 		}
 
+		// If not in either upstream or local, we don't need to add it.
 		if !lok && !uok {
+			continue
+		}
+
+		// If deleted from upstream, we only remove it if local is unchanged.
+		if ook && !uok {
+			if !reflect.DeepEqual(o, l) {
+				merged = append(merged, l)
+			}
+			continue
+		}
+
+		// If deleted from local, we don't want to re-add it from upstream.
+		if ook && !lok {
 			continue
 		}
 
 		// If key not found in local, we use the version from updated.
 		if !lok {
 			merged = append(merged, u)
+			continue
 		}
 		// If key not found in updated, we use the version from local.
 		if !uok {
 			merged = append(merged, l)
+			continue
 		}
 
 		// If we changes to local compared with original, we keep the local
