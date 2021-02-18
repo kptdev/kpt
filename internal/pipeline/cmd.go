@@ -67,11 +67,15 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	err := cmdutil.DockerCmdAvailable()
+	if err != nil {
+		return err
+	}
 	klog.Infof("running pipeline command")
 	executor := Executor{
 		PkgPath: r.pkgPath,
 	}
-	err := executor.Execute()
+	err = executor.Execute()
 	if err != nil {
 		fmt.Fprintf(c.OutOrStderr(), "failed to run pipeline %v \n", err)
 		return err
