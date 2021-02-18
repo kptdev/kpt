@@ -57,6 +57,14 @@ const (
 	targetRemotePackageSource string = "target"
 )
 
+const (
+	exitCodeDiffWarning string = "\nThe selected diff tool (%s) exited with an " +
+		"error. It may not support the chosen diff type (%s). To use a different " +
+		"diff tool please provide the tool using the --diff-tool flag. \n\nFor " +
+		"more information about using kpt's diff command please see the commands " +
+		"--help.\n"
+)
+
 // String implements Stringer.
 func (dt DiffType) String() string {
 	return string(dt)
@@ -279,11 +287,15 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 	}
 	err := cmd.Run()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok &&
-			exitErr.ExitCode() == 1 {
+		exitErr, ok := err.(*exec.ExitError)
+		if ok && exitErr.ExitCode() == 1 {
 			// diff tool will exit with return code 1 if there are differences
 			// between two dirs. This suppresses those errors.
 			err = nil
+		} else if ok {
+			// An error occurred but was not one of the excluded ones
+			// Attempt to display help information to assist with resolving
+			fmt.Printf(exitCodeDiffWarning, d.DiffTool, d.DiffType)
 		}
 	}
 	return err
