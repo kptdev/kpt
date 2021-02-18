@@ -16,8 +16,8 @@ inventory object functionality. The alpha version of this command is not
 available unless the `RESOURCE_GROUP_INVENTORY` environment variable is set.
 
 The init command will initialize a package using the next generation inventory
-object (**ResourceGroup** custom resource). See commands [`migrate`](./migrate) and
-[`install-resource-group`](./install-resource-group) for more information. A Kptfile
+object (**ResourceGroup** custom resource). See commands [`migrate`](../migrate) and
+[`install-resource-group`](../install-resource-group) for more information. A Kptfile
 is required in the package directory.
 
 The inventory object is required by other live commands
