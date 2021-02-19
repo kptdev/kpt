@@ -30,7 +30,7 @@ const descriptions = {
 "source": `
 A Source takes no \`input\`:
 
-{{< png src="images/source" >}}
+![img](/../../../../../static/images/source.png)
 
 Instead, the function typically produces the \`output\` by reading configurations
 from an external system (e.g. reading files from a filesystem).
@@ -38,7 +38,7 @@ from an external system (e.g. reading files from a filesystem).
 "sink": `
 A Sink produces no \`output\`:
 
-{{< png src="images/sink" >}}
+![img](/../../../../../static/images/sink.png)
 
 Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem).

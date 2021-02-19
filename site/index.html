@@ -20,9 +20,9 @@
         paths: 'auto',
       },
       loadSidebar: "sidebar.md",
-      alias: {
-      '/.*/sidebar.md': '/sidebar.md'
-      },
+      // alias: {
+      // '/.*/sidebar.md': '/sidebar.md'
+      // },
       coverpage: "coverpage.md",
       auto2top: true,
       repo:'true',
@@ -31,10 +31,30 @@
         icon: "github", 
       },
       routerMode: "history",
-      toc: {
-        tocMaxLevel: 5,
-        target: 'h2, h3'
-      },
+      // toc: {
+      //   tocMaxLevel: 5,
+      //   target: 'h2, h3'
+      // },
+      plugins: [
+        function(hook, vm) {
+          hook.beforeEach(
+            function(content){
+              // Match title blocks like the following:
+              // +++
+              // title: Page Title
+              // +++
+              titleBlock = /^[\+\-]{3}[\s\S]*^[\+\-]{3}$/m;
+              hugoDirectives = /{{.*}}/g;
+              titleMatch = content.match(/title:\s*["'](.*)["']/);
+
+              titleHeading = titleMatch ? ("# " + titleMatch[1]) : "";
+
+              content = content.replace(titleBlock, titleHeading).replace(hugoDirectives, "");
+              return content;
+            }
+            )
+        }
+      ]
     }
   </script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
@@ -44,7 +64,7 @@
   <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-yaml.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-go.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-typescript.min.js"></script>
-  <script src="//unpkg.com/docsify-plugin-toc"></script>
+  <!-- <script src="//unpkg.com/docsify-plugin-toc"></script> -->
   <!--Fallback content on 404s can go here.-->
 </body>
 <style>

@@ -18,4 +18,4 @@ description: >
 - (Optional) Automation makes last-mile changes before pushing
 - Automation pushes by applying to a cluster
 
-{{< svg src="images/consumer-guide" >}}
+![img](/../../static/images/consumer-guide.svg)

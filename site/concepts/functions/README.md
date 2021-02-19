@@ -47,7 +47,7 @@ specifically:
 
 At a high level, a function can be conceptualized like so:
 
-{{< png src="images/func" >}}
+![img](/../../static/images/func.png)
 
 - `FUNC`: A program that performs CRUD (Create, Read, Update, Delete)
   operations on the input. This program can be packaged as a container,
@@ -65,7 +65,7 @@ There are two special-case functions: source functions and sink functions.
 
 A Source Function takes no `input`:
 
-{{< png src="images/source" >}}
+![img](/../../static/images/source.png)
 
 Instead, the function typically produces the `output` by reading configurations
 from an external system (e.g. reading files from a filesystem). Find examples in
@@ -75,7 +75,7 @@ the [sources catalog].
 
 A Sink Function produces no `output`:
 
-{{< png src="images/sink" >}}
+![img](/../../static/images/sink.png)
 
 Instead, the function typically writes configurations to an external system
 (e.g. writing files to a filesystem). Find examples in the [sinks catalog].
@@ -85,7 +85,7 @@ Instead, the function typically writes configurations to an external system
 In order do something useful with a function, we need to compose a pipeline
 with a source and a sink function.
 
-{{< png src="images/pipeline" >}}
+![img](/../../static/images/pipeline.png)
 
 You can also use a container-based workflow orchestrator by exporting a workflow
 pipeline. Get detailed tutorials on how to use `kpt fn export` from the

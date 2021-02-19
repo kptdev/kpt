@@ -129,7 +129,7 @@ spec:
         hostPath:
             path: /var/run/docker.sock
             type: Socket
----
+----
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -190,7 +190,7 @@ spec:
         hostPath:
             path: /var/run/docker.sock
             type: Socket
----
+----
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -235,7 +235,7 @@ tkn pipeline start run-kpt-functions
 
 In the prompt, enter `shared-workspace` as workspace name, leave `Value of the Sub Path` blank, select `pvc` as `Type of the Workspace`, enter `workspace-pvc` as `Value of Claim Name`.
 
-{{< png src="images/fn-export/tekton-result" >}}
+![img](/../../../../../static/images/fn-export/tekton-result.png)
 
 To view the output, run
 

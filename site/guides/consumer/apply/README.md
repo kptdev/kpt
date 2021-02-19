@@ -31,7 +31,7 @@ Kpt live apply provides additional functionality beyond what is provided by
 `kubectl apply`, such as communicating back resource status and pruning
 resources for deleted configuration.
 
-{{< svg src="images/apply" >}}
+![img](/../../../static/images/apply.svg)
 
 ## Steps
 

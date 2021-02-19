@@ -102,7 +102,7 @@ git push --set-upstream origin master
 
 Once the changes are committed and pushed to GitLab, you can see the latest job on GitLab CI like this:
 
-{{< png src="images/fn-export/gitlab-ci-result" >}}
+![img](/../../../../../static/images/fn-export/gitlab-ci-result.png)
 
 ## Next step
 

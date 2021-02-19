@@ -154,7 +154,7 @@ git push --set-upstream origin master
 
 Once the changes are committed and pushed, you can go to your Jenkins server at `<instance ip>:8080` and click `Build Now` on the left sidebar in your project page. Then you will see a latest job like this:
 
-{{< png src="images/fn-export/jenkins-result" >}}
+![img](/../../../../../static/images/fn-export/jenkins-result.png)
 
 ## Next step
 

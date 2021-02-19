@@ -140,7 +140,7 @@ git push --set-upstream origin master
 
 Once local changes have been pushed, you can see a latest build running on CircleCI like this:
 
-{{< png src="images/fn-export/circleci-result" >}}
+![img](/../../../../../static/images/fn-export/circle-ci-result.png)
 
 ## Next step
 

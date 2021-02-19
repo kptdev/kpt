@@ -39,7 +39,7 @@ be individually versioned (as version v1.0.2) by creating the tag `example/v1.0.
 
 {{% /pageinfo %}}
 
-{{< svg src="images/producer-guide" >}}
+![img](/../../../static/images/producer-guide.svg)
 
 ## Steps
 

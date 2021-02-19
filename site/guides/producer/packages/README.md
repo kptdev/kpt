@@ -37,7 +37,7 @@ can pull in changes to a package after fetching it.
     admin-server, hystrix, various backends)
 - **Infrastructure Stacks**: CloudSQL + Pubsub + GKE
 
-{{< svg src="images/package" >}}
+![img](/../../../static/images/package.svg)
 
 ```sh
 # Optional: copy the mysql-kustomize package to follow along
