@@ -37,6 +37,6 @@ This provides various advantages:
 - Read the complete [Typescript Developer Guide].
 - Learn how to [run functions].
 
-[Typescript Quickstart]: quickstart/
-[Typescript Developer Guide]: develop/
+[Typescript Quickstart]: guides/producer/functions/ts/quickstart/
+[Typescript Developer Guide]: guides/producer/functions/ts/develop/
 [run functions]: ../../../consumer/function/

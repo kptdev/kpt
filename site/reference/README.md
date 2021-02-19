@@ -189,10 +189,10 @@ by kpt.
   a wider ecosystem of tools.
 - Consult the [FAQ] for answers to common questions.
 
-[pkg]: pkg/
-[cfg]: cfg/
-[fn]: fn/
-[live]: live/
+[pkg]: reference/pkg/
+[cfg]: reference/cfg/
+[fn]: reference/fn/
+[live]: reference/live/
 [architecture]: ../concepts/architecture/
 [guides]: ../guides/
 [FAQ]: ../faq/
