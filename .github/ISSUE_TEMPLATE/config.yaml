@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Kpt Slack Channel
+    url: https://kubernetes.slack.com/app_redirect?channel=kpt
+    about: Discuss Kpt Topics with the Kpt Team on Slack
+  - name: Kpt Guides
+    url: https://googlecontainertools.github.io/kpt/guides/
+    about: Learn more about using kpt with these guides
+  - name: Kpt Mailing List
+    url: https://groups.google.com/forum/#!forum/kpt-users
+    about: Join the Kpt mailing list
