@@ -14,7 +14,7 @@ assignees: ""
 ### Information
 
 <!-- Please include any additional information related to your issue -->
-<!-- EX: Operating System -->
+<!-- EX: -->
 <!--     Kpt Version (you may find this by running `kpt version` in your shell) -->
 <!--     Kpt Package that can demonstrate the error. Ex: https://github.com/kubernetes/examples/staging/cockroachdb -->
 
