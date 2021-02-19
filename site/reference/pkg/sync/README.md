@@ -129,4 +129,4 @@ ensureNotExists: <remove the dependency, mutually exclusive with git>
 Dependencies maybe be updated by updating their `git.ref` field and running `kpt pkg sync`
 against the directory.
 
-[sync-set]: set
+[sync-set]: reference/pkg/sync/set/
