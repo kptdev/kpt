@@ -20,9 +20,16 @@
         paths: 'auto',
       },
       loadSidebar: "sidebar.md",
-      // alias: {
-      // '/.*/sidebar.md': '/sidebar.md'
-      // },
+      alias: {
+        '/installation/.*/sidebar.md' : '/installation/sidebar.md',
+        '/guides/consumer/.*/sidebar.md': '/guides/consumer/sidebar.md',
+        '/guides/producer/.*/sidebar.md': '/guides/producer/sidebar.md',
+        '/guides/ecosystem/.*/sidebar.md': '/guides/ecosystem/sidebar.md',
+        '/concepts/.*/sidebar.md': '/concepts/sidebar.md',
+        '/reference/.*/sidebar.md': '/reference/sidebar.md',
+        '/faq/.*/sidebar.md': '/faq/sidebar.md',
+        '/contact/.*/sidebar.md': '/contact/sidebar.md',
+      },
       coverpage: "coverpage.md",
       auto2top: true,
       repo:'true',
