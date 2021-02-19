@@ -40,7 +40,7 @@ As configuration becomes complex, it becomes hard to read and understand.
 Our design philosophy is to keep configuration as data in order to manage this complexity.
 We do this by keeping resources serialized as either JSON or YAML configuration.
 
-- [link](https://changelog.com/gotime/114#t=00:12:09.18)
+- [link](https://changelog.com/gotime/114#t=729.18)
 
 #### kpt vs kubernetes
 
