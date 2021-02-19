@@ -120,7 +120,7 @@ func TestSearchSubPackages(t *testing.T) {
 		{
 			name:    "search-replace-recurse-subpackages",
 			dataset: "dataset-with-autosetters",
-			args:    []string{"--by-value", "myspace", "--put-literal", "otherspace"},
+			args:    []string{"--by-value", "myspace", "--put-value", "otherspace"},
 			out: `${baseDir}/mysql/deployment.yaml
 fieldPath: metadata.namespace
 value: otherspace # {"$openapi":"gcloud.core.project"}

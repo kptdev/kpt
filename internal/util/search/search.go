@@ -23,8 +23,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
-	"sigs.k8s.io/kustomize/kyaml/setters2"
-	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -47,12 +45,12 @@ type SearchReplace struct {
 	// Count is the number of matches
 	Count int
 
-	// PutLiteral is the literal to be put at to field
+	// PutValue is the value to be put at to field
 	// filtered by path and/or value
-	PutLiteral string
+	PutValue string
 
-	// PutPattern is the setters reference comment to be added at to field
-	PutPattern string
+	// PutComment is the comment to be added at to field
+	PutComment string
 
 	filePath string
 
@@ -104,8 +102,8 @@ func (sr *SearchReplace) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	}
 	sr.filePath = filePath
 
-	if sr.shouldPutLiteralByPath() {
-		return object, sr.putLiteral(object)
+	if sr.shouldPutValueByPath() {
+		return object, sr.putValue(object)
 	}
 
 	// traverse the node to perform search/put operation
@@ -138,25 +136,25 @@ func (sr *SearchReplace) matchAndReplace(node *yaml.Node, path string) error {
 		(pathMatch && sr.ByValue == "" && sr.ByValueRegex == "") {
 		sr.Count++
 
-		if sr.PutLiteral != "" {
+		if sr.PutComment != "" {
+			var err error
+			node.LineComment, err = resolvePattern(node.Value, sr.ByValueRegex, sr.PutComment)
+			if err != nil {
+				return err
+			}
+		}
+
+		if sr.PutValue != "" {
 			// TODO: pmarupaka Check if the new value honors the openAPI schema and/or
 			// current field type, throw error if it doesn't
-			node.Value = sr.PutLiteral
+			var err error
+			node.Value, err = resolvePattern(node.Value, sr.ByValueRegex, sr.PutValue)
+			if err != nil {
+				return err
+			}
 			// When encoding, if this tag is unset the value type will be
 			// implied from the node properties
 			node.Tag = yaml.NodeTagEmpty
-		}
-
-		if sr.PutPattern != "" {
-			var err error
-			pattern := sr.PutPattern
-			if sr.ByValueRegex != "" {
-				pattern, err = setterPatternFromRegex(node.Value, sr.ByValueRegex, sr.PutPattern)
-				if err != nil {
-					return err
-				}
-			}
-			node.LineComment = fmt.Sprintf(`kpt-set: %s`, pattern)
 		}
 
 		if sr.filePath != "" {
@@ -184,8 +182,8 @@ func (sr *SearchReplace) regexMatch(value string) bool {
 	return sr.regex.Match([]byte(value))
 }
 
-// putLiteral puts the literal in the user specified sr.ByPath
-func (sr *SearchReplace) putLiteral(object *yaml.RNode) error {
+// putLiteral puts the value in the user specified sr.ByPath
+func (sr *SearchReplace) putValue(object *yaml.RNode) error {
 	path := strings.Split(sr.ByPath, PathDelimiter)
 	// lookup(or create) node for n-1 path elements
 	node, err := object.Pipe(yaml.LookupCreate(yaml.MappingNode, path[:len(path)-1]...))
@@ -193,7 +191,7 @@ func (sr *SearchReplace) putLiteral(object *yaml.RNode) error {
 		return errors.Wrap(err)
 	}
 	// set the last path element key with the input value
-	sn := yaml.NewScalarRNode(sr.PutLiteral)
+	sn := yaml.NewScalarRNode(sr.PutValue)
 	// When encoding, if this tag is unset the value type will be
 	// implied from the node properties
 	sn.YNode().Tag = yaml.NodeTagEmpty
@@ -204,83 +202,50 @@ func (sr *SearchReplace) putLiteral(object *yaml.RNode) error {
 	res := SearchResult{
 		FilePath:  sr.filePath,
 		FieldPath: sr.ByPath,
-		Value:     sr.PutLiteral,
+		Value:     sr.PutValue,
 	}
 	sr.Result = append(sr.Result, res)
 	sr.Count++
 	return nil
 }
 
-// shouldPutLiteralByPath returns true if only absolute path and literal are provided,
+// shouldPutValueByPath returns true if only absolute path and literal are provided,
 // so that the value can be directly put without needing to traverse the entire node,
 // handles the case of adding non-existent field-value to node
-func (sr *SearchReplace) shouldPutLiteralByPath() bool {
+func (sr *SearchReplace) shouldPutValueByPath() bool {
 	return isAbsPath(sr.ByPath) &&
 		!strings.Contains(sr.ByPath, "[") && // TODO: pmarupaka Support appending literal for arrays
 		sr.ByValue == "" &&
 		sr.ByValueRegex == "" &&
-		sr.PutLiteral != ""
+		sr.PutValue != ""
 }
 
-// setterPatternFromRegex takes the field value of a node, valueRegex provided by
-// user from --by-value-regex, patternRegex provided by user from --put-pattern,
-// and makes best effort to derive the corresponding setter pattern comment to be
-// added as line comment to the node.
-// e.g. fieldValue: my-project-foo, valueRegex: my-project-*, patternRegex: ${project-id}-*
-// the output pattern will be ${project-id}-foo
-// in case the valueRegex is vague and not enough to derive the setter values, it
-// returns an error
-func setterPatternFromRegex(fieldValue, valueRegex, patternRegex string) (string, error) {
-	settersValues, err := settersValues(valueRegex, patternRegex)
+// resolvePattern takes the field value of a node, valueRegex provided by
+// user from --by-value-regex, patternRegex provided by user from --put-value/--put-comment,
+// and makes best effort to derive the corresponding capture groups and resolve the pattern
+// refer to tests for expected behavior
+func resolvePattern(fieldValue, valueRegex, patternRegex string) (string, error) {
+	if valueRegex == "" {
+		return patternRegex, nil
+	}
+	r, err := regexp.Compile(valueRegex)
 	if err != nil {
-		return "", err
+		return "", errors.Errorf("failed to compile input pattern %q: %s", valueRegex, err.Error())
+	}
+	captureGroup := r.FindStringSubmatch(fieldValue)
+	res := patternRegex
+	for i, val := range captureGroup {
+		if i == 0 {
+			continue
+		}
+		res = strings.ReplaceAll(res, fmt.Sprintf("${%d}", i), val)
 	}
 
-	pattern := fieldValue
-	// derive the pattern from the field value by replacing setter values
-	// with setter name markers
-	// e.g. if field value is "my-project-foo", input PutPattern is "${project]-*", and
-	// value for setter "project" is "my-project",
-	// the pattern to be added as comment is ${project]-foo
-	for sn, sv := range settersValues {
-		pattern = strings.ReplaceAll(clean(pattern), clean(sv), clean(sn))
+	// make sure that all capture groups are resolved and throw error if they are not
+	re := regexp.MustCompile(`\$\{([0-9]+)\}`)
+	if re.Match([]byte(res)) {
+		return "", errors.Errorf("unable to resolve capture groups")
 	}
 
-	return pattern, nil
-}
-
-// settersValues returns the values for the setters present in patternRegex,
-// returns error if the setter values can't be derived from the pattern
-// e.g. valueRegex = my-project-*, patternRegex = ${project-id}-* returns
-// map[project-id]my-project
-// e.g. valueRegex = nginx-*, patternRegex = ${image}:${tag}-* returns error
-// as setter values can't be derived from valueRegex
-func settersValues(valueRegex, patternRegex string) (map[string]string, error) {
-	// extract setter name tokens from pattern enclosed in ${}
-	re := regexp.MustCompile(`\$\{([^}]*)\}`)
-	markers := re.FindAllString(patternRegex, -1)
-	if len(markers) == 0 {
-		return nil, errors.Errorf("unable to find setter names in pattern, " +
-			"setter names must be enclosed in ${}")
-	}
-	sc := settersutil.SubstitutionCreator{
-		FieldValue: valueRegex,
-		Pattern:    patternRegex,
-	}
-	for _, m := range markers {
-		sc.Values = append(sc.Values, setters2.Value{
-			Marker: m,
-		})
-	}
-	res, err := sc.GetValuesForMarkers()
-	if err != nil {
-		return nil, errors.Errorf("unable to derive setter values from the provided pattern, " +
-			"please ensure value-regex matches provided setter pattern")
-	}
 	return res, nil
-}
-
-// clean trims the string and removes quotes around it
-func clean(input string) string {
-	return strings.Trim(strings.TrimSpace(input), `"`)
 }

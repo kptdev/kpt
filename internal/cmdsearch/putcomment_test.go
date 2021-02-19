@@ -17,7 +17,7 @@ package cmdsearch
 var putPatternCases = []test{
 	{
 		name: "put pattern single setter",
-		args: []string{"--by-value", "3", "--put-pattern", "${replicas}"},
+		args: []string{"--by-value", "3", "--put-comment", "kpt-set: ${replicas}"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -43,7 +43,7 @@ spec:
 	},
 	{
 		name: "put pattern group of setters",
-		args: []string{"--by-value", "nginx-deployment", "--put-pattern", "${image}-${kind}"},
+		args: []string{"--by-value", "nginx-deployment", "--put-comment", "kpt-set: ${image}-${kind}"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -69,7 +69,7 @@ spec:
 	},
 	{
 		name: "put pattern by value",
-		args: []string{"--by-value", "dev/my-project/nginx", "--put-pattern", "${env}/${project}/${name}"},
+		args: []string{"--by-value", "dev/my-project/nginx", "--put-comment", "kpt-set: ${env}/${project}/${name}"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -94,16 +94,14 @@ spec:
  `,
 	},
 	{
-		name: "put pattern by regex",
-		args: []string{"--by-value-regex", "my-project-*", "--put-pattern", "${project}-*"},
+		name: "put comment by capture groups simple case",
+		args: []string{"--by-value-regex", "my-project-(.*)", "--put-comment", "kpt-set: ${project}-${1}"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-project-deployment
   namespace: my-project-namespace
-spec:
-  replicas: 3
  `,
 		out: `${baseDir}/${filePath}
 fieldPath: metadata.name
@@ -121,39 +119,55 @@ kind: Deployment
 metadata:
   name: my-project-deployment # kpt-set: ${project}-deployment
   namespace: my-project-namespace # kpt-set: ${project}-namespace
-spec:
-  replicas: 3
  `,
 	},
 	{
-		name: "put pattern by regex, error when unable to derive values",
-		args: []string{"--by-value-regex", "something/*", "--put-pattern", "*/${image}:${tag}"},
+		name: "put value and comment by regex capture groups",
+		args: []string{"--by-value-regex", `(\w+)-dev-(\w+)-us-east-1-(\w+)`,
+			"--put-value", "${1}-prod-${2}-us-central-1-${3}", "--put-comment", "kpt-set: ${1}-${environment}-${2}-${region}-${3}"},
 		input: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3
-  template:
-    spec:
-      containers:
-      - name: nginx
-        image: something/nginx:1.7.9
+  name: foo1-dev-bar1-us-east-1-baz1
+  namespace: foo2-dev-bar2-us-east-1-baz2
  `,
-		errMsg: `unable to derive setter values from the provided pattern`,
+		out: `${baseDir}/${filePath}
+fieldPath: metadata.name
+value: foo1-prod-bar1-us-central-1-baz1 # kpt-set: foo1-${environment}-bar1-${region}-baz1
+
+${baseDir}/${filePath}
+fieldPath: metadata.namespace
+value: foo2-prod-bar2-us-central-1-baz2 # kpt-set: foo2-${environment}-bar2-${region}-baz2
+
+Mutated 2 field(s)
+`,
 		expectedResources: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3
-  template:
-    spec:
-      containers:
-      - name: nginx
-        image: something/nginx:1.7.9
+  name: foo1-prod-bar1-us-central-1-baz1 # kpt-set: foo1-${environment}-bar1-${region}-baz1
+  namespace: foo2-prod-bar2-us-central-1-baz2 # kpt-set: foo2-${environment}-bar2-${region}-baz2
  `,
+	},
+	{
+		name: "put value and comment by regex capture groups error",
+		args: []string{"--by-value-regex", `(\w+)-dev-(\w+)-us-east-1-(\w+)`,
+			"--put-value", "${1}-prod-${2}-us-central-1-${3}", "--put-comment", "kpt-set: ${1}-${environment}-${2}-${region}-${3}-extra-${4}"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo1-dev-bar1-us-east-1-baz1
+  namespace: foo2-dev-bar2-us-east-1-baz2
+ `,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo1-dev-bar1-us-east-1-baz1
+  namespace: foo2-dev-bar2-us-east-1-baz2
+ `,
+		errMsg: "unable to resolve capture groups",
 	},
 }
