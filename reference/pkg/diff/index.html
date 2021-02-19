@@ -1126,11 +1126,11 @@ VERSION:
   # Show changes using 'meld' commandline tool
   kpt pkg diff @master --diff-tool meld
 
---diff-opts:
+--diff-tool-opts:
   Commandline options to use with the diffing tool.
   Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
   # Show changes using &quot;diff&quot; with recurive options
-  kpt pkg diff @master --diff-tool meld --diff-opts &quot;-r&quot;
+  kpt pkg diff @master --diff-tool meld --diff-tool-opts &quot;-r&quot;
 </code></pre><h4 id="environment-variables">Environment Variables</h4>
 <pre><code>KPT_EXTERNAL_DIFF:
    Commandline diffing tool (diff by default) that will be used to show
@@ -1232,7 +1232,7 @@ KPT_EXTERNAL_DIFF_OPTS:
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified July 16, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/e20b22cddd117911ddda29e69401124c1d479c2a">Fix all markdownlint issues (e20b22cd)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified February 18, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/153c545247b4864584aea836e7b232ba676cc62b">Update diff-tool-opts docs for correctness. (#1467) (153c5452)</a>
 </div>
 </div>
 
