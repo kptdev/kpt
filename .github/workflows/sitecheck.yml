@@ -14,6 +14,11 @@
 
 name: SiteCheck
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - "site/**"
   pull_request:
     branches:
       - master
