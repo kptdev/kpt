@@ -39,4 +39,4 @@ This provides various advantages:
 
 [Typescript Quickstart]: guides/producer/functions/ts/quickstart/
 [Typescript Developer Guide]: guides/producer/functions/ts/develop/
-[run functions]: ../../../consumer/function/
+[run functions]: ../../consumer/function/

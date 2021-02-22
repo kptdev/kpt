@@ -29,7 +29,7 @@ actions on configuration. By default KPT runs configuration functions in a
 The image below details how a function adds the label `color: pink` to a
 package.
 
-![img](/../../../static/images/fn-command.svg)
+![img](/../../../static/images/fn.svg)
 
 Functions can address many types of use cases, including:
 
