@@ -164,14 +164,14 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
   [functions concepts] page.
 - Learn more ways of using the `kpt fn` command from the [reference] doc.
 
-[container runtime]: ../../producer/functions/container/
-[executables]: ../../producer/functions/exec/
-[starlark scripts]: ../../producer/functions/starlark/
+[container runtime]:/guides/producer/functions/container/
+[executables]:/guides/producer/functions/exec/
+[starlark scripts]:/guides/producer/functions/starlark/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/hello-world/src/label_namespace.ts
 [VCS]: https://en.wikipedia.org/wiki/Version_control
-[function producer docs]: ../../producer/functions/
+[function producer docs]:/guides/producer/functions/
 [functions concepts]: ../../../concepts/functions/
 [reference]: ../../../reference/fn/run/
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
-[ts sdk]: ../../producer/functions/ts/
-[go libs]: ../../producer/functions/golang/
+[ts sdk]:/guides/producer/functions/ts/
+[go libs]:/guides/producer/functions/golang/

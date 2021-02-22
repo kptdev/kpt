@@ -50,5 +50,5 @@ NAME:
 
 ```
 
-[setters]: ../create-setter/
+[setters]: /reference/cfg/create-setter/
 [creating substitutions]: ../../../guides/producer/substitutions/

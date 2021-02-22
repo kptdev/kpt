@@ -285,6 +285,6 @@ statefulset.apps/cockroachdb   3/3     54s
 
 [kubernetes examples]: https://github.com/kubernetes/examples
 [resource configuration]: https://kubernetes.io/docs/concepts/configuration/overview/#general-configuration-tips
-[kpt pkg get]: ../../..//reference/pkg/get/
+[kpt pkg get]: ../../../reference/pkg/get/
 [Kptfile]: ../../../api-reference/kptfile/
 [kpt live]: ../../../reference/live/

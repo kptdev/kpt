@@ -184,4 +184,4 @@ grep "replicas: 3" helloworld/deploy.yaml
 [Kptfile]: ../../../api-reference/kptfile/
 [kpt cfg set]: ../../../reference/cfg/set/
 [setters]: ../../../reference/cfg/create-setter/
-[create setter guide]: ../../producer/setters/
+[create setter guide]: /guides/producer/setters/

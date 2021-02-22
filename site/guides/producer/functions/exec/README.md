@@ -78,6 +78,6 @@ ignore the exec function and exit 0.
   [functions concepts] page.
 - Consult the [fn command reference].
 
-[Functions Developer Guide]: ../
+[Functions Developer Guide]: /guides/producer/functions/
 [functions concepts]: ../../../../concepts/functions/
 [fn command reference]: ../../../../reference/fn/

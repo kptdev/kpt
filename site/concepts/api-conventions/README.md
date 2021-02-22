@@ -79,5 +79,5 @@ as the ResourceList.functionConfig.
 - Consult the [FAQ] for answers to common questions.
 
 [Configuration IO API Semantics]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/config-io.md
-[functions concepts]: ../functions/
-[FAQ]: ../../faq/
+[functions concepts]: /concepts/functions/
+[FAQ]: /faq/

@@ -295,10 +295,10 @@ npm run kpt:docker-build -- --tag=latest
 [install-node]: https://github.com/nodejs/help/wiki/Installation/
 [install-docker]: https://docs.docker.com/engine/installation/
 [crd-openapi]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing
-[Quickstart]: ../quickstart/
+[Quickstart]: /guides/producer/functions/ts/quickstart/
 [download-kind]: https://github.com/kubernetes-sigs/kind/
 [VSCode]: https://code.visualstudio.com/
 [TS SDK API]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
 [demo functions]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
-[run functions]: ../../../../consumer/function/
+[run functions]: /guides/consumer/function/
 [functions concepts]: ../../../../../concepts/functions/

@@ -168,6 +168,6 @@ results:
 [`kpt fn source`]: ../../../reference/fn/source/
 [`helm-template`]: https://gcr.io/kpt-functions/helm-template/
 [`kpt fn sink`]: ../../../reference/fn/sink/
-[run functions]: ../../consumer/function/
+[run functions]: /guides/consumer/function/
 [functions concepts]: ../../../concepts/functions/
 [fn command reference]: ../../../reference/fn/

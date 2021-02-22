@@ -218,5 +218,5 @@ Currently supported platforms: amd64 Linux/Mac
 [validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts
 [expand-team-cr]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
 [demo functions]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
-[Typescript Developer Guide]: ../develop/
-[run functions]: ../../../../consumer/function/
+[Typescript Developer Guide]: /guides/producer/functions/ts/develop/
+[run functions]: /guides/consumer/function/

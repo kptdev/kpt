@@ -119,6 +119,6 @@ VALUE
 ```
 <!--mdtogo-->
 
-[create-setter]: ../create-setter/
-[create-subst]: ../create-subst/
-[list-setters]: ../list-setters/
+[create-setter]: /reference/cfg/create-setter/
+[create-subst]: /reference/cfg/create-subst/
+[list-setters]: /reference/cfg/list-setters/

@@ -47,5 +47,5 @@ NAME
 ```
 <!--mdtogo-->
 
-[create-setter]: ../create-setter/
-[create-subst]: ../create-subst/
+[create-setter]: /reference/cfg/create-setter/
+[create-subst]:/reference/cfg/create-subst/

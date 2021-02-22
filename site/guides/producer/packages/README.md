@@ -299,5 +299,5 @@ may be ok -- changes to fields will overwrite user changes to those same
 fields, whereas adds will only conflict if the user added the same field.
 
 [kustomize]: https://github.com/kubernetes-sigs/kustomize
-[setter]: ../setters/
-[substitution]: ../substitutions/
+[setter]: /guides/producer/setters/
+[substitution]: /guides/producer/substitutions/

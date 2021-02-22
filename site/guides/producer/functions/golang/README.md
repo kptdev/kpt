@@ -350,6 +350,6 @@ cmd := framework.Command(resourceList, func() error {
 [sigs.k8s.io/kustomize/kyaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/
 [RNode link]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/#RNode
 [Pipe link]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/#RNode.Pipe
-[run functions]: ../../../consumer/function/
+[run functions]: /guides/consumer/function/
 [fn command reference]: ../../../../reference/fn/
 [functions concepts]: ../../../../concepts/functions/

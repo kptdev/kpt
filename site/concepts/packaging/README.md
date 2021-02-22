@@ -68,7 +68,7 @@ Here are the core principles around `subpackages` concept
    `--recurse-subpackages(-R)` is provided. (only available with [cfg] commands currently
    and the default value of `-R` flag might vary for each command)
 
-[source functions]: ../functions/#source-function
+[source functions]: /concepts/functions/#source-function
 [update]: https://googlecontainertools.github.io/kpt/guides/consumer/update/
 [setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/
 [cfg]: https://googlecontainertools.github.io/kpt/reference/cfg/

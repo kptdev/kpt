@@ -143,7 +143,7 @@ persistentvolumeclaim/wp-pv-claim created
 deployment.apps/wordpress created
 ```
 
-[kpt pkg get]: ../../..//reference/pkg/get/
+[kpt pkg get]: ../../../reference/pkg/get/
 [tree]: https://googlecontainertools.github.io/kpt/reference/cfg/tree/
 [count]: https://googlecontainertools.github.io/kpt/reference/cfg/count/
 [grep]: https://googlecontainertools.github.io/kpt/reference/cfg/grep/

@@ -65,7 +65,7 @@ the example.
 
 [io specification]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [kpt-functions-sdk]: https://github.com/GoogleContainerTools/kpt-functions-sdk
-[go libraries]: ../golang/
-[Functions Developer Guide]: ../
+[go libraries]: /guides/producer/functions/golang/
+[Functions Developer Guide]: /guides/producer/functions/
 [functions concepts]: ../../../../concepts/functions/
 [fn command reference]: ../../../../reference/fn/

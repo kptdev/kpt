@@ -202,4 +202,4 @@ package [Kptfile].
 [kpt cfg set]: ../../../reference/cfg/set/
 [setters]: ../../../reference/cfg/create-setter/
 [substitutions]: ../../../reference/cfg/create-subst/
-[create substitution guide]: ../../producer/substitutions/
+[create substitution guide]: /guides/producer/substitutions/

@@ -312,4 +312,4 @@ are used *not* the name of the substitution.  The name of the substitution is
 *only used in the configuration field references*.
 {{% /pageinfo %}}
 
-[setters]: ../setters/
+[setters]: /guides/producer/setters/
