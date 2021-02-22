@@ -31,7 +31,6 @@ func NewSearchRunner(name string) *SearchRunner {
 	r := &SearchRunner{}
 	c := &cobra.Command{
 		Use:     "search DIR",
-		Short:   shortMessage,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 		Args:    cobra.ExactArgs(1),
@@ -48,21 +47,16 @@ func NewSearchRunner(name string) *SearchRunner {
 		"Match by path expression of a field.")
 	c.Flags().StringVar(&r.PutValue, "put-value", "",
 		"Set or update the value of the matching fields. Input can be a pattern "+
-			"for which the capture groups are resolved using --by-value-regex input.")
+			"for which the numbered capture groups are resolved using --by-value-regex input.")
 	c.Flags().StringVar(&r.PutComment, "put-comment", "",
 		"Set or update the line comment for matching fields. Input can be a pattern "+
-			"for which the capture groups are resolved using --by-value-regex input.")
+			"for which the numbered capture groups are resolved using --by-value-regex input.")
 	c.Flags().BoolVarP(&r.RecurseSubPackages, "recurse-subpackages", "R", true,
 		"search recursively in all the nested subpackages")
 
 	r.Command = c
 	return r
 }
-
-const shortMessage = `Search and optionally replace fields across all resources. 
-Search matchers are provided by flags with --by- prefix. When multiple matchers 
-are provided they are AND’ed together. --put- flags are mutually exclusive.
- `
 
 func SearchCommand(name string) *cobra.Command {
 	return NewSearchRunner(name).Command
