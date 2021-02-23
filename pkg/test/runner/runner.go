@@ -146,6 +146,12 @@ func (r *Runner) runPipeline() error {
 	for i := 0; i < r.testCase.Config.RunCount; i++ {
 		command.SetArgs(kptArgs)
 		fnErr = command.Execute()
+		if fnErr != nil {
+			if r.testCase.Config.ExitCode != 0 {
+				return nil
+			}
+			break
+		}
 	}
 
 	// run formatter
