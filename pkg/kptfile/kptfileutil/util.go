@@ -23,6 +23,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -48,6 +49,12 @@ func ReadFile(dir string) (kptfile.KptFile, error) {
 	if err = d.Decode(&kpgfile); err != nil {
 		return kptfile.KptFile{}, errors.Errorf("unable to parse %q: %v", kptfile.KptFileName, err)
 	}
+	annotations := kpgfile.Annotations
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	annotations[kioutil.PathAnnotation] = dir
+	kpgfile.Annotations = annotations
 	return kpgfile, nil
 }
 

@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: subpackage
+inventory:
+  namespace: default
+  name: inventory-test-sub-package
+  inventoryID: inventory-test-sub-package

@@ -5,6 +5,9 @@ package live
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -12,12 +15,14 @@ import (
 	"k8s.io/klog"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
 // ResourceGroupPathManifestReader encapsulates the default path
 // manifest reader.
 type ResourceGroupPathManifestReader struct {
 	pathReader *manifestreader.PathManifestReader
+	nested bool
 }
 
 // Read reads the manifests and returns them as Info objects.
@@ -43,10 +48,33 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	if err == nil {
 		klog.V(4).Infof(`from Kptfile generating ResourceGroup inventory object "%s/%s/%s"`,
 			inv.Namespace, inv.Name, inv.InventoryID)
+		if p.nested {
+			annotations := invObj.GetAnnotations()
+			if annotations == nil {
+				annotations = make(map[string]string)
+			}
+			for k, v := range kf.Annotations {
+				if k == kioutil.PathAnnotation {
+					v = strings.TrimPrefix(v, p.pathReader.Path)
+				}
+				annotations[k] = v
+			}
+			invObj.SetAnnotations(annotations)
+		}
 		objs = append(objs, invObj)
 	} else {
 		klog.V(4).Infof("unable to generate ResourceGroup inventory: %s", err)
 	}
+
+	// Read Kptfile from the subdirectories
+	if p.nested {
+		rgs, err := getSubDirResourceGroups(p.pathReader.Path)
+		if err != nil {
+			klog.V(4).Infof("unable to read the sub package level ResourceGroup: %s", err)
+		}
+		objs = append(objs, rgs...)
+	}
+
 	return objs, nil
 }
 
@@ -88,4 +116,46 @@ func ResourceGroupUnstructured(name, namespace, id string) *unstructured.Unstruc
 		},
 	}
 	return inventoryObj
+}
+
+func getSubDirResourceGroups(dir string) ([]*unstructured.Unstructured, error) {
+	objs := []*unstructured.Unstructured{}
+
+	err := filepath.Walk(dir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if path == dir {
+				return nil
+			}
+			if !info.IsDir() {
+				return nil
+			}
+			kf, err := kptfileutil.ReadFile(path)
+			if err != nil {
+				klog.V(4).Infof("unable to parse Kptfile for ResourceGroup inventory: %s", err)
+				return err
+			}
+			inv := kf.Inventory
+			invObj, err := generateInventoryObj(inv)
+			if err == nil {
+				klog.V(4).Infof(`from Kptfile generating ResourceGroup inventory object "%s/%s/%s"`,
+					inv.Namespace, inv.Name, inv.InventoryID)
+				annotations := invObj.GetAnnotations()
+				if annotations == nil {
+					annotations = make(map[string]string)
+				}
+				for k, v := range kf.Annotations {
+					if k == kioutil.PathAnnotation {
+						v = strings.TrimPrefix(strings.TrimPrefix(v, dir), string(filepath.Separator))
+					}
+					annotations[k] = v
+				}
+				invObj.SetAnnotations(annotations)
+				objs = append(objs, invObj)
+			}
+			return nil
+		})
+	return objs, err
 }

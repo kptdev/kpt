@@ -19,12 +19,20 @@ var _ manifestreader.ManifestLoader = &ResourceGroupManifestLoader{}
 // ResourceGroup versions of some kpt live apply structures.
 type ResourceGroupManifestLoader struct {
 	factory util.Factory
+	nested bool
 }
 
 // NewResourceGroupProvider encapsulates the passed values, and returns a pointer to an ResourceGroupProvider.
 func NewResourceGroupManifestLoader(f util.Factory) *ResourceGroupManifestLoader {
 	return &ResourceGroupManifestLoader{
 		factory: f,
+	}
+}
+
+func NewResourceGroupManifestLoaderNested(f util.Factory) *ResourceGroupManifestLoader {
+	return &ResourceGroupManifestLoader{
+		factory: f,
+		nested: true,
 	}
 }
 
@@ -79,6 +87,7 @@ func (f *ResourceGroupManifestLoader) ManifestReader(reader io.Reader, args []st
 				Path:          args[0],
 				ReaderOptions: readerOptions,
 			},
+			nested: f.nested,
 		}
 	}
 	return rgReader, nil

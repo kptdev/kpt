@@ -1,0 +1,11 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: subpackage
+# change the inventory information
+# change name: inventory-test-sub-package-renamed
+# change the inventory id: inventory-test-sub-package-renamed
+inventory:
+  namespace: default
+  name: inventory-test-sub-package-renamed
+  inventoryID: inventory-test-sub-package-renamed

@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: test
+inventory:
+  namespace: default
+  name: inventory-test-root-pkg
+  inventoryID: inventory-test-root-pkg

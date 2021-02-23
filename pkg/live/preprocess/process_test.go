@@ -129,3 +129,7 @@ func (f *fakeInventoryClient) UpdateLabels(inv inventory.InventoryInfo, labels m
 	f.inventory.SetLabels(labels)
 	return nil
 }
+
+func (f *fakeInventoryClient) ApplyInventoryObj(u *unstructured.Unstructured) error {
+	return nil
+}

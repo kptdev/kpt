@@ -1,0 +1,7 @@
+# Rename the ConfigMap from subpackage-cm1 to subpackage-cm2
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: subpackage-cm2
+data:
+  foo: bar
