@@ -385,7 +385,7 @@ metadata:
         image: gcr.io/example.com/my-fn
 data:
   foo: bar
----
+----
 apiVersion: v1
 kind: MyType
 metadata:
