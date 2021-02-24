@@ -13,6 +13,6 @@ jobs:
         with:
           version: "v0.9.0"
           skipClusterCreation: true
-      - name: Cluster Info
+      - name: Run Tests
         run: |
           ./e2e/live/end-to-end-test.sh
