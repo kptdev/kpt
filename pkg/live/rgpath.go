@@ -6,7 +6,7 @@ package live
 import (
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/klog"
@@ -52,7 +52,7 @@ func (p *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 
 // generateInventoryObj returns the ResourceGroupInventory object using the
 // passed information.
-func generateInventoryObj(inv *kptfile.Inventory) (*unstructured.Unstructured, error) {
+func generateInventoryObj(inv *kptfilev1alpha2.Inventory) (*unstructured.Unstructured, error) {
 	// First, ensure the Kptfile inventory section is valid.
 	if isValid, err := kptfileutil.ValidateInventory(inv); !isValid {
 		return nil, err

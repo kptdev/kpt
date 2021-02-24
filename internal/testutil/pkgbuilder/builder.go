@@ -23,7 +23,7 @@ import (
 	"testing"
 	"text/template"
 
-	kptfileutil "github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -318,9 +318,9 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 
 // Kptfile represents the Kptfile of a package.
 type Kptfile struct {
-	Setters     []Setter
-	Subpackages []RemoteSubpackage
-	Upstream    Upstream
+	Setters      []Setter
+	Subpackages  []RemoteSubpackage
+	UpstreamLock UpstreamLock
 }
 
 func NewKptfile() *Kptfile {
@@ -331,7 +331,7 @@ func NewKptfile() *Kptfile {
 // The upstream section of the Kptfile is only added if this information is
 // provided.
 func (k *Kptfile) WithUpstream(repo, dir, ref string) *Kptfile {
-	k.Upstream = Upstream{
+	k.UpstreamLock = UpstreamLock{
 		Repo: repo,
 		Dir:  dir,
 		Ref:  ref,
@@ -344,7 +344,7 @@ func (k *Kptfile) WithUpstream(repo, dir, ref string) *Kptfile {
 // reference to the repo rather than the actual path. The reference will
 // be resolved to an actual path when the package is written to disk.
 func (k *Kptfile) WithUpstreamRef(repoRef, dir, ref string) *Kptfile {
-	k.Upstream = Upstream{
+	k.UpstreamLock = UpstreamLock{
 		RepoRef: repoRef,
 		Dir:     dir,
 		Ref:     ref,
@@ -352,7 +352,7 @@ func (k *Kptfile) WithUpstreamRef(repoRef, dir, ref string) *Kptfile {
 	return k
 }
 
-type Upstream struct {
+type UpstreamLock struct {
 	Repo    string
 	RepoRef string
 	Dir     string
@@ -469,7 +469,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, repoPaths map[string]str
 	if pkg.Kptfile != nil {
 		content := buildKptfile(pkg, pkgName, repoPaths)
 
-		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfileutil.KptFileName),
+		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfilev1alpha2.KptFileName),
 			[]byte(content), 0600)
 		if err != nil {
 			return err
@@ -522,19 +522,20 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, repoPaths map[string]str
 
 // TODO: Consider using the Kptfile struct for this instead of a template.
 var kptfileTemplate = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: {{.PkgName}}
 {{- if gt (len .Pkg.Kptfile.Subpackages) 0 }}
 subpackages:
 {{- range .Pkg.Kptfile.Subpackages }}
-- git:
-    directory: {{.Directory}}
-    ref: {{.Ref}}
-    repo: {{.Repo}}
+- upstream:
+    git:
+      directory: {{.Directory}}
+      ref: {{.Ref}}
+      repo: {{.Repo}}
+    updateStrategy: {{.Strategy}}
   localDir: {{.LocalDir}}
-  updateStrategy: {{.Strategy}}
 {{- end }}
 {{- end }}
 {{- if gt (len .Pkg.Kptfile.Setters) 0 }}
@@ -551,13 +552,13 @@ openAPI:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- if gt (len .Pkg.Kptfile.Upstream.Repo) 0 }}
-upstream:
+{{- if gt (len .Pkg.Kptfile.UpstreamLock.Repo) 0 }}
+upstreamLock:
   type: git
-  git:
-    directory: {{.Pkg.Kptfile.Upstream.Dir}}
-    ref: {{.Pkg.Kptfile.Upstream.Ref}}
-    repo: {{.Pkg.Kptfile.Upstream.Repo}}
+  gitLock:
+    directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
+    ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
+    repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
     commit: abc123
 {{- end }}
 `
@@ -576,13 +577,13 @@ func buildKptfile(pkg *pkg, pkgName string, repoPaths map[string]string) string 
 			panic(fmt.Errorf("paths for package %s not found", repoRef))
 		}
 	}
-	if pkg.Kptfile.Upstream.RepoRef != "" {
-		repoRef := pkg.Kptfile.Upstream.RepoRef
+	if pkg.Kptfile.UpstreamLock.RepoRef != "" {
+		repoRef := pkg.Kptfile.UpstreamLock.RepoRef
 		repo, found := repoPaths[repoRef]
 		if !found {
 			panic(fmt.Errorf("paths for package %s not found", repoRef))
 		}
-		pkg.Kptfile.Upstream.Repo = repo
+		pkg.Kptfile.UpstreamLock.Repo = repo
 	}
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {

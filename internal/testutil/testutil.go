@@ -27,7 +27,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	toposort "github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
@@ -68,7 +68,7 @@ type TestGitRepo struct {
 
 var AssertNoError = assertnow.NilError
 
-var KptfileSet = diffSet(kptfile.KptFileName)
+var KptfileSet = diffSet(kptfilev1alpha2.KptFileName)
 
 func diffSet(path string) sets.String {
 	s := sets.String{}
@@ -107,7 +107,7 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
 	}
 
 	for _, s := range diff.List() {
-		if !strings.HasSuffix(s, kptfile.KptFileName) {
+		if !strings.HasSuffix(s, kptfilev1alpha2.KptFileName) {
 			continue
 		}
 
@@ -127,13 +127,17 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		pkg1kf.Upstream.Git.Commit = ""
+		if pkg1kf.UpstreamLock != nil && pkg1kf.UpstreamLock.GitLock != nil {
+			pkg1kf.UpstreamLock.GitLock.Commit = ""
+		}
 
 		pkg2kf, err := kptfileutil.ReadFile(filepath.Dir(pkg2Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		pkg2kf.Upstream.Git.Commit = ""
+		if pkg2kf.UpstreamLock != nil && pkg2kf.UpstreamLock.GitLock != nil {
+			pkg2kf.UpstreamLock.GitLock.Commit = ""
+		}
 
 		equal, err := kptfileutil.Equal(pkg1kf, pkg2kf)
 		if !assert.NoError(t, err) {
@@ -296,19 +300,18 @@ func Compare(t *testing.T, a, b string) {
 }
 
 // AssertKptfile verifies the contents of the KptFile matches the provided value.
-func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfile.KptFile) bool {
+func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1alpha2.KptFile) bool {
 	// read the actual generated KptFile
-	b, err := ioutil.ReadFile(filepath.Join(cloned, kptfile.KptFileName))
+	b, err := ioutil.ReadFile(filepath.Join(cloned, kptfilev1alpha2.KptFileName))
 	if !assert.NoError(t, err) {
 		return false
 	}
-	actual := kptfile.KptFile{}
-	d := yaml.NewDecoder(bytes.NewBuffer(b))
-	d.KnownFields(true)
-	if !assert.NoError(t, d.Decode(&actual)) {
+	var res bytes.Buffer
+	d := yaml.NewEncoder(&res)
+	if !assert.NoError(t, d.Encode(kpkg)) {
 		return false
 	}
-	return assert.Equal(t, kpkg, actual)
+	return assert.Equal(t, res.String(), string(b))
 }
 
 // CheckoutBranch checks out the git branch in the repo
@@ -497,11 +500,11 @@ func Tag(t *testing.T, g *TestGitRepo, tag string) {
 }
 
 func CopyKptfile(t *testing.T, src, dest string) {
-	b, err := ioutil.ReadFile(filepath.Join(src, kptfile.KptFileName))
+	b, err := ioutil.ReadFile(filepath.Join(src, kptfilev1alpha2.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	err = ioutil.WriteFile(filepath.Join(dest, kptfile.KptFileName), b, 0600)
+	err = ioutil.WriteFile(filepath.Join(dest, kptfilev1alpha2.KptFileName), b, 0600)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -701,8 +704,8 @@ func replaceData(repo, data string) error {
 			}
 			// Only copy over the Upstream section from the existing
 			// Kptfile if other values hasn't been provided.
-			if reflect.DeepEqual(dataKptfile.Upstream, kptfile.Upstream{}) {
-				dataKptfile.Upstream = repoKptfile.Upstream
+			if dataKptfile.UpstreamLock == nil || reflect.DeepEqual(dataKptfile.UpstreamLock, kptfilev1alpha2.Upstream{}) {
+				dataKptfile.UpstreamLock = repoKptfile.UpstreamLock
 			}
 			dataKptfile.Name = repoKptfile.Name
 			err = kptfileutil.WriteFile(repoKptfileDir, dataKptfile)
@@ -740,7 +743,7 @@ func replaceData(repo, data string) error {
 		}
 
 		// Never delete the Kptfile in the root package.
-		if rel == kptfile.KptFileName {
+		if rel == kptfilev1alpha2.KptFileName {
 			return nil
 		}
 

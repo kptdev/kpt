@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -40,7 +40,7 @@ import (
 type ResourceMergeUpdater struct{}
 
 func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
-	g := options.KptFile.Upstream.Git
+	g := options.KptFile.UpstreamLock.GitLock
 
 	// get the original repo
 	original := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: g.Commit}
@@ -155,7 +155,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath 
 
 	err = settersutil.SetAllSetterDefinitions(
 		false,
-		filepath.Join(localPath, kptfile.KptFileName),
+		filepath.Join(localPath, kptfilev1alpha2.KptFileName),
 		originalPath,
 		updatedPath,
 		localPath,
@@ -182,13 +182,13 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath 
 
 // updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the update
 func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, originalPath string) (
-	kptfile.KptFile, error) {
+	kptfilev1alpha2.KptFile, error) {
 
 	updatedKf, err := kptfileutil.ReadFile(updatedPath)
 	if err != nil {
 		updatedKf, err = kptfileutil.ReadFile(localPath)
 		if err != nil {
-			return kptfile.KptFile{}, err
+			return kptfilev1alpha2.KptFile{}, err
 		}
 	}
 
@@ -196,30 +196,23 @@ func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, originalPat
 	if err != nil {
 		originalKf, err = kptfileutil.ReadFile(localPath)
 		if err != nil {
-			return kptfile.KptFile{}, err
+			return kptfilev1alpha2.KptFile{}, err
 		}
 	}
 
 	localKf, err := kptfileutil.ReadFile(localPath)
 	if err != nil {
-		return kptfile.KptFile{}, err
-	}
-
-	// keep the local OpenAPI values
-	mergedOpenAPI, err := kptfile.MergeOpenAPI(localKf.OpenAPI, updatedKf.OpenAPI, originalKf.OpenAPI)
-	if err != nil {
-		return localKf, err
+		return kptfilev1alpha2.KptFile{}, err
 	}
 
 	// merge the subpackage information from upstream and local.
-	mergedSubpackages, err := kptfile.MergeSubpackages(localKf.Subpackages, updatedKf.Subpackages, originalKf.Subpackages)
+	mergedSubpackages, err := kptfileutil.MergeSubpackages(localKf.Subpackages, updatedKf.Subpackages, originalKf.Subpackages)
 	if err != nil {
 		return localKf, err
 	}
 
 	localKf.Subpackages = mergedSubpackages
-	localKf.OpenAPI = mergedOpenAPI
-	localKf.Upstream = updatedKf.Upstream
+	localKf.UpstreamLock = updatedKf.UpstreamLock
 	return localKf, err
 }
 
@@ -332,7 +325,7 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	return dirs, files, nil
 }
 
-var krmFilesGlob = append([]string{kptfile.KptFileName}, kio.DefaultMatch...)
+var krmFilesGlob = append([]string{kptfilev1alpha2.KptFileName}, kio.DefaultMatch...)
 
 // isKrmFile checks if the file pointed to by the path is a yaml file (including
 // the Kptfile).

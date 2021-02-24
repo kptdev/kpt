@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -124,7 +124,7 @@ func (g *TestSetupManager) Init(content Content) bool {
 	// Get the content from the upstream repo into the local workspace.
 	if !assert.NoError(g.T, get.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
-		Git: kptfile.Git{
+		GitLock: v1alpha2.GitLock{
 			Repo:      g.UpstreamRepo.RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
@@ -203,7 +203,7 @@ func UpdateGitDir(t *testing.T, gitDir GitDirectory, changes []Content, repoPath
 }
 
 func (g *TestSetupManager) AssertKptfile(name, commit, ref string) bool {
-	expectedKptfile := kptfile.KptFile{
+	expectedKptfile := v1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -211,13 +211,12 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string) bool {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: v1alpha2.TypeMeta.APIVersion,
+				Kind:       v1alpha2.TypeMeta.Kind},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+		UpstreamLock: &v1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &v1alpha2.GitLock{
 				Directory: g.GetSubDirectory,
 				Repo:      g.UpstreamRepo.RepoDirectory,
 				Ref:       ref,

@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
@@ -655,7 +655,7 @@ metadata:
 
 			expectedOut := strings.ReplaceAll(test.expectedOut, "${childPkg}", childPkg)
 			expectedOut = strings.ReplaceAll(expectedOut, "${nestedPkg}", nestedPkg)
-			expectedOut = strings.ReplaceAll(expectedOut, "${parentPkgKptfile}", filepath.Join(parentPkg, kptfile.KptFileName))
+			expectedOut = strings.ReplaceAll(expectedOut, "${parentPkgKptfile}", filepath.Join(parentPkg, kptfilev1alpha2.KptFileName))
 
 			if !assert.Equal(t, expectedOut, out.String()) {
 				t.FailNow()

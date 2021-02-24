@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	. "github.com/GoogleContainerTools/kpt/internal/util/man"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,12 +34,12 @@ func TestMan_Execute(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: java
-packageMetadata:
+info:
   man: "man/README.md"
 `), 0600)
 	assert.NoError(t, err)
@@ -196,12 +196,12 @@ func TestMan_Execute_failNoManPage(t *testing.T) {
 	}
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: java
-packageMetadata:
+info:
 `), 0600)
 	if !assert.NoError(t, err) {
 		return
@@ -214,7 +214,7 @@ packageMetadata:
 		StdOut:         b,
 	}
 	err = instance.Run()
-	if !assert.EqualError(t, err, fmt.Sprintf("no manual entry for %s", d)) {
+	if !assert.EqualError(t, err, fmt.Sprintf("no manual entry for %q", d)) {
 		return
 	}
 	if !assert.Equal(t, ``, b.String()) {
@@ -229,12 +229,12 @@ func TestMan_Execute_failBadPath(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: java
-packageMetadata:
+info:
   man: "not/real/path"
 `), 0600)
 	assert.NoError(t, err)
@@ -258,12 +258,12 @@ func TestMan_Execute_failLocation(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfile.KptFileName), []byte(`
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: java
-packageMetadata:
+info:
   man: "../../path"
 `), 0600)
 	assert.NoError(t, err)
@@ -275,7 +275,7 @@ packageMetadata:
 		StdOut:         b,
 	}
 	err = instance.Run()
-	assert.EqualError(t, err, fmt.Sprintf("invalid manual location for %s", d))
+	assert.EqualError(t, err, fmt.Sprintf("invalid manual location for %q", d))
 	assert.Equal(t, ``, b.String())
 }
 

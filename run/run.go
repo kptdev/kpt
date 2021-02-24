@@ -30,7 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptopenapi "github.com/GoogleContainerTools/kpt/internal/util/openapi"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -83,7 +83,7 @@ func GetMain() *cobra.Command {
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// register function to use Kptfile for OpenAPI
 		ext.KRMFileName = func() string {
-			return kptfile.KptFileName
+			return kptfilev1alpha2.KptFileName
 		}
 		err := kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
 		if err != nil {
@@ -92,7 +92,7 @@ func GetMain() *cobra.Command {
 
 		if len(args) > 0 {
 			// add openAPI definitions from Kptfile to configured openAPI
-			_, addErr := openapi.AddSchemaFromFile(filepath.Join(args[0], kptfile.KptFileName))
+			_, addErr := openapi.AddSchemaFromFile(filepath.Join(args[0], kptfilev1alpha2.KptFileName))
 			if addErr != nil {
 				// do not throw error if schema doesn't exist or not readable from Kptfile
 				return nil

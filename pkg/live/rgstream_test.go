@@ -134,7 +134,7 @@ metadata:
 		},
 		"Kptfile with wrong kind is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: foo
 metadata:
   name: test1
@@ -154,7 +154,7 @@ spec:
 		},
 		"Wrong fields (foo/bar) in kptfile is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 foo: bar
 `,
@@ -162,7 +162,7 @@ foo: bar
 		},
 		"Kptfile with deployment/replicas fields is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test-deployment
@@ -173,7 +173,7 @@ spec:
 		},
 		"Wrong fields (foo/bar) in kptfile inventory is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
@@ -190,14 +190,14 @@ inventory:
 		},
 		"Kptfile with only GVK is valid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 `,
 			expected: true,
 		},
 		"Kptfile missing optional inventory is still valid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1

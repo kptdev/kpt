@@ -21,7 +21,6 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/internal/util/get/getioreader"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -66,7 +65,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	r.Get.Git = t.Git
+	r.Get.GitLock = t.GitLock
 
 	_, absDestPath, err := cmdutil.ResolveAbsAndRelPaths(t.Destination)
 	if err != nil {
@@ -78,10 +77,6 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if args[0] == "-" {
-		return getioreader.Get(args[1], r.FilenamePattern, c.InOrStdin())
-	}
-
 	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
 		r.Get.Directory, r.Get.Repo, r.Get.Destination)
 	if err := r.Get.Run(); err != nil {

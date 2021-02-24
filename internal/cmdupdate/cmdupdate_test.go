@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -84,7 +84,7 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertKptfile(t, dest, kptfile.KptFile{
+	if !g.AssertKptfile(t, dest, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -92,13 +92,12 @@ func TestCmd_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfile.TypeMeta.APIVersion,
-				Kind:       kptfile.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
+				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
-		PackageMeta: kptfile.PackageMeta{},
-		Upstream: kptfile.Upstream{
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			Git: kptfile.Git{
+			GitLock: &kptfilev1alpha2.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",

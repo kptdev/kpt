@@ -26,14 +26,14 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 type UpdateOptions struct {
 	// KptFile is the current local package KptFile
-	KptFile kptfile.KptFile
+	KptFile kptfilev1alpha2.KptFile
 
 	// ToRef is the ref to update to
 	ToRef string
@@ -139,11 +139,13 @@ func (u Command) Run() error {
 	}
 
 	// default arguments
-	if u.Repo == "" {
-		u.Repo = rootKf.Upstream.Git.Repo
-	}
-	if u.Ref == "" {
-		u.Ref = rootKf.Upstream.Git.Ref
+	if rootKf.UpstreamLock != nil && rootKf.UpstreamLock.GitLock != nil {
+		if u.Repo == "" {
+			u.Repo = rootKf.UpstreamLock.GitLock.Repo
+		}
+		if u.Ref == "" {
+			u.Ref = rootKf.UpstreamLock.GitLock.Ref
+		}
 	}
 
 	// require package is checked into git before trying to update it
@@ -205,7 +207,11 @@ func (u Command) Run() error {
 
 			if os.IsNotExist(err) {
 				if err := (get.Command{
-					Git:         sp.Git,
+					GitLock: kptfilev1alpha2.GitLock{
+						Repo:      sp.Upstream.Git.Repo,
+						Ref:       sp.Upstream.Git.Ref,
+						Directory: sp.Upstream.Git.Directory,
+					},
 					Destination: spFilePath,
 					Name:        sp.LocalDir,
 					Clean:       false,
@@ -223,19 +229,19 @@ func (u Command) Run() error {
 			// If either the repo or the directory of the current local package
 			// doesn't match the remote subpackage spec in the Kptfile, it must
 			// be a local subpackage.
-			if sp.Git.Repo != spKptfile.Upstream.Git.Repo ||
-				sp.Git.Directory != spKptfile.Upstream.Git.Directory {
+			if sp.Upstream.Git.Repo != spKptfile.UpstreamLock.GitLock.Repo ||
+				sp.Upstream.Git.Directory != spKptfile.UpstreamLock.GitLock.Directory {
 				return fmt.Errorf("subpackage already exists in directory %s", sp.LocalDir)
 			}
 
-			updater, found := strategies[StrategyType(sp.UpdateStrategy)]
+			updater, found := strategies[StrategyType(sp.Upstream.UpdateStrategy)]
 			if !found {
 				return errors.Errorf("unrecognized update strategy %s", u.Strategy)
 			}
 			if err := updater().Update(UpdateOptions{
 				KptFile:        spKptfile,
-				ToRef:          sp.Git.Ref,
-				ToRepo:         sp.Git.Repo,
+				ToRef:          sp.Upstream.Git.Ref,
+				ToRepo:         sp.Upstream.Git.Repo,
 				AbsPackagePath: spFilePath,
 				DryRun:         u.DryRun,
 				Verbose:        u.Verbose,
@@ -255,20 +261,20 @@ func (u Command) Run() error {
 // information about the remote subpackage. The function returns a function
 // that makes it possible to revert the change if fetching the package fails.
 func (u Command) updateParentKptfile() (func() error, error) {
-	return pkgutil.UpdateParentKptfile(u.FullPackagePath, func(parentPath string, kf kptfile.KptFile) (kptfile.KptFile, error) {
+	return pkgutil.UpdateParentKptfile(u.FullPackagePath, func(parentPath string, kf kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
 		var found bool
 		for i := range kf.Subpackages {
 			absPath := filepath.Join(parentPath, kf.Subpackages[i].LocalDir)
 			if absPath == u.FullPackagePath {
-				kf.Subpackages[i].Git.Repo = u.Repo
-				kf.Subpackages[i].Git.Ref = u.Ref
+				kf.Subpackages[i].Upstream.Git.Repo = u.Repo
+				kf.Subpackages[i].Upstream.Git.Ref = u.Ref
 				found = true
 				break
 			}
 		}
 
 		if !found {
-			return kptfile.KptFile{}, fmt.Errorf("subpackage at %q not listed in parent Kptfile", u.FullPackagePath)
+			return kptfilev1alpha2.KptFile{}, fmt.Errorf("subpackage at %q not listed in parent Kptfile", u.FullPackagePath)
 		}
 		return kf, nil
 	})

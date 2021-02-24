@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
@@ -161,20 +161,20 @@ func SetV1AutoSetter(name, value, path string) error {
 // SetV2AutoSetter sets the input auto setter recursively in all the sub-packages of root
 // Sets GcloudProjectNumber as well, if input setter is GcloudProject
 func SetV2AutoSetter(name, value, root string, w io.Writer) error {
-	resourcePackagesPaths, err := pathutil.DirsWithFile(root, kptfile.KptFileName, true)
+	resourcePackagesPaths, err := pathutil.DirsWithFile(root, kptfilev1alpha2.KptFileName, true)
 	if err != nil {
 		return err
 	}
 	for _, resourcesPath := range resourcePackagesPaths {
-		if !DefExists(resourcesPath, name) || isSet(name, filepath.Join(resourcesPath, kptfile.KptFileName)) {
+		if !DefExists(resourcesPath, name) || isSet(name, filepath.Join(resourcesPath, kptfilev1alpha2.KptFileName)) {
 			continue
 		}
 		fs := &settersutil.FieldSetter{
 			Name:            name,
 			Value:           value,
 			SetBy:           "kpt",
-			OpenAPIPath:     filepath.Join(resourcesPath, kptfile.KptFileName),
-			OpenAPIFileName: kptfile.KptFileName,
+			OpenAPIPath:     filepath.Join(resourcesPath, kptfilev1alpha2.KptFileName),
+			OpenAPIFileName: kptfilev1alpha2.KptFileName,
 			ResourcesPath:   resourcesPath,
 			IsSet:           true,
 		}
@@ -193,15 +193,15 @@ func SetV2AutoSetter(name, value, root string, w io.Writer) error {
 				return err
 			}
 			if DefExists(resourcesPath, GcloudProjectNumber) && projectNumber != "" {
-				if isSet(GcloudProjectNumber, filepath.Join(resourcesPath, kptfile.KptFileName)) {
+				if isSet(GcloudProjectNumber, filepath.Join(resourcesPath, kptfilev1alpha2.KptFileName)) {
 					continue
 				}
 				fs = &settersutil.FieldSetter{
 					Name:            GcloudProjectNumber,
 					Value:           projectNumber,
 					SetBy:           "kpt",
-					OpenAPIPath:     filepath.Join(resourcesPath, kptfile.KptFileName),
-					OpenAPIFileName: kptfile.KptFileName,
+					OpenAPIPath:     filepath.Join(resourcesPath, kptfilev1alpha2.KptFileName),
+					OpenAPIFileName: kptfilev1alpha2.KptFileName,
 					ResourcesPath:   resourcesPath,
 					IsSet:           true,
 				}
@@ -230,7 +230,7 @@ var GetProjectNumberFromProjectID = func(projectID string) (string, error) {
 
 // SetEnvAutoSetters auto-fills setters from the environment
 func (a AutoSet) SetEnvAutoSetters() error {
-	resourcePackagesPaths, err := pathutil.DirsWithFile(a.PackagePath, kptfile.KptFileName, true)
+	resourcePackagesPaths, err := pathutil.DirsWithFile(a.PackagePath, kptfilev1alpha2.KptFileName, true)
 	if err != nil {
 		return err
 	}
@@ -249,7 +249,7 @@ func (a AutoSet) SetEnvAutoSetters() error {
 		for _, resourcesPath := range resourcePackagesPaths {
 			rw := &kio.LocalPackageReadWriter{
 				PackagePath:     resourcesPath,
-				PackageFileName: kptfile.KptFileName,
+				PackageFileName: kptfilev1alpha2.KptFileName,
 			}
 
 			setter := &setters.PerformSetters{Name: k, Value: v, SetBy: "kpt"}
@@ -263,7 +263,7 @@ func (a AutoSet) SetEnvAutoSetters() error {
 				return err
 			}
 
-			if !DefExists(resourcesPath, k) || isSet(k, filepath.Join(resourcesPath, kptfile.KptFileName)) {
+			if !DefExists(resourcesPath, k) || isSet(k, filepath.Join(resourcesPath, kptfilev1alpha2.KptFileName)) {
 				continue
 			}
 
@@ -272,8 +272,8 @@ func (a AutoSet) SetEnvAutoSetters() error {
 				Value:           v,
 				SetBy:           "kpt",
 				ResourcesPath:   resourcesPath,
-				OpenAPIPath:     filepath.Join(resourcesPath, kptfile.KptFileName),
-				OpenAPIFileName: kptfile.KptFileName,
+				OpenAPIPath:     filepath.Join(resourcesPath, kptfilev1alpha2.KptFileName),
+				OpenAPIFileName: kptfilev1alpha2.KptFileName,
 				IsSet:           true,
 			}
 			count, err := fs.Set()
@@ -295,7 +295,7 @@ var environmentVariables = os.Environ
 // values in targetPath and all its subpackages
 func (a AutoSet) SetInheritedSetters() error {
 	// get all the subpackage paths(including itself) in PackagePath
-	targetPackagesPaths, err := pathutil.DirsWithFile(a.PackagePath, kptfile.KptFileName, true)
+	targetPackagesPaths, err := pathutil.DirsWithFile(a.PackagePath, kptfilev1alpha2.KptFileName, true)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func (a AutoSet) SetInheritedSetters() error {
 			continue
 		}
 
-		targetPkgRefs, err := openapi.DefinitionRefs(filepath.Join(targetPath, kptfile.KptFileName))
+		targetPkgRefs, err := openapi.DefinitionRefs(filepath.Join(targetPath, kptfilev1alpha2.KptFileName))
 		if err != nil {
 			return err
 		}
@@ -343,7 +343,7 @@ func (a AutoSet) setInheritedSettersForPkg(pkgPath, parentKptfilePath, setterRef
 		// continue, as there might be setters which are not present global schema
 		return nil
 	}
-	kptfilePath := filepath.Join(pkgPath, kptfile.KptFileName)
+	kptfilePath := filepath.Join(pkgPath, kptfilev1alpha2.KptFileName)
 	if isSet(cliExt.Setter.Name, kptfilePath) {
 		// skip if the setter is already set on local
 		return nil
@@ -354,7 +354,7 @@ func (a AutoSet) setInheritedSettersForPkg(pkgPath, parentKptfilePath, setterRef
 		Value:           cliExt.Setter.Value,
 		ListValues:      cliExt.Setter.ListValues,
 		OpenAPIPath:     kptfilePath,
-		OpenAPIFileName: kptfile.KptFileName,
+		OpenAPIFileName: kptfilev1alpha2.KptFileName,
 		ResourcesPath:   pkgPath,
 		// turn isSet to true on child Kptfile iff the value derived from parent
 		// is set by user, don't set isSet to true for inheriting default values from parent
@@ -412,7 +412,7 @@ func parentDirWithKptfile(parentPath string) (string, error) {
 		return "", err
 	}
 	for {
-		openAPIPath := filepath.Join(absParentPath, kptfile.KptFileName)
+		openAPIPath := filepath.Join(absParentPath, kptfilev1alpha2.KptFileName)
 		_, err := os.Stat(openAPIPath)
 		if !os.IsNotExist(err) {
 			return openAPIPath, nil
@@ -427,7 +427,7 @@ func parentDirWithKptfile(parentPath string) (string, error) {
 
 // DefExists returns true if the setterName exists in Kptfile definitions
 func DefExists(resourcePath, setterName string) bool {
-	_, err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, kptfile.KptFileName))
+	_, err := openapi.AddSchemaFromFile(filepath.Join(resourcePath, kptfilev1alpha2.KptFileName))
 	if err != nil {
 		return false
 	}

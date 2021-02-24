@@ -17,7 +17,7 @@
 package pipeline
 
 import (
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
@@ -28,8 +28,8 @@ const (
 
 // fnChain returns a slice of function runners from the
 // functions and configs defined in pipeline.
-func fnChain(p *v1alpha2.Pipeline, pkgPath string) ([]kio.Filter, error) {
-	fns := []v1alpha2.Function{}
+func fnChain(p *kptfilev1alpha2.Pipeline, pkgPath string) ([]kio.Filter, error) {
+	fns := []kptfilev1alpha2.Function{}
 	fns = append(fns, p.Mutators...)
 	// TODO: Validators cannot modify resources.
 	fns = append(fns, p.Validators...)

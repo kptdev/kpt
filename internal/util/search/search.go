@@ -19,7 +19,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -76,7 +76,7 @@ func (sr *SearchReplace) Perform(resourcesPath string) error {
 	inout := &kio.LocalPackageReadWriter{
 		PackagePath:     resourcesPath,
 		NoDeleteFiles:   true,
-		PackageFileName: kptfile.KptFileName,
+		PackageFileName: kptfilev1alpha2.KptFileName,
 	}
 
 	if sr.ByValueRegex != "" {

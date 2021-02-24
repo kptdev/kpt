@@ -21,7 +21,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -162,7 +162,7 @@ func writePkg(path string) (*pkg, error) {
 		return nil, err
 	}
 	err = ioutil.WriteFile(filepath.Join(
-		dir, kptfile.KptFileName), []byte(`
+		dir, kptfilev1alpha2.KptFileName), []byte(`
 apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 `), 0600)

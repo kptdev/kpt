@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -66,7 +66,7 @@ func (m Merge3) Merge() error {
 		MatchFilesGlob:     m.MatchFilesGlob,
 		SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceDest},
 		IncludeSubpackages: m.IncludeSubPackages,
-		PackageFileName:    kptfile.KptFileName,
+		PackageFileName:    kptfilev1alpha2.KptFileName,
 	}
 	inputs = append(inputs, dest)
 
@@ -77,7 +77,7 @@ func (m Merge3) Merge() error {
 			MatchFilesGlob:     m.MatchFilesGlob,
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceOriginal},
 			IncludeSubpackages: m.IncludeSubPackages,
-			PackageFileName:    kptfile.KptFileName,
+			PackageFileName:    kptfilev1alpha2.KptFileName,
 		},
 		Exclusions: relPaths,
 	})
@@ -89,7 +89,7 @@ func (m Merge3) Merge() error {
 			MatchFilesGlob:     m.MatchFilesGlob,
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceUpdated},
 			IncludeSubpackages: m.IncludeSubPackages,
-			PackageFileName:    kptfile.KptFileName,
+			PackageFileName:    kptfilev1alpha2.KptFileName,
 		},
 		Exclusions: relPaths,
 	})
@@ -107,7 +107,7 @@ func (m Merge3) Merge() error {
 
 func (m Merge3) findExclusions() ([]string, error) {
 	var relPaths []string
-	paths, err := pathutil.DirsWithFile(m.DestPath, kptfile.KptFileName, true)
+	paths, err := pathutil.DirsWithFile(m.DestPath, kptfilev1alpha2.KptFileName, true)
 	if err != nil {
 		return relPaths, err
 	}

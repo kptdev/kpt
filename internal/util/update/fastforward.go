@@ -25,7 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -39,14 +39,14 @@ type FastForwardUpdater struct{}
 
 var kptfileSet = func() sets.String {
 	s := sets.String{}
-	s.Insert(kptfile.KptFileName)
+	s.Insert(kptfilev1alpha2.KptFileName)
 	return s
 }()
 
 // TODO(mortent): There is duplicate code between the different update strategies.
 // We should try to pull the common code up into the Update command.
 func (u FastForwardUpdater) Update(options UpdateOptions) error {
-	g := options.KptFile.Upstream.Git
+	g := options.KptFile.UpstreamLock.GitLock
 	g.Ref = options.ToRef
 	g.Repo = options.ToRepo
 
@@ -181,7 +181,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		// If the original package didn't have a Kptfile, one was created
 		// in local, but we don't consider that a change unless the user
 		// has made additional changes.
-		if d.Has(kptfile.KptFileName) && subPkgPath == "." {
+		if d.Has(kptfilev1alpha2.KptFileName) && subPkgPath == "." {
 			hasDiff, err := hasKfDiff(localSubPkgPath, originalSubPkgPath)
 			if err != nil {
 				return err
@@ -206,9 +206,9 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	localKf.Upstream = kptfile.Upstream{}
+	localKf.UpstreamLock = nil
 
-	_, err = os.Stat(filepath.Join(orgPath, kptfile.KptFileName))
+	_, err = os.Stat(filepath.Join(orgPath, kptfilev1alpha2.KptFileName))
 	if err != nil {
 		if os.IsNotExist(err) {
 			// We know that there aren't any Kptfile in the original
@@ -222,12 +222,10 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 		}
 		return false, err
 	}
-
 	orgKf, err := kptfileutil.ReadFile(orgPath)
 	if err != nil {
 		return false, err
 	}
-	orgKf.Upstream = kptfile.Upstream{}
 
 	orgKf.Name = localKf.Name
 	equal, err := kptfileutil.Equal(localKf, orgKf)
@@ -238,7 +236,7 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 	return !equal, nil
 }
 
-func isDefaultKptfile(localKf kptfile.KptFile, name string) (bool, error) {
+func isDefaultKptfile(localKf kptfilev1alpha2.KptFile, name string) (bool, error) {
 	defaultKf := kptfileutil.DefaultKptfile(name)
 	return kptfileutil.Equal(localKf, defaultKf)
 }

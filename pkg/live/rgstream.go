@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/klog"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
@@ -68,14 +68,14 @@ func (p *ResourceGroupStreamManifestReader) Read() ([]*unstructured.Unstructured
 	return objs, err
 }
 
-var kptFileTemplate = kptfile.KptFile{ResourceMeta: kptfile.TypeMeta}
+var kptFileTemplate = kptfilev1alpha2.KptFile{ResourceMeta: kptfilev1alpha2.TypeMeta}
 
 // isKptfile returns true if the passed resource config is a Kptfile; false otherwise
 func isKptfile(resource []byte) bool {
 	d := yaml.NewDecoder(bytes.NewReader(resource))
 	d.KnownFields(true)
 	if err := d.Decode(&kptFileTemplate); err == nil {
-		return kptFileTemplate.ResourceMeta.TypeMeta == kptfile.TypeMeta.TypeMeta
+		return kptFileTemplate.ResourceMeta.TypeMeta == kptfilev1alpha2.TypeMeta.TypeMeta
 	}
 	return false
 }
@@ -88,7 +88,7 @@ func transformKptfile(resource []byte) (*unstructured.Unstructured, error) {
 	if err := d.Decode(&kptFileTemplate); err != nil {
 		return nil, err
 	}
-	if kptFileTemplate.ResourceMeta.TypeMeta != kptfile.TypeMeta.TypeMeta {
+	if kptFileTemplate.ResourceMeta.TypeMeta != kptfilev1alpha2.TypeMeta.TypeMeta {
 		return nil, fmt.Errorf("invalid kptfile type: %s", kptFileTemplate.ResourceMeta.TypeMeta)
 	}
 	inv := kptFileTemplate.Inventory

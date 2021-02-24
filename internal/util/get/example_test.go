@@ -17,13 +17,13 @@ package get_test
 import (
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 )
 
 func ExampleCommand() {
-	err := get.Command{Git: kptfile.Git{
+	err := get.Command{GitLock: kptfilev1alpha2.GitLock{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "v1.0",
 	}}.Run()
@@ -33,7 +33,7 @@ func ExampleCommand() {
 }
 
 func ExampleCommand_branch() {
-	err := get.Command{Git: kptfile.Git{
+	err := get.Command{GitLock: kptfilev1alpha2.GitLock{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "refs/heads/v1.0",
 	}}.Run()
@@ -43,7 +43,7 @@ func ExampleCommand_branch() {
 }
 
 func ExampleCommand_tag() {
-	err := get.Command{Git: kptfile.Git{
+	err := get.Command{GitLock: kptfilev1alpha2.GitLock{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "refs/tags/v1.0",
 	}}.Run()
@@ -53,7 +53,7 @@ func ExampleCommand_tag() {
 }
 
 func ExampleCommand_commit() {
-	err := get.Command{Git: kptfile.Git{
+	err := get.Command{GitLock: kptfilev1alpha2.GitLock{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "8186bef8e5c0621bf80fa8106bd595aae8b62884",
 	}}.Run()
@@ -64,7 +64,7 @@ func ExampleCommand_commit() {
 
 func ExampleCommand_subdir() {
 	err := get.Command{
-		Git: kptfile.Git{
+		GitLock: kptfilev1alpha2.GitLock{
 			Repo:      "https://github.com/example-org/example-repo",
 			Ref:       "v1.0",
 			Directory: filepath.Join("path", "to", "package"),
@@ -77,7 +77,7 @@ func ExampleCommand_subdir() {
 
 func ExampleCommand_destination() {
 	err := get.Command{
-		Git: kptfile.Git{
+		GitLock: kptfilev1alpha2.GitLock{
 			Repo: "https://github.com/example-org/example-repo",
 			Ref:  "v1.0",
 		},

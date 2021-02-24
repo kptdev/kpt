@@ -26,13 +26,13 @@ import (
 type ReplaceUpdater struct{}
 
 func (u ReplaceUpdater) Update(options UpdateOptions) error {
-	options.KptFile.Upstream.Git.Ref = options.ToRef
-	options.KptFile.Upstream.Git.Repo = options.ToRepo
+	options.KptFile.UpstreamLock.GitLock.Ref = options.ToRef
+	options.KptFile.UpstreamLock.GitLock.Repo = options.ToRepo
 	return fetch.Command{
 		RepoSpec: &git.RepoSpec{
-			OrgRepo: options.KptFile.Upstream.Git.Repo,
-			Ref:     options.KptFile.Upstream.Git.Ref,
-			Path:    options.KptFile.Upstream.Git.Directory,
+			OrgRepo: options.KptFile.UpstreamLock.GitLock.Repo,
+			Ref:     options.KptFile.UpstreamLock.GitLock.Ref,
+			Path:    options.KptFile.UpstreamLock.GitLock.Directory,
 		},
 		Destination: options.AbsPackagePath,
 		Clean:       true,
