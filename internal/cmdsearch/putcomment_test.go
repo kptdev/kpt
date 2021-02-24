@@ -16,7 +16,7 @@ package cmdsearch
 
 var putPatternCases = []test{
 	{
-		name: "put pattern single setter",
+		name: "put comment single setter",
 		args: []string{"--by-value", "3", "--put-comment", "kpt-set: ${replicas}"},
 		input: `
 apiVersion: apps/v1
@@ -42,7 +42,7 @@ spec:
  `,
 	},
 	{
-		name: "put pattern group of setters",
+		name: "put comment group of setters",
 		args: []string{"--by-value", "nginx-deployment", "--put-comment", "kpt-set: ${image}-${kind}"},
 		input: `
 apiVersion: apps/v1
@@ -68,7 +68,67 @@ spec:
  `,
 	},
 	{
-		name: "put pattern by value",
+		name: "put comment array setter",
+		args: []string{"--by-path", "spec.images", "--put-comment", "kpt-set: ${image}"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  images: 
+  - nginx
+  - ubuntu
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: spec.images # kpt-set: ${image}
+value: [nginx, ubuntu]
+
+Mutated 1 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  images: # kpt-set: ${image}
+  - nginx
+  - ubuntu
+ `,
+	},
+	{
+		name: "put comment array setter flow style",
+		args: []string{"--by-path", "spec.images", "--put-comment", "kpt-set: ${image}"},
+		input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  images: [nginx, ubuntu]
+  non-matching-list: [foo, bar]
+ `,
+		out: `${baseDir}/${filePath}
+fieldPath: spec.images # kpt-set: ${image}
+value: [nginx, ubuntu]
+
+Mutated 1 field(s)
+`,
+		expectedResources: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  images: # kpt-set: ${image}
+  - nginx
+  - ubuntu
+  non-matching-list: [foo, bar]
+ `,
+	},
+	{
+		name: "put comment by value",
 		args: []string{"--by-value", "dev/my-project/nginx", "--put-comment", "kpt-set: ${env}/${project}/${name}"},
 		input: `
 apiVersion: apps/v1
