@@ -207,11 +207,11 @@ git push origin master
 Go through the [consumer guide] to consume the published package
 
 [kpt pkg get]: ../../../reference/pkg/get/
-[substitutions]: https://googlecontainertools.github.io/kpt/guides/producer/substitutions/
+[substitutions]: /guides/producer/substitutions/
 [git repo]: https://docs.github.com/en/enterprise/2.13/user/articles/creating-a-new-repository
-[set]: https://googlecontainertools.github.io/kpt/guides/consumer/set/
-[setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/
-[auto-setter]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters
-[cfg]: https://googlecontainertools.github.io/kpt/reference/cfg/
-[subpackage]: https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages
-[consumer guide]: https://googlecontainertools.github.io/kpt/guides/producer/subpackages/
+[set]: /guides/consumer/set/
+[setters]: /guides/producer/setters/
+[auto-setter]: /guides/producer/setters/#auto-setters
+[cfg]: /reference/cfg/
+[subpackage]: /concepts/packaging/#subpackages
+[consumer guide]: /guides/producer/subpackages/

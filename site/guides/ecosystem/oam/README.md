@@ -56,7 +56,7 @@ So release your OAM app only needs two steps.
 
 Using our [example repository](https://github.com/oam-dev/samples/tree/master/5.OAM_KPT_Demo/repository/) for this demo.
 
-You could fetch OAM app from remote Repository using [kpt pkg get](https://googlecontainertools.github.io/kpt/reference/pkg/get/).
+You could fetch OAM app from remote Repository using [kpt pkg get](/reference/pkg/get/).
 
 #### Command
 
@@ -120,11 +120,11 @@ Then our local sampleapp can be changed and sync with the remote app. For exampl
 kpt pkg update sampleapp@v0.1.0 --strategy=resource-merge
 ```
 
-Ref to [update section](https://googlecontainertools.github.io/kpt/guides/consumer/update/#commit-local-changes) of kpt for more details.
+Ref to [update section](/guides/consumer/update/#commit-local-changes) of kpt for more details.
 
 ### Parameter Setting
 
-[kpt setters](https://googlecontainertools.github.io/kpt/guides/consumer/set/) is a powerful feature which naturally matches to the idea of "separate concerns" design from OAM.
+[kpt setters](/guides/consumer/set/) is a powerful feature which naturally matches to the idea of "separate concerns" design from OAM.
 
 In Open Application Model, developers can claim certain fields in the application YAML as "configurable", so in the following workflow, operators (or the platform) will be allowed to modify these fields.
 
@@ -195,7 +195,7 @@ So in the sampleapp, we have one ApplicationConfiguration and one Component.
 
 ### Live apply
 
-kpt includes the next-generation **apply** commands developed out of the Kubernetes [cli-utils](https://github.com/kubernetes-sigs/cli-utils) repository as the [`kpt live apply`](https://googlecontainertools.github.io/kpt/reference/live/apply/) command.
+kpt includes the next-generation **apply** commands developed out of the Kubernetes [cli-utils](https://github.com/kubernetes-sigs/cli-utils) repository as the [`kpt live apply`](/reference/live/apply/) command.
 
 This means with `kpt live apply` command, we could wait for the controller reconcile.
 

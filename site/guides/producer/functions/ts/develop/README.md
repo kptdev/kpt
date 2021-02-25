@@ -298,7 +298,7 @@ npm run kpt:docker-build -- --tag=latest
 [Quickstart]: /guides/producer/functions/ts/quickstart/
 [download-kind]: https://github.com/kubernetes-sigs/kind/
 [VSCode]: https://code.visualstudio.com/
-[TS SDK API]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
+[TS SDK API]: -functions-sdk/api/
 [demo functions]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
 [run functions]: /guides/consumer/function/
 [functions concepts]: ../../../../../concepts/functions/

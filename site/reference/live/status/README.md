@@ -79,4 +79,4 @@ DIR | STDIN:
 ```
 <!--mdtogo-->
 
-[Inventory Template]: https://googlecontainertools.github.io/kpt/reference/live/apply/#prune
+[Inventory Template]: /reference/live/apply/#prune

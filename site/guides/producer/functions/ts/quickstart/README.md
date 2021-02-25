@@ -210,7 +210,7 @@ Currently supported platforms: amd64 Linux/Mac
 - Read the complete [Typescript Developer Guide].
 - Learn how to [run functions].
 
-[TS SDK API]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
+[TS SDK API]: -functions-sdk/api/
 [download-node]: https://nodejs.org/en/download/
 [install-docker]: https://docs.docker.com/engine/installation/
 [download-kpt]: ../../../../../installation/

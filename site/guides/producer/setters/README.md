@@ -526,4 +526,4 @@ grep '\- "d"' example.yaml
 {{% /hide %}}
 
 [openapi types]: https://swagger.io/docs/specification/data-models/data-types/
-[setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#setters
+[setters]: /concepts/setters/#setters

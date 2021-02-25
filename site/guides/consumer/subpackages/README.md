@@ -144,13 +144,13 @@ deployment.apps/wordpress created
 ```
 
 [kpt pkg get]: ../../../reference/pkg/get/
-[tree]: https://googlecontainertools.github.io/kpt/reference/cfg/tree/
-[count]: https://googlecontainertools.github.io/kpt/reference/cfg/count/
-[grep]: https://googlecontainertools.github.io/kpt/reference/cfg/grep/
-[cat]: https://googlecontainertools.github.io/kpt/reference/cfg/cat/
-[auto-setter]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters
-[subpackage]: https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages
-[setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/
-[set]: https://googlecontainertools.github.io/kpt/reference/cfg/set/
-[required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#marking-a-field-as-required
-[list-setters]: https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/
+[tree]: /reference/cfg/tree/
+[count]: /reference/cfg/count/
+[grep]: /reference/cfg/grep/
+[cat]: /reference/cfg/cat/
+[auto-setter]: /guides/producer/setters/#auto-setters
+[subpackage]: /concepts/packaging/#subpackages
+[setters]: /guides/producer/setters/
+[set]: /reference/cfg/set/
+[required setters]: /guides/producer/setters/#marking-a-field-as-required
+[list-setters]: /reference/cfg/list-setters/

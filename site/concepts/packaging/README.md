@@ -69,6 +69,6 @@ Here are the core principles around `subpackages` concept
    and the default value of `-R` flag might vary for each command)
 
 [source functions]: /concepts/functions/#source-function
-[update]: https://googlecontainertools.github.io/kpt/guides/consumer/update/
-[setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/
-[cfg]: https://googlecontainertools.github.io/kpt/reference/cfg/
+[update]: /guides/consumer/update/
+[setters]: /guides/producer/setters/
+[cfg]: /reference/cfg/
