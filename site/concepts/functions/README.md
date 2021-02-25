@@ -96,10 +96,10 @@ pipeline. Get detailed tutorials on how to use `kpt fn export` from the
 - Get a quickstart on writing functions from the [function producer docs].
 - Learn more ways of using the `kpt fn` command from the [reference] doc.
 
-[architecture influences]: ../architecture/#influences
-[sources catalog]: ../../guides/consumer/function/sources/
-[sinks catalog]: ../../guides/consumer/function/catalog/sinks/
+[architecture influences]: /concepts/architecture/#influences
+[sources catalog]: /guides/consumer/function/catalog/sources/
+[sinks catalog]: /guides/consumer/function/catalog/sinks/
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
-[Export a Workflow]: ../../guides/consumer/function/export/
-[function producer docs]: ../../guides/producer/functions/
-[reference]: ../../reference/fn/run/
+[Export a Workflow]: /guides/consumer/function/export/
+[function producer docs]: /guides/producer/functions/
+[reference]: /reference/fn/run/

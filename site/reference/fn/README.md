@@ -89,13 +89,13 @@ See the [Functions Developer Guide] for more on producing functions.
 - Find out how to structure a pipeline of functions from the
   [functions concepts] page.
 
-[Functions Developer Guide]: ../../guides/producer/functions/
-[Typescript SDK]: ../../guides/producer/functions/ts/
+[Functions Developer Guide]: /guides/producer/functions/
+[Typescript SDK]: /guides/producer/functions/ts/
 [sdk-ts-examples]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
-[Golang Libraries]: ../../guides/producer/functions/golang/
+[Golang Libraries]: /guides/producer/functions/golang/
 [golang-example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/set-namespace/
 [shell-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-heredoc-cockroachdb/image/cockroachdb-template.sh
-[Starlark SDK]: ../../guides/producer/functions/starlark/
+[Starlark SDK]: /guides/producer/functions/starlark/
 [starlark-example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/starlark/set_namespace.star
-[run functions]: ../../guides/consumer/function/
-[functions concepts]: ../../concepts/functions/
+[run functions]: /guides/consumer/function/
+[functions concepts]: /concepts/functions/

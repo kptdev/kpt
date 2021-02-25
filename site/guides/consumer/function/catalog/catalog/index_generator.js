@@ -15,11 +15,11 @@ function tableByType(type) {
         const source = `[Source](${r.source})`;
         let toolchain = ``;
         if (r.toolchain === "golang") {
-          toolchain = "[Go Library](../../../../producer/functions/golang/)";
+          toolchain = "[Go Library](/guides/producer/functions/golang/)";
         } else if (r.toolchain === "typescript") {
-          toolchain = "[Typescript SDK](../../../../producer/functions/ts/)";
+          toolchain = "[Typescript SDK](/guides/producer/functions/ts/)";
         } else if (r.toolchain === "starlark") {
-          toolchain = "[Starlark Runtime](../../../../producer/functions/starlark/)";
+          toolchain = "[Starlark Runtime](/guides/producer/functions/starlark/)";
         }
         t.push([r.image, r.args, desc, example, source, toolchain]);
     });
@@ -83,6 +83,6 @@ ${tableByType(name.toLowerCase())}
 
 - Learn more ways of using the kpt fn command from the [reference] doc.
 
-[reference]: ../../../../reference/fn/run/`;
+[reference]: /reference/fn/run/`;
 
 console.log(README);

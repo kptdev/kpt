@@ -24,11 +24,11 @@ orchestrators:
 
 *Unable to find support for your orchestrator? Please file an [Issue]/[Pull Request].*
 
-[GitHub Actions]: guides/consumer/function/github-actions/
-[GitLab CI]: guides/consumer/function/gitlab-ci/
-[Jenkins]: guides/consumer/function/jenkins/
-[Cloud Build]: guides/consumer/function/cloud-build/
-[CircleCI]: guides/consumer/function/circleci/
-[Tekton]: guides/consumer/function/tekton/
+[GitHub Actions]: /guides/consumer/function/export/github-actions/
+[GitLab CI]: /guides/consumer/function/export/gitlab-ci/
+[Jenkins]: /guides/consumer/function/export/jenkins/
+[Cloud Build]: /guides/consumer/function/export/cloud-build/
+[CircleCI]: /guides/consumer/function/export/circleci/
+[Tekton]: /guides/consumer/function/export/tekton/
 [Issue]: https://github.com/GoogleContainerTools/kpt/issues
 [Pull Request]: https://github.com/GoogleContainerTools/kpt/pulls

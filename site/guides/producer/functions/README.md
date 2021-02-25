@@ -160,14 +160,14 @@ results:
   [functions concepts] page.
 - Consult the [fn command reference].
 
-[Containers]: ../../../guides/producer/functions/container/
-[Starlark]: ../../../guides/producer/functions/starlark/
-[Exec]: ../../../guides/producer/functions/exec/
-[Go Fn Lib]: ../../../guides/producer/functions/golang/
-[TS SDK]: ../../../guides/producer/functions/ts/
-[`kpt fn source`]: ../../../reference/fn/source/
+[Containers]: /guides/producer/functions/container/
+[Starlark]: /guides/producer/functions/starlark/
+[Exec]: /guides/producer/functions/exec/
+[Go Fn Lib]: /guides/producer/functions/golang/
+[TS SDK]: /guides/producer/functions/ts/
+[`kpt fn source`]: /reference/fn/source/
 [`helm-template`]: https://gcr.io/kpt-functions/helm-template/
-[`kpt fn sink`]: ../../../reference/fn/sink/
+[`kpt fn sink`]: /reference/fn/sink/
 [run functions]: /guides/consumer/function/
-[functions concepts]: ../../../concepts/functions/
-[fn command reference]: ../../../reference/fn/
+[functions concepts]: /concepts/functions/
+[fn command reference]: /reference/fn/

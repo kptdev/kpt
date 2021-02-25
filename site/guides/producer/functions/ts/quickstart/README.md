@@ -210,10 +210,10 @@ Currently supported platforms: amd64 Linux/Mac
 - Read the complete [Typescript Developer Guide].
 - Learn how to [run functions].
 
-[TS SDK API]: -functions-sdk/api/
+[TS SDK API]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
 [download-node]: https://nodejs.org/en/download/
 [install-docker]: https://docs.docker.com/engine/installation/
-[download-kpt]: ../../../../../installation/
+[download-kpt]: /installation/
 [label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
 [validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts
 [expand-team-cr]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
