@@ -198,8 +198,8 @@ grep "image: gcr.io/kpt-dev/helloworld-gke:v0.2.0" helloworld/deploy.yaml
 See [setters] and [substitutions] for how to add or update them in the
 package [Kptfile].
 
-[Kptfile]: ../../../api-reference/kptfile/
-[kpt cfg set]: ../../../reference/cfg/set/
-[setters]: ../../../reference/cfg/create-setter/
-[substitutions]: ../../../reference/cfg/create-subst/
+[Kptfile]: /api-reference/kptfile/
+[kpt cfg set]: /reference/cfg/set/
+[setters]: /reference/cfg/create-setter/
+[substitutions]: /reference/cfg/create-subst/
 [create substitution guide]: /guides/producer/substitutions/

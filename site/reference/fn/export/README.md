@@ -62,4 +62,4 @@ OUTPUT_FILENAME:
 - Get detailed tutorials on how to use `kpt fn export` from the
   [Export a Workflow] guide.
 
-[Export a Workflow]: ../../../guides/consumer/function/export/
+[Export a Workflow]: /guides/consumer/function/export/

@@ -46,6 +46,6 @@ DIR:
 - Learn about [functions concepts] like sources, sinks, and pipelines.
 - See more examples of sink functions in the functions [catalog].
 
-[sink function]: ../../../concepts/functions/#sink-function
-[functions concepts]: ../../../concepts/functions/
-[catalog]: ../../../guides/consumer/function/catalog/sinks/
+[sink function]: /concepts/functions/#sink-function
+[functions concepts]: /concepts/functions/
+[catalog]: /guides/consumer/function/catalog/sinks/

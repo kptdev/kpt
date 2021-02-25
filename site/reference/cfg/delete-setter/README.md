@@ -50,4 +50,4 @@ NAME:
 
 ```
 
-[setters]: ../../../guides/producer/setters/#deleting-a-setter
+[setters]: /guides/producer/setters/#deleting-a-setter

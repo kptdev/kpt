@@ -206,7 +206,7 @@ git push origin master
 
 Go through the [consumer guide] to consume the published package
 
-[kpt pkg get]: ../../../reference/pkg/get/
+[kpt pkg get]: /reference/pkg/get/
 [substitutions]: /guides/producer/substitutions/
 [git repo]: https://docs.github.com/en/enterprise/2.13/user/articles/creating-a-new-repository
 [set]: /guides/consumer/set/

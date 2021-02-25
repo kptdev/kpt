@@ -112,13 +112,13 @@ A: [Please reach out!][contact]
 
 [kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
-[setters]: ../reference/cfg/set/
-[functions]: ../reference/fn/run/
-[source functions]: ../guides/consumer/function/catalog/sources/
-[Functions User Guide]: ../guides/consumer/function/
-[updating]: ../reference/pkg/update/
+[setters]: /reference/cfg/set/
+[functions]: /reference/fn/run/
+[source functions]: /guides/consumer/function/catalog/sources/
+[Functions User Guide]: /guides/consumer/function/
+[updating]: /reference/pkg/update/
 [gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
-[contact]: ../contact/
-[architecture]: ../concepts/architecture/
-[command reference]: ../reference/
-[guides]: ../guides/
+[contact]: /contact/
+[architecture]: /concepts/architecture/
+[command reference]: /reference/
+[guides]: /guides/

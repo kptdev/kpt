@@ -164,7 +164,7 @@ Once local changes are pushed, build again on Jenkins, then you can see how it f
 
 [Jenkins]: https://www.jenkins.io/
 [tutorial]: https://www.jenkins.io/doc/tutorials/
-[page]: ../../../../../guides/consumer/function/export/jenkins/creating_a_jenkins_instance_on_gcp
+[page]: /guides/consumer/function/export/jenkins/creating_a_jenkins_instance_on_gcp
 [Marketplace]: https://console.cloud.google.com/marketplace/browse?q=jenkins&filter=solution-type:vm&filter=price:free
 [agent]: https://www.jenkins.io/doc/book/glossary/#agent
 [install docker]: https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script

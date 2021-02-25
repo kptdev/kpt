@@ -298,6 +298,6 @@ grep "ref: v0.5.0" helloworld/Kptfile
 The updated local package contains *both* the upstream changes (new image tag),
 and local modifications (additional environment variable).
 
-[kpt pkg update]: ../../../reference/pkg/update/
-[update strategies]: ../../../reference/pkg/update/#flags
+[kpt pkg update]: /reference/pkg/update/
+[update strategies]: /reference/pkg/update/#flags
 [kubernetes examples]: https://github.com/kubernetes/examples

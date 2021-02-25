@@ -48,6 +48,6 @@ DIR:
 - Learn about [functions concepts] like sources, sinks, and pipelines.
 - See more examples of source functions in the functions [catalog].
 
-[source function]: ../../../concepts/functions/#source-function
-[functions concepts]: ../../../concepts/functions/
-[catalog]: ../../../guides/consumer/function/catalog/sources/
+[source function]: /concepts/functions/#source-function
+[functions concepts]: /concepts/functions/
+[catalog]: /guides/consumer/function/catalog/sources/

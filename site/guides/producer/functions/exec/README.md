@@ -79,5 +79,5 @@ ignore the exec function and exit 0.
 - Consult the [fn command reference].
 
 [Functions Developer Guide]: /guides/producer/functions/
-[functions concepts]: ../../../../concepts/functions/
-[fn command reference]: ../../../../reference/fn/
+[functions concepts]: /concepts/functions/
+[fn command reference]: /reference/fn/

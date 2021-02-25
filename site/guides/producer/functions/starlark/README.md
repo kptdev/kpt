@@ -137,6 +137,6 @@ Starlark scripts.
 - Consult the [fn command reference].
 
 [Starlark]: https://github.com/bazelbuild/starlark
-[Functions Developer Guide]: ../
-[functions concepts]: ../../../../concepts/functions/
-[fn command reference]: ../../../../reference/fn/
+[Functions Developer Guide]: /guides/producer/functions/
+[functions concepts]: /concepts/functions/
+[fn command reference]: /reference/fn/

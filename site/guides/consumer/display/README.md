@@ -215,8 +215,8 @@ metadata:
 ```
 
 [kubernetes examples]: https://github.com/kubernetes/examples
-[kpt cfg count]: ../../../reference/cfg/count/
-[kpt cfg tree]: ../../../reference/cfg/tree/
-[kpt cfg grep]: ../../../reference/cfg/grep/
-[kpt cfg cat]: ../../../reference/cfg/cat/
-[kpt pkg get]: ../../../reference/pkg/get/
+[kpt cfg count]: /reference/cfg/count/
+[kpt cfg tree]: /reference/cfg/tree/
+[kpt cfg grep]: /reference/cfg/grep/
+[kpt cfg cat]: /reference/cfg/cat/
+[kpt pkg get]: /reference/pkg/get/

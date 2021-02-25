@@ -112,4 +112,4 @@ VALUE
   that start with '-'
 ```
 
-[creating setters]: ../../../guides/producer/setters/
+[creating setters]: /guides/producer/setters/
