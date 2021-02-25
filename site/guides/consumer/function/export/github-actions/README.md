@@ -117,7 +117,7 @@ git push --set-upstream origin master
 
 Once the changes are committed and pushed, you can see the latest job on GitHub Actions like this:
 
-![img](/../../../../../static/images/fn-export/github-actions-result.png)
+![img](/static/images/fn-export/github-actions-result.png)
 
 ## Next step
 

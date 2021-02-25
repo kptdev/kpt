@@ -18,4 +18,4 @@ description: >
 - (Optional) Automation makes last-mile changes before pushing
 - Automation pushes by applying to a cluster
 
-![img](/../../static/images/consumer-guide.svg)
+![img](/static/images/consumer-guide.svg)

@@ -40,7 +40,7 @@ in this guide.
   - May be pushed from the local package copy (manual) or from the team repo
     (GitOps automation)
 
-![img](/../../../static/images/get-command.svg)
+![img](/static/images/get-command.svg)
 
 ## Steps
 

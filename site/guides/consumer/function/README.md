@@ -19,7 +19,7 @@ are reviewed before being committed to the repo. They can be run locally or as
 part of a CI/CD pipeline, or as pre-commit or post-commit steps to validate
 configurations before they are applied to a cluster.
 
-![img](../../../static/images/pipeline.png)
+![img](../static/images/pipeline.png)
 
 KPT offers multiple runtimes for configuration functions to run arbitrary
 actions on configuration. By default KPT runs configuration functions in a
@@ -29,7 +29,7 @@ actions on configuration. By default KPT runs configuration functions in a
 The image below details how a function adds the label `color: pink` to a
 package.
 
-![img](/../../../static/images/fn.svg)
+![img](/static/images/fn.svg)
 
 Functions can address many types of use cases, including:
 

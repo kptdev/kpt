@@ -7,4 +7,4 @@ description: >
     Guides for publishing configuration packages for others to consume.
 ---
 
-![img](/../../static/images/producer-guide.svg)
+![img](/static/images/producer-guide.svg)

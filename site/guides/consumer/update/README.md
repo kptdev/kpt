@@ -53,7 +53,7 @@ in this guide.
 - Commit the changes
 - Update the local package with upstream changes from a new version
 
-![img](/../../../static/images/update-command.svg)
+![img](/static/images/update-command.svg)
 
 ## Steps
 

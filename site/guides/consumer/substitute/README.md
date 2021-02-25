@@ -65,7 +65,7 @@ in this guide.
    the pattern.
 5. Write both the modified Kptfile and resources back to the package.
 
-![img](/../../../static/images/substitute-command.svg)
+![img](/static/images/substitute-command.svg)
 
 ## Steps
 

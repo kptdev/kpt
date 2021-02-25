@@ -23,7 +23,7 @@ embedded in other systems. For example, functions could be:
 - automatically run in CICD systems
 - run by controllers as reconcile implementations
 
-![img](/../../../static/images/fn.svg)
+![img](/static/images/fn.svg)
 
 {{% pageinfo color="primary" %}}
 Unlikely pure-templating and DSL approaches, functions must be able to both

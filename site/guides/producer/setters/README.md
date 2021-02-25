@@ -53,7 +53,7 @@ in this guide.
 3. Locate all fields which reference the setter and change their values.
 4. Write both the modified Kptfile and resources back to the package.
 
-![img](/../../../static/images/set-command.svg)
+![img](/static/images/set-command.svg)
 
 This guide walks you through an end-to-end example to create, invoke and delete setters.
 

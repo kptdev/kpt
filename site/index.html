@@ -20,6 +20,7 @@
     <script>
       window.$docsify = {
         name: "kpt",
+        nameLink: "https://kpt.dev",
         search: {
           maxAge: 43200000,
           placeholder: "Search",
@@ -49,6 +50,13 @@
           icon: "github",
         },
         routerMode: "history",
+        markdown: {
+          renderer: {
+            image: function (href, title) {
+              return `<img src="${href}" data-origin="${href}" alt="${title}">`;
+            },
+          },
+        },
         plugins: [
           function (hook, vm) {
             hook.beforeEach(function (content) {
