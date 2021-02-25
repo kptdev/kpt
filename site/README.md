@@ -1,58 +1,60 @@
-# Docsy Example
++++
+title = "Kpt"
+linkTitle = "Kpt"
 
-[Docsy](https://github.com/google/docsy) is a Hugo theme for technical documentation sites, providing easy site navigation, structure, and more. This **Docsy Example Project** uses the Docsy theme, as well as providing a skeleton documentation structure for you to use. You can either copy this project and edit it with your own content, or use the theme in your projects like any other [Hugo theme](https://gohugo.io/themes/installing-and-using-themes/).
++++
 
-This Docsy Example Project is hosted at [https://example.docsy.dev/](https://example.docsy.dev/).
+{{% blocks/lead color="primary" %}}
+### Overview
 
-You can find detailed theme instructions in the Docsy user guide: https://docsy.dev/docs/
+Kpt (pronounced “kept”) is an OSS tool for building declarative workflows
+on top of resource configuration.
 
-This is not an officially supported Google product. This project is currently maintained.
+Its git + YAML architecture means it just works with existing tools,
+frameworks, and platforms.
 
-## Cloning the Docsy Example Project
+Kpt includes solutions to fetch, display, customize, update, validate, and
+apply Kubernetes configuration.
 
-The following will give you a project that is set up and ready to use (don't forget to use `--recurse-submodules` or you won't pull down some of the code you need to generate a working site). The `hugo server` command builds and serves the site. If you just want to build the site, run `hugo` instead.
+{{% /blocks/lead %}}
 
-```bash
-git clone --recurse-submodules --depth 1 https://github.com/google/docsy-example.git
-cd docsy-example
-hugo server
-```
+{{< blocks/section color="light" >}}
+{{% blocks/feature icon="fa fa-download" title="Install" url="installation/" %}}
+### Installation
+[Install](installation/) via gcloud, homebrew, binaries or source.
+{{% /blocks/feature %}}
 
-The theme is included as a Git submodule:
+{{% blocks/feature icon="fab fa-github" title="Contribute" url="https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md" %}}
+### Contributing
+We use a pull request workflow on [**GitHub**](https://github.com/GoogleContainerTools/kpt/blob/master/CONTRIBUTING.md). New users are always welcome!
+{{% /blocks/feature %}}
 
-```bash
-▶ git submodule
- a053131a4ebf6a59e4e8834a42368e248d98c01d themes/docsy (heads/master)
-```
+{{< /blocks/section >}}
+### Features
 
-If you want to do SCSS edits and want to publish these, you need to install `PostCSS` (not needed for `hugo server`):
+{{< blocks/section color="dark" >}}
+{{% blocks/feature title="`kpt pkg`" url="reference/pkg/" %}}
+#### [kpt pkg](reference/pkg/)
+A packaging solution for resource configuration.
+Fetch and update configuration using git and YAML.
+{{% /blocks/feature %}}
 
-```bash
-npm install
-```
+{{% blocks/feature title="`kpt cfg`" url="reference/cfg/" %}}
+#### [kpt cfg](reference/cfg/)
+A cli UX layer on top of YAML
+Display and modify configuration files without ever dropping into an editor.
+{{% /blocks/feature %}}
 
-<!--### Cloning the Example from the Theme Project
+{{% blocks/feature title="`kpt live`" url="reference/live/" %}}
+#### [kpt live](reference/live/)
+The next-generation of apply with manifest based pruning and resource
+status.
+{{% /blocks/feature %}}
 
+{{% blocks/feature title="`kpt fn`" url="reference/fn/" %}}
+#### [kpt fn](reference/fn/)
+Extend the built-in capabilities of kpt by writing functions to generate,
+transform and validate configuration.
+{{% /blocks/feature %}}
 
-```bash
-git clone --recurse-submodules --depth 1 https://github.com/docsy.git
-cd tech-doc-hugo-theme/exampleSite
-HUGO_THEMESDIR="../.." hugo server
-```
-
-
-Note that the Hugo Theme Site requires the `exampleSite` to live in a subfolder of the theme itself. To avoid recursive duplication, the example site is added as a Git subtree:
-
-```bash
-git subtree add --prefix exampleSite https://github.com/google/docsy.git  master --squash
-```
-
-To pull in changes, see `pull-deps.sh` script in the theme.-->
-
-## Running the website locally
-
-Once you've cloned the site repo, from the repo root folder, run:
-
-```
-hugo server
-```
+{{< /blocks/section >}}
