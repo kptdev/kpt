@@ -45,6 +45,11 @@ func NewRunner(testCase TestCase, c string) (*Runner, error) {
 
 // Run runs the test.
 func (r *Runner) Run() error {
+	if r.testCase.Config.Skip {
+		fmt.Printf("Skipping test for package %s\n", r.pkgName)
+		return nil
+	}
+
 	if r.cmd == CommandFn {
 		return r.runFn()
 	}
