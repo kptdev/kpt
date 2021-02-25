@@ -1,0 +1,49 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: CheckSite
+on:
+  pull_request:
+    paths:
+      - "site/**"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: etefera/href-checker
+          ref: docsify
+          path: href-checker
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Install Site Checker
+        run: yarn install
+        working-directory: href-checker
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build Site
+        uses: docker/build-push-action@v2
+        with:
+          context: ./site
+          load: true
+          tags: kpt-site:latest
+      - name: Run Site
+        run: docker run -p 3000:80 -d kpt-site:latest 
+      - name: Run Site Checker
+        shell: bash
+        # Find all potential entrypoints (stripping out themes directory until it's removed) and check them for Docsify 404s.
+        run: find site -name README.md -printf "%P\n" | grep -v node_modules | grep -v themes | sed "s/README.md//" | sed "s/^/http:\/\/localhost:3000\//" | xargs -n1 sh -c '! (npx href-checker/ $0 --bad-content="404 - Not found" --silent --no-off-site -c=15 | grep .) || exit 255'
