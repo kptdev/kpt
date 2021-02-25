@@ -15,8 +15,8 @@
 package update
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
 // Updater updates a package to a new upstream version.
@@ -26,13 +26,16 @@ import (
 type ReplaceUpdater struct{}
 
 func (u ReplaceUpdater) Update(options UpdateOptions) error {
+	if options.KptFile.UpstreamLock == nil || options.KptFile.UpstreamLock.GitLock == nil {
+		return nil
+	}
 	options.KptFile.UpstreamLock.GitLock.Ref = options.ToRef
 	options.KptFile.UpstreamLock.GitLock.Repo = options.ToRepo
-	return fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: options.KptFile.UpstreamLock.GitLock.Repo,
-			Ref:     options.KptFile.UpstreamLock.GitLock.Ref,
-			Path:    options.KptFile.UpstreamLock.GitLock.Directory,
+	return get.Command{
+		GitLock: kptfilev1alpha2.GitLock{
+			Repo:      options.KptFile.UpstreamLock.GitLock.Repo,
+			Ref:       options.KptFile.UpstreamLock.GitLock.Ref,
+			Directory: options.KptFile.UpstreamLock.GitLock.Directory,
 		},
 		Destination: options.AbsPackagePath,
 		Clean:       true,
