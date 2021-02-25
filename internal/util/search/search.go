@@ -113,7 +113,42 @@ func (sr *SearchReplace) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 
 // visitMapping parses mapping node
 func (sr *SearchReplace) visitMapping(object *yaml.RNode, path string) error {
-	return nil
+	return object.VisitFields(func(node *yaml.MapNode) error {
+		// the aim of this method is to put-comment to sequence node matched --by-path
+		if node.Value.YNode().Kind != yaml.SequenceNode {
+			// return if it is not a sequence node
+			return nil
+		}
+
+		key, err := node.Key.String()
+		if err != nil {
+			return err
+		}
+
+		// pathToKey refers to the path address of the key node ex: metadata.annotations
+		// path is the path till parent node, pathToKey is obtained by appending child key
+		pathToKey := fmt.Sprintf("%s.%s", path, strings.TrimSpace(key))
+		if sr.pathMatch(strings.TrimPrefix(pathToKey, ".")) {
+			node.Key.YNode().LineComment = sr.PutComment
+			// change the style just to print the values to stdout e.g. [foo, bar]
+			node.Value.YNode().Style = yaml.FlowStyle
+			val, err := yaml.String(node.Value.YNode())
+			if err != nil {
+				return err
+			}
+
+			// change to folded style as it looks clean with comment in key node
+			node.Value.YNode().Style = yaml.FoldedStyle
+			res := SearchResult{
+				FilePath:  sr.filePath,
+				FieldPath: sr.ByPath + fmt.Sprintf(" # %s", sr.PutComment),
+				Value:     strings.TrimSpace(val),
+			}
+			sr.Result = append(sr.Result, res)
+			sr.Count++
+		}
+		return nil
+	})
 }
 
 // visitSequence parses sequence node
