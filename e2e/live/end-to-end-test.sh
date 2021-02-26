@@ -78,6 +78,8 @@ BUILD_DEPS_AT_HEAD=""
 # Default Kubernetes cluster version to run test against.
 K8S_VERSION=${DEFAULT_K8S_VERSION}
 
+HAS_TEST_FAILURE=0
+
 # Parse/validate parameters
 options="bk:"
 while getopts $options opt; do
@@ -225,6 +227,7 @@ function assertContains {
 	  touch $OUTPUT_DIR/errors
       fi
       echo "error: expected missing text \"${test_arg}\"" >> $OUTPUT_DIR/errors
+      HAS_TEST_FAILURE=1
   fi
 }
 
@@ -242,6 +245,7 @@ function assertNotContains {
 	  touch $OUTPUT_DIR/errors
       fi
       echo "error: unexpected text \"${test_arg}\" found" >> $OUTPUT_DIR/errors
+      HAS_TEST_FAILURE=1
   fi
 }
 
@@ -265,6 +269,7 @@ function assertCMInventory {
 	    touch $OUTPUT_DIR/errors
 	fi
 	echo "error: expected missing ConfigMap inventory object in ${ns} namespace" >> $OUTPUT_DIR/errors
+    HAS_TEST_FAILURE=1
     fi
 
     test 1 == $(grep $numInv $OUTPUT_DIR/numinv | wc -l);
@@ -276,6 +281,7 @@ function assertCMInventory {
 	    touch $OUTPUT_DIR/errors
 	fi
 	echo "error: expected ConfigMap inventory to have $numInv inventory items" >> $OUTPUT_DIR/errors
+    HAS_TEST_FAILURE=1
     fi
 }
 
@@ -296,6 +302,7 @@ function assertRGInventory {
 	    touch $OUTPUT_DIR/errors
 	fi
 	echo "error: expected missing ResourceGroup inventory in ${ns} namespace" >> $OUTPUT_DIR/errors
+    HAS_TEST_FAILURE=1
     fi
 }
 
@@ -318,6 +325,7 @@ function assertPodExists {
 	    touch $OUTPUT_DIR/errors
 	fi
 	echo "error: expected missing pod $namespace/$podName in ${namespace} namespace" >> $OUTPUT_DIR/errors
+    HAS_TEST_FAILURE=1
     fi
 }
 
@@ -340,6 +348,7 @@ function assertPodNotExists {
 	    touch $OUTPUT_DIR/errors
 	fi
 	echo "error: unexpected pod $namespace/$podName found in ${namespace} namespace" >> $OUTPUT_DIR/errors
+    HAS_TEST_FAILURE=1
     fi
 }
 
@@ -920,3 +929,5 @@ echo "Cleaning up cluster"
 kind delete cluster
 echo "FINISHED"
 
+# Return error code if tests have failed
+exit $HAS_TEST_FAILURE
