@@ -44,6 +44,9 @@ func runPipelineTests(t *testing.T, path string) {
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}
+			if r.Skip() {
+				t.Skip()
+			}
 			err = r.Run()
 			if err != nil {
 				t.Fatalf("failed when running test: %s", err)

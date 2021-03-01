@@ -5,4 +5,4 @@ metadata:
 pipeline:
   mutators:
   - image: gcr.io/kpt-fn/set-namespace:unstable
-    configPath: configMap.yaml
+    configPath: configmap.yaml # configmap.yaml doesn't exist
