@@ -1,18 +1,38 @@
 name: "Kpt Live - KinD Tests"
+
 on:
-  - workflow_dispatch
+  push:
+    branches:
+      - master
+      - next
+    paths-ignore: # do not run these tests when only changes to documentation are detected
+      - 'docs/**'
+      - 'site/**'
+  pull_request:
+    branches:
+      - master
+      - next
+    paths-ignore:
+      - 'docs/**'
+      - 'site/**'
 
 jobs:
   kind:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [ 1.16, 1.17 ]
     steps:
       - uses: actions/checkout@master
       # Pinned to Commit to ensure action is consistent: https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
       # If you upgrade this version confirm the changes match your expectations
-      - uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
+      - name: Install KinD
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
         with:
           version: "v0.9.0"
           skipClusterCreation: true
       - name: Run Tests
+        env:
+          K8S_VERSION: ${{ matrix.version }}
         run: |
-          ./e2e/live/end-to-end-test.sh
+          ./e2e/live/end-to-end-test.sh -k $K8S_VERSION
