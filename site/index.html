@@ -65,14 +65,16 @@
               // title: Page Title
               // +++
               titleBlock = /^[\+\-]{3}[\s\S]*^[\+\-]{3}$/m;
-              hugoDirectives = /{{.*}}/g;
+              hugoHideDirectives =/{{% hide %}}.+?{{% \/hide %}}/gms;
+              hugoDirectiveTags = /{{.*}}/g;
               titleMatch = content.match(/title:\s*["'](.*)["']/);
 
               titleHeading = titleMatch ? "# " + titleMatch[1] : "";
 
               content = content
                 .replace(titleBlock, titleHeading)
-                .replace(hugoDirectives, "");
+                .replace(hugoHideDirectives, "")
+                .replace(hugoDirectiveTags, "");
               return content;
             });
           },
