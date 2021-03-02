@@ -14,6 +14,7 @@ type TestCaseConfig struct {
 	ExitCode int  `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
 	Network  bool `json:"network,omitempty" yaml:"network,omitempty"`
 	RunCount int  `json:"runCount,omitempty" yaml:"runCount,omitempty"`
+	Skip     bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 }
 
 func newTestCaseConfig(path string) (TestCaseConfig, error) {
@@ -25,6 +26,7 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 			ExitCode: 0,
 			Network:  false,
 			RunCount: 1,
+			Skip:     false,
 		}, nil
 	}
 	if err != nil {

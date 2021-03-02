@@ -146,6 +146,12 @@ func (r *Runner) runPipeline() error {
 	for i := 0; i < r.testCase.Config.RunCount; i++ {
 		command.SetArgs(kptArgs)
 		fnErr = command.Execute()
+		if fnErr != nil {
+			if r.testCase.Config.ExitCode != 0 {
+				return nil
+			}
+			break
+		}
 	}
 
 	// run formatter
@@ -213,6 +219,10 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 			actual, expected.Diff)
 	}
 	return nil
+}
+
+func (r *Runner) Skip() bool {
+	return r.testCase.Config.Skip
 }
 
 func readActualResults(resultsPath string) (string, error) {
