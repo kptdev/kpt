@@ -21,7 +21,10 @@ require (
 	k8s.io/client-go v0.18.10
 	k8s.io/klog v1.0.0
 	k8s.io/kubectl v0.18.10
-	sigs.k8s.io/cli-utils v0.23.2
-	sigs.k8s.io/kustomize/cmd/config v0.8.9
-	sigs.k8s.io/kustomize/kyaml v0.10.9
+	sigs.k8s.io/cli-utils v0.23.5
+	sigs.k8s.io/kustomize/cmd/config v0.9.5
+	sigs.k8s.io/kustomize/kyaml v0.10.13
 )
+
+// Fix for issue: https://github.com/ory/dockertest/issues/208#issuecomment-686820414
+replace golang.org/x/sys => golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6
