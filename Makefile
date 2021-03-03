@@ -92,3 +92,6 @@ servedocs:
 
 verify-guides:
 	./scripts/verifyGuides.sh
+
+verify-examples:
+	./scripts/verifyExamples.sh
