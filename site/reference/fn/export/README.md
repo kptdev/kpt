@@ -15,14 +15,33 @@ configurations.
 
 ### Examples
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR/
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
 
+<!-- @fnExport @verifyExamples-->
 ```sh
 # read functions from DIR, run them against it as one step.
 # write the generated GitHub Actions pipeline to main.yaml.
 kpt fn export DIR/ --output main.yaml --workflow github-actions
 ```
 
+<!-- @fnExport @verifyExamples-->
 ```sh
 # discover functions in FUNCTIONS_DIR and run them against resource in DIR.
 # write the generated Cloud Build pipeline to stdout.
