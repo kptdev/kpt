@@ -34,10 +34,10 @@ jobs:
         run: |
           GOPATH=$(go env GOPATH) go get github.com/monopole/mdrip
           GOPATH=$(go env GOPATH) go get sigs.k8s.io/kind@v0.8.1
-      - run: |
+      - name: Verify Guides
+        run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
-      - name: Verify Guides
-        run: make verify-guides
+          make verify-guides
       - name: Verify Examples
         run: make verify-examples
