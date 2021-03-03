@@ -117,7 +117,6 @@ using `kpt set`.
 
 {{% hide %}}
 
-<!-- @verifyListSetters @verifyGuides-->
 ```
 # Verify that we find the expected setters.
 kpt cfg list-setters helloworld/ | tr -s ' ' | grep "http-port 80 package-default helloworld port 3 No"
