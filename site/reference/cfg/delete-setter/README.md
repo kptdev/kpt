@@ -39,12 +39,6 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR
 {{% /hide %}}
 
 <!--mdtogo:Examples-->
-<!-- @cfgDeleteSetter @verifyExamples-->
-```sh
-# delete a setter replicas
-kpt cfg delete-setter DIR/ replicas
-```
-
 <!--mdtogo-->
 
 ### Synopsis

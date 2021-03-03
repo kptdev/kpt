@@ -37,11 +37,6 @@ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR
 ```
 
-<!-- @cfgCreateSetter @verifyExamples-->
-```sh
-kpt cfg delete-setter DIR/ replicas
-```
-
 {{% /hide %}}
 
 <!--mdtogo:Examples-->
