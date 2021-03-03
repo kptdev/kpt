@@ -39,6 +39,23 @@ field paths.
 
 ### Examples
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
 
 ```sh
@@ -46,11 +63,13 @@ field paths.
 kpt cfg fmt file1.yaml file2.yml
 ```
 
+<!-- @cfgFmt @verifyExamples-->
 ```sh
 # format all *.yaml and *.yml recursively traversing directories
 kpt cfg fmt my-dir/
 ```
 
+<!-- @cfgFmt @verifyExamples-->
 ```sh
 # format kubectl output
 kubectl get -o yaml deployments | kpt cfg fmt

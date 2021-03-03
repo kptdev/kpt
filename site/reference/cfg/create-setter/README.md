@@ -22,29 +22,83 @@ See the [creating setters] guide for more info on creating setters.
 
 ### Examples
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR
+```
+
+<!-- @cfgCreateSetter @verifyExamples-->
+```sh
+kpt cfg delete-setter DIR/ replicas
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
 
+<!-- @cfgCreateSetter @verifyExamples-->
 ```sh
 # create a setter called replicas for fields matching value "3"
 kpt cfg create-setter DIR/ replicas 3
 ```
 
+{{% hide %}}
+
+<!-- @cfgCreateSetter @verifyExamples-->
+```sh
+kpt cfg delete-setter DIR/ replicas
+```
+
+{{% /hide %}}
+
+<!-- @cfgCreateSetter @verifyExamples-->
 ```sh
 # scope creating setter references to a specified field
 kpt cfg create-setter DIR/ replicas 3 --field "replicas"
 ```
 
+{{% hide %}}
+
+<!-- @cfgCreateSetter @verifyExamples-->
+```sh
+kpt cfg delete-setter DIR/ replicas
+```
+
+{{% /hide %}}
+
+<!-- @cfgCreateSetter @verifyExamples-->
 ```sh
 # scope creating setter references to a specified field path
 kpt cfg create-setter DIR/ replicas 3 --field "spec.replicas"
 ```
 
+{{% hide %}}
+
+<!-- @cfgCreateSetter @verifyExamples-->
+```sh
+kpt cfg delete-setter DIR/ replicas
+```
+
+{{% /hide %}}
+
+<!-- @cfgCreateSetter @verifyExamples-->
 ```sh
 # create a setter called replicas with a description and set-by
 kpt cfg create-setter DIR/ replicas 3 --set-by "package-default" \
     --description "good starter value"
 ```
 
+<!-- @cfgCreateSetter @verifyExamples-->
 ```sh
 # scope create a setter with a type.  the setter will make sure the set fields
 # always parse as strings with a yaml 1.1 parser (e.g. values such as 1,on,true

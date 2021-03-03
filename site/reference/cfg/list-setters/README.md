@@ -24,7 +24,27 @@ See [create-setter] and [create-subst] for how setters and substitutions
 are defined in a Kptfile.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+
+<!-- @cfgListSetters @verifyExamples-->
 ```sh
 # list the setters in the hello-world package
 kpt cfg list-setters hello-world/

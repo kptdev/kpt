@@ -28,7 +28,6 @@ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
 ```
 
-
 {{% /hide %}}
 
 <!--mdtogo:Examples-->

@@ -20,23 +20,44 @@ read annotations to configure their behavior.
 
 ### Examples
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
 
+<!-- @cfgAnnotate @verifyExamples-->
 ```sh
 # set an annotation on all Resources: 'key: value'
 kpt cfg annotate DIR --kv key=value
 ```
 
+<!-- @cfgAnnotate @verifyExamples-->
 ```sh
 # set an annotation on all Service Resources
 kpt cfg annotate DIR --kv key=value --kind Service
 ```
 
+<!-- @cfgAnnotate @verifyExamples-->
 ```sh
 # set an annotation on the foo Service Resource only
 kpt cfg annotate DIR --kv key=value --kind Service --name foo
 ```
 
+<!-- @cfgAnnotate @verifyExamples-->
 ```sh
 # set multiple annotations
 kpt cfg annotate DIR --kv key1=value1 --kv key2=value2

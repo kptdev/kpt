@@ -21,23 +21,44 @@ be piped to other commands such as `kpt cfg tree` for display.
 
 ### Examples
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
 
+<!-- @cfgGrep @verifyExamples-->
 ```sh
 # find Deployment Resources
 kpt cfg grep "kind=Deployment" my-dir/
 ```
 
+<!-- @cfgGrep @verifyExamples-->
 ```sh
 # find Resources named nginx
 kpt cfg grep "metadata.name=nginx" my-dir/
 ```
 
+<!-- @cfgGrep @verifyExamples-->
 ```sh
 # use tree to display matching Resources
 kpt cfg grep "metadata.name=nginx" my-dir/ | kpt cfg tree
 ```
 
+<!-- @cfgGrep @verifyExamples-->
 ```sh
 # look for Resources matching a specific container image
 kpt cfg grep "spec.template.spec.containers[name=nginx].image=nginx:1\.7\.9" \
