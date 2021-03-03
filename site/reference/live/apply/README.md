@@ -220,17 +220,48 @@ The status for this resource state will be InProgress. So if the
 the `Reconciling` condition is `False` before pruning and exiting.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
+```
+
+<!-- @createKindCluster @verifyExamples-->
+```
+kind delete cluster && kind create cluster
+```
+
+<!-- @initCluster @verifyExamples-->
+```
+kpt live init my-dir
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+<!-- @liveApply @verifyExamples-->
 ```sh
 # apply resources and prune
 kpt live apply my-dir/
 ```
 
+<!-- @liveApply @verifyExamples-->
 ```sh
 # apply resources and wait for all the resources to be reconciled before pruning
 kpt live apply --reconcile-timeout=15m my-dir/
 ```
 
+<!-- @liveApply @verifyExamples-->
 ```sh
 # apply resources and specify how often to poll the cluster for resource status
 kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir/

@@ -16,7 +16,37 @@ those resources for their status until either an exit criteria has been met
 or the process is cancelled.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-app
+```
+
+<!-- @createKindCluster @verifyExamples-->
+```
+kind delete cluster && kind create cluster
+```
+
+<!-- @initCluster @verifyExamples-->
+```
+kpt live init my-app
+kpt live apply my-app
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+<!-- @liveStatus @verifyExamples-->
 ```sh
 # Monitor status for a set of resources based on manifests. Wait until all
 # resources have reconciled.
@@ -28,6 +58,7 @@ kpt live status my-app/
 kpt live status my-app/ --poll-until=forever --output=table
 ```
 
+<!-- @liveStatus @verifyExamples-->
 ```sh
 # Check status for a set of resources read from stdin with output in events format
 kpt cfg cat my-app | kpt live status
