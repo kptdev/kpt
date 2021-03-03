@@ -74,7 +74,12 @@ cd $TEST_HOME
 <!-- @fetchPackage @verifyExamples-->
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
+```
+
+<!-- @cfgSet @verifyExamples-->
+```sh
+kpt cfg create-setter hello-world/ tag 1.0.1
 ```
 
 {{% /hide %}}

@@ -48,7 +48,8 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
 ```sh
 # list the setters in the hello-world package
 kpt cfg list-setters hello-world/
-
+```
+```
   NAME     VALUE    SET BY    DESCRIPTION   COUNT  
 replicas   4       isabella   good value    1
 ```
