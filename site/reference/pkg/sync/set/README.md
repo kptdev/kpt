@@ -49,7 +49,7 @@ kpt pkg sync .
 
 #### Update an existing package dependency
 
-<!-- @pkgSyncSet @verifyExamples-->
+<!-- @pkgSyncSet @verifyStaleExamples-->
 ```sh
 # add a dependency to an existing package
 kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \

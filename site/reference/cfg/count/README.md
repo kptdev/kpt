@@ -42,7 +42,7 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
 kpt cfg count my-dir/
 ```
 
-<!-- @cfgCat @verifyExamples-->
+<!-- @cfgCat @verifyStaleExamples-->
 ```sh
 # print Resource counts from a cluster
 kubectl get all -o yaml | kpt cfg count

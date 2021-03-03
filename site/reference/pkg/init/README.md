@@ -44,7 +44,7 @@ cd $TEST_HOME
 
 <!--mdtogo:Examples-->
 
-<!-- @pkgInit @verifyExamples-->
+<!-- @pkgInit @verifyStaleExamples-->
 ```sh
 # writes Kptfile package meta if not found
 mkdir my-pkg

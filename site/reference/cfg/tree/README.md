@@ -67,20 +67,20 @@ kpt cfg tree my-dir/ --all
 kpt cfg tree my-dir/ --field "metadata.annotations.foo"
 ```
 
-<!-- @cfgTree @verifyExamples-->
+<!-- @cfgTree @verifyStaleExamples-->
 ```sh
 # print the status of resources with status.condition type of "Completed"
 kubectl get all -o yaml | kpt cfg tree \
   --field="status.conditions[type=Completed].status"
 ```
 
-<!-- @cfgTree @verifyExamples-->
+<!-- @cfgTree @verifyStaleExamples-->
 ```sh
 # print live Resources from a cluster using owners for graph structure
 kubectl get all -o yaml | kpt cfg tree --replicas --name --image
 ```
 
-<!-- @cfgTree @verifyExamples-->
+<!-- @cfgTree @verifyStaleExamples-->
 ```sh
 # print live Resources with status condition fields
 kubectl get all -o yaml | kpt cfg tree \

@@ -80,6 +80,7 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
 <!-- @cfgSet @verifyExamples-->
 ```sh
 kpt cfg create-setter hello-world/ tag 1.0.1
+kpt cfg create-setter hello-world/ replicas 4
 ```
 
 {{% /hide %}}

@@ -69,7 +69,7 @@ kpt cfg fmt file1.yaml file2.yml
 kpt cfg fmt my-dir/
 ```
 
-<!-- @cfgFmt @verifyExamples-->
+<!-- @cfgFmt @verifyStaleExamples-->
 ```sh
 # format kubectl output
 kubectl get -o yaml deployments | kpt cfg fmt

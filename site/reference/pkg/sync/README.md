@@ -45,7 +45,7 @@ cd hello-world
 {{% /hide %}}
 
 <!--mdtogo:Examples-->
-<!-- @pkgSync @verifyExamples-->
+<!-- @pkgSync @verifyStaleExamples-->
 ```sh
 # print the dependencies that would be modified
 kpt pkg sync . --dry-run
