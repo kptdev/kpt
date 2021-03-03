@@ -15,11 +15,11 @@
 name: VerifyContent
 on:
   push:
-    paths:
-      - "site/**"
   pull_request:
     paths:
       - "site/**"
+      - "commands/**"
+      - "internals/**"
 jobs:
   build:
     runs-on: ubuntu-latest

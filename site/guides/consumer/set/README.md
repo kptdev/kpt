@@ -117,6 +117,14 @@ using `kpt set`.
 
 {{% hide %}}
 
+<!-- @verifyListSetters @verifyGuides-->
+```sh
+kpt cfg create-setter helloworld/ replicas 5 --set-by=package-default --description="helloworld replicas"
+kpt cfg create-setter helloworld/ http-port 80 --set-by=package-default --description="helloworld port"
+kpt cfg create-setter helloworld/ image-tag v0.1.0 --set-by=package-default --description="helloworld image tag" 
+```
+
+<!-- @verifyListSetters @verifyGuides-->
 ```
 # Verify that we find the expected setters.
 kpt cfg list-setters helloworld/ | tr -s ' ' | grep "http-port 80 package-default helloworld port 3 No"
