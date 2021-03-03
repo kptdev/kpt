@@ -105,16 +105,6 @@ Print the list of setters included in the package.
 
 ### List Output
 
-```sh
-    NAME      VALUE        SET BY            DESCRIPTION        COUNT
-  http-port   80       package-default   helloworld port        3
-  image-tag   v0.1.0   package-default   helloworld image tag   1
-  replicas    5        package-default   helloworld replicas    1
-```
-
-The package contains 3 setters which may be used to modify the configuration
-using `kpt set`.
-
 {{% hide %}}
 
 <!-- @verifyListSetters @verifyGuides-->
@@ -128,11 +118,21 @@ kpt cfg create-setter helloworld/ image-tag v0.1.0 --set-by=package-default --de
 ```
 # Verify that we find the expected setters.
 kpt cfg list-setters helloworld/ | tr -s ' ' | grep "http-port 80 package-default helloworld port 3 No"
-kpt cfg list-setters helloworld/ | tr -s ' ' | grep "image-tag v0.1.0 package-default helloworld image tag 1 No"
+kpt cfg list-setters helloworld/ | tr -s ' ' | grep "image-tag v0.1.0 package-default helloworld image tag 0 No"
 kpt cfg list-setters helloworld/ | tr -s ' ' | grep "replicas 5 package-default helloworld replicas 1 No"
 ```
 
 {{% /hide %}}
+
+```sh
+    NAME      VALUE        SET BY            DESCRIPTION        COUNT
+  http-port   80       package-default   helloworld port        3
+  image-tag   v0.1.0   package-default   helloworld image tag   0
+  replicas    5        package-default   helloworld replicas    1
+```
+
+The package contains 3 setters which may be used to modify the configuration
+using `kpt set`.
 
 ## Set a field
 
