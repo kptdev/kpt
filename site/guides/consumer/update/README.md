@@ -9,7 +9,7 @@ description: >
 
 {{% hide %}}
 
-<!-- @makeWorkplace @verifyGuides-->
+<!-- @makeWorkplace @verifyStaleGuides-->
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
@@ -77,7 +77,7 @@ updated to later versions by merging in upstream changes.
 
 ### Initialize local Repository
 
-<!-- @InitRepo @verifyGuides-->
+<!-- @InitRepo @verifyStaleGuides-->
 ```sh
 mkdir workspace
 cd workspace
@@ -86,7 +86,7 @@ git init
 
 ### Fetch Command
 
-<!-- @fetchPackage @verifyGuides-->
+<!-- @fetchPackage @verifyStaleGuides-->
 ```sh
 export REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $REPO/package-examples/helloworld-set@v0.3.0 helloworld
@@ -112,7 +112,7 @@ resolved to the tag `v0.3.0`.
 
 ### Commit Local Repository 1st Version
 
-<!-- @commitLocalRepository @verifyGuides-->
+<!-- @commitLocalRepository @verifyStaleGuides-->
 ```sh
 git add .
 git commit -m "init"
@@ -143,7 +143,7 @@ vi helloworld/deploy.yaml
 
 {{% hide %}}
 
-<!-- @updateLocalPackage @verifyGuides-->
+<!-- @updateLocalPackage @verifyStaleGuides-->
 ```
 # Update the local package
 cat <<EOF >> helloworld/deploy.yaml
@@ -181,7 +181,7 @@ kpt will throw an error if trying to update a package and the git repo
 has uncommitted changes.
 {{% /pageinfo %}}
 
-<!-- @commitLocalChanges @verifyGuides-->
+<!-- @commitLocalChanges @verifyStaleGuides-->
 ```sh
 git add .
 git commit -m "local package edits"
@@ -194,7 +194,7 @@ specified version and applying the upstream changes to the local package.
 
 ### Merge Command
 
-<!-- @mergeUpdates @verifyGuides-->
+<!-- @mergeUpdates @verifyStaleGuides-->
 ```sh
 kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 ```
@@ -286,7 +286,7 @@ The Kptfile was updated with the new upstream metadata.
 
 {{% hide %}}
 
-<!-- @verifyUpdate @verifyGuides-->
+<!-- @verifyUpdate @verifyStaleGuides-->
 ```
 grep "helloworld-gke:v0.3.0" helloworld/deploy.yaml
 grep "name: NEW_ENV" helloworld/deploy.yaml
