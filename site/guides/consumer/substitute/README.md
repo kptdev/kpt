@@ -129,7 +129,6 @@ kpt cfg list-setters helloworld/ --include-subst
 
 {{% hide %}}
 
-<!-- @verifyListSubst @verifyGuides-->
 ```
 # Verify that we get the expected output
 kpt cfg list-setters helloworld/ --include-subst | tr -s ' ' | grep "image-tag gcr.io/kpt-dev/helloworld-gke:IMAGE_TAG_SETTER \[image-tag\]"
@@ -156,7 +155,6 @@ metadata:
 
 ### Command
 
-<!-- @setImageTag @verifyGuides-->
 ```sh
  kpt cfg set helloworld/ image-tag v0.2.0
 ```
@@ -185,7 +183,6 @@ metadata:
 
 {{% hide %}}
 
-<!-- @verifySubst @verifyGuides-->
 ```
 # Verify that the sustitution was updated
 grep "image: gcr.io/kpt-dev/helloworld-gke:v0.2.0" helloworld/deploy.yaml
