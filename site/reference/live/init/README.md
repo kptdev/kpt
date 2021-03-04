@@ -19,12 +19,46 @@ The template resource is required by other live commands
 such as apply, preview and destroy.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
+```
+
+<!-- @createKindCluster @verifyExamples-->
+```
+kind delete cluster && kind create cluster
+```
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+
+<!-- @liveInit @verifyExamples-->
 ```sh
 # initialize a package
 kpt live init my-dir/
 ```
 
+{{% hide %}}
+
+<!-- @removeInventoryTemplate @verifyExamples-->
+```sh
+rm my-dir/inventory-template.yaml
+```
+
+{{% /hide %}}
+
+<!-- @liveInit @verifyExamples-->
 ```sh
 # initialize a package with a specific name for the group of resources
 kpt live init --namespace=test my-dir/

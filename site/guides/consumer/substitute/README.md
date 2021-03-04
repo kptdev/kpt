@@ -9,7 +9,7 @@ description: >
 
 {{% hide %}}
 
-<!-- @makeWorkplace @verifyGuides-->
+<!-- @makeWorkplace @verifyStaleGuides-->
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
@@ -77,7 +77,7 @@ in this guide.
 
 ### Fetch Command
 
-<!-- @fetchPackage @verifyGuides-->
+<!-- @fetchPackage @verifyStaleGuides-->
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.3.0 helloworld
@@ -129,7 +129,7 @@ kpt cfg list-setters helloworld/ --include-subst
 
 {{% hide %}}
 
-<!-- @verifyListSubst @verifyGuides-->
+<!-- @verifyListSubst @verifyStaleGuides-->
 ```
 # Verify that we get the expected output
 kpt cfg list-setters helloworld/ --include-subst | tr -s ' ' | grep "image-tag gcr.io/kpt-dev/helloworld-gke:IMAGE_TAG_SETTER \[image-tag\]"
@@ -156,7 +156,7 @@ metadata:
 
 ### Command
 
-<!-- @setImageTag @verifyGuides-->
+<!-- @setImageTag @verifyStaleGuides-->
 ```sh
  kpt cfg set helloworld/ image-tag v0.2.0
 ```
@@ -185,7 +185,7 @@ metadata:
 
 {{% hide %}}
 
-<!-- @verifySubst @verifyGuides-->
+<!-- @verifySubst @verifyStaleGuides-->
 ```
 # Verify that the sustitution was updated
 grep "image: gcr.io/kpt-dev/helloworld-gke:v0.2.0" helloworld/deploy.yaml

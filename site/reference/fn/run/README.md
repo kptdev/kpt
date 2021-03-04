@@ -41,6 +41,22 @@ DIR:
 
 ## Examples
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyStaleExamples-->
+```sh
+kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/mutators/set-label/simple@b7f2350 DIR/
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
 
 ```sh
@@ -59,6 +75,7 @@ kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 ```
 
+<!-- @fnRun @verifyStaleExamples-->
 ```sh
 # discover functions in DIR and run them against Resource in DIR.
 # functions may be scoped to a subset of Resources -- see `kpt help fn run`

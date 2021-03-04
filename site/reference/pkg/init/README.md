@@ -30,7 +30,21 @@ Init will:
 * Create a README.md for package documentation if it doesn't exist.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+
+<!-- @pkgInit @verifyStaleExamples-->
 ```sh
 # writes Kptfile package meta if not found
 mkdir my-pkg

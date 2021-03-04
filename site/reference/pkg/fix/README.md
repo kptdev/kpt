@@ -15,13 +15,41 @@ and fixes any deprecated feature traces.
 ### Examples
 
 #### Example fix commands
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
+cd hello-world
+```
+
+<!-- @initializeGit @verifyExamples-->
+```sh
+git init
+git add .
+git commit -m "Initialization"
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+<!-- @pkgFix @verifyExamples-->
 ```sh
 # print the fixes which will be made to the package without actually modifying
 # resources
 kpt pkg fix . --dry-run
 ```
 
+<!-- @pkgFix @verifyExamples-->
 ```sh
 # fix the package if it is using deprecated features
 kpt pkg fix .

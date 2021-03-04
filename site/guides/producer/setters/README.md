@@ -10,7 +10,7 @@ description: >
 
 {{% hide %}}
 
-<!-- @makeWorkplace @verifyGuides-->
+<!-- @makeWorkplace @verifyStaleGuides-->
 
 ```
 # Set up workspace for the test.
@@ -27,7 +27,7 @@ not exist for the package, run `kpt pkg init DIR/` to create one.
 
 {{% hide %}}
 
-<!-- @createKptfile @verifyGuides-->
+<!-- @createKptfile @verifyStaleGuides-->
 
 ```
 kpt pkg init .
@@ -76,7 +76,7 @@ command will:
 1. create a new OpenAPI definition for a setter in the Kptfile
 2. create references to the setter definition on the resource fields
 
-<!-- @createResource @verifyGuides-->
+<!-- @createResource @verifyStaleGuides-->
 
 ```sh
 cat <<EOF >deployment.yaml
@@ -89,7 +89,7 @@ spec:
 EOF
 ```
 
-<!-- @createSetter @verifyGuides-->
+<!-- @createSetter @verifyStaleGuides-->
 
 ```sh
 # create or update a setter named "replicas"
@@ -119,7 +119,7 @@ spec:
 
 {{% hide %}}
 
-<!-- @validateCreateSetter @verifyGuides-->
+<!-- @validateCreateSetter @verifyStaleGuides-->
 
 ```
 grep "io.k8s.cli.setters.replicas" Kptfile
@@ -190,7 +190,7 @@ spec:
   replicas: 3 # {"$kpt-set":"replicas"}
 ```
 
-<!-- @setReplicas @verifyGuides-->
+<!-- @setReplicas @verifyStaleGuides-->
 
 ```sh
 # set the replicas field to 5
@@ -208,7 +208,7 @@ spec:
 
 {{% hide %}}
 
-<!-- @validateSetSetter @verifyGuides-->
+<!-- @validateSetSetter @verifyStaleGuides-->
 
 ```
 grep 'value: "5"' Kptfile
@@ -246,7 +246,7 @@ spec:
   replicas: 3 # {"$kpt-set":"replicas"}
 ```
 
-<!-- @deleteSetter @verifyGuides-->
+<!-- @deleteSetter @verifyStaleGuides-->
 
 ```sh
 # delete a setter named "replicas"
@@ -276,7 +276,7 @@ the input value against provided schema during setter creation and throws an
 error if the input value doesn't meet any of the constraints. This example walks
 you through the steps to work with openAPI validations.
 
-<!-- @createSetterForValidation @verifyGuides-->
+<!-- @createSetterForValidation @verifyStaleGuides-->
 
 ```sh
 cat <<EOF >schema.json
@@ -313,7 +313,7 @@ validation failure list: replicas in body should be less than or equal to 10
 
 {{% hide %}}
 
-<!-- @testSetSetter @verifyGuides-->
+<!-- @testSetSetter @verifyStaleGuides-->
 
 ```
 kpt cfg set . replicas 11 || echo "Worked" | grep "Worked"
@@ -419,7 +419,7 @@ The list setter will take variable args for its value rather than a single value
 **Note:** You should skip passing the value arg while creating array setters. `field`
 flag is required for array setters.
 
-<!-- @createResourceForListSetter @verifyGuides-->
+<!-- @createResourceForListSetter @verifyStaleGuides-->
 
 ```sh
 cat <<EOF >example.yaml
@@ -438,7 +438,7 @@ EOF
 kind: Kptfile
 ```
 
-<!-- @createListSetter @verifyGuides-->
+<!-- @createListSetter @verifyStaleGuides-->
 
 ```
 kpt cfg create-setter . list --type array --field spec.list
@@ -471,7 +471,7 @@ openAPI:
 
 {{% hide %}}
 
-<!-- @validateCreateListSetter @verifyGuides-->
+<!-- @validateCreateListSetter @verifyStaleGuides-->
 
 ```
 grep "type: array" Kptfile
@@ -481,7 +481,7 @@ grep 'list: # {"$kpt-set":"list"}' example.yaml
 
 {{% /hide %}}
 
-<!-- @setListSetter @verifyGuides-->
+<!-- @setListSetter @verifyStaleGuides-->
 
 ```
 kpt cfg set . list c d e
@@ -516,7 +516,7 @@ openAPI:
 
 {{% hide %}}
 
-<!-- @validateSetListSetter @verifyGuides-->
+<!-- @validateSetListSetter @verifyStaleGuides-->
 
 ```
 grep '\- "d"' Kptfile

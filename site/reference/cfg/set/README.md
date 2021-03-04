@@ -61,22 +61,50 @@ When set is called, it may also update substitutions which are derived from
 the setter.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
+```
+
+<!-- @cfgSet @verifyExamples-->
+```sh
+kpt cfg create-setter hello-world/ tag 1.0.1
+kpt cfg create-setter hello-world/ replicas 4
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+<!-- @cfgSet @verifyExamples-->
 ```sh
 # set replicas to 3 using the 'replicas' setter
 kpt cfg set hello-world/ replicas 3
 ```
 
+<!-- @cfgSet @verifyExamples-->
 ```sh
 # set the replicas to 5 and include a description of the value
 kpt cfg set hello-world/ replicas 5 --description "need at least 5 replicas"
 ```
 
+<!-- @cfgSet @verifyExamples-->
 ```sh
 # set the replicas to 5 and record who set this value
 kpt cfg set hello-world/ replicas 5 --set-by "mia"
 ```
 
+<!-- @cfgSet @verifyExamples-->
 ```sh
 # set the tag portion of the image field to '1.8.1' using the 'tag' setter
 # the tag setter is referenced as a value by a substitution in the Kptfile

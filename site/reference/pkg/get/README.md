@@ -16,13 +16,28 @@ local directory.  The local directory name does not need to match the upstream
 directory name.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+
+<!-- @pkgGet @verifyExamples-->
 ```sh
 # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
 # creates directory ./cockroachdb/ containing the package contents
 kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
 ```
 
+<!-- @pkgGet @verifyExamples-->
 ```sh
 # fetch a cockroachdb
 # if ./my-package doesn't exist, creates directory ./my-package/ containing
@@ -30,10 +45,11 @@ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@maste
 kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
 ```
 
+<!-- @pkgGet @verifyExamples-->
 ```sh
 # fetch package examples from github.com/kubernetes/examples
-# creates directory ./examples fetched from the provided commit
-kpt pkg get https://github.com/kubernetes/examples.git/@[COMMIT_HASH] ./
+# creates directory ./examples fetched from the provided commit hash
+kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792 ./
 ```
 <!--mdtogo-->
 

@@ -19,13 +19,25 @@ to be updated.
 {{% /pageinfo %}}
 
 ### Examples
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
 
 #### Create a new package and add a dependency to it
 
+<!-- @pkgSyncSet @verifyExamples-->
 ```sh
 # init a package so it can be synced
-kpt pkg init
+kpt pkg init .
 
 # add a dependency to the package
 kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
@@ -37,6 +49,7 @@ kpt pkg sync .
 
 #### Update an existing package dependency
 
+<!-- @pkgSyncSet @verifyStaleExamples-->
 ```sh
 # add a dependency to an existing package
 kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \

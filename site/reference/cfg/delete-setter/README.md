@@ -20,12 +20,25 @@ structured data -- e.g. using `sed` to replace values.
 See the [setters] guide for more info on creating and deleting setters.
 
 ### Examples
-<!--mdtogo:Examples-->
-```sh
-# delete a setter replicas
-kpt cfg delete-setter DIR/ replicas
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
 ```
 
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR
+```
+
+{{% /hide %}}
+
+<!--mdtogo:Examples-->
 <!--mdtogo-->
 
 ### Synopsis

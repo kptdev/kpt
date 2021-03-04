@@ -19,6 +19,6 @@ set -o errexit
 set -o pipefail
 
 mdrip -alsologtostderr -v 10 --blockTimeOut 20m0s --mode test \
-    --label verifyGuides site/guides
+    --label verifyExamples site/reference
 
 echo "Success"

@@ -25,12 +25,33 @@ the `get` and `update` commands.
 ### Examples
 
 #### Example sync commands
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
+cd hello-world
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+<!-- @pkgSync @verifyStaleExamples-->
 ```sh
 # print the dependencies that would be modified
 kpt pkg sync . --dry-run
 ```
 
+<!-- @pkgSync @verifyExamples-->
 ```sh
 # sync the dependencies
 kpt pkg sync .

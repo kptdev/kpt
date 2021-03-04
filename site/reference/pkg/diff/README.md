@@ -20,7 +20,27 @@ The diff tool can be specified.  By default, the local 'diff' command is used to
 display differences.
 
 ### Examples
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+```
+
+<!-- @fetchPackage @verifyExamples-->
+```sh
+export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
+cd hello-world
+```
+
+{{% /hide %}}
+
 <!--mdtogo:Examples-->
+<!-- @pkgDiff @verifyExamples-->
 ```sh
 # Show changes in current package relative to upstream source package
 kpt pkg diff
@@ -32,21 +52,23 @@ kpt pkg diff
 kpt pkg diff --diff-tool meld --diff-tool-opts "-a"
 ```
 
+<!-- @pkgDiff @verifyExamples-->
 ```sh
 # Show changes in upstream source package between current version and
 # target version
-kpt pkg diff @v4.0.0 --diff-type remote
+kpt pkg diff @v0.4.0 --diff-type remote
 ```
 
+<!-- @pkgDiff @verifyExamples-->
 ```sh
 # Show changes in current package relative to target version
-kpt pkg diff @v4.0.0 --diff-type combined
+kpt pkg diff @v0.4.0 --diff-type combined
 ```
 
 ```sh
 # Show 3way changes between the local package, upstream package at original
 # version and upstream package at target version using meld
-kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
+kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
 ```
 <!--mdtogo-->
 
