@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate $GOBIN/mdtogo site/content/en/reference/live internal/docs/generated/livedocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/content/en/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/content/en/reference/cfg internal/docs/generated/cfgdocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/content/en/reference/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/content/en/reference internal/docs/generated/overview --license=none --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/content/en/guides/consumer internal/guides/generated/consumer --license=none --recursive=true --strategy=guide
-//go:generate $GOBIN/mdtogo site/content/en/guides/ecosystem internal/guides/generated/ecosystem --license=none --recursive=true --strategy=guide
-//go:generate $GOBIN/mdtogo site/content/en/guides/producer internal/guides/generated/producer --license=none --recursive=true --strategy=guide
+//go:generate $GOBIN/mdtogo site/reference/live internal/docs/generated/livedocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/cfg internal/docs/generated/cfgdocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference internal/docs/generated/overview --license=none --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/guides/consumer internal/guides/generated/consumer --license=none --recursive=true --strategy=guide
+//go:generate $GOBIN/mdtogo site/guides/ecosystem internal/guides/generated/ecosystem --license=none --recursive=true --strategy=guide
+//go:generate $GOBIN/mdtogo site/guides/producer internal/guides/generated/producer --license=none --recursive=true --strategy=guide
 package main
 
 import (
