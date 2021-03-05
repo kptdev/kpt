@@ -10,7 +10,7 @@ description: >
     Render resources using a tree structure
 -->
 
-{{< asciinema key="cfg-tree" rows="10" preload="1" >}}
+{{< asciinema key="pkg-tree" rows="10" preload="1" >}}
 
 Tree displays the contents of a package using a tree structure to show
 the relationships between directories, resources, and fields.
@@ -18,7 +18,7 @@ the relationships between directories, resources, and fields.
 Tree supports a number of built-in fields such as replicas, images, ports,
 etc.  Additional fields may be printed by providing the `--field` flag
 
-By default, kpt cfg tree uses Resource graph structure if any relationships
+By default, kpt pkg tree uses Resource graph structure if any relationships
 between resources (ownerReferences) are detected e.g. when printing
 remote cluster resources rather than local package resources.
 Otherwise, directory graph structure is used.
@@ -43,47 +43,47 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
 {{% /hide %}}
 
 <!--mdtogo:Examples-->
-<!-- @cfgTree @verifyExamples-->
+<!-- @pkgTree @verifyExamples-->
 ```sh
 # print Resources using directory structure
-kpt cfg tree my-dir/
+kpt pkg tree my-dir/
 ```
 
-<!-- @cfgTree @verifyExamples-->
+<!-- @pkgTree @verifyExamples-->
 ```sh
 # print replicas, container name, and container image and fields for Resources
-kpt cfg tree my-dir --replicas --image --name
+kpt pkg tree my-dir --replicas --image --name
 ```
 
-<!-- @cfgTree @verifyExamples-->
+<!-- @pkgTree @verifyExamples-->
 ```sh
 # print all common Resource fields
-kpt cfg tree my-dir/ --all
+kpt pkg tree my-dir/ --all
 ```
 
-<!-- @cfgTree @verifyExamples-->
+<!-- @pkgTree @verifyExamples-->
 ```sh
 # print the "foo"" annotation
-kpt cfg tree my-dir/ --field "metadata.annotations.foo"
+kpt pkg tree my-dir/ --field "metadata.annotations.foo"
 ```
 
-<!-- @cfgTree @verifyStaleExamples-->
+<!-- @pkgTree @verifyStaleExamples-->
 ```sh
 # print the status of resources with status.condition type of "Completed"
-kubectl get all -o yaml | kpt cfg tree \
+kubectl get all -o yaml | kpt pkg tree \
   --field="status.conditions[type=Completed].status"
 ```
 
-<!-- @cfgTree @verifyStaleExamples-->
+<!-- @pkgTree @verifyStaleExamples-->
 ```sh
 # print live Resources from a cluster using owners for graph structure
-kubectl get all -o yaml | kpt cfg tree --replicas --name --image
+kubectl get all -o yaml | kpt pkg tree --replicas --name --image
 ```
 
-<!-- @cfgTree @verifyStaleExamples-->
+<!-- @pkgTree @verifyStaleExamples-->
 ```sh
 # print live Resources with status condition fields
-kubectl get all -o yaml | kpt cfg tree \
+kubectl get all -o yaml | kpt pkg tree \
   --name --image --replicas \
   --field="status.conditions[type=Completed].status" \
   --field="status.conditions[type=Complete].status" \
@@ -95,7 +95,7 @@ kubectl get all -o yaml | kpt cfg tree \
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt cfg tree [DIR] [flags]
+kpt pkg tree [DIR] [flags]
 ```
 
 #### Args

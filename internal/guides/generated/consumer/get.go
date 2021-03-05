@@ -140,7 +140,7 @@ artifacts such as documentation.
 ### Package Contents Command
 
 <!-- @treePackage @verifyGuides-->
-  kpt cfg tree cockroachdb/
+  kpt pkg tree cockroachdb/
 
 ### Package Contents Output
 

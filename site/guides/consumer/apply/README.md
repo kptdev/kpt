@@ -199,10 +199,10 @@ kubectl get deployments | tr -s ' ' | grep "deployment.apps/helloworld-gke 5/5"
 ### Command: `tree`
 
 ```sh
-kubectl get all -o yaml | kpt cfg tree
+kubectl get all -o yaml | kpt pkg tree
 ```
 
-The output of kubectl can also be piped to [kpt cfg tree] to summarize
+The output of kubectl can also be piped to [kpt pkg tree] to summarize
 the resources.
 
 ### Output: `tree`
@@ -256,9 +256,7 @@ kubectl get deploy
 No resources found in default namespace.
 ```
 
-[kpt cfg tree]: /reference/cfg/tree/
+[kpt pkg tree]: /reference/pkg/tree/
 [kpt live apply]: /reference/live/apply/
 [kpt live init]: /reference/live/init/
-[setters]: /reference/cfg/create-setter/
-[substitutions]: /reference/cfg/create-subst/
 [cli-utils]: https://github.com/kubernetes-sigs/cli-utils

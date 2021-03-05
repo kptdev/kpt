@@ -232,7 +232,7 @@ commands for performing structured edits of a configuration.
 Combined with the preceding techniques, setters or substitutions can be used
 to modify generated ConfigMaps and patches in the `instance` dir.
 
-See the [setter] and [substitution] guides for details.
+See the setter and substitution guides for details.
 
 ```yaml
 # mysql/instance/kustomization.yaml
@@ -299,5 +299,3 @@ may be ok -- changes to fields will overwrite user changes to those same
 fields, whereas adds will only conflict if the user added the same field.
 
 [kustomize]: https://github.com/kubernetes-sigs/kustomize
-[setter]: /guides/producer/setters/
-[substitution]: /guides/producer/substitutions/

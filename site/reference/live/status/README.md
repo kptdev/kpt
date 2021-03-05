@@ -58,13 +58,6 @@ kpt live status my-app/
 kpt live status my-app/ --poll-until=forever --output=table
 ```
 
-<!-- @liveStatus @verifyExamples-->
-```sh
-# Check status for a set of resources read from stdin with output in events format
-kpt cfg cat my-app | kpt live status
-```
-<!--mdtogo-->
-
 ### Synopsis
 <!--mdtogo:Long-->
 ```

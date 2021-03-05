@@ -51,7 +51,7 @@ foo
    ship an out of the box application, maintain the package and abstract the
    details from package consumers. Alternatively, package consumers may [update]
    individual `subpackages` directly from the upstream sources.
-2. Package publishers need a way to create parameter values (e.g. [setters]) to
+2. Package publishers need a way to create parameter values (e.g. setters) to
    be consistent across multiple `subpackages` and make it easy for package
    consumers to provide them with a single command.
 3. (Under development) Package consumers need a way to apply a set of
@@ -65,10 +65,8 @@ Here are the core principles around `subpackages` concept
 1. Each kpt package is an independent building block and should contain resources
    (e.g. setter definitions) in its `Kptfile`.
 2. Commands performed on a package are not performed on its subpackages unless
-   `--recurse-subpackages(-R)` is provided. (only available with [cfg] commands currently
+   `--recurse-subpackages(-R)` is provided. (only available with cfg commands currently
    and the default value of `-R` flag might vary for each command)
 
 [source functions]: /concepts/functions/#source-function
 [update]: /guides/consumer/update/
-[setters]: /guides/producer/setters/
-[cfg]: /reference/cfg/

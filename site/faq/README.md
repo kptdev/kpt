@@ -68,7 +68,7 @@ using resource configuration provides a number of desirable properties:
 A: `kpt` offers a collection of utilities which enable working with
 configuration programmatically to simplify the experience. Using `vi` to edit
 YAML should be necessary only for bootstrapping, and the common cases should
-use [setters] or [functions] to generate or modify YAML configuration.
+use setters or [functions] to generate or modify YAML configuration.
 
 #### **Q: I really like DSL / templating solution X. Can I use it with `kpt`?**
 
@@ -112,7 +112,6 @@ A: [Please reach out!][contact]
 
 [kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
-[setters]: /reference/cfg/set/
 [functions]: /reference/fn/run/
 [source functions]: /guides/consumer/function/catalog/sources/
 [Functions User Guide]: /guides/consumer/function/
