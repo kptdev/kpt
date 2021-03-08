@@ -166,16 +166,8 @@ var manTemplate = `# {{.Name}}
 Details: https://googlecontainertools.github.io/kpt/reference/pkg/get/
 
 ### View package content
-'kpt cfg tree {{.Name}}'
-Details: https://googlecontainertools.github.io/kpt/reference/cfg/tree/
-
-### List setters
-'kpt cfg list-setters {{.Name}}'
-Details: https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/
-
-### Set a value
-'kpt cfg set {{.Name}} NAME VALUE'
-Details: https://googlecontainertools.github.io/kpt/reference/cfg/set/
+'kpt pkg tree {{.Name}}'
+Details: https://googlecontainertools.github.io/kpt/reference/pkg/tree/
 
 ### Apply the package
 '''

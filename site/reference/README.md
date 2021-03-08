@@ -25,7 +25,6 @@ syntax and pattern of inputs and outputs.
 | Command Group | Description                                                                     | Reads From      | Writes To       |
 | ------------- | ------------------------------------------------------------------------------- | --------------- | --------------- |
 | [pkg]         | fetch, update, and sync configuration files using git                           | remote git      | local directory |
-| [cfg]         | examine and modify configuration files                                          | local directory | local directory |
 | [fn]          | generate, transform, validate configuration files using containerized functions | local directory | local directory |
 | [live]        | reconcile the live state with configuration files                               | local directory | remote cluster  |
 
@@ -190,7 +189,6 @@ by kpt.
 - Consult the [FAQ] for answers to common questions.
 
 [pkg]: /reference/pkg/
-[cfg]: /reference/cfg/
 [fn]: /reference/fn/
 [live]: /reference/live/
 [architecture]: /concepts/architecture/

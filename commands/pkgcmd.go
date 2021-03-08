@@ -17,12 +17,12 @@ package commands
 import (
 	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
-	"github.com/GoogleContainerTools/kpt/internal/cmdfix"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 )
 
 func GetPkgCommand(name string) *cobra.Command {
@@ -43,9 +43,15 @@ func GetPkgCommand(name string) *cobra.Command {
 			return cmd.Usage()
 		},
 	}
+
+	tree := configcobra.Tree(name)
+	tree.Short = pkgdocs.TreeShort
+	tree.Long = pkgdocs.TreeShort + "\n" + pkgdocs.TreeLong
+	tree.Example = pkgdocs.TreeExamples
+
 	pkg.AddCommand(
 		cmddesc.NewCommand(name), cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdfix.NewCommand(name), cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
+		cmdupdate.NewCommand(name), cmddiff.NewCommand(name), tree,
 	)
 	return pkg
 }

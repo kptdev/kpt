@@ -147,7 +147,7 @@ artifacts such as documentation.
 
 <!-- @treePackage @verifyGuides-->
 ```sh
-kpt cfg tree cockroachdb/
+kpt pkg tree cockroachdb/
 ```
 
 ### Package Contents Output

@@ -39,12 +39,6 @@ A packaging solution for resource configuration.
 Fetch and update configuration using git and YAML.
 {{% /blocks/feature %}}
 
-{{% blocks/feature title="`kpt cfg`" url="reference/cfg/" %}}
-#### [kpt cfg](reference/cfg/)
-A cli UX layer on top of YAML
-Display and modify configuration files without ever dropping into an editor.
-{{% /blocks/feature %}}
-
 {{% blocks/feature title="`kpt live`" url="reference/live/" %}}
 #### [kpt live](reference/live/)
 The next-generation of apply with manifest based pruning and resource

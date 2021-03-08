@@ -1,4 +1,3 @@
-// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,6 +52,7 @@ var DescLong = `
     Path to a package directory
 `
 var DescExamples = `
+<!-- @pkgDesc @verifyExamples-->
   # display description for the local hello-world package
   kpt pkg desc hello-world/
 `
@@ -113,6 +113,7 @@ Environment Variables:
      KPT_EXTERNAL_DIFF_OPTS="-a" kpt pkg diff --diff-tool meld
 `
 var DiffExamples = `
+<!-- @pkgDiff @verifyExamples-->
   # Show changes in current package relative to upstream source package
   kpt pkg diff
 
@@ -120,16 +121,18 @@ var DiffExamples = `
   # using meld tool with auto compare option.
   kpt pkg diff --diff-tool meld --diff-tool-opts "-a"
 
+<!-- @pkgDiff @verifyExamples-->
   # Show changes in upstream source package between current version and
   # target version
-  kpt pkg diff @v4.0.0 --diff-type remote
+  kpt pkg diff @v0.4.0 --diff-type remote
 
+<!-- @pkgDiff @verifyExamples-->
   # Show changes in current package relative to target version
-  kpt pkg diff @v4.0.0 --diff-type combined
+  kpt pkg diff @v0.4.0 --diff-type combined
 
   # Show 3way changes between the local package, upstream package at original
   # version and upstream package at target version using meld
-  kpt pkg diff @v4.0.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
+  kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
 `
 
 var FixShort = `Fix a local package which is using deprecated features.`
@@ -146,14 +149,6 @@ var FixLong = `
       if set, the fix command shall only print the fixes which will be made to the
       package without actually fixing/modifying the resources.
   
-`
-var FixExamples = `
-  # print the fixes which will be made to the package without actually modifying
-  # resources
-  kpt pkg fix . --dry-run
-
-  # fix the package if it is using deprecated features
-  kpt pkg fix .
 `
 
 var GetShort = `Fetch a package from a git repo.`
@@ -193,18 +188,21 @@ var GetLong = `
         the same name of the one that would be created: fail
 `
 var GetExamples = `
+<!-- @pkgGet @verifyExamples-->
   # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
   # creates directory ./cockroachdb/ containing the package contents
   kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
 
+<!-- @pkgGet @verifyExamples-->
   # fetch a cockroachdb
   # if ./my-package doesn't exist, creates directory ./my-package/ containing
   # the package contents
   kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
 
+<!-- @pkgGet @verifyExamples-->
   # fetch package examples from github.com/kubernetes/examples
-  # creates directory ./examples fetched from the provided commit
-  kpt pkg get https://github.com/kubernetes/examples.git/@[COMMIT_HASH] ./
+  # creates directory ./examples fetched from the provided commit hash
+  kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792 ./
 `
 
 var InitShort = `Initialize an empty package`
@@ -231,6 +229,7 @@ Flags:
     link to page with information about the package.
 `
 var InitExamples = `
+<!-- @pkgInit @verifyStaleExamples-->
   # writes Kptfile package meta if not found
   mkdir my-pkg
   kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb \
@@ -252,9 +251,11 @@ Env Vars:
     Defaults to ~/.kpt/repos/
 `
 var SyncExamples = `
+<!-- @pkgSync @verifyStaleExamples-->
   # print the dependencies that would be modified
   kpt pkg sync . --dry-run
 
+<!-- @pkgSync @verifyExamples-->
   # sync the dependencies
   kpt pkg sync .
 `
@@ -316,8 +317,9 @@ Flags:
 var SetExamples = `
 Create a new package and add a dependency to it:
 
+<!-- @pkgSyncSet @verifyExamples-->
   # init a package so it can be synced
-  kpt pkg init
+  kpt pkg init .
   
   # add a dependency to the package
   kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
@@ -328,9 +330,84 @@ Create a new package and add a dependency to it:
 
 Update an existing package dependency:
 
+<!-- @pkgSyncSet @verifyStaleExamples-->
   # add a dependency to an existing package
   kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
       hello-world --strategy=resource-merge
+`
+
+var TreeShort = `Render resources using a tree structure`
+var TreeLong = `
+  kpt pkg tree [DIR] [flags]
+
+Args:
+
+  DIR:
+    Path to a package directory.  Defaults to STDIN if not specified.
+
+Flags:
+
+  --args:
+    if true, print the container args field
+  
+  --command:
+    if true, print the container command field
+  
+  --env:
+    if true, print the container env field
+  
+  --field:
+    dot-separated path to a field to print
+  
+  --image:
+    if true, print the container image fields
+  
+  --name:
+    if true, print the container name fields
+  
+  --ports:
+    if true, print the container port fields
+  
+  --replicas:
+    if true, print the replica field
+  
+  --resources:
+    if true, print the resource reservations
+`
+var TreeExamples = `
+<!-- @pkgTree @verifyExamples-->
+  # print Resources using directory structure
+  kpt pkg tree my-dir/
+
+<!-- @pkgTree @verifyExamples-->
+  # print replicas, container name, and container image and fields for Resources
+  kpt pkg tree my-dir --replicas --image --name
+
+<!-- @pkgTree @verifyExamples-->
+  # print all common Resource fields
+  kpt pkg tree my-dir/ --all
+
+<!-- @pkgTree @verifyExamples-->
+  # print the "foo"" annotation
+  kpt pkg tree my-dir/ --field "metadata.annotations.foo"
+
+<!-- @pkgTree @verifyStaleExamples-->
+  # print the status of resources with status.condition type of "Completed"
+  kubectl get all -o yaml | kpt pkg tree \
+    --field="status.conditions[type=Completed].status"
+
+<!-- @pkgTree @verifyStaleExamples-->
+  # print live Resources from a cluster using owners for graph structure
+  kubectl get all -o yaml | kpt pkg tree --replicas --name --image
+
+<!-- @pkgTree @verifyStaleExamples-->
+  # print live Resources with status condition fields
+  kubectl get all -o yaml | kpt pkg tree \
+    --name --image --replicas \
+    --field="status.conditions[type=Completed].status" \
+    --field="status.conditions[type=Complete].status" \
+    --field="status.conditions[type=Ready].status" \
+    --field="status.conditions[type=ContainersReady].status"
 `
 
 var UpdateShort = `Apply upstream package updates`

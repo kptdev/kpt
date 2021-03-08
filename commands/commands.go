@@ -17,27 +17,9 @@ package commands
 import (
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
-	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
-	"github.com/GoogleContainerTools/kpt/internal/cmdfix"
-	"github.com/GoogleContainerTools/kpt/internal/cmdget"
-	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
-	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/spf13/cobra"
 	"k8s.io/kubectl/pkg/cmd/util"
 )
-
-func GetAnthosCommands(name string) []*cobra.Command {
-	c := []*cobra.Command{cmddesc.NewCommand(name),
-		cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
-		cmdfix.NewCommand(name),
-	}
-
-	// apply cross-cutting issues to commands
-	NormalizeCommand(c...)
-	return c
-}
 
 // NormalizeCommand will modify commands to be consistent, e.g. silencing errors
 func NormalizeCommand(c ...*cobra.Command) {
@@ -50,15 +32,11 @@ func NormalizeCommand(c ...*cobra.Command) {
 // GetKptCommands returns the set of kpt commands to be registered
 func GetKptCommands(name string, f util.Factory) []*cobra.Command {
 	var c []*cobra.Command
-	cfgCmd := GetConfigCommand(name)
 	fnCmd := GetFnCommand(name)
-	pipelineCmd := GetPipelineCommand(name)
 	pkgCmd := GetPkgCommand(name)
-	ttlCmd := GetTTLCommand(name)
 	liveCmd := GetLiveCommand(name, f)
-	guideCmd := GetGuideCommand(name)
 
-	c = append(c, cfgCmd, pkgCmd, fnCmd, pipelineCmd, ttlCmd, liveCmd, guideCmd)
+	c = append(c, pkgCmd, fnCmd, liveCmd)
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)
