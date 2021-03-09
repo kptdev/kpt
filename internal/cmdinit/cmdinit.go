@@ -37,8 +37,8 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:     "init DIR",
-		Args:    cobra.ExactArgs(1),
+		Use:     "init [DIR]",
+		Args:    cobra.MaximumNArgs(1),
 		Short:   docs.InitShort,
 		Long:    docs.InitShort + "\n" + docs.InitLong,
 		Example: docs.InitExamples,
@@ -85,6 +85,9 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
 	var err error
+	if len(args) == 0 {
+		args = append(args, ".")
+	}
 	if _, err = os.Stat(args[0]); os.IsNotExist(err) {
 		return errors.Errorf("%s does not exist", err)
 	}

@@ -28,7 +28,7 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:     "desc [DIR]...",
+		Use:     "desc [PKG_PATH] [flags]",
 		Short:   pkgdocs.DescShort,
 		Long:    pkgdocs.DescShort + "\n" + pkgdocs.DescLong,
 		Example: pkgdocs.DescExamples,

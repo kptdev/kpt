@@ -56,7 +56,7 @@ kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792 ./
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY] [flags]
 
 REPO_URI:
   URI of a git repository containing 1 or more packages as subdirectories.
@@ -80,7 +80,7 @@ VERSION:
   e.g. @master
 
 LOCAL_DEST_DIRECTORY:
-  The local directory to write the package to.
+  The local directory to write the package to. Defaults to the current working directory.
   e.g. ./my-cockroachdb-copy
 
     * If the directory does NOT exist: create the specified directory

@@ -30,8 +30,8 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
-		Args:       cobra.ExactArgs(2),
+		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY]",
+		Args:       cobra.MinimumNArgs(1),
 		Short:      docs.GetShort,
 		Long:       docs.GetShort + "\n" + docs.GetLong,
 		Example:    docs.GetExamples,
@@ -61,6 +61,9 @@ type Runner struct {
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
+	if len(args) == 1 {
+		args = append(args, ".")
+	}
 	t, err := parse.GitParseArgs(args)
 	if err != nil {
 		return err

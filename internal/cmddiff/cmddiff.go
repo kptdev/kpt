@@ -29,7 +29,7 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:          "diff LOCAL_PKG_DIR[@VERSION]",
+		Use:          "diff [PKG_PATH@VERSION] [flags]",
 		Short:        pkgdocs.DiffShort,
 		Long:         pkgdocs.DiffShort + "\n" + pkgdocs.DiffLong,
 		Example:      pkgdocs.DiffExamples,

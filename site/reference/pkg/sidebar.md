@@ -14,7 +14,6 @@
         - [diff](reference/pkg/diff/)
         - [get](reference/pkg/get/)
         - [init](reference/pkg/init/)
-        - [sync](reference/pkg/sync/)
         - [update](reference/pkg/update/)
     - [fn](reference/fn/)
     - [live](reference/live/)

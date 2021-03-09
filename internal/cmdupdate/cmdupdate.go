@@ -30,12 +30,12 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:        "update LOCAL_PKG_DIR[@VERSION]",
+		Use:        "update [PKG_PATH@VERSION] [flags]",
 		Short:      docs.UpdateShort,
 		Long:       docs.UpdateShort + "\n" + docs.UpdateLong,
 		Example:    docs.UpdateExamples,
 		RunE:       r.runE,
-		Args:       cobra.ExactArgs(1),
+		Args:       cobra.MaximumNArgs(1),
 		PreRunE:    r.preRunE,
 		SuggestFor: []string{"rebase", "replace"},
 	}
@@ -67,6 +67,9 @@ type Runner struct {
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		args = append(args, ".")
+	}
 	r.Update.Strategy = update.StrategyType(r.strategy)
 	parts := strings.Split(args[0], "@")
 	if len(parts) > 2 {

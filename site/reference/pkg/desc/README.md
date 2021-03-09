@@ -42,9 +42,9 @@ kpt pkg desc hello-world/
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg desc DIR
+kpt pkg desc [PKG_PATH]
 
-DIR:
-  Path to a package directory
+PKG_PATH:
+  Path to a package directory. Defaults to the current working directory.
 ```
 <!--mdtogo-->

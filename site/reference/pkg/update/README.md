@@ -42,18 +42,18 @@ kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+kpt pkg update [PKG_PATH@VERSION] [flags]
 ```
 
 #### Args
 
 ```
-LOCAL_PKG_DIR:
-  Local package to update.  Directory must exist and contain a Kptfile
-  to be updated.
+PKG_PATH:
+  Local package path to update. Directory must exist and contain a Kptfile
+  to be updated. Defaults to the current working directory.
 
 VERSION:
-  A git tag, branch, ref or commit.  Specified after the local_package
+  A git tag, branch, ref or commit. Specified after the local_package
   with @ -- pkg@version.
   Defaults the local package version that was last fetched.
 

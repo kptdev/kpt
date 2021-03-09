@@ -75,15 +75,15 @@ kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg diff [DIR@VERSION]
+kpt pkg diff [PKG_PATH@VERSION] [flags]
 ```
 
 #### Args
 
 ```
-DIR:
-  Local package to compare. Command will fail if the directory doesn't exist, or does not
-  contain a Kptfile.  Defaults to the current working directory.
+PKG_PATH:
+  Local package path to compare. Command will fail if the directory doesn't exist, or does not
+  contain a Kptfile. Defaults to the current working directory.
 
 VERSION:
   A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
