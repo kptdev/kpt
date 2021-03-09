@@ -87,8 +87,8 @@ gencatalog:
 	rm site/content/en/guides/consumer/function/catalog/*/_index.md
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
-servedocs:
-	(cd site && go run github.com/gohugoio/hugo server)
+run-site:
+	(cd site && python -m SimpleHTTPServer 3000)
 
 verify-guides:
 	./scripts/verifyGuides.sh
