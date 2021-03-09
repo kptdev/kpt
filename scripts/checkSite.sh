@@ -24,3 +24,4 @@ echo "Starting check."
 find . -name README.md -printf "%P\n" | grep -v node_modules | grep -v themes \
     | sed "s/README.md//" | sed "s/^/http:\/\/localhost:3000\//" \
     | xargs -n1 sh -c '! (npx href-checker $0 --bad-content="404 - Not found" --silent --no-off-site -c=15 | grep .) || exit 255'
+echo "Success."
