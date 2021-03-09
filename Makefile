@@ -90,6 +90,9 @@ gencatalog:
 run-site:
 	(cd site && python -m SimpleHTTPServer 3000)
 
+check-site:
+	./scripts/checkSite.sh
+
 verify-guides:
 	./scripts/verifyGuides.sh
 
