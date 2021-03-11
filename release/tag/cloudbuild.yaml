@@ -138,7 +138,7 @@ steps:
     dir: 'artifacts'
     args: [ 'cp', '-a', 'public-read', 'kpt_windows_amd64.exe', 'gs://${_GCS_BUCKET}/latest/windows_amd64/kpt.exe' ]
 
-  # build docker image
+  # build docker images
   ## kpt image
   - name: 'gcr.io/cloud-builders/docker'
     dir: 'kpt'
