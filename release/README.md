@@ -35,7 +35,23 @@ also updated with the `latest` tag for tagged releases.
   - `gs://kpt-dev/latest`
   - `gs://kpt-dev/releases`
 
-# Dry-Run Goreleaser
+# Testing the Release Process
+
+## Running Cloud Build Locally
+
+You can use [`cloud-build-local`](https://github.com/GoogleCloudPlatform/cloud-build-local)
+to run kpt's Cloud Build builds locally with custom parameters (`--substitutions`)
+and dry-runs (`--dryrun`) to validate the builds syntax.
+
+You will need to provide `--substitutions` for `TAG_NAME`, `_VERSION`,
+`_GCS_BUCKET` and `_GITHUB_USER`. In a `--dryrun` these do not need to align
+with existing resources. For example:
+
+```sh
+cloud-build-local --config=release/tag/cloudbuild.yaml --substitutions=TAG_NAME=test,_VERSION=test,_GCS_BUCKET=test,_GITHUB_USER=test --dryrun=true .
+```
+
+## Dry-Run Goreleaser
 
 To test local changes to the [`goreleaser.yaml`](./tag/goreleaser.yaml) config. You may
 [install goreleaser](https://goreleaser.com/install/) locally and provide the
