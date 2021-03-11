@@ -51,6 +51,28 @@ with existing resources. For example:
 cloud-build-local --config=release/tag/cloudbuild.yaml --substitutions=TAG_NAME=test,_VERSION=test,_GCS_BUCKET=test,_GITHUB_USER=test --dryrun=true .
 ```
 
+When running with `--dryrun=false` you will need to do some initial work to run
+against your forked version of kpt:
+
+1. Setup your gcloud profile.
+2. Create a enable the Google Cloud Secret Manager on the profile
+3. Create a GitHub Personal Access Token and save it as `github-token` in the
+Google Cloud Secrets Manager.
+
+```sh
+gcloud secrets create github-token
+```
+
+4. Assign `--substitutions=_GITHUB_USER={your github username}`. Do **not** use
+`GoogleContainerTools`.
+5. Identify or create a tag on your fork. Assign that name to the `TAG_NAME`
+substitution.
+6. Create a Cloud Storage bucket and assign its name to `_GCS_BUCKET`
+7. Run `cloud-build-local` with the updated substitutions.
+8. Grab a coffee ☕ or your favorite tea 🍵 this process is not quick.
+9. Once this is done the tag you chose in step 5 should now be a release and
+the kpt containers should be in your container registry.
+
 ## Dry-Run Goreleaser
 
 To test local changes to the [`goreleaser.yaml`](./tag/goreleaser.yaml) config. You may
