@@ -107,7 +107,7 @@ func TestDualDelegatingProvider_Read(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			// Create the fake factory
-			tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+			tf := cmdtesting.NewTestFactory().WithNamespace("test-namespace")
 			defer tf.Cleanup()
 			// Set up the yaml manifests (including Kptfile) in temp dir.
 			dir, err := ioutil.TempDir("", "provider-test")
