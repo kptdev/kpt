@@ -124,7 +124,7 @@ func (g *TestSetupManager) Init(content Content) bool {
 	// Get the content from the upstream repo into the local workspace.
 	if !assert.NoError(g.T, get.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
-		GitLock: v1alpha2.GitLock{
+		Git: &v1alpha2.Git{
 			Repo:      g.UpstreamRepo.RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
@@ -202,7 +202,7 @@ func UpdateGitDir(t *testing.T, gitDir GitDirectory, changes []Content, repoPath
 	return nil
 }
 
-func (g *TestSetupManager) AssertKptfile(name, commit, ref string) bool {
+func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy v1alpha2.UpdateStrategyType) bool {
 	expectedKptfile := v1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -213,6 +213,15 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string) bool {
 			TypeMeta: yaml.TypeMeta{
 				APIVersion: v1alpha2.TypeMeta.APIVersion,
 				Kind:       v1alpha2.TypeMeta.Kind},
+		},
+		Upstream: &v1alpha2.Upstream{
+			Type: "git",
+			Git: &v1alpha2.Git{
+				Directory: g.GetSubDirectory,
+				Repo:      g.UpstreamRepo.RepoDirectory,
+				Ref:       ref,
+			},
+			UpdateStrategy: strategy,
 		},
 		UpstreamLock: &v1alpha2.UpstreamLock{
 			Type: "git",

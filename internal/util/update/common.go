@@ -18,7 +18,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 )
@@ -48,37 +47,8 @@ func findAllSubpackages(pkgPaths ...string) ([]string, error) {
 	for p := range uniquePaths {
 		paths = append(paths, p)
 	}
-	sort.Slice(paths, rootPkgFirstSorter(paths))
+	sort.Slice(paths, pkgutil.RootPkgFirstSorter(paths))
 	return paths, nil
-}
-
-// rootPkgFirstSorter returns a "less" function that can be used with the
-// sort.Slice function to correctly sort package paths so parent packages
-// are always before subpackages.
-func rootPkgFirstSorter(paths []string) func(i, j int) bool {
-	return func(i, j int) bool {
-		iPath := paths[i]
-		jPath := paths[j]
-		if iPath == "." {
-			return true
-		}
-		if jPath == "." {
-			return false
-		}
-		iSegmentCount := len(strings.Split(iPath, "/"))
-		jSegmentCount := len(strings.Split(jPath, "/"))
-		return iSegmentCount < jSegmentCount
-	}
-}
-
-// subPkgFirstSorter returns a "less" function that can be used with the
-// sort.Slice function to correctly sort package paths so subpackages are
-// always before parent packages.
-func subPkgFirstSorter(paths []string) func(i, j int) bool {
-	sorter := rootPkgFirstSorter(paths)
-	return func(i, j int) bool {
-		return !sorter(i, j)
-	}
 }
 
 // exists returns true if a file or directory exists on the provided path,

@@ -21,45 +21,54 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
-// Command fetches a package from a git repository and copies it to a local
-// directory.
+// Command takes the upstream information in the Kptfile at the provided path,
+// and fetches the package referenced.
 type Command struct {
-	RepoSpec *git.RepoSpec
-
-	Destination string
-
-	Name string
-
-	Clean bool
+	Path string
 }
 
 // Run runs the Command.
 func (c Command) Run() error {
-	if err := (&c).DefaultValues(); err != nil {
-		return err
+	kptfile, err := kptfileutil.ReadFile(c.Path)
+	if err != nil {
+		return fmt.Errorf("no Kptfile found")
 	}
 
-	if _, err := os.Stat(c.Destination); !c.Clean && !os.IsNotExist(err) {
-		return errors.Errorf("destination directory %s already exists", c.Destination)
+	if kptfile.Upstream == nil {
+		return fmt.Errorf("kptfile doesn't contain upstream information")
 	}
 
-	// normalize path to a filepath
-	if !strings.HasSuffix(c.RepoSpec.Dir, "file://") {
-		c.RepoSpec.Dir = filepath.Join(path.Split(c.RepoSpec.Dir))
+	if kptfile.Upstream.Git == nil {
+		return fmt.Errorf("kptfile upstream doesn't have git information")
 	}
 
-	err := cloneAndCopy(c.RepoSpec, c.Destination, c.Name, c.Clean)
+	g := kptfile.Upstream.Git
+	if len(g.Repo) == 0 {
+		return errors.Errorf("must specify repo")
+	}
+	if len(g.Ref) == 0 {
+		return errors.Errorf("must specify ref")
+	}
+	if len(g.Directory) == 0 {
+		return errors.Errorf("must specify directory")
+	}
+
+	repoSpec := &git.RepoSpec{
+		OrgRepo: g.Repo,
+		Path:    g.Directory,
+		Ref:     g.Ref,
+	}
+	err = cloneAndCopy(repoSpec, c.Path)
 	if err != nil {
 		return err
 	}
@@ -69,25 +78,18 @@ func (c Command) Run() error {
 // cloneAndCopy fetches the provided repo and copies the content into the
 // directory specified by dest. The provided name is set as `metadata.name`
 // of the Kptfile of the package.
-func cloneAndCopy(r *git.RepoSpec, dest, name string, clean bool) error {
+func cloneAndCopy(r *git.RepoSpec, dest string) error {
 	if err := ClonerUsingGitExec(r); err != nil {
 		return errors.Errorf("failed to clone git repo: %v", err)
 	}
 	defer os.RemoveAll(r.Dir)
 
-	// delete the existing package if it exists
-	if clean {
-		if err := os.RemoveAll(dest); err != nil {
-			return errors.Wrap(err)
-		}
-	}
-
-	if err := copyutil.CopyDir(r.AbsPath(), dest); err != nil {
+	if err := pkgutil.CopyPackageWithSubpackages(r.AbsPath(), dest); err != nil {
 		return errors.WrapPrefixf(err, "missing subdirectory %s in repo %s at ref %s\n",
 			r.Path, r.OrgRepo, r.Ref)
 	}
 
-	if err := UpsertKptfile(dest, name, r); err != nil {
+	if err := UpsertKptfile(dest, r); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil
@@ -228,47 +230,14 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	return nil
 }
 
-// DefaultValues sets values to the default values if they were unspecified
-func (c *Command) DefaultValues() error {
-	if c.RepoSpec == nil {
-		return errors.Errorf("must specify a repoSpec")
-	}
-	r := c.RepoSpec
-	if len(r.OrgRepo) == 0 {
-		return errors.Errorf("must specify repo")
-	}
-	if len(r.Ref) == 0 {
-		return errors.Errorf("must specify ref")
-	}
-	if len(c.Destination) == 0 {
-		return errors.Errorf("must specify destination")
-	}
-	if len(r.Path) == 0 {
-		return errors.Errorf("must specify path")
-	}
-
-	if !filepath.IsAbs(c.Destination) {
-		return errors.Errorf("destination must be an absolute path")
-	}
-
-	// default the name to the destination name
-	if len(c.Name) == 0 {
-		c.Name = filepath.Base(c.Destination)
-	}
-
-	return nil
-}
-
 // UpsertKptfile populates the KptFile values, merging any cloned KptFile and the
 // cloneFrom values.
-func UpsertKptfile(path, name string, spec *git.RepoSpec) error {
+func UpsertKptfile(path string, spec *git.RepoSpec) error {
 	// read KptFile cloned with the package if it exists
 	kpgfile, err := kptfileutil.ReadFile(path)
 	if err != nil {
-		// no KptFile present, create a default
-		kpgfile = kptfileutil.DefaultKptfile(name)
+		return err
 	}
-	kpgfile.Name = name
 
 	// find the git commit sha that we cloned the package at so we can write it to the KptFile
 	commit, err := git.LookupCommit(spec.AbsPath())
@@ -283,8 +252,8 @@ func UpsertKptfile(path, name string, spec *git.RepoSpec) error {
 			Repo:      spec.OrgRepo,
 			Directory: spec.Path,
 			Ref:       spec.Ref,
+			Commit:    commit,
 		},
 	}
-	kpgfile.UpstreamLock.GitLock.Commit = commit
 	return kptfileutil.WriteFile(path, kpgfile)
 }

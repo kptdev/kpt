@@ -16,18 +16,12 @@ package update
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"sort"
 
 	pkgdiff "github.com/GoogleContainerTools/kpt/internal/util/diff"
-	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
@@ -43,116 +37,29 @@ var kptfileSet = func() sets.String {
 	return s
 }()
 
-// TODO(mortent): There is duplicate code between the different update strategies.
 // We should try to pull the common code up into the Update command.
 func (u FastForwardUpdater) Update(options UpdateOptions) error {
-	g := options.KptFile.UpstreamLock.GitLock
-	g.Ref = options.ToRef
-	g.Repo = options.ToRepo
-
-	// get the original repo
-	original := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Commit}
-	if err := fetch.ClonerUsingGitExec(original); err != nil {
-		return errors.Errorf("failed to clone git repo: original source: %v", err)
-	}
-	defer os.RemoveAll(original.AbsPath())
-
-	// get the updated repo
-	updated := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: options.ToRef}
-	if err := fetch.ClonerUsingGitExec(updated); err != nil {
-		return errors.Errorf("failed to clone git repo: updated source: %v", err)
-	}
-	defer os.RemoveAll(updated.AbsPath())
+	localPath := filepath.Join(options.LocalPath, options.RelPackagePath)
+	originalPath := filepath.Join(options.OriginPath, options.RelPackagePath)
 
 	// Verify that there are no local changes that would prevent us from
 	// using the FastForward strategy.
-	if err := u.checkForLocalChanges(options.AbsPackagePath, original.AbsPath()); err != nil {
+	if err := u.checkForLocalChanges(localPath, originalPath); err != nil {
 		return err
 	}
 
-	// Look up all subpackages across the local package and the updated (from upstream)
-	// package.
-	subPkgPaths, err := findAllSubpackages(options.AbsPackagePath, updated.AbsPath())
-	if err != nil {
-		return err
-	}
-
-	// Update each package individually, starting with the root package.
-	for _, subPkgPath := range subPkgPaths {
-		localSubPkgPath := filepath.Join(options.AbsPackagePath, subPkgPath)
-		updatedSubPkgPath := filepath.Join(updated.AbsPath(), subPkgPath)
-
-		// Walk the package (while ignoring subpackages) and delete all files.
-		// We capture the paths to any subdirectories in the package so we
-		// can handle those later. We can't do it while walking the package
-		// since we don't want to end up deleting directories that might
-		// contain a nested subpackage.
-		var dirs []string
-		if err := pkgutil.WalkPackage(localSubPkgPath, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				if os.IsNotExist(err) {
-					return nil
-				}
-				return err
-			}
-
-			if info.IsDir() {
-				if path != localSubPkgPath {
-					dirs = append(dirs, path)
-				}
-				return nil
-			}
-			return os.Remove(path)
-		}); err != nil {
-			return err
-		}
-
-		// Delete any of the directories in the package that are
-		// empty. We start with the most deeply nested directories
-		// so we can just check every directory for files/directories.
-		sort.Slice(dirs, subPkgFirstSorter(dirs))
-		for _, p := range dirs {
-			f, err := os.Open(p)
-			if err != nil {
-				return err
-			}
-			// List up to one file or folder in the directory.
-			_, err = f.Readdirnames(1)
-			if err != nil && err != io.EOF {
-				return err
-			}
-			// If the returned error is EOF, it means the folder
-			// was empty and we can remove it.
-			if err == io.EOF {
-				err = os.RemoveAll(p)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		// If the package doesn't exist in updated, we make sure it is
-		// deleted from the local package. If it exists in updated, we copy
-		// the content of the package into local.
-		_, err = os.Stat(updatedSubPkgPath)
-		if err != nil && !os.IsNotExist(err) {
-			return err
-		}
-		if os.IsNotExist(err) {
-			if err = os.RemoveAll(localSubPkgPath); err != nil {
-				return err
-			}
-		} else {
-			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath); err != nil {
-				return err
-			}
-		}
-	}
-
-	return fetch.UpsertKptfile(options.AbsPackagePath, filepath.Base(options.AbsPackagePath), updated)
+	return (&ReplaceUpdater{}).Update(options)
 }
 
 func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string) error {
+	found, err := exists(originalPath)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return nil
+	}
+
 	subPkgPaths, err := findAllSubpackages(localPath, originalPath)
 	if err != nil {
 		return err
@@ -206,6 +113,7 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	localKf.Upstream = nil
 	localKf.UpstreamLock = nil
 
 	_, err = os.Stat(filepath.Join(orgPath, kptfilev1alpha2.KptFileName))

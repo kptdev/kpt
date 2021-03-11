@@ -153,11 +153,8 @@ func (p *pkg) allReferencedRepos(collector map[string]bool) {
 	for i := range p.subPkgs {
 		p.subPkgs[i].pkg.allReferencedRepos(collector)
 	}
-	if p.Kptfile != nil {
-		for i := range p.Kptfile.Subpackages {
-			sp := p.Kptfile.Subpackages[i]
-			collector[sp.RepoRef] = true
-		}
+	if p.Kptfile != nil && len(p.Kptfile.Upstream.RepoRef) > 0 {
+		collector[p.Kptfile.Upstream.RepoRef] = true
 	}
 }
 
@@ -242,6 +239,9 @@ func (rp *RootPkg) Build(path string, pkgName string, repoPaths map[string]strin
 	if err != nil {
 		return err
 	}
+	if rp == nil {
+		return nil
+	}
 	err = buildPkg(pkgPath, rp.pkg, pkgName, repoPaths)
 	if err != nil {
 		return err
@@ -319,7 +319,7 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 // Kptfile represents the Kptfile of a package.
 type Kptfile struct {
 	Setters      []Setter
-	Subpackages  []RemoteSubpackage
+	Upstream     Upstream
 	UpstreamLock UpstreamLock
 }
 
@@ -330,11 +330,12 @@ func NewKptfile() *Kptfile {
 // WithUpstream adds information about the upstream information to the Kptfile.
 // The upstream section of the Kptfile is only added if this information is
 // provided.
-func (k *Kptfile) WithUpstream(repo, dir, ref string) *Kptfile {
-	k.UpstreamLock = UpstreamLock{
-		Repo: repo,
-		Dir:  dir,
-		Ref:  ref,
+func (k *Kptfile) WithUpstream(repo, dir, ref, strategy string) *Kptfile {
+	k.Upstream = Upstream{
+		Repo:     repo,
+		Dir:      dir,
+		Ref:      ref,
+		Strategy: strategy,
 	}
 	return k
 }
@@ -343,25 +344,36 @@ func (k *Kptfile) WithUpstream(repo, dir, ref string) *Kptfile {
 // Kptfile. Unlike WithUpstream, this function allows providing just a
 // reference to the repo rather than the actual path. The reference will
 // be resolved to an actual path when the package is written to disk.
-func (k *Kptfile) WithUpstreamRef(repoRef, dir, ref string) *Kptfile {
-	k.UpstreamLock = UpstreamLock{
-		RepoRef: repoRef,
-		Dir:     dir,
-		Ref:     ref,
+func (k *Kptfile) WithUpstreamRef(repoRef, dir, ref, strategy string) *Kptfile {
+	k.Upstream = Upstream{
+		RepoRef:  repoRef,
+		Dir:      dir,
+		Ref:      ref,
+		Strategy: strategy,
 	}
 	return k
 }
 
-type UpstreamLock struct {
-	Repo    string
-	RepoRef string
-	Dir     string
-	Ref     string
+func (k *Kptfile) WithUpstreamLock() *Kptfile {
+	k.UpstreamLock = UpstreamLock{
+		// We just use a constant here. We can't know the commit hash in
+		// advance, so for now we just ignore the value here when we do
+		// diffs in the tests.
+		Commit: "abc123",
+	}
+	return k
 }
 
-func (k *Kptfile) WithSubpackages(subpackages ...RemoteSubpackage) *Kptfile {
-	k.Subpackages = subpackages
-	return k
+type Upstream struct {
+	Repo     string
+	RepoRef  string
+	Dir      string
+	Ref      string
+	Strategy string
+}
+
+type UpstreamLock struct {
+	Commit string
 }
 
 // RemoteSubpackage contains information about remote subpackages that should
@@ -376,16 +388,6 @@ type RemoteSubpackage struct {
 	Ref       string
 	Strategy  string
 	LocalDir  string
-}
-
-func NewSubpackage(repoRef, directory, ref, strategy, localDir string) RemoteSubpackage {
-	return RemoteSubpackage{
-		RepoRef:   repoRef,
-		Directory: directory,
-		Ref:       ref,
-		Strategy:  strategy,
-		LocalDir:  localDir,
-	}
 }
 
 // WithSetters adds information about the setters for a Kptfile.
@@ -526,18 +528,6 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: {{.PkgName}}
-{{- if gt (len .Pkg.Kptfile.Subpackages) 0 }}
-subpackages:
-{{- range .Pkg.Kptfile.Subpackages }}
-- upstream:
-    git:
-      directory: {{.Directory}}
-      ref: {{.Ref}}
-      repo: {{.Repo}}
-    updateStrategy: {{.Strategy}}
-  localDir: {{.LocalDir}}
-{{- end }}
-{{- end }}
 {{- if gt (len .Pkg.Kptfile.Setters) 0 }}
 openAPI:
   definitions:
@@ -552,38 +542,34 @@ openAPI:
 {{- end }}
 {{- end }}
 {{- end }}
-{{- if gt (len .Pkg.Kptfile.UpstreamLock.Repo) 0 }}
+{{- if gt (len .Pkg.Kptfile.Upstream.Repo) 0 }}
+upstream:
+  type: git
+  updateStrategy: {{.Pkg.Kptfile.Upstream.Strategy}}
+  git:
+    directory: {{.Pkg.Kptfile.Upstream.Dir}}
+    ref: {{.Pkg.Kptfile.Upstream.Ref}}
+    repo: {{.Pkg.Kptfile.Upstream.Repo}}
+{{- end }}
+{{- if gt (len .Pkg.Kptfile.UpstreamLock.Commit) 0 }}
 upstreamLock:
   type: git
   gitLock:
-    directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
-    ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
-    repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
-    commit: abc123
+    commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
+    directory: {{.Pkg.Kptfile.Upstream.Dir}}
+    ref: {{.Pkg.Kptfile.Upstream.Ref}}
+    repo: {{.Pkg.Kptfile.Upstream.Repo}}
 {{- end }}
 `
 
 func buildKptfile(pkg *pkg, pkgName string, repoPaths map[string]string) string {
-	for i := range pkg.Kptfile.Subpackages {
-		repoRef := pkg.Kptfile.Subpackages[i].RepoRef
-		found := false
-		for n, repoPath := range repoPaths {
-			if n == repoRef {
-				pkg.Kptfile.Subpackages[i].Repo = repoPath
-				found = true
-			}
-		}
-		if !found {
-			panic(fmt.Errorf("paths for package %s not found", repoRef))
-		}
-	}
-	if pkg.Kptfile.UpstreamLock.RepoRef != "" {
-		repoRef := pkg.Kptfile.UpstreamLock.RepoRef
+	if pkg.Kptfile.Upstream.RepoRef != "" {
+		repoRef := pkg.Kptfile.Upstream.RepoRef
 		repo, found := repoPaths[repoRef]
 		if !found {
 			panic(fmt.Errorf("paths for package %s not found", repoRef))
 		}
-		pkg.Kptfile.UpstreamLock.Repo = repo
+		pkg.Kptfile.Upstream.Repo = repo
 	}
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {

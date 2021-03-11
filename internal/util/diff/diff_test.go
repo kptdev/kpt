@@ -28,7 +28,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -70,17 +71,25 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: g.RepoDirectory,
-			Ref:     "refs/tags/v2",
-			Path:    "/",
+	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+
+	kf := kptfileutil.DefaultKptfile(g.RepoName)
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.Git{
+			Repo:      g.RepoDirectory,
+			Directory: "/",
+			Ref:       "refs/tags/v2",
 		},
-		Destination: filepath.Base(g.RepoDirectory),
-	}.Run()
+		UpdateStrategy: kptfilev1alpha2.FastForward,
+	}
+	err = kptfileutil.WriteFile(localPkg, kf)
 	assert.NoError(t, err)
 
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+	err = fetch.Command{
+		Path: localPkg,
+	}.Run()
+	assert.NoError(t, err)
 
 	diffOutput := &bytes.Buffer{}
 
@@ -153,13 +162,24 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit2)
 
 	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: g.RepoDirectory,
-			Ref:     "refs/tags/v2",
-			Path:    "/",
+	err = os.MkdirAll(localPkg, 0700)
+	assert.NoError(t, err)
+
+	kf := kptfileutil.DefaultKptfile(g.RepoName)
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.Git{
+			Repo:      g.RepoDirectory,
+			Directory: "/",
+			Ref:       "refs/tags/v2",
 		},
-		Destination: localPkg,
+		UpdateStrategy: kptfilev1alpha2.FastForward,
+	}
+	err = kptfileutil.WriteFile(localPkg, kf)
+	assert.NoError(t, err)
+
+	err = fetch.Command{
+		Path: localPkg,
 	}.Run()
 	assert.NoError(t, err)
 
@@ -228,13 +248,24 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 
 	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: g.RepoDirectory,
-			Ref:     "refs/tags/v2",
-			Path:    "/",
+	err = os.MkdirAll(localPkg, 0700)
+	assert.NoError(t, err)
+
+	kf := kptfileutil.DefaultKptfile(g.RepoName)
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.Git{
+			Repo:      g.RepoDirectory,
+			Directory: "/",
+			Ref:       "refs/tags/v2",
 		},
-		Destination: localPkg,
+		UpdateStrategy: kptfilev1alpha2.FastForward,
+	}
+	err = kptfileutil.WriteFile(localPkg, kf)
+	assert.NoError(t, err)
+
+	err = fetch.Command{
+		Path: localPkg,
 	}.Run()
 	assert.NoError(t, err)
 

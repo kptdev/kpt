@@ -40,14 +40,13 @@ var TypeMeta = yaml.ResourceMeta{
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline"`
 
+	Upstream *Upstream `yaml:"upstream,omitempty"`
+
 	// UpstreamLock is a resolved locator for the last fetch of the package.
 	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty"`
 
 	// Info contains metadata such as license, documentation, etc.
 	Info *PackageInfo `yaml:"info,omitempty"`
-
-	// Subpackages declares the list of subpackages.
-	Subpackages []Subpackage `yaml:"subpackages,omitempty"`
 
 	// Pipeline declares the pipeline of functions.
 	Pipeline *Pipeline `yaml:"pipeline,omitempty"`

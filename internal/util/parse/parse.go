@@ -26,7 +26,7 @@ import (
 )
 
 type Target struct {
-	kptfilev1alpha2.GitLock
+	kptfilev1alpha2.Git
 	Destination string
 }
 

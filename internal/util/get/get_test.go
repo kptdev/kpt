@@ -37,7 +37,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	err := Command{
 		Destination: w.WorkspaceDirectory,
 	}.Run()
-	assert.EqualError(t, err, "must specify repo")
+	assert.EqualError(t, err, "must specify git repo information")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -46,7 +46,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo: "foo",
 		},
 		Destination: w.WorkspaceDirectory,
@@ -68,7 +68,7 @@ func TestCommand_Run(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{GitLock: kptfilev1alpha2.GitLock{
+	err := Command{Git: &kptfilev1alpha2.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Ref:       "master",
 		Directory: "/",
@@ -94,13 +94,22 @@ func TestCommand_Run(t *testing.T) {
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit, // verify the commit matches the repo
 			},
+		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
+				Directory: "/",
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "master",
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
 }
@@ -120,7 +129,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err := Command{GitLock: kptfilev1alpha2.GitLock{
+	err := Command{Git: &kptfilev1alpha2.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: absPath,
 	}.Run()
@@ -152,6 +161,15 @@ func TestCommand_Run_subdir(t *testing.T) {
 				Repo:      g.RepoDirectory,
 			},
 		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: "git",
+			Git: &kptfilev1alpha2.Git{
+				Directory: subdir,
+				Ref:       "refs/heads/master",
+				Repo:      g.RepoDirectory,
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+		},
 	})
 }
 
@@ -169,7 +187,7 @@ func TestCommand_Run_destination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -196,13 +214,22 @@ func TestCommand_Run_destination(t *testing.T) {
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit,
 			},
+		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
+				Directory: "/",
+				Repo:      g.RepoDirectory,
+				Ref:       "master",
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
 }
@@ -224,7 +251,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: subdir,
@@ -251,13 +278,22 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "master",
 				Repo:      g.RepoDirectory,
 			},
+		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
+				Directory: subdir,
+				Ref:       "master",
+				Repo:      g.RepoDirectory,
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
 }
@@ -295,7 +331,7 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/heads/exp",
 			Directory: "/",
@@ -320,13 +356,22 @@ func TestCommand_Run_branch(t *testing.T) {
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
 				Commit:    commit,
 			},
+		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
+				Directory: "/",
+				Repo:      g.RepoDirectory,
+				Ref:       "refs/heads/exp",
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
 }
@@ -369,7 +414,7 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/tags/v2",
 			Directory: "/",
@@ -394,7 +439,7 @@ func TestCommand_Run_tag(t *testing.T) {
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
@@ -402,206 +447,14 @@ func TestCommand_Run_tag(t *testing.T) {
 				Commit:    commit,
 			},
 		},
-	})
-}
-
-// TestCommand_Run_clean verifies that the Command delete the existing directory if Clean is set.
-//
-// 1. clone the master branch
-// 2. add data to the master branch and commit it
-// 3. clone the master branch again
-// 4. verify the new master branch data is present
-func TestCommand_Run_clean(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
-		Data:   testutil.Dataset1,
-		Branch: "master",
-	}, map[string]string{})
-	defer clean()
-
-	defer testutil.Chdir(t, w.WorkspaceDirectory)()
-
-	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
-		},
-		Destination: absPath,
-	}.Run()
-	assert.NoError(t, err)
-
-	// verify the KptFile contains the expected values
-	commit, err := g.GetCommit()
-	assert.NoError(t, err)
-
-	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
-
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
-		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
+				Ref:       "refs/tags/v2",
 			},
-		},
-	})
-
-	// update the data that would be cloned
-	err = g.ReplaceData(testutil.Dataset2)
-	assert.NoError(t, err)
-	err = g.Commit("new-data")
-	assert.NoError(t, err)
-
-	// verify the KptFile contains the expected values
-	commit, err = g.GetCommit()
-	assert.NoError(t, err)
-
-	// configure clone to clean the existing dir
-	err = Command{
-		GitLock: kptfilev1alpha2.GitLock{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
-		},
-		Destination: absPath,
-		Clean:       true,
-	}.Run()
-	assert.NoError(t, err)
-
-	// verify files are updated
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
-		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
-}
-
-// TestCommand_Run_failClean verifies that the Command will not clean the existing directory if it
-// fails to clone.
-//
-// 1. clone the master branch
-// 2. clone a non-existing branch
-// 3. verify the master branch data is still present
-func TestCommand_Run_failClean(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
-		Data:   testutil.Dataset1,
-		Branch: "master",
-	}, map[string]string{})
-	defer clean()
-
-	defer testutil.Chdir(t, w.WorkspaceDirectory)()
-
-	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
-			Repo:      g.RepoDirectory,
-			Ref:       "master",
-			Directory: "/",
-		},
-		Destination: absPath,
-	}.Run()
-	assert.NoError(t, err)
-
-	// verify the KptFile contains the expected values
-	commit, err := g.GetCommit()
-	assert.NoError(t, err)
-
-	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
-		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
-		},
-	})
-
-	// configure clone to clean the existing dir, but fail
-	err = Command{
-		GitLock: kptfilev1alpha2.GitLock{
-			Repo:      g.RepoDirectory,
-			Ref:       "refs/heads/not-real",
-			Directory: "/",
-		},
-		Destination: absPath,
-		Clean:       true,
-	}.Run()
-	if !assert.Error(t, err) {
-		t.FailNow()
-	}
-	if !assert.Contains(t, err.Error(), "refs/heads/not-real") {
-		t.FailNow()
-	}
-	if !assert.Contains(t, err.Error(), "exit status 128") {
-		t.FailNow()
-	}
-
-	// verify files weren't deleted
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: g.RepoName,
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
-		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
-				Directory: "/",
-				Repo:      g.RepoDirectory,
-				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
-			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
 }
@@ -619,7 +472,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -646,13 +499,22 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit, // verify the commit matches the repo
 			},
+		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
+				Directory: "/",
+				Repo:      g.RepoDirectory,
+				Ref:       "master",
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
 
@@ -664,7 +526,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// try to clone and expect a failure
 	err = Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -687,13 +549,22 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit, // verify the commit matches the repo
 			},
+		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
+				Directory: "/",
+				Repo:      g.RepoDirectory,
+				Ref:       "master",
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
 }
@@ -707,7 +578,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
 	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      "foo",
 			Directory: "/",
 			Ref:       "refs/heads/master",
@@ -731,7 +602,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
 	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
 			Ref:       "refs/heads/foo",
@@ -757,7 +628,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		GitLock: kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
 			Ref:       "refs/tags/foo",
@@ -798,7 +669,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			expectedResult: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master"),
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLock(),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 		},
@@ -820,7 +692,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			expectedResult: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master"),
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLock(),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -836,16 +709,32 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			upstream: testutil.Content{
 				Branch: "master",
 				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/", "main", "fast-forward", "foo"),
-							),
-					).
 					WithResource(pkgbuilder.DeploymentResource).
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("subpkg").
 							WithResource(pkgbuilder.ConfigMapResource),
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "main", "fast-forward").
+									WithUpstreamLock(),
+							).
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile(),
+									).
+									WithResource(pkgbuilder.ConfigMapResource).
+									WithSubPackages(
+										pkgbuilder.NewSubPkg("bar").
+											WithKptfile(
+												pkgbuilder.NewKptfile().
+													WithUpstreamRef("bar", "/", "main", "fast-forward").
+													WithUpstreamLock(),
+											).WithResource(pkgbuilder.DeploymentResource),
+									),
+							),
 					),
 			},
 			refRepos: map[string][]testutil.Content{
@@ -857,12 +746,18 @@ func TestCommand_Run_subpackages(t *testing.T) {
 							WithSubPackages(
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
-										pkgbuilder.NewKptfile().
-											WithSubpackages(
-												pkgbuilder.NewSubpackage("bar", "/", "main", "fast-forward", "bar"),
-											),
+										pkgbuilder.NewKptfile(),
 									).
-									WithResource(pkgbuilder.ConfigMapResource),
+									WithResource(pkgbuilder.ConfigMapResource).
+									WithSubPackages(
+										pkgbuilder.NewSubPkg("bar").
+											WithKptfile(
+												pkgbuilder.NewKptfile().
+													WithUpstreamRef("bar", "/", "main", "fast-forward").
+													WithUpstreamLock(),
+											).
+											WithResource(pkgbuilder.DeploymentResource),
+									),
 							),
 					},
 				},
@@ -877,33 +772,30 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			expectedResult: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/", "main", "fast-forward", "foo"),
-						).
-						WithUpstreamRef("upstream", "/", "master"),
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLock(),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("foo").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "main"),
+								WithUpstreamRef("foo", "/", "main", "fast-forward").
+								WithUpstreamLock(),
 						).
 						WithResource(pkgbuilder.DeploymentResource).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("subpkg").
 								WithKptfile(
-									pkgbuilder.NewKptfile().
-										WithSubpackages(
-											pkgbuilder.NewSubpackage("bar", "/", "main", "fast-forward", "bar"),
-										),
+									pkgbuilder.NewKptfile(),
 								).
 								WithResource(pkgbuilder.ConfigMapResource).
 								WithSubPackages(
 									pkgbuilder.NewSubPkg("bar").
 										WithKptfile(
 											pkgbuilder.NewKptfile().
-												WithUpstreamRef("bar", "/", "main"),
+												WithUpstreamRef("bar", "/", "main", "fast-forward").
+												WithUpstreamLock(),
 										).
 										WithResource(pkgbuilder.DeploymentResource),
 								),
@@ -919,17 +811,17 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			upstream: testutil.Content{
 				Branch: "main",
 				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
-							),
-					).
+					WithKptfile().
 					WithResource(pkgbuilder.DeploymentResource).
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("bar").
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/subpkg", "v1.2", "fast-forward"),
+							),
 					),
 			},
 			refRepos: map[string][]testutil.Content{
@@ -944,28 +836,28 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			expectedResult: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/bar", "main"),
+						WithUpstreamRef("upstream", "/bar", "main", "resource-merge").
+						WithUpstreamLock(),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},
 		{
-			name:      "package with remote subpackage with a tag reference",
+			name:      "package with unfetched remote subpackage with a tag reference",
 			directory: "/",
 			ref:       "main",
 			upstream: testutil.Content{
 				Branch: "main",
 				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
-							),
-					).
 					WithResource(pkgbuilder.DeploymentResource).
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("bar").
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/subpkg", "v1.2", "fast-forward"),
+							),
 					),
 			},
 			refRepos: map[string][]testutil.Content{
@@ -992,10 +884,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			expectedResult: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/subpkg", "v1.2", "fast-forward", "foo"),
-						).
-						WithUpstreamRef("upstream", "/", "main"),
+						WithUpstreamRef("upstream", "/", "main", "resource-merge").
+						WithUpstreamLock(),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -1005,23 +895,29 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					pkgbuilder.NewSubPkg("foo").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/subpkg", "v1.2"),
+								WithUpstreamRef("foo", "/subpkg", "v1.2", "fast-forward").
+								WithUpstreamLock(),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 		},
 		{
-			name:      "same remote subpackage referenced multiple times",
+			name:      "same unfetched remote subpackage referenced multiple times",
 			directory: "/",
 			ref:       "master",
 			upstream: testutil.Content{
 				Branch: "master",
 				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/subpkg", "subpkg/v1.2", "fast-forward", "foo-sub"),
-								pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo-root"),
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo-sub").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/subpkg", "subpkg/v1.2", "fast-forward"),
+							),
+						pkgbuilder.NewSubPkg("foo-root").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "fast-forward"),
 							),
 					),
 			},
@@ -1049,23 +945,22 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			expectedResult: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/subpkg", "subpkg/v1.2", "fast-forward", "foo-sub"),
-							pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo-root"),
-						).
-						WithUpstreamRef("upstream", "/", "master"),
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLock(),
 				).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("foo-sub").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/subpkg", "subpkg/v1.2"),
+								WithUpstreamRef("foo", "/subpkg", "subpkg/v1.2", "fast-forward").
+								WithUpstreamLock(),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 					pkgbuilder.NewSubPkg("foo-root").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "master"),
+								WithUpstreamRef("foo", "/", "master", "fast-forward").
+								WithUpstreamLock(),
 						).
 						WithResource(pkgbuilder.ConfigMapResource).
 						WithSubPackages(
@@ -1074,68 +969,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithResource(pkgbuilder.DeploymentResource),
 						),
 				),
-		},
-		{
-			name:      "conflict between local and remote subpackage",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward", "foo"),
-							),
-					).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("foo").
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-				},
-			},
-			expectedErrMsg: "local subpackage in directory \"foo\" already exist",
-		},
-		{
-			name:      "conflict between two remote subpackages",
-			directory: "/",
-			ref:       "master",
-			upstream: testutil.Content{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(
-						pkgbuilder.NewKptfile().
-							WithSubpackages(
-								pkgbuilder.NewSubpackage("foo", "/", "master", "fast-forward", "subpkg"),
-								pkgbuilder.NewSubpackage("bar", "/", "master", "fast-forward", "subpkg"),
-							),
-					),
-			},
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-				},
-				"bar": {
-					{
-						Branch: "master",
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-					},
-				},
-			},
-			expectedErrMsg: "multiple remote subpackages with localDir \"subpkg\"",
 		},
 	}
 
@@ -1170,7 +1003,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
 
 			err = Command{
-				GitLock: kptfilev1alpha2.GitLock{
+				Git: &kptfilev1alpha2.Git{
 					Repo:      g.RepoDirectory,
 					Directory: test.directory,
 					Ref:       test.ref,
@@ -1208,229 +1041,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 
 			expectedPath := pkgbuilder.ExpandPkgWithName(t, test.expectedResult, targetDir, repoPaths)
 			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
-		})
-	}
-}
-
-func TestCommand_Run_fetchIntoSubpackage(t *testing.T) {
-	testCases := map[string]struct {
-		initialUpstream *pkgbuilder.RootPkg
-		refRepos        map[string][]testutil.Content
-		subPkgPath      string
-		repoRef         string
-		directory       string
-		ref             string
-		expectedResult  *pkgbuilder.RootPkg
-		expectedErrMsg  string
-	}{
-		"fetching a subpackage should update parent Kptfile": {
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.DeploymentResource),
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: "master",
-					},
-				},
-			},
-			subPkgPath: "foo",
-			repoRef:    "foo",
-			directory:  "/",
-			ref:        "master",
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master").
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "/", "master", "resource-merge", "foo"),
-						),
-				).
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "master"),
-						).
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-		},
-		"Kptfile should be updated when parent is not in the immediate parent folder": {
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.DeploymentResource),
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithSubPackages(
-								pkgbuilder.NewSubPkg("nested").
-									WithResource(pkgbuilder.ConfigMapResource),
-							),
-						Branch: "main",
-						Tag:    "my-tag",
-					},
-				},
-			},
-			subPkgPath: "deeply/nested/package",
-			repoRef:    "foo",
-			directory:  "nested",
-			ref:        "my-tag",
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master").
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("foo", "nested", "my-tag", "resource-merge", "deeply/nested/package"),
-						),
-				).
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("deeply").
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("nested").
-								WithSubPackages(
-									pkgbuilder.NewSubPkg("package").
-										WithKptfile(
-											pkgbuilder.NewKptfile().
-												WithUpstreamRef("foo", "nested", "my-tag"),
-										).
-										WithResource(pkgbuilder.ConfigMapResource),
-								),
-						),
-				),
-		},
-		"it is an error if there is already another subpackage in the specified path": {
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("bar", "/", "master", "fast-forward", "sub"),
-						),
-				).
-				WithResource(pkgbuilder.DeploymentResource),
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: "main",
-					},
-				},
-				"bar": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: "master",
-					},
-				},
-			},
-			subPkgPath:     "sub",
-			repoRef:        "foo",
-			directory:      "/",
-			ref:            "main",
-			expectedErrMsg: "subpackage with localDir \"sub\" already exist",
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master").
-						WithSubpackages(
-							pkgbuilder.NewSubpackage("bar", "/", "master", "fast-forward", "sub"),
-						),
-				).
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("sub").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("bar", "/", "master"),
-						).
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-		},
-		"if the package can't be fetched, we roll back the change to the Kptfile": {
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource),
-			refRepos: map[string][]testutil.Content{
-				"foo": {
-					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: "main",
-					},
-				},
-			},
-			subPkgPath:     "sub",
-			repoRef:        "foo",
-			directory:      "/",
-			ref:            "unknownRef",
-			expectedErrMsg: "failed to clone git repo",
-			expectedResult: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", "master"),
-				).
-				WithResource(pkgbuilder.DeploymentResource),
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			g := &testutil.TestSetupManager{
-				T:               t,
-				RefReposChanges: tc.refRepos,
-			}
-			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Pkg:    tc.initialUpstream,
-				Branch: "master",
-			}) {
-				return
-			}
-
-			repoPath, found := g.RepoPaths[tc.repoRef]
-			if !found {
-				t.Errorf("expected to found a path for repoRef %q, but didn't", tc.repoRef)
-			}
-			fullSubPkgPath := filepath.Join(g.LocalWorkspace.FullPackagePath(), tc.subPkgPath)
-			err := Command{
-				GitLock: kptfilev1alpha2.GitLock{
-					Repo:      repoPath,
-					Directory: tc.directory,
-					Ref:       tc.ref,
-				},
-				Destination: fullSubPkgPath,
-			}.Run()
-
-			if tc.expectedErrMsg != "" {
-				if assert.Error(t, err) {
-					assert.Contains(t, err.Error(), tc.expectedErrMsg)
-				}
-			} else {
-				assert.NoError(t, err)
-			}
-
-			// Format the Kptfiles so we can diff the output without
-			// formatting issues.
-			rw := &kio.LocalPackageReadWriter{
-				NoDeleteFiles:  true,
-				PackagePath:    g.LocalWorkspace.FullPackagePath(),
-				MatchFilesGlob: []string{kptfilev1alpha2.KptFileName},
-			}
-			err = kio.Pipeline{
-				Inputs:  []kio.Reader{rw},
-				Filters: []kio.Filter{filters.FormatFilter{}},
-				Outputs: []kio.Writer{rw},
-			}.Execute()
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			expectedPath := pkgbuilder.ExpandPkgWithName(t, tc.expectedResult, g.UpstreamRepo.RepoName, g.RepoPaths)
-			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
 		})
 	}
 }
