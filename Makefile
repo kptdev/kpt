@@ -91,7 +91,7 @@ site-run-server:
 	npx http-server site/ -p 3000
 
 site-check:
-	./scripts/checkSite.sh
+	./scripts/check-site.sh
 
 site-verify-guides:
 	./scripts/verifyGuides.sh
