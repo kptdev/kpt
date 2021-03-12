@@ -87,14 +87,14 @@ gencatalog:
 	rm site/content/en/guides/consumer/function/catalog/*/_index.md
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
-run-site:
+site-run-server:
 	(cd site && python -m SimpleHTTPServer 3000)
 
-check-site:
+site-check:
 	./scripts/checkSite.sh
 
-verify-guides:
+site-verify-guides:
 	./scripts/verifyGuides.sh
 
-verify-examples:
+site-verify-examples:
 	./scripts/verifyExamples.sh
