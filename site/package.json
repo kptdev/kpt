@@ -21,6 +21,7 @@
   "dependencies": {},
   "devDependencies": {
     "autoprefixer": "^9.7.4",
+    "href-checker": "etefera/href-checker",
     "markdownlint-cli": "^0.23.2",
     "postcss-cli": "^5.0.1"
   }
