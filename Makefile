@@ -88,7 +88,7 @@ gencatalog:
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
 site-run-server:
-	npx http-server site/ -p 3001
+	npx http-server site/ -p 3000
 
 site-check:
 	./scripts/checkSite.sh
