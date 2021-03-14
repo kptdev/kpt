@@ -30,6 +30,9 @@ type UniquePath string
 // be used for display purposes and is subject to change.
 type DisplayPath string
 
+const CurDir = "."
+const ParentDir = ".."
+
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
 	UniquePath  UniquePath
@@ -48,31 +51,27 @@ type Pkg struct {
 // New returns a pkg given an absolute or relative OS-defined path.
 // Use ReadKptfile or ReadPipeline on the return value to read meta resources from filesystem.
 func New(path string) (*Pkg, error) {
-	p := filepath.Clean(path)
-
-	u, err := filepath.EvalSymlinks(p)
+	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
-
-	u, err = filepath.Abs(u)
-	if err != nil {
-		return nil, err
-	}
-
-	var d string
-	if filepath.IsAbs(p) {
-		wd, err := os.Getwd()
+	var relPath string
+	var absPath string
+	if filepath.IsAbs(path) {
+		// If the provided path is absolute, we find the relative path by
+		// comparing it to the current working directory.
+		relPath, err = filepath.Rel(cwd, path)
 		if err != nil {
 			return nil, err
 		}
-		d, err = filepath.Rel(wd, p)
-		if err != nil {
-			return nil, err
-		}
+		absPath = filepath.Clean(path)
+	} else {
+		// If the provided path is relative, we find the absolute path by
+		// combining the current working directory with the relative path.
+		relPath = filepath.Clean(path)
+		absPath = filepath.Join(cwd, path)
 	}
-	d = filepath.ToSlash(d)
-	return &Pkg{UniquePath: UniquePath(u), DisplayPath: DisplayPath(d)}, nil
+	return &Pkg{UniquePath: UniquePath(absPath), DisplayPath: DisplayPath(relPath)}, nil
 }
 
 // Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
@@ -94,9 +93,4 @@ func (p *Pkg) Pipeline() *kptfilev1alpha2.Pipeline {
 		p.pipelineLoaded = true
 	}
 	return p.pipeline
-}
-
-// String returns the slash-separated relative path to the package.
-func (p *Pkg) String() string {
-	return string(p.DisplayPath)
 }

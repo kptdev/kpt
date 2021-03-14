@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/spf13/cobra"
@@ -66,9 +67,9 @@ type Runner struct {
 	Command  *cobra.Command
 }
 
-func (r *Runner) preRunE(c *cobra.Command, args []string) error {
+func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		args = append(args, ".")
+		args = append(args, pkg.CurDir)
 	}
 	r.Update.Strategy = update.StrategyType(r.strategy)
 	parts := strings.Split(args[0], "@")
@@ -76,13 +77,15 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("at most 1 version permitted")
 	}
 
-	var err error
-	r.Update.Path, r.Update.FullPackagePath, err = cmdutil.ResolveAbsAndRelPaths(parts[0])
+	p, err := pkg.New(parts[0])
 	if err != nil {
 		return err
 	}
 
-	if strings.HasPrefix(r.Update.Path, "../") {
+	r.Update.Path = string(p.DisplayPath)
+	r.Update.FullPackagePath = string(p.UniquePath)
+
+	if strings.HasPrefix(r.Update.Path, pkg.ParentDir) {
 		return errors.Errorf("package path must be under current working directory")
 	}
 
@@ -92,7 +95,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Runner) runE(c *cobra.Command, args []string) error {
+func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if len(r.Update.Ref) > 0 {
 		fmt.Fprintf(c.ErrOrStderr(), "updating package %s to %s\n",
 			r.Update.Path, r.Update.Ref)
