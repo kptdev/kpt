@@ -94,7 +94,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	r.Path = string(p.DisplayPath)
+	r.Path = string(p.UniquePath)
 	r.Ref = version
 
 	return r.Validate()
