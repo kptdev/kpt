@@ -156,77 +156,6 @@ apiVersion: v1
 `,
 		},
 		{
-			name: "star",
-			args: []string{"run", "dir",
-				"--enable-star",
-				"--star-path", "a/b/c",
-				"--star-name", "foo",
-				"--", "Foo", "g=h"},
-			path: "dir",
-			expected: `
-metadata:
-  name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      starlark: {path: a/b/c, name: foo}
-data: {g: h}
-kind: Foo
-apiVersion: v1
-`,
-		},
-		{
-			name: "star-not-enabled",
-			args: []string{"run", "dir",
-				"--star-path", "a/b/c",
-				"--star-name", "foo",
-				"--", "Foo", "g=h"},
-			path: "dir",
-			err:  "must specify --enable-star with --star-path",
-		},
-		{
-			name: "image-star-not-enabled",
-			args: []string{"run", "dir",
-				"--image", "some_image",
-				"--star-path", "a/b/c",
-				"--star-name", "foo",
-				"--", "Foo", "g=h"},
-			path: "dir",
-			err:  "must specify --enable-star with --star-path",
-		},
-		{
-			name: "star-enabled",
-			args: []string{"run", "dir", "--enable-star"},
-			path: "dir",
-			expectedStruct: &runfn.RunFns{
-				Path:           "dir",
-				EnableStarlark: true,
-				Env:            []string{},
-			},
-		},
-		{
-			name:          "function paths",
-			args:          []string{"run", "dir", "--fn-path", "path1", "--fn-path", "path2"},
-			path:          "dir",
-			functionPaths: []string{"path1", "path2"},
-		},
-		{
-			name: "custom kind with function paths",
-			args: []string{
-				"run", "dir", "--fn-path", "path", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
-			path:          "dir",
-			functionPaths: []string{"path"},
-			expected: `
-metadata:
-  name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
-data: {g: h, i: j=k}
-kind: Foo
-apiVersion: v1
-`,
-		},
-		{
 			name: "custom kind with storage mounts",
 			args: []string{
 				"run", "dir", "--mount", "type=bind,src=/mount/path,dst=/local/",
@@ -371,11 +300,6 @@ apiVersion: v1
 				}
 			}
 
-			// check if FunctionPaths were set
-			if tt.functionPaths == nil {
-				// make Equal work against flag default
-				tt.functionPaths = []string{}
-			}
 			if !assert.Equal(t, tt.functionPaths, r.RunFns.FunctionPaths) {
 				t.FailNow()
 			}
