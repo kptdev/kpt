@@ -1,6 +1,9 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
+// do not lint this file since it's copied from 3rd-party.
+// TODO: refactor this file so it can pass linter
+//nolint
 package commands
 
 import (
@@ -15,8 +18,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-
-	"sigs.k8s.io/kustomize/cmd/config/internal/generateddocs/commands"
 )
 
 // GetCatRunner returns a RunFnRunner.
@@ -24,9 +25,6 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r := &RunFnRunner{}
 	c := &cobra.Command{
 		Use:     "run [DIR]",
-		Short:   commands.RunFnsShort,
-		Long:    commands.RunFnsLong,
-		Example: commands.RunFnsExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
