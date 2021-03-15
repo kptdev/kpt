@@ -20,6 +20,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands"
 )
 
 func GetFnCommand(name string) *cobra.Command {
@@ -41,7 +43,7 @@ func GetFnCommand(name string) *cobra.Command {
 		},
 	}
 
-	run := configcobra.RunFn(name)
+	run := commands.RunCommand(name)
 	run.Short = fndocs.RunShort
 	run.Long = fndocs.RunShort + "\n" + fndocs.RunLong
 	run.Example = fndocs.RunExamples
