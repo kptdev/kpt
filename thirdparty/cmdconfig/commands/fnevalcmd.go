@@ -8,20 +8,19 @@ import (
 	"io"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
-
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
-	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// GetCatRunner returns a RunFnRunner.
-func GetRunFnRunner(name string) *RunFnRunner {
-	r := &RunFnRunner{}
+// GetEvalFnRunner returns a EvalFnRunner.
+func GetEvalFnRunner(name string) *EvalFnRunner {
+	r := &EvalFnRunner{}
 	c := &cobra.Command{
-		Use:     "run [DIR]",
+		Use:     "eval [DIR]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
@@ -55,12 +54,12 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	return r
 }
 
-func RunCommand(name string) *cobra.Command {
-	return GetRunFnRunner(name).Command
+func EvalCommand(name string) *cobra.Command {
+	return GetEvalFnRunner(name).Command
 }
 
-// RunFnRunner contains the run function
-type RunFnRunner struct {
+// EvalFnRunner contains the run function
+type EvalFnRunner struct {
 	IncludeSubpackages bool
 	Command            *cobra.Command
 	DryRun             bool
@@ -76,13 +75,13 @@ type RunFnRunner struct {
 	AsCurrentUser      bool
 }
 
-func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
+func (r *EvalFnRunner) runE(c *cobra.Command, args []string) error {
 	return runner.HandleError(c, r.RunFns.Execute())
 }
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
 // Functions to run.
-func (r *RunFnRunner) getContainerFunctions(dataItems []string) (
+func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
 	[]*yaml.RNode, error) {
 
 	if r.Image == "" && r.ExecPath == "" {
@@ -197,7 +196,7 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 	return sms
 }
 
-func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
+func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if c.ArgsLenAtDash() >= 0 && r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image")
 	}

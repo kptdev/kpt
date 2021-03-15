@@ -9,10 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-
-	"sigs.k8s.io/kustomize/kyaml/runfn"
 )
 
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
@@ -33,7 +32,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 	}{
 		{
 			name: "config map",
-			args: []string{"run", "dir", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", "dir", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
 			expected: `
 metadata:
@@ -48,7 +47,7 @@ apiVersion: v1
 		},
 		{
 			name:   "config map stdin / stdout",
-			args:   []string{"run", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args:   []string{"eval", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			input:  os.Stdin,
 			output: os.Stdout,
 			expected: `
@@ -64,7 +63,7 @@ apiVersion: v1
 		},
 		{
 			name:   "config map dry-run",
-			args:   []string{"run", "dir", "--image", "foo:bar", "--dry-run", "--", "a=b", "c=d", "e=f"},
+			args:   []string{"eval", "dir", "--image", "foo:bar", "--dry-run", "--", "a=b", "c=d", "e=f"},
 			output: os.Stdout,
 			path:   "dir",
 			expected: `
@@ -80,7 +79,7 @@ apiVersion: v1
 		},
 		{
 			name: "config map no args",
-			args: []string{"run", "dir", "--image", "foo:bar"},
+			args: []string{"eval", "dir", "--image", "foo:bar"},
 			path: "dir",
 			expected: `
 metadata:
@@ -95,7 +94,7 @@ apiVersion: v1
 		},
 		{
 			name:    "network enabled",
-			args:    []string{"run", "dir", "--image", "foo:bar", "--network"},
+			args:    []string{"eval", "dir", "--image", "foo:bar", "--network"},
 			path:    "dir",
 			network: true,
 			expected: `
@@ -111,7 +110,7 @@ apiVersion: v1
 		},
 		{
 			name:    "with network name",
-			args:    []string{"run", "dir", "--image", "foo:bar", "--network"},
+			args:    []string{"eval", "dir", "--image", "foo:bar", "--network"},
 			path:    "dir",
 			network: true,
 			expected: `
@@ -127,7 +126,7 @@ apiVersion: v1
 		},
 		{
 			name: "custom kind",
-			args: []string{"run", "dir", "--image", "foo:bar", "--", "Foo", "g=h"},
+			args: []string{"eval", "dir", "--image", "foo:bar", "--", "Foo", "g=h"},
 			path: "dir",
 			expected: `
 metadata:
@@ -142,7 +141,7 @@ apiVersion: v1
 		},
 		{
 			name: "custom kind '=' in data",
-			args: []string{"run", "dir", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+			args: []string{"eval", "dir", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
 			path: "dir",
 			expected: `
 metadata:
@@ -158,7 +157,7 @@ apiVersion: v1
 		{
 			name: "custom kind with storage mounts",
 			args: []string{
-				"run", "dir", "--mount", "type=bind,src=/mount/path,dst=/local/",
+				"eval", "dir", "--mount", "type=bind,src=/mount/path,dst=/local/",
 				"--mount", "type=volume,src=myvol,dst=/local/",
 				"--mount", "type=tmpfs,dst=/local/",
 				"--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
@@ -177,7 +176,7 @@ apiVersion: v1
 		},
 		{
 			name: "results_dir",
-			args: []string{"run", "dir", "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", "dir", "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:       "dir",
@@ -197,22 +196,22 @@ apiVersion: v1
 		},
 		{
 			name: "config map multi args",
-			args: []string{"run", "dir", "dir2", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", "dir", "dir2", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "0 or 1 arguments supported",
 		},
 		{
 			name: "config map not image",
-			args: []string{"run", "dir", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", "dir", "--", "a=b", "c=d", "e=f"},
 			err:  "must specify --image",
 		},
 		{
 			name: "config map bad data",
-			args: []string{"run", "dir", "--image", "foo:bar", "--", "a=b", "c", "e=f"},
+			args: []string{"eval", "dir", "--image", "foo:bar", "--", "a=b", "c", "e=f"},
 			err:  "must have keys and values separated by",
 		},
 		{
 			name: "log steps",
-			args: []string{"run", "dir", "--log-steps"},
+			args: []string{"eval", "dir", "--log-steps"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:     "dir",
@@ -222,7 +221,7 @@ apiVersion: v1
 		},
 		{
 			name: "envs",
-			args: []string{"run", "dir", "--env", "FOO=BAR", "-e", "BAR"},
+			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path: "dir",
@@ -231,7 +230,7 @@ apiVersion: v1
 		},
 		{
 			name: "as current user",
-			args: []string{"run", "dir", "--as-current-user"},
+			args: []string{"eval", "dir", "--as-current-user"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:          "dir",
@@ -244,7 +243,7 @@ apiVersion: v1
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			r := GetRunFnRunner("kustomize")
+			r := GetEvalFnRunner("kpt")
 			// Don't run the actual command
 			r.Command.Run = nil
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error { return nil }

@@ -936,6 +936,38 @@ func TestCmd_Execute(t *testing.T) {
 	assert.Contains(t, string(b), "kind: StatefulSet")
 }
 
+func TestCmd_Execute_includeMetaResources(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	// write a test filter to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	// write a Kptfile to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "Kptfile"), []byte("kind: Deployment"), 0600)) {
+		return
+	}
+
+	instance := RunFns{
+		Path:                   dir,
+		functionFilterProvider: getFilterProvider(t),
+		IncludeMetaResources:   true,
+	}
+	if !assert.NoError(t, instance.Execute()) {
+		t.FailNow()
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(dir, "Kptfile"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(b), "kind: StatefulSet")
+}
+
 type TestFilter struct {
 	invoked bool
 	Exit    error

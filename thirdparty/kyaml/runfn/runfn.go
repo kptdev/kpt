@@ -101,6 +101,10 @@ type RunFns struct {
 	// If it is true, the empty result will be provided as input to the next
 	// function in the list.
 	ContinueOnEmptyResult bool
+
+	// IncludeMetaResources indicates will kpt add pkg meta resources such as
+	// Kptfile to the input resources to the function.
+	IncludeMetaResources bool
 }
 
 // Execute runs the command
@@ -129,8 +133,12 @@ func (r RunFns) getNodesAndFilters() (
 	// save the output dir because we will need it to write back
 	// the same one for reading must be used for writing if deleting Resources
 	var outputPkg *kio.LocalPackageReadWriter
+	matchFilesGlob := kio.MatchAll
+	if r.IncludeMetaResources {
+		matchFilesGlob = append(matchFilesGlob, "Kptfile")
+	}
 	if r.Path != "" {
-		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path, MatchFilesGlob: kio.MatchAll}
+		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path, MatchFilesGlob: matchFilesGlob}
 	}
 
 	if r.Input == nil {

@@ -43,10 +43,10 @@ func GetFnCommand(name string) *cobra.Command {
 		},
 	}
 
-	run := commands.RunCommand(name)
-	run.Short = fndocs.RunShort
-	run.Long = fndocs.RunShort + "\n" + fndocs.RunLong
-	run.Example = fndocs.RunExamples
+	eval := commands.EvalCommand(name)
+	eval.Short = fndocs.RunShort
+	eval.Long = fndocs.RunShort + "\n" + fndocs.RunLong
+	eval.Example = fndocs.RunExamples
 
 	render := pipeline.NewCommand(name)
 
@@ -60,6 +60,6 @@ func GetFnCommand(name string) *cobra.Command {
 	sink.Long = fndocs.SinkShort + "\n" + fndocs.SinkLong
 	sink.Example = fndocs.SinkExamples
 
-	functions.AddCommand(run, render, source, sink, cmdexport.ExportCommand())
+	functions.AddCommand(eval, render, source, sink, cmdexport.ExportCommand())
 	return functions
 }
