@@ -14,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -36,6 +37,14 @@ metadata:
     config.kubernetes.io/local-config: "true"
 stringMatch: Deployment
 replace: StatefulSet
+`
+
+	KptfileData = `apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: kptfile
+  annotations:
+    foo: bar
 `
 )
 
@@ -936,6 +945,69 @@ func TestCmd_Execute(t *testing.T) {
 	assert.Contains(t, string(b), "kind: StatefulSet")
 }
 
+func TestCmd_Execute_includeMetaResources(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	// write a test filter to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	// write a Kptfile to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, v1alpha2.KptFileName), []byte(KptfileData), 0600)) {
+		return
+	}
+
+	instance := RunFns{
+		Path:                   dir,
+		functionFilterProvider: getMetaResourceFilterProvider(),
+		IncludeMetaResources:   true,
+	}
+	if !assert.NoError(t, instance.Execute()) {
+		t.FailNow()
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(dir, v1alpha2.KptFileName))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(b), "foo: baz")
+}
+
+func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	// write a test filter to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		return
+	}
+
+	// write a Kptfile to the directory of configuration
+	if !assert.NoError(t, ioutil.WriteFile(
+		filepath.Join(dir, v1alpha2.KptFileName), []byte(KptfileData), 0600)) {
+		return
+	}
+
+	instance := RunFns{
+		Path:                   dir,
+		functionFilterProvider: getMetaResourceFilterProvider(),
+	}
+	if !assert.NoError(t, instance.Execute()) {
+		t.FailNow()
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(dir, v1alpha2.KptFileName))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.EqualValues(t, string(b), KptfileData)
+}
+
 type TestFilter struct {
 	invoked bool
 	Exit    error
@@ -1279,6 +1351,16 @@ func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode,
 
 		return filters.Modifier{
 			Filters: []yaml.YFilter{{Filter: yaml.Lookup("kind")}, filter},
+		}, nil
+	}
+}
+
+// getMetaResourceFilterProvider fakes the creation of a filter, replacing the
+// ContainerFilter with replace the value for annotation "foo" to "baz"
+func getMetaResourceFilterProvider() func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+		return filters.Modifier{
+			Filters: []yaml.YFilter{{Filter: yaml.SetAnnotation("foo", "baz")}},
 		}, nil
 	}
 }

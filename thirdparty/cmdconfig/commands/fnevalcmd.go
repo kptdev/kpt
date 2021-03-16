@@ -1,9 +1,6 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-// do not lint this file since it's copied from 3rd-party.
-// TODO: refactor this file so it can pass linter
-//nolint
 package commands
 
 import (
@@ -11,20 +8,19 @@ import (
 	"io"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/cmd/config/runner"
-
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
-	"sigs.k8s.io/kustomize/kyaml/runfn"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// GetCatRunner returns a RunFnRunner.
-func GetRunFnRunner(name string) *RunFnRunner {
-	r := &RunFnRunner{}
+// GetEvalFnRunner returns a EvalFnRunner.
+func GetEvalFnRunner(name string) *EvalFnRunner {
+	r := &EvalFnRunner{}
 	c := &cobra.Command{
-		Use:     "run [DIR]",
+		Use:     "eval [DIR]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
@@ -34,27 +30,11 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	r.Command = c
 	r.Command.Flags().BoolVar(
 		&r.DryRun, "dry-run", false, "print results to stdout")
-	r.Command.Flags().BoolVar(
-		&r.GlobalScope, "global-scope", false, "set global scope for functions.")
-	r.Command.Flags().StringSliceVar(
-		&r.FnPaths, "fn-path", []string{},
-		"read functions from these directories instead of the configuration directory.")
 	r.Command.Flags().StringVar(
 		&r.Image, "image", "",
-		"run this image as a function instead of discovering them.")
-	// NOTE: exec plugins execute arbitrary code -- never change the default value of this flag!!!
-	r.Command.Flags().BoolVar(
-		&r.EnableExec, "enable-exec", false /*do not change!*/, "enable support for exec functions -- note: exec functions run arbitrary code -- do not use for untrusted configs!!! (Alpha)")
+		"run this image as a function")
 	r.Command.Flags().StringVar(
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
-	r.Command.Flags().BoolVar(
-		&r.EnableStar, "enable-star", false, "enable support for starlark functions. (Alpha)")
-	r.Command.Flags().StringVar(
-		&r.StarPath, "star-path", "", "run a starlark script as a function. (Alpha)")
-	r.Command.Flags().StringVar(
-		&r.StarURL, "star-url", "", "run a starlark script as a function. (Alpha)")
-	r.Command.Flags().StringVar(
-		&r.StarName, "star-name", "", "name of starlark program. (Alpha)")
 
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
@@ -74,23 +54,16 @@ func GetRunFnRunner(name string) *RunFnRunner {
 	return r
 }
 
-func RunCommand(name string) *cobra.Command {
-	return GetRunFnRunner(name).Command
+func EvalCommand(name string) *cobra.Command {
+	return GetEvalFnRunner(name).Command
 }
 
-// RunFnRunner contains the run function
-type RunFnRunner struct {
+// EvalFnRunner contains the run function
+type EvalFnRunner struct {
 	IncludeSubpackages bool
 	Command            *cobra.Command
 	DryRun             bool
-	GlobalScope        bool
-	FnPaths            []string
 	Image              string
-	EnableStar         bool
-	StarPath           string
-	StarURL            string
-	StarName           string
-	EnableExec         bool
 	ExecPath           string
 	RunFns             runfn.RunFns
 	ResultsDir         string
@@ -101,16 +74,16 @@ type RunFnRunner struct {
 	AsCurrentUser      bool
 }
 
-func (r *RunFnRunner) runE(c *cobra.Command, args []string) error {
+func (r *EvalFnRunner) runE(c *cobra.Command, args []string) error {
 	return runner.HandleError(c, r.RunFns.Execute())
 }
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
 // Functions to run.
-func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, dataItems []string) (
+func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
 	[]*yaml.RNode, error) {
 
-	if r.Image == "" && r.StarPath == "" && r.ExecPath == "" && r.StarURL == "" {
+	if r.Image == "" && r.ExecPath == "" {
 		return nil, nil
 	}
 
@@ -138,37 +111,14 @@ func (r *RunFnRunner) getContainerFunctions(c *cobra.Command, dataItems []string
 				return nil, err
 			}
 		}
-	} else if r.EnableStar && (r.StarPath != "" || r.StarURL != "") {
-		// create the function spec to set as an annotation
-		fn, err = yaml.Parse(`starlark: {}`)
-		if err != nil {
-			return nil, err
+	} else if r.ExecPath != "" {
+		// check the flags that doesn't make sense with exec function
+		// --mount, --as-current-user, --network and --env are
+		// only used with container functions
+		if r.AsCurrentUser || r.Network ||
+			len(r.Mounts) != 0 || len(r.Env) != 0 {
+			return nil, fmt.Errorf("--mount, --as-current-user, --network and --env cannot be used with executable function")
 		}
-
-		if r.StarPath != "" {
-			err = fn.PipeE(
-				yaml.Lookup("starlark"),
-				yaml.SetField("path", yaml.NewScalarRNode(r.StarPath)))
-			if err != nil {
-				return nil, err
-			}
-		}
-		if r.StarURL != "" {
-			err = fn.PipeE(
-				yaml.Lookup("starlark"),
-				yaml.SetField("url", yaml.NewScalarRNode(r.StarURL)))
-			if err != nil {
-				return nil, err
-			}
-		}
-		err = fn.PipeE(
-			yaml.Lookup("starlark"),
-			yaml.SetField("name", yaml.NewScalarRNode(r.StarName)))
-		if err != nil {
-			return nil, err
-		}
-
-	} else if r.EnableExec && r.ExecPath != "" {
 		// create the function spec to set as an annotation
 		fn, err = yaml.Parse(`exec: {}`)
 		if err != nil {
@@ -252,18 +202,9 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 	return sms
 }
 
-func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
-	if !r.EnableStar && (r.StarPath != "" || r.StarURL != "") {
-		return errors.Errorf("must specify --enable-star with --star-path and --star-url")
-	}
-
-	if !r.EnableExec && r.ExecPath != "" {
-		return errors.Errorf("must specify --enable-exec with --exec-path")
-	}
-
-	if c.ArgsLenAtDash() >= 0 && r.Image == "" &&
-		!(r.EnableStar && (r.StarPath != "" || r.StarURL != "")) && !(r.EnableExec && r.ExecPath != "") {
-		return errors.Errorf("must specify --image")
+func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
+	if c.ArgsLenAtDash() >= 0 && r.Image == "" && r.ExecPath == "" {
+		return errors.Errorf("must specify --image or --exec-path")
 	}
 
 	var dataItems []string
@@ -275,7 +216,7 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
 	}
 
-	fns, err := r.getContainerFunctions(c, dataItems)
+	fns, err := r.getContainerFunctions(dataItems)
 	if err != nil {
 		return err
 	}
@@ -301,20 +242,16 @@ func (r *RunFnRunner) preRunE(c *cobra.Command, args []string) error {
 	storageMounts := toStorageMounts(r.Mounts)
 
 	r.RunFns = runfn.RunFns{
-		FunctionPaths:  r.FnPaths,
-		GlobalScope:    r.GlobalScope,
-		Functions:      fns,
-		Output:         output,
-		Input:          input,
-		Path:           path,
-		Network:        r.Network,
-		EnableStarlark: r.EnableStar,
-		EnableExec:     r.EnableExec,
-		StorageMounts:  storageMounts,
-		ResultsDir:     r.ResultsDir,
-		LogSteps:       r.LogSteps,
-		Env:            r.Env,
-		AsCurrentUser:  r.AsCurrentUser,
+		Functions:     fns,
+		Output:        output,
+		Input:         input,
+		Path:          path,
+		Network:       r.Network,
+		StorageMounts: storageMounts,
+		ResultsDir:    r.ResultsDir,
+		LogSteps:      r.LogSteps,
+		Env:           r.Env,
+		AsCurrentUser: r.AsCurrentUser,
 	}
 
 	// don't consider args for the function
