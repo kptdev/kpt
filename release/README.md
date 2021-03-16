@@ -61,7 +61,7 @@ changes and all future steps will not include those changes. This includes any
 modifications to `goreleaser.yaml`!
 
 1. Setup your gcloud profile.
-2. Create a enable the Google Cloud Secret Manager on the profile
+2. Create and enable the Google Cloud Secret Manager on the profile
 3. Create a GitHub Personal Access Token and save it as `github-token` in the
 Google Cloud Secrets Manager.
 
