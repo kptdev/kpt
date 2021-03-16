@@ -1,12 +1,12 @@
 apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
-  name: app
+  name: app-with-db
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-namespace
+  - image: gcr.io/kpt-fn/set-namespace:unstable
     configMap:
       namespace: staging
-  - image: gcr.io/kpt-fn/set-label
+  - image: gcr.io/kpt-fn/set-label:unstable
     configMap:
-      tier: backend
+      tier: db

@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
 )
 
-// These e2e tests currently fail. When pipeline is implemented they should pass.
 func TestPipeline(t *testing.T) {
 	runPipelineTests(t, "../internal/pipeline/testdata/")
 }
@@ -40,7 +39,7 @@ func runPipelineTests(t *testing.T, path string) {
 		c := c // capture range variable
 		t.Run(c.Path, func(t *testing.T) {
 			t.Parallel()
-			r, err := runner.NewRunner(c, runner.CommandPipeline)
+			r, err := runner.NewRunner(c, runner.CommandFnRender)
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}

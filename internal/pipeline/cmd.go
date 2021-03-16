@@ -21,17 +21,16 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
 )
 
 // NewRunner returns a command runner
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:     "run [DIR]",
-		Short:   "run",
-		Long:    "run",
-		Example: "run",
+		Use:     "render [DIR]",
+		Short:   "render",
+		Long:    "render",
+		Example: "render",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
@@ -55,8 +54,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()
 		if err != nil {
-			fmt.Fprintf(c.OutOrStderr(), "error getting current dir: %v \n", err)
-			return err
+			return fmt.Errorf("unable to get current dir: %w", err)
 		}
 		r.pkgPath = wd
 	} else {
@@ -71,13 +69,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	klog.Infof("running pipeline command")
 	executor := Executor{
 		PkgPath: r.pkgPath,
 	}
-	err = executor.Execute()
-	if err != nil {
-		fmt.Fprintf(c.OutOrStderr(), "failed to run pipeline %v \n", err)
+	if err = executor.Execute(); err != nil {
 		return err
 	}
 	return nil

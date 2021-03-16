@@ -20,7 +20,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-
+	"github.com/GoogleContainerTools/kpt/internal/pipeline"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands"
 )
 
@@ -48,6 +48,8 @@ func GetFnCommand(name string) *cobra.Command {
 	run.Long = fndocs.RunShort + "\n" + fndocs.RunLong
 	run.Example = fndocs.RunExamples
 
+	render := pipeline.NewCommand(name)
+
 	source := configcobra.Source(name)
 	source.Short = fndocs.SourceShort
 	source.Long = fndocs.SourceShort + "\n" + fndocs.SourceLong
@@ -58,6 +60,6 @@ func GetFnCommand(name string) *cobra.Command {
 	sink.Long = fndocs.SinkShort + "\n" + fndocs.SinkLong
 	sink.Example = fndocs.SinkExamples
 
-	functions.AddCommand(run, source, sink, cmdexport.ExportCommand())
+	functions.AddCommand(run, render, source, sink, cmdexport.ExportCommand())
 	return functions
 }

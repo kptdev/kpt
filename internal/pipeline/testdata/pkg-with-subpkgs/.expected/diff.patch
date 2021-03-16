@@ -1,0 +1,55 @@
+diff --git a/configs/db/resources.yaml b/configs/db/resources.yaml
+index 1f53907..b0d03ce 100644
+--- a/configs/db/resources.yaml
++++ b/configs/db/resources.yaml
+@@ -1,6 +1,19 @@
+ apiVersion: apps/v1
+ kind: StatefulSet
+ metadata:
++  labels:
++    app: backend
++    tier: db
+   name: db
++  namespace: staging
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      app: backend
++      tier: db
++  template:
++    metadata:
++      labels:
++        app: backend
++        tier: db
+diff --git a/configs/resources.yaml b/configs/resources.yaml
+index 62f8744..aba4424 100644
+--- a/configs/resources.yaml
++++ b/configs/resources.yaml
+@@ -1,13 +1,26 @@
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
++  labels:
++    tier: db
+   name: nginx-deployment
++  namespace: staging
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
++  labels:
++    tier: db
+   name: custom
++  namespace: staging
+ spec:
+   image: nginx:1.2.3
