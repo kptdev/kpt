@@ -54,21 +54,42 @@ cloud-build-local --config=release/tag/cloudbuild.yaml --substitutions=TAG_NAME=
 When running with `--dryrun=false` you will need to do some initial work to run
 against your forked version of kpt:
 
+> If your change depends on code changes (any file other than `cloudbuild.yaml`)
+you will need to check in and tag those changes when following these steps.
+Otherwise the first steps that checkout the code will not include your local
+changes and all future steps will not include those changes.
+
 1. Setup your gcloud profile.
 2. Create a enable the Google Cloud Secret Manager on the profile
 3. Create a GitHub Personal Access Token and save it as `github-token` in the
 Google Cloud Secrets Manager.
 
 ```sh
-gcloud secrets create github-token
+➜ gcloud secrets create github-token
 ```
 
 4. Assign `--substitutions=_GITHUB_USER={your github username}`. Do **not** use
-`GoogleContainerTools`.
-5. Identify or create a tag on your fork. Assign that name to the `TAG_NAME`
+`GoogleContainerTools` (this would attempt to create a release for
+`GoogleContainerTools/kpt`).
+5. Create a tag on your fork. Assign that name to the `TAG_NAME`
+substitution (multiple substitutions are comma delimated: FOO=a,BAR=b).
+
+```sh
+➜ git tag my-test-release
+➜ git push origin my-test-release
+```
+
+6. Create a Cloud Storage bucket and assign its name to `_GCS_BUCKET` in a
 substitution.
-6. Create a Cloud Storage bucket and assign its name to `_GCS_BUCKET`
+7. Assign a `_VERSION` substition. This will impact the results of
+`kpt version`.
 7. Run `cloud-build-local` with the updated substitutions.
+
+> `cloud-build-local` will use `--dryrun=true` by default. This will allow you
+to validate your substitutions and syntax. To perform an actual run (including
+releasing and publishing images to your gcr/storage/github) set
+`--dryrun=false`.
+
 8. Grab a coffee ☕ or your favorite tea 🍵 this process is not quick.
 9. Once this is done the tag you chose in step 5 should now be a release and
 the kpt containers should be in your container registry.
@@ -79,7 +100,13 @@ To test local changes to the [`goreleaser.yaml`](./tag/goreleaser.yaml) config. 
 [install goreleaser](https://goreleaser.com/install/) locally and provide the
 `--skip-verify --skip-publish` flags.
 
-From the kpt directory you would run:
+Set the GitHub User ENV to your username:
+
+```sh
+export _GITHUB_USER=YourUsername
+```
+
+From the kpt directory you can run the following to validate your release:
 
 ```sh
 goreleaser release --skip-validate --skip-publish -f release/tag/goreleaser.yaml
