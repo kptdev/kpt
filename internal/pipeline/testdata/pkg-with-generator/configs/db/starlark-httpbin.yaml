@@ -1,0 +1,42 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
+metadata:
+  name: httpbin-gen
+source: |
+  httpbin_deployment = {
+     "apiVersion": "apps/v1",
+     "kind": "Deployment",
+     "metadata": {
+        "name": "httpbin",
+     },
+     "spec": {
+        "replicas": 4,
+        "template": {
+           "spec": {
+              "containers": [
+                {
+                  "name": "httpbin",
+                  "image": "kennethreitz/httpbin",
+                  "ports": [
+                    {
+                       "containerPort": 9876
+                    }
+                  ]
+                }
+              ]
+           }
+        }
+    }
+  }
+  # filter to return if resource is HTTPBin resource
+  def is_httpbin(r):
+    return r["apiVersion"] == "apps/v1" and r["kind"] == "Deployment" and r["metadata"]["name"] == "httpbin"
+
+  def ensure_httpbin(resources):
+    for r in resources:
+      if is_httpbin(r):
+        return
+
+    resources.append(httpbin_deployment)
+
+  ensure_httpbin(ctx.resource_list["items"])
