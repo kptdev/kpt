@@ -177,9 +177,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{})
 	err := r.Command.Execute()
-	assert.EqualError(t, err, "accepts 1 arg(s), received 0")
+	assert.NoError(t, err)
 	assert.Equal(t, "", r.Update.Ref)
-	assert.Equal(t, update.Default, r.Update.Strategy)
+	assert.Equal(t, update.FastForward, r.Update.Strategy)
 
 	// verify an error is thrown if multiple paths are specified
 	r = cmdupdate.NewRunner("kpt")
@@ -187,7 +187,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.RunE = failRun
 	r.Command.SetArgs([]string{"foo", "bar"})
 	err = r.Command.Execute()
-	assert.EqualError(t, err, "accepts 1 arg(s), received 2")
+	assert.EqualError(t, err, "accepts at most 1 arg(s), received 2")
 	assert.Equal(t, "", r.Update.Ref)
 	assert.Equal(t, update.Default, r.Update.Strategy)
 

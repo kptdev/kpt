@@ -56,14 +56,14 @@ kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb \
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg init DIR [flags]
+kpt pkg init [DIR] [flags]
 ```
 
 #### Args
 
 ```
 DIR:
-  Init fails if DIR does not already exist
+  Init fails if DIR does not already exist. Defaults to the current working directory.
 ```
 
 #### Flags

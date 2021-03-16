@@ -38,6 +38,7 @@ cd $TEST_HOME
 ```sh
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
+cd my-dir
 ```
 
 {{% /hide %}}
@@ -46,31 +47,32 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
 <!-- @pkgTree @verifyExamples-->
 ```sh
 # print Resources using directory structure
-kpt pkg tree my-dir/
+kpt pkg tree
 ```
 
 <!-- @pkgTree @verifyExamples-->
 ```sh
 # print replicas, container name, and container image and fields for Resources
-kpt pkg tree my-dir --replicas --image --name
+kpt pkg tree --replicas --image --name
 ```
 
 <!-- @pkgTree @verifyExamples-->
 ```sh
 # print all common Resource fields
-kpt pkg tree my-dir/ --all
+kpt pkg tree --all
 ```
 
 <!-- @pkgTree @verifyExamples-->
 ```sh
 # print the "foo"" annotation
-kpt pkg tree my-dir/ --field "metadata.annotations.foo"
+kpt pkg tree --field "metadata.annotations.foo"
 ```
 
 <!-- @pkgTree @verifyStaleExamples-->
 ```sh
-# print the status of resources with status.condition type of "Completed"
-kubectl get all -o yaml | kpt pkg tree \
+# print the status of resources piped from kubectl output with status.condition 
+type of "Completed"
+kubectl get all -o yaml | kpt pkg tree - \
   --field="status.conditions[type=Completed].status"
 ```
 
@@ -95,14 +97,14 @@ kubectl get all -o yaml | kpt pkg tree \
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg tree [DIR] [flags]
+kpt pkg tree [DIR | -<STDIN>] [flags]
 ```
 
 #### Args
 
 ```
 DIR:
-  Path to a package directory.  Defaults to STDIN if not specified.
+  Path to a package directory. Defaults to the current working directory.
 ```
 
 #### Flags

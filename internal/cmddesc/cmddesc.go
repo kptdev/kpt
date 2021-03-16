@@ -16,9 +16,8 @@
 package cmddesc
 
 import (
-	"os"
-
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/desc"
 	"github.com/spf13/cobra"
@@ -28,11 +27,11 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:     "desc [DIR]...",
+		Use:     "desc [PKG_PATH] [flags]",
+		Args:    cobra.MaximumNArgs(1),
 		Short:   pkgdocs.DescShort,
 		Long:    pkgdocs.DescShort + "\n" + pkgdocs.DescLong,
 		Example: pkgdocs.DescExamples,
-		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
 	r.Command = c
@@ -50,19 +49,15 @@ type Runner struct {
 	Command     *cobra.Command
 }
 
-func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		dir, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		r.Description.PkgPaths = append(r.Description.PkgPaths, dir)
-	}
-	r.Description.StdOut = c.OutOrStdout()
-	return nil
-}
-
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	r.Description.PkgPaths = append(r.Description.PkgPaths, args...)
+	if len(args) == 0 {
+		args = append(args, pkg.CurDir)
+	}
+	p, err := pkg.New(args[0])
+	if err != nil {
+		return err
+	}
+	r.Description.PkgPaths = append(r.Description.PkgPaths, string(p.DisplayPath))
+	r.Description.StdOut = c.OutOrStdout()
 	return r.Description.Run()
 }

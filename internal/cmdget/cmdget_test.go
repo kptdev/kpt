@@ -43,7 +43,8 @@ func TestCmd_execute(t *testing.T) {
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	r := cmdget.NewRunner("kpt")
-	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
+	// defaults LOCAL_DEST_DIR to current working directory
+	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/"})
 	err := r.Command.Execute()
 
 	assert.NoError(t, err)
@@ -177,7 +178,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.RunE = failRun
 	r.Command.SetArgs([]string{})
 	err := r.Command.Execute()
-	assert.EqualError(t, err, "accepts 2 arg(s), received 0")
+	assert.EqualError(t, err, "requires at least 1 arg(s), only received 0")
 
 	r = cmdget.NewRunner("kpt")
 	r.Command.SilenceErrors = true
@@ -185,7 +186,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.RunE = failRun
 	r.Command.SetArgs([]string{"foo", "bar", "baz"})
 	err = r.Command.Execute()
-	assert.EqualError(t, err, "accepts 2 arg(s), received 3")
+	assert.EqualError(t, err, "ambiguous repo/dir@version specify '.git' in argument")
 
 	r = cmdget.NewRunner("kpt")
 	r.Command.RunE = NoOpRunE

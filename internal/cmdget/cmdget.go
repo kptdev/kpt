@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
@@ -30,8 +31,8 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY",
-		Args:       cobra.ExactArgs(2),
+		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY]",
+		Args:       cobra.MinimumNArgs(1),
 		Short:      docs.GetShort,
 		Long:       docs.GetShort + "\n" + docs.GetLong,
 		Example:    docs.GetExamples,
@@ -61,22 +62,24 @@ type Runner struct {
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
+	if len(args) == 1 {
+		args = append(args, pkg.CurDir)
+	}
 	t, err := parse.GitParseArgs(args)
 	if err != nil {
 		return err
 	}
 	r.Get.GitLock = t.GitLock
-
-	_, absDestPath, err := cmdutil.ResolveAbsAndRelPaths(t.Destination)
+	p, err := pkg.New(t.Destination)
 	if err != nil {
 		return err
 	}
 
-	r.Get.Destination = absDestPath
+	r.Get.Destination = string(p.UniquePath)
 	return nil
 }
 
-func (r *Runner) runE(c *cobra.Command, args []string) error {
+func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
 		r.Get.Directory, r.Get.Repo, r.Get.Destination)
 	if err := r.Get.Run(); err != nil {
