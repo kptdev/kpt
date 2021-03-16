@@ -112,6 +112,13 @@ func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
 			}
 		}
 	} else if r.ExecPath != "" {
+		// check the flags that doesn't make sense with exec function
+		// --mount, --as-current-user, --network and --env are
+		// only used with container functions
+		if r.AsCurrentUser || r.Network ||
+			len(r.Mounts) != 0 || len(r.Env) != 0 {
+			return nil, fmt.Errorf("--mount, --as-current-user, --network and --env cannot be used with executable function")
+		}
 		// create the function spec to set as an annotation
 		fn, err = yaml.Parse(`exec: {}`)
 		if err != nil {

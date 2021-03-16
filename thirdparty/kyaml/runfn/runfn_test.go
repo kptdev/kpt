@@ -963,7 +963,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 
 	instance := RunFns{
 		Path:                   dir,
-		functionFilterProvider: getMetaResourceFilterProvider(t),
+		functionFilterProvider: getMetaResourceFilterProvider(),
 		IncludeMetaResources:   true,
 	}
 	if !assert.NoError(t, instance.Execute()) {
@@ -995,7 +995,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 
 	instance := RunFns{
 		Path:                   dir,
-		functionFilterProvider: getMetaResourceFilterProvider(t),
+		functionFilterProvider: getMetaResourceFilterProvider(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
@@ -1357,7 +1357,7 @@ func getFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode,
 
 // getMetaResourceFilterProvider fakes the creation of a filter, replacing the
 // ContainerFilter with replace the value for annotation "foo" to "baz"
-func getMetaResourceFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+func getMetaResourceFilterProvider() func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
 	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 		return filters.Modifier{
 			Filters: []yaml.YFilter{{Filter: yaml.SetAnnotation("foo", "baz")}},
