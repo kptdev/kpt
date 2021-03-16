@@ -32,7 +32,7 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 		&r.DryRun, "dry-run", false, "print results to stdout")
 	r.Command.Flags().StringVar(
 		&r.Image, "image", "",
-		"run this image as a function instead of discovering them.")
+		"run this image as a function")
 	r.Command.Flags().StringVar(
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
 
@@ -63,7 +63,6 @@ type EvalFnRunner struct {
 	IncludeSubpackages bool
 	Command            *cobra.Command
 	DryRun             bool
-	FnPaths            []string
 	Image              string
 	ExecPath           string
 	RunFns             runfn.RunFns
@@ -198,7 +197,7 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if c.ArgsLenAtDash() >= 0 && r.Image == "" && r.ExecPath == "" {
-		return errors.Errorf("must specify --image")
+		return errors.Errorf("must specify --image or --exec-path")
 	}
 
 	var dataItems []string
@@ -236,7 +235,6 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	storageMounts := toStorageMounts(r.Mounts)
 
 	r.RunFns = runfn.RunFns{
-		FunctionPaths: r.FnPaths,
 		Functions:     fns,
 		Output:        output,
 		Input:         input,

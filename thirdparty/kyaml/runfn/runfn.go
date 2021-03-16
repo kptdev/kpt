@@ -23,6 +23,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
 // RunFns runs the set of configuration functions in a local directory against
@@ -135,7 +137,7 @@ func (r RunFns) getNodesAndFilters() (
 	var outputPkg *kio.LocalPackageReadWriter
 	matchFilesGlob := kio.MatchAll
 	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, "Kptfile")
+		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
 	}
 	if r.Path != "" {
 		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path, MatchFilesGlob: matchFilesGlob}
