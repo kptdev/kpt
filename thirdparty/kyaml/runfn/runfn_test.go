@@ -1005,7 +1005,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	assert.NotContains(t, string(b), "foo: baz")
+	assert.EqualValues(t, string(b), KptfileData)
 }
 
 type TestFilter struct {
