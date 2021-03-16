@@ -23,7 +23,7 @@ builds:
     goarch:
       - amd64
       - arm64
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+    ldflags: -s -w -X github.com/{{ .Env._GITHUB_USER }}/kpt/run.version={{.Version}}
 archives:
   - id: archived
     files:
@@ -49,5 +49,5 @@ changelog:
       - Merge branch
 release:
   github:
-    owner: GoogleContainerTools
+    owner: "{{ .Env._GITHUB_USER }}"
     name: kpt
