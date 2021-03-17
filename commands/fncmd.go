@@ -44,9 +44,9 @@ func GetFnCommand(name string) *cobra.Command {
 	}
 
 	eval := commands.EvalCommand(name)
-	eval.Short = fndocs.RunShort
-	eval.Long = fndocs.RunShort + "\n" + fndocs.RunLong
-	eval.Example = fndocs.RunExamples
+	eval.Short = fndocs.EvalShort
+	eval.Long = fndocs.EvalShort + "\n" + fndocs.EvalLong
+	eval.Example = fndocs.EvalExamples
 
 	render := pipeline.NewCommand(name)
 
