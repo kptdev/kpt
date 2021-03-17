@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	pkgdiff "github.com/GoogleContainerTools/kpt/internal/util/diff"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -52,7 +53,7 @@ func (u FastForwardUpdater) Update(options UpdateOptions) error {
 }
 
 func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string) error {
-	found, err := exists(originalPath)
+	found, err := pkgutil.Exists(originalPath)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		return nil
 	}
 
-	subPkgPaths, err := findAllSubpackages(localPath, originalPath)
+	subPkgPaths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(localPath, originalPath)
 	if err != nil {
 		return err
 	}
@@ -69,11 +70,11 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		localSubPkgPath := filepath.Join(localPath, subPkgPath)
 		originalSubPkgPath := filepath.Join(originalPath, subPkgPath)
 
-		localExists, err := exists(localSubPkgPath)
+		localExists, err := pkgutil.Exists(localSubPkgPath)
 		if err != nil {
 			return err
 		}
-		originalExists, err := exists(originalSubPkgPath)
+		originalExists, err := pkgutil.Exists(originalSubPkgPath)
 		if err != nil {
 			return err
 		}

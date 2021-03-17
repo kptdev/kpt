@@ -161,7 +161,7 @@ func (u Command) Run() error {
 			return err
 		}
 
-		paths, err := pkgutil.FindSubpackages(p)
+		paths, err := pkgutil.FindAllDirectSubpackages(p)
 		if err != nil {
 			return err
 		}
@@ -273,7 +273,7 @@ func (u Command) updatePackage(p string) error {
 			return err
 		}
 
-		paths, err := pkgutil.FindImmediateRemoteSubpackages(filepath.Join(p, relPath))
+		paths, err := pkgutil.FindRemoteDirectSubpackages(filepath.Join(p, relPath))
 		if err != nil {
 			return err
 		}

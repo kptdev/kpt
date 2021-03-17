@@ -44,7 +44,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	// Find all subpackages in local, upstream and original. They are sorted
 	// in increasing order based on the depth of the subpackage relative to the
 	// root package.
-	subPkgPaths, err := findAllSubpackages(localPath, updatedPath, originPath)
+	subPkgPaths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(localPath, updatedPath, originPath)
 	if err != nil {
 		return err
 	}
@@ -72,17 +72,17 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 // using the provided paths to the updated version of the package and the
 // original version of the package.
 func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string, isRootPkg bool) error {
-	localExists, err := exists(localPath)
+	localExists, err := pkgutil.Exists(localPath)
 	if err != nil {
 		return err
 	}
 
-	updatedExists, err := exists(updatedPath)
+	updatedExists, err := pkgutil.Exists(updatedPath)
 	if err != nil {
 		return err
 	}
 
-	originalExists, err := exists(originalPath)
+	originalExists, err := pkgutil.Exists(originalPath)
 	if err != nil {
 		return err
 	}

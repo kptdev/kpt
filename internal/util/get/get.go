@@ -115,7 +115,7 @@ func (c Command) fetchRemoteSubpackages() error {
 			}
 		}
 
-		paths, err := pkgutil.FindSubpackages(p)
+		paths, err := pkgutil.FindAllDirectSubpackages(p)
 		if err != nil {
 			return err
 		}

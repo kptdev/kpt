@@ -31,7 +31,7 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 	localPath := filepath.Join(options.LocalPath, options.RelPackagePath)
 	updatedPath := filepath.Join(options.UpdatedPath, options.RelPackagePath)
 
-	paths, err := findAllSubpackages(localPath, updatedPath)
+	paths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(localPath, updatedPath)
 	if err != nil {
 		return err
 	}

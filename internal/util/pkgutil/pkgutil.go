@@ -27,7 +27,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
-func FindSubpackages(path string) ([]string, error) {
+// FindAllDirectSubpackages returns the paths to all immediate subpackages of the
+// provided path. It finds both remote and local subpackages, but it will not
+// find any nested packages. The path to the root package is not returned.
+func FindAllDirectSubpackages(path string) ([]string, error) {
 	excludedDirs := make(map[string]bool)
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -68,9 +71,11 @@ func FindSubpackages(path string) ([]string, error) {
 	return packagePaths, err
 }
 
-// FindLocalSubpackages returns a slice with the paths to all local subpackages
-// under the provided path. Any remote subpackages are excluded.
-func FindLocalSubpackages(path string) ([]string, error) {
+// FindLocalRecursiveSubpackages returns a slice with the paths to all local subpackages
+// under the provided path. Any remote subpackages are excluded, and this includes local
+// subpackages within those nested remote subpackages. Nested local
+// subpackages are included. The path to the root package is not included.
+func FindLocalRecursiveSubpackages(path string) ([]string, error) {
 	var localSubPkgs []string
 	var remoteSubPkgs []string
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
@@ -108,7 +113,8 @@ func FindLocalSubpackages(path string) ([]string, error) {
 	return localSubPkgs, err
 }
 
-func FindImmediateRemoteSubpackages(path string) ([]string, error) {
+// FindRemoteDirectSubpackages
+func FindRemoteDirectSubpackages(path string) ([]string, error) {
 	var localSubPkgs []string
 	var remoteSubPkgs []string
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
@@ -344,4 +350,43 @@ func SubPkgFirstSorter(paths []string) func(i, j int) bool {
 	return func(i, j int) bool {
 		return !sorter(i, j)
 	}
+}
+
+// FindLocalRecursiveSubpackagesForPaths traverses the provided package paths
+// and finds all local subpackages. A subpackage is a subdirectory underneath the
+// root that has a Kptfile in it, but that doesn't have an upstream reference.
+// The list is sorted in increasing order based on the depth of the subpackage
+// relative to the root package.
+func FindLocalRecursiveSubpackagesForPaths(pkgPaths ...string) ([]string, error) {
+	uniquePaths := make(map[string]bool)
+	uniquePaths["."] = true
+	for _, path := range pkgPaths {
+		paths, err := FindLocalRecursiveSubpackages(path)
+		if err != nil {
+			return []string{}, err
+		}
+		for _, p := range paths {
+			relPath, err := filepath.Rel(path, p)
+			if err != nil {
+				return []string{}, err
+			}
+			uniquePaths[relPath] = true
+		}
+	}
+	var paths []string
+	for p := range uniquePaths {
+		paths = append(paths, p)
+	}
+	sort.Slice(paths, RootPkgFirstSorter(paths))
+	return paths, nil
+}
+
+// Exists returns true if a file or directory exists on the provided path,
+// and false otherwise.
+func Exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+	return !os.IsNotExist(err), nil
 }
