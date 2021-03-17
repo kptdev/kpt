@@ -37,6 +37,9 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
 
 	r.Command.Flags().StringVar(
+		&r.FnConfig, "fn-config", "", "path to the function config file")
+
+	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 
 	r.Command.Flags().BoolVar(
@@ -65,6 +68,7 @@ type EvalFnRunner struct {
 	DryRun             bool
 	Image              string
 	ExecPath           string
+	FnConfig           string
 	RunFns             runfn.RunFns
 	ResultsDir         string
 	Network            bool
@@ -252,6 +256,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		LogSteps:      r.LogSteps,
 		Env:           r.Env,
 		AsCurrentUser: r.AsCurrentUser,
+		FunctionPath:  r.FnConfig,
 	}
 
 	// don't consider args for the function

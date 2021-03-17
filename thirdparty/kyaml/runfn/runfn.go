@@ -35,20 +35,12 @@ type RunFns struct {
 	// Path is the path to the directory containing functions
 	Path string
 
-	// FunctionPaths Paths allows functions to be specified outside the configuration
-	// directory.
-	// Functions provided on FunctionPaths are globally scoped.
-	// If FunctionPaths length is > 0, then NoFunctionsFromInput defaults to true
-	FunctionPaths []string
+	// FunctionPath  allows functions to be specified by a path to function config
+	// file
+	FunctionPath string
 
 	// Functions is an explicit list of functions to run against the input.
-	// Functions provided on Functions are globally scoped.
-	// If Functions length is > 0, then NoFunctionsFromInput defaults to true
 	Functions []*yaml.RNode
-
-	// GlobalScope if true, functions read from input will be scoped globally rather
-	// than only to Resources under their subdirs.
-	GlobalScope bool
 
 	// Input can be set to read the Resources from Input rather than from a directory
 	Input io.Reader
@@ -58,19 +50,6 @@ type RunFns struct {
 
 	// Output can be set to write the result to Output rather than back to the directory
 	Output io.Writer
-
-	// NoFunctionsFromInput if set to true will not read any functions from the input,
-	// and only use explicit sources
-	NoFunctionsFromInput *bool
-
-	// EnableStarlark will enable functions run as starlark scripts
-	EnableStarlark bool
-
-	// EnableExec will enable exec functions
-	EnableExec bool
-
-	// DisableContainers will disable functions run as containers
-	DisableContainers bool
 
 	// ResultsDir is where to write each functions results
 	ResultsDir string
@@ -152,25 +131,17 @@ func (r RunFns) getNodesAndFilters() (
 		return nil, nil, outputPkg, err
 	}
 
-	fltrs, err := r.getFilters(buff.Nodes)
+	fltrs, err := r.getFilters()
 	if err != nil {
 		return nil, nil, outputPkg, err
 	}
 	return buff, fltrs, outputPkg, nil
 }
 
-func (r RunFns) getFilters(nodes []*yaml.RNode) ([]kio.Filter, error) {
+func (r RunFns) getFilters() ([]kio.Filter, error) {
 	var fltrs []kio.Filter
-
-	// fns from annotations on the input resources
-	f, err := r.getFunctionsFromInput(nodes)
-	if err != nil {
-		return nil, err
-	}
-	fltrs = append(fltrs, f...)
-
 	// fns from directories specified on the struct
-	f, err = r.getFunctionsFromFunctionPaths()
+	f, err := r.getFunctionsFromFunctionPaths()
 	if err != nil {
 		return nil, err
 	}
@@ -248,50 +219,27 @@ func (r RunFns) runFunctions(
 	return nil
 }
 
-// getFunctionsFromInput scans the input for functions and runs them
-func (r RunFns) getFunctionsFromInput(nodes []*yaml.RNode) ([]kio.Filter, error) {
-	if *r.NoFunctionsFromInput {
+// getFunctionsFromFunctionPath returns the function read from r.FunctionPath
+func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
+	if r.FunctionPath == "" {
 		return nil, nil
 	}
-
-	buff := &kio.PackageBuffer{}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.PackageBuffer{Nodes: nodes}},
-		Filters: []kio.Filter{&runtimeutil.IsReconcilerFilter{}},
-		Outputs: []kio.Writer{buff},
-	}.Execute()
+	f, err := os.Open(r.FunctionPath)
 	if err != nil {
 		return nil, err
 	}
-	err = sortFns(buff)
+	reader := kio.ByteReader{Reader: f}
+	nodes, err := reader.Read()
 	if err != nil {
 		return nil, err
 	}
-	return r.getFunctionFilters(false, buff.Nodes...)
-}
-
-// getFunctionsFromFunctionPaths returns the set of functions read from r.FunctionPaths
-// as a slice of Filters
-func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
-	buff := &kio.PackageBuffer{}
-	for i := range r.FunctionPaths {
-		err := kio.Pipeline{
-			Inputs: []kio.Reader{
-				kio.LocalPackageReader{PackagePath: r.FunctionPaths[i]},
-			},
-			Outputs: []kio.Writer{buff},
-		}.Execute()
-		if err != nil {
-			return nil, err
-		}
-	}
-	return r.getFunctionFilters(true, buff.Nodes...)
+	return r.getFunctionFilters(nodes...)
 }
 
 // getFunctionsFromFunctions returns the set of explicitly provided functions as
 // Filters
 func (r RunFns) getFunctionsFromFunctions() ([]kio.Filter, error) {
-	return r.getFunctionFilters(true, r.Functions...)
+	return r.getFunctionFilters(r.Functions...)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -310,7 +258,7 @@ func (r RunFns) mergeContainerEnv(envs []string) []string {
 	return declarative.Raw()
 }
 
-func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
+func (r RunFns) getFunctionFilters(fns ...*yaml.RNode) (
 	[]kio.Filter, error) {
 	var fltrs []kio.Filter
 	for i := range fns {
@@ -334,10 +282,6 @@ func (r RunFns) getFunctionFilters(global bool, fns ...*yaml.RNode) (
 
 		if c == nil {
 			continue
-		}
-		cf, ok := c.(*container.Filter)
-		if global && ok {
-			cf.Exec.GlobalScope = true
 		}
 		fltrs = append(fltrs, c)
 	}
@@ -412,12 +356,6 @@ func sortFns(buff *kio.PackageBuffer) error {
 
 // init initializes the RunFns with a containerFilterProvider.
 func (r *RunFns) init() {
-	if r.NoFunctionsFromInput == nil {
-		// default no functions from input if any function sources are explicitly provided
-		nfn := len(r.FunctionPaths) > 0 || len(r.Functions) > 0
-		r.NoFunctionsFromInput = &nfn
-	}
-
 	// if no path is specified, default reading from stdin and writing to stdout
 	if r.Path == "" {
 		if r.Output == nil {
@@ -463,7 +401,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 			"results-%v.yaml", r.resultsCount))
 		atomic.AddUint32(&r.resultsCount, 1)
 	}
-	if !r.DisableContainers && spec.Container.Image != "" {
+	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
 		if err != nil {
@@ -480,48 +418,15 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 		)
 		cf := &c
 		cf.Exec.FunctionConfig = api
-		cf.Exec.GlobalScope = r.GlobalScope
 		cf.Exec.ResultsFile = resultsFile
 		cf.Exec.DeferFailure = spec.DeferFailure
 		return cf, nil
 	}
-	if r.EnableStarlark && (spec.Starlark.Path != "" || spec.Starlark.URL != "") {
-		// the script path is relative to the function config file
-		m, err := api.GetMeta()
-		if err != nil {
-			return nil, errors.Wrap(err)
-		}
 
-		var p string
-		if spec.Starlark.Path != "" {
-			p = filepath.ToSlash(path.Clean(m.Annotations[kioutil.PathAnnotation]))
-			spec.Starlark.Path = filepath.ToSlash(path.Clean(spec.Starlark.Path))
-			if filepath.IsAbs(spec.Starlark.Path) || path.IsAbs(spec.Starlark.Path) {
-				return nil, errors.Errorf(
-					"absolute function path %s not allowed", spec.Starlark.Path)
-			}
-			if strings.HasPrefix(spec.Starlark.Path, "..") {
-				return nil, errors.Errorf(
-					"function path %s not allowed to start with ../", spec.Starlark.Path)
-			}
-			p = filepath.ToSlash(filepath.Join(r.Path, filepath.Dir(p), spec.Starlark.Path))
-		}
-		fmt.Println(p)
-
-		sf := &starlark.Filter{Name: spec.Starlark.Name, Path: p, URL: spec.Starlark.URL}
-
-		sf.FunctionConfig = api
-		sf.GlobalScope = r.GlobalScope
-		sf.ResultsFile = resultsFile
-		sf.DeferFailure = spec.DeferFailure
-		return sf, nil
-	}
-
-	if r.EnableExec && spec.Exec.Path != "" {
+	if spec.Exec.Path != "" {
 		ef := &exec.Filter{Path: spec.Exec.Path}
 
 		ef.FunctionConfig = api
-		ef.GlobalScope = r.GlobalScope
 		ef.ResultsFile = resultsFile
 		ef.DeferFailure = spec.DeferFailure
 		return ef, nil

@@ -26,7 +26,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		path           string
 		input          io.Reader
 		output         io.Writer
-		functionPaths  []string
+		functionPath   string
 		network        bool
 		mount          []string
 	}{
@@ -238,6 +238,26 @@ apiVersion: v1
 				Env:           []string{},
 			},
 		},
+		{
+			name: "--fn-config flag",
+			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			path: "dir",
+			expectedStruct: &runfn.RunFns{
+				Path: "dir",
+				Env:  []string{},
+			},
+			functionPath: "a/b/c",
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {a: b, c: d, e: f}
+kind: ConfigMap
+apiVersion: v1
+`,
+		},
 	}
 
 	for i := range tests {
@@ -299,7 +319,7 @@ apiVersion: v1
 				}
 			}
 
-			if !assert.Equal(t, tt.functionPaths, r.RunFns.FunctionPaths) {
+			if !assert.Equal(t, tt.functionPath, r.RunFns.FunctionPath) {
 				t.FailNow()
 			}
 
@@ -324,7 +344,7 @@ apiVersion: v1
 
 			if tt.expectedStruct != nil {
 				r.RunFns.Functions = nil
-				tt.expectedStruct.FunctionPaths = tt.functionPaths
+				tt.expectedStruct.FunctionPath = tt.functionPath
 				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
 					t.FailNow()
 				}
