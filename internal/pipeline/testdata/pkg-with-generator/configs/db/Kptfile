@@ -4,7 +4,8 @@ metadata:
   name: db
 pipeline:
   mutators:
-  - image: gcr.io/sunilarora-sandbox/httpbin-fn:latest
+  - image: gcr.io/kpt-fn/starlark:unstable
+    configPath: starlark-httpbin.yaml
   - image: gcr.io/kpt-fn/set-namespace:unstable
     configMap:
       namespace: db
