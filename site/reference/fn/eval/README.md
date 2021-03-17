@@ -1,13 +1,13 @@
 ---
-title: "Run"
-linkTitle: "run"
+title: "Eval"
+linkTitle: "eval"
 type: docs
 description: >
    Locally execute one or more functions in containers
 ---
 
 <!--mdtogo:Short
-    Locally execute one or more functions in containers
+    Locally execute function
 -->
 
 Generate, transform, or validate configuration files using locally run
@@ -71,8 +71,8 @@ kpt fn eval DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 ```
 
 ```sh
-# run the function in FUNCTIONS_CONFIG_PATH against the Resources in DIR
-kpt fn eval DIR/ --fn-config FUNCTIONS_CONFIG_PATH
+# run the function with config in FUNCTIONS_CONFIG_PATH against the Resources in DIR
+kpt fn eval DIR/ --image gcr.io/example.com/my-fn:v1.0.0 --fn-config FUNCTIONS_CONFIG_PATH
 ```
 
 <!--mdtogo-->
