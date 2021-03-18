@@ -14,13 +14,13 @@ require (
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gotest.tools v2.2.0+incompatible
-	k8s.io/api v0.20.3
-	k8s.io/apimachinery v0.20.3
-	k8s.io/cli-runtime v0.20.3
-	k8s.io/client-go v0.20.3
+	k8s.io/api v0.20.4
+	k8s.io/apimachinery v0.20.4
+	k8s.io/cli-runtime v0.20.4
+	k8s.io/client-go v0.20.4
 	k8s.io/klog v1.0.0
-	k8s.io/kubectl v0.20.3
-	sigs.k8s.io/cli-utils v0.23.5
+	k8s.io/kubectl v0.20.4
+	sigs.k8s.io/cli-utils v0.23.7-0.20210316180306-70426d65771d
 	sigs.k8s.io/kustomize/cmd/config v0.9.5
-	sigs.k8s.io/kustomize/kyaml v0.10.13
+	sigs.k8s.io/kustomize/kyaml v0.10.14
 )
