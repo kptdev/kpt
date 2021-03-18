@@ -25,7 +25,7 @@ RUN go mod download
 COPY . .
 RUN go build -v -o /usr/local/bin/kpt -ldflags="-s -w -X github.com/GoogleContainerTools/kpt/run.version=$KPT_VERSION" ./
 
-FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
+FROM gcr.io/google.com/cloudsdktool/cloud-sdk:332.0.0-alpine
 RUN apk update && apk upgrade && \
     apk add --no-cache git less diffutils bash openssh docker-cli && \
     rm -rf /var/lib/apt/lists/* && \
