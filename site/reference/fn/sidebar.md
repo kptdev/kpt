@@ -12,7 +12,7 @@
     - [pkg](reference/pkg/)
     - [fn](reference/fn/)
         - [export](reference/fn/export/)
-        - [run](reference/fn/run/)
+        - [run](reference/fn/eval/)
         - [sink](reference/fn/sink/)
         - [source](reference/fn/source/)
     - [live](reference/live/)

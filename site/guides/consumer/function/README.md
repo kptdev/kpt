@@ -171,7 +171,7 @@ Here, rather than specifying `gcr.io/kpt-functions/label-namespace` using the
 [VCS]: https://en.wikipedia.org/wiki/Version_control
 [function producer docs]: /guides/producer/functions/
 [functions concepts]: /concepts/functions/
-[reference]: /reference/fn/run/
+[reference]: /reference/fn/eval/
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [ts sdk]: /guides/producer/functions/ts/
 [go libs]: /guides/producer/functions/golang/

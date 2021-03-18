@@ -25,4 +25,4 @@ a namespace with organization-mandated config defaults.
 
 - Learn more ways of using the kpt fn command from the [reference] doc.
 
-[reference]: /reference/fn/run/
+[reference]: /reference/fn/eval/
