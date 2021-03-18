@@ -324,7 +324,7 @@ apiVersion: v1
 				}
 			}
 
-			if !assert.Equal(t, tt.functionPath, r.RunFns.FunctionPath) {
+			if !assert.Equal(t, tt.functionPath, r.RunFns.FnConfigPath) {
 				t.FailNow()
 			}
 
@@ -349,7 +349,7 @@ apiVersion: v1
 
 			if tt.expectedStruct != nil {
 				r.RunFns.Functions = nil
-				tt.expectedStruct.FunctionPath = tt.functionPath
+				tt.expectedStruct.FnConfigPath = tt.functionPath
 				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
 					t.FailNow()
 				}

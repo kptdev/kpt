@@ -259,7 +259,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		LogSteps:      r.LogSteps,
 		Env:           r.Env,
 		AsCurrentUser: r.AsCurrentUser,
-		FunctionPath:  r.FnConfig,
+		FnConfigPath:  r.FnConfig,
 	}
 
 	// don't consider args for the function
