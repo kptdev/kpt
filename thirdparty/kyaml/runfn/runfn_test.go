@@ -39,6 +39,14 @@ stringMatch: Deployment
 replace: StatefulSet
 `
 
+	ValueReplacerFnConfigYAMLData = `apiVersion: v1
+kind: ValueReplacer
+metadata:
+  name: fn-config
+stringMatch: Deployment
+replace: ReplicaSet
+`
+
 	KptfileData = `apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
@@ -147,20 +155,20 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 		},
 		{
 			name:     "explicit functions in paths -- no functions from input",
-			instance: RunFns{FunctionPath: "foo"},
+			instance: RunFns{FnConfigPath: "foo"},
 			expected: RunFns{
 				Output:       os.Stdout,
 				Input:        os.Stdin,
-				FunctionPath: "foo",
+				FnConfigPath: "foo",
 			},
 		},
 		{
 			name:     "functions in paths -- yes functions from input",
-			instance: RunFns{FunctionPath: "foo"},
+			instance: RunFns{FnConfigPath: "foo"},
 			expected: RunFns{
 				Output:       os.Stdout,
 				Input:        os.Stdin,
-				FunctionPath: "foo",
+				FnConfigPath: "foo",
 			},
 		},
 		{
@@ -663,8 +671,32 @@ replace: StatefulSet
 	assert.Contains(t, string(b), "kind: Deployment")
 }
 
-// TestCmd_Execute_setOutput tests the execution of a filter reading and writing to a dir
-func TestCmd_Execute_setFunctionPaths(t *testing.T) {
+func getFnConfigPathFilterProvider(t *testing.T, r *RunFns) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+		// parse the filter from the input
+		filter := yaml.YFilter{}
+		b := &bytes.Buffer{}
+		e := yaml.NewEncoder(b)
+		node, err := r.getFunctionConfig(node)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !assert.NoError(t, e.Encode(node.YNode())) {
+			t.FailNow()
+		}
+		e.Close()
+		d := yaml.NewDecoder(b)
+		if !assert.NoError(t, d.Decode(&filter)) {
+			t.FailNow()
+		}
+
+		return filters.Modifier{
+			Filters: []yaml.YFilter{{Filter: yaml.Lookup("kind")}, filter},
+		}, nil
+	}
+}
+
+func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
@@ -674,16 +706,22 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 		return
 	}
 	os.RemoveAll(tmpF.Name())
-	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerYAMLData), 0600)) {
+	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerFnConfigYAMLData), 0600)) {
 		return
+	}
+
+	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	// run the functions, providing the path to the directory of filters
 	instance := RunFns{
-		FunctionPath:           tmpF.Name(),
-		Path:                   dir,
-		functionFilterProvider: getFilterProvider(t),
+		FnConfigPath: tmpF.Name(),
+		Path:         dir,
+		Functions:    []*yaml.RNode{fn},
 	}
+	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
 	// initialize the defaults
 	instance.init()
 
@@ -696,7 +734,7 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.Contains(t, string(b), "kind: StatefulSet")
+	assert.Contains(t, string(b), "kind: ReplicaSet")
 }
 
 // TestCmd_Execute_setOutput tests the execution of a filter using an io.Writer as output

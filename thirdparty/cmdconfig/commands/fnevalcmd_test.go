@@ -240,7 +240,7 @@ apiVersion: v1
 		},
 		{
 			name: "--fn-config flag",
-			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path: "dir",
@@ -253,10 +253,15 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container: {image: 'foo:bar'}
-data: {a: b, c: d, e: f}
+data: {}
 kind: ConfigMap
 apiVersion: v1
 `,
+		},
+		{
+			name: "--fn-config flag",
+			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			err:  "command line arguments cannot be used with function config file at the same time",
 		},
 	}
 

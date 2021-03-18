@@ -35,9 +35,9 @@ type RunFns struct {
 	// Path is the path to the directory containing functions
 	Path string
 
-	// FunctionPath  allows functions to be specified by a path to function config
-	// file
-	FunctionPath string
+	// FnConfigPath specifies a config file which contains the configs used in
+	// function input
+	FnConfigPath string
 
 	// Functions is an explicit list of functions to run against the input.
 	Functions []*yaml.RNode
@@ -139,22 +139,13 @@ func (r RunFns) getNodesAndFilters() (
 }
 
 func (r RunFns) getFilters() ([]kio.Filter, error) {
-	var fltrs []kio.Filter
-	// fns from directories specified on the struct
-	f, err := r.getFunctionsFromFunctionPaths()
-	if err != nil {
-		return nil, err
-	}
-	fltrs = append(fltrs, f...)
-
 	// explicit fns specified on the struct
-	f, err = r.getFunctionsFromFunctions()
+	f, err := r.getFunctionsFromFunctions()
 	if err != nil {
 		return nil, err
 	}
-	fltrs = append(fltrs, f...)
 
-	return fltrs, nil
+	return f, nil
 }
 
 // runFunctions runs the fltrs against the input and writes to either r.Output or output
@@ -217,23 +208,6 @@ func (r RunFns) runFunctions(
 		return fmt.Errorf(strings.Join(errs, "\n---\n"))
 	}
 	return nil
-}
-
-// getFunctionsFromFunctionPath returns the function read from r.FunctionPath
-func (r RunFns) getFunctionsFromFunctionPaths() ([]kio.Filter, error) {
-	if r.FunctionPath == "" {
-		return nil, nil
-	}
-	f, err := os.Open(r.FunctionPath)
-	if err != nil {
-		return nil, err
-	}
-	reader := kio.ByteReader{Reader: f}
-	nodes, err := reader.Read()
-	if err != nil {
-		return nil, err
-	}
-	return r.getFunctionFilters(nodes...)
 }
 
 // getFunctionsFromFunctions returns the set of explicitly provided functions as
@@ -393,6 +367,28 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
+// getFunctionConfig will return the config that used in 'functionConfig' field in
+// function input. If r.FnConfigPath is provided, it will read and return it. Otherwise
+// return the 'config' generated from command line arguments.
+func (r *RunFns) getFunctionConfig(config *yaml.RNode) (*yaml.RNode, error) {
+	if r.FnConfigPath == "" {
+		return config, nil
+	}
+	f, err := os.Open(r.FnConfigPath)
+	if err != nil {
+		return nil, err
+	}
+	reader := kio.ByteReader{Reader: f}
+	nodes, err := reader.Read()
+	if err != nil {
+		return nil, err
+	}
+	if len(nodes) > 1 {
+		return nil, fmt.Errorf("more than 1 config found in %s", r.FnConfigPath)
+	}
+	return nodes[0], nil
+}
+
 // ffp provides function filters
 func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 	var resultsFile string
@@ -400,6 +396,10 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
 			"results-%v.yaml", r.resultsCount))
 		atomic.AddUint32(&r.resultsCount, 1)
+	}
+	fnConfig, err := r.getFunctionConfig(api)
+	if err != nil {
+		return nil, err
 	}
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
@@ -417,7 +417,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 			uidgid,
 		)
 		cf := &c
-		cf.Exec.FunctionConfig = api
+		cf.Exec.FunctionConfig = fnConfig
 		cf.Exec.ResultsFile = resultsFile
 		cf.Exec.DeferFailure = spec.DeferFailure
 		return cf, nil
@@ -426,7 +426,7 @@ func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser
 	if spec.Exec.Path != "" {
 		ef := &exec.Filter{Path: spec.Exec.Path}
 
-		ef.FunctionConfig = api
+		ef.FunctionConfig = fnConfig
 		ef.ResultsFile = resultsFile
 		ef.DeferFailure = spec.DeferFailure
 		return ef, nil

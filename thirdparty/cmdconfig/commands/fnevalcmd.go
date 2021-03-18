@@ -219,6 +219,9 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if len(args) > 1 {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
 	}
+	if len(dataItems) > 0 && r.FnConfig != "" {
+		return fmt.Errorf("command line arguments cannot be used with function config file at the same time")
+	}
 
 	fns, err := r.getContainerFunctions(dataItems)
 	if err != nil {
