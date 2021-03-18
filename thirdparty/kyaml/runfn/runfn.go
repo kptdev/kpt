@@ -342,7 +342,7 @@ func (r *RunFns) init() {
 
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
-		r.functionFilterProvider = r.ffp
+		r.functionFilterProvider = r.defaultFnFilterProvider
 	}
 
 	// if LogSteps is enabled and LogWriter is not specified, use stderr
@@ -389,8 +389,8 @@ func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
 	return nodes[0], nil
 }
 
-// ffp provides function filters
-func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, fnConfig *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+// defaultFnFilterProvider provides function filters
+func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 	if spec.Container.Image == "" && spec.Exec.Path == "" {
 		return nil, fmt.Errorf("either image name or executable path need to be provided")
 	}
