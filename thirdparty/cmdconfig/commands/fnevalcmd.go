@@ -37,7 +37,7 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
 
 	r.Command.Flags().StringVar(
-		&r.FnConfig, "fn-config", "", "path to the function config file")
+		&r.FnConfigPath, "fn-config", "", "path to the function config file")
 
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
@@ -68,7 +68,7 @@ type EvalFnRunner struct {
 	DryRun             bool
 	Image              string
 	ExecPath           string
-	FnConfig           string
+	FnConfigPath       string
 	RunFns             runfn.RunFns
 	ResultsDir         string
 	Network            bool
@@ -219,8 +219,8 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if len(args) > 1 {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
 	}
-	if len(dataItems) > 0 && r.FnConfig != "" {
-		return fmt.Errorf("command line arguments cannot be used with function config file at the same time")
+	if len(dataItems) > 0 && r.FnConfigPath != "" {
+		return fmt.Errorf("function arguments can not be specified with function config file")
 	}
 
 	fns, err := r.getContainerFunctions(dataItems)
@@ -259,7 +259,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		LogSteps:      r.LogSteps,
 		Env:           r.Env,
 		AsCurrentUser: r.AsCurrentUser,
-		FnConfigPath:  r.FnConfig,
+		FnConfigPath:  r.FnConfigPath,
 	}
 
 	// don't consider args for the function

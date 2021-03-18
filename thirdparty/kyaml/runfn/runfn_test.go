@@ -677,9 +677,12 @@ func getFnConfigPathFilterProvider(t *testing.T, r *RunFns) func(runtimeutil.Fun
 		filter := yaml.YFilter{}
 		b := &bytes.Buffer{}
 		e := yaml.NewEncoder(b)
-		node, err := r.getFunctionConfig(node)
-		if err != nil {
-			t.Fatal(err)
+		var err error
+		if r.FnConfigPath != "" {
+			node, err = r.getFunctionConfig()
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 		if !assert.NoError(t, e.Encode(node.YNode())) {
 			t.FailNow()

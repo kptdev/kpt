@@ -26,7 +26,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		path           string
 		input          io.Reader
 		output         io.Writer
-		functionPath   string
+		fnConfigPath   string
 		network        bool
 		mount          []string
 	}{
@@ -246,7 +246,7 @@ apiVersion: v1
 				Path: "dir",
 				Env:  []string{},
 			},
-			functionPath: "a/b/c",
+			fnConfigPath: "a/b/c",
 			expected: `
 metadata:
   name: function-input
@@ -261,7 +261,7 @@ apiVersion: v1
 		{
 			name: "--fn-config flag",
 			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
-			err:  "command line arguments cannot be used with function config file at the same time",
+			err:  "function arguments can not be specified with function config file",
 		},
 	}
 
@@ -324,7 +324,7 @@ apiVersion: v1
 				}
 			}
 
-			if !assert.Equal(t, tt.functionPath, r.RunFns.FnConfigPath) {
+			if !assert.Equal(t, tt.fnConfigPath, r.RunFns.FnConfigPath) {
 				t.FailNow()
 			}
 
@@ -349,7 +349,7 @@ apiVersion: v1
 
 			if tt.expectedStruct != nil {
 				r.RunFns.Functions = nil
-				tt.expectedStruct.FnConfigPath = tt.functionPath
+				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
 				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
 					t.FailNow()
 				}

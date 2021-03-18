@@ -66,7 +66,7 @@ type RunFns struct {
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
-		filter runtimeutil.FunctionSpec, api *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error)
+		filter runtimeutil.FunctionSpec, fnConfig *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error)
 
 	// AsCurrentUser is a boolean to indicate whether docker container should use
 	// the uid and gid that run the command
@@ -369,10 +369,10 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 
 // getFunctionConfig will return the config that used in 'functionConfig' field in
 // function input. If r.FnConfigPath is provided, it will read and return it. Otherwise
-// return the 'config' generated from command line arguments.
-func (r *RunFns) getFunctionConfig(config *yaml.RNode) (*yaml.RNode, error) {
+// returns an error.
+func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
 	if r.FnConfigPath == "" {
-		return config, nil
+		return nil, fmt.Errorf("read function config from file but no path provided")
 	}
 	f, err := os.Open(r.FnConfigPath)
 	if err != nil {
@@ -390,16 +390,23 @@ func (r *RunFns) getFunctionConfig(config *yaml.RNode) (*yaml.RNode, error) {
 }
 
 // ffp provides function filters
-func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, api *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+func (r *RunFns) ffp(spec runtimeutil.FunctionSpec, fnConfig *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+	if spec.Container.Image == "" && spec.Exec.Path == "" {
+		return nil, fmt.Errorf("either image name or executable path need to be provided")
+	}
+
 	var resultsFile string
 	if r.ResultsDir != "" {
 		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
 			"results-%v.yaml", r.resultsCount))
 		atomic.AddUint32(&r.resultsCount, 1)
 	}
-	fnConfig, err := r.getFunctionConfig(api)
-	if err != nil {
-		return nil, err
+	var err error
+	if r.FnConfigPath != "" {
+		fnConfig, err = r.getFunctionConfig()
+		if err != nil {
+			return nil, err
+		}
 	}
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
