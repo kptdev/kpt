@@ -112,7 +112,7 @@ A: [Please reach out!][contact]
 
 [kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
-[functions]: /reference/fn/eval/
+[functions]: /reference/fn/run/
 [source functions]: /guides/consumer/function/catalog/sources/
 [Functions User Guide]: /guides/consumer/function/
 [updating]: /reference/pkg/update/

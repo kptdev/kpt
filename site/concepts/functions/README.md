@@ -102,4 +102,4 @@ pipeline. Get detailed tutorials on how to use `kpt fn export` from the
 [spec]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [Export a Workflow]: /guides/consumer/function/export/
 [function producer docs]: /guides/producer/functions/
-[reference]: /reference/fn/eval/
+[reference]: /reference/fn/run/

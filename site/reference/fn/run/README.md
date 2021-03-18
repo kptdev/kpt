@@ -1,13 +1,13 @@
 ---
-title: "Eval"
-linkTitle: "eval"
+title: "Run"
+linkTitle: "run"
 type: docs
 description: >
    Locally execute one or more functions in containers
 ---
 
 <!--mdtogo:Short
-    Locally execute function
+    Locally execute one or more functions in containers
 -->
 
 Generate, transform, or validate configuration files using locally run
@@ -26,10 +26,10 @@ reference for advanced usecases.
 <!--mdtogo:Long-->
 
 ```sh
-kpt fn eval DIR [flags]
+kpt fn run DIR [flags]
 ```
 
-If the container exits with non-zero status code, eval will fail and print the
+If the container exits with non-zero status code, run will fail and print the
 container `STDERR`.
 
 ```sh
@@ -62,17 +62,24 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/ex
 ```sh
 # read the Resources from DIR, provide them to a container my-fun as input,
 # write my-fn output back to DIR
-kpt fn eval DIR/ --image gcr.io/example.com/my-fn
+kpt fn run DIR/ --image gcr.io/example.com/my-fn
 ```
 
 ```sh
 # provide the my-fn with an input ConfigMap containing `data: {foo: bar}`
-kpt fn eval DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 ```
 
 ```sh
-# run the function with config in FUNCTIONS_CONFIG_PATH against the Resources in DIR
-kpt fn eval DIR/ --image gcr.io/example.com/my-fn:v1.0.0 --fn-config FUNCTIONS_CONFIG_PATH
+# run the functions in FUNCTIONS_DIR against the Resources in DIR
+kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
+```
+
+<!-- @fnRun @verifyStaleExamples-->
+```sh
+# discover functions in DIR and run them against Resource in DIR.
+# functions may be scoped to a subset of Resources -- see `kpt help fn run`
+kpt fn run DIR/
 ```
 
 <!--mdtogo-->

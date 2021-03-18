@@ -40,28 +40,6 @@ var FnExamples = `
   kpt fn run DIR/
 `
 
-var EvalShort = `Locally execute function`
-var EvalLong = `
-  kpt fn eval DIR [flags]
-
-If the container exits with non-zero status code, eval will fail and print the
-container ` + "`" + `STDERR` + "`" + `.
-
-  DIR:
-    Path to a package directory.  Defaults to stdin if unspecified.
-`
-var EvalExamples = `
-  # read the Resources from DIR, provide them to a container my-fun as input,
-  # write my-fn output back to DIR
-  kpt fn eval DIR/ --image gcr.io/example.com/my-fn
-
-  # provide the my-fn with an input ConfigMap containing ` + "`" + `data: {foo: bar}` + "`" + `
-  kpt fn eval DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
-
-  # run the function with config in FUNCTIONS_CONFIG_PATH against the Resources in DIR
-  kpt fn eval DIR/ --image gcr.io/example.com/my-fn:v1.0.0 --fn-config FUNCTIONS_CONFIG_PATH
-`
-
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
 var ExportLong = `
   kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
@@ -83,15 +61,39 @@ var ExportLong = `
     output is stdout
 `
 var ExportExamples = `
-<!-- @fnExport @verifyExamples-->
   # read functions from DIR, run them against it as one step.
   # write the generated GitHub Actions pipeline to main.yaml.
   kpt fn export DIR/ --output main.yaml --workflow github-actions
 
-<!-- @fnExport @verifyExamples-->
   # discover functions in FUNCTIONS_DIR and run them against resource in DIR.
   # write the generated Cloud Build pipeline to stdout.
   kpt fn export DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
+`
+
+var RunShort = `Locally execute one or more functions in containers`
+var RunLong = `
+  kpt fn run DIR [flags]
+
+If the container exits with non-zero status code, run will fail and print the
+container ` + "`" + `STDERR` + "`" + `.
+
+  DIR:
+    Path to a package directory.  Defaults to stdin if unspecified.
+`
+var RunExamples = `
+  # read the Resources from DIR, provide them to a container my-fun as input,
+  # write my-fn output back to DIR
+  kpt fn run DIR/ --image gcr.io/example.com/my-fn
+
+  # provide the my-fn with an input ConfigMap containing ` + "`" + `data: {foo: bar}` + "`" + `
+  kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+
+  # run the functions in FUNCTIONS_DIR against the Resources in DIR
+  kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
+
+  # discover functions in DIR and run them against Resource in DIR.
+  # functions may be scoped to a subset of Resources -- see ` + "`" + `kpt help fn run` + "`" + `
+  kpt fn run DIR/
 `
 
 var SinkShort = `Specify a directory as an output sink package`
@@ -116,7 +118,6 @@ var SourceLong = `
     Path to a package directory.  Defaults to stdin if unspecified.
 `
 var SourceExamples = `
-<!-- @fnSource @verifyExamples-->
   # print to stdout configuration from DIR/ formatted as an input source
   kpt fn source DIR/
 
