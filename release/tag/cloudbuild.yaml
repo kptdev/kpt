@@ -138,7 +138,8 @@ steps:
     dir: 'artifacts'
     args: [ 'cp', '-a', 'public-read', 'kpt_windows_amd64.exe', 'gs://${_GCS_BUCKET}/latest/windows_amd64/kpt.exe' ]
 
-  # build docker image
+  # build docker images
+  ## kpt image
   - name: 'gcr.io/cloud-builders/docker'
     dir: 'kpt'
     args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}', '.', '--build-arg', 'KPT_VERSION=${_VERSION}']
@@ -147,12 +148,27 @@ steps:
     dir: 'kpt'
     args: [ 'tag', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}',  'gcr.io/$PROJECT_ID/kpt:latest' ]
 
-  # push the container image
+  ## kpt + gcloud image
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'kpt'
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt-gcloud:${TAG_NAME}', '-f', 'release/gcloud/Dockerfile', '.', '--build-arg', 'KPT_VERSION=${_VERSION}']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'kpt'
+    args: [ 'tag', 'gcr.io/$PROJECT_ID/kpt-gcloud:${TAG_NAME}',  'gcr.io/$PROJECT_ID/kpt-gcloud:latest' ]
+
+  # push the container images
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/kpt:${TAG_NAME}']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/kpt-gcloud:${TAG_NAME}']
 
   # update latest tag on release
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/kpt:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/kpt-gcloud:latest']
 
 timeout: '60m'
