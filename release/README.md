@@ -10,7 +10,7 @@ To cut a new kpt release perform the following:
   - Within kustomize: [cmd/config](https://github.com/kubernetes-sigs/kustomize/blob/master/releasing)
   - Update `go.mod` file with correct versions of `cli-utils`, `kyaml`, and `cmd/config`
   - Update the pinned base image versions in the kpt Dockerfiles
-  ([Dockerfile](./Dockerfile) and [release/gcloud/Dockerfile](./release/gcloud/Dockerfile))
+  ([release/Dockerfile](./Dockerfile) and [release/gcloud/Dockerfile](./gcloud/Dockerfile))
   - Run `make all` (which should update `go.sum` and run `go mod tidy`)
   - Create a `kpt` PR with previous `go.mod` and `go.sum` changes, and submit. [Example PR](https://github.com/GoogleContainerTools/kpt/pull/594)
 - Fetch the latest master changes to a clean branch

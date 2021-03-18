@@ -73,7 +73,10 @@ vet:
 	go vet ./...
 
 docker:
-	docker build .
+	docker build -f release/Dockerfile .
+
+docker-gcloud:
+	docker build -f release/gcloud/Dockerfile .
 
 lintdocs:
 	(cd site && npm run lint-fix)
