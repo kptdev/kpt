@@ -151,7 +151,7 @@ steps:
   ## kpt + gcloud image
   - name: 'gcr.io/cloud-builders/docker'
     dir: 'kpt'
-    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt-gcloud:${TAG_NAME}', '-f', 'gcloud/Dockerfile', '.', '--build-arg', 'KPT_VERSION=${_VERSION}']
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt-gcloud:${TAG_NAME}', '-f', 'release/gcloud/Dockerfile', '.', '--build-arg', 'KPT_VERSION=${_VERSION}']
 
   - name: 'gcr.io/cloud-builders/docker'
     dir: 'kpt'
