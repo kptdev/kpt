@@ -1,0 +1,72 @@
+diff --git a/configs/db/resources.yaml b/configs/db/resources.yaml
+index 36d87ea..adf2fec 100644
+--- a/configs/db/resources.yaml
++++ b/configs/db/resources.yaml
+@@ -1,13 +1,10 @@
+-apiVersion: apps/v1
+-kind: StatefulSet
+-metadata:
+-  name: db
+-spec:
+-  replicas: 3
+----
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
++  labels:
++    app: backend
++    tier: backend
+   name: custom
++  namespace: staging
+ spec:
+   image: nginx:1.2.3
+diff --git a/configs/deployment_httpbin.yaml b/configs/deployment_httpbin.yaml
+deleted file mode 100644
+index 2e8f622..0000000
+--- a/configs/deployment_httpbin.yaml
++++ /dev/null
+@@ -1,23 +0,0 @@
+-apiVersion: apps/v1
+-kind: Deployment
+-metadata:
+-  labels:
+-    app: backend
+-    tier: db
+-  name: httpbin
+-  namespace: staging
+-spec:
+-  replicas: 4
+-  selector:
+-    matchLabels:
+-      app: backend
+-      tier: db
+-  template:
+-    metadata:
+-      labels:
+-        app: backend
+-        tier: db
+-    spec:
+-      containers:
+-      - image: kennethreitz/httpbin
+-        name: httpbin
+diff --git a/configs/resources.yaml b/configs/resources.yaml
+index 0848ba0..6be45ee 100644
+--- a/configs/resources.yaml
++++ b/configs/resources.yaml
+@@ -1,6 +1,16 @@
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
++  labels:
++    tier: backend
+   name: nginx-deployment
++  namespace: staging
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
++  template:
++    metadata:
++      labels:
++        tier: backend

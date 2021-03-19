@@ -16,13 +16,16 @@ package pipeline
 
 import (
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -49,25 +52,42 @@ func (e *Executor) Execute() error {
 		return fmt.Errorf("failed to run pipeline in package %s %w", root.pkg, err)
 	}
 
+	if err = trackOutputFiles(hctx); err != nil {
+		return err
+	}
+
 	pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
 	err = pkgWriter.Write(resources)
 	if err != nil {
 		return fmt.Errorf("failed to save resources: %w", err)
 	}
+
+	if err = pruneResources(hctx); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-//
 // hydrationContext contains bits to track state of a package hydration.
 // This is sort of global state that is available to hydration step at
 // each pkg along the hydration walk.
 type hydrationContext struct {
-	// root points to the root of hydration graph where we bagan our hydration journey
+	// root points to the root pkg of hydration graph
 	root *pkgNode
 
 	// pkgs refers to the packages undergoing hydration. pkgs are key'd by their
 	// unique paths.
 	pkgs map[pkg.UniquePath]*pkgNode
+
+	// inputFiles is a set of filepaths containing input resources to the
+	// functions across all the packages during hydration.
+	// The file paths are relative to the root package.
+	inputFiles sets.String
+
+	// outputFiles is a set of filepaths containing output resources. This
+	// will be compared with the inputFiles to identify files be pruned.
+	outputFiles sets.String
 }
 
 //
@@ -144,6 +164,11 @@ func hydrate(pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err err
 	// mark the pkg in hydrating
 	curr.state = Hydrating
 
+	relPath, err := curr.pkg.RelativePathTo(hctx.root.pkg)
+	if err != nil {
+		return nil, err
+	}
+
 	var input []*yaml.RNode
 
 	// determine sub packages to be hydrated
@@ -174,6 +199,18 @@ func hydrate(pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err err
 	if err != nil {
 		return output, err
 	}
+
+	// ensure input resource's paths are relative to root pkg.
+	currPkgResources, err = adjustRelPath(currPkgResources, relPath)
+	if err != nil {
+		return nil, fmt.Errorf("adjust relative path: %w", err)
+	}
+
+	err = trackInputFiles(hctx, currPkgResources)
+	if err != nil {
+		return nil, err
+	}
+
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
 
@@ -182,14 +219,7 @@ func hydrate(pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err err
 		return output, err
 	}
 
-	// Resources are read from local filesystem or generated at a package level, so the
-	// path annotation in each resource points to path relative to that package.
-	// But the resources are written to the file system at the root package level, so
-	// the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
-	relPath, err := curr.pkg.RelativePathTo(hctx.root.pkg)
-	if err != nil {
-		return nil, err
-	}
+	// ensure generated resource's file path are relative to root pkg.
 	output, err = adjustRelPath(output, relPath)
 	if err != nil {
 		return nil, fmt.Errorf("adjust relative path: %w", err)
@@ -241,8 +271,10 @@ func (pn *pkgNode) runPipeline(input []*yaml.RNode) ([]*yaml.RNode, error) {
 // path (location) of a KRM resources is tracked in a special key in
 // metadata.annotation field. adjustRelPath updates that path annotation by prepending
 // the given relPath to the current path annotation if it doesn't exist already.
-// During hydration, paths are adjusted with the relative path to the root
-// package before returning the resources to the parent in hydrate call.
+// Resources are read from local filesystem or generated at a package level, so the
+// path annotation in each resource points to path relative to that package.
+// But the resources are written to the file system at the root package level, so
+// the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
 func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, error) {
 	if relPath == "" {
 		return resources, nil
@@ -280,4 +312,47 @@ func fnChain(pl *kptfilev1alpha2.Pipeline, pkgPath pkg.UniquePath) ([]kio.Filter
 		runners = append(runners, r)
 	}
 	return runners, nil
+}
+
+// trackInputFiles records file paths of input resources in the hydration context.
+func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
+	if hctx.inputFiles == nil {
+		hctx.inputFiles = sets.String{}
+	}
+	for _, r := range input {
+		path, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return fmt.Errorf("path annotation missing: %w", err)
+		}
+		hctx.inputFiles.Insert(path)
+	}
+	return nil
+}
+
+// trackOutputfiles records the file paths of output resources in the hydration
+// context. It should be invoked post hydration.
+func trackOutputFiles(hctx *hydrationContext) error {
+	outputSet := sets.String{}
+
+	for _, r := range hctx.root.resources {
+		path, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return fmt.Errorf("path annotation missing: %w", err)
+		}
+		outputSet.Insert(path)
+	}
+	hctx.outputFiles = outputSet
+	return nil
+}
+
+// pruneResources compares the input and output of the hydration and prunes
+// resources that are no longer present in the output of the hydration.
+func pruneResources(hctx *hydrationContext) error {
+	filesToBeDeleted := hctx.inputFiles.Difference(hctx.outputFiles)
+	for f := range filesToBeDeleted {
+		if err := os.Remove(filepath.Join(string(hctx.root.pkg.UniquePath), f)); err != nil {
+			return fmt.Errorf("failed to delete file: %w", err)
+		}
+	}
+	return nil
 }
