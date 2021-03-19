@@ -6,6 +6,7 @@ package commands
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
@@ -206,8 +207,16 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 	return sms
 }
 
+func checkFnConfigPath(path string) error {
+	// check does fn config file exist
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("missing function config file: %s", path)
+	}
+	return nil
+}
+
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
-	if c.ArgsLenAtDash() >= 0 && r.Image == "" && r.ExecPath == "" {
+	if r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image or --exec-path")
 	}
 
@@ -247,6 +256,13 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 
 	// parse mounts to set storageMounts
 	storageMounts := toStorageMounts(r.Mounts)
+
+	if r.FnConfigPath != "" {
+		err = checkFnConfigPath(r.FnConfigPath)
+		if err != nil {
+			return err
+		}
+	}
 
 	r.RunFns = runfn.RunFns{
 		Functions:     fns,

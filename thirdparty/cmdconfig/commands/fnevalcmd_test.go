@@ -211,42 +211,52 @@ apiVersion: v1
 		},
 		{
 			name: "log steps",
-			args: []string{"eval", "dir", "--log-steps"},
+			args: []string{"eval", "dir", "--log-steps", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:     "dir",
 				LogSteps: true,
 				Env:      []string{},
 			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
 		},
 		{
 			name: "envs",
-			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR"},
+			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path: "dir",
 				Env:  []string{"FOO=BAR", "BAR"},
 			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
 		},
 		{
 			name: "as current user",
-			args: []string{"eval", "dir", "--as-current-user"},
+			args: []string{"eval", "dir", "--as-current-user", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:          "dir",
 				AsCurrentUser: true,
 				Env:           []string{},
 			},
-		},
-		{
-			name: "--fn-config flag",
-			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar"},
-			path: "dir",
-			expectedStruct: &runfn.RunFns{
-				Path: "dir",
-				Env:  []string{},
-			},
-			fnConfigPath: "a/b/c",
 			expected: `
 metadata:
   name: function-input
@@ -260,6 +270,11 @@ apiVersion: v1
 		},
 		{
 			name: "--fn-config flag",
+			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar"},
+			err:  "missing function config file: a/b/c",
+		},
+		{
+			name: "--fn-config with function arguments",
 			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "function arguments can not be specified with function config file",
 		},

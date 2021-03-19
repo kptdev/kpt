@@ -135,17 +135,83 @@ func (r RunFns) getNodesAndFilters() (
 	if err != nil {
 		return nil, nil, outputPkg, err
 	}
+
+	// we need to exclude function config file if we don't want to include
+	// meta resources.
+	if !r.IncludeMetaResources {
+		p := kio.Pipeline{
+			Inputs:                []kio.Reader{buff},
+			Filters:               []kio.Filter{kio.FilterFunc(r.filterOutFnConfigFile)},
+			Outputs:               []kio.Writer{buff},
+			ContinueOnEmptyResult: r.ContinueOnEmptyResult,
+		}
+		if err := p.Execute(); err != nil {
+			return nil, nil, outputPkg, err
+		}
+	}
 	return buff, fltrs, outputPkg, nil
 }
 
-func (r RunFns) getFilters() ([]kio.Filter, error) {
-	// explicit fns specified on the struct
-	f, err := r.getFunctionsFromFunctions()
-	if err != nil {
-		return nil, err
+// filterOutFnConfigFile is a filter which filters out the function config
+// file
+func (r RunFns) filterOutFnConfigFile(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	var result []*yaml.RNode
+	// fn config path should be absolute
+	var fnConfigPath string
+	if filepath.IsAbs(r.FnConfigPath) {
+		fnConfigPath = r.FnConfigPath
+	} else {
+		fnConfigPath = filepath.Join(r.Path, r.FnConfigPath)
 	}
+	for i := range nodes {
+		node := nodes[i]
+		meta, err := node.GetMeta()
+		if err != nil {
+			return nil, err
+		}
+		path := meta.Annotations[kioutil.PathAnnotation]
+		if path != "" {
+			// file path in the annotation is relative to the package path
+			// we need to use absolute path
+			path = filepath.Join(r.Path, path)
+			if path == fnConfigPath {
+				continue
+			}
+		}
 
-	return f, nil
+		result = append(result, node)
+	}
+	return result, nil
+}
+
+func (r RunFns) getFilters() ([]kio.Filter, error) {
+	fns := r.Functions
+	var fltrs []kio.Filter
+	for i := range fns {
+		api := fns[i]
+		spec := runtimeutil.GetFunctionSpec(api)
+		if spec == nil {
+			// resource doesn't have function spec
+			continue
+		}
+		if spec.Container.Network && !r.Network {
+			// TODO(eddiezane): Provide error info about which function needs the network
+			return fltrs, errors.Errorf("network required but not enabled with --network")
+		}
+		// merge envs from imperative and declarative
+		spec.Container.Env = r.mergeContainerEnv(spec.Container.Env)
+
+		c, err := r.functionFilterProvider(*spec, api, user.Current)
+		if err != nil {
+			return nil, err
+		}
+
+		if c == nil {
+			continue
+		}
+		fltrs = append(fltrs, c)
+	}
+	return fltrs, nil
 }
 
 // runFunctions runs the fltrs against the input and writes to either r.Output or output
@@ -210,12 +276,6 @@ func (r RunFns) runFunctions(
 	return nil
 }
 
-// getFunctionsFromFunctions returns the set of explicitly provided functions as
-// Filters
-func (r RunFns) getFunctionsFromFunctions() ([]kio.Filter, error) {
-	return r.getFunctionFilters(r.Functions...)
-}
-
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
 // file (declarative). If they have same key, the imperative value will be respected.
 func (r RunFns) mergeContainerEnv(envs []string) []string {
@@ -230,36 +290,6 @@ func (r RunFns) mergeContainerEnv(envs []string) []string {
 	}
 
 	return declarative.Raw()
-}
-
-func (r RunFns) getFunctionFilters(fns ...*yaml.RNode) (
-	[]kio.Filter, error) {
-	var fltrs []kio.Filter
-	for i := range fns {
-		api := fns[i]
-		spec := runtimeutil.GetFunctionSpec(api)
-		if spec == nil {
-			// resource doesn't have function spec
-			continue
-		}
-		if spec.Container.Network && !r.Network {
-			// TODO(eddiezane): Provide error info about which function needs the network
-			return fltrs, errors.Errorf("network required but not enabled with --network")
-		}
-		// merge envs from imperative and declarative
-		spec.Container.Env = r.mergeContainerEnv(spec.Container.Env)
-
-		c, err := r.functionFilterProvider(*spec, api, user.Current)
-		if err != nil {
-			return nil, err
-		}
-
-		if c == nil {
-			continue
-		}
-		fltrs = append(fltrs, c)
-	}
-	return fltrs, nil
 }
 
 // sortFns sorts functions so that functions with the longest paths come first
@@ -376,12 +406,12 @@ func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
 	}
 	f, err := os.Open(r.FnConfigPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("missing function config %s: %w", r.FnConfigPath, err)
 	}
 	reader := kio.ByteReader{Reader: f}
 	nodes, err := reader.Read()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read function config: %w", err)
 	}
 	if len(nodes) > 1 {
 		return nil, fmt.Errorf("more than 1 config found in %s", r.FnConfigPath)
