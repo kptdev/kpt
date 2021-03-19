@@ -231,7 +231,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
 ```
@@ -250,19 +250,19 @@ kpt live init my-dir
 
 <!--mdtogo:Examples-->
 <!-- @liveApply @verifyExamples-->
-```sh
+```shell
 # apply resources and prune
 kpt live apply my-dir/
 ```
 
 <!-- @liveApply @verifyExamples-->
-```sh
+```shell
 # apply resources and wait for all the resources to be reconciled before pruning
 kpt live apply --reconcile-timeout=15m my-dir/
 ```
 
 <!-- @liveApply @verifyExamples-->
-```sh
+```shell
 # apply resources and specify how often to poll the cluster for resource status
 kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir/
 ```

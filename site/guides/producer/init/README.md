@@ -52,7 +52,7 @@ be individually versioned (as version v1.0.2) by creating the tag `example/v1.0.
 ## Create a git repo
 
 <!-- @defineEnvVars @verifyStaleGuides-->
-```sh
+```shell
 REPO_NAME=my-repo
 REPO_URL="<url>"
 ```
@@ -66,7 +66,7 @@ REPO_URL=file://$(pwd)/$REPO_NAME.git
 {{% /hide %}}
 
 <!-- @setupRepo @verifyStaleGuides-->
-```sh
+```shell
 mkdir $REPO_NAME # or clone with git `git clone`
 git init $REPO_NAME # only if new repo
 ```
@@ -74,35 +74,35 @@ git init $REPO_NAME # only if new repo
 ## Create the package
 
 <!-- @createPackage @verifyStaleGuides-->
-```sh
+```shell
 mkdir $REPO_NAME/nginx
 ```
 
 Recommended: initialize the package with metadata
 
 <!-- @initPackage @verifyStaleGuides-->
-```sh
+```shell
 kpt pkg init $REPO_NAME/nginx --tag kpt.dev/app=nginx --description "kpt nginx package"
 ```
 
 ## Create configuration
 
 <!-- @addConfig @verifyStaleGuides-->
-```sh
+```shell
 curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output $REPO_NAME/nginx/nginx-deployment.yaml
 ```
 
 ## Publish package to git
 
 <!-- @commitRepo @verifyStaleGuides-->
-```sh
+```shell
 (cd $REPO_NAME && git add . && git commit -m "Add nginx package")
 ```
 
 Recommended: tag the commit as a release
 
 <!-- @createTag @verifyStaleGuides-->
-```sh
+```shell
 # tag as DIR/VERSION for per-directory versioning
 (cd $REPO_NAME && git tag nginx/v0.1.0)
 # git push nginx/v0.1.0 # requires an upstream repo
@@ -111,7 +111,7 @@ Recommended: tag the commit as a release
 ## Fetch the released package
 
 <!-- @fetchPackage @verifyStaleGuides-->
-```sh
+```shell
 kpt pkg get $REPO_URL/nginx@v0.1.0 nginx
 ```
 

@@ -22,7 +22,7 @@ Before diving into the following tutorial, you need to create a public repo on G
 
 On your local machine, create an empty directory:
 
-```shell script
+```shell
 mkdir function-export-example
 cd function-export-example
 ```
@@ -33,7 +33,7 @@ All commands must be run at the root of this directory.
 
 Use `kpt pkg get` to fetch source files of this tutorial:
 
-```shell script
+```shell
 # Init git
 git init
 git remote add origin https://github.com/<USER>/<REPO>.git
@@ -59,14 +59,14 @@ The exported pipeline leverages docker to run the kpt container, so you also nee
 
 1. Install docker using the convenience script.
 
-    ```shell script
+    ```shell
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     ```
 
 1. Add the `jenkins` user to the `docker` group so that docker commands can be run in Jenkins pipelines.
 
-    ```shell script
+    ```shell
     sudo usermod -aG docker jenkins
     ```
 
@@ -82,7 +82,7 @@ The exported pipeline leverages docker to run the kpt container, so you also nee
 
 ## Exporting a pipeline
 
-```shell script
+```shell
 kpt fn export example-package --workflow jenkins --output Jenkinsfile
 ```
 
@@ -146,7 +146,7 @@ pipeline {
 
 ## Viewing the result on Jenkins
 
-```shell script
+```shell
 git add .
 git commit -am 'Init pipeline'
 git push --set-upstream origin master

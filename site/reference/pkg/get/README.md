@@ -31,14 +31,14 @@ cd $TEST_HOME
 <!--mdtogo:Examples-->
 
 <!-- @pkgGet @verifyExamples-->
-```sh
+```shell
 # fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
 # creates directory ./cockroachdb/ containing the package contents
 kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./
 ```
 
 <!-- @pkgGet @verifyExamples-->
-```sh
+```shell
 # fetch a cockroachdb
 # if ./my-package doesn't exist, creates directory ./my-package/ containing
 # the package contents
@@ -46,7 +46,7 @@ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@maste
 ```
 
 <!-- @pkgGet @verifyExamples-->
-```sh
+```shell
 # fetch package examples from github.com/kubernetes/examples
 # creates directory ./examples fetched from the provided commit hash
 kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792 ./

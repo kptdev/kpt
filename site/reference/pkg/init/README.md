@@ -45,7 +45,7 @@ cd $TEST_HOME
 <!--mdtogo:Examples-->
 
 <!-- @pkgInit @verifyStaleExamples-->
-```sh
+```shell
 # writes Kptfile package meta if not found
 mkdir my-pkg
 kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb \

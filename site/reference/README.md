@@ -36,14 +36,14 @@ The following are examples of running each kpt command group.
 
 <!--mdtogo:Examples-->
 
-```sh
+```shell
 # get a package
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.5.0 helloworld
 fetching package /package-examples/helloworld-set from \
   https://github.com/GoogleContainerTools/kpt to helloworld
 ```
 
-```sh
+```shell
 # list setters and set a value
 $ kpt cfg list-setters helloworld
 NAME            DESCRIPTION         VALUE    TYPE     COUNT   SETBY
@@ -55,14 +55,14 @@ $ kpt cfg set helloworld replicas 3 --set-by pwittrock  --description 'reason'
 set 1 fields
 ```
 
-```sh
+```shell
 # get a package and run a validation function
 kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
 mkdir results/
 kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- subject_name=bob@foo-corp.com
 ```
 
-```sh
+```shell
 # apply the package to a cluster
 $ kpt live apply --reconcile-timeout=10m helloworld
 ...
@@ -82,7 +82,7 @@ flags to allows users to specify the schema that should be used.
 
 By default, kpt will use the builtin schema.
 
-```sh
+```shell
 --k8s-schema-source
   Set the source for the OpenAPI schema. Allowed values are cluster, file, or
   builtin. If an OpenAPI schema can't be find at the given source, kpt will

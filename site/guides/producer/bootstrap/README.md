@@ -12,7 +12,7 @@ description: >
 Fetch another package and use it as your starting point (e.g.
 [kubernetes-examples](https://github.com/kubernetes/examples))
 
-```sh
+```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.3.0 helloworld
 ```
 
@@ -21,7 +21,7 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/hel
 Generate configuration from commandline tools (e.g.
 [kubectl](https://kubectl.docs.kubernetes.io/pages/imperative_porcelain/creating_resources.html))
 
-```sh
+```shell
 kubectl create deployment nginx --image nginx -o yaml --dry-run > deploy.yaml
 ```
 
@@ -30,7 +30,7 @@ kubectl create deployment nginx --image nginx -o yaml --dry-run > deploy.yaml
 Some examples may be published as blog posts without being published
 as a package in git.  These can be copied directly from their source.
 
-```sh
+```shell
 curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/examples/controllers/nginx-deployment.yaml --output nginx/nginx-deployment.yaml
 ```
 
@@ -38,7 +38,7 @@ curl https://raw.githubusercontent.com/kubernetes/website/master/content/en/exam
 
 Generate configuration from templates (e.g. [helm](https://helm.sh/))
 
-```sh
+```shell
 helm fetch stable/mysql
 helm template mysql-1.3.1.tgz --output-dir .
 ```
@@ -48,6 +48,6 @@ helm template mysql-1.3.1.tgz --output-dir .
 Generate configuration from application source code
 (e.g. [dekorate](https://github.com/dekorateio/dekorate))
 
-```sh
+```shell
 mvn clean package
 ```

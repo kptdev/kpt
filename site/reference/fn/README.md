@@ -49,18 +49,18 @@ the organizational needs:
 
 <!--mdtogo:Examples-->
 
-```sh
+```shell
 # run the function defined by gcr.io/example.com/my-fn as a local container
 # against the configuration in DIR
 kpt fn run DIR/ --image gcr.io/example.com/my-fn
 ```
 
-```sh
+```shell
 # run the functions declared in files under FUNCTIONS_DIR/
 kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 ```
 
-```sh
+```shell
 # run the functions declared in files under DIR/
 kpt fn run DIR/
 ```

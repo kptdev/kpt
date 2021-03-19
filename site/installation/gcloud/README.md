@@ -9,11 +9,11 @@ description: >
 
 Install with gcloud.
 
-```sh
+```shell
 gcloud components install kpt
 ```
 
-```sh
+```shell
 kpt version
 ```
 
