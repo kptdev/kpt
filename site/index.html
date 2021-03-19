@@ -14,6 +14,10 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/asciinema-player@2.6.1/resources/public/css/asciinema-player.css"
+    />
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   </head>
   <body>
@@ -66,7 +70,8 @@
               // title: Page Title
               // +++
               titleBlock = /^[\+\-]{3}[\s\S]*^[\+\-]{3}$/m;
-              hugoHideDirectives =/{{% hide %}}.+?{{% \/hide %}}/gms;
+              hugoHideDirectives = /{{% hide %}}.+?{{% \/hide %}}/gms;
+              asciinemaDirective = /{{<\s*asciinema.+key="(.+?)".+}}/g;
               hugoDirectiveTags = /{{.*}}/g;
               titleMatch = content.match(/title:\s*["'](.*)["']/);
 
@@ -74,6 +79,7 @@
 
               content = content
                 .replace(titleBlock, titleHeading)
+                .replace(asciinemaDirective, (_, fileName) => `<asciinema-player src="${ window.location.origin}/static/casts/${fileName}.cast"></asciinema-player>`)
                 .replace(hugoHideDirectives, "")
                 .replace(hugoDirectiveTags, "");
               return content;
@@ -86,6 +92,7 @@
     <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify-corner/dist/docsify-corner.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/asciinema-player@2.6.1/resources/public/js/asciinema-player.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-yaml.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-go.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-typescript.min.js"></script>
