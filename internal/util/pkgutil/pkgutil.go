@@ -27,6 +27,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
+// TODO: There is overlap with the functionality in internal/pkg. We should try
+// to reduce duplication.
+
 // FindAllDirectSubpackages returns the paths to all immediate subpackages of the
 // provided path. It finds both remote and local subpackages, but it will not
 // find any nested packages. The path to the root package is not returned.

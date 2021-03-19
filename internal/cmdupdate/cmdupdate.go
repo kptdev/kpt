@@ -92,6 +92,8 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 	r.Update.FullPackagePath = string(p.UniquePath)
 
+	// TODO: Make sure we handle this in a centralized library and do
+	// this consistently across all commands.
 	relPath, err := resolveRelPath(p.UniquePath)
 	if err != nil {
 		return err
