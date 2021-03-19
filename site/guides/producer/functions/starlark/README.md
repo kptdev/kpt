@@ -37,7 +37,7 @@ run(ctx.resource_list["items"], an)
 
 Run the Starlark function with:
 
-```sh
+```shell
 # run c.star as a function, generating a ConfigMap with value=bar as the
 # functionConfig
 kpt fn run . --enable-star --star-path c.star -- value=bar
@@ -84,7 +84,7 @@ run(ctx.resource_list["items"], an)
 
 Run them on the directory containing `example.yaml` using:
 
-```shell script
+```shell
 kpt fn run DIR/ --enable-star
 ```
 
@@ -97,7 +97,7 @@ It is possible to debug Starlark functions using `print`
 print(ctx.resource_list["items"][0]["metadata"]["name"])
 ```
 
-```sh
+```shell
 kpt fn run . --enable-star --star-path c.star
 ```
 
@@ -114,7 +114,7 @@ their types.
 print(ctx.open_api["definitions"]["io.k8s.api.apps.v1.Deployment"]["description"])
 ```
 
-```sh
+```shell
 kpt fn run . --enable-star --star-path c.star
 ```
 

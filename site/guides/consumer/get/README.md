@@ -59,13 +59,13 @@ as a public package catalogue.
 ### Fetch Command
 
 <!-- @fetchPackage @verifyGuides-->
-```sh
+```shell
 kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
 ```
 
 ### Fetch Output
 
-```sh
+```shell
 fetching package staging/cockroachdb from https://github.com/kubernetes/examples to cockroachdb
 ```
 
@@ -105,7 +105,7 @@ The upstream commit and branch / tag reference are stored in the package's
 [Kptfile].  These are used by `kpt pkg update`.
 
 <!-- @catPackage @verifyGuides-->
-```sh
+```shell
 cat cockroachdb/Kptfile
 ```
 
@@ -146,13 +146,13 @@ artifacts such as documentation.
 ### Package Contents Command
 
 <!-- @treePackage @verifyGuides-->
-```sh
+```shell
 kpt pkg tree cockroachdb/
 ```
 
 ### Package Contents Output
 
-```sh
+```shell
 cockroachdb
 ├── [cockroachdb-statefulset.yaml]  Service cockroachdb
 ├── [cockroachdb-statefulset.yaml]  StatefulSet cockroachdb
@@ -173,7 +173,7 @@ upstream rather than replacing it.
 
 ### Command
 
-```sh
+```shell
 head cockroachdb/cockroachdb-statefulset.yaml
 ```
 
@@ -214,13 +214,13 @@ kind delete cluster && kind create cluster
 {{% /hide %}}
 
 <!-- @applyPackage @verifyGuides-->
-```sh
+```shell
 kubectl apply -R -f cockroachdb
 ```
 
 ### Apply Output
 
-```sh
+```shell
 service/cockroachdb-public created
 service/cockroachdb created
 poddisruptionbudget.policy/cockroachdb-budget unchanged
@@ -262,13 +262,13 @@ tools such as `kubectl get`.
 
 ### Applied Package Command
 
-```sh
+```shell
 kubectl get all
 ```
 
 ### Applied Package Output
 
-```sh
+```shell
 NAME                READY   STATUS    RESTARTS   AGE
 pod/cockroachdb-0   1/1     Running   0          54s
 pod/cockroachdb-1   1/1     Running   0          41s

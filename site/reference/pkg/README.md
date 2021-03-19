@@ -28,7 +28,7 @@ resources rather than files.
 
 ### Examples
 <!--mdtogo:Examples-->
-```sh
+```shell
 # create your workspace
 $ mkdir hello-world-workspace
 $ cd hello-world-workspace

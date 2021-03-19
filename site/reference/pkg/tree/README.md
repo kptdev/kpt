@@ -35,7 +35,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
 cd my-dir
@@ -45,31 +45,31 @@ cd my-dir
 
 <!--mdtogo:Examples-->
 <!-- @pkgTree @verifyExamples-->
-```sh
+```shell
 # print Resources using directory structure
 kpt pkg tree
 ```
 
 <!-- @pkgTree @verifyExamples-->
-```sh
+```shell
 # print replicas, container name, and container image and fields for Resources
 kpt pkg tree --replicas --image --name
 ```
 
 <!-- @pkgTree @verifyExamples-->
-```sh
+```shell
 # print all common Resource fields
 kpt pkg tree --all
 ```
 
 <!-- @pkgTree @verifyExamples-->
-```sh
+```shell
 # print the "foo"" annotation
 kpt pkg tree --field "metadata.annotations.foo"
 ```
 
 <!-- @pkgTree @verifyStaleExamples-->
-```sh
+```shell
 # print the status of resources piped from kubectl output with status.condition 
 type of "Completed"
 kubectl get all -o yaml | kpt pkg tree - \
@@ -77,13 +77,13 @@ kubectl get all -o yaml | kpt pkg tree - \
 ```
 
 <!-- @pkgTree @verifyStaleExamples-->
-```sh
+```shell
 # print live Resources from a cluster using owners for graph structure
 kubectl get all -o yaml | kpt pkg tree --replicas --name --image
 ```
 
 <!-- @pkgTree @verifyStaleExamples-->
-```sh
+```shell
 # print live Resources with status condition fields
 kubectl get all -o yaml | kpt pkg tree \
   --name --image --replicas \

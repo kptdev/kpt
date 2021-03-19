@@ -22,7 +22,7 @@ kyaml libraries' reference below.
 
 ### Create the go module
 
-```sh
+```shell
 go mod init github.com/user/repo
 go get sigs.k8s.io/kustomize/kyaml
 ```
@@ -67,13 +67,13 @@ func main() {
 
 Build the go binary:
 
-```sh
+```shell
 go build -o my-fn .
 ```
 
 Test it by running imperatively as an executable function:
 
-```sh
+```shell
 # run the my-fn function against the configuration in PACKAGE_DIR/
 kpt fn run PACKAGE_DIR/ --enable-exec --exec-path ./my-fn -- value=foo
 ```
@@ -94,7 +94,7 @@ data:
   value: foo
 ```
 
-```sh
+```shell
 kpt fn run PACKAGE_DIR/ --enable-exec
 ```
 
@@ -102,12 +102,12 @@ kpt fn run PACKAGE_DIR/ --enable-exec
 
 Build the function into a container image:
 
-```sh
+```shell
 # optional: generate a Dockerfile to contain the function
 go run ./main.go gen ./
 ```
 
-```sh
+```shell
 # build the function into an image
 docker build . -t gcr.io/project/fn-name:tag
 # optional: push the image to a container registry
@@ -116,7 +116,7 @@ docker push gcr.io/project/fn-name:tag
 
 Run the function imperatively as a container function:
 
-```sh
+```shell
 kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- value=foo
 ```
 
@@ -136,7 +136,7 @@ data:
   value: foo
 ```
 
-```sh
+```shell
 kpt fn run PACKAGE_DIR/
 ```
 

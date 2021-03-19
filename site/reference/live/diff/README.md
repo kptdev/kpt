@@ -14,7 +14,7 @@ resource against the local package config.
 
 ### Examples
 <!--mdtogo:Examples-->
-```sh
+```shell
 # diff the config in "my-dir" against the live cluster resources
 kpt live diff my-dir/
 

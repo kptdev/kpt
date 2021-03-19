@@ -30,26 +30,26 @@ Currently supported platforms: amd64 Linux/Mac
 
 1. Get the `demo-functions` package:
 
-   ```sh
+   ```shell
    git clone --depth 1 https://github.com/GoogleContainerTools/kpt-functions-sdk.git
    ```
 
    All subsequent commands are run from the `demo-functions` directory:
 
-   ```sh
+   ```shell
    cd kpt-functions-sdk/ts/demo-functions
    ```
 
 1. Install all dependencies:
 
-   ```sh
+   ```shell
    npm install
    ```
 
 1. Run the following in a separate terminal to continuously build your
    function as you make changes:
 
-   ```sh
+   ```shell
    npm run watch
    ```
 
@@ -74,7 +74,7 @@ Currently supported platforms: amd64 Linux/Mac
 
 1. Run the `label_namespace` function on the `example-configs` directory:
 
-   ```sh
+   ```shell
    export CONFIGS=../../example-configs
 
    kpt fn source $CONFIGS |
@@ -85,7 +85,7 @@ Currently supported platforms: amd64 Linux/Mac
    As the name suggests, this function added the given label to all
    `Namespace` objects in the `example-configs` directory:
 
-   ```sh
+   ```shell
    git diff $CONFIGS
    ```
 
@@ -124,7 +124,7 @@ Currently supported platforms: amd64 Linux/Mac
 
 1. Run `validate-rolebinding` on `example-configs`.
 
-   ```sh
+   ```shell
    kpt fn source $CONFIGS |
      node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com |
      kpt fn sink $CONFIGS
@@ -196,7 +196,7 @@ Currently supported platforms: amd64 Linux/Mac
 
 1. Run `expand-team-cr` on `example-configs`.
 
-   ```sh
+   ```shell
    kpt fn source $CONFIGS |
      node dist/expand_team_cr_run.js |
      kpt fn sink $CONFIGS

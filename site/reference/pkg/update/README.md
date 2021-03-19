@@ -20,19 +20,19 @@ All changes must be committed to git before running update
 
 ### Examples
 <!--mdtogo:Examples-->
-```sh
+```shell
 # update my-package-dir/
 git add . && git commit -m 'some message'
 kpt pkg update my-package-dir/
 ```
 
-```sh
+```shell
 # update my-package-dir/ to match the v1.3 branch or tag
 git add . && git commit -m 'some message'
 kpt pkg update my-package-dir/@v1.3
 ```
 
-```sh
+```shell
 # update applying a git patch
 git add . && git commit -m "package updates"
 kpt pkg  update my-package-dir/@master --strategy alpha-git-patch

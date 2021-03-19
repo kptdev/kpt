@@ -19,7 +19,7 @@ A kpt version `v0.32.0` or higher is required.
 
 On your local machine, create an empty directory:
 
-```shell script
+```shell
 mkdir function-export-example
 cd function-export-example
 ```
@@ -30,7 +30,7 @@ All commands must be run at the root of this directory.
 
 Use `kpt pkg get` to fetch source files of this tutorial:
 
-```shell script
+```shell
 # Fetch source files
 kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/function-export example-package
 ```
@@ -45,7 +45,7 @@ Then you will get an `example-package` directory:
 
 ## Exporting a pipeline
 
-```shell script
+```shell
 kpt fn export example-package --workflow cloud-build --output cloudbuild.yaml
 ```
 

@@ -9,11 +9,11 @@ description: >
 
 Install the latest release with Homebrew on MacOS
 
-```sh
+```shell
 brew tap GoogleContainerTools/kpt https://github.com/GoogleContainerTools/kpt.git
 brew install kpt
 ```
 
-```sh
+```shell
 kpt version
 ```

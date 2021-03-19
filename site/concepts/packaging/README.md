@@ -32,7 +32,7 @@ another `kpt` package.
 
 Here is an example directory structure of a `kpt` package with subpackages
 
-```sh
+```shell
 foo
 ├── Kptfile
 ├── bar # subpackage

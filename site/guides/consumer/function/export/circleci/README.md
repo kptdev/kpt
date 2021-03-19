@@ -21,7 +21,7 @@ Before diving into the following tutorial, you need to create a public repo on G
 
 On your local machine, create an empty directory:
 
-```shell script
+```shell
 mkdir function-export-example
 cd function-export-example
 ```
@@ -32,7 +32,7 @@ All commands must be run at the root of this directory.
 
 Use `kpt pkg get` to fetch source files of this tutorial:
 
-```shell script
+```shell
 # Init git
 git init
 git remote add origin https://github.com/<USER>/<REPO>.git
@@ -50,7 +50,7 @@ Then you will get an `example-package` directory:
 
 ## Exporting a pipeline
 
-```shell script
+```shell
 kpt fn export example-package --workflow circleci --output config.yml
 ```
 
@@ -132,7 +132,7 @@ Once all changes are pushed into GitHub, you can do the following steps to setti
 
 ## Viewing the result on CircleCI
 
-```shell script
+```shell
 git add .
 git commit -am 'Init pipeline'
 git push --set-upstream origin master

@@ -31,7 +31,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
 cd hello-world
@@ -41,31 +41,31 @@ cd hello-world
 
 <!--mdtogo:Examples-->
 <!-- @pkgDiff @verifyExamples-->
-```sh
+```shell
 # Show changes in current package relative to upstream source package
 kpt pkg diff
 ```
 
-```sh
+```shell
 # Show changes in current package relative to upstream source package
 # using meld tool with auto compare option.
 kpt pkg diff --diff-tool meld --diff-tool-opts "-a"
 ```
 
 <!-- @pkgDiff @verifyExamples-->
-```sh
+```shell
 # Show changes in upstream source package between current version and
 # target version
 kpt pkg diff @v0.4.0 --diff-type remote
 ```
 
 <!-- @pkgDiff @verifyExamples-->
-```sh
+```shell
 # Show changes in current package relative to target version
 kpt pkg diff @v0.4.0 --diff-type combined
 ```
 
-```sh
+```shell
 # Show 3way changes between the local package, upstream package at original
 # version and upstream package at target version using meld
 kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
