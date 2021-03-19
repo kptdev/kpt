@@ -17,6 +17,8 @@ package cmdupdate
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -88,9 +90,12 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	relPath := string(p.DisplayPath)
 	r.Update.FullPackagePath = string(p.UniquePath)
 
+	relPath, err := resolveRelPath(p.UniquePath)
+	if err != nil {
+		return err
+	}
 	if strings.HasPrefix(relPath, pkg.ParentDir) {
 		return errors.Errorf("package path must be under current working directory")
 	}
@@ -114,4 +119,17 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	}
 
 	return nil
+}
+
+func resolveRelPath(path pkg.UniquePath) (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	relPath, err := filepath.Rel(cwd, path.String())
+	if err != nil {
+		return "", err
+	}
+	return relPath, nil
 }

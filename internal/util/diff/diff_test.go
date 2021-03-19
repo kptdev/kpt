@@ -71,21 +71,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-
-	kf := kptfileutil.DefaultKptfile(g.RepoName)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.Git{
-			Repo:      g.RepoDirectory,
-			Directory: "/",
-			Ref:       "refs/tags/v2",
-		},
-		UpdateStrategy: kptfilev1alpha2.FastForward,
-	}
-	err = kptfileutil.WriteFile(localPkg, kf)
-	assert.NoError(t, err)
-
+	localPkg := fetchPackage(t, g, w)
 	err = fetch.Command{
 		Path: localPkg,
 	}.Run()
@@ -161,23 +147,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = os.MkdirAll(localPkg, 0700)
-	assert.NoError(t, err)
-
-	kf := kptfileutil.DefaultKptfile(g.RepoName)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.Git{
-			Repo:      g.RepoDirectory,
-			Directory: "/",
-			Ref:       "refs/tags/v2",
-		},
-		UpdateStrategy: kptfilev1alpha2.FastForward,
-	}
-	err = kptfileutil.WriteFile(localPkg, kf)
-	assert.NoError(t, err)
-
+	localPkg := fetchPackage(t, g, w)
 	err = fetch.Command{
 		Path: localPkg,
 	}.Run()
@@ -247,23 +217,7 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = os.MkdirAll(localPkg, 0700)
-	assert.NoError(t, err)
-
-	kf := kptfileutil.DefaultKptfile(g.RepoName)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.Git{
-			Repo:      g.RepoDirectory,
-			Directory: "/",
-			Ref:       "refs/tags/v2",
-		},
-		UpdateStrategy: kptfilev1alpha2.FastForward,
-	}
-	err = kptfileutil.WriteFile(localPkg, kf)
-	assert.NoError(t, err)
-
+	localPkg := fetchPackage(t, g, w)
 	err = fetch.Command{
 		Path: localPkg,
 	}.Run()
@@ -321,4 +275,28 @@ func filterDiffMetadata(r io.Reader) string {
 		b.WriteString("\n")
 	}
 	return b.String()
+}
+
+func fetchPackage(t *testing.T, g *testutil.TestGitRepo, w *testutil.TestWorkspace) string {
+	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+	err := os.MkdirAll(localPkg, 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	kf := kptfileutil.DefaultKptfile(g.RepoName)
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.Git{
+			Repo:      g.RepoDirectory,
+			Directory: "/",
+			Ref:       "refs/tags/v2",
+		},
+		UpdateStrategy: kptfilev1alpha2.FastForward,
+	}
+	err = kptfileutil.WriteFile(localPkg, kf)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	return localPkg
 }

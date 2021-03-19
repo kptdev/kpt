@@ -31,7 +31,7 @@ import (
 // provided path. It finds both remote and local subpackages, but it will not
 // find any nested packages. The path to the root package is not returned.
 func FindAllDirectSubpackages(path string) ([]string, error) {
-	excludedDirs := make(map[string]bool)
+	packagePaths := make(map[string]bool)
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -44,7 +44,9 @@ func FindAllDirectSubpackages(path string) ([]string, error) {
 			}
 		}
 
-		for dir := range excludedDirs {
+		// Any paths that are inside subpackages can be ignored since
+		// we only want the subpackages directly underneath the package.
+		for dir := range packagePaths {
 			if strings.HasPrefix(p, dir) {
 				return nil
 			}
@@ -56,19 +58,19 @@ func FindAllDirectSubpackages(path string) ([]string, error) {
 				return err
 			}
 			if err == nil && p != path {
-				excludedDirs[p] = true
+				packagePaths[p] = true
 				return nil
 			}
 		}
 		return nil
 	})
 
-	var packagePaths []string
-	for p := range excludedDirs {
-		packagePaths = append(packagePaths, p)
+	var packageSlice []string
+	for p := range packagePaths {
+		packageSlice = append(packageSlice, p)
 	}
 
-	return packagePaths, err
+	return packageSlice, err
 }
 
 // FindLocalRecursiveSubpackages returns a slice with the paths to all local subpackages
@@ -113,9 +115,10 @@ func FindLocalRecursiveSubpackages(path string) ([]string, error) {
 	return localSubPkgs, err
 }
 
-// FindRemoteDirectSubpackages
+// FindRemoteDirectSubpackages scans the filesystem underneath path and
+// returns a list of absolute paths to all immediate remote subpackages. This
+// means we don't go any deeper than one layer.
 func FindRemoteDirectSubpackages(path string) ([]string, error) {
-	var localSubPkgs []string
 	var remoteSubPkgs []string
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -142,9 +145,7 @@ func FindRemoteDirectSubpackages(path string) ([]string, error) {
 			return err
 		}
 
-		if kf.Upstream == nil {
-			localSubPkgs = append(localSubPkgs, pkgPath)
-		} else {
+		if kf.Upstream != nil {
 			remoteSubPkgs = append(remoteSubPkgs, pkgPath)
 		}
 		return nil
