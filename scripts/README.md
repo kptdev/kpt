@@ -11,7 +11,7 @@ Helper scripts for kpt repository.
 
 From top-level kpt directory:
 
-```Shell
+```shell
 ./scripts/create-licenses.sh
 ```
 

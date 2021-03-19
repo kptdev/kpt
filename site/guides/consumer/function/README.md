@@ -72,7 +72,7 @@ label to all Namespace resources provided to it.
 
 Run the function:
 
-```sh
+```shell
 kpt fn run . --image gcr.io/kpt-functions/label-namespace -- label_name=color label_value=orange
 ```
 
@@ -85,7 +85,7 @@ and sink will default to STDOUT.
 
 **Example:** This is equivalent to the preceding example
 
-```sh
+```shell
 kpt fn source . |
   kpt fn run --image gcr.io/kpt-functions/label-namespace -- label_name=color label_value=orange |
   kpt fn sink .
@@ -139,7 +139,7 @@ like a list of strings.
 
 Run the function:
 
-```sh
+```shell
 kpt fn run .
 ```
 

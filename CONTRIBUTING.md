@@ -30,20 +30,20 @@ Conduct].
 
 1. Clone the project
 
-   ```sh
+   ```shell
    git clone https://github.com/GoogleContainerTools/kpt
    cd kpt
    ```
 
 2. Build `kpt` to `$(go env GOPATH)/bin/kpt`
 
-   ```sh
+   ```shell
    make
    ```
 
 3. Run test
 
-   ```sh
+   ```shell
    make all
    ```
 

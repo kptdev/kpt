@@ -23,7 +23,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
 ```
@@ -33,7 +33,7 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 hello-world
 <!--mdtogo:Examples-->
 
 <!-- @pkgDesc @verifyExamples-->
-```sh
+```shell
 # display description for the local hello-world package
 kpt pkg desc hello-world/
 ```

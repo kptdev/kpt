@@ -24,7 +24,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR/
 ```
@@ -34,12 +34,12 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR/
 <!--mdtogo:Examples-->
 
 <!-- @fnSource @verifyExamples-->
-```sh
+```shell
 # print to stdout configuration from DIR/ formatted as an input source
 kpt fn source DIR/
 ```
 
-```sh
+```shell
 # run a function using explicit sources and sinks
 kpt fn source DIR/ |
   kpt fn run --image gcr.io/example.com/my-fn |
@@ -52,7 +52,7 @@ kpt fn source DIR/ |
 
 <!--mdtogo:Long-->
 
-```sh
+```shell
 kpt fn source [DIR...]
 
 DIR:

@@ -25,7 +25,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
 ```
@@ -45,7 +45,7 @@ kpt live apply my-dir
 
 <!--mdtogo:Examples-->
 <!-- @liveDestroy @verifyExamples-->
-```sh
+```shell
 # remove all resources in a package from the cluster
 kpt live destroy my-dir/
 ```

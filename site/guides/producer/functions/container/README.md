@@ -33,7 +33,7 @@ STDIN a ResourceList created from the contents of the package directory, and
 finally read from it's STDOUT a ResourceList used to write resource back to
 the package directory.
 
-```sh
+```shell
 kpt fn run DIR/ --image gcr.io/a/b:v1
 ```
 

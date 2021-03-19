@@ -19,7 +19,7 @@ about files for which it sees input resources.
 
 <!--mdtogo:Examples-->
 
-```sh
+```shell
 # run a function using explicit sources and sinks
 kpt fn source DIR/ |
   kpt fn run --image gcr.io/example.com/my-fn |
@@ -32,7 +32,7 @@ kpt fn source DIR/ |
 
 <!--mdtogo:Long-->
 
-```sh
+```shell
 kpt fn sink [DIR]
 
 DIR:

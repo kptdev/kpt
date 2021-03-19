@@ -9,13 +9,13 @@ description: >
 
 Install by compiling the source.
 
-```sh
+```shell
 GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 ```
 
 **Note:** `kpt version` will return *unknown* for binaries installed
 with `go get`.
 
-```sh
+```shell
 kpt help
 ```

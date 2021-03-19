@@ -14,7 +14,7 @@ given by the context. It prints the result to stdout.
 
 ### Examples
 <!--mdtogo:Examples-->
-```sh
+```shell
 # print the schema for the cluster given by the current context
 kpt live fetch-k8s-schema
 

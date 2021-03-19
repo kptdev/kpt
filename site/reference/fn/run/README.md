@@ -25,14 +25,14 @@ reference for advanced usecases.
 
 <!--mdtogo:Long-->
 
-```sh
+```shell
 kpt fn run DIR [flags]
 ```
 
 If the container exits with non-zero status code, run will fail and print the
 container `STDERR`.
 
-```sh
+```shell
 DIR:
   Path to a package directory.  Defaults to stdin if unspecified.
 ```
@@ -51,7 +51,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyStaleExamples-->
-```sh
+```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/mutators/set-label/simple@b7f2350 DIR/
 ```
 
@@ -59,24 +59,24 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/ex
 
 <!--mdtogo:Examples-->
 
-```sh
+```shell
 # read the Resources from DIR, provide them to a container my-fun as input,
 # write my-fn output back to DIR
 kpt fn run DIR/ --image gcr.io/example.com/my-fn
 ```
 
-```sh
+```shell
 # provide the my-fn with an input ConfigMap containing `data: {foo: bar}`
 kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 ```
 
-```sh
+```shell
 # run the functions in FUNCTIONS_DIR against the Resources in DIR
 kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 ```
 
 <!-- @fnRun @verifyStaleExamples-->
-```sh
+```shell
 # discover functions in DIR and run them against Resource in DIR.
 # functions may be scoped to a subset of Resources -- see `kpt help fn run`
 kpt fn run DIR/
@@ -94,7 +94,7 @@ specify a destination to write results to.
 
 **Example**: Run `validate-rolebinding` on an example package
 
-```sh
+```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
 mkdir results/
 kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- subject_name=bob@foo-corp.com
@@ -121,7 +121,7 @@ metadata:
     config.kubernetes.io/local-config: 'true'
 ```
 
-```sh
+```shell
 kpt pkg get https://github.com/instrumenta/kubeval.git/fixtures .
 kpt fn source fixtures/*invalid.yaml |
   kpt fn run --fn-path fc.yaml --network 2>error.txt || true
@@ -135,7 +135,7 @@ arguments as for `docker run`.
 
 **Example**: Run `kustomize-build` on a helloWorld package
 
-```sh
+```shell
 kpt pkg get https://github.com/kubernetes-sigs/kustomize/examples/helloWorld helloWorld
 kpt fn source helloWorld |
   kpt fn run --mount type=bind,src="$(pwd)/helloWorld",dst=/source --image gcr.io/kpt-functions/kustomize-build -- path=/source |
@@ -145,7 +145,7 @@ kpt fn source helloWorld |
 All volumes are mounted readonly by default. Specify `rw=true` to mount volumes
 in read-write mode.
 
-```sh
+```shell
 kpt pkg get https://github.com/kubernetes-sigs/kustomize/examples/helloWorld helloWorld
 kpt fn source helloWorld |
   kpt fn run --mount type=bind,src="$(pwd)/helloWorld",dst=/source,rw=true --image gcr.io/kpt-functions/kustomize-build -- path=/source |
@@ -228,7 +228,7 @@ and invoking them -- passing in only those resources scoped to the function.
 **Example:** Function declared in `stuff/my-function.yaml` is scoped to
 Resources in `stuff/` and is NOT scoped to Resources in `apps/`
 
-```sh
+```shell
 .
 ├── stuff
 │   ├── inscope-deployment.yaml
@@ -245,7 +245,7 @@ directory named `functions`.
 
 **Example**: This is equivalent to previous example
 
-```sh
+```shell
 .
 ├── stuff
 │   ├── inscope-deployment.yaml
@@ -261,7 +261,7 @@ directory named `functions`.
 Alternatively, you can also use `--fn-path` to explicitly provide the directory
 containing function configurations:
 
-```sh
+```shell
 kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 ```
 
@@ -281,7 +281,7 @@ arguments are passed as `data` elements in the ConfigMap.
 
 **Example**: Run `validate-rolebinding` on an example package
 
-```sh
+```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/example-configs example-configs
 mkdir results/
 kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/validate-rolebinding:results -- subject_name=bob@foo-corp.com
@@ -306,7 +306,7 @@ the functionConfig type.
 
 Run the function:
 
-```sh
+```shell
 kpt fn run DIR/ --image foo:v1 -- Foo a=b c=d
 ```
 
@@ -374,7 +374,7 @@ with shorter lexical file path is executed first.
 
 **Example:** Directory structure with multiple functions and corresponding ordering
 
-```sh
+```shell
 .
 ├── stuff
 │   ├── deployment.yaml

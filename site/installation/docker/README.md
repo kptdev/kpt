@@ -11,7 +11,7 @@ Use the docker image.
 
 [gcr.io/kpt-dev/kpt]
 
-```sh
+```shell
 docker run gcr.io/kpt-dev/kpt version
 ```
 

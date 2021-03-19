@@ -15,13 +15,13 @@ kpt is a toolkit to help you manage, manipulate, customize, and apply Kubernetes
 
 The version of kpt installed using `gcloud` may not be the latest released version.
 
-```Shell
+```shell
 gcloud components install kpt
 ```
 
 ### Install with Homebrew
 
-```Shell
+```shell
 brew tap GoogleContainerTools/kpt https://github.com/GoogleContainerTools/kpt.git
 brew install kpt
 ```
@@ -32,7 +32,7 @@ brew install kpt
 
 ### Install from source
 
-```sh
+```shell
 GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 ```
 
@@ -40,7 +40,7 @@ GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 
 [gcr.io/kpt-dev/kpt]
 
-```sh
+```shell
 docker run gcr.io/kpt-dev/kpt version
 ```
 

@@ -21,7 +21,7 @@ Before diving into the following tutorial, you need to create a public repo on G
 
 On your local machine, create an empty directory:
 
-```shell script
+```shell
 mkdir function-export-example
 cd function-export-example
 ```
@@ -32,7 +32,7 @@ All commands must be run at the root of this directory.
 
 Use `kpt pkg get` to fetch source files of this tutorial:
 
-```shell script
+```shell
 # Init git
 git init
 git remote add origin https://github.com/<USER>/<REPO>.git
@@ -55,19 +55,19 @@ Follow the instructions in the [Getting Started] guide of Tekton.
 1. Check the [prerequisites].
 1. [Create a Kubernetes cluster] of version 1.15 or higher on Google Cloud.
 
-    ```shell script
+    ```shell
     gcloud container clusters create tekton-cluster --cluster-version=1.15
     ```
 
 1. Install Tekton to the cluster.
 
-    ```shell script
+    ```shell
     kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
     ```
 
 1. Verify every component listed in the following command has the status `Running`.
 
-    ```shell script
+    ```shell
     kubectl get pods --namespace tekton-pipelines
     ```
 
@@ -75,14 +75,14 @@ To make the exported pipeline fully functional, you probably need to do the foll
 
 1. Install [Git Tasks] from Tekton Catalog.
 
-    ```shell script
+    ```shell
     kpt pkg get https://github.com/tektoncd/catalog/git@v1beta1 git
     kubectl apply -f git/git-clone.yaml
     ```
 
 1. Provide a Persistent Volume for storage purposes.
 
-    ```shell script
+    ```shell
     cat <<EOF | kubectl apply -f -
     kind: PersistentVolumeClaim
     apiVersion: v1
@@ -99,7 +99,7 @@ To make the exported pipeline fully functional, you probably need to do the foll
 
 ## Exporting a pipeline
 
-```shell script
+```shell
 kpt fn export example-package --workflow tekton --output pipeline.yaml
 ```
 
@@ -220,7 +220,7 @@ spec:
 
 ## Run the pipeline via Tekton CLI
 
-```shell script
+```shell
 git add .
 git commit -am 'Init pipeline'
 git push --set-upstream origin master
@@ -228,7 +228,7 @@ git push --set-upstream origin master
 
 Once local changes are committed and pushed. Start the pipeline:
 
-```shell script
+```shell
 kubectl apply -f pipeline.yaml
 tkn pipeline start run-kpt-functions
 ```
@@ -239,7 +239,7 @@ In the prompt, enter `shared-workspace` as workspace name, leave `Value of the S
 
 To view the output, run
 
-```shell script
+```shell
 tkn pipeline logs
 ```
 
