@@ -9,3 +9,6 @@ menu:
 description: >
    Concepts
 ---
+
+Explore kpt's [architecture](/concepts/architecture/) and [API conventions](/concepts/api-conventions/),
+as well as the goals and design decisions of [packaging](/concepts/packaging/) and [functions](/concepts/functions/).
