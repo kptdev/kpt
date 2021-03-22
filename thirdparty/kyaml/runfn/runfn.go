@@ -36,7 +36,8 @@ type RunFns struct {
 	Path string
 
 	// FnConfigPath specifies a config file which contains the configs used in
-	// function input
+	// function input. It can be absolute or relative to kpt working directory.
+	// The exact format depends on the OS.
 	FnConfigPath string
 
 	// Functions is an explicit list of functions to run against the input.
@@ -161,7 +162,13 @@ func (r RunFns) filterOutFnConfigFile(nodes []*yaml.RNode) ([]*yaml.RNode, error
 	if filepath.IsAbs(r.FnConfigPath) {
 		fnConfigPath = r.FnConfigPath
 	} else {
-		fnConfigPath = filepath.Join(r.Path, r.FnConfigPath)
+		// if the FnConfigPath is relative, we should use the
+		// current directory to construct full path.
+		path, err := os.Getwd()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get working directory: %w", err)
+		}
+		fnConfigPath = filepath.Join(path, r.FnConfigPath)
 	}
 	for i := range nodes {
 		node := nodes[i]
