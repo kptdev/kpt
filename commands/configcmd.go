@@ -147,6 +147,7 @@ func SetCommand(parent string) *cobra.Command {
 	kustomizeCmd.SilenceUsage = true
 	kustomizeCmd.SilenceErrors = true
 	var autoRun bool
+	setCmd.Args = cobra.MinimumNArgs(3)
 	setCmd.Flags().BoolVar(&autoRun, "auto-run", true,
 		`Automatically run functions after setting (if enabled for the package)`)
 	setCmd.RunE = func(c *cobra.Command, args []string) error {
