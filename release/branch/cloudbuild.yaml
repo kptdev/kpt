@@ -123,7 +123,7 @@ steps:
 
   # build docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${BRANCH_NAME}', '-f', './release/Dockerfile', '.' ]
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${BRANCH_NAME}', '-f', 'release/Dockerfile', '.' ]
     dir: 'kpt'
 
   # push the container image
