@@ -43,20 +43,23 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
-				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{
-					{
-						Data: testutil.Dataset2,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Data: testutil.Dataset2,
+						},
 					},
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
 			if !assert.NoError(t, Command{
@@ -70,11 +73,11 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !g.AssertLocalDataEquals(testutil.Dataset2) {
 				return
 			}
-			commit, err := g.UpstreamRepo.GetCommit()
+			commit, err := upstreamRepo.GetCommit()
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "master",
+			if !g.AssertKptfile(upstreamRepo.RepoName, commit, "master",
 				strategy) {
 				return
 			}
@@ -89,17 +92,25 @@ func TestCommand_Run_subDir(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
-				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{{Tag: "v1.2", Data: testutil.Dataset2}},
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Tag:  "v1.2",
+							Data: testutil.Dataset2,
+						},
+					},
+				},
 				GetSubDirectory: "java",
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
 			if !assert.NoError(t, Command{
@@ -114,7 +125,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 			if !g.AssertLocalDataEquals(filepath.Join(testutil.Dataset2, "java")) {
 				return
 			}
-			commit, err := g.UpstreamRepo.GetCommit()
+			commit, err := upstreamRepo.GetCommit()
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -142,14 +153,20 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+					},
+				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
 			err := Command{
@@ -169,11 +186,11 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			if !g.AssertLocalDataEquals(testutil.Dataset1) {
 				return
 			}
-			commit, err := g.UpstreamRepo.GetCommit()
+			commit, err := upstreamRepo.GetCommit()
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "master", u.updater) {
+			if !g.AssertKptfile(upstreamRepo.RepoName, commit, "master", u.updater) {
 				return
 			}
 		})
@@ -187,19 +204,25 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+					},
+				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// don't commit the data
 			err := copyutil.CopyDir(
-				filepath.Join(g.UpstreamRepo.DatasetDirectory, testutil.Dataset3),
-				filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.UpstreamRepo.RepoName))
+				filepath.Join(upstreamRepo.DatasetDirectory, testutil.Dataset3),
+				filepath.Join(g.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName))
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -228,18 +251,24 @@ func TestCommand_Run_noAdd(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+					},
+				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// don't add the data
 			err := ioutil.WriteFile(
-				filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.UpstreamRepo.RepoName, "java", "added-file"), []byte(`hello`),
+				filepath.Join(g.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName, "java", "added-file"), []byte(`hello`),
 				0600)
 			if !assert.NoError(t, err) {
 				return
@@ -284,7 +313,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				Data: testutil.DatasetMerged,
 			},
 			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
-				return writer.UpstreamRepo.GetCommit()
+				return writer.Repos[testutil.Upstream].GetCommit()
 			},
 		},
 		"update using fast-forward strategy with local changes": {
@@ -304,7 +333,8 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			},
 			expectedErr: "local package files have been modified",
 			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
-				f, err := kptfileutil.ReadFile(filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, writer.UpstreamRepo.RepoName))
+				upstreamRepo := writer.Repos[testutil.Upstream]
+				f, err := kptfileutil.ReadFile(filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName))
 				if err != nil {
 					return "", err
 				}
@@ -327,7 +357,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				Data: testutil.Dataset2,
 			},
 			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
-				return writer.UpstreamRepo.GetCommit()
+				return writer.Repos[testutil.Upstream].GetCommit()
 			},
 		},
 		"conflicting field with resource-merge strategy": {
@@ -353,7 +383,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 						pkgbuilder.SetFieldPath("42", "spec", "replicas")),
 			},
 			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
-				return writer.UpstreamRepo.GetCommit()
+				return writer.Repos[testutil.Upstream].GetCommit()
 			},
 		},
 		"conflicting field with force-delete-replace strategy": {
@@ -379,15 +409,20 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 						pkgbuilder.SetFieldPath("42", "spec", "replicas")),
 			},
 			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
-				return writer.UpstreamRepo.GetCommit()
+				return writer.Repos[testutil.Upstream].GetCommit()
 			},
 		},
 	}
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			g := &testutil.TestSetupManager{
-				T:               t,
-				UpstreamChanges: []testutil.Content{tc.updatedUpstream},
+				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						tc.initialUpstream,
+						tc.updatedUpstream,
+					},
+				},
 			}
 			defer g.Clean()
 
@@ -395,7 +430,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				g.LocalChanges = []testutil.Content{tc.updatedLocal}
 			}
 
-			if !g.Init(tc.initialUpstream) {
+			if !g.Init() {
 				t.FailNow()
 			}
 
@@ -428,14 +463,14 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 
 			expectedPath := tc.expectedLocal.Data
 			if tc.expectedLocal.Pkg != nil {
-				expectedPath = pkgbuilder.ExpandPkgWithName(t, tc.expectedLocal.Pkg,
-					g.LocalWorkspace.PackageDir, g.RepoPaths)
+				expectedPath = tc.expectedLocal.Pkg.ExpandPkgWithName(t,
+					g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
 			}
 
 			if !g.AssertLocalDataEquals(expectedPath) {
 				t.FailNow()
 			}
-			if !g.AssertKptfile(g.UpstreamRepo.RepoName, expectedCommit, "master",
+			if !g.AssertKptfile(g.Repos[testutil.Upstream].RepoName, expectedCommit, "master",
 				tc.strategy) {
 				t.FailNow()
 			}
@@ -452,19 +487,28 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
-				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{
-					{Data: testutil.Dataset2, Branch: "exp", CreateBranch: true},
-					{Data: testutil.Dataset3, Branch: "master"},
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Data:   testutil.Dataset2,
+							Branch: "exp", CreateBranch: true,
+						},
+						{
+							Data:   testutil.Dataset3,
+							Branch: "master",
+						},
+					},
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
 			if !assert.NoError(t, Command{
@@ -480,14 +524,14 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 				return
 			}
 
-			if !assert.NoError(t, g.UpstreamRepo.CheckoutBranch("exp", false)) {
+			if !assert.NoError(t, upstreamRepo.CheckoutBranch("exp", false)) {
 				return
 			}
-			commit, err := g.UpstreamRepo.GetCommit()
+			commit, err := upstreamRepo.GetCommit()
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "exp",
+			if !g.AssertKptfile(upstreamRepo.RepoName, commit, "exp",
 				strategy) {
 				return
 			}
@@ -504,19 +548,27 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
-				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{
-					{Data: testutil.Dataset2, Tag: "v1.0"},
-					{Data: testutil.Dataset3},
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Data: testutil.Dataset2,
+							Tag:  "v1.0",
+						},
+						{
+							Data: testutil.Dataset3,
+						},
+					},
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
 			if !assert.NoError(t, Command{
@@ -532,14 +584,14 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 				return
 			}
 
-			if !assert.NoError(t, g.UpstreamRepo.CheckoutBranch("v1.0", false)) {
+			if !assert.NoError(t, upstreamRepo.CheckoutBranch("v1.0", false)) {
 				return
 			}
-			commit, err := g.UpstreamRepo.GetCommit()
+			commit, err := upstreamRepo.GetCommit()
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "v1.0",
+			if !g.AssertKptfile(upstreamRepo.RepoName, commit, "v1.0",
 				strategy) {
 				return
 			}
@@ -556,18 +608,24 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
 				T: t,
-				// Update upstream to Dataset5
-				UpstreamChanges: []testutil.Content{
-					{Data: testutil.Dataset5, Tag: "v1.0"},
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Data: testutil.Dataset5,
+							Tag:  "v1.0",
+						},
+					},
 				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				t.FailNow()
 			}
+			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
 			if !assert.NoError(t, Command{
@@ -583,14 +641,14 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 				t.FailNow()
 			}
 
-			if !assert.NoError(t, g.UpstreamRepo.CheckoutBranch("v1.0", false)) {
+			if !assert.NoError(t, upstreamRepo.CheckoutBranch("v1.0", false)) {
 				t.FailNow()
 			}
-			commit, err := g.UpstreamRepo.GetCommit()
+			commit, err := upstreamRepo.GetCommit()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			if !g.AssertKptfile(g.UpstreamRepo.RepoName, commit, "v1.0",
+			if !g.AssertKptfile(upstreamRepo.RepoName, commit, "v1.0",
 				strategy) {
 				t.FailNow()
 			}
@@ -622,14 +680,20 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 		t.Run(string(strategy), func(t *testing.T) {
 			g := &testutil.TestSetupManager{
 				T: t,
-				// Update upstream to Dataset2
-				UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Data: testutil.Dataset2,
+						},
+					},
+				},
 			}
 			defer g.Clean()
-			if !g.Init(testutil.Content{
-				Data:   testutil.Dataset1,
-				Branch: "master",
-			}) {
+			if !g.Init() {
 				return
 			}
 
@@ -656,14 +720,20 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 	// Setup the test upstream and local packages
 	g := &testutil.TestSetupManager{
 		T: t,
-		// Update upstream to Dataset2
-		UpstreamChanges: []testutil.Content{{Data: testutil.Dataset2}},
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Data:   testutil.Dataset1,
+					Branch: "master",
+				},
+				{
+					Data: testutil.Dataset2,
+				},
+			},
+		},
 	}
 	defer g.Clean()
-	if !g.Init(testutil.Content{
-		Data:   testutil.Dataset1,
-		Branch: "master",
-	}) {
+	if !g.Init() {
 		return
 	}
 
@@ -681,33 +751,38 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 func TestCommand_Run_subpackages(t *testing.T) {
 	testCases := []struct {
 		name            string
-		refRepos        map[string][]testutil.Content
-		initialUpstream *pkgbuilder.RootPkg
-		updatedUpstream testutil.Content
+		reposChanges    map[string][]testutil.Content
 		updatedLocal    testutil.Content
 		expectedResults []resultForStrategy
 	}{
 		{
 			name: "update fetches any new subpackages",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithSubPackages(
-								pkgbuilder.NewSubPkg("nestedbar").
+								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(),
 							),
-						pkgbuilder.NewSubPkg("zork").
-							WithKptfile(),
-					),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile().
+									WithSubPackages(
+										pkgbuilder.NewSubPkg("nestedbar").
+											WithKptfile(),
+									),
+								pkgbuilder.NewSubPkg("zork").
+									WithKptfile(),
+							),
+					},
+				},
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -720,7 +795,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -737,12 +812,19 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "local changes and a noop update",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(),
-				),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(),
+							),
+						Branch: "master",
+					},
+				},
+			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile().
@@ -762,7 +844,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 0),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -785,7 +867,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 0),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -796,21 +878,28 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "non-overlapping additions in both upstream and local",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
-							WithKptfile(),
-						pkgbuilder.NewSubPkg("zork").
-							WithKptfile(),
-					),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(),
+								pkgbuilder.NewSubPkg("zork").
+									WithKptfile(),
+							),
+					},
+				},
 			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
@@ -831,7 +920,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -856,7 +945,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -869,21 +958,28 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "overlapping additions in both upstream and local",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
-							WithKptfile(),
-						pkgbuilder.NewSubPkg("abc").
-							WithKptfile(),
-					),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(),
+								pkgbuilder.NewSubPkg("abc").
+									WithKptfile(),
+							),
+					},
+				},
 			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
@@ -916,7 +1012,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -929,15 +1025,22 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "subpackages deleted in upstream",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(),
+					},
+				},
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -950,26 +1053,33 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						),
 				},
 			},
 		},
 		{
 			name: "multiple layers of subpackages added in upstream",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile(),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithSubPackages(
-								pkgbuilder.NewSubPkg("nestedbar").
-									WithKptfile(),
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile().
+									WithSubPackages(
+										pkgbuilder.NewSubPkg("nestedbar").
+											WithKptfile(),
+									),
 							),
-					),
+					},
+				},
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -982,7 +1092,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -997,20 +1107,27 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "removed Kptfile from upstream",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(pkgbuilder.NewKptfile()).
-						WithResource(pkgbuilder.DeploymentResource),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
-							WithResource(pkgbuilder.DeploymentResource),
-					),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(pkgbuilder.NewKptfile()).
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+					},
+				},
 			},
 			expectedResults: []resultForStrategy{
 				// TODO(mortent): Revisit this. Not clear that the Kptfile
@@ -1024,7 +1141,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1041,7 +1158,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1052,20 +1169,27 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "kptfile added only on local",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithResource(pkgbuilder.DeploymentResource),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("bar").
-							WithResource(pkgbuilder.DeploymentResource).
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+					},
+				},
 			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
@@ -1085,7 +1209,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1108,7 +1232,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1120,16 +1244,23 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "subpackage deleted from upstream but is unchanged in local",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(pkgbuilder.NewKptfile()).
-						WithResource(pkgbuilder.DeploymentResource),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(pkgbuilder.NewKptfile()).
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(),
+					},
+				},
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -1142,23 +1273,30 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						),
 				},
 			},
 		},
 		{
 			name: "subpackage deleted from upstream but has local changes",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("bar").
-						WithKptfile(pkgbuilder.NewKptfile()).
-						WithResource(pkgbuilder.DeploymentResource),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("bar").
+									WithKptfile(pkgbuilder.NewKptfile()).
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(),
+					},
+				},
 			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
@@ -1179,7 +1317,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1202,27 +1340,34 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						),
 				},
 			},
 		},
 		{
 			name: "upstream package doesn't need to have a Kptfile in the root",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("subpkg").
-						WithKptfile(pkgbuilder.NewKptfile()),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithResource(pkgbuilder.DeploymentResource).
-					WithResource(pkgbuilder.ConfigMapResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("subpkg").
-							WithKptfile(pkgbuilder.NewKptfile()),
-					),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(pkgbuilder.NewKptfile()),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(pkgbuilder.NewKptfile()),
+							),
+					},
+				},
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -1235,7 +1380,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithResource(pkgbuilder.DeploymentResource).
 						WithResource(pkgbuilder.ConfigMapResource).
@@ -1248,23 +1393,30 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "non-krm files updated in upstream",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile()).
-				WithFile("data.txt", "initial content").
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("subpkg").
-						WithKptfile(pkgbuilder.NewKptfile()).
-						WithFile("information", "first version"),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(pkgbuilder.NewKptfile()).
-					WithFile("data.txt", "updated content").
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("subpkg").
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile(pkgbuilder.NewKptfile()).
-							WithFile("information", "second version"),
-					),
+							WithFile("data.txt", "initial content").
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(pkgbuilder.NewKptfile()).
+									WithFile("information", "first version"),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithFile("data.txt", "updated content").
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(pkgbuilder.NewKptfile()).
+									WithFile("information", "second version"),
+							),
+					},
+				},
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -1277,7 +1429,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithFile("data.txt", "updated content").
 						WithSubPackages(
@@ -1290,13 +1442,20 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "non-krm files updated in both upstream and local",
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile(pkgbuilder.NewKptfile()).
-				WithFile("data.txt", "initial content"),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(pkgbuilder.NewKptfile()).
-					WithFile("data.txt", "updated content"),
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithFile("data.txt", "initial content"),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithFile("data.txt", "updated content"),
+					},
+				},
 			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
@@ -1312,7 +1471,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithFile("data.txt", "local content"),
 				},
@@ -1330,7 +1489,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithFile("data.txt", "updated content"),
 				},
@@ -1338,7 +1497,33 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "subpackages are updated based on the version specified in their Kptfile",
-			refRepos: map[string][]testutil.Content{
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge"),
+									),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "v1.0", "resource-merge"),
+									),
+							),
+					},
+				},
 				"foo": {
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1353,27 +1538,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						Tag: "v1.0",
 					},
 				},
-			},
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "master", "resource-merge"),
-						),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("foo").
-							WithKptfile(
-								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", "v1.0", "resource-merge"),
-							),
-					),
 			},
 			expectedResults: []resultForStrategy{
 				{
@@ -1386,7 +1550,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "resource-merge").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithResource(pkgbuilder.DeploymentResource).
 						WithSubPackages(
@@ -1394,7 +1558,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithKptfile(
 									pkgbuilder.NewKptfile().
 										WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
-										WithUpstreamLock(),
+										WithUpstreamLockRef("foo", "/", "v1.0", 1),
 								).
 								WithResource(pkgbuilder.ConfigMapResource),
 						),
@@ -1403,7 +1567,34 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "subpackage with changes can not be updated with fast-forward strategy",
-			refRepos: map[string][]testutil.Content{
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "fast-forward"),
+									),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "v1.0", "fast-forward"),
+									),
+							),
+					},
+				},
 				"foo": {
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1419,28 +1610,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					},
 				},
 			},
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.ConfigMapResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "master", "fast-forward"),
-						),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("foo").
-							WithKptfile(
-								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", "v1.0", "fast-forward"),
-							),
-					),
-			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile().
@@ -1449,7 +1618,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						pkgbuilder.NewSubPkg("foo").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", "master", "fast-forward"),
+									WithUpstreamRef("foo", "/", "master", "fast-forward").
+									WithUpstreamLockRef("foo", "/", "master", 0),
 							).
 							WithResource(pkgbuilder.DeploymentResource,
 								pkgbuilder.SetFieldPath("34", "spec", "replicas")),
@@ -1468,7 +1638,34 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "subpackage with changes can be updated with resource-merge",
-			refRepos: map[string][]testutil.Content{
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge"),
+									),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "v1.0", "resource-merge"),
+									),
+							),
+					},
+				},
 				"foo": {
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1485,28 +1682,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					},
 				},
 			},
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.ConfigMapResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "master", "resource-merge"),
-						),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("foo").
-							WithKptfile(
-								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", "v1.0", "resource-merge"),
-							),
-					),
-			},
 			updatedLocal: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile().
@@ -1515,7 +1690,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						pkgbuilder.NewSubPkg("foo").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", "master", "resource-merge"),
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
 							).
 							WithResource(pkgbuilder.DeploymentResource,
 								pkgbuilder.SetFieldPath("34", "spec", "replicas")),
@@ -1531,7 +1707,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithResource(pkgbuilder.DeploymentResource).
 						WithSubPackages(
@@ -1539,7 +1715,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithKptfile(
 									pkgbuilder.NewKptfile().
 										WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
-										WithUpstreamLock(),
+										WithUpstreamLockRef("foo", "/", "v1.0", 1),
 								).
 								WithResource(pkgbuilder.DeploymentResource,
 									pkgbuilder.SetFieldPath("34", "spec", "replicas"),
@@ -1555,7 +1731,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "PLACEHOLDER").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithResource(pkgbuilder.DeploymentResource).
 						WithSubPackages(
@@ -1563,7 +1739,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithKptfile(
 									pkgbuilder.NewKptfile().
 										WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
-										WithUpstreamLock(),
+										WithUpstreamLockRef("foo", "/", "v1.0", 1),
 								).
 								WithResource(pkgbuilder.DeploymentResource,
 									pkgbuilder.SetFieldPath("34", "spec", "replicas"),
@@ -1575,7 +1751,34 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 		{
 			name: "multiple layers of remote packages",
-			refRepos: map[string][]testutil.Content{
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge"),
+									),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge"),
+									),
+							),
+					},
+				},
 				"foo": {
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1616,28 +1819,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					},
 				},
 			},
-			initialUpstream: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", "master", "resource-merge"),
-						),
-				),
-			updatedUpstream: testutil.Content{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithResource(pkgbuilder.ConfigMapResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("foo").
-							WithKptfile(
-								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", "master", "resource-merge"),
-							),
-					),
-			},
 			expectedResults: []resultForStrategy{
 				{
 					strategies: []kptfilev1alpha2.UpdateStrategyType{
@@ -1649,7 +1830,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("upstream", "/", "master", "resource-merge").
-								WithUpstreamLock(),
+								WithUpstreamLockRef("upstream", "/", "master", 1),
 						).
 						WithResource(pkgbuilder.ConfigMapResource).
 						WithSubPackages(
@@ -1657,7 +1838,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 								WithKptfile(
 									pkgbuilder.NewKptfile().
 										WithUpstreamRef("foo", "/", "master", "resource-merge").
-										WithUpstreamLock(),
+										WithUpstreamLockRef("foo", "/", "master", 1),
 								).
 								WithResource(pkgbuilder.ConfigMapResource).
 								WithSubPackages(
@@ -1665,7 +1846,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 										WithKptfile(
 											pkgbuilder.NewKptfile().
 												WithUpstreamRef("bar", "/", "master", "resource-merge").
-												WithUpstreamLock(),
+												WithUpstreamLockRef("bar", "/", "master", 1),
 										).
 										WithResource(pkgbuilder.ConfigMapResource),
 								),
@@ -1682,24 +1863,16 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			strategy := strategies[i]
 			t.Run(fmt.Sprintf("%s#%s", test.name, string(strategy)), func(t *testing.T) {
 				g := &testutil.TestSetupManager{
-					T: t,
+					T:            t,
+					ReposChanges: test.reposChanges,
 				}
 				defer g.Clean()
-				if test.updatedUpstream.Pkg != nil {
-					g.UpstreamChanges = []testutil.Content{
-						test.updatedUpstream,
-					}
-				}
 				if test.updatedLocal.Pkg != nil {
 					g.LocalChanges = []testutil.Content{
 						test.updatedLocal,
 					}
 				}
-				g.RefReposChanges = test.refRepos
-				if !g.Init(testutil.Content{
-					Pkg:    test.initialUpstream,
-					Branch: "master",
-				}) {
+				if !g.Init() {
 					return
 				}
 
@@ -1737,8 +1910,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					t.FailNow()
 				}
 
-				expectedPath := pkgbuilder.ExpandPkgWithName(t, result.expectedLocal,
-					g.LocalWorkspace.PackageDir, g.RepoPaths)
+				expectedPath := result.expectedLocal.ExpandPkgWithName(t,
+					g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
 				kf, err := kptfileutil.ReadFile(expectedPath)
 				if !assert.NoError(t, err) {
 					t.FailNow()

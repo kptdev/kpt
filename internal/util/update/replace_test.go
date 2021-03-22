@@ -44,7 +44,7 @@ func TestUpdate_Replace(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "force-delete-replace").
-						WithUpstreamLock(),
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -65,7 +65,7 @@ func TestUpdate_Replace(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "force-delete-replace").
-						WithUpstreamLock(),
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -89,7 +89,7 @@ func TestUpdate_Replace(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "force-delete-replace").
-						WithUpstreamLock(),
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -116,7 +116,7 @@ func TestUpdate_Replace(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "force-delete-replace").
-						WithUpstreamLock(),
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -139,7 +139,7 @@ func TestUpdate_Replace(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "force-delete-replace").
-						WithUpstreamLock(),
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 			updated: pkgbuilder.NewRootPkg().
@@ -154,7 +154,7 @@ func TestUpdate_Replace(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "force-delete-replace").
-						WithUpstreamLock(),
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},
@@ -162,11 +162,11 @@ func TestUpdate_Replace(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			repoPaths := map[string]string{}
-			origin := pkgbuilder.ExpandPkg(t, tc.origin, repoPaths)
-			local := pkgbuilder.ExpandPkg(t, tc.local, repoPaths)
-			updated := pkgbuilder.ExpandPkg(t, tc.updated, repoPaths)
-			expected := pkgbuilder.ExpandPkg(t, tc.expected, repoPaths)
+			repos := testutil.EmptyReposInfo
+			origin := tc.origin.ExpandPkg(t, repos)
+			local := tc.local.ExpandPkg(t, repos)
+			updated := tc.updated.ExpandPkg(t, repos)
+			expected := tc.expected.ExpandPkg(t, repos)
 
 			updater := &ReplaceUpdater{}
 
