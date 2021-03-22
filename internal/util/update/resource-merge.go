@@ -220,6 +220,35 @@ func MergeSubPackages(localRoot, updatedRoot, originalRoot string) error {
 			return err
 		}
 	}
+
+	// there could be subpackage which are not present in local but added in upstream
+	// we should copy the Kptfiles from newly added subpackages in upstream to local
+
+	// get the Kptfile paths from the subdirectories of updated package recursively
+	updatedPkgPaths, err := pathutil.DirsWithFile(updatedRoot, kptfile.KptFileName, true)
+	if err != nil {
+		return err
+	}
+
+	for _, updatedPkgPath := range updatedPkgPaths {
+		cleanUpdatedPkgPath := filepath.Clean(updatedPkgPath)
+		relativePkgPath, err := filepath.Rel(updatedRoot, cleanUpdatedPkgPath)
+		if err != nil {
+			return err
+		}
+
+		if !fileExists(filepath.Join(localRoot, relativePkgPath, kptfile.KptFileName)) {
+			err = os.MkdirAll(filepath.Join(localRoot, relativePkgPath), 0700)
+			if err != nil {
+				return err
+			}
+			err = copyutil.SyncFile(filepath.Join(updatedPkgPath, kptfile.KptFileName),
+				filepath.Join(localRoot, relativePkgPath, kptfile.KptFileName))
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

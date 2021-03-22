@@ -701,7 +701,6 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		expectedLocal   *pkgbuilder.Pkg
 	}{
 		{
-			// TODO(mortent): This does not handle Kptfiles correctly.
 			name: "update fetches any new subpackages",
 			initialUpstream: pkgbuilder.NewPackage("foo").
 				WithKptfile().
@@ -727,9 +726,11 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					pkgbuilder.NewPackage("bar").
 						WithKptfile().
 						WithSubPackages(
-							pkgbuilder.NewPackage("nestedbar"),
+							pkgbuilder.NewPackage("nestedbar").
+								WithKptfile(),
 						),
-					pkgbuilder.NewPackage("zork"),
+					pkgbuilder.NewPackage("zork").
+						WithKptfile(),
 				),
 		},
 		{
@@ -786,7 +787,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				WithSubPackages(
 					pkgbuilder.NewPackage("bar").
 						WithKptfile(),
-					pkgbuilder.NewPackage("zork"),
+					pkgbuilder.NewPackage("zork").
+						WithKptfile(),
 					pkgbuilder.NewPackage("abc").
 						WithKptfile(),
 				),
