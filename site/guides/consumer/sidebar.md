@@ -10,7 +10,7 @@
         - [Apply](guides/consumer/apply/)
         - [Update](guides/consumer/update/)
         - [Running Functions](guides/consumer/function/)
-            - [Function Catalog](guides/consumer/function/catalog/)
+            - Function Catalog
                 - [Generators](guides/consumer/function/catalog/generators/)
                 - [Sinks](guides/consumer/function/catalog/sinks/)
                 - [Sources](guides/consumer/function/catalog/sources/)
