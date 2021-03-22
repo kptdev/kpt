@@ -704,7 +704,10 @@ func replaceData(repo, data string) error {
 			}
 			// Only copy over the Upstream section from the existing
 			// Kptfile if other values hasn't been provided.
-			if dataKptfile.UpstreamLock == nil || reflect.DeepEqual(dataKptfile.UpstreamLock, kptfilev1alpha2.Upstream{}) {
+			if dataKptfile.Upstream == nil || reflect.DeepEqual(dataKptfile.Upstream, kptfilev1alpha2.Upstream{}) {
+				dataKptfile.Upstream = repoKptfile.Upstream
+			}
+			if dataKptfile.UpstreamLock == nil || reflect.DeepEqual(dataKptfile.UpstreamLock, kptfilev1alpha2.UpstreamLock{}) {
 				dataKptfile.UpstreamLock = repoKptfile.UpstreamLock
 			}
 			dataKptfile.Name = repoKptfile.Name

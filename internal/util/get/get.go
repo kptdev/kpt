@@ -16,25 +16,24 @@
 package get
 
 import (
-	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
 )
 
 // Command fetches a package from a git repository, copies it to a local
 // directory, and expands any remote subpackages.
 type Command struct {
 	// Git contains information about the git repo to fetch
-	kptfilev1alpha2.GitLock
+	Git *kptfilev1alpha2.Git
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -42,29 +41,46 @@ type Command struct {
 
 	// Name is the name to give the package.  Defaults to the destination.
 	Name string
-
-	// Remove directory before copying to it.
-	Clean bool
 }
 
 // Run runs the Command.
 func (c Command) Run() error {
-	revertFunc, err := c.updateParentKptfile()
+	if err := (&c).DefaultValues(); err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(c.Destination); !os.IsNotExist(err) {
+		return errors.Errorf("destination directory %s already exists", c.Destination)
+	}
+
+	err := os.MkdirAll(c.Destination, 0700)
 	if err != nil {
 		return err
 	}
 
-	r := &git.RepoSpec{OrgRepo: c.Repo, Path: c.Directory, Ref: c.Ref}
+	// normalize path to a filepath
+	repoDir := c.Git.Directory
+	if !strings.HasSuffix(repoDir, "file://") {
+		repoDir = filepath.Join(path.Split(repoDir))
+	}
+	c.Git.Directory = repoDir
+
+	kf := kptfileutil.DefaultKptfile(c.Name)
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type:           kptfilev1alpha2.GitOrigin,
+		Git:            c.Git,
+		UpdateStrategy: "resource-merge",
+	}
+
+	err = kptfileutil.WriteFile(c.Destination, kf)
+	if err != nil {
+		return err
+	}
+
 	err = (&fetch.Command{
-		RepoSpec:    r,
-		Destination: c.Destination,
-		Name:        c.Name,
-		Clean:       c.Clean,
+		Path: c.Destination,
 	}).Run()
 	if err != nil {
-		// Ignore the error here. If this happens, it just means that
-		// we weren't able to roll back the change to the parent Kptfile.
-		_ = revertFunc()
 		return err
 	}
 
@@ -74,39 +90,6 @@ func (c Command) Run() error {
 	return nil
 }
 
-// updateParentKptfile searches the parent folders of a Kptfile. If it finds
-// a Kptfile, it means the package should be registered as a subpackage of the
-// parent. It adds the new package to the parent. The function returns a function
-// that makes it possible to revert the change if fetching the package fails.
-func (c Command) updateParentKptfile() (func() error, error) {
-	return pkgutil.UpdateParentKptfile(c.Destination, func(parentPath string, kf kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
-		for _, subPkg := range kf.Subpackages {
-			absPath := filepath.Join(parentPath, subPkg.LocalDir)
-			if absPath == c.Destination {
-				return kptfilev1alpha2.KptFile{}, fmt.Errorf("subpackage with localDir %q already exist", subPkg.LocalDir)
-			}
-		}
-
-		relPkgPath, err := filepath.Rel(parentPath, c.Destination)
-		if err != nil {
-			return kptfilev1alpha2.KptFile{}, err
-		}
-
-		kf.Subpackages = append(kf.Subpackages, kptfilev1alpha2.Subpackage{
-			LocalDir: relPkgPath,
-			Upstream: &kptfilev1alpha2.Upstream{
-				Git: &kptfilev1alpha2.Git{
-					Repo:      c.Repo,
-					Directory: c.Directory,
-					Ref:       c.Ref,
-				},
-				UpdateStrategy: "resource-merge",
-			},
-		})
-		return kf, nil
-	})
-}
-
 // fetchRemoteSubpackages goes through the root package and its subpackages
 // and fetches any remote subpackages referenced. It will also handle situations
 // where a remote subpackage references other remote subpackages.
@@ -114,14 +97,7 @@ func (c Command) fetchRemoteSubpackages() error {
 	// Create a stack to keep track of all Kptfiles that needs to be checked
 	// for remote subpackages.
 	s := stack.New()
-
-	paths, err := pathutil.DirsWithFile(c.Destination, kptfilev1alpha2.KptFileName, true)
-	if err != nil {
-		return err
-	}
-	for _, p := range paths {
-		s.Push(p)
-	}
+	s.Push(c.Destination)
 
 	for s.Len() > 0 {
 		p := s.Pop()
@@ -130,55 +106,53 @@ func (c Command) fetchRemoteSubpackages() error {
 			return err
 		}
 
-		remoteSubPkgDirs := make(map[string]bool)
-		for i := range kf.Subpackages {
-			sp := kf.Subpackages[i]
-
-			if _, found := remoteSubPkgDirs[sp.LocalDir]; found {
-				return fmt.Errorf("multiple remote subpackages with localDir %q", sp.LocalDir)
-			}
-			remoteSubPkgDirs[sp.LocalDir] = true
-
-			gitInfo := sp.Upstream.Git
-			localPath := filepath.Join(p, sp.LocalDir)
-
-			_, err = os.Stat(localPath)
-			// If we get an error and it is something different than that the
-			// directory doesn't exist, we just return the error.
-			if err != nil && !os.IsNotExist(err) {
-				return err
-			}
-			// Check if the folder already exist by checking if err is nil. Due
-			// to the check above, err here can only be IsNotExist or nil. So
-			// if err is nil it means the folder already exists.
-			// If it does, we return an error with a specific error message.
-			if err == nil {
-				return fmt.Errorf("local subpackage in directory %q already exists. Either"+
-					"rename the local subpackage or use a different directory for the remote subpackage", sp.LocalDir)
-			}
-
-			r := &git.RepoSpec{OrgRepo: gitInfo.Repo, Path: gitInfo.Directory, Ref: gitInfo.Ref}
+		if kf.Upstream != nil && kf.UpstreamLock == nil {
 			err := (&fetch.Command{
-				RepoSpec:    r,
-				Destination: localPath,
-				Name:        sp.LocalDir,
-				Clean:       false,
+				Path: p,
 			}).Run()
 			if err != nil {
 				return err
 			}
+		}
 
-			subPaths, err := pathutil.DirsWithFile(localPath, kptfilev1alpha2.KptFileName, true)
-			if err != nil {
-				return err
-			}
-			for _, subp := range subPaths {
-				if subp == p {
-					continue
-				}
-				s.Push(subp)
-			}
+		paths, err := pkgutil.FindAllDirectSubpackages(p)
+		if err != nil {
+			return err
+		}
+		for _, p := range paths {
+			s.Push(p)
 		}
 	}
+	return nil
+}
+
+// DefaultValues sets values to the default values if they were unspecified
+func (c *Command) DefaultValues() error {
+	if c.Git == nil {
+		return errors.Errorf("must specify git repo information")
+	}
+	g := c.Git
+	if len(g.Repo) == 0 {
+		return errors.Errorf("must specify repo")
+	}
+	if len(g.Ref) == 0 {
+		return errors.Errorf("must specify ref")
+	}
+	if len(c.Destination) == 0 {
+		return errors.Errorf("must specify destination")
+	}
+	if len(g.Directory) == 0 {
+		return errors.Errorf("must specify directory")
+	}
+
+	if !filepath.IsAbs(c.Destination) {
+		return errors.Errorf("destination must be an absolute path")
+	}
+
+	// default the name to the destination name
+	if len(c.Name) == 0 {
+		c.Name = filepath.Base(c.Destination)
+	}
+
 	return nil
 }

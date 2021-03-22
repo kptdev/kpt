@@ -69,8 +69,10 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	r.Get.GitLock = t.GitLock
+
+	r.Get.Git = &t.Git
 	p, err := pkg.New(t.Destination)
+
 	if err != nil {
 		return err
 	}
@@ -81,7 +83,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
-		r.Get.Directory, r.Get.Repo, r.Get.Destination)
+		r.Get.Git.Directory, r.Get.Git.Repo, r.Get.Destination)
 	if err := r.Get.Run(); err != nil {
 		return err
 	}

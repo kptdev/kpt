@@ -26,7 +26,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -294,14 +293,24 @@ func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 	if err != nil {
 		return dir, err
 	}
-	cmdGet := &fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: repo,
-			Ref:     ref,
-			Path:    path,
+
+	name := filepath.Base(dir)
+	kf := kptfileutil.DefaultKptfile(name)
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.Git{
+			Repo:      repo,
+			Directory: "/",
+			Ref:       ref,
 		},
-		Destination: dir,
-		Clean:       true,
+	}
+	err = kptfileutil.WriteFile(dir, kf)
+	if err != nil {
+		return dir, err
+	}
+
+	cmdGet := &fetch.Command{
+		Path: dir,
 	}
 	err = cmdGet.Run()
 	return dir, err

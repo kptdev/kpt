@@ -15,8 +15,10 @@
 package update
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"os"
+	"path/filepath"
+
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 )
 
 // Updater updates a package to a new upstream version.
@@ -26,18 +28,44 @@ import (
 type ReplaceUpdater struct{}
 
 func (u ReplaceUpdater) Update(options UpdateOptions) error {
-	if options.KptFile.UpstreamLock == nil || options.KptFile.UpstreamLock.GitLock == nil {
-		return nil
+	localPath := filepath.Join(options.LocalPath, options.RelPackagePath)
+	updatedPath := filepath.Join(options.UpdatedPath, options.RelPackagePath)
+
+	paths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(localPath, updatedPath)
+	if err != nil {
+		return err
 	}
-	options.KptFile.UpstreamLock.GitLock.Ref = options.ToRef
-	options.KptFile.UpstreamLock.GitLock.Repo = options.ToRepo
-	return get.Command{
-		GitLock: kptfilev1alpha2.GitLock{
-			Repo:      options.KptFile.UpstreamLock.GitLock.Repo,
-			Ref:       options.KptFile.UpstreamLock.GitLock.Ref,
-			Directory: options.KptFile.UpstreamLock.GitLock.Directory,
-		},
-		Destination: options.AbsPackagePath,
-		Clean:       true,
-	}.Run()
+
+	for _, p := range paths {
+		isRootPkg := false
+		if p == "." && options.IsRoot {
+			isRootPkg = true
+		}
+		localSubPkgPath := filepath.Join(localPath, p)
+		updatedSubPkgPath := filepath.Join(updatedPath, p)
+
+		err = pkgutil.RemovePackageContent(localSubPkgPath, !isRootPkg)
+		if err != nil {
+			return err
+		}
+
+		// If the package doesn't exist in updated, we make sure it is
+		// deleted from the local package. If it exists in updated, we copy
+		// the content of the package into local.
+		_, err = os.Stat(updatedSubPkgPath)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		if os.IsNotExist(err) {
+			if err = os.RemoveAll(localSubPkgPath); err != nil {
+				return err
+			}
+		} else {
+
+			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
