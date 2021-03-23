@@ -4,6 +4,7 @@
     - [Homebrew](installation/homebrew/)
     - [Source](installation/source/)
     - [Binaries](installation/binaries/)
+- [Book](book/01-getting-started/00.md)
 - [Guides](guides/)
     - [For Consumers](guides/consumer/)
         - [Get](guides/consumer/get/)
