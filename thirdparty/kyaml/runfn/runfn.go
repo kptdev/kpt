@@ -406,9 +406,8 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
-// getFunctionConfig will return the config that used in 'functionConfig' field in
-// function input. If r.FnConfigPath is provided, it will read and return it. Otherwise
-// returns an error.
+// etFunctionConfig returns yaml representation of functionConfig that can
+// be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
 	if r.FnConfigPath == "" {
 		return nil, fmt.Errorf("function config file path must not be empty")
