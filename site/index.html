@@ -25,7 +25,7 @@
     <script>
       window.$docsify = {
         name: "kpt",
-        nameLink: "https://kpt.dev",
+        nameLink: window.location.origin,
         search: {
           maxAge: 43200000,
           placeholder: "Search",
@@ -34,6 +34,7 @@
         loadSidebar: "sidebar.md",
         alias: {
           "/installation/*.*/sidebar.md": "/sidebar.md",
+          "/book/*.*/sidebar.md": "/book/sidebar.md",
           "/guides/sidebar.md": "/sidebar.md",
           "/guides/consumer/.*/sidebar.md": "/guides/consumer/sidebar.md",
           "/guides/producer/.*/sidebar.md": "/guides/producer/sidebar.md",
@@ -50,6 +51,9 @@
         coverpage: "coverpage.md",
         auto2top: true,
         repo: "true",
+        pagination: {
+          crossChapter: true 
+        },
         corner: {
           url: "https://github.com/GoogleContainerTools/kpt",
           icon: "github",
@@ -84,12 +88,21 @@
                 .replace(hugoDirectiveTags, "");
               return content;
             });
+
+            hook.doneEach(function() {
+               const paginationFooters = Array.from(document.getElementsByClassName("docsify-pagination-container"));
+               paginationFooters.forEach(
+                 el => 
+                 el.style.display = document.location.pathname.toLowerCase().startsWith("/book") ? "flex" : "none"
+                 );
+            });
           },
         ],
       };
     </script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify-corner/dist/docsify-corner.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/asciinema-player@2.6.1/resources/public/js/asciinema-player.min.js"></script>
