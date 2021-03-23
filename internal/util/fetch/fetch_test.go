@@ -28,10 +28,10 @@ import (
 )
 
 func setupWorkspace(t *testing.T) (*testutil.TestGitRepo, *testutil.TestWorkspace, func()) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 
 	w.PackageDir = g.RepoName
 	err := os.MkdirAll(w.FullPackagePath(), 0700)
@@ -53,10 +53,10 @@ func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1alpha2.Git, 
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if no Kptfile
 func TestCommand_Run_failNoKptfile(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	pkgPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
@@ -266,7 +266,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new dataset")
+	_, err = g.Commit("new dataset")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -342,7 +342,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -350,7 +350,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)

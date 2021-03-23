@@ -17,6 +17,7 @@ package diff
 import (
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -90,8 +91,8 @@ func TestPkgDiff(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			pkg1Dir := pkgbuilder.ExpandPkg(t, test.pkg1, map[string]string{})
-			pkg2Dir := pkgbuilder.ExpandPkg(t, test.pkg2, map[string]string{})
+			pkg1Dir := test.pkg1.ExpandPkg(t, testutil.EmptyReposInfo)
+			pkg2Dir := test.pkg2.ExpandPkg(t, testutil.EmptyReposInfo)
 			diff, err := PkgDiff(pkg1Dir, pkg2Dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()

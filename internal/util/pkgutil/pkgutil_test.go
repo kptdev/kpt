@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkgutil
+package pkgutil_test
 
 import (
 	"os"
@@ -20,7 +20,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 )
@@ -77,10 +79,10 @@ func TestWalkPackage(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			pkgPath := pkgbuilder.ExpandPkg(t, tc.pkg, map[string]string{})
+			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
 			var visited []string
-			if err := WalkPackage(pkgPath, func(s string, info os.FileInfo, err error) error {
+			if err := pkgutil.WalkPackage(pkgPath, func(s string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -193,9 +195,9 @@ func TestFindAllDirectSubpackages(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			pkgPath := pkgbuilder.ExpandPkg(t, tc.pkg, map[string]string{})
+			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
-			paths, err := FindAllDirectSubpackages(pkgPath)
+			paths, err := pkgutil.FindAllDirectSubpackages(pkgPath)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -315,9 +317,9 @@ func TestFindLocalRecursiveSubpackages(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			pkgPath := pkgbuilder.ExpandPkg(t, tc.pkg, map[string]string{})
+			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
-			paths, err := FindLocalRecursiveSubpackages(pkgPath)
+			paths, err := pkgutil.FindLocalRecursiveSubpackages(pkgPath)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -416,9 +418,9 @@ func TestFindRemoteDirectSubpackages(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			pkgPath := pkgbuilder.ExpandPkg(t, tc.pkg, map[string]string{})
+			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
-			paths, err := FindRemoteDirectSubpackages(pkgPath)
+			paths, err := pkgutil.FindRemoteDirectSubpackages(pkgPath)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -582,10 +584,10 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			var pkgPaths []string
 			for _, p := range tc.pkgs {
-				pkgPaths = append(pkgPaths, pkgbuilder.ExpandPkg(t, p, map[string]string{}))
+				pkgPaths = append(pkgPaths, p.ExpandPkg(t, testutil.EmptyReposInfo))
 			}
 
-			paths, err := FindLocalRecursiveSubpackagesForPaths(pkgPaths...)
+			paths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(pkgPaths...)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

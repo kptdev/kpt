@@ -45,10 +45,10 @@ import (
 // 5. Run remote diff between master and cloned
 func TestCommand_RunRemoteDiff(t *testing.T) {
 	t.SkipNow()
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
@@ -56,7 +56,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -64,7 +64,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -119,10 +119,10 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 // 5. add more data to the master branch, commit it
 // 5. Run combined diff between master and cloned
 func TestCommand_RunCombinedDiff(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -132,7 +132,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -140,7 +140,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -196,10 +196,10 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 // 5. Update cloned package with dataset3
 // 6. Run remote diff and verify the output
 func TestCommand_Run_LocalDiff(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -209,7 +209,7 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
