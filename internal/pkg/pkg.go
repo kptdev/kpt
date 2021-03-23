@@ -16,9 +16,7 @@
 package pkg
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -27,6 +25,7 @@ import (
 
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -111,10 +110,6 @@ func (p *Pkg) readKptfile() (*kptfilev1alpha2.KptFile, error) {
 	f, err := os.Open(path.Join(string(p.UniquePath), kptfilev1alpha2.KptFileName))
 
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			// assuming implicit kpt pkg
-			return kf, nil
-		}
 		return kf, fmt.Errorf("unable to read %s: %w", kptfilev1alpha2.KptFileName, err)
 	}
 	defer f.Close()
@@ -159,29 +154,63 @@ func (p *Pkg) RelativePathTo(ancestorPkg *Pkg) (string, error) {
 
 // SubPackages returns sub packages of a pkg.
 // A sub directory that has a Kptfile is considered a sub package.
-func (p *Pkg) SubPackages() (subPkgs []*Pkg, err error) {
+func (p *Pkg) SubPackages() ([]*Pkg, error) {
 	pkgPath := string(p.UniquePath)
 
-	files, err := ioutil.ReadDir(pkgPath)
-	if err != nil {
-		return subPkgs, fmt.Errorf("failed to read sub dirs for %s %w", p, err)
-	}
-	for _, f := range files {
-		if f.IsDir() {
-			dirPath := path.Join(pkgPath, f.Name())
-			isKptPkg, err := kptfileutil.HasKptfile(dirPath)
-			if err != nil {
-				return subPkgs, fmt.Errorf("failed to check kptfile in subpackage %w", err)
-			}
-			if isKptPkg {
-				subPkg, err := New(dirPath)
-				if err != nil {
-					return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", dirPath, err)
-				}
-				subPkgs = append(subPkgs, subPkg)
+	packagePaths := make(map[string]bool)
+	if err := filepath.Walk(pkgPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to read package %s: %w", p, err)
+		}
+
+		// Ignore the root folder
+		if path == pkgPath {
+			return nil
+		}
+
+		// Ignore anything inside the .git folder
+		rel := strings.TrimPrefix(path, pkgPath)
+		if copyutil.IsDotGitFolder(rel) {
+			return nil
+		}
+
+		// Any paths that are inside subpackages can be ignored since
+		// we only want the subpackages directly underneath the package.
+		for dir := range packagePaths {
+			if strings.HasPrefix(path, dir) {
+				return nil
 			}
 		}
+
+		// For every folder, we check if it is a kpt package
+		if info.IsDir() {
+			kfPath := filepath.Join(path, kptfilev1alpha2.KptFileName)
+			_, err := os.Stat(kfPath)
+			// If we get any other errors than IsNotExist, we bail out.
+			if err != nil && !os.IsNotExist(err) {
+				return fmt.Errorf("failed to check file at %s: %w", kfPath, err)
+			}
+			// If err is nil here, it means we did find the Kptfile. We add the
+			// path to the slice.
+			if err == nil {
+				packagePaths[path] = true
+				return nil
+			}
+		}
+		return nil
+	}); err != nil {
+		return []*Pkg{}, fmt.Errorf("failed to read package at %s: %w", p, err)
 	}
+
+	var subPkgs []*Pkg
+	for subPkgPath := range packagePaths {
+		subPkg, err := New(subPkgPath)
+		if err != nil {
+			return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", subPkgPath, err)
+		}
+		subPkgs = append(subPkgs, subPkg)
+	}
+
 	sort.Slice(subPkgs, func(i, j int) bool {
 		return subPkgs[i].DisplayPath < subPkgs[j].DisplayPath
 	})

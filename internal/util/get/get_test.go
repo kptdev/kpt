@@ -710,6 +710,60 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				),
 		},
 		{
+			name:      "package with deeply nested subpackages",
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithResource(pkgbuilder.ConfigMapResource).
+									WithSubPackages(
+										pkgbuilder.NewSubPkg("deepsubpkg").
+											WithKptfile(
+												pkgbuilder.NewKptfile().
+													WithUpstreamRef("foo", "/", "main", "fast-forward"),
+											),
+									),
+							),
+					},
+				},
+				"foo": {
+					{
+						Branch: "main",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.SecretResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithResource(pkgbuilder.ConfigMapResource).
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("deepsubpkg").
+								WithKptfile(
+									pkgbuilder.NewKptfile().
+										WithUpstreamRef("foo", "/", "main", "fast-forward").
+										WithUpstreamLockRef("foo", "/", "main", 0),
+								).
+								WithResource(pkgbuilder.SecretResource),
+						),
+				),
+		},
+		{
 			name:      "package with local and remote subpackages",
 			directory: "/",
 			ref:       "master",

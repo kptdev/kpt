@@ -14,8 +14,13 @@
 
 package stack
 
-import "fmt"
+import (
+	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+)
+
+// New returns a new stack for elements of string type.
 func New() *stack {
 	return &stack{
 		slice: make([]string, 0),
@@ -42,4 +47,33 @@ func (s *stack) Pop() string {
 
 func (s *stack) Len() int {
 	return len(s.slice)
+}
+
+// NewPkgStack returns a new stack for elements of *pkg.Pkg type.
+func NewPkgStack() *pkgStack {
+	return &pkgStack{
+		slice: make([]*pkg.Pkg, 0),
+	}
+}
+
+type pkgStack struct {
+	slice []*pkg.Pkg
+}
+
+func (ps *pkgStack) Push(p *pkg.Pkg) {
+	ps.slice = append(ps.slice, p)
+}
+
+func (ps *pkgStack) Pop() *pkg.Pkg {
+	l := len(ps.slice)
+	if l == 0 {
+		panic(fmt.Errorf("can't pop an empty stack"))
+	}
+	p := ps.slice[l-1]
+	ps.slice = ps.slice[:l-1]
+	return p
+}
+
+func (ps *pkgStack) Len() int {
+	return len(ps.slice)
 }

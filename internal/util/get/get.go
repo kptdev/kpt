@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -69,7 +69,7 @@ func (c Command) Run() error {
 	kf.Upstream = &kptfilev1alpha2.Upstream{
 		Type:           kptfilev1alpha2.GitOrigin,
 		Git:            c.Git,
-		UpdateStrategy: "resource-merge",
+		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 	}
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
@@ -77,14 +77,12 @@ func (c Command) Run() error {
 		return err
 	}
 
-	err = (&fetch.Command{
-		Path: c.Destination,
-	}).Run()
+	p, err := pkg.New(c.Destination)
 	if err != nil {
 		return err
 	}
 
-	if err = c.fetchRemoteSubpackages(); err != nil {
+	if err = c.fetchPackages(p); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil
@@ -93,34 +91,35 @@ func (c Command) Run() error {
 // fetchRemoteSubpackages goes through the root package and its subpackages
 // and fetches any remote subpackages referenced. It will also handle situations
 // where a remote subpackage references other remote subpackages.
-func (c Command) fetchRemoteSubpackages() error {
+func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
 	// Create a stack to keep track of all Kptfiles that needs to be checked
 	// for remote subpackages.
-	s := stack.New()
-	s.Push(c.Destination)
+	s := stack.NewPkgStack()
+	s.Push(rootPkg)
 
 	for s.Len() > 0 {
 		p := s.Pop()
-		kf, err := kptfileutil.ReadFile(p)
+
+		kf, err := p.Kptfile()
 		if err != nil {
 			return err
 		}
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
 			err := (&fetch.Command{
-				Path: p,
+				Pkg: p,
 			}).Run()
 			if err != nil {
 				return err
 			}
 		}
 
-		paths, err := pkgutil.FindAllDirectSubpackages(p)
+		subPkgs, err := p.SubPackages()
 		if err != nil {
 			return err
 		}
-		for _, p := range paths {
-			s.Push(p)
+		for _, subPkg := range subPkgs {
+			s.Push(subPkg)
 		}
 	}
 	return nil
