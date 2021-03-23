@@ -65,7 +65,7 @@ func currentUser() (*user.User, error) {
 
 func TestRunFns_init(t *testing.T) {
 	instance := RunFns{}
-	instance.init()
+	assert.NoError(t, instance.init())
 	if !assert.Equal(t, instance.Input, os.Stdin) {
 		t.FailNow()
 	}
@@ -95,7 +95,7 @@ func TestRunFns_initAsCurrentUser(t *testing.T) {
 	instance := RunFns{
 		AsCurrentUser: true,
 	}
-	instance.init()
+	assert.NoError(t, instance.init())
 	if !assert.Equal(t, instance.Input, os.Stdin) {
 		t.FailNow()
 	}
@@ -184,7 +184,7 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			(&tt.instance).init()
+			assert.NoError(t, (&tt.instance).init())
 			(&tt.instance).functionFilterProvider = nil
 			if !assert.Equal(t, tt.expected, tt.instance) {
 				t.FailNow()
@@ -283,7 +283,7 @@ metadata:
 				Functions: parsedFns,
 				Path:      d,
 			}
-			r.init()
+			assert.NoError(t, r.init())
 
 			// get the filters which would be run
 			var results []string
@@ -476,7 +476,7 @@ metadata:
 				Functions: []*yaml.RNode{fn},
 				Network:   tt.network,
 			}
-			r.init()
+			assert.NoError(t, r.init())
 
 			_, fltrs, _, err := r.getNodesAndFilters()
 			if tt.error != "" {
@@ -645,7 +645,7 @@ replace: StatefulSet
 		},
 		Functions: []*yaml.RNode{fn1, fn2},
 	}
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	err = instance.Execute()
 
@@ -726,7 +726,7 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	}
 	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
 	// initialize the defaults
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	err = instance.Execute()
 	if !assert.NoError(t, err) {
@@ -766,7 +766,7 @@ func TestCmd_Execute_ignoreFnConfigPath(t *testing.T) {
 	}
 	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
 	// initialize the defaults
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	err = instance.Execute()
 	if !assert.NoError(t, err) {
@@ -802,7 +802,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 		Functions:              []*yaml.RNode{fn},
 	}
 	// initialize the defaults
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	if !assert.NoError(t, instance.Execute()) {
 		return
@@ -851,7 +851,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		Functions:              []*yaml.RNode{fn},
 	}
 	// initialize the defaults
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	if !assert.NoError(t, instance.Execute()) {
 		return
