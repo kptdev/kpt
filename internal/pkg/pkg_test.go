@@ -287,7 +287,7 @@ func TestSubpackages(t *testing.T) {
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			subPkgs, err := p.SubPackages()
+			subPkgs, err := p.DirectSubpackages()
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

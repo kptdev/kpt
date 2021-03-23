@@ -25,7 +25,6 @@ import (
 
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -152,34 +151,25 @@ func (p *Pkg) RelativePathTo(ancestorPkg *Pkg) (string, error) {
 	return filepath.Rel(string(ancestorPkg.UniquePath), string(p.UniquePath))
 }
 
-// SubPackages returns sub packages of a pkg.
+// DirectSubpackages returns subpackages of a pkg.
 // A sub directory that has a Kptfile is considered a sub package.
-func (p *Pkg) SubPackages() ([]*Pkg, error) {
-	pkgPath := string(p.UniquePath)
-
+// TODO: This does not support symlinks, so we need to figure out how
+// we should support that with kpt.
+func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 	packagePaths := make(map[string]bool)
-	if err := filepath.Walk(pkgPath, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(p.UniquePath.String(), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to read package %s: %w", p, err)
 		}
 
 		// Ignore the root folder
-		if path == pkgPath {
+		if path == p.UniquePath.String() {
 			return nil
 		}
 
 		// Ignore anything inside the .git folder
-		rel := strings.TrimPrefix(path, pkgPath)
-		if copyutil.IsDotGitFolder(rel) {
-			return nil
-		}
-
-		// Any paths that are inside subpackages can be ignored since
-		// we only want the subpackages directly underneath the package.
-		for dir := range packagePaths {
-			if strings.HasPrefix(path, dir) {
-				return nil
-			}
+		if info.Name() == ".git" && info.IsDir() {
+			return filepath.SkipDir
 		}
 
 		// For every folder, we check if it is a kpt package
@@ -191,10 +181,11 @@ func (p *Pkg) SubPackages() ([]*Pkg, error) {
 				return fmt.Errorf("failed to check file at %s: %w", kfPath, err)
 			}
 			// If err is nil here, it means we did find the Kptfile. We add the
-			// path to the slice.
+			// path to the slice and return SkipDir since we don't need to
+			// walk any deeper into the directory.
 			if err == nil {
 				packagePaths[path] = true
-				return nil
+				return filepath.SkipDir
 			}
 		}
 		return nil

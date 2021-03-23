@@ -147,7 +147,7 @@ func hydrate(pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err err
 	var input []*yaml.RNode
 
 	// determine sub packages to be hydrated
-	subpkgs, err := curr.pkg.SubPackages()
+	subpkgs, err := curr.pkg.DirectSubpackages()
 	if err != nil {
 		return output, err
 	}

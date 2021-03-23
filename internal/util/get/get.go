@@ -114,7 +114,7 @@ func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
 			}
 		}
 
-		subPkgs, err := p.SubPackages()
+		subPkgs, err := p.DirectSubpackages()
 		if err != nil {
 			return err
 		}

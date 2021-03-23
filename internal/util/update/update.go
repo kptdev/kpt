@@ -166,7 +166,7 @@ func (u Command) Run() error {
 			return err
 		}
 
-		subPkgs, err := p.SubPackages()
+		subPkgs, err := p.DirectSubpackages()
 		if err != nil {
 			return err
 		}
