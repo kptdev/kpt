@@ -276,7 +276,7 @@ apiVersion: v1
 		{
 			name: "--fn-config with function arguments",
 			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
-			err:  "function arguments can not be specified with function config file",
+			err:  "function arguments can only be specified without function config file",
 		},
 	}
 

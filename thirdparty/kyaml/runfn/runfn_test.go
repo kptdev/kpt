@@ -155,20 +155,20 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 		},
 		{
 			name:     "explicit functions in paths -- no functions from input",
-			instance: RunFns{FnConfigPath: "foo"},
+			instance: RunFns{FnConfigPath: "/foo"},
 			expected: RunFns{
 				Output:       os.Stdout,
 				Input:        os.Stdin,
-				FnConfigPath: "foo",
+				FnConfigPath: "/foo",
 			},
 		},
 		{
 			name:     "functions in paths -- yes functions from input",
-			instance: RunFns{FnConfigPath: "foo"},
+			instance: RunFns{FnConfigPath: "/foo"},
 			expected: RunFns{
 				Output:       os.Stdout,
 				Input:        os.Stdin,
-				FnConfigPath: "foo",
+				FnConfigPath: "/foo",
 			},
 		},
 		{

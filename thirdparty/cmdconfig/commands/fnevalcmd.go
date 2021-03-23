@@ -122,7 +122,7 @@ func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
 		// only used with container functions
 		if r.AsCurrentUser || r.Network ||
 			len(r.Mounts) != 0 || len(r.Env) != 0 {
-			return nil, fmt.Errorf("--mount, --as-current-user, --network and --env cannot be used with executable function")
+			return nil, fmt.Errorf("--mount, --as-current-user, --network and --env can only be used with container functions")
 		}
 		// create the function spec to set as an annotation
 		fn, err = yaml.Parse(`exec: {}`)
@@ -207,7 +207,7 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 	return sms
 }
 
-func checkFnConfigPath(path string) error {
+func checkFnConfigPathExistence(path string) error {
 	// check does fn config file exist
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return fmt.Errorf("missing function config file: %s", path)
@@ -229,7 +229,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
 	}
 	if len(dataItems) > 0 && r.FnConfigPath != "" {
-		return fmt.Errorf("function arguments can not be specified with function config file")
+		return fmt.Errorf("function arguments can only be specified without function config file")
 	}
 
 	fns, err := r.getContainerFunctions(dataItems)
@@ -258,7 +258,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	storageMounts := toStorageMounts(r.Mounts)
 
 	if r.FnConfigPath != "" {
-		err = checkFnConfigPath(r.FnConfigPath)
+		err = checkFnConfigPathExistence(r.FnConfigPath)
 		if err != nil {
 			return err
 		}

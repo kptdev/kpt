@@ -99,7 +99,10 @@ func (r RunFns) Execute() error {
 	}
 
 	// default the containerFilterProvider if it hasn't been override.  Split out for testing.
-	(&r).init()
+	err = (&r).init()
+	if err != nil {
+		return err
+	}
 	nodes, fltrs, output, err := r.getNodesAndFilters()
 	if err != nil {
 		return err
@@ -155,23 +158,10 @@ func (r RunFns) getNodesAndFilters() (
 
 // filterOutFnConfigFile is a filter which filters out the function config
 // file
-func (r RunFns) filterOutFnConfigFile(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
-	var result []*yaml.RNode
-	// fn config path should be absolute
-	var fnConfigPath string
-	if filepath.IsAbs(r.FnConfigPath) {
-		fnConfigPath = r.FnConfigPath
-	} else {
-		// if the FnConfigPath is relative, we should use the
-		// current directory to construct full path.
-		path, err := os.Getwd()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get working directory: %w", err)
-		}
-		fnConfigPath = filepath.Join(path, r.FnConfigPath)
-	}
-	for i := range nodes {
-		node := nodes[i]
+func (r RunFns) filterOutFnConfigFile(input []*yaml.RNode) ([]*yaml.RNode, error) {
+	var output []*yaml.RNode
+	for i := range input {
+		node := input[i]
 		meta, err := node.GetMeta()
 		if err != nil {
 			return nil, err
@@ -181,14 +171,14 @@ func (r RunFns) filterOutFnConfigFile(nodes []*yaml.RNode) ([]*yaml.RNode, error
 			// file path in the annotation is relative to the package path
 			// we need to use absolute path
 			path = filepath.Join(r.Path, path)
-			if path == fnConfigPath {
+			if path == r.FnConfigPath {
 				continue
 			}
 		}
 
-		result = append(result, node)
+		output = append(output, node)
 	}
-	return result, nil
+	return output, nil
 }
 
 func (r RunFns) getFilters() ([]kio.Filter, error) {
@@ -366,7 +356,7 @@ func sortFns(buff *kio.PackageBuffer) error {
 }
 
 // init initializes the RunFns with a containerFilterProvider.
-func (r *RunFns) init() {
+func (r *RunFns) init() error {
 	// if no path is specified, default reading from stdin and writing to stdout
 	if r.Path == "" {
 		if r.Output == nil {
@@ -386,6 +376,18 @@ func (r *RunFns) init() {
 	if r.LogSteps && r.LogWriter == nil {
 		r.LogWriter = os.Stderr
 	}
+
+	// fn config path should be absolute
+	if r.FnConfigPath != "" && !filepath.IsAbs(r.FnConfigPath) {
+		// if the FnConfigPath is relative, we should use the
+		// current directory to construct full path.
+		path, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get working directory: %w", err)
+		}
+		r.FnConfigPath = filepath.Join(path, r.FnConfigPath)
+	}
+	return nil
 }
 
 type currentUserFunc func() (*user.User, error)
@@ -409,19 +411,19 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 // returns an error.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
 	if r.FnConfigPath == "" {
-		return nil, fmt.Errorf("read function config from file but no path provided")
+		return nil, fmt.Errorf("function config file path must not be empty")
 	}
 	f, err := os.Open(r.FnConfigPath)
 	if err != nil {
-		return nil, fmt.Errorf("missing function config %s: %w", r.FnConfigPath, err)
+		return nil, fmt.Errorf("missing function config '%s': %w", r.FnConfigPath, err)
 	}
 	reader := kio.ByteReader{Reader: f}
 	nodes, err := reader.Read()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read function config: %w", err)
+		return nil, fmt.Errorf("failed to read function config '%s': %w", r.FnConfigPath, err)
 	}
 	if len(nodes) > 1 {
-		return nil, fmt.Errorf("more than 1 config found in %s", r.FnConfigPath)
+		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config", r.FnConfigPath)
 	}
 	return nodes[0], nil
 }
