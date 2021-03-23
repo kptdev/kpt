@@ -156,23 +156,6 @@ func DefaultKptfile(name string) kptfilev1alpha2.KptFile {
 	}
 }
 
-// HasKptfile checks if there exists a Kptfile on the provided path.
-func HasKptfile(path string) (bool, error) {
-	_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
-
-	// If we got an error that wasn't IsNotExist, something went wrong and
-	// we don't really know if the file exists or not.
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
-	}
-
-	// If the error is IsNotExist, we know the file doesn't exist.
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return true, nil
-}
-
 func MergeAndUpdateLocal(local, updated, original string) error {
 	// hasUpdatedKf := true
 	updatedKf, err := ReadFile(updated)

@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -167,23 +166,24 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 			return nil
 		}
 
-		// Ignore anything inside the .git folder
-		if info.Name() == ".git" && info.IsDir() {
-			return filepath.SkipDir
-		}
-
 		// For every folder, we check if it is a kpt package
 		if info.IsDir() {
-			kfPath := filepath.Join(path, kptfilev1alpha2.KptFileName)
-			_, err := os.Stat(kfPath)
-			// If we get any other errors than IsNotExist, we bail out.
-			if err != nil && !os.IsNotExist(err) {
-				return fmt.Errorf("failed to check file at %s: %w", kfPath, err)
+			// Ignore anything inside the .git folder
+			// TODO: We eventually want to support user-defined ignore lists.
+			if info.Name() == ".git" {
+				return filepath.SkipDir
 			}
-			// If err is nil here, it means we did find the Kptfile. We add the
+
+			// Check if the directory is the root of a kpt package
+			isPkg, err := IsPackageDir(path)
+			if err != nil {
+				return err
+			}
+
+			// If the path is the root of a subpackage, add the
 			// path to the slice and return SkipDir since we don't need to
 			// walk any deeper into the directory.
-			if err == nil {
+			if isPkg {
 				packagePaths[path] = true
 				return filepath.SkipDir
 			}
@@ -208,9 +208,27 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 	return subPkgs, nil
 }
 
+// IsPackageDir checks if there exists a Kptfile on the provided path, i.e.
+// whether the provided path is the root of a package.
+func IsPackageDir(path string) (bool, error) {
+	_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
+
+	// If we got an error that wasn't IsNotExist, something went wrong and
+	// we don't really know if the file exists or not.
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	// If the error is IsNotExist, we know the file doesn't exist.
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, nil
+}
+
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
 func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode, err error) {
-	hasKptfile, err := kptfileutil.HasKptfile(p.UniquePath.String())
+	hasKptfile, err := IsPackageDir(p.UniquePath.String())
 	if err != nil {
 		return resources, fmt.Errorf("failed to check kptfile %w", err)
 	}
