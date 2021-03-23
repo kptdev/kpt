@@ -13,13 +13,14 @@
 // limitations under the License.
 
 //nolint:dupl
-package update
+package update_test
 
 import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	. "github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,8 +44,8 @@ func TestUpdate_FastForward(t *testing.T) {
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "fast-forward").
-						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -64,8 +65,8 @@ func TestUpdate_FastForward(t *testing.T) {
 			expected: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "fast-forward").
-						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -81,22 +82,22 @@ func TestUpdate_FastForward(t *testing.T) {
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "fast-forward"),
+								WithUpstream(kptRepo, "/", "main", "fast-forward"),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "fast-forward").
-						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "fast-forward"),
+								WithUpstream(kptRepo, "/", "main", "fast-forward"),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
@@ -106,7 +107,7 @@ func TestUpdate_FastForward(t *testing.T) {
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "fast-forward"),
+								WithUpstream(kptRepo, "/", "main", "fast-forward"),
 						).
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
@@ -115,15 +116,15 @@ func TestUpdate_FastForward(t *testing.T) {
 			expected: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "fast-forward").
-						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "fast-forward"),
+								WithUpstream(kptRepo, "/", "main", "fast-forward"),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
@@ -132,20 +133,20 @@ func TestUpdate_FastForward(t *testing.T) {
 			origin: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "fast-forward"),
+						WithUpstream(kptRepo, "/", "main", "fast-forward"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "fast-forward").
-						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 			updated: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "v1.0", "fast-forward"),
+						WithUpstream(kptRepo, "/", "v1.0", "fast-forward"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 			relPackagePath: "/",
@@ -153,8 +154,8 @@ func TestUpdate_FastForward(t *testing.T) {
 			expected: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "fast-forward").
-						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},

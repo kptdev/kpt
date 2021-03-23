@@ -32,6 +32,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
+const (
+	kptRepo = "github.com/GoogleContainerTools/kpt"
+)
+
 // TestCommand_Run_noRefChanges updates a package without specifying a new ref.
 // - Get a package using  a branch ref
 // - Modify upstream with new content
