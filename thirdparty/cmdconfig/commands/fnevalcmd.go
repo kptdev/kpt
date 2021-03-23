@@ -85,6 +85,7 @@ func (r *EvalFnRunner) runE(c *cobra.Command, args []string) error {
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
 // Functions to run.
+// TODO: refactor this function to avoid using annotations in function config.
 func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
 	[]*yaml.RNode, error) {
 
