@@ -15,7 +15,6 @@
 package commands
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/cmddesc"
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
@@ -50,7 +49,7 @@ func GetPkgCommand(name string) *cobra.Command {
 	tree.Example = pkgdocs.TreeExamples
 
 	pkg.AddCommand(
-		cmddesc.NewCommand(name), cmdget.NewCommand(name), cmdinit.NewCommand(name),
+		cmdget.NewCommand(name), cmdinit.NewCommand(name),
 		cmdupdate.NewCommand(name), cmddiff.NewCommand(name), tree,
 	)
 	return pkg
