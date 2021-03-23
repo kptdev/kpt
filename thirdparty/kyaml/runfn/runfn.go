@@ -170,6 +170,9 @@ func (r RunFns) filterOutFnConfigFile(input []*yaml.RNode) ([]*yaml.RNode, error
 		if path != "" {
 			// file path in the annotation is relative to the package path
 			// we need to use absolute path
+			// TODO: file paths in annotations should be OS-agnostic but kyaml
+			// doesn't obey this rule. path needs to be converted to OS-specific
+			// format once kyaml solve the issue.
 			path = filepath.Join(r.Path, path)
 			if path == r.FnConfigPath {
 				continue
