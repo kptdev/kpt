@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -31,28 +32,49 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
-// Command takes the upstream information in the Kptfile at the provided path,
-// and fetches the package referenced.
+// Command takes the upstream information in the Kptfile at the path for the
+// provided package, and fetches the package referenced if it isn't already
+// there.
 type Command struct {
-	Path string
+	Pkg *pkg.Pkg
 }
 
 // Run runs the Command.
 func (c Command) Run() error {
-	kptfile, err := kptfileutil.ReadFile(c.Path)
+	kf, err := c.Pkg.Kptfile()
 	if err != nil {
 		return fmt.Errorf("no Kptfile found")
 	}
 
-	if kptfile.Upstream == nil {
+	if err := c.validate(kf); err != nil {
+		return err
+	}
+
+	g := kf.Upstream.Git
+	repoSpec := &git.RepoSpec{
+		OrgRepo: g.Repo,
+		Path:    g.Directory,
+		Ref:     g.Ref,
+	}
+	err = cloneAndCopy(repoSpec, c.Pkg.UniquePath.String())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// validate makes sure the Kptfile has the necessary information to fetch
+// the package.
+func (c Command) validate(kf *kptfilev1alpha2.KptFile) error {
+	if kf.Upstream == nil {
 		return fmt.Errorf("kptfile doesn't contain upstream information")
 	}
 
-	if kptfile.Upstream.Git == nil {
+	if kf.Upstream.Git == nil {
 		return fmt.Errorf("kptfile upstream doesn't have git information")
 	}
 
-	g := kptfile.Upstream.Git
+	g := kf.Upstream.Git
 	if len(g.Repo) == 0 {
 		return errors.Errorf("must specify repo")
 	}
@@ -61,16 +83,6 @@ func (c Command) Run() error {
 	}
 	if len(g.Directory) == 0 {
 		return errors.Errorf("must specify directory")
-	}
-
-	repoSpec := &git.RepoSpec{
-		OrgRepo: g.Repo,
-		Path:    g.Directory,
-		Ref:     g.Ref,
-	}
-	err = cloneAndCopy(repoSpec, c.Path)
-	if err != nil {
-		return err
 	}
 	return nil
 }

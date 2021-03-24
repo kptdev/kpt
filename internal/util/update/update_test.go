@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"testing"
 
+	pkgtest "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
@@ -67,8 +68,8 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        strategy,
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
 			}.Run()) {
 				return
 			}
@@ -118,9 +119,9 @@ func TestCommand_Run_subDir(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Ref:             "v1.2",
-				Strategy:        strategy,
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Ref:      "v1.2",
+				Strategy: strategy,
 			}.Run()) {
 				return
 			}
@@ -174,8 +175,8 @@ func TestCommand_Run_noChanges(t *testing.T) {
 
 			// Update the local package
 			err := Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        u.updater,
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: u.updater,
 			}.Run()
 			if u.err == "" {
 				if !assert.NoError(t, err) {
@@ -233,8 +234,8 @@ func TestCommand_Run_noCommit(t *testing.T) {
 
 			// Update the local package
 			err = Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        strategy,
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
 			}.Run()
 			if !assert.Error(t, err) {
 				return
@@ -280,8 +281,8 @@ func TestCommand_Run_noAdd(t *testing.T) {
 
 			// Update the local package
 			err = Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        strategy,
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
 			}.Run()
 			if !assert.Error(t, err) {
 				return
@@ -446,9 +447,9 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 
 			// run the command
 			err = Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Ref:             "master",
-				Strategy:        tc.strategy,
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Ref:      "master",
+				Strategy: tc.strategy,
 			}.Run()
 
 			// check the error response
@@ -516,9 +517,9 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        strategy,
-				Ref:             "exp",
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
+				Ref:      "exp",
 			}.Run()) {
 				return
 			}
@@ -576,9 +577,9 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        strategy,
-				Ref:             "v1.0",
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
+				Ref:      "v1.0",
 			}.Run()) {
 				return
 			}
@@ -633,9 +634,9 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Strategy:        strategy,
-				Ref:             "v1.0",
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
+				Ref:      "v1.0",
 			}.Run()) {
 				t.FailNow()
 			}
@@ -667,8 +668,8 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 		t.Run(string(strategy), func(t *testing.T) {
 			path := filepath.Join("fake", "path")
 			err := Command{
-				FullPackagePath: path,
-				Strategy:        strategy,
+				Pkg:      pkgtest.CreatePkgOrFail(t, path),
+				Strategy: strategy,
 			}.Run()
 			if assert.Error(t, err) {
 				assert.Contains(t, err.Error(), "no such file or directory")
@@ -702,9 +703,9 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 			}
 
 			err := Command{
-				FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-				Ref:             "exp",
-				Strategy:        strategy,
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Ref:      "exp",
+				Strategy: strategy,
 			}.Run()
 			if !assert.Error(t, err) {
 				return
@@ -743,8 +744,8 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 
 	// Update the local package
 	err := Command{
-		FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-		Strategy:        strategy,
+		Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Strategy: strategy,
 	}.Run()
 	if !assert.Error(t, err, strategy) {
 		return
@@ -1881,8 +1882,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				}
 
 				err := Command{
-					FullPackagePath: g.LocalWorkspace.FullPackagePath(),
-					Strategy:        strategy,
+					Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+					Strategy: strategy,
 				}.Run()
 
 				result := findExpectedResultForStrategy(test.expectedResults, strategy)

@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -309,8 +310,13 @@ func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 		return dir, err
 	}
 
+	p, err := pkg.New(dir)
+	if err != nil {
+		return dir, err
+	}
+
 	cmdGet := &fetch.Command{
-		Path: dir,
+		Pkg: p,
 	}
 	err = cmdGet.Run()
 	return dir, err

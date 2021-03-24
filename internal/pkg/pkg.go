@@ -16,9 +16,7 @@
 package pkg
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -26,7 +24,6 @@ import (
 	"strings"
 
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -111,10 +108,6 @@ func (p *Pkg) readKptfile() (*kptfilev1alpha2.KptFile, error) {
 	f, err := os.Open(path.Join(string(p.UniquePath), kptfilev1alpha2.KptFileName))
 
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			// assuming implicit kpt pkg
-			return kf, nil
-		}
 		return kf, fmt.Errorf("unable to read %s: %w", kptfilev1alpha2.KptFileName, err)
 	}
 	defer f.Close()
@@ -157,40 +150,85 @@ func (p *Pkg) RelativePathTo(ancestorPkg *Pkg) (string, error) {
 	return filepath.Rel(string(ancestorPkg.UniquePath), string(p.UniquePath))
 }
 
-// SubPackages returns sub packages of a pkg.
+// DirectSubpackages returns subpackages of a pkg.
 // A sub directory that has a Kptfile is considered a sub package.
-func (p *Pkg) SubPackages() (subPkgs []*Pkg, err error) {
-	pkgPath := string(p.UniquePath)
+// TODO: This does not support symlinks, so we need to figure out how
+// we should support that with kpt.
+func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
+	packagePaths := make(map[string]bool)
+	if err := filepath.Walk(p.UniquePath.String(), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to read package %s: %w", p, err)
+		}
 
-	files, err := ioutil.ReadDir(pkgPath)
-	if err != nil {
-		return subPkgs, fmt.Errorf("failed to read sub dirs for %s %w", p, err)
-	}
-	for _, f := range files {
-		if f.IsDir() {
-			dirPath := path.Join(pkgPath, f.Name())
-			isKptPkg, err := kptfileutil.HasKptfile(dirPath)
-			if err != nil {
-				return subPkgs, fmt.Errorf("failed to check kptfile in subpackage %w", err)
+		// Ignore the root folder
+		if path == p.UniquePath.String() {
+			return nil
+		}
+
+		// For every folder, we check if it is a kpt package
+		if info.IsDir() {
+			// Ignore anything inside the .git folder
+			// TODO: We eventually want to support user-defined ignore lists.
+			if info.Name() == ".git" {
+				return filepath.SkipDir
 			}
-			if isKptPkg {
-				subPkg, err := New(dirPath)
-				if err != nil {
-					return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", dirPath, err)
-				}
-				subPkgs = append(subPkgs, subPkg)
+
+			// Check if the directory is the root of a kpt package
+			isPkg, err := IsPackageDir(path)
+			if err != nil {
+				return err
+			}
+
+			// If the path is the root of a subpackage, add the
+			// path to the slice and return SkipDir since we don't need to
+			// walk any deeper into the directory.
+			if isPkg {
+				packagePaths[path] = true
+				return filepath.SkipDir
 			}
 		}
+		return nil
+	}); err != nil {
+		return []*Pkg{}, fmt.Errorf("failed to read package at %s: %w", p, err)
 	}
+
+	var subPkgs []*Pkg
+	for subPkgPath := range packagePaths {
+		subPkg, err := New(subPkgPath)
+		if err != nil {
+			return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", subPkgPath, err)
+		}
+		subPkgs = append(subPkgs, subPkg)
+	}
+
 	sort.Slice(subPkgs, func(i, j int) bool {
 		return subPkgs[i].DisplayPath < subPkgs[j].DisplayPath
 	})
 	return subPkgs, nil
 }
 
+// IsPackageDir checks if there exists a Kptfile on the provided path, i.e.
+// whether the provided path is the root of a package.
+func IsPackageDir(path string) (bool, error) {
+	_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
+
+	// If we got an error that wasn't IsNotExist, something went wrong and
+	// we don't really know if the file exists or not.
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	// If the error is IsNotExist, we know the file doesn't exist.
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, nil
+}
+
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
 func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode, err error) {
-	hasKptfile, err := kptfileutil.HasKptfile(p.UniquePath.String())
+	hasKptfile, err := IsPackageDir(p.UniquePath.String())
 	if err != nil {
 		return resources, fmt.Errorf("failed to check kptfile %w", err)
 	}

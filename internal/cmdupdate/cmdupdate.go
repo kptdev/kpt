@@ -90,7 +90,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	r.Update.FullPackagePath = string(p.UniquePath)
+	r.Update.Pkg = p
 
 	// TODO: Make sure we handle this in a centralized library and do
 	// this consistently across all commands.
@@ -111,10 +111,10 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if len(r.Update.Ref) > 0 {
 		fmt.Fprintf(c.ErrOrStderr(), "updating package %s to %s\n",
-			r.Update.FullPackagePath, r.Update.Ref)
+			r.Update.Pkg.UniquePath, r.Update.Ref)
 	} else {
 		fmt.Fprintf(c.ErrOrStderr(), "updating package %s\n",
-			r.Update.FullPackagePath)
+			r.Update.Pkg.UniquePath)
 	}
 	if err := r.Update.Run(); err != nil {
 		return err

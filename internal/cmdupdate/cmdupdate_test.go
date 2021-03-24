@@ -298,7 +298,7 @@ func TestCmd_path(t *testing.T) {
 
 			r := cmdupdate.NewRunner("kpt")
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error {
-				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.FullPackagePath) {
+				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.Pkg.UniquePath.String()) {
 					t.FailNow()
 				}
 				return nil
