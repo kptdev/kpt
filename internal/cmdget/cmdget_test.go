@@ -15,15 +15,20 @@
 package cmdget_test
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -321,4 +326,151 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err = r.Command.Execute()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "specify '.git'")
+}
+
+func TestOutput(t *testing.T) {
+	testCases := map[string]struct {
+		reposContent   map[string][]testutil.Content
+		directory      string
+		ref            string
+		expectedOutput string
+	}{
+		"single package": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			directory: "/",
+			ref:       "",
+			expectedOutput: `
+fetching package / from {{ .repoDir }} to {{ .workspaceDir }}/{{ .packageDir }}
+`,
+		},
+		"nested packages": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "main",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "main", "fast-forward").
+											WithUpstreamLockRef("foo", "/", "main", 0),
+									).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+					},
+				},
+				"foo": {
+					{
+						Branch: "main",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+			},
+			directory: "/",
+			ref:       "main",
+			expectedOutput: `
+fetching package / from {{ .repoDir }} to {{ .workspaceDir }}/{{ .packageDir }}
+`,
+		},
+		"unknown ref": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "main",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			directory: "/",
+			ref:       "doesNotExist",
+			//nolint:lll
+			expectedOutput: `
+fetching package / from {{ .repoDir }} to {{ .workspaceDir }}/{{ .packageDir }}
+Error: get.Run: {{ .workspaceDir }}/{{ .packageDir }}
+	get.fetchPackages
+	fetch.Run
+	fetch.cloneAndCopy
+	fetch.ClonerUsingGitExec: git error
+	fetch.clonerUsingGitExec: failed to hard reset empty repository to "doesNotExist", please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: exit status 128
+`,
+		},
+		"unfetched remote subpackage with incorrect repo": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "main",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("foo").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstream("doesNotExist", "/", "main", "fast-forward"),
+									),
+							),
+					},
+				},
+			},
+			directory: "/",
+			ref:       "main",
+			expectedOutput: `
+fetching package / from {{ .repoDir }} to {{ .workspaceDir }}/{{ .packageDir }}
+Error: get.Run: {{ .workspaceDir }}/{{ .packageDir }}
+	get.fetchPackages: {{ .workspaceDir }}/{{ .packageDir }}/foo
+	fetch.Run
+	fetch.cloneAndCopy
+	fetch.ClonerUsingGitExec: git error
+	fetch.clonerUsingGitExec: failed to fetch origin, please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: exit status 128
+`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, tc.reposContent)
+			defer clean()
+
+			var b strings.Builder
+			_, _ = fmt.Fprintf(&b, "%s.git", repos[testutil.Upstream].RepoDirectory)
+			if len(tc.directory) > 0 && tc.directory != "/" {
+				_, _ = fmt.Fprintf(&b, "/%s", tc.directory)
+			}
+			if len(tc.ref) > 0 {
+				_, _ = fmt.Fprintf(&b, "@%s", tc.ref)
+			}
+
+			var templateBuf bytes.Buffer
+			err := template.Must(template.New("tmpl").
+				Parse(strings.TrimSpace(tc.expectedOutput)+"\n")).
+				Execute(&templateBuf, map[string]interface{}{
+					"repoDir":      repos[testutil.Upstream].RepoDirectory,
+					"workspaceDir": w.WorkspaceDirectory,
+					"packageDir":   filepath.Base(repos[testutil.Upstream].RepoDirectory),
+				})
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			var buf bytes.Buffer
+			r := cmdget.NewRunner("kpt")
+			r.Command.SetArgs([]string{b.String(), w.WorkspaceDirectory})
+			r.Command.SetOut(&buf)
+			r.Command.SilenceUsage = true
+			_ = r.Command.Execute()
+
+			assert.Equal(t, templateBuf.String(), buf.String())
+		})
+	}
 }

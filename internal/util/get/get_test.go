@@ -15,7 +15,6 @@
 package get_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -37,7 +36,10 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	err := Command{
 		Destination: w.WorkspaceDirectory,
 	}.Run()
-	assert.EqualError(t, err, "must specify git repo information")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify git repo information")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -51,7 +53,10 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 		},
 		Destination: w.WorkspaceDirectory,
 	}.Run()
-	assert.EqualError(t, err, "must specify ref")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify ref")
 }
 
 // TestCommand_Run verifies that Command will clone the HEAD of the master branch.
@@ -533,7 +538,10 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		Destination: absPath,
 	}.Run()
-	assert.EqualError(t, err, fmt.Sprintf("destination directory %s already exists", absPath))
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "directory already exists")
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)

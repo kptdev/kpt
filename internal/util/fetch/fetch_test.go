@@ -77,7 +77,10 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 	err = Command{
 		Pkg: createPackage(t, pkgPath),
 	}.Run()
-	assert.EqualError(t, err, "no Kptfile found")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "unable to read Kptfile")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -93,7 +96,10 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
-	assert.EqualError(t, err, "kptfile upstream doesn't have git information")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "kptfile upstream doesn't have git information")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -113,7 +119,10 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
-	assert.EqualError(t, err, "must specify repo")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify repo")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -133,7 +142,10 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
-	assert.EqualError(t, err, "must specify ref")
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify ref")
 }
 
 // TestCommand_Run verifies that Command will clone the HEAD of the master branch.

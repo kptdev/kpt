@@ -21,12 +21,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // Command fetches a package from a git repository, copies it to a local
@@ -45,17 +45,20 @@ type Command struct {
 
 // Run runs the Command.
 func (c Command) Run() error {
+	const op errors.Op = "get.Run"
 	if err := (&c).DefaultValues(); err != nil {
 		return err
 	}
 
 	if _, err := os.Stat(c.Destination); !os.IsNotExist(err) {
-		return errors.Errorf("destination directory %s already exists", c.Destination)
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.Exist,
+			"directory already exists")
 	}
 
 	err := os.MkdirAll(c.Destination, 0700)
 	if err != nil {
-		return err
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.Internal,
+			err)
 	}
 
 	// normalize path to a filepath
@@ -74,16 +77,17 @@ func (c Command) Run() error {
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
 	if err != nil {
-		return err
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.Internal,
+			err)
 	}
 
 	p, err := pkg.New(c.Destination)
 	if err != nil {
-		return err
+		return errors.E(op, pkg.UniquePath(c.Destination), err)
 	}
 
 	if err = c.fetchPackages(p); err != nil {
-		return errors.Wrap(err)
+		return errors.E(op, pkg.UniquePath(c.Destination), err)
 	}
 	return nil
 }
@@ -92,6 +96,7 @@ func (c Command) Run() error {
 // and fetches any remote subpackages referenced. It will also handle situations
 // where a remote subpackage references other remote subpackages.
 func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
+	const op errors.Op = "get.fetchPackages"
 	// Create a stack to keep track of all Kptfiles that needs to be checked
 	// for remote subpackages.
 	s := stack.NewPkgStack()
@@ -102,7 +107,7 @@ func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
 
 		kf, err := p.Kptfile()
 		if err != nil {
-			return err
+			return errors.E(op, p.UniquePath, err)
 		}
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
@@ -110,13 +115,13 @@ func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
 				Pkg: p,
 			}).Run()
 			if err != nil {
-				return err
+				return errors.E(op, p.UniquePath, err)
 			}
 		}
 
 		subPkgs, err := p.DirectSubpackages()
 		if err != nil {
-			return err
+			return errors.E(op, p.UniquePath, err)
 		}
 		for _, subPkg := range subPkgs {
 			s.Push(subPkg)
@@ -127,25 +132,32 @@ func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
 
 // DefaultValues sets values to the default values if they were unspecified
 func (c *Command) DefaultValues() error {
+	const op errors.Op = "get.DefaultValues"
 	if c.Git == nil {
-		return errors.Errorf("must specify git repo information")
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.MissingParam,
+			"must specify git repo information")
 	}
 	g := c.Git
 	if len(g.Repo) == 0 {
-		return errors.Errorf("must specify repo")
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.MissingParam,
+			"must specify repo")
 	}
 	if len(g.Ref) == 0 {
-		return errors.Errorf("must specify ref")
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.MissingParam,
+			"must specify ref")
 	}
 	if len(c.Destination) == 0 {
-		return errors.Errorf("must specify destination")
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.MissingParam,
+			"must specify destination")
 	}
 	if len(g.Directory) == 0 {
-		return errors.Errorf("must specify directory")
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.MissingParam,
+			"must specify directory")
 	}
 
 	if !filepath.IsAbs(c.Destination) {
-		return errors.Errorf("destination must be an absolute path")
+		return errors.E(op, pkg.UniquePath(c.Destination), errors.InvalidParam,
+			"destination must be an absolute path")
 	}
 
 	// default the name to the destination name
