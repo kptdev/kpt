@@ -25,9 +25,17 @@ import (
 )
 
 const markdownExtension = ".md"
+const introPage = "00.md"
 
 func main() {
-	source := "site/book"
+	sourcePath := "site/book"
+	chapters := collectChapters(sourcePath)
+
+	printChapters(chapters)
+
+}
+
+func collectChapters(source string) []chapter {
 	chapters := make([]chapter, 0)
 	chapterDirs, err := ioutil.ReadDir(source)
 	if err != nil {
@@ -36,47 +44,66 @@ func main() {
 	}
 
 	for _, dir := range chapterDirs {
-		chapterBuilder := chapter{}
 		if dir.IsDir() {
-			// Split into chapter number and hyphenated name
-			splitDirName := strings.SplitN(dir.Name(), "-", 2)
-			chapterBuilder.Number = splitDirName[0]
-			chapterBuilder.Name = strings.Title(strings.ReplaceAll(splitDirName[1], "-", " "))
-
-			chapterDir := filepath.Join(source, dir.Name())
-			pageFiles, err := ioutil.ReadDir(chapterDir)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
-
-			for _, pageFile := range pageFiles {
-				if filepath.Ext(pageFile.Name()) == markdownExtension {
-					// Split into page number and hyphenated name
-					splitPageName := strings.SplitN(pageFile.Name(), "-", 2)
-
-					pageTitle := regexp.MustCompile(`^\d\d-?`).ReplaceAll([]byte(pageFile.Name()), []byte(""))
-					pageName := chapterBuilder.Name
-					if pageFile.Name() != "00.md" {
-						pageName = strings.Title(strings.ReplaceAll(strings.ReplaceAll(string(pageTitle), ".md", ""), "-", " "))
-					}
-
-					chapterBuilder.Pages = append(chapterBuilder.Pages,
-						page{
-							Number: splitPageName[0],
-							Name:   pageName,
-							Path:   filepath.Join(filepath.Join(source, dir.Name()), pageFile.Name()),
-						})
-				}
-			}
+			chapters = append(chapters, getChapter(dir.Name(), filepath.Join(source, dir.Name())))
 		}
-		chapters = append(chapters, chapterBuilder)
 	}
 
+	return chapters
+}
+
+func getChapter(chapterDirName string, chapterDirPath string) chapter {
+	chapterBuilder := chapter{}
+
+	// Split into chapter number and hyphenated name
+	splitDirName := strings.SplitN(chapterDirName, "-", 2)
+	chapterBuilder.Number = splitDirName[0]
+	chapterBuilder.Name = strings.Title(strings.ReplaceAll(splitDirName[1], "-", " "))
+
+	pageFiles, err := ioutil.ReadDir(chapterDirPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+
+	for _, pageFile := range pageFiles {
+		if filepath.Ext(pageFile.Name()) == markdownExtension {
+			chapterBuilder.Pages = append(chapterBuilder.Pages,
+				getPage(pageFile.Name(), chapterBuilder.Name, chapterDirPath))
+		}
+	}
+
+	return chapterBuilder
+}
+
+func getPage(pageFileName string, defaultName string, parentPath string) page {
+	// Split into page number and hyphenated name.
+	splitPageName := strings.SplitN(pageFileName, "-", 2)
+
+	pageName := defaultName
+	if pageFileName != introPage {
+		// Strip page number and extension from file name.
+		pageTitle := regexp.MustCompile(`^\d\d-?`).ReplaceAll([]byte(pageFileName), []byte(""))
+		pageName = strings.Title(strings.ReplaceAll(strings.ReplaceAll(string(pageTitle), ".md", ""), "-", " "))
+	}
+
+	return page{
+		Number: splitPageName[0],
+		Name:   pageName,
+		Path:   filepath.Join(parentPath, pageFileName),
+	}
+}
+
+func printChapters(chapters []chapter) {
+	// Sort chapters in ascending order by chapter number.
 	sort.Slice(chapters, func(i, j int) bool { return chapters[i].Number < chapters[j].Number })
+
 	for _, chapterEntry := range chapters {
 		for pageNumber, pageEntry := range chapterEntry.Pages {
-			path := strings.Replace(pageEntry.Name, "site/", "", 1)
+			// Make path relative to site directory.
+			path := strings.Replace(pageEntry.Path, "site/", "", 1)
+
+			// Print non-chapter intro pages as children of chapter intro page.
 			if pageNumber == 0 {
 				fmt.Printf("- [%s](%s)\n", pageEntry.Name, path)
 			} else {
@@ -84,7 +111,6 @@ func main() {
 			}
 		}
 	}
-
 }
 
 type chapter struct {
