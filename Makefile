@@ -93,10 +93,6 @@ site-run-server:
 site-check:
 	./scripts/check-site.sh
 
-site-gen-book-outline:
-	rm -f site/book/sidebar.md
-	go run ./scripts/generate_book_outline > site/book/sidebar.md
-
 site-verify-guides:
 	./scripts/verifyGuides.sh
 
