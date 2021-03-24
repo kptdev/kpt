@@ -6,6 +6,7 @@ package commands
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
@@ -37,6 +38,9 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
 
 	r.Command.Flags().StringVar(
+		&r.FnConfigPath, "fn-config", "", "path to the function config file")
+
+	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 
 	r.Command.Flags().BoolVar(
@@ -65,6 +69,7 @@ type EvalFnRunner struct {
 	DryRun             bool
 	Image              string
 	ExecPath           string
+	FnConfigPath       string
 	RunFns             runfn.RunFns
 	ResultsDir         string
 	Network            bool
@@ -80,6 +85,7 @@ func (r *EvalFnRunner) runE(c *cobra.Command, args []string) error {
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
 // Functions to run.
+// TODO: refactor this function to avoid using annotations in function config.
 func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
 	[]*yaml.RNode, error) {
 
@@ -117,7 +123,7 @@ func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
 		// only used with container functions
 		if r.AsCurrentUser || r.Network ||
 			len(r.Mounts) != 0 || len(r.Env) != 0 {
-			return nil, fmt.Errorf("--mount, --as-current-user, --network and --env cannot be used with executable function")
+			return nil, fmt.Errorf("--mount, --as-current-user, --network and --env can only be used with container functions")
 		}
 		// create the function spec to set as an annotation
 		fn, err = yaml.Parse(`exec: {}`)
@@ -202,8 +208,16 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 	return sms
 }
 
+func checkFnConfigPathExistence(path string) error {
+	// check does fn config file exist
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("missing function config file: %s", path)
+	}
+	return nil
+}
+
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
-	if c.ArgsLenAtDash() >= 0 && r.Image == "" && r.ExecPath == "" {
+	if r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image or --exec-path")
 	}
 
@@ -214,6 +228,9 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 	if len(args) > 1 {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
+	}
+	if len(dataItems) > 0 && r.FnConfigPath != "" {
+		return fmt.Errorf("function arguments can only be specified without function config file")
 	}
 
 	fns, err := r.getContainerFunctions(dataItems)
@@ -241,6 +258,13 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// parse mounts to set storageMounts
 	storageMounts := toStorageMounts(r.Mounts)
 
+	if r.FnConfigPath != "" {
+		err = checkFnConfigPathExistence(r.FnConfigPath)
+		if err != nil {
+			return err
+		}
+	}
+
 	r.RunFns = runfn.RunFns{
 		Functions:     fns,
 		Output:        output,
@@ -252,6 +276,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		LogSteps:      r.LogSteps,
 		Env:           r.Env,
 		AsCurrentUser: r.AsCurrentUser,
+		FnConfigPath:  r.FnConfigPath,
 	}
 
 	// don't consider args for the function
