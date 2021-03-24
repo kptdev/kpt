@@ -74,7 +74,7 @@
             });
 
             hook.doneEach(function() { 
-              const tocLists = Array.from(document.getElementsByClassName("sidebar-nav")[0].getElementsByTagName("ul"))
+              const tocLists = Array.from(document.getElementsByClassName("sidebar-nav").item(0)?.getElementsByTagName("ul"))
               
               // Hide a child list if neither its parent nor any of its descendants are active.
               tocLists.forEach(
