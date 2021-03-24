@@ -79,9 +79,10 @@
             hook.doneEach(function() {
               // Only show footer for book pages.
               const paginationFooters = Array.from(document.getElementsByClassName("docsify-pagination-container"));
+              const isBookPage = document.location.pathname.toLowerCase().startsWith("/book") && document.location.pathname.length > 6;
               paginationFooters.forEach(
                 el => 
-                el.style.display = document.location.pathname.toLowerCase().startsWith("/book") ? "flex" : "none"
+                el.style.display = isBookPage ? "flex" : "none"
                 );
                  
               const tocLists = Array.from(document.getElementsByClassName("sidebar-nav").item(0)?.getElementsByTagName("ul"))
