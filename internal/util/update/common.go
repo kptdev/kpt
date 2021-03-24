@@ -20,7 +20,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
 
-func PkgHasLocalChanges(local, origin string) (bool, error) {
+// PkgHasUpdatedUpstream checks if the the local package has different
+// upstream information than origin.
+func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
 	originKf, err := kptfileutil.ReadFile(origin)
 	if err != nil {
 		return false, err

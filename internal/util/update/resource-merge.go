@@ -38,7 +38,7 @@ type ResourceMergeUpdater struct{}
 
 func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	if !options.IsRoot {
-		hasChanges, err := PkgHasLocalChanges(options.LocalPath, options.OriginPath)
+		hasChanges, err := PkgHasUpdatedUpstream(options.LocalPath, options.OriginPath)
 		if err != nil {
 			return err
 		}

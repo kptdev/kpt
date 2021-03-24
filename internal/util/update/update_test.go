@@ -2458,6 +2458,73 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "two different remote packages in same path added in upstream and local",
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
+											WithUpstreamLockRef("foo", "/", "v1.0", 0),
+									).
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+						Tag:    "v1.0",
+					},
+				},
+				"bar": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "main",
+						Tag:    "v1.0",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile().
+					WithResource(pkgbuilder.ConfigMapResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("bar", "/", "v1.0", "resource-merge").
+									WithUpstreamLockRef("bar", "/", "v1.0", 0),
+							).
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			expectedResults: []resultForStrategy{
+				{
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
+					},
+					expectedErrMsg: "package added in both local and upstream",
+				},
+			},
+		},
 	}
 
 	for i := range testCases {

@@ -231,7 +231,7 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 			case !originalExists && !updatedExists:
 				continue
 			case originalExists && !updatedExists:
-				hasChanges, err := PkgHasLocalChanges(localPath, originPath)
+				hasChanges, err := PkgHasUpdatedUpstream(localPath, originPath)
 				if err != nil {
 					return err
 				}
