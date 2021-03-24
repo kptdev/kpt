@@ -16,6 +16,7 @@
 package update_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
@@ -173,9 +174,9 @@ func TestUpdate_FastForward(t *testing.T) {
 
 			err := updater.Update(UpdateOptions{
 				RelPackagePath: tc.relPackagePath,
-				OriginPath:     origin,
-				LocalPath:      local,
-				UpdatedPath:    updated,
+				OriginPath:     filepath.Join(origin, tc.relPackagePath),
+				LocalPath:      filepath.Join(local, tc.relPackagePath),
+				UpdatedPath:    filepath.Join(updated, tc.relPackagePath),
 				IsRoot:         tc.isRoot,
 			})
 			if !assert.NoError(t, err) {

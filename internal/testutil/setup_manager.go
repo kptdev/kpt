@@ -114,13 +114,13 @@ func (g *TestSetupManager) Init() bool {
 		return false
 	}
 
-	// Modify local workspace after initial fetch.
-	if err := UpdateGitDir(g.T, Local, g.LocalWorkspace, g.LocalChanges, g.Repos); err != nil {
+	// Modify other repos after initial fetch.
+	if err := UpdateRepos(g.T, g.Repos, g.ReposChanges); err != nil {
 		return false
 	}
 
-	// Modify other repos after initial fetch.
-	if err := UpdateRepos(g.T, g.Repos, g.ReposChanges); err != nil {
+	// Modify local workspace after initial fetch.
+	if err := UpdateGitDir(g.T, Local, g.LocalWorkspace, g.LocalChanges, g.Repos); err != nil {
 		return false
 	}
 
