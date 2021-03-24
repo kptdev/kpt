@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -28,10 +29,10 @@ import (
 )
 
 func setupWorkspace(t *testing.T) (*testutil.TestGitRepo, *testutil.TestWorkspace, func()) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 
 	w.PackageDir = g.RepoName
 	err := os.MkdirAll(w.FullPackagePath(), 0700)
@@ -51,12 +52,20 @@ func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1alpha2.Git, 
 	return kptfileutil.WriteFile(workspace.FullPackagePath(), kf)
 }
 
+func createPackage(t *testing.T, pkgPath string) *pkg.Pkg {
+	p, err := pkg.New(pkgPath)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	return p
+}
+
 // TestCommand_Run_failEmptyRepo verifies that Command fail if no Kptfile
 func TestCommand_Run_failNoKptfile(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	pkgPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
@@ -66,7 +75,7 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 	}
 
 	err = Command{
-		Path: pkgPath,
+		Pkg: createPackage(t, pkgPath),
 	}.Run()
 	assert.EqualError(t, err, "no Kptfile found")
 }
@@ -82,7 +91,7 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	assert.EqualError(t, err, "kptfile upstream doesn't have git information")
 }
@@ -102,7 +111,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	assert.EqualError(t, err, "must specify repo")
 }
@@ -122,7 +131,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	assert.EqualError(t, err, "must specify ref")
 }
@@ -146,7 +155,7 @@ func TestCommand_Run(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	assert.NoError(t, err)
 
@@ -208,7 +217,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	assert.NoError(t, err)
 
@@ -266,7 +275,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new dataset")
+	_, err = g.Commit("new dataset")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -286,7 +295,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	assert.NoError(t, err)
 
@@ -342,7 +351,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -350,7 +359,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -367,7 +376,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	assert.NoError(t, err)
 
@@ -421,7 +430,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -445,7 +454,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -472,7 +481,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	}
 
 	err = Command{
-		Path: w.FullPackagePath(),
+		Pkg: createPackage(t, w.FullPackagePath()),
 	}.Run()
 	if !assert.Error(t, err) {
 		t.FailNow()

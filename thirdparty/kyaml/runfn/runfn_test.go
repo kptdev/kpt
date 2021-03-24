@@ -39,6 +39,14 @@ stringMatch: Deployment
 replace: StatefulSet
 `
 
+	ValueReplacerFnConfigYAMLData = `apiVersion: v1
+kind: ValueReplacer
+metadata:
+  name: fn-config
+stringMatch: Deployment
+replace: ReplicaSet
+`
+
 	KptfileData = `apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
@@ -57,7 +65,7 @@ func currentUser() (*user.User, error) {
 
 func TestRunFns_init(t *testing.T) {
 	instance := RunFns{}
-	instance.init()
+	assert.NoError(t, instance.init())
 	if !assert.Equal(t, instance.Input, os.Stdin) {
 		t.FailNow()
 	}
@@ -87,7 +95,7 @@ func TestRunFns_initAsCurrentUser(t *testing.T) {
 	instance := RunFns{
 		AsCurrentUser: true,
 	}
-	instance.init()
+	assert.NoError(t, instance.init())
 	if !assert.Equal(t, instance.Input, os.Stdin) {
 		t.FailNow()
 	}
@@ -113,38 +121,6 @@ kind:
 	assert.Equal(t, cf, filter)
 }
 
-func TestRunFns_Execute__initGlobalScope(t *testing.T) {
-	instance := RunFns{GlobalScope: true}
-	instance.init()
-	if !assert.Equal(t, instance.Input, os.Stdin) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, instance.Output, os.Stdout) {
-		t.FailNow()
-	}
-	api, err := yaml.Parse(`apiVersion: apps/v1
-kind: 
-`)
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	spec := runtimeutil.FunctionSpec{
-		Container: runtimeutil.ContainerSpec{
-			Image: "example.com:version",
-		},
-	}
-	if !assert.NoError(t, err) {
-		return
-	}
-	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody")
-	cf := &c
-	cf.Exec.FunctionConfig = api
-	cf.Exec.GlobalScope = true
-	assert.Equal(t, cf, filter)
-}
-
 func TestRunFns_Execute__initDefault(t *testing.T) {
 	b := &bytes.Buffer{}
 	var tests = []struct {
@@ -155,63 +131,60 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 		{
 			instance: RunFns{},
 			name:     "empty",
-			expected: RunFns{Output: os.Stdout, Input: os.Stdin, NoFunctionsFromInput: getFalse()},
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin},
 		},
 		{
 			name:     "explicit output",
 			instance: RunFns{Output: b},
-			expected: RunFns{Output: b, Input: os.Stdin, NoFunctionsFromInput: getFalse()},
+			expected: RunFns{Output: b, Input: os.Stdin},
 		},
 		{
 			name:     "explicit input",
 			instance: RunFns{Input: b},
-			expected: RunFns{Output: os.Stdout, Input: b, NoFunctionsFromInput: getFalse()},
+			expected: RunFns{Output: os.Stdout, Input: b},
 		},
 		{
 			name:     "explicit functions -- no functions from input",
 			instance: RunFns{Functions: []*yaml.RNode{{}}},
-			expected: RunFns{Output: os.Stdout, Input: os.Stdin, NoFunctionsFromInput: getTrue(), Functions: []*yaml.RNode{{}}},
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin, Functions: []*yaml.RNode{{}}},
 		},
 		{
 			name:     "explicit functions -- yes functions from input",
-			instance: RunFns{Functions: []*yaml.RNode{{}}, NoFunctionsFromInput: getFalse()},
-			expected: RunFns{Output: os.Stdout, Input: os.Stdin, NoFunctionsFromInput: getFalse(), Functions: []*yaml.RNode{{}}},
+			instance: RunFns{Functions: []*yaml.RNode{{}}},
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin, Functions: []*yaml.RNode{{}}},
 		},
 		{
 			name:     "explicit functions in paths -- no functions from input",
-			instance: RunFns{FunctionPaths: []string{"foo"}},
+			instance: RunFns{FnConfigPath: "/foo"},
 			expected: RunFns{
-				Output:               os.Stdout,
-				Input:                os.Stdin,
-				NoFunctionsFromInput: getTrue(),
-				FunctionPaths:        []string{"foo"},
+				Output:       os.Stdout,
+				Input:        os.Stdin,
+				FnConfigPath: "/foo",
 			},
 		},
 		{
 			name:     "functions in paths -- yes functions from input",
-			instance: RunFns{FunctionPaths: []string{"foo"}, NoFunctionsFromInput: getFalse()},
+			instance: RunFns{FnConfigPath: "/foo"},
 			expected: RunFns{
-				Output:               os.Stdout,
-				Input:                os.Stdin,
-				NoFunctionsFromInput: getFalse(),
-				FunctionPaths:        []string{"foo"},
+				Output:       os.Stdout,
+				Input:        os.Stdin,
+				FnConfigPath: "/foo",
 			},
 		},
 		{
 			name:     "explicit directories in mounts",
 			instance: RunFns{StorageMounts: []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}}},
 			expected: RunFns{
-				Output:               os.Stdout,
-				Input:                os.Stdin,
-				NoFunctionsFromInput: getFalse(),
-				StorageMounts:        []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
+				Output:        os.Stdout,
+				Input:         os.Stdin,
+				StorageMounts: []runtimeutil.StorageMount{{MountType: "volume", Src: "myvol", DstPath: "/local/"}},
 			},
 		},
 	}
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			(&tt.instance).init()
+			assert.NoError(t, (&tt.instance).init())
 			(&tt.instance).functionFilterProvider = nil
 			if !assert.Equal(t, tt.expected, tt.instance) {
 				t.FailNow()
@@ -220,33 +193,11 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 	}
 }
 
-func getTrue() *bool {
-	t := true
-	return &t
-}
-
-func getFalse() *bool {
-	f := false
-	return &f
-}
-
 // TestRunFns_getFilters tests how filters are found and sorted
 func TestRunFns_getFilters(t *testing.T) {
 	type f struct {
-		// path to function file and string value to write
-		path, value string
-		// if true, create the function in a separate directory from
-		// the config, and provide it through FunctionPaths
-		outOfPackage bool
-
-		// if true, create the function as an explicit Functions input
-		explicitFunction bool
-
-		// if true and outOfPackage is true, create a new directory
-		// for this function separate from the previous one.  If
-		// false and outOfPackage is true, create the function in
-		// the directory created for the last outOfPackage function.
-		newFnPath bool
+		// string value of function
+		value string
 	}
 	var tests = []struct {
 		// function files to write
@@ -262,39 +213,10 @@ func TestRunFns_getFilters(t *testing.T) {
 
 		// name of the test
 		name string
-		// value to set for NoFunctionsFromInput
-		noFunctionsFromInput *bool
-
-		enableStarlark bool
-
-		disableContainers bool
 	}{
-		// Test
-		//
-		//
-		{name: "single implicit function",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: gcr.io/example.com/image:v1.0.0
-    config.kubernetes.io/local-config: "true"
-`,
-				},
-			},
-			out: []string{"gcr.io/example.com/image:v1.0.0"},
-		},
-
 		{name: "no function spec",
 			in: []f{
 				{
-					explicitFunction: true,
 					value: `
 foo: bar
 `,
@@ -308,7 +230,6 @@ foo: bar
 		{name: "defer_failure",
 			in: []f{
 				{
-					path: filepath.Join("foo", "bar.yaml"),
 					value: `
 apiVersion: example.com/v1alpha1
 kind: ExampleFunction
@@ -325,330 +246,22 @@ metadata:
 			out: []string{"gcr.io/example.com/image:v1.0.0 deferFailure: true"},
 		},
 
-		{name: "disable containers",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: gcr.io/example.com/image:v1.0.0
-    config.kubernetes.io/local-config: "true"
-`,
-				},
-			},
-			out:               nil,
-			disableContainers: true,
-		},
-
-		// Test
-		//
-		//
-		{name: "sort functions -- deepest first",
-			in: []f{
-				{
-					path: filepath.Join("a.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`,
-				},
-				{
-					path: filepath.Join("foo", "b.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`,
-				},
-			},
-			out: []string{"b", "a"},
-		},
-
-		// Test
-		//
-		//
-		{name: "sort functions -- skip implicit with output of package",
-			in: []f{
-				{
-					path:         filepath.Join("foo", "a.yaml"),
-					outOfPackage: true, // out of package is run last
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`,
-				},
-				{
-					path: filepath.Join("b.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`,
-				},
-			},
-			out: []string{"a"},
-		},
-
-		// Test
-		//
-		//
-		{name: "sort functions -- skip implicit",
-			noFunctionsFromInput: getTrue(),
-			in: []f{
-				{
-					path: filepath.Join("foo", "a.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`,
-				},
-				{
-					path: filepath.Join("b.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`,
-				},
-			},
-			out: nil,
-		},
-
-		// Test
-		//
-		//
-		{name: "sort functions -- include implicit",
-			noFunctionsFromInput: getFalse(),
-			in: []f{
-				{
-					path: filepath.Join("foo", "a.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`,
-				},
-				{
-					path: filepath.Join("b.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`,
-				},
-			},
-			out: []string{"a", "b"},
-		},
-
-		// Test
-		//
-		//
-		{name: "sort functions -- implicit first",
-			noFunctionsFromInput: getFalse(),
-			in: []f{
-				{
-					path:         filepath.Join("foo", "a.yaml"),
-					outOfPackage: true, // out of package is run last
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`,
-				},
-				{
-					path: filepath.Join("b.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`,
-				},
-			},
-			out: []string{"b", "a"},
-		},
-
 		// Test
 		//
 		//
 		{name: "explicit functions",
 			in: []f{
 				{
-					explicitFunction: true,
 					value: `
 metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
         image: c
-`,
-				},
-				{
-					path: filepath.Join("b.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: b
 `,
 				},
 			},
 			out: []string{"c"},
-		},
-
-		// Test
-		//
-		//
-		{name: "sort functions -- implicit first",
-			noFunctionsFromInput: getFalse(),
-			in: []f{
-				{
-					explicitFunction: true,
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: c
-`,
-				},
-				{
-					path:         filepath.Join("foo", "a.yaml"),
-					outOfPackage: true, // out of package is run last
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`,
-				},
-				{
-					path: filepath.Join("b.yaml"),
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`,
-				},
-			},
-			out: []string{"b", "a", "c"},
-		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			outFn: func(path string) []string {
-				return []string{
-					fmt.Sprintf("name:  path: %s/foo/a/b/c url:  program:", filepath.ToSlash(path))}
-			},
-		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function-absolute",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: /a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			error:          "absolute function path /a/b/c not allowed",
-		},
-
-		// Test
-		//
-		//
-		{name: "starlark-function-escape-parent",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: ../a/b/c
-`,
-				},
-			},
-			enableStarlark: true,
-			error:          "function path ../a/b/c not allowed to start with ../",
-		},
-
-		{name: "starlark-function-disabled",
-			in: []f{
-				{
-					path: filepath.Join("foo", "bar.yaml"),
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      starlark:
-        path: a/b/c
-`,
-				},
-			},
 		},
 	}
 
@@ -659,57 +272,18 @@ metadata:
 			d := setupTest(t)
 			defer os.RemoveAll(d)
 
-			// write the functions to files
-			var fnPaths []string
 			var parsedFns []*yaml.RNode
-			var fnPath string
 			var err error
 			for _, f := range tt.in {
-				// get the location for the file
-				var dir string
-				switch {
-				case f.outOfPackage:
-					// if out of package, write to a separate temp directory
-					if f.newFnPath || fnPath == "" {
-						// create a new fn directory
-						fnPath, err = ioutil.TempDir("", "kustomize-test")
-						if !assert.NoError(t, err) {
-							t.FailNow()
-						}
-						defer os.RemoveAll(fnPath)
-						fnPaths = append(fnPaths, fnPath)
-					}
-					dir = fnPath
-				case f.explicitFunction:
-					parsedFns = append(parsedFns, yaml.MustParse(f.value))
-				default:
-					// if in package, write to the dir containing the configs
-					dir = d
-				}
-
-				if !f.explicitFunction {
-					// create the parent dir and write the file
-					err = os.MkdirAll(filepath.Join(dir, filepath.Dir(f.path)), 0700)
-					if !assert.NoError(t, err) {
-						t.FailNow()
-					}
-					err := ioutil.WriteFile(filepath.Join(dir, f.path), []byte(f.value), 0600)
-					if !assert.NoError(t, err) {
-						t.FailNow()
-					}
-				}
+				parsedFns = append(parsedFns, yaml.MustParse(f.value))
 			}
 
 			// init the instance
 			r := &RunFns{
-				EnableStarlark:       tt.enableStarlark,
-				DisableContainers:    tt.disableContainers,
-				FunctionPaths:        fnPaths,
-				Functions:            parsedFns,
-				Path:                 d,
-				NoFunctionsFromInput: tt.noFunctionsFromInput,
+				Functions: parsedFns,
+				Path:      d,
 			}
-			r.init()
+			assert.NoError(t, r.init())
 
 			// get the filters which would be run
 			var results []string
@@ -902,7 +476,7 @@ metadata:
 				Functions: []*yaml.RNode{fn},
 				Network:   tt.network,
 			}
-			r.init()
+			assert.NoError(t, r.init())
 
 			_, fltrs, _, err := r.getNodesAndFilters()
 			if tt.error != "" {
@@ -927,13 +501,16 @@ func TestCmd_Execute(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
-		return
+	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	instance := RunFns{Path: dir, functionFilterProvider: getFilterProvider(t)}
+	instance := RunFns{
+		Path:                   dir,
+		functionFilterProvider: getFilterProvider(t),
+		Functions:              []*yaml.RNode{fn},
+	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
@@ -949,10 +526,9 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
-		return
+	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	// write a Kptfile to the directory of configuration
@@ -965,6 +541,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		IncludeMetaResources:   true,
+		Functions:              []*yaml.RNode{fn},
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
@@ -1026,9 +603,7 @@ func TestCmd_Execute_deferFailure(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter1.yaml"), []byte(`apiVersion: v1
+	fn1, err := yaml.Parse(`apiVersion: v1
 kind: ValueReplacer
 metadata:
   annotations:
@@ -1038,13 +613,12 @@ metadata:
     config.kubernetes.io/local-config: "true"
 stringMatch: Deployment
 replace: StatefulSet
-`), 0600)) {
-		t.FailNow()
+`)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter2.yaml"), []byte(`apiVersion: v1
+	fn2, err := yaml.Parse(`apiVersion: v1
 kind: ValueReplacer
 metadata:
   annotations:
@@ -1054,8 +628,9 @@ metadata:
     config.kubernetes.io/local-config: "true"
 stringMatch: Deployment
 replace: StatefulSet
-`), 0600)) {
-		t.FailNow()
+`)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	var fltrs []*TestFilter
@@ -1068,10 +643,11 @@ replace: StatefulSet
 			fltrs = append(fltrs, tf)
 			return tf, nil
 		},
+		Functions: []*yaml.RNode{fn1, fn2},
 	}
-	instance.init()
+	assert.NoError(t, instance.init())
 
-	err := instance.Execute()
+	err = instance.Execute()
 
 	// make sure all filters were run
 	if !assert.Equal(t, 2, len(fltrs)) {
@@ -1095,8 +671,35 @@ replace: StatefulSet
 	assert.Contains(t, string(b), "kind: Deployment")
 }
 
-// TestCmd_Execute_setOutput tests the execution of a filter reading and writing to a dir
-func TestCmd_Execute_setFunctionPaths(t *testing.T) {
+func getFnConfigPathFilterProvider(t *testing.T, r *RunFns) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
+	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+		// parse the filter from the input
+		filter := yaml.YFilter{}
+		b := &bytes.Buffer{}
+		e := yaml.NewEncoder(b)
+		var err error
+		if r.FnConfigPath != "" {
+			node, err = r.getFunctionConfig()
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+		if !assert.NoError(t, e.Encode(node.YNode())) {
+			t.FailNow()
+		}
+		e.Close()
+		d := yaml.NewDecoder(b)
+		if !assert.NoError(t, d.Decode(&filter)) {
+			t.FailNow()
+		}
+
+		return filters.Modifier{
+			Filters: []yaml.YFilter{{Filter: yaml.Lookup("kind")}, filter},
+		}, nil
+	}
+}
+
+func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
@@ -1106,18 +709,24 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 		return
 	}
 	os.RemoveAll(tmpF.Name())
-	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerYAMLData), 0600)) {
+	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerFnConfigYAMLData), 0600)) {
 		return
+	}
+
+	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	// run the functions, providing the path to the directory of filters
 	instance := RunFns{
-		FunctionPaths:          []string{tmpF.Name()},
-		Path:                   dir,
-		functionFilterProvider: getFilterProvider(t),
+		FnConfigPath: tmpF.Name(),
+		Path:         dir,
+		Functions:    []*yaml.RNode{fn},
 	}
+	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
 	// initialize the defaults
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	err = instance.Execute()
 	if !assert.NoError(t, err) {
@@ -1128,7 +737,7 @@ func TestCmd_Execute_setFunctionPaths(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.Contains(t, string(b), "kind: StatefulSet")
+	assert.Contains(t, string(b), "kind: ReplicaSet")
 }
 
 // TestCmd_Execute_setOutput tests the execution of a filter using an io.Writer as output
@@ -1136,10 +745,9 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	// write a test filter
-	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
-		return
+	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	out := &bytes.Buffer{}
@@ -1147,9 +755,10 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 		Output:                 out, // write to out
 		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
+		Functions:              []*yaml.RNode{fn},
 	}
 	// initialize the defaults
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	if !assert.NoError(t, instance.Execute()) {
 		return
@@ -1167,9 +776,9 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 func TestCmd_Execute_setInput(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
-	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
-		return
+	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	read, err := kio.LocalPackageReader{PackagePath: dir}.Read()
@@ -1195,9 +804,10 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		Input:                  input, // read from input
 		Path:                   outDir,
 		functionFilterProvider: getFilterProvider(t),
+		Functions:              []*yaml.RNode{fn},
 	}
 	// initialize the defaults
-	instance.init()
+	assert.NoError(t, instance.init())
 
 	if !assert.NoError(t, instance.Execute()) {
 		return
@@ -1215,10 +825,9 @@ func TestCmd_Execute_enableLogSteps(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
-		return
+	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	logs := &bytes.Buffer{}
@@ -1227,6 +836,7 @@ func TestCmd_Execute_enableLogSteps(t *testing.T) {
 		functionFilterProvider: getFilterProvider(t),
 		LogSteps:               true,
 		LogWriter:              logs,
+		Functions:              []*yaml.RNode{fn},
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()

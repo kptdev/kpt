@@ -167,10 +167,10 @@ func TestCmd_failNotExists(t *testing.T) {
 
 func TestGitUtil_DefaultRef(t *testing.T) {
 	// set up git repo with both main and master branches
-	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, _, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	// check if master is picked as default if both main and master branches exist

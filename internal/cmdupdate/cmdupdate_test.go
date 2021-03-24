@@ -33,10 +33,10 @@ import (
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -65,7 +65,8 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, g.ReplaceData(testutil.Dataset2)) {
 		return
 	}
-	if !assert.NoError(t, g.Commit("modify upstream package -- ds2")) {
+	_, err = g.Commit("modify upstream package -- ds2")
+	if !assert.NoError(t, err) {
 		return
 	}
 
@@ -118,10 +119,10 @@ func TestCmd_execute(t *testing.T) {
 }
 
 func TestCmd_failUnCommitted(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -144,7 +145,8 @@ func TestCmd_failUnCommitted(t *testing.T) {
 		return
 	}
 
-	if !assert.NoError(t, g.Commit("new dataset")) {
+	_, err = g.Commit("new dataset")
+	if !assert.NoError(t, err) {
 		return
 	}
 
@@ -296,7 +298,7 @@ func TestCmd_path(t *testing.T) {
 
 			r := cmdupdate.NewRunner("kpt")
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error {
-				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.FullPackagePath) {
+				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.Pkg.UniquePath.String()) {
 					t.FailNow()
 				}
 				return nil

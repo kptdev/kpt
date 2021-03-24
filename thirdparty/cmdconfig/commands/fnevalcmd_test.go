@@ -26,7 +26,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		path           string
 		input          io.Reader
 		output         io.Writer
-		functionPaths  []string
+		fnConfigPath   string
 		network        bool
 		mount          []string
 	}{
@@ -211,32 +211,72 @@ apiVersion: v1
 		},
 		{
 			name: "log steps",
-			args: []string{"eval", "dir", "--log-steps"},
+			args: []string{"eval", "dir", "--log-steps", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:     "dir",
 				LogSteps: true,
 				Env:      []string{},
 			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
 		},
 		{
 			name: "envs",
-			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR"},
+			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path: "dir",
 				Env:  []string{"FOO=BAR", "BAR"},
 			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
 		},
 		{
 			name: "as current user",
-			args: []string{"eval", "dir", "--as-current-user"},
+			args: []string{"eval", "dir", "--as-current-user", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:          "dir",
 				AsCurrentUser: true,
 				Env:           []string{},
 			},
+			expected: `
+metadata:
+  name: function-input
+  annotations:
+    config.kubernetes.io/function: |
+      container: {image: 'foo:bar'}
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
+		},
+		{
+			name: "--fn-config flag",
+			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar"},
+			err:  "missing function config file: a/b/c",
+		},
+		{
+			name: "--fn-config with function arguments",
+			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			err:  "function arguments can only be specified without function config file",
 		},
 	}
 
@@ -299,7 +339,7 @@ apiVersion: v1
 				}
 			}
 
-			if !assert.Equal(t, tt.functionPaths, r.RunFns.FunctionPaths) {
+			if !assert.Equal(t, tt.fnConfigPath, r.RunFns.FnConfigPath) {
 				t.FailNow()
 			}
 
@@ -324,7 +364,7 @@ apiVersion: v1
 
 			if tt.expectedStruct != nil {
 				r.RunFns.Functions = nil
-				tt.expectedStruct.FunctionPaths = tt.functionPaths
+				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
 				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
 					t.FailNow()
 				}

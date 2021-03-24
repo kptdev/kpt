@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
@@ -84,8 +85,8 @@ func StrategiesAsStrings() []string {
 
 // Command updates the contents of a local package to a different version.
 type Command struct {
-	// FullPackagePath is the absolute path to the local package
-	FullPackagePath string
+	// Pkg captures information about the package that should be updated.
+	Pkg *pkg.Pkg
 
 	// Ref is the ref to update to
 	Ref string
@@ -116,20 +117,24 @@ func (u Command) Run() error {
 		u.Output = os.Stdout
 	}
 
+	if u.Pkg == nil {
+		return fmt.Errorf("pkg can not be nil")
+	}
+
 	// require package is checked into git before trying to update it
-	g := gitutil.NewLocalGitRunner(u.FullPackagePath)
+	g := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
 	if err := g.Run("status", "-s"); err != nil {
 		return errors.Errorf(
 			"kpt packages must be checked into a git repo before they are updated: %v", err)
 	}
 	if strings.TrimSpace(g.Stdout.String()) != "" {
 		return errors.Errorf("must commit package %s to git before attempting to update",
-			u.FullPackagePath)
+			u.Pkg.UniquePath.String())
 	}
 
-	rootKf, err := kptfileutil.ReadFileStrict(u.FullPackagePath)
+	rootKf, err := u.Pkg.Kptfile()
 	if err != nil {
-		return errors.Errorf("unable to read package Kptfile: %v", err)
+		return errors.Errorf("unable to read package Kptfile: %w", err)
 	}
 
 	if rootKf.Upstream == nil || rootKf.Upstream.Git == nil {
@@ -144,15 +149,15 @@ func (u Command) Run() error {
 	if u.Strategy != "" {
 		rootKf.Upstream.UpdateStrategy = u.Strategy
 	}
-	err = kptfileutil.WriteFile(u.FullPackagePath, rootKf)
+	err = kptfileutil.WriteFile(u.Pkg.UniquePath.String(), *rootKf)
 	if err != nil {
 		return err
 	}
 
 	// Use stack to keep track of paths with a Kptfile that might contain
 	// information about remote subpackages.
-	s := stack.New()
-	s.Push(u.FullPackagePath)
+	s := stack.NewPkgStack()
+	s.Push(u.Pkg)
 
 	for s.Len() > 0 {
 		p := s.Pop()
@@ -161,19 +166,20 @@ func (u Command) Run() error {
 			return err
 		}
 
-		paths, err := pkgutil.FindAllDirectSubpackages(p)
+		subPkgs, err := p.DirectSubpackages()
 		if err != nil {
 			return err
 		}
-		for _, p := range paths {
-			s.Push(p)
+		for _, subPkg := range subPkgs {
+			s.Push(subPkg)
 		}
 	}
 	return nil
 }
 
-func (u Command) updatePackage(p string) error {
-	kf, err := kptfileutil.ReadFile(p)
+//nolint:gocyclo
+func (u Command) updatePackage(p *pkg.Pkg) error {
+	kf, err := p.Kptfile()
 	if err != nil {
 		return err
 	}
@@ -201,18 +207,22 @@ func (u Command) updatePackage(p string) error {
 
 	for s.Len() > 0 {
 		relPath := s.Pop()
+		localPath := filepath.Join(p.UniquePath.String(), relPath)
+		updatedPath := filepath.Join(updated.AbsPath(), relPath)
+		originPath := filepath.Join(original.AbsPath(), relPath)
+
 		isRoot := false
 		if relPath == "." {
 			isRoot = true
 		}
 
 		if !isRoot {
-			updatedExists, err := pkgExists(filepath.Join(updated.AbsPath(), relPath))
+			updatedExists, err := pkgExists(updatedPath)
 			if err != nil {
 				return err
 			}
 
-			originalExists, err := pkgExists(filepath.Join(original.AbsPath(), relPath))
+			originalExists, err := pkgExists(originPath)
 			if err != nil {
 				return err
 			}
@@ -221,8 +231,14 @@ func (u Command) updatePackage(p string) error {
 			case !originalExists && !updatedExists:
 				continue
 			case originalExists && !updatedExists:
-				if err := os.RemoveAll(p); err != nil {
+				hasChanges, err := PkgHasUpdatedUpstream(localPath, originPath)
+				if err != nil {
 					return err
+				}
+				if !hasChanges {
+					if err := os.RemoveAll(localPath); err != nil {
+						return err
+					}
 				}
 				continue
 			case !originalExists && updatedExists:
@@ -230,20 +246,17 @@ func (u Command) updatePackage(p string) error {
 			default:
 			}
 
-			updatedFetched, err := pkgFetched(filepath.Join(updated.AbsPath(), relPath))
+			updatedFetched, err := pkgFetched(updatedPath)
 			if err != nil {
 				return err
 			}
-			originalFetched, err := pkgFetched(filepath.Join(original.AbsPath(), relPath))
+			originalFetched, err := pkgFetched(originPath)
 			if err != nil {
 				return err
 			}
 
 			if !originalFetched || !updatedFetched {
-				err := kptfileutil.MergeAndUpdateLocal(
-					filepath.Join(p, relPath),
-					filepath.Join(updated.AbsPath(), relPath),
-					filepath.Join(original.AbsPath(), relPath))
+				err := kptfileutil.MergeAndUpdateLocal(localPath, updatedPath, originPath)
 				if err != nil {
 					return err
 				}
@@ -251,7 +264,7 @@ func (u Command) updatePackage(p string) error {
 			}
 		}
 
-		pkgKf, err := kptfileutil.ReadFile(filepath.Join(p, relPath))
+		pkgKf, err := kptfileutil.ReadFile(localPath)
 		if err != nil {
 			return err
 		}
@@ -261,9 +274,9 @@ func (u Command) updatePackage(p string) error {
 		}
 		if err := updater().Update(UpdateOptions{
 			RelPackagePath: relPath,
-			LocalPath:      p,
-			UpdatedPath:    updated.AbsPath(),
-			OriginPath:     original.AbsPath(),
+			LocalPath:      localPath,
+			UpdatedPath:    updatedPath,
+			OriginPath:     originPath,
 			IsRoot:         isRoot,
 			DryRun:         u.DryRun,
 			Verbose:        u.Verbose,
@@ -273,19 +286,19 @@ func (u Command) updatePackage(p string) error {
 			return err
 		}
 
-		paths, err := pkgutil.FindRemoteDirectSubpackages(filepath.Join(p, relPath))
+		paths, err := pkgutil.FindRemoteDirectSubpackages(localPath)
 		if err != nil {
 			return err
 		}
 		for _, path := range paths {
-			rel, err := filepath.Rel(p, path)
+			rel, err := filepath.Rel(p.UniquePath.String(), path)
 			if err != nil {
 				return err
 			}
 			s.Push(rel)
 		}
 	}
-	return fetch.UpsertKptfile(p, updated)
+	return fetch.UpsertKptfile(p.UniquePath.String(), updated)
 }
 
 func pkgExists(path string) (bool, error) {

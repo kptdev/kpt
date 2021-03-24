@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,4 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e
+package testing
+
+import (
+	"testing"
+
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/stretchr/testify/assert"
+)
+
+// CreatePkgOrFail creates a new package from the provided path. Unlike the
+// pkg.New function, it fails the test instead of returning an error.
+func CreatePkgOrFail(t *testing.T, path string) *pkg.Pkg {
+	p, err := pkg.New(path)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	return p
+}

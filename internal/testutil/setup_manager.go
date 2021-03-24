@@ -28,6 +28,11 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const (
+	Upstream = "upstream"
+	Local    = "local"
+)
+
 type TestSetupManager struct {
 	T *testing.T
 
@@ -37,29 +42,18 @@ type TestSetupManager struct {
 	// GetSubDirectory is the repo subdirectory containing the package
 	GetSubDirectory string
 
-	// UpstreamInit are made before fetching the repo
-	UpstreamInit []Content
-
-	// UpstreamChanges are upstream content changes made after cloning the repo
-	UpstreamChanges []Content
-
-	// RefReposChanges are content for any other repos that will be used as
-	// remote subpackages.
-	RefReposChanges map[string][]Content
+	// ReposChanges are content for any repos.
+	ReposChanges map[string][]Content
 
 	LocalChanges []Content
 
-	UpstreamRepo *TestGitRepo
-
-	RefRepos map[string]*TestGitRepo
+	Repos map[string]*TestGitRepo
 
 	LocalWorkspace *TestWorkspace
 
-	RepoPaths map[string]string
-
-	cleanTestRepo func()
-	cacheDir      string
-	targetDir     string
+	cleanTestRepos func()
+	cacheDir       string
+	targetDir      string
 }
 
 type Content struct {
@@ -77,7 +71,7 @@ type Content struct {
 // - Setup a new cache location for git repos and update the environment variable
 // - Setup fetch the upstream package to a local package
 // - Verify the local package contains the upstream content
-func (g *TestSetupManager) Init(content Content) bool {
+func (g *TestSetupManager) Init() bool {
 	// Default optional values
 	if g.GetRef == "" {
 		g.GetRef = "master"
@@ -94,38 +88,19 @@ func (g *TestSetupManager) Init(content Content) bool {
 	g.cacheDir = cacheDir
 	os.Setenv(gitutil.RepoCacheDirEnv, g.cacheDir)
 
-	// Set up any repos that will be used as remote subpackages.
-	refRepos, err := SetupRepos(g.T, g.RefReposChanges)
-	if !assert.NoError(g.T, err) {
-		return false
-	}
-	g.RefRepos = refRepos
-
-	// Create the mapping from repo name to path.
-	g.RepoPaths = make(map[string]string)
-	for name, tgr := range refRepos {
-		g.RepoPaths[name] = tgr.RepoDirectory
-	}
-
-	// Setup a "remote" source repo, and a "local" destination repo
-	g.UpstreamRepo, g.LocalWorkspace, g.cleanTestRepo = SetupDefaultRepoAndWorkspace(g.T, content, g.RepoPaths)
+	g.Repos, g.LocalWorkspace, g.cleanTestRepos = SetupReposAndWorkspace(g.T, g.ReposChanges)
 	if g.GetSubDirectory == "/" {
-		g.targetDir = filepath.Base(g.UpstreamRepo.RepoName)
+		g.targetDir = filepath.Base(g.Repos[Upstream].RepoName)
 	} else {
 		g.targetDir = filepath.Base(g.GetSubDirectory)
 	}
 	g.LocalWorkspace.PackageDir = g.targetDir
 
-	// Update the upstream repo with the init content.
-	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamInit, g.RepoPaths); err != nil {
-		return false
-	}
-
 	// Get the content from the upstream repo into the local workspace.
 	if !assert.NoError(g.T, get.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
 		Git: &kptfilev1alpha2.Git{
-			Repo:      g.UpstreamRepo.RepoDirectory,
+			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
 		}}.Run()) {
@@ -139,18 +114,13 @@ func (g *TestSetupManager) Init(content Content) bool {
 		return false
 	}
 
-	// Modify source repository state after fetching it
-	if err := UpdateGitDir(g.T, g.UpstreamRepo, g.UpstreamChanges, g.RepoPaths); err != nil {
+	// Modify other repos after initial fetch.
+	if err := UpdateRepos(g.T, g.Repos, g.ReposChanges); err != nil {
 		return false
 	}
 
 	// Modify local workspace after initial fetch.
-	if err := UpdateGitDir(g.T, g.LocalWorkspace, g.LocalChanges, g.RepoPaths); err != nil {
-		return false
-	}
-
-	// Modify other repos after initial fetch.
-	if err := UpdateRefRepos(g.T, refRepos, g.RefReposChanges, g.RepoPaths); err != nil {
+	if err := UpdateGitDir(g.T, Local, g.LocalWorkspace, g.LocalChanges, g.Repos); err != nil {
 		return false
 	}
 
@@ -160,11 +130,11 @@ func (g *TestSetupManager) Init(content Content) bool {
 type GitDirectory interface {
 	CheckoutBranch(branch string, create bool) error
 	ReplaceData(data string) error
-	Commit(message string) error
+	Commit(message string) (string, error)
 	Tag(tagName string) error
 }
 
-func UpdateGitDir(t *testing.T, gitDir GitDirectory, changes []Content, repoPaths map[string]string) error {
+func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Content, repos map[string]*TestGitRepo) error {
 	for _, content := range changes {
 		if content.Message == "" {
 			content.Message = "initializing data"
@@ -178,7 +148,7 @@ func UpdateGitDir(t *testing.T, gitDir GitDirectory, changes []Content, repoPath
 
 		var pkgData string
 		if content.Pkg != nil {
-			pkgData = pkgbuilder.ExpandPkg(t, content.Pkg, repoPaths)
+			pkgData = content.Pkg.ExpandPkg(t, ToReposInfo(repos))
 		} else {
 			pkgData = content.Data
 		}
@@ -188,10 +158,16 @@ func UpdateGitDir(t *testing.T, gitDir GitDirectory, changes []Content, repoPath
 			return err
 		}
 
-		err = gitDir.Commit(content.Message)
+		sha, err := gitDir.Commit(content.Message)
 		if !assert.NoError(t, err) {
 			return err
 		}
+
+		// Update the list of commit shas for the repo.
+		if r, found := repos[name]; found {
+			r.Commits = append(r.Commits, sha)
+		}
+
 		if len(content.Tag) > 0 {
 			err = gitDir.Tag(content.Tag)
 			if !assert.NoError(t, err) {
@@ -218,7 +194,7 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 			Type: "git",
 			Git: &kptfilev1alpha2.Git{
 				Directory: g.GetSubDirectory,
-				Repo:      g.UpstreamRepo.RepoDirectory,
+				Repo:      g.Repos[Upstream].RepoDirectory,
 				Ref:       ref,
 			},
 			UpdateStrategy: strategy,
@@ -227,14 +203,14 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 			Type: "git",
 			GitLock: &kptfilev1alpha2.GitLock{
 				Directory: g.GetSubDirectory,
-				Repo:      g.UpstreamRepo.RepoDirectory,
+				Repo:      g.Repos[Upstream].RepoDirectory,
 				Ref:       ref,
 				Commit:    commit,
 			},
 		},
 	}
 
-	return g.UpstreamRepo.AssertKptfile(
+	return g.Repos[Upstream].AssertKptfile(
 		g.T, filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir), expectedKptfile)
 }
 
@@ -243,13 +219,13 @@ func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {
 	if filepath.IsAbs(path) {
 		sourceDir = path
 	} else {
-		sourceDir = filepath.Join(g.UpstreamRepo.DatasetDirectory, path)
+		sourceDir = filepath.Join(g.Repos[Upstream].DatasetDirectory, path)
 	}
 	destDir := filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir)
-	return g.UpstreamRepo.AssertEqual(g.T, sourceDir, destDir)
+	return g.Repos[Upstream].AssertEqual(g.T, sourceDir, destDir)
 }
 
 func (g *TestSetupManager) Clean() {
-	g.cleanTestRepo()
+	g.cleanTestRepos()
 	os.RemoveAll(g.cacheDir)
 }

@@ -27,6 +27,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	toposort "github.com/philopon/go-toposort"
@@ -64,6 +65,10 @@ type TestGitRepo struct {
 
 	// RepoName is the name of the repository
 	RepoName string
+
+	// Commits keeps track of the commit shas for the changes
+	// to the repo.
+	Commits []string
 }
 
 var AssertNoError = assertnow.NilError
@@ -106,6 +111,8 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
 		return false
 	}
 
+	// TODO(mortent): See if we can avoid this. We just need to make sure
+	// we can compare Kptfiles without any formatting issues.
 	for _, s := range diff.List() {
 		if !strings.HasSuffix(s, kptfilev1alpha2.KptFileName) {
 			continue
@@ -127,16 +134,9 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		if pkg1kf.UpstreamLock != nil && pkg1kf.UpstreamLock.GitLock != nil {
-			pkg1kf.UpstreamLock.GitLock.Commit = ""
-		}
-
 		pkg2kf, err := kptfileutil.ReadFile(filepath.Dir(pkg2Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
-		}
-		if pkg2kf.UpstreamLock != nil && pkg2kf.UpstreamLock.GitLock != nil {
-			pkg2kf.UpstreamLock.GitLock.Commit = ""
 		}
 
 		equal, err := kptfileutil.Equal(pkg1kf, pkg2kf)
@@ -255,50 +255,6 @@ const trimPrefix = `# Copyright 2019 Google LLC
 # See the License for the specific language governing permissions and
 # limitations under the License.`
 
-func Replace(t *testing.T, path, old, new string) {
-	b, err := ioutil.ReadFile(path)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	// update the expected contents to reflect the set command
-	b = []byte(strings.ReplaceAll(string(b), old, new))
-	if !assert.NoError(t, ioutil.WriteFile(path, b, 0)) {
-		t.FailNow()
-	}
-}
-
-func Compare(t *testing.T, a, b string) {
-	// Compare parses the yaml and serializes both files to normalize
-	// formatting
-	b1, err := ioutil.ReadFile(a)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	n1, err := yaml.Parse(string(b1))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	s1, err := n1.String()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	b2, err := ioutil.ReadFile(b)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	n2, err := yaml.Parse(string(b2))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	s2, err := n2.String()
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, s1, s2) {
-		t.FailNow()
-	}
-}
-
 // AssertKptfile verifies the contents of the KptFile matches the provided value.
 func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1alpha2.KptFile) bool {
 	// read the actual generated KptFile
@@ -332,44 +288,10 @@ func (g *TestGitRepo) DeleteBranch(branch string) error {
 	return nil
 }
 
-// Commit performs a git commit
-func (g *TestGitRepo) Commit(message string) error {
+// Commit performs a git commit and returns the SHA for the newly
+// created commit.
+func (g *TestGitRepo) Commit(message string) (string, error) {
 	return commit(g.RepoDirectory, message)
-}
-
-// Commit performs a git commit
-func Commit(t *testing.T, g *TestGitRepo, message string) {
-	if !assert.NoError(t, g.Commit(message)) {
-		t.FailNow()
-	}
-}
-
-func CommitTag(t *testing.T, g *TestGitRepo, tag string) {
-	Commit(t, g, tag)
-	Tag(t, g, tag)
-}
-
-func CopyData(t *testing.T, g *TestGitRepo, data, dest string) {
-	if !filepath.IsAbs(data) {
-		data = filepath.Join(g.DatasetDirectory, data)
-	}
-
-	dest = filepath.Join(g.RepoDirectory, dest)
-	err := os.MkdirAll(dest, 0700)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	if !assert.NoError(t, copyutil.CopyDir(data, dest)) {
-		t.FailNow()
-	}
-
-	cmd := exec.Command("git", "add", ".")
-	cmd.Dir = g.RepoDirectory
-	stdoutStderr, err := cmd.CombinedOutput()
-	if !assert.NoError(t, err, stdoutStderr) {
-		t.FailNow()
-	}
 }
 
 func (g *TestGitRepo) GetCommit() (string, error) {
@@ -388,24 +310,6 @@ func (g *TestGitRepo) RemoveAll() error {
 	return err
 }
 
-func RemoveData(t *testing.T, g *TestGitRepo) {
-	// remove the old data
-	files, err := ioutil.ReadDir(g.RepoDirectory)
-	if err != nil {
-		t.FailNow()
-	}
-	for i := range files {
-		f := files[i]
-		if f.IsDir() && f.Name() == ".git" {
-			continue
-		}
-		err := os.RemoveAll(filepath.Join(g.RepoDirectory, f.Name()))
-		if err != nil {
-			t.FailNow()
-		}
-	}
-}
-
 // ReplaceData replaces the data with a new source
 func (g *TestGitRepo) ReplaceData(data string) error {
 	if !filepath.IsAbs(data) {
@@ -416,7 +320,7 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 }
 
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
-func (g *TestGitRepo) SetupTestGitRepo(data []Content, repoPaths map[string]string) error {
+func (g *TestGitRepo) SetupTestGitRepo(name string, data []Content, repos map[string]*TestGitRepo) error {
 	defaultBranch := "main"
 	if len(data) > 0 && len(data[0].Branch) > 0 {
 		defaultBranch = data[0].Branch
@@ -434,7 +338,7 @@ func (g *TestGitRepo) SetupTestGitRepo(data []Content, repoPaths map[string]stri
 	}
 	g.DatasetDirectory = ds
 
-	return UpdateGitDir(g.T, g, data, repoPaths)
+	return UpdateGitDir(g.T, name, g, data, repos)
 }
 
 func (g *TestGitRepo) createEmptyGitRepo(defaultBranch string) error {
@@ -453,19 +357,8 @@ func (g *TestGitRepo) createEmptyGitRepo(defaultBranch string) error {
 		fmt.Fprintf(os.Stderr, "%s", stdoutStderr)
 		return err
 	}
-	return g.Commit("initial commit")
-}
-
-func GetTestResource(dataset, path string) (string, error) {
-	testPath, err := GetTestDataPath()
-	if err != nil {
-		return "", err
-	}
-	c, err := ioutil.ReadFile(filepath.Join(testPath, dataset, path))
-	if err != nil {
-		return "", err
-	}
-	return string(c), nil
+	_, err = g.Commit("initial commit")
+	return err
 }
 
 func GetTestDataPath() (string, error) {
@@ -493,45 +386,44 @@ func (g *TestGitRepo) Tag(tagName string) error {
 	return tag(g.RepoDirectory, tagName)
 }
 
-func Tag(t *testing.T, g *TestGitRepo, tag string) {
-	if !assert.NoError(t, g.Tag(tag)) {
-		t.FailNow()
-	}
-}
-
-func CopyKptfile(t *testing.T, src, dest string) {
-	b, err := ioutil.ReadFile(filepath.Join(src, kptfilev1alpha2.KptFileName))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	err = ioutil.WriteFile(filepath.Join(dest, kptfilev1alpha2.KptFileName), b, 0600)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-}
-
-// SetupDefaultRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
+// SetupRepoAndWorkspace handles setting up a default repo to clone, and a workspace to clone into.
 // returns a cleanup function to remove the git repo and workspace.
-func SetupDefaultRepoAndWorkspace(t *testing.T, content Content, repoPaths map[string]string) (*TestGitRepo, *TestWorkspace, func()) {
-	// setup the repo to clone from
-	g := &TestGitRepo{T: t}
-	err := g.SetupTestGitRepo([]Content{content}, repoPaths)
-	assert.NoError(t, err)
-	repoPaths["upstream"] = g.RepoDirectory
+func SetupRepoAndWorkspace(t *testing.T, content Content) (*TestGitRepo, *TestWorkspace, func()) {
+	repos, workspace, cleanup := SetupReposAndWorkspace(t, map[string][]Content{
+		Upstream: {
+			content,
+		},
+	})
 
+	g := repos[Upstream]
+	return g, workspace, cleanup
+}
+
+// SetupReposAndWorkspace handles setting up a set of repos as specified by
+// the reposContent and a workspace to clone into. It returns a cleanup function
+// that will remove the repos.
+func SetupReposAndWorkspace(t *testing.T, reposContent map[string][]Content) (map[string]*TestGitRepo, *TestWorkspace, func()) {
+	repos, repoCleanup := SetupRepos(t, reposContent)
+	w, workspaceCleanup := SetupWorkspace(t)
+	return repos, w, func() {
+		repoCleanup()
+		workspaceCleanup()
+	}
+}
+
+// SetupWorkspace creates a local workspace which kpt packages can be cloned
+// into. It returns a cleanup function that will remove the workspace.
+func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 	// setup the directory to clone to
 	w := &TestWorkspace{}
-	err = w.SetupTestWorkspace()
+	err := w.SetupTestWorkspace()
 	assert.NoError(t, err)
 
 	gr := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, gr.Run("init")) {
 		assert.FailNowf(t, "%s %s", gr.Stdout.String(), gr.Stderr.String())
 	}
-
-	return g, w, func() {
-		// ignore cleanup failures
-		_ = g.RemoveAll()
+	return w, func() {
 		_ = w.RemoveAll()
 	}
 }
@@ -539,42 +431,50 @@ func SetupDefaultRepoAndWorkspace(t *testing.T, content Content, repoPaths map[s
 // SetupRepos creates repos and returns a mapping from name to TestGitRepos.
 // This only creates the first version of each repo as given by the first item
 // in the repoContent slice.
-func SetupRepos(t *testing.T, repoContent map[string][]Content) (map[string]*TestGitRepo, error) {
-	refRepos := make(map[string]*TestGitRepo)
+func SetupRepos(t *testing.T, repoContent map[string][]Content) (map[string]*TestGitRepo, func()) {
+	repos := make(map[string]*TestGitRepo)
 
-	ordering, err := findRepoOrdering(repoContent)
-	if err != nil {
-		return refRepos, err
+	cleanupFunc := func() {
+		for _, rp := range repos {
+			_ = os.RemoveAll(rp.RepoDirectory)
+		}
 	}
 
-	// Create the repos in correct order.
-	repoPaths := make(map[string]string)
+	ordering, err := findRepoOrdering(repoContent)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
 	for _, name := range ordering {
 		data := repoContent[name]
 		if len(data) < 1 {
 			continue
 		}
 		tgr := &TestGitRepo{T: t}
-		if err := tgr.SetupTestGitRepo(data[:1], repoPaths); err != nil {
-			return refRepos, err
+		repos[name] = tgr
+		if err := tgr.SetupTestGitRepo(name, data[:1], repos); err != nil {
+			return repos, cleanupFunc
 		}
-		refRepos[name] = tgr
-		repoPaths[name] = tgr.RepoDirectory
 	}
-	return refRepos, nil
+	return repos, cleanupFunc
 }
 
-// UpdateRefRepos updates the existing repos with any additional Content
+// UpdateRepos updates the existing repos with any additional Content
 // items in the repoContent slice.
-func UpdateRefRepos(t *testing.T, repos map[string]*TestGitRepo, repoContent map[string][]Content, repoPaths map[string]string) error {
-	for name := range repoContent {
+func UpdateRepos(t *testing.T, repos map[string]*TestGitRepo, repoContent map[string][]Content) error {
+	ordering, err := findRepoOrdering(repoContent)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	for _, name := range ordering {
 		data := repoContent[name]
 		if len(data) < 1 {
 			continue
 		}
 
 		r := repos[name]
-		err := UpdateGitDir(t, r, data[1:], repoPaths)
+		err := UpdateGitDir(t, name, r, data[1:], repos)
 		if err != nil {
 			return err
 		}
@@ -783,15 +683,21 @@ func replaceData(repo, data string) error {
 	return err
 }
 
-func commit(repo, message string) error {
+func commit(repo, message string) (string, error) {
 	cmd := exec.Command("git", "commit", "-m", message, "--allow-empty")
 	cmd.Dir = repo
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s", stdoutStderr)
-		return err
+		return "", err
 	}
-	return nil
+
+	sha, err := git.LookupCommit(repo)
+	if err != nil {
+		return "", err
+	}
+
+	return sha, nil
 }
 
 func tag(repo, tag string) error {
@@ -838,7 +744,7 @@ func (w *TestWorkspace) ReplaceData(data string) error {
 }
 
 // Commit performs a git commit
-func (w *TestWorkspace) Commit(message string) error {
+func (w *TestWorkspace) Commit(message string) (string, error) {
 	return commit(w.WorkspaceDirectory, message)
 }
 
@@ -887,4 +793,36 @@ func Chdir(t *testing.T, path string) func() {
 		t.FailNow()
 	}
 	return revertFunc
+}
+
+var EmptyReposInfo = &ReposInfo{}
+
+func ToReposInfo(repos map[string]*TestGitRepo) *ReposInfo {
+	return &ReposInfo{
+		repos: repos,
+	}
+}
+
+type ReposInfo struct {
+	repos map[string]*TestGitRepo
+}
+
+func (ri *ReposInfo) ResolveRepoRef(repoRef string) (string, bool) {
+	repo, found := ri.repos[repoRef]
+	if !found {
+		return "", false
+	}
+	return repo.RepoDirectory, true
+}
+
+func (ri *ReposInfo) ResolveCommitIndex(repoRef string, index int) (string, bool) {
+	repo, found := ri.repos[repoRef]
+	if !found {
+		return "", false
+	}
+	commits := repo.Commits
+	if len(commits) <= index {
+		return "", false
+	}
+	return commits[index], true
 }

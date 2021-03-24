@@ -17,6 +17,7 @@ package merge
 import (
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -133,10 +134,10 @@ func TestMerge3_Nested_packages(t *testing.T) {
 	for i := range testCases {
 		test := testCases[i]
 		t.Run(test.name, func(t *testing.T) {
-			original := pkgbuilder.ExpandPkg(t, test.original, map[string]string{})
-			updated := pkgbuilder.ExpandPkg(t, test.upstream, map[string]string{})
-			local := pkgbuilder.ExpandPkg(t, test.local, map[string]string{})
-			expected := pkgbuilder.ExpandPkg(t, test.expected, map[string]string{})
+			original := test.original.ExpandPkg(t, testutil.EmptyReposInfo)
+			updated := test.upstream.ExpandPkg(t, testutil.EmptyReposInfo)
+			local := test.local.ExpandPkg(t, testutil.EmptyReposInfo)
+			expected := test.expected.ExpandPkg(t, testutil.EmptyReposInfo)
 			err := Merge3{
 				OriginalPath:       original,
 				UpdatedPath:        updated,

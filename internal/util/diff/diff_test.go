@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
@@ -45,10 +46,10 @@ import (
 // 5. Run remote diff between master and cloned
 func TestCommand_RunRemoteDiff(t *testing.T) {
 	t.SkipNow()
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
@@ -56,7 +57,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -64,23 +65,19 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	localPkg := fetchPackage(t, g, w)
-	err = fetch.Command{
-		Path: localPkg,
-	}.Run()
-	assert.NoError(t, err)
+	localPkg := createPackage(t, g, w)
 
 	diffOutput := &bytes.Buffer{}
 
 	err = (&Command{
-		Path:         localPkg,
+		Path:         localPkg.UniquePath.String(),
 		Ref:          "master",
 		DiffType:     "remote",
 		DiffTool:     "diff",
@@ -119,10 +116,10 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 // 5. add more data to the master branch, commit it
 // 5. Run combined diff between master and cloned
 func TestCommand_RunCombinedDiff(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -132,7 +129,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -140,23 +137,19 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	localPkg := fetchPackage(t, g, w)
-	err = fetch.Command{
-		Path: localPkg,
-	}.Run()
-	assert.NoError(t, err)
+	localPkg := createPackage(t, g, w)
 
 	diffOutput := &bytes.Buffer{}
 
 	err = (&Command{
-		Path:         localPkg,
+		Path:         localPkg.UniquePath.String(),
 		Ref:          "master",
 		DiffType:     "combined",
 		DiffTool:     "diff",
@@ -196,10 +189,10 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 // 5. Update cloned package with dataset3
 // 6. Run remote diff and verify the output
 func TestCommand_Run_LocalDiff(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -209,7 +202,7 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -217,20 +210,16 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 
-	localPkg := fetchPackage(t, g, w)
-	err = fetch.Command{
-		Path: localPkg,
-	}.Run()
-	assert.NoError(t, err)
+	localPkg := createPackage(t, g, w)
 
 	// make changes in local package
-	err = copyutil.CopyDir(filepath.Join(g.DatasetDirectory, testutil.Dataset3), localPkg)
+	err = copyutil.CopyDir(filepath.Join(g.DatasetDirectory, testutil.Dataset3), localPkg.UniquePath.String())
 	assert.NoError(t, err)
 
 	diffOutput := &bytes.Buffer{}
 
 	err = (&Command{
-		Path:         localPkg,
+		Path:         localPkg.UniquePath.String(),
 		Ref:          "master",
 		DiffType:     "combined",
 		DiffTool:     "diff",
@@ -277,9 +266,9 @@ func filterDiffMetadata(r io.Reader) string {
 	return b.String()
 }
 
-func fetchPackage(t *testing.T, g *testutil.TestGitRepo, w *testutil.TestWorkspace) string {
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := os.MkdirAll(localPkg, 0700)
+func createPackage(t *testing.T, g *testutil.TestGitRepo, w *testutil.TestWorkspace) *pkg.Pkg {
+	localPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+	err := os.MkdirAll(localPath, 0700)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -294,9 +283,20 @@ func fetchPackage(t *testing.T, g *testutil.TestGitRepo, w *testutil.TestWorkspa
 		},
 		UpdateStrategy: kptfilev1alpha2.FastForward,
 	}
-	err = kptfileutil.WriteFile(localPkg, kf)
+	err = kptfileutil.WriteFile(localPath, kf)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	return localPkg
+
+	p, err := pkg.New(localPath)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = fetch.Command{
+		Pkg: p,
+	}.Run()
+	assert.NoError(t, err)
+
+	return p
 }

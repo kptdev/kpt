@@ -13,13 +13,15 @@
 // limitations under the License.
 
 //nolint:dupl
-package update
+package update_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	. "github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,8 +45,8 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
-						WithUpstreamLock(),
+						WithUpstream(kptRepo, "/", "master", "resource-merge").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -64,8 +66,8 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			expected: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
-						WithUpstreamLock(),
+						WithUpstream(kptRepo, "/", "master", "resource-merge").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -81,22 +83,22 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "resource-merge"),
+								WithUpstream(kptRepo, "/", "main", "resource-merge"),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
-						WithUpstreamLock(),
+						WithUpstream(kptRepo, "/", "master", "resource-merge").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "resource-merge"),
+								WithUpstream(kptRepo, "/", "main", "resource-merge"),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
@@ -106,7 +108,7 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "resource-merge"),
+								WithUpstream(kptRepo, "/", "main", "resource-merge"),
 						).
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
@@ -115,37 +117,37 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			expected: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
-						WithUpstreamLock(),
+						WithUpstream(kptRepo, "/", "master", "resource-merge").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("bar").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "resource-merge"),
+								WithUpstream(kptRepo, "/", "main", "resource-merge"),
 						).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 		},
-		"doesn't update the Kptfile": {
+		"doesn't update the Kptfile if package is the root": {
 			origin: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "resource-merge"),
+						WithUpstream(kptRepo, "/", "main", "resource-merge"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
-						WithUpstreamLock(),
+						WithUpstream(kptRepo, "/", "master", "resource-merge").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 			updated: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "v1.0", "resource-merge"),
+						WithUpstream(kptRepo, "/", "v1.0", "resource-merge"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 			relPackagePath: "/",
@@ -153,28 +155,92 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			expected: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
-						WithUpstreamLock(),
+						WithUpstream(kptRepo, "/", "master", "resource-merge").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
+		},
+		"updates the Kptfile if package is not the root and local hasn't changed from origin": {
+			origin: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			local: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "master", "abc123"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			updated: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "v1.0", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "v1.0", "def456"),
+				).
+				WithResource(pkgbuilder.ConfigMapResource),
+			relPackagePath: "/",
+			isRoot:         false,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "v1.0", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "v1.0", "def456"),
+				).
+				WithResource(pkgbuilder.ConfigMapResource),
+		},
+		"does not update the local package at all if not root and upstream info is changed on local": {
+			origin: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "main", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "main", "abc123"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			local: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "def456"),
+				).
+				WithResource(pkgbuilder.SecretResource),
+			updated: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "v1.0", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "v1.0", "qwerty"),
+				).
+				WithResource(pkgbuilder.ConfigMapResource),
+			relPackagePath: "/",
+			isRoot:         false,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "def456"),
+				).
+				WithResource(pkgbuilder.SecretResource),
 		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			repoPaths := map[string]string{}
-			origin := pkgbuilder.ExpandPkg(t, tc.origin, repoPaths)
-			local := pkgbuilder.ExpandPkg(t, tc.local, repoPaths)
-			updated := pkgbuilder.ExpandPkg(t, tc.updated, repoPaths)
-			expected := pkgbuilder.ExpandPkg(t, tc.expected, repoPaths)
+			repos := testutil.EmptyReposInfo
+			origin := tc.origin.ExpandPkg(t, repos)
+			local := tc.local.ExpandPkg(t, repos)
+			updated := tc.updated.ExpandPkg(t, repos)
+			expected := tc.expected.ExpandPkg(t, repos)
 
-			updater := &FastForwardUpdater{}
+			updater := &ResourceMergeUpdater{}
 
 			err := updater.Update(UpdateOptions{
 				RelPackagePath: tc.relPackagePath,
-				OriginPath:     origin,
-				LocalPath:      local,
-				UpdatedPath:    updated,
+				OriginPath:     filepath.Join(origin, tc.relPackagePath),
+				LocalPath:      filepath.Join(local, tc.relPackagePath),
+				UpdatedPath:    filepath.Join(updated, tc.relPackagePath),
 				IsRoot:         tc.isRoot,
 			})
 			if !assert.NoError(t, err) {
