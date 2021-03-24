@@ -90,7 +90,7 @@ var (
 type pkg struct {
 	Kptfile *Kptfile
 
-	resources []resourceInfoWithSetters
+	resources []resourceInfoWithMutators
 
 	files map[string]string
 
@@ -116,37 +116,20 @@ func (p *pkg) withResource(resourceName string, mutators ...yaml.Filter) {
 	if !ok {
 		panic(fmt.Errorf("unknown resource %s", resourceName))
 	}
-	p.resources = append(p.resources, resourceInfoWithSetters{
+	p.resources = append(p.resources, resourceInfoWithMutators{
 		resourceInfo: resourceInfo,
-		setterRefs:   []SetterRef{},
 		mutators:     mutators,
 	})
 }
 
 // withRawResource configures the package to include the provided resource
 func (p *pkg) withRawResource(resourceName, manifest string, mutators ...yaml.Filter) {
-	p.resources = append(p.resources, resourceInfoWithSetters{
+	p.resources = append(p.resources, resourceInfoWithMutators{
 		resourceInfo: resourceInfo{
 			filename: resourceName,
 			manifest: manifest,
 		},
-		setterRefs: []SetterRef{},
-		mutators:   mutators,
-	})
-}
-
-// withResourceAndSetters configures the package to have the provided resource.
-// It also allows for specifying setterRefs for the resource and a set of
-// mutators that will update the content of the resource.
-func (p *pkg) withResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) {
-	resourceInfo, ok := resources[resourceName]
-	if !ok {
-		panic(fmt.Errorf("unknown resource %s", resourceName))
-	}
-	p.resources = append(p.resources, resourceInfoWithSetters{
-		resourceInfo: resourceInfo,
-		setterRefs:   setterRefs,
-		mutators:     mutators,
+		mutators: mutators,
 	})
 }
 
@@ -221,14 +204,6 @@ func (rp *RootPkg) WithResource(resourceName string, mutators ...yaml.Filter) *R
 // WithRawResource configures the package to include the provided resource
 func (rp *RootPkg) WithRawResource(resourceName, manifest string, mutators ...yaml.Filter) *RootPkg {
 	rp.pkg.withRawResource(resourceName, manifest, mutators...)
-	return rp
-}
-
-// WithResourceAndSetters configures the package to have the provided resource.
-// It also allows for specifying setterRefs for the resource and a set of
-// mutators that will update the content of the resource.
-func (rp *RootPkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) *RootPkg {
-	rp.pkg.withResourceAndSetters(resourceName, setterRefs, mutators...)
 	return rp
 }
 
@@ -309,14 +284,6 @@ func (sp *SubPkg) WithRawResource(resourceName, manifest string, mutators ...yam
 	return sp
 }
 
-// WithResourceAndSetters configures the package to have the provided resource.
-// It also allows for specifying setterRefs for the resource and a set of
-// mutators that will update the content of the resource.
-func (sp *SubPkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) *SubPkg {
-	sp.pkg.withResourceAndSetters(resourceName, setterRefs, mutators...)
-	return sp
-}
-
 // WithFile configures the package to contain a file with the provided name
 // and the given content.
 func (sp *SubPkg) WithFile(name, content string) *SubPkg {
@@ -333,7 +300,6 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 
 // Kptfile represents the Kptfile of a package.
 type Kptfile struct {
-	Setters      []Setter
 	Upstream     *Upstream
 	UpstreamLock *UpstreamLock
 }
@@ -427,60 +393,13 @@ type RemoteSubpackage struct {
 	LocalDir  string
 }
 
-// WithSetters adds information about the setters for a Kptfile.
-func (k *Kptfile) WithSetters(setters ...Setter) *Kptfile {
-	k.Setters = setters
-	return k
-}
-
-// Setter contains the properties required for adding a setter to the
-// Kptfile.
-type Setter struct {
-	Name  string
-	Value string
-	IsSet bool
-}
-
-// NewSetter creates a new setter that is not marked as set
-func NewSetter(name, value string) Setter {
-	return Setter{
-		Name:  name,
-		Value: value,
-	}
-}
-
-// NewSetSetter creates a new setter that is marked as set.
-func NewSetSetter(name, value string) Setter {
-	return Setter{
-		Name:  name,
-		Value: value,
-		IsSet: true,
-	}
-}
-
-// SetterRef specifies the information for creating a new reference to
-// a setter in a resource.
-type SetterRef struct {
-	Path []string
-	Name string
-}
-
-// NewSetterRef creates a new setterRef with the given name and path.
-func NewSetterRef(name string, path ...string) SetterRef {
-	return SetterRef{
-		Path: path,
-		Name: name,
-	}
-}
-
 type resourceInfo struct {
 	filename string
 	manifest string
 }
 
-type resourceInfoWithSetters struct {
+type resourceInfoWithMutators struct {
 	resourceInfo resourceInfo
-	setterRefs   []SetterRef
 	mutators     []yaml.Filter
 }
 
@@ -525,16 +444,6 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 			}
 		}
 
-		for _, setterRef := range ri.setterRefs {
-			n, err := r.Pipe(yaml.PathGetter{
-				Path: setterRef.Path,
-			})
-			if err != nil {
-				return err
-			}
-			n.YNode().LineComment = fmt.Sprintf(`{"$openapi":"%s"}`, setterRef.Name)
-		}
-
 		filePath := filepath.Join(pkgPath, ri.resourceInfo.filename)
 		err := ioutil.WriteFile(filePath, []byte(r.MustString()), 0600)
 		if err != nil {
@@ -565,20 +474,6 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: {{.PkgName}}
-{{- if gt (len .Pkg.Kptfile.Setters) 0 }}
-openAPI:
-  definitions:
-{{- range .Pkg.Kptfile.Setters }}
-    io.k8s.cli.setters.{{.Name}}:
-      x-k8s-cli:
-        setter:
-          name: {{.Name}}
-          value: {{.Value}}
-{{- if eq .IsSet true }}
-          isSet: true
-{{- end }}
-{{- end }}
-{{- end }}
 {{- if .Pkg.Kptfile.Upstream }}
 upstream:
   type: git
