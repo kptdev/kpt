@@ -84,6 +84,17 @@
                 .replace(hugoDirectiveTags, "");
               return content;
             });
+
+            hook.doneEach(function() { 
+              const tocLists = Array.from(document.getElementsByClassName("sidebar-nav")[0].getElementsByTagName("ul"))
+              
+              // Hide a child list if neither its parent nor none of its descendants are active.
+              tocLists.forEach(
+                  ul => (ul.parentElement.classList.contains("active") || ul.getElementsByClassName("active").length) ?
+                   ul.classList.remove("inactive") : 
+                   ul.classList.add("inactive")
+                  );
+            });
           },
         ],
       };
@@ -123,16 +134,9 @@
     .sidebar-toggle {
       bottom: 0;
     }
-
-    /* Right side table of contents */
-    aside.toc-nav {
-      z-index: 19;
-    }
-    .page_toc div.active {
-      border-color: black;
-    }
-    .page_toc div[class^="lv"] a span {
-      color: black !important;
+    /* Hide inactive lists whose titles aren't links. */
+    .sidebar-nav ul a+ul.inactive {
+      display: none;
     }
   </style>
 </html>
