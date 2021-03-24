@@ -184,7 +184,7 @@ for PACKAGE in $(go list -m -json all | jq -r .Path | sort -f); do
   # Kpt currently depends on 2 versions of posener. Because v2 *is* checked out
   # the directory does exist causing the above check to pass. However this repo
   # is not included in the vendor directory so a license will not be found.
-  if [[ ! -e "github.com/posener/complete" ]]; then
+  if [[ ${PACKAGE} == "github.com/posener/complete" ]]; then
     continue
   fi
 
