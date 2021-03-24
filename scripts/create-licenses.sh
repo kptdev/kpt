@@ -178,6 +178,15 @@ for PACKAGE in $(go list -m -json all | jq -r .Path | sort -f); do
     # echo "$PACKAGE doesn't exist in vendor, skipping" > /dev/stderr
     continue
   fi
+  # TODO: samwronski - remove this edge case
+  # The above if statement skips dependencies which did not get checked out with
+  # `go mod vendor` however that does not catch this edge case.
+  # Kpt currently depends on 2 versions of posener. Because v2 *is* checked out
+  # the directory does exist causing the above check to pass. However this repo
+  # is not included in the vendor directory so a license will not be found.
+  if [[ ! -e "github.com/posener/complete" ]]; then
+    continue
+  fi
 
   process_content "${PACKAGE}" LICENSE
   process_content "${PACKAGE}" COPYRIGHT
