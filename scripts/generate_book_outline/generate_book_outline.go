@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -28,7 +29,7 @@ const markdownExtension = ".md"
 func main() {
 	source := "site/book"
 	chapters := make([]chapter, 0)
-	chapterDirs, err := os.ReadDir(source)
+	chapterDirs, err := ioutil.ReadDir(source)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
@@ -43,7 +44,7 @@ func main() {
 			chapterBuilder.Name = strings.Title(strings.ReplaceAll(splitDirName[1], "-", " "))
 
 			chapterDir := filepath.Join(source, dir.Name())
-			pageFiles, err := os.ReadDir(chapterDir)
+			pageFiles, err := ioutil.ReadDir(chapterDir)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
