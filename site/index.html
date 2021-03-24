@@ -76,7 +76,7 @@
             hook.doneEach(function() { 
               const tocLists = Array.from(document.getElementsByClassName("sidebar-nav")[0].getElementsByTagName("ul"))
               
-              // Hide a child list if neither its parent nor none of its descendants are active.
+              // Hide a child list if neither its parent nor any of its descendants are active.
               tocLists.forEach(
                   ul => (ul.parentElement.classList.contains("active") || ul.getElementsByClassName("active").length) ?
                    ul.classList.remove("inactive") : 
