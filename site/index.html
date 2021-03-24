@@ -33,19 +33,7 @@
         },
         loadSidebar: "sidebar.md",
         alias: {
-          "/installation/*.*/sidebar.md": "/sidebar.md",
-          "/guides/sidebar.md": "/sidebar.md",
-          "/guides/consumer/.*/sidebar.md": "/guides/consumer/sidebar.md",
-          "/guides/producer/.*/sidebar.md": "/guides/producer/sidebar.md",
-          "/guides/ecosystem/.*/sidebar.md": "/guides/ecosystem/sidebar.md",
-          "/concepts/*.*/sidebar.md": "/sidebar.md",
-          "/reference/pkg/.*/sidebar.md": "/reference/pkg/sidebar.md",
-          "/reference/cfg/.*/sidebar.md": "/reference/cfg/sidebar.md",
-          "/reference/live/.*/sidebar.md": "/reference/live/sidebar.md",
-          "/reference/fn/.*/sidebar.md": "/reference/fn/sidebar.md",
-          "/reference/sidebar.md": "/sidebar.md",
-          "/faq/sidebar.md": "/sidebar.md",
-          "/contact/sidebar.md": "/sidebar.md",
+          "/*.*/sidebar.md": "/sidebar.md",
         },
         coverpage: "coverpage.md",
         auto2top: true,
@@ -83,6 +71,17 @@
                 .replace(hugoHideDirectives, "")
                 .replace(hugoDirectiveTags, "");
               return content;
+            });
+
+            hook.doneEach(function() { 
+              const tocLists = Array.from(document.getElementsByClassName("sidebar-nav").item(0)?.getElementsByTagName("ul"))
+              
+              // Hide a child list if neither its parent nor any of its descendants are active.
+              tocLists.forEach(
+                  ul => (ul.parentElement.classList.contains("active") || ul.getElementsByClassName("active").length) ?
+                   ul.classList.remove("inactive") : 
+                   ul.classList.add("inactive")
+                  );
             });
           },
         ],
@@ -123,16 +122,9 @@
     .sidebar-toggle {
       bottom: 0;
     }
-
-    /* Right side table of contents */
-    aside.toc-nav {
-      z-index: 19;
-    }
-    .page_toc div.active {
-      border-color: black;
-    }
-    .page_toc div[class^="lv"] a span {
-      color: black !important;
+    /* Hide inactive lists whose titles aren't links. */
+    .sidebar-nav ul a+ul.inactive {
+      display: none;
     }
   </style>
 </html>
