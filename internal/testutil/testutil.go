@@ -462,7 +462,12 @@ func SetupRepos(t *testing.T, repoContent map[string][]Content) (map[string]*Tes
 // UpdateRepos updates the existing repos with any additional Content
 // items in the repoContent slice.
 func UpdateRepos(t *testing.T, repos map[string]*TestGitRepo, repoContent map[string][]Content) error {
-	for name := range repoContent {
+	ordering, err := findRepoOrdering(repoContent)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	for _, name := range ordering {
 		data := repoContent[name]
 		if len(data) < 1 {
 			continue

@@ -28,10 +28,7 @@ import (
 type ReplaceUpdater struct{}
 
 func (u ReplaceUpdater) Update(options UpdateOptions) error {
-	localPath := filepath.Join(options.LocalPath, options.RelPackagePath)
-	updatedPath := filepath.Join(options.UpdatedPath, options.RelPackagePath)
-
-	paths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(localPath, updatedPath)
+	paths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(options.LocalPath, options.UpdatedPath)
 	if err != nil {
 		return err
 	}
@@ -41,8 +38,8 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 		if p == "." && options.IsRoot {
 			isRootPkg = true
 		}
-		localSubPkgPath := filepath.Join(localPath, p)
-		updatedSubPkgPath := filepath.Join(updatedPath, p)
+		localSubPkgPath := filepath.Join(options.LocalPath, p)
+		updatedSubPkgPath := filepath.Join(options.UpdatedPath, p)
 
 		err = pkgutil.RemovePackageContent(localSubPkgPath, !isRootPkg)
 		if err != nil {

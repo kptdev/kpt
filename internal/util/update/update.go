@@ -177,6 +177,7 @@ func (u Command) Run() error {
 	return nil
 }
 
+//nolint:gocyclo
 func (u Command) updatePackage(p *pkg.Pkg) error {
 	kf, err := p.Kptfile()
 	if err != nil {
@@ -206,18 +207,22 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 
 	for s.Len() > 0 {
 		relPath := s.Pop()
+		localPath := filepath.Join(p.UniquePath.String(), relPath)
+		updatedPath := filepath.Join(updated.AbsPath(), relPath)
+		originPath := filepath.Join(original.AbsPath(), relPath)
+
 		isRoot := false
 		if relPath == "." {
 			isRoot = true
 		}
 
 		if !isRoot {
-			updatedExists, err := pkgExists(filepath.Join(updated.AbsPath(), relPath))
+			updatedExists, err := pkgExists(updatedPath)
 			if err != nil {
 				return err
 			}
 
-			originalExists, err := pkgExists(filepath.Join(original.AbsPath(), relPath))
+			originalExists, err := pkgExists(originPath)
 			if err != nil {
 				return err
 			}
@@ -226,8 +231,14 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 			case !originalExists && !updatedExists:
 				continue
 			case originalExists && !updatedExists:
-				if err := os.RemoveAll(p.UniquePath.String()); err != nil {
+				hasChanges, err := PkgHasLocalChanges(localPath, originPath)
+				if err != nil {
 					return err
+				}
+				if !hasChanges {
+					if err := os.RemoveAll(localPath); err != nil {
+						return err
+					}
 				}
 				continue
 			case !originalExists && updatedExists:
@@ -235,20 +246,17 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 			default:
 			}
 
-			updatedFetched, err := pkgFetched(filepath.Join(updated.AbsPath(), relPath))
+			updatedFetched, err := pkgFetched(updatedPath)
 			if err != nil {
 				return err
 			}
-			originalFetched, err := pkgFetched(filepath.Join(original.AbsPath(), relPath))
+			originalFetched, err := pkgFetched(originPath)
 			if err != nil {
 				return err
 			}
 
 			if !originalFetched || !updatedFetched {
-				err := kptfileutil.MergeAndUpdateLocal(
-					filepath.Join(p.UniquePath.String(), relPath),
-					filepath.Join(updated.AbsPath(), relPath),
-					filepath.Join(original.AbsPath(), relPath))
+				err := kptfileutil.MergeAndUpdateLocal(localPath, updatedPath, originPath)
 				if err != nil {
 					return err
 				}
@@ -256,7 +264,7 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 			}
 		}
 
-		pkgKf, err := kptfileutil.ReadFile(filepath.Join(p.UniquePath.String(), relPath))
+		pkgKf, err := kptfileutil.ReadFile(localPath)
 		if err != nil {
 			return err
 		}
@@ -266,9 +274,9 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 		}
 		if err := updater().Update(UpdateOptions{
 			RelPackagePath: relPath,
-			LocalPath:      p.UniquePath.String(),
-			UpdatedPath:    updated.AbsPath(),
-			OriginPath:     original.AbsPath(),
+			LocalPath:      localPath,
+			UpdatedPath:    updatedPath,
+			OriginPath:     originPath,
 			IsRoot:         isRoot,
 			DryRun:         u.DryRun,
 			Verbose:        u.Verbose,
@@ -278,7 +286,7 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 			return err
 		}
 
-		paths, err := pkgutil.FindRemoteDirectSubpackages(filepath.Join(p.UniquePath.String(), relPath))
+		paths, err := pkgutil.FindRemoteDirectSubpackages(localPath)
 		if err != nil {
 			return err
 		}

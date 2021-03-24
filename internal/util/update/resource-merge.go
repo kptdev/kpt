@@ -37,14 +37,25 @@ import (
 type ResourceMergeUpdater struct{}
 
 func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
-	localPath := filepath.Join(options.LocalPath, options.RelPackagePath)
-	updatedPath := filepath.Join(options.UpdatedPath, options.RelPackagePath)
-	originPath := filepath.Join(options.OriginPath, options.RelPackagePath)
+	if !options.IsRoot {
+		hasChanges, err := PkgHasLocalChanges(options.LocalPath, options.OriginPath)
+		if err != nil {
+			return err
+		}
+
+		// If the upstream information in local has changed from origin, it
+		// means the user had updated the package independently and we don't
+		// want to override it.
+		if hasChanges {
+			return nil
+		}
+	}
 
 	// Find all subpackages in local, upstream and original. They are sorted
 	// in increasing order based on the depth of the subpackage relative to the
 	// root package.
-	subPkgPaths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(localPath, updatedPath, originPath)
+	subPkgPaths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(options.LocalPath,
+		options.UpdatedPath, options.OriginPath)
 	if err != nil {
 		return err
 	}
@@ -56,9 +67,9 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		if subPkgPath == "." && options.IsRoot {
 			isRootPkg = true
 		}
-		localSubPkgPath := filepath.Join(localPath, subPkgPath)
-		updatedSubPkgPath := filepath.Join(updatedPath, subPkgPath)
-		originalSubPkgPath := filepath.Join(originPath, subPkgPath)
+		localSubPkgPath := filepath.Join(options.LocalPath, subPkgPath)
+		updatedSubPkgPath := filepath.Join(options.UpdatedPath, subPkgPath)
+		originalSubPkgPath := filepath.Join(options.OriginPath, subPkgPath)
 
 		err := u.updatePackage(subPkgPath, localSubPkgPath, updatedSubPkgPath, originalSubPkgPath, isRootPkg)
 		if err != nil {
