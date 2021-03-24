@@ -139,49 +139,7 @@ func (r RunFns) getNodesAndFilters() (
 	if err != nil {
 		return nil, nil, outputPkg, err
 	}
-
-	// we need to exclude function config file if we don't want to include
-	// meta resources.
-	if !r.IncludeMetaResources {
-		p := kio.Pipeline{
-			Inputs:                []kio.Reader{buff},
-			Filters:               []kio.Filter{kio.FilterFunc(r.filterOutFnConfigFile)},
-			Outputs:               []kio.Writer{buff},
-			ContinueOnEmptyResult: r.ContinueOnEmptyResult,
-		}
-		if err := p.Execute(); err != nil {
-			return nil, nil, outputPkg, err
-		}
-	}
 	return buff, fltrs, outputPkg, nil
-}
-
-// filterOutFnConfigFile is a filter which filters out the function config
-// file
-func (r RunFns) filterOutFnConfigFile(input []*yaml.RNode) ([]*yaml.RNode, error) {
-	var output []*yaml.RNode
-	for i := range input {
-		node := input[i]
-		meta, err := node.GetMeta()
-		if err != nil {
-			return nil, err
-		}
-		path := meta.Annotations[kioutil.PathAnnotation]
-		if path != "" {
-			// file path in the annotation is relative to the package path
-			// we need to use absolute path
-			// TODO: file paths in annotations should be OS-agnostic but kyaml
-			// doesn't obey this rule. path needs to be converted to OS-specific
-			// format once kyaml solve the issue.
-			path = filepath.Join(r.Path, path)
-			if path == r.FnConfigPath {
-				continue
-			}
-		}
-
-		output = append(output, node)
-	}
-	return output, nil
 }
 
 func (r RunFns) getFilters() ([]kio.Filter, error) {

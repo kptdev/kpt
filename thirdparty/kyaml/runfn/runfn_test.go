@@ -740,50 +740,6 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	assert.Contains(t, string(b), "kind: ReplicaSet")
 }
 
-func TestCmd_Execute_ignoreFnConfigPath(t *testing.T) {
-	dir := setupTest(t)
-	defer os.RemoveAll(dir)
-
-	// write a test filter to a separate directory
-	tmpF, err := ioutil.TempFile(dir, "filter*.yaml")
-	if !assert.NoError(t, err) {
-		return
-	}
-	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerFnConfigYAMLData), 0600)) {
-		return
-	}
-
-	fn, err := yaml.Parse(ValueReplacerYAMLData)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// run the functions, providing the path to the directory of filters
-	instance := RunFns{
-		FnConfigPath: tmpF.Name(),
-		Path:         dir,
-		Functions:    []*yaml.RNode{fn},
-	}
-	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
-	// initialize the defaults
-	assert.NoError(t, instance.init())
-
-	err = instance.Execute()
-	if !assert.NoError(t, err) {
-		return
-	}
-	// check is function config file ignored
-	if _, err := os.Stat(tmpF.Name()); !os.IsNotExist(err) {
-		t.Fatalf("function config file should be filtered out")
-	}
-	b, err := ioutil.ReadFile(
-		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Contains(t, string(b), "kind: ReplicaSet")
-}
-
 // TestCmd_Execute_setOutput tests the execution of a filter using an io.Writer as output
 func TestCmd_Execute_setOutput(t *testing.T) {
 	dir := setupTest(t)
