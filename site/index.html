@@ -82,7 +82,6 @@
               const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)-?(.+)?/;
               const bookPathMatch = pathname.match(bookPath);
               if (bookPathMatch) {
-                console.log(bookPathMatch)
                 const chapterLine = `# Chapter ${parseInt(bookPathMatch[1])} - ${bookPathMatch[2].replaceAll("-", " ")}\n`;
                 const pageNumber = parseInt(bookPathMatch[3]);
                 let pageLine = "## Introduction\n";
@@ -91,6 +90,7 @@
                 }
                 content = chapterLine + pageLine + content;
               }
+              
               return content;
             });
 
@@ -103,7 +103,11 @@
                 el.style.display = isBookPage ? "flex" : "none"
                 );
                  
-              const tocLists = Array.from(document.getElementsByClassName("sidebar-nav").item(0)?.getElementsByTagName("ul"))
+              const sidebar = document.getElementsByClassName("sidebar-nav").item(0);
+              // Add book outline class to the sidebar item with the book link.
+              sidebar?.querySelectorAll("a[href='/book/']").item(0).parentNode.classList.add("book-outline");
+              
+              const tocLists = Array.from(sidebar?.getElementsByTagName("ul"))
               
               // Hide a child list if neither its parent nor any of its descendants are active.
               tocLists.forEach(
@@ -158,6 +162,15 @@
     /* Hide inactive lists whose titles aren't links. */
     .sidebar-nav ul a+ul.inactive {
       display: none;
+    }
+
+    .sidebar-nav ul ol {
+      padding-left: var(--sidebar-nav-indent);
+      margin-left: var(--sidebar-nav-indent);
+    }
+
+    .sidebar-nav .book-outline ul {
+      list-style-type: decimal;
     }
 
     .markdown-section h1 {
