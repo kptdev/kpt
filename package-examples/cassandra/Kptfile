@@ -6,3 +6,4 @@ pipeline:
   validators:
   # TODO: https://github.com/GoogleContainerTools/kpt/issues/1621
   # - image: gcr.io/kpt-fn/kubeval:0.0.1
+  

@@ -11,7 +11,9 @@ First, let's fetch the Cassandra package from Git to your local filesystem:
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/cassandra@next cassandra
 ```
 
-kpt is fully integrated with Git and enables forking, rebasing and versioning a package of configuration using the underlying Git version control system. Since kpt is Git-native, any existing directory in Git containing Kubernetes resources is also a valid kpt package!
+kpt is fully integrated with Git and enables forking, rebasing and versioning a package of
+configuration using the underlying Git version control system. Since kpt is Git-native, any
+existing directory in Git containing Kubernetes resources is also a valid kpt package!
 
 Next, let's quickly view the content of the package:
 
@@ -25,29 +27,36 @@ $ kpt pkg tree
 └── [statefulset.yaml]  StorageClass fast
 ```
 
-As you can see, this package contains four resources in three files (`statfeulset.yaml` contains 2 resources: `StatefulSet` and `StorageClass`). There is a special file named `Kptfile` which is used by the kpt client itself and is not deployed to the cluster. Later chapters will explain the `Kptfile` in detail.
+As you can see, this package contains four resources in three files (`statfeulset.yaml` contains 2
+resources: `StatefulSet` and `StorageClass`). There is a special file named `Kptfile` which is used
+by the kpt client itself and is not deployed to the cluster. Later chapters will explain the
+`Kptfile` in detail.
 
 ## Customize the package
 
-At this point, you typically want to customize the package. With kpt, you can use different approaches depending on your use case.
+At this point, you typically want to customize the package. With kpt, you can use different
+approaches depending on your use case.
 
-You may want to manually edit the files. For example,
-modify the value of `CASSANDRA_CLUSTER_NAME` in the `StatefulSet` resource using your favorite editor:
+You may want to manually edit the files. For example, modify the value of `CASSANDRA_CLUSTER_NAME`
+in the `StatefulSet` resource using your favorite editor:
 
 ```shell
 $ vim cassandra/statefulset.yaml
 ```
 
-Alternatively, you may want to automatically customize and validate a package using _functions_. For example, you can set a label with key `env` on all the resources in the package:
+Alternatively, you may want to automatically customize and/or validate a package using _functions_.
+For example, you can set a label with key `env` on all the resources in the package:
 
 ```shell
 $ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 -- env=dev
 ```
 
 This is an imperative one-time operation. It is also possible to declare a function as part of
-pipeline in the `Kptfile`. In this case, the author of a package has already declared a validator function (`kubeval`) that validates the resources using their OpenAPI schema.
+pipeline in the `Kptfile`. In this case, the author of a package has already declared a validator
+function (`kubeval`) that validates the resources using their OpenAPI schema.
 
-Regardless of the how you choose to customize the package, you want to _render_ the package before applying it the cluster:
+Regardless of the how you choose to customize the package, you need to _render_ the package before
+applying it the cluster:
 
 ```shell
 $ kpt fn render
