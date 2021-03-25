@@ -82,13 +82,11 @@
               const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)-?(.+)?/;
               const bookPathMatch = pathname.match(bookPath);
               if (bookPathMatch) {
-                const chapterLine = `# Chapter ${parseInt(bookPathMatch[1])} - ${bookPathMatch[2].replaceAll("-", " ")}\n`;
                 const pageNumber = parseInt(bookPathMatch[3]);
-                let pageLine = "## Introduction\n";
-                if (pageNumber > 0) {
-                  pageLine = `## ${pageNumber} - ${bookPathMatch[4].replaceAll("-", " ")}\n`
-                }
-                content = chapterLine + pageLine + content;
+                const chapterNum = `# ${parseInt(bookPathMatch[1])}${pageNumber > 0 ? `.${pageNumber}` : ""}`;
+                const pageTitle = pageNumber > 0 ? bookPathMatch[4] : bookPathMatch[2];
+
+                content = `${chapterNum} ${pageTitle.replaceAll("-", " ").toTitleCase()}\n` + content;
               }
               
               return content;
@@ -130,6 +128,7 @@
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-yaml.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-go.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-typescript.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/@gouch/to-title-case@2.2.1/to-title-case.min.js"></script>
     <!--Fallback content on 404s can go here.-->
   </body>
   <style>
