@@ -41,7 +41,6 @@
         - [Open Application Model (OAM)](guides/ecosystem/oam/)
 - [Reference](reference/)
     - [pkg](reference/pkg/)
-        - [desc](reference/pkg/desc/)
         - [diff](reference/pkg/diff/)
         - [get](reference/pkg/get/)
         - [init](reference/pkg/init/)

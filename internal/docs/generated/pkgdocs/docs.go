@@ -1,3 +1,4 @@
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,28 +45,15 @@ var PkgExamples = `
   $ kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 `
 
-var DescShort = `Display upstream package metadata`
-var DescLong = `
-  kpt pkg desc DIR
-  
-  DIR:
-    Path to a package directory
-`
-var DescExamples = `
-<!-- @pkgDesc @verifyExamples-->
-  # display description for the local hello-world package
-  kpt pkg desc hello-world/
-`
-
 var DiffShort = `Diff a local package against upstream`
 var DiffLong = `
-  kpt pkg diff [DIR@VERSION]
+  kpt pkg diff [PKG_PATH@VERSION] [flags]
 
 Args:
 
-  DIR:
-    Local package to compare. Command will fail if the directory doesn't exist, or does not
-    contain a Kptfile.  Defaults to the current working directory.
+  PKG_PATH:
+    Local package path to compare. Command will fail if the directory doesn't exist, or does not
+    contain a Kptfile. Defaults to the current working directory.
   
   VERSION:
     A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
@@ -135,25 +123,9 @@ var DiffExamples = `
   kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
 `
 
-var FixShort = `Fix a local package which is using deprecated features.`
-var FixLong = `
-  kpt pkg fix LOCAL_PKG_DIRECTORY [flags]
-  
-  Args:
-    LOCAL_PKG_DIRECTORY:
-      Local directory with kpt package. Directory must exist and
-      contain a Kptfile.
-  
-  Flags:
-    --dry-run
-      if set, the fix command shall only print the fixes which will be made to the
-      package without actually fixing/modifying the resources.
-  
-`
-
 var GetShort = `Fetch a package from a git repo.`
 var GetLong = `
-  kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
+  kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY] [flags]
   
   REPO_URI:
     URI of a git repository containing 1 or more packages as subdirectories.
@@ -177,7 +149,7 @@ var GetLong = `
     e.g. @master
   
   LOCAL_DEST_DIRECTORY:
-    The local directory to write the package to.
+    The local directory to write the package to. Defaults to the current working directory.
     e.g. ./my-cockroachdb-copy
   
       * If the directory does NOT exist: create the specified directory
@@ -207,12 +179,12 @@ var GetExamples = `
 
 var InitShort = `Initialize an empty package`
 var InitLong = `
-  kpt pkg init DIR [flags]
+  kpt pkg init [DIR] [flags]
 
 Args:
 
   DIR:
-    Init fails if DIR does not already exist
+    Init fails if DIR does not already exist. Defaults to the current working directory.
 
 Flags:
 
@@ -236,114 +208,14 @@ var InitExamples = `
       --description "my cockroachdb implementation"
 `
 
-var SyncShort = `Fetch and update packages declaratively`
-var SyncLong = `
-  kpt pkg sync LOCAL_PKG_DIR [flags]
-  
-  LOCAL_PKG_DIR:
-    Local package with dependencies to sync.  Directory must exist and
-    contain a Kptfile.
-
-Env Vars:
-
-  KPT_CACHE_DIR:
-    Controls where to cache remote packages during updates.
-    Defaults to ~/.kpt/repos/
-`
-var SyncExamples = `
-<!-- @pkgSync @verifyStaleExamples-->
-  # print the dependencies that would be modified
-  kpt pkg sync . --dry-run
-
-<!-- @pkgSync @verifyExamples-->
-  # sync the dependencies
-  kpt pkg sync .
-`
-
-var SetShort = `Add a sync dependency to a Kptfile`
-var SetLong = `
-  kpt pkg set REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]
-  
-  REPO_URI:
-    URI of a git repository containing 1 or more packages as subdirectories.
-    In most cases the .git suffix should be specified to delimit the REPO_URI
-    from the PKG_PATH, but this is not required for widely recognized repo
-    prefixes.  If get cannot parse the repo for the directory and version,
-    then it will print an error asking for '.git' to be specified as part of
-    the argument.
-    e.g. https://github.com/kubernetes/examples.git
-    Specify - to read Resources from stdin and write to a LOCAL_DEST_DIRECTORY
-  
-  PKG_PATH:
-    Path to remote subdirectory containing Kubernetes Resource configuration
-    files or directories.  Defaults to the root directory.
-    Uses '/' as the path separator (regardless of OS).
-    e.g. staging/cockroachdb
-  
-  VERSION:
-    A git tag, branch, ref or commit for the remote version of the package to
-    fetch.  Defaults to the repository master branch.
-    e.g. @master
-  
-  LOCAL_DEST_DIRECTORY:
-    The local directory to write the package to. e.g. ./my-cockroachdb-copy
-  
-      * If the directory does NOT exist: create the specified directory and write
-        the package contents to it
-      * If the directory DOES exist: create a NEW directory under the specified one,
-        defaulting the name to the Base of REPO/PKG_PATH
-      * If the directory DOES exist and already contains a directory with the same name
-        of the one that would be created: fail
-
-Flags:
-
-  --strategy:
-    Controls how changes to the local package are handled.
-    Defaults to fast-forward.
-  
-      * resource-merge: perform a structural comparison of the original /
-        updated Resources, and merge the changes into the local package.
-        See ` + "`" + `kpt help apis merge3` + "`" + ` for details on merge.
-      * fast-forward: fail without updating if the local package was modified
-        since it was fetched.
-      * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
-        patch of the changes between the source version and destination
-        version.
-        REQUIRES THE LOCAL PACKAGE TO HAVE BEEN COMMITTED TO A LOCAL GIT REPO.
-      * force-delete-replace: THIS WILL WIPE ALL LOCAL CHANGES TO
-        THE PACKAGE.  DELETE the local package at local_pkg_dir/ and replace
-        it with the remote version.
-`
-var SetExamples = `
-Create a new package and add a dependency to it:
-
-<!-- @pkgSyncSet @verifyExamples-->
-  # init a package so it can be synced
-  kpt pkg init .
-  
-  # add a dependency to the package
-  kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set \
-      hello-world
-  
-  # sync the dependencies
-  kpt pkg sync .
-
-Update an existing package dependency:
-
-<!-- @pkgSyncSet @verifyStaleExamples-->
-  # add a dependency to an existing package
-  kpt pkg sync set https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.2.0 \
-      hello-world --strategy=resource-merge
-`
-
 var TreeShort = `Render resources using a tree structure`
 var TreeLong = `
-  kpt pkg tree [DIR] [flags]
+  kpt pkg tree [DIR | -<STDIN>] [flags]
 
 Args:
 
   DIR:
-    Path to a package directory.  Defaults to STDIN if not specified.
+    Path to a package directory. Defaults to the current working directory.
 
 Flags:
 
@@ -377,23 +249,24 @@ Flags:
 var TreeExamples = `
 <!-- @pkgTree @verifyExamples-->
   # print Resources using directory structure
-  kpt pkg tree my-dir/
+  kpt pkg tree
 
 <!-- @pkgTree @verifyExamples-->
   # print replicas, container name, and container image and fields for Resources
-  kpt pkg tree my-dir --replicas --image --name
+  kpt pkg tree --replicas --image --name
 
 <!-- @pkgTree @verifyExamples-->
   # print all common Resource fields
-  kpt pkg tree my-dir/ --all
+  kpt pkg tree --all
 
 <!-- @pkgTree @verifyExamples-->
   # print the "foo"" annotation
-  kpt pkg tree my-dir/ --field "metadata.annotations.foo"
+  kpt pkg tree --field "metadata.annotations.foo"
 
 <!-- @pkgTree @verifyStaleExamples-->
-  # print the status of resources with status.condition type of "Completed"
-  kubectl get all -o yaml | kpt pkg tree \
+  # print the status of resources piped from kubectl output with status.condition 
+  type of "Completed"
+  kubectl get all -o yaml | kpt pkg tree - \
     --field="status.conditions[type=Completed].status"
 
 <!-- @pkgTree @verifyStaleExamples-->
@@ -412,16 +285,16 @@ var TreeExamples = `
 
 var UpdateShort = `Apply upstream package updates`
 var UpdateLong = `
-  kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+  kpt pkg update [PKG_PATH@VERSION] [flags]
 
 Args:
 
-  LOCAL_PKG_DIR:
-    Local package to update.  Directory must exist and contain a Kptfile
-    to be updated.
+  PKG_PATH:
+    Local package path to update. Directory must exist and contain a Kptfile
+    to be updated. Defaults to the current working directory.
   
   VERSION:
-    A git tag, branch, ref or commit.  Specified after the local_package
+    A git tag, branch, ref or commit. Specified after the local_package
     with @ -- pkg@version.
     Defaults the local package version that was last fetched.
   
