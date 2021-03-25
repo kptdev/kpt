@@ -103,9 +103,21 @@
                  
               const sidebar = document.getElementsByClassName("sidebar-nav").item(0);
               // Add book outline class to the sidebar item with the book link.
-              sidebar?.querySelectorAll("a[href='/book/']").item(0).parentNode.classList.add("book-outline");
+              const bookItem = sidebar?.querySelectorAll("a[href='/book/']").item(0).parentNode;
+              bookItem.classList.add("book-outline");
+
+              // Add chapter and page numbers before each book entry.
+              const chapArray = Array.from(bookItem.children.item(1).children);
+              chapArray.forEach(
+                (chap, chapIndex) => {
+                  const chapNumber = chapIndex+1;
+                  Array.from(chap.children.item(1).children).forEach(
+                    (page, pageIndex) => page.children.item(0).insertAdjacentText("afterbegin", `${chapNumber}.${pageIndex+1} `)
+                    );
+                  chap.children.item(0).insertAdjacentText("afterbegin", `${chapNumber} `);
+                });
               
-              const tocLists = Array.from(sidebar?.getElementsByTagName("ul"))
+              const tocLists = Array.from(sidebar?.getElementsByTagName("ul"));
               
               // Hide a child list if neither its parent nor any of its descendants are active.
               tocLists.forEach(
@@ -164,8 +176,6 @@
     }
 
     .sidebar-nav .book-outline ul {
-      list-style-type: decimal;
-      padding-left: var(--sidebar-nav-indent);
       margin-left: var(--sidebar-nav-indent);
     }
   </style>
