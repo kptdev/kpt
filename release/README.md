@@ -62,6 +62,10 @@ Otherwise the first steps that checkout the code will not include your local
 changes and all future steps will not include those changes. This includes any
 modifications to `goreleaser.yaml`!
 
+> Before following these steps you will need to manually update
+`release/tag/goreleaser.yaml` so that `release.github.owner` points to your
+GitHub account.
+
 1. Setup your gcloud profile.
 2. Create and enable the Google Cloud Secret Manager on the profile
 3. Create a GitHub Personal Access Token and save it as `github-token` in the
