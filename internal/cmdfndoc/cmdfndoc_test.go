@@ -36,6 +36,10 @@ func TestFnDoc(t *testing.T) {
 			image:     "gcr.io/kpt-fn/set-namespace:v0.1.0",
 			expectErr: "please ensure the container has an entrypoint and it supports --help flag",
 		},
+		{
+			image:     "",
+			expectErr: "image must be specified",
+		},
 	}
 
 	for _, tc := range testcases {

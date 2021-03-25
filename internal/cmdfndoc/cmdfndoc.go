@@ -17,6 +17,7 @@ package cmdfndoc
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -29,7 +30,7 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:     "doc [PKG_PATH] [flags]",
+		Use:     "doc --image=IMAGE",
 		Args:    cobra.MaximumNArgs(1),
 		Short:   fndocs.DocShort,
 		Long:    fndocs.DocShort + "\n" + fndocs.DocLong,
@@ -52,6 +53,9 @@ type Runner struct {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	if r.Image == "" {
+		return errors.New("image must be specified")
+	}
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",
