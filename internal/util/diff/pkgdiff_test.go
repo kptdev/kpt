@@ -77,11 +77,7 @@ func TestPkgDiff(t *testing.T) {
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpackage").
-						WithKptfile(pkgbuilder.NewKptfile().
-							WithSetters(
-								pkgbuilder.NewSetter("bar", "foo"),
-							),
-						).
+						WithKptfile().
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 			diff: toStringSet(),
