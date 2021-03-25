@@ -49,5 +49,5 @@ changelog:
       - Merge branch
 release:
   github:
-    owner: "{{ .Env._GITHUB_USER }}"
+    owner: "GoogleContainerTools"
     name: kpt
