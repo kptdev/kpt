@@ -1,1 +1,1 @@
-# Concepts - Exploring a Fetched Package
+How to explore a package

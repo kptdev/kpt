@@ -1,1 +1,1 @@
-# Concepts - Functions
+What is a function?

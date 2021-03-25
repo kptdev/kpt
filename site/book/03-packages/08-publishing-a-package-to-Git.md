@@ -1,1 +1,1 @@
-# Concepts - Publishing a Package to Git
+Working with git

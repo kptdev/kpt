@@ -1,1 +1,1 @@
-# Apply - Lifecycle of Applied Resources
+Lifecycle information

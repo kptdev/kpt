@@ -1,1 +1,1 @@
-# Concepts - Customizing a Package
+How to customize a package

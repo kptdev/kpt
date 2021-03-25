@@ -1,1 +1,1 @@
-# Concepts - Rebasing a Package
+How to rebase

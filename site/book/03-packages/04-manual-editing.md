@@ -1,1 +1,1 @@
-# Concepts - Manual Editing
+Manually edit a package

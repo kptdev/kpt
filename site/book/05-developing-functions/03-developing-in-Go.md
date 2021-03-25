@@ -1,1 +1,1 @@
-# Developing Functions - Developing in Go
+Golang development

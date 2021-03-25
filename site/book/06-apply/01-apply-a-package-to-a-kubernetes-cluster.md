@@ -1,1 +1,1 @@
-# Apply a Package to a Kubernetes Cluster
+Applying to a cluster
