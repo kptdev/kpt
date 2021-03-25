@@ -76,6 +76,24 @@
               return content;
             });
 
+            hook.beforeEach(function (content) {
+              const pathname = window.location.pathname.toLowerCase();
+              // Matches a path like /book/02-concepts/01-packages
+              const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)-?(.+)?/;
+              const bookPathMatch = pathname.match(bookPath);
+              if (bookPathMatch) {
+                console.log(bookPathMatch)
+                const chapterLine = `# Chapter ${parseInt(bookPathMatch[1])} - ${bookPathMatch[2].replaceAll("-", " ")}\n`;
+                const pageNumber = parseInt(bookPathMatch[3]);
+                let pageLine = "## Introduction\n";
+                if (pageNumber > 0) {
+                  pageLine = `## ${pageNumber} - ${bookPathMatch[4].replaceAll("-", " ")}\n`
+                }
+                content = chapterLine + pageLine + content;
+              }
+              return content;
+            });
+
             hook.doneEach(function() {
               // Only show footer for book pages.
               const paginationFooters = Array.from(document.getElementsByClassName("docsify-pagination-container"));
@@ -140,6 +158,14 @@
     /* Hide inactive lists whose titles aren't links. */
     .sidebar-nav ul a+ul.inactive {
       display: none;
+    }
+
+    .markdown-section h1 {
+      text-transform: capitalize;
+    }
+
+    .markdown-section h2 {
+      text-transform: capitalize;
     }
   </style>
 </html>
