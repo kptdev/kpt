@@ -48,9 +48,14 @@ func GetPkgCommand(name string) *cobra.Command {
 	tree.Long = pkgdocs.TreeShort + "\n" + pkgdocs.TreeLong
 	tree.Example = pkgdocs.TreeExamples
 
+	cat := configcobra.Cat(name)
+	cat.Short = pkgdocs.CatShort
+	cat.Long = pkgdocs.CatShort + "\n" + pkgdocs.CatLong
+	cat.Example = pkgdocs.CatExamples
+
 	pkg.AddCommand(
 		cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdupdate.NewCommand(name), cmddiff.NewCommand(name), tree,
+		cmdupdate.NewCommand(name), cmddiff.NewCommand(name), cat, tree,
 	)
 	return pkg
 }

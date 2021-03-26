@@ -45,6 +45,18 @@ var PkgExamples = `
   $ kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 `
 
+var CatShort = `Print the resources in a package`
+var CatLong = `
+  kpt cfg cat [DIR]
+  
+  DIR:
+    Path to a package directory. Defaults to the current working directory.
+`
+var CatExamples = `
+  # print Resource config from current directory
+  kpt cfg cat
+`
+
 var DiffShort = `Diff a local package against upstream`
 var DiffLong = `
   kpt pkg diff [PKG_PATH@VERSION] [flags]
