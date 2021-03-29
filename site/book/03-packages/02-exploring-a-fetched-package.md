@@ -1,0 +1,1 @@
+How to explore a package
