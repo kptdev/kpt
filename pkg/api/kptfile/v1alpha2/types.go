@@ -222,6 +222,12 @@ func (p *Pipeline) IsEmpty() bool {
 
 // Function specifies a KRM function.
 type Function struct {
+	// `Name` specifies the name of the function within the pipeline. It must
+	// be unique within the pipeline.
+	// The name will be used as the associative key when merging changes
+	// from the upstream package into the pipeline.
+	Name string `yaml:"name,omitempty"`
+
 	// `Image` specifies the function container image.
 	// It can either be fully qualified, e.g.:
 	//

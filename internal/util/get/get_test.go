@@ -647,16 +647,14 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 }
 
 func TestCommand_Run_subpackages(t *testing.T) {
-	testCases := []struct {
-		name           string
+	testCases := map[string]struct {
 		directory      string
 		ref            string
 		reposContent   map[string][]testutil.Content
 		expectedResult *pkgbuilder.RootPkg
 		expectedErrMsg string
 	}{
-		{
-			name:      "basic package",
+		"basic package without pipeline": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -677,8 +675,56 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 		},
-		{
-			name:      "package with subpackages",
+		"basic package with pipeline": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("foo", "gcr.io/kpt-dev/foo:latest"),
+									),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0).
+						WithPipeline(
+							pkgbuilder.NewFunction("foo", "gcr.io/kpt-dev/foo:latest"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"basic package with no Kptfile in upstream": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"package with subpackages": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -709,8 +755,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 		},
-		{
-			name:      "package with deeply nested subpackages",
+		"package with deeply nested subpackages": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -763,8 +808,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						),
 				),
 		},
-		{
-			name:      "package with local and remote subpackages",
+		"package with local and remote subpackages": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -867,8 +911,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 		},
-		{
-			name:      "fetch subpackage on a different branch than master",
+		"fetch subpackage on a different branch than master": {
 			directory: "/bar",
 			ref:       "main",
 			reposContent: map[string][]testutil.Content{
@@ -906,8 +949,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},
-		{
-			name:      "package with unfetched remote subpackage with a tag reference",
+		"package with unfetched remote subpackage with a tag reference": {
 			directory: "/",
 			ref:       "main",
 			reposContent: map[string][]testutil.Content{
@@ -969,8 +1011,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 		},
-		{
-			name:      "same unfetched remote subpackage referenced multiple times",
+		"same unfetched remote subpackage referenced multiple times": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -1042,22 +1083,21 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 	}
 
-	for i := range testCases {
-		test := testCases[i]
-		t.Run(test.name, func(t *testing.T) {
-			repos, w, clean := testutil.SetupReposAndWorkspace(t, test.reposContent)
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, tc.reposContent)
 			defer clean()
 			upstreamRepo := repos[testutil.Upstream]
-			err := testutil.UpdateRepos(t, repos, test.reposContent)
+			err := testutil.UpdateRepos(t, repos, tc.reposContent)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
 			var targetDir string
-			if test.directory == "/" {
+			if tc.directory == "/" {
 				targetDir = filepath.Base(upstreamRepo.RepoName)
 			} else {
-				targetDir = filepath.Base(test.directory)
+				targetDir = filepath.Base(tc.directory)
 			}
 			w.PackageDir = targetDir
 			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
@@ -1065,17 +1105,17 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			err = Command{
 				Git: &kptfilev1alpha2.Git{
 					Repo:      upstreamRepo.RepoDirectory,
-					Directory: test.directory,
-					Ref:       test.ref,
+					Directory: tc.directory,
+					Ref:       tc.ref,
 				},
 				Destination: destinationDir,
 			}.Run()
 
-			if test.expectedErrMsg != "" {
+			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
 					t.FailNow()
 				}
-				assert.Contains(t, err.Error(), test.expectedErrMsg)
+				assert.Contains(t, err.Error(), tc.expectedErrMsg)
 				return
 			}
 
@@ -1099,7 +1139,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				t.FailNow()
 			}
 
-			expectedPath := test.expectedResult.ExpandPkgWithName(t, targetDir, testutil.ToReposInfo(repos))
+			expectedPath := tc.expectedResult.ExpandPkgWithName(t, targetDir, testutil.ToReposInfo(repos))
 			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
 		})
 	}

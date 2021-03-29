@@ -177,7 +177,6 @@ func (u Command) Run() error {
 	return nil
 }
 
-//nolint:gocyclo
 func (u Command) updatePackage(p *pkg.Pkg) error {
 	kf, err := p.Kptfile()
 	if err != nil {
@@ -217,49 +216,11 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 		}
 
 		if !isRoot {
-			updatedExists, err := pkgExists(updatedPath)
+			doUpdate, err := checkPackageState(localPath, updatedPath, originPath)
 			if err != nil {
 				return err
 			}
-
-			originalExists, err := pkgExists(originPath)
-			if err != nil {
-				return err
-			}
-
-			switch {
-			case !originalExists && !updatedExists:
-				continue
-			case originalExists && !updatedExists:
-				hasChanges, err := PkgHasUpdatedUpstream(localPath, originPath)
-				if err != nil {
-					return err
-				}
-				if !hasChanges {
-					if err := os.RemoveAll(localPath); err != nil {
-						return err
-					}
-				}
-				continue
-			case !originalExists && updatedExists:
-				return fmt.Errorf("package added in both local and upstream")
-			default:
-			}
-
-			updatedFetched, err := pkgFetched(updatedPath)
-			if err != nil {
-				return err
-			}
-			originalFetched, err := pkgFetched(originPath)
-			if err != nil {
-				return err
-			}
-
-			if !originalFetched || !updatedFetched {
-				err := kptfileutil.MergeAndUpdateLocal(localPath, updatedPath, originPath)
-				if err != nil {
-					return err
-				}
+			if !doUpdate {
 				continue
 			}
 		}
@@ -298,7 +259,57 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 			s.Push(rel)
 		}
 	}
-	return fetch.UpsertKptfile(p.UniquePath.String(), updated)
+
+	return kptfileutil.UpdateUpstreamLockFromGit(p.UniquePath.String(), updated)
+}
+
+func checkPackageState(localPath, updatedPath, originPath string) (bool, error) {
+	updatedExists, err := pkgExists(updatedPath)
+	if err != nil {
+		return false, err
+	}
+
+	originalExists, err := pkgExists(originPath)
+	if err != nil {
+		return false, err
+	}
+
+	switch {
+	case !originalExists && !updatedExists:
+		return false, nil
+	case originalExists && !updatedExists:
+		hasChanges, err := PkgHasUpdatedUpstream(localPath, originPath)
+		if err != nil {
+			return false, err
+		}
+		if !hasChanges {
+			if err := os.RemoveAll(localPath); err != nil {
+				return false, err
+			}
+		}
+		return false, nil
+	case !originalExists && updatedExists:
+		return false, fmt.Errorf("package added in both local and upstream")
+	default:
+	}
+
+	// At this point we know that the package exists in both upstream and origin.
+	updatedKf, err := kptfileutil.ReadFile(updatedPath)
+	if err != nil {
+		return false, err
+	}
+
+	originKf, err := kptfileutil.ReadFile(originPath)
+	if err != nil {
+		return false, err
+	}
+
+	if originKf.UpstreamLock == nil || updatedKf.UpstreamLock == nil {
+		if err := kptfileutil.UpdateKptfile(localPath, updatedPath, originPath, true); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 func pkgExists(path string) (bool, error) {
@@ -307,12 +318,4 @@ func pkgExists(path string) (bool, error) {
 		return false, err
 	}
 	return !os.IsNotExist(err), nil
-}
-
-func pkgFetched(path string) (bool, error) {
-	kf, err := kptfileutil.ReadFile(path)
-	if err != nil {
-		return false, err
-	}
-	return kf.UpstreamLock != nil, nil
 }
