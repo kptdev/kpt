@@ -1,7 +1,7 @@
-diff --git a/configs/db/resources.yaml b/configs/db/resources.yaml
+diff --git a/db/resources.yaml b/db/resources.yaml
 index 1f53907..b0d03ce 100644
---- a/configs/db/resources.yaml
-+++ b/configs/db/resources.yaml
+--- a/db/resources.yaml
++++ b/db/resources.yaml
 @@ -1,6 +1,19 @@
  apiVersion: apps/v1
  kind: StatefulSet
@@ -22,10 +22,10 @@ index 1f53907..b0d03ce 100644
 +      labels:
 +        app: backend
 +        tier: db
-diff --git a/configs/resources.yaml b/configs/resources.yaml
+diff --git a/resources.yaml b/resources.yaml
 index 62f8744..aba4424 100644
---- a/configs/resources.yaml
-+++ b/configs/resources.yaml
+--- a/resources.yaml
++++ b/resources.yaml
 @@ -1,13 +1,26 @@
  apiVersion: apps/v1
  kind: Deployment

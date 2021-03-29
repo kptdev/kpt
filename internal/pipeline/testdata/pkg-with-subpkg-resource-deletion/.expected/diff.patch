@@ -1,7 +1,7 @@
-diff --git a/configs/db/resources.yaml b/configs/db/resources.yaml
+diff --git a/db/resources.yaml b/db/resources.yaml
 index 36d87ea..adf2fec 100644
---- a/configs/db/resources.yaml
-+++ b/configs/db/resources.yaml
+--- a/db/resources.yaml
++++ b/db/resources.yaml
 @@ -1,13 +1,10 @@
 -apiVersion: apps/v1
 -kind: StatefulSet
@@ -20,10 +20,10 @@ index 36d87ea..adf2fec 100644
 +  namespace: staging
  spec:
    image: nginx:1.2.3
-diff --git a/configs/deployment_httpbin.yaml b/configs/deployment_httpbin.yaml
+diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
 index 2e8f622..0000000
---- a/configs/deployment_httpbin.yaml
+--- a/deployment_httpbin.yaml
 +++ /dev/null
 @@ -1,23 +0,0 @@
 -apiVersion: apps/v1
@@ -49,10 +49,10 @@ index 2e8f622..0000000
 -      containers:
 -      - image: kennethreitz/httpbin
 -        name: httpbin
-diff --git a/configs/resources.yaml b/configs/resources.yaml
+diff --git a/resources.yaml b/resources.yaml
 index 0848ba0..6be45ee 100644
---- a/configs/resources.yaml
-+++ b/configs/resources.yaml
+--- a/resources.yaml
++++ b/resources.yaml
 @@ -1,6 +1,16 @@
  apiVersion: apps/v1
  kind: Deployment

@@ -1,7 +1,7 @@
-diff --git a/configs/resources.yaml b/configs/resources.yaml
+diff --git a/resources.yaml b/resources.yaml
 index 62f8744..c268dd0 100644
---- a/configs/resources.yaml
-+++ b/configs/resources.yaml
+--- a/resources.yaml
++++ b/resources.yaml
 @@ -1,13 +1,26 @@
  apiVersion: apps/v1
  kind: Deployment

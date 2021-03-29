@@ -1,7 +1,7 @@
-diff --git a/configs/deployment.yaml b/configs/deployment.yaml
+diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
 index 4704d53..0000000
---- a/configs/deployment.yaml
+--- a/deployment.yaml
 +++ /dev/null
 @@ -1,11 +0,0 @@
 -apiVersion: apps/v1
@@ -15,10 +15,10 @@ index 4704d53..0000000
 -      containers:
 -      - image: kennethreitz/httpbin
 -        name: httpbin
-diff --git a/configs/resources.yaml b/configs/resources.yaml
+diff --git a/resources.yaml b/resources.yaml
 deleted file mode 100644
 index 0848ba0..0000000
---- a/configs/resources.yaml
+--- a/resources.yaml
 +++ /dev/null
 @@ -1,6 +0,0 @@
 -apiVersion: apps/v1
