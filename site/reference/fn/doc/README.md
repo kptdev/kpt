@@ -3,7 +3,7 @@ title: "Doc"
 linkTitle: "doc"
 type: docs
 description: >
-    Get the help text from a function image
+    Display the documentation for a function
 ---
 
 <!--mdtogo:Short
@@ -16,7 +16,7 @@ description: >
 
 ```shell
 # diplay the documentation for image gcr.io/kpt-fn/set-namespace:v0.1.1
-kpt fn doc --image gcr.io/kpt-fn/starlark:unstable
+kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1
 ```
 
 <!--mdtogo-->
@@ -24,6 +24,9 @@ kpt fn doc --image gcr.io/kpt-fn/starlark:unstable
 ### Synopsis
 
 <!--mdtogo:Long-->
+
+`kpt fn doc` invokes `docker run` to extract the help text. It requires the
+image to set the default entrypoint which supports `--help` flag.
 
 ```shell
 kpt fn doc --image=IMAGE

@@ -30,7 +30,7 @@ func TestFnDoc(t *testing.T) {
 	}
 	testcases := []testcase{
 		{
-			image: "gcr.io/kpt-fn/set-namespace:unstable",
+			image: "gcr.io/kpt-fn/set-namespace:v0.1.1",
 		},
 		{
 			image:     "gcr.io/kpt-fn/set-namespace:v0.1.0",
