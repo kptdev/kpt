@@ -45,16 +45,37 @@ var PkgExamples = `
   $ kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 `
 
-var CatShort = `Print the resources in a package`
+var CatShort = `Print the KRM resources in a file/directory`
 var CatLong = `
-  kpt cfg cat [DIR]
+  kpt pkg cat [FILE | DIR]
   
   DIR:
-    Path to a package directory. Defaults to the current working directory.
+    Path to a directory with KRM resource files. Defaults to the current working directory.
+  
+  FILE:
+    Path to a KRM file.
 `
 var CatExamples = `
+  # print Resource config from a file
+  kpt pkg cat path/to/deployment.yaml
+
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+
   # print Resource config from current directory
-  kpt cfg cat
+  kpt pkg cat
+
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+  ---
+  apiVersion: apps/v1
+  kind: Service
+  metadata:
+    name: nginx-service
 `
 
 var DiffShort = `Diff a local package against upstream`

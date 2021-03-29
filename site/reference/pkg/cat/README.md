@@ -3,18 +3,16 @@ title: "Cat"
 linkTitle: "cat"
 type: docs
 description: >
-  Print the resources in a package
+  Print the KRM resources in a file/directory
 ---
 
 <!--mdtogo:Short
-    Print the resources in a package
+    Print the KRM resources in a file/directory
 -->
-
-{{< asciinema key="pkg-cat" rows="10" preload="1" >}}
 
 Cat prints the resources in a package as yaml to stdout.
 
-Cat is useful for printing only the resources in a package which might
+Cat is useful for printing the KRM resources in a file/directory which might
 contain other non-resource files.
 
 ### Synopsis
@@ -22,10 +20,13 @@ contain other non-resource files.
 <!--mdtogo:Long-->
 
 ```
-kpt cfg cat [DIR]
+kpt pkg cat [FILE | DIR]
 
 DIR:
-  Path to a package directory. Defaults to the current working directory.
+  Path to a directory with KRM resource files. Defaults to the current working directory.
+
+FILE:
+  Path to a KRM file.
 ```
 
 <!--mdtogo-->
@@ -34,9 +35,33 @@ DIR:
 
 <!--mdtogo:Examples-->
 
-```sh
+```
+# print Resource config from a file
+kpt pkg cat path/to/deployment.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+```
+
+```
 # print Resource config from current directory
-kpt cfg cat
+kpt pkg cat
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+---
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: nginx-service
 ```
 
 <!--mdtogo-->
@@ -47,20 +72,14 @@ kpt cfg cat
 --annotate
   annotate resources with their file origins.
 
---dest string
-  if specified, write output to a file rather than stdout
-
---exclude-non-local
-  if true, exclude non-local-config in the output.
-
 --format
   format resource config yaml before printing. (default true)
 
---function-config string
-  path to function config to put in ResourceList -- only if wrapped in a ResourceList.
-
 --include-local
   if true, include local-config in the output.
+
+--only-local
+  if true, print only the local-config.
 
 --recurse-subpackages, -R
   print resources recursively in all the nested subpackages. (default true)
@@ -69,11 +88,5 @@ kpt cfg cat
   remove comments from yaml.
 
 --style
-  yaml styles to apply.  may be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
-
---wrap-kind string
-  if set, wrap the output in this list type kind.
-
---wrap-version string
-  if set, wrap the output in this list type apiVersion.
+  yaml styles to apply. may be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
 ```
