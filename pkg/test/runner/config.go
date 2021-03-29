@@ -23,13 +23,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ImperativeTestCaseConfig contains the config only for imperative
+// function run
+type ImperativeTestCaseConfig struct {
+	ExecPath string            `json:"execPath,omitempty" yaml:"execPath,omitempty"`
+	Image    string            `json:"image,omitempty" yaml:"image,omitempty"`
+	Args     map[string]string `json:"args,omitempty" yaml:"args,omitempty"`
+}
+
 // TestCaseConfig contains the config information for the test case
 type TestCaseConfig struct {
-	ExitCode int  `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
-	Network  bool `json:"network,omitempty" yaml:"network,omitempty"`
-	RunCount int  `json:"runCount,omitempty" yaml:"runCount,omitempty"`
-	Skip     bool `json:"skip,omitempty" yaml:"skip,omitempty"`
-	Debug    bool `json:"debug,omitempty" yaml:"debug,omitempty"`
+	ExitCode         int                      `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
+	Network          bool                     `json:"network,omitempty" yaml:"network,omitempty"`
+	RunCount         int                      `json:"runCount,omitempty" yaml:"runCount,omitempty"`
+	Skip             bool                     `json:"skip,omitempty" yaml:"skip,omitempty"`
+	Debug            bool                     `json:"debug,omitempty" yaml:"debug,omitempty"`
+	ImperativeConfig ImperativeTestCaseConfig `json:",inline" yaml:",inline"`
 }
 
 func newTestCaseConfig(path string) (TestCaseConfig, error) {
@@ -52,6 +61,9 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	err = yaml.Unmarshal(b, &config)
 	if err != nil {
 		return config, fmt.Errorf("failed to unmarshal config file: %s\n: %w", string(b), err)
+	}
+	if config.ImperativeConfig.ExecPath != "" && config.ImperativeConfig.Image != "" {
+		return config, fmt.Errorf("either ExecPath or Image can be used")
 	}
 	if config.RunCount == 0 {
 		config.RunCount = 1

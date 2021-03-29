@@ -26,8 +26,8 @@ func TestPipeline(t *testing.T) {
 	runPipelineTests(t, "../internal/pipeline/testdata/")
 }
 
-// runTests will scan test cases in 'path', run the command
-// `kpt pipeline run` on all of the packages in path, and test that
+// runPipelineTests will scan test cases in 'path', run the command
+// `kpt fn render` on all of the packages in path, and test that
 // the diff between the results and the original package is as
 // expected
 func runPipelineTests(t *testing.T, path string) {
@@ -40,6 +40,38 @@ func runPipelineTests(t *testing.T, path string) {
 		t.Run(c.Path, func(t *testing.T) {
 			t.Parallel()
 			r, err := runner.NewRunner(c, runner.CommandFnRender)
+			if err != nil {
+				t.Fatalf("failed to create test runner: %s", err)
+			}
+			if r.Skip() {
+				t.Skip()
+			}
+			err = r.Run()
+			if err != nil {
+				t.Fatalf("failed when running test: %s", err)
+			}
+		})
+	}
+}
+
+func TestEval(t *testing.T) {
+	runPipelineTests(t, "./fn/eval")
+}
+
+// runEvalTests will scan test cases in 'path', run the command
+// `kpt fn eval` on all of the packages in path, and test that
+// the diff between the results and the original package is as
+// expected
+func runEvalTests(t *testing.T, path string) {
+	cases, err := runner.ScanTestCases(path)
+	if err != nil {
+		t.Fatalf("failed to scan test cases: %s", err)
+	}
+	for _, c := range *cases {
+		c := c // capture range variable
+		t.Run(c.Path, func(t *testing.T) {
+			t.Parallel()
+			r, err := runner.NewRunner(c, runner.CommandFnEval)
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}

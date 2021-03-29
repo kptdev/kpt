@@ -76,6 +76,10 @@ func (r *Runner) Run() error {
 
 func (r *Runner) runFnEval() error {
 	fmt.Printf("Running test against package %s\n", r.pkgName)
+	if r.testCase.Config.ImperativeConfig.Image == "" &&
+		r.testCase.Config.ImperativeConfig.ExecPath == "" {
+		return fmt.Errorf("either ExecPath or Image must be specified")
+	}
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
@@ -102,9 +106,20 @@ func (r *Runner) runFnEval() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "run", tmpPkgPath, "--results-dir", resultsPath}
+	kptArgs := []string{"fn", "eval", tmpPkgPath, "--results-dir", resultsPath}
 	if r.testCase.Config.Network {
 		kptArgs = append(kptArgs, "--network")
+	}
+	if r.testCase.Config.ImperativeConfig.Image != "" {
+		kptArgs = append(kptArgs, "--image", r.testCase.Config.ImperativeConfig.Image)
+	} else if r.testCase.Config.ImperativeConfig.ExecPath != "" {
+		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.ImperativeConfig.ExecPath)
+	}
+	if len(r.testCase.Config.ImperativeConfig.Args) > 0 {
+		kptArgs = append(kptArgs, "--")
+		for k, v := range r.testCase.Config.ImperativeConfig.Args {
+			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
+		}
 	}
 	var output string
 	var fnErr error
