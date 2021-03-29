@@ -68,55 +68,20 @@
             // Add title to book Markdown pages based on directory structure.
             hook.beforeEach(processBookPageTitle);
 
-            hook.doneEach(function () {
-              // Only show footer for book pages.
-              const paginationFooters = Array.from(
-                document.getElementsByClassName("docsify-pagination-container")
-              );
-              const isBookPage =
-                document.location.pathname.toLowerCase().startsWith("/book") &&
-                document.location.pathname.length > 6;
-              paginationFooters.forEach(
-                (el) => (el.style.display = isBookPage ? "flex" : "none")
-              );
+            // Show navigation footer for book pages.
+            hook.doneEach(showBookPageFooters);
 
+            // Process elements in the navigation sidebar.
+            hook.doneEach(function () {
               const sidebar = document
                 .getElementsByClassName("sidebar-nav")
                 .item(0);
-              // Add book outline class to the sidebar item with the book link.
-              const bookItem = sidebar
-                ?.querySelectorAll("a[href='/book/']")
-                .item(0).parentNode;
-              bookItem.classList.add("book-outline");
 
-              // Add chapter and page numbers before each book entry.
-              const chapArray = Array.from(bookItem.children.item(1).children);
-              chapArray.forEach((chap, chapIndex) => {
-                const chapNumber = chapIndex + 1;
-                Array.from(
-                  chap.children.item(1).children
-                ).forEach((page, pageIndex) =>
-                  page.children
-                    .item(0)
-                    .insertAdjacentText(
-                      "afterbegin",
-                      `${chapNumber}.${pageIndex + 1} `
-                    )
-                );
-                chap.children
-                  .item(0)
-                  .insertAdjacentText("afterbegin", `${chapNumber} `);
-              });
+              // Post-process UI elements like chapter number for the book outline in the sidebar.
+              processBookOutline(sidebar);
 
-              const tocLists = Array.from(sidebar?.getElementsByTagName("ul"));
-
-              // Hide a child list if neither its parent nor any of its descendants are active.
-              tocLists.forEach((ul) =>
-                ul.parentElement.classList.contains("active") ||
-                ul.getElementsByClassName("active").length
-                  ? ul.classList.remove("inactive")
-                  : ul.classList.add("inactive")
-              );
+              // Only show child pages for currently active page to avoid sidebar cluttering.
+              addSidebarCollapsibility(sidebar);
             });
           },
         ],
@@ -132,6 +97,18 @@
           .replace(hugoDirectiveTags, "");
       }
 
+      function showBookPageFooters() {
+        const paginationFooters = Array.from(
+          document.getElementsByClassName("docsify-pagination-container")
+        );
+        const isBookPage =
+          document.location.pathname.toLowerCase().startsWith("/book") &&
+          document.location.pathname.length > 6;
+        paginationFooters.forEach(
+          (el) => (el.style.display = isBookPage ? "flex" : "none")
+        );
+      }
+
       function processBookPageTitle(content) {
         const pathname = window.location.pathname.toLowerCase();
 
@@ -141,7 +118,7 @@
 
         if (bookPathMatch) {
           const pageNumber = parseInt(bookPathMatch[3]);
-          
+
           // Use chapter name if on intro page and page name otherwise.
           const chapterNum = `# ${parseInt(bookPathMatch[1])}${
             pageNumber > 0 ? `.${pageNumber}` : ""
@@ -155,6 +132,44 @@
         }
 
         return content;
+      }
+
+      function processBookOutline(sidebar) {
+        // Add book outline class to the sidebar item with the book link.
+        const bookItem = sidebar?.querySelectorAll("a[href='/book/']").item(0)
+          .parentNode;
+        bookItem.classList.add("book-outline");
+
+        // Add chapter and page numbers before each book entry.
+        const chapArray = Array.from(bookItem.children.item(1).children);
+        chapArray.forEach((chap, chapIndex) => {
+          const chapNumber = chapIndex + 1;
+          Array.from(
+            chap.children.item(1).children
+          ).forEach((page, pageIndex) =>
+            page.children
+              .item(0)
+              .insertAdjacentText(
+                "afterbegin",
+                `${chapNumber}.${pageIndex + 1} `
+              )
+          );
+          chap.children
+            .item(0)
+            .insertAdjacentText("afterbegin", `${chapNumber} `);
+        });
+      }
+
+      function addSidebarCollapsibility(sidebar) {
+        const tocLists = Array.from(sidebar?.getElementsByTagName("ul"));
+
+        // Hide a child list if neither its parent nor any of its descendants are active.
+        tocLists.forEach((ul) =>
+          ul.parentElement.classList.contains("active") ||
+          ul.getElementsByClassName("active").length
+            ? ul.classList.remove("inactive")
+            : ul.classList.add("inactive")
+        );
       }
 
       // Make Markdown standard titles (# Title) out of the following:
