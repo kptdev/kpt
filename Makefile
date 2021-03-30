@@ -93,6 +93,10 @@ site-run-server:
 site-check:
 	./scripts/check-site.sh
 
+site-gen-sidebar:
+	rm -f site/sidebar.md
+	go run ./scripts/generate_site_sidebar > site/sidebar.md
+
 site-verify-guides:
 	./scripts/verifyGuides.sh
 
