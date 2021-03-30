@@ -38,6 +38,7 @@ type TestCaseConfig struct {
 	RunCount         int                      `json:"runCount,omitempty" yaml:"runCount,omitempty"`
 	Skip             bool                     `json:"skip,omitempty" yaml:"skip,omitempty"`
 	Debug            bool                     `json:"debug,omitempty" yaml:"debug,omitempty"`
+	TestType         string                   `json:"testType,omitempty" yaml:"testType,omitempty"`
 	ImperativeConfig ImperativeTestCaseConfig `json:",inline" yaml:",inline"`
 }
 
@@ -51,6 +52,7 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 			Network:  false,
 			RunCount: 1,
 			Skip:     false,
+			TestType: CommandFnRender,
 		}, nil
 	}
 	if err != nil {
@@ -67,6 +69,10 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	}
 	if config.RunCount == 0 {
 		config.RunCount = 1
+	}
+	if config.TestType == "" {
+		// by default we test pipeline
+		config.TestType = CommandFnRender
 	}
 	return config, nil
 }

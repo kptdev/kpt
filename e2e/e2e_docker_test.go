@@ -39,7 +39,7 @@ func runPipelineTests(t *testing.T, path string) {
 		c := c // capture range variable
 		t.Run(c.Path, func(t *testing.T) {
 			t.Parallel()
-			r, err := runner.NewRunner(c, runner.CommandFnRender)
+			r, err := runner.NewRunner(c, c.Config.TestType)
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}
@@ -71,7 +71,7 @@ func runEvalTests(t *testing.T, path string) {
 		c := c // capture range variable
 		t.Run(c.Path, func(t *testing.T) {
 			t.Parallel()
-			r, err := runner.NewRunner(c, runner.CommandFnEval)
+			r, err := runner.NewRunner(c, c.Config.TestType)
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}

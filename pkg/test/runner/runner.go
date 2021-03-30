@@ -42,7 +42,7 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
-	CommandFnEval       string = "run"
+	CommandFnEval       string = "eval"
 	CommandFnRender     string = "render"
 )
 
@@ -130,12 +130,6 @@ func (r *Runner) runFnEval() error {
 			// the result
 			break
 		}
-	}
-
-	// run formatter
-	_, err = runCommand("", "kpt", []string{"cfg", "fmt", tmpPkgPath})
-	if err != nil {
-		return fmt.Errorf("failed to run kpt cfg fmt: %w", err)
 	}
 
 	// Update the diff file or results file if updateExpectedEnv is set.
