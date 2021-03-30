@@ -39,9 +39,7 @@ jobs:
         run: make site-gen-sidebar
       - name: Normalize Book Introduction Pages
         working-directory: site
-        run: |
-        find . -iname "00.md" -execdir mv {} README.md \;
-        sed -i s/00.md//g sidebar.md 
+        run: find . -iname "00.md" -execdir mv {} README.md \; && sed -i s/00.md//g sidebar.md 
       - name: Build Site
         uses: docker/build-push-action@v2
         with:
