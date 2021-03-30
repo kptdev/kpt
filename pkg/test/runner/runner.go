@@ -233,9 +233,13 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 		if err != nil {
 			return fmt.Errorf("failed to read actual results: %w", err)
 		}
+		diffOfResult, err := diffStrings(actual, expected.Results)
+		if err != nil {
+			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+		}
 		if actual != expected.Results {
-			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nExpected\n===\n%s",
-				actual, expected.Results)
+			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+				actual, diffOfResult)
 		}
 		return nil
 	}
@@ -246,8 +250,12 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
 	if actual != expected.Diff {
-		return fmt.Errorf("actual diff doesn't match expected\nActual\n===\n%s\nExpected\n===\n%s",
-			actual, expected.Diff)
+		diffOfDiff, err := diffStrings(actual, expected.Diff)
+		if err != nil {
+			return fmt.Errorf("error when run diff of diff: %w: %s", err, diffOfDiff)
+		}
+		return fmt.Errorf("actual diff doesn't match expected\nActual\n===\n%s\nDiff of Diff\n===\n%s",
+			actual, diffOfDiff)
 	}
 	return nil
 }
