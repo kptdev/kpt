@@ -3,16 +3,16 @@ title: "Cat"
 linkTitle: "cat"
 type: docs
 description: >
-  Print the KRM resources in a file/directory
+  Print the resources in a file/directory
 ---
 
 <!--mdtogo:Short
-    Print the KRM resources in a file/directory
+    Print the resources in a file/directory
 -->
 
-Cat prints the resources in a package as yaml to stdout.
+Cat prints the resources in a file/directory as yaml to stdout.
 
-Cat is useful for printing the KRM resources in a file/directory which might
+Cat is useful for printing the resources in a file/directory which might
 contain other non-resource files.
 
 ### Synopsis
@@ -23,10 +23,10 @@ contain other non-resource files.
 kpt pkg cat [FILE | DIR]
 
 DIR:
-  Path to a directory with KRM resource files. Defaults to the current working directory.
+  Path to a directory with resources. Defaults to the current working directory.
 
 FILE:
-  Path to a KRM file.
+  Path to a resource file.
 ```
 
 <!--mdtogo-->
@@ -36,7 +36,7 @@ FILE:
 <!--mdtogo:Examples-->
 
 ```
-# print Resource config from a file
+# print resource from a file
 kpt pkg cat path/to/deployment.yaml
 ```
 
@@ -48,7 +48,7 @@ metadata:
 ```
 
 ```
-# print Resource config from current directory
+# print resources from current directory
 kpt pkg cat
 ```
 
@@ -73,7 +73,7 @@ metadata:
   annotate resources with their file origins.
 
 --format
-  format resource config yaml before printing. (default true)
+  format resource before printing. (default true)
 
 --include-local
   if true, include local-config in the output.
