@@ -22,6 +22,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/igorsobreira/titlecase"
 )
 
 const markdownExtension = ".md"
@@ -131,7 +133,7 @@ func getChapter(chapterDirName string, chapterDirPath string) chapter {
 	// Split into chapter number and hyphenated name
 	splitDirName := strings.SplitN(chapterDirName, "-", 2)
 	chapterBuilder.Number = splitDirName[0]
-	chapterBuilder.Name = strings.Title(strings.ReplaceAll(splitDirName[1], "-", " "))
+	chapterBuilder.Name = titlecase.Title(strings.ReplaceAll(splitDirName[1], "-", " "))
 
 	pageFiles, err := ioutil.ReadDir(chapterDirPath)
 	if err != nil {
@@ -157,7 +159,7 @@ func getPage(pageFileName string, defaultName string, parentPath string) page {
 	if pageFileName != introPage {
 		// Strip page number and extension from file name.
 		pageTitle := regexp.MustCompile(`^\d\d-?`).ReplaceAll([]byte(pageFileName), []byte(""))
-		pageName = strings.Title(strings.ReplaceAll(strings.ReplaceAll(string(pageTitle), ".md", ""), "-", " "))
+		pageName = titlecase.Title(strings.ReplaceAll(strings.ReplaceAll(string(pageTitle), ".md", ""), "-", " "))
 	}
 
 	return page{
