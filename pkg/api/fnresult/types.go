@@ -22,7 +22,7 @@ import (
 // FunctionResult contains the structured result from an individual function
 type FunctionResult struct {
 	// Image is the full name of the image that generates this result
-	// mage and Exec are mutually exclusive
+	// Image and Exec are mutually exclusive
 	Image string `yaml:"image,omitempty"`
 	// Exec is the the absolute path to the executable file
 	Exec string `yaml:"exec,omitempty"`
@@ -32,11 +32,15 @@ type FunctionResult struct {
 	Results []framework.Item `yaml:"results,omitempty"`
 }
 
+const (
+	FunctionResultListKind       = "FunctionResultList"
+	FunctionResultListGroup      = "config.kubernetes.io"
+	FunctionResultListVersion    = "v1beta1"
+	FunctionResultListAPIVersion = FunctionResultListGroup + "/" + FunctionResultListVersion
+)
+
 // FunctionResultList contains aggregated results from multiple functions
 type FunctionResultList struct {
-	// The GVK must be:
-	//  apiVersion: config.kubernetes.io/v1beta1
-	//  kind: FunctionResultList
 	yaml.ResourceMeta `yaml:",inline"`
 	// Items contain a list of function result
 	Items []FunctionResult `yaml:"items,omitempty"`
