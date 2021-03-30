@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Generate Sidebar
+        run: make site-gen-sidebar
       - name: Normalize Book Introduction Pages
         working-directory: site
         run: |

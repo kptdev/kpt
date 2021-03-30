@@ -35,6 +35,8 @@ jobs:
         working-directory: href-checker
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+      - name: Generate Sidebar
+        run: make site-gen-sidebar
       - name: Normalize Book Introduction Pages
         working-directory: site
         run: |
