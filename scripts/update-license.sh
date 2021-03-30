@@ -15,4 +15,4 @@
 # don't add licenses to the site directory, it will break the docs
 # and will add them to the theme which is a submodule (bad)
 which addlicense || go get github.com/google/addlicense
-ls | grep -v site | grep -v docs | xargs $GOBIN/addlicense -y 2019 -l apache
+ls | grep -v site | grep -v docs | xargs $GOBIN/addlicense -y 2021 -l apache
