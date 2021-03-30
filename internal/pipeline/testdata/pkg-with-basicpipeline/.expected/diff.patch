@@ -1,8 +1,12 @@
-diff --git a/configs/resources.yaml b/configs/resources.yaml
-index 62f8744..c268dd0 100644
---- a/configs/resources.yaml
-+++ b/configs/resources.yaml
-@@ -1,13 +1,26 @@
+diff --git a/resources.yaml b/resources.yaml
+index 10cd18b..c77c357 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -11,17 +11,29 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
  apiVersion: apps/v1
  kind: Deployment
  metadata:

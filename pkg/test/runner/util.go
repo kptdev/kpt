@@ -16,7 +16,10 @@ package runner
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 func runCommand(pwd, name string, arg []string) (string, error) {
@@ -69,4 +72,23 @@ func gitDiff(d, commit1, commit2 string) (string, error) {
 		return "", fmt.Errorf("git diff error: %w, output: %s", err, o)
 	}
 	return o, nil
+}
+
+func diffStrings(actual, expected string) (string, error) {
+	tmpDir, err := ioutil.TempDir("", "kpt-e2e-diff-*")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temporary dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+	actualPath := filepath.Join(tmpDir, "actual")
+	expectedPath := filepath.Join(tmpDir, "expected")
+	if err := ioutil.WriteFile(actualPath, []byte(actual), 0644); err != nil {
+		return "", fmt.Errorf("failed to write file %s", actualPath)
+	}
+	if err := ioutil.WriteFile(expectedPath, []byte(expected), 0644); err != nil {
+		return "", fmt.Errorf("failed to write file %s", expectedPath)
+	}
+	// diff is expected to exit with 1 so we ignore the error here
+	output, _ := runCommand(tmpDir, "diff", []string{"-u", expectedPath, actualPath})
+	return output, nil
 }
