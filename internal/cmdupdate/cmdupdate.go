@@ -23,6 +23,7 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -123,7 +124,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	return nil
 }
 
-func resolveRelPath(path pkg.UniquePath) (string, error) {
+func resolveRelPath(path types.UniquePath) (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", err

@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -30,27 +31,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
-type UniquePath string
-
-// String returns the absolute path in string format.
-func (u UniquePath) String() string {
-	return string(u)
-}
-
-// DisplayPath represents Slash-separated path to the package directory on the filesytem relative
-// to current working directory.
-// This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
-// be used for display purposes and is subject to change.
-type DisplayPath string
-
 const CurDir = "."
 const ParentDir = ".."
 
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
-	UniquePath  UniquePath
-	DisplayPath DisplayPath
+	UniquePath  types.UniquePath
+	DisplayPath types.DisplayPath
 
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
@@ -80,7 +67,10 @@ func New(path string) (*Pkg, error) {
 		relPath = filepath.Clean(path)
 		absPath = filepath.Join(cwd, path)
 	}
-	return &Pkg{UniquePath: UniquePath(absPath), DisplayPath: DisplayPath(relPath)}, nil
+	return &Pkg{
+		UniquePath:  types.UniquePath(absPath),
+		DisplayPath: types.DisplayPath(relPath),
+	}, nil
 }
 
 // Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
