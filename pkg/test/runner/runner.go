@@ -19,6 +19,11 @@ type Runner struct {
 }
 
 const (
+	// If this env is set to "true", this e2e test framework will update the
+	// expected diff and results if they already exist. If will not change
+	// config.yaml.
+	updateExpectedEnv string = "KPT_E2E_UPDATE_EXPECTED"
+
 	expectedDir         string = ".expected"
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
@@ -104,6 +109,11 @@ func (r *Runner) runFnEval() error {
 		return fmt.Errorf("failed to run kpt cfg fmt: %w", err)
 	}
 
+	// Update the diff file or results file if updateExpectedEnv is set.
+	if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
+		return updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
+	}
+
 	// compare results
 	err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
 	if err != nil {
@@ -161,6 +171,11 @@ func (r *Runner) runFnRender() error {
 			}
 			break
 		}
+	}
+
+	// Update the diff file or results file if updateExpectedEnv is set.
+	if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
+		return updateExpected(tmpPkgPath, orgPkgPath, filepath.Join(r.testCase.Path, expectedDir))
 	}
 
 	// compare results
@@ -291,4 +306,35 @@ func newExpected(path string) (expected, error) {
 	}
 
 	return e, nil
+}
+
+func updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
+	// We update results directory only when a result file already exists.
+	l, err := ioutil.ReadDir(resultsPath)
+	if err != nil {
+		return err
+	}
+	if len(l) > 0 {
+		actualResults, err := readActualResults(resultsPath)
+		if err != nil {
+			return err
+		}
+		if actualResults != "" {
+			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
+				return err
+			}
+		}
+	} else {
+		actualDiff, err := readActualDiff(tmpPkgPath)
+		if err != nil {
+			return err
+		}
+		if actualDiff != "" {
+			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedDiffFile), []byte(actualDiff+"\n"), 0666); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
