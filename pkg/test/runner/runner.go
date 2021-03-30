@@ -128,11 +128,6 @@ func (r *Runner) runFnEval() error {
 		return updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
 	}
 
-	// Update the diff file or results file if updateExpectedEnv is set.
-	if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
-		return updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
-	}
-
 	// compare results
 	err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
 	if err != nil {
