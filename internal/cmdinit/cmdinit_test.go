@@ -114,6 +114,44 @@ info:
 `, string(b))
 }
 
+func TestCmd_DefaultToCurrentDir(t *testing.T) {
+	d, err := ioutil.TempDir("", "kpt")
+	assert.NoError(t, err)
+	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
+
+	packageDir := filepath.Join(d, "my-pkg")
+	currentDir, err := os.Getwd()
+	assert.NoError(t, err)
+	err = func() error {
+		nestedErr := os.Chdir(packageDir)
+		if nestedErr != nil {
+			return nestedErr
+		}
+		defer func() {
+			deferErr := os.Chdir(currentDir)
+			if deferErr != nil {
+				panic(deferErr)
+			}
+		}()
+
+		r := cmdinit.NewRunner("kpt")
+		r.Command.SetArgs([]string{"--description", "my description"})
+		return r.Command.Execute()
+	}()
+	assert.NoError(t, err)
+
+	// verify the contents
+	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: my-pkg
+info:
+  description: my description
+`, string(b))
+}
+
 // TestCmd_failExists verifies the command throws and error if the directory exists
 func TestCmd_failNotExists(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
@@ -129,10 +167,10 @@ func TestCmd_failNotExists(t *testing.T) {
 
 func TestGitUtil_DefaultRef(t *testing.T) {
 	// set up git repo with both main and master branches
-	g, _, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, _, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	// check if master is picked as default if both main and master branches exist

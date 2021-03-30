@@ -72,7 +72,7 @@ test:
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
 test-docker:	
-	go test -cover --tags=docker ./...	
+	go test -v -cover --tags=docker ./...	
 
 vet:
 	go vet ./...
@@ -87,11 +87,14 @@ gencatalog:
 	rm site/content/en/guides/consumer/function/catalog/*/_index.md
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
-servedocs:
-	(cd site && go run github.com/gohugoio/hugo server)
+site-run-server:
+	npx http-server site/ -p 3000
 
-verify-guides:
+site-check:
+	./scripts/check-site.sh
+
+site-verify-guides:
 	./scripts/verifyGuides.sh
 
-verify-examples:
+site-verify-examples:
 	./scripts/verifyExamples.sh

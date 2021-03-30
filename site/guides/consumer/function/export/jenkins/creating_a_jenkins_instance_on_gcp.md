@@ -23,14 +23,14 @@ type: docs
 
     1. Install JDK first.
 
-        ```shell script
+        ```shell
         sudo apt update
         sudo apt install openjdk-8-jdk
         ```
 
     1. Then install Jenkins.
 
-        ```shell script
+        ```shell
         wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
         sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > \
             /etc/apt/sources.list.d/jenkins.list'

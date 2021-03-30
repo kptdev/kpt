@@ -39,7 +39,7 @@ can pull in changes to a package after fetching it.
 
 ![img](/static/images/package.svg)
 
-```sh
+```shell
 # Optional: copy the mysql-kustomize package to follow along
 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize mysql
 ```
@@ -73,7 +73,7 @@ remote package, then you can't push changes.
 
 Example package structure:
 
-```sh
+```shell
 $ tree mysql/
 mysql/
 ├── Kptfile

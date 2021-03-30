@@ -96,6 +96,18 @@ var RunExamples = `
   kpt fn run DIR/
 `
 
+var DocShort = `Locally execuate a function to get the help text`
+var DocLong = `
+  kpt fn doc --image=IMAGE
+
+If the function supports --help, it will print the help text to STDOUT.
+Otherwise, it will exit with non-zero exit code and print the error message to
+STDERR.
+`
+var DocExamples = `
+  kpt fn doc --image gcr.io/kpt-fn/set-namespace:unstable
+`
+
 var SinkShort = `Specify a directory as an output sink package`
 var SinkLong = `
   kpt fn sink [DIR]

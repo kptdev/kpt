@@ -23,7 +23,7 @@ customized directly.
 
 ##### Command
 
-```sh
+```shell
 helm fetch stable/mysql
 ```
 
@@ -34,7 +34,7 @@ git so it can be expanded again in the future.
 
 ##### Command
 
-```sh
+```shell
 helm template mysql-1.3.1.tgz --output-dir .
 ```
 
@@ -43,7 +43,7 @@ provided on the commandline or through a `value.yaml`
 
 ##### Output
 
-```sh
+```shell
 wrote ./mysql/templates/secrets.yaml
 wrote ./mysql/templates/tests/test-configmap.yaml
 wrote ./mysql/templates/pvc.yaml
@@ -54,7 +54,7 @@ wrote ./mysql/templates/deployment.yaml
 
 ##### Command
 
-```sh
+```shell
 tree mysql/
 ```
 
@@ -77,7 +77,7 @@ mysql
 The expanded chart will function as a kpt package once checked into a git
 repository.  It may optionally be tagged with a package version.
 
-```sh
+```shell
 git add .
 git commit -m “add mysql package”
 git tag package-examples/mysql/mysql/templates/v0.1.0
@@ -86,7 +86,7 @@ git push package-examples/mysql/mysql/templates/v0.1.0
 
 Once stored in git, kpt can be used to fetch the package and customize it directly.
 
-```sh
+```shell
 export REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $REPO/package-examples/mysql/mysql/templates@v0.16.0 mysql/
 ```

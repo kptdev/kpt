@@ -25,7 +25,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR/
 ```
@@ -35,14 +35,14 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR/
 <!--mdtogo:Examples-->
 
 <!-- @fnExport @verifyExamples-->
-```sh
+```shell
 # read functions from DIR, run them against it as one step.
 # write the generated GitHub Actions pipeline to main.yaml.
 kpt fn export DIR/ --output main.yaml --workflow github-actions
 ```
 
 <!-- @fnExport @verifyExamples-->
-```sh
+```shell
 # discover functions in FUNCTIONS_DIR and run them against resource in DIR.
 # write the generated Cloud Build pipeline to stdout.
 kpt fn export DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
@@ -54,7 +54,7 @@ kpt fn export DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
 
 <!--mdtogo:Long-->
 
-```sh
+```shell
 kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
 
 DIR:

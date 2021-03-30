@@ -53,11 +53,22 @@ metadata:
 data:
   foo: bar
 `
+
+	secretResourceManifest = `
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret
+type: Opaque
+data:
+  foo: bar
+`
 )
 
 var (
 	DeploymentResource = "deployment"
 	ConfigMapResource  = "configmap"
+	SecretResource     = "secret"
 	resources          = map[string]resourceInfo{
 		DeploymentResource: {
 			filename: "deployment.yaml",
@@ -67,6 +78,10 @@ var (
 			filename: "configmap.yaml",
 			manifest: configMapResourceManifest,
 		},
+		SecretResource: {
+			filename: "secret.yaml",
+			manifest: secretResourceManifest,
+		},
 	}
 )
 
@@ -75,7 +90,7 @@ var (
 type pkg struct {
 	Kptfile *Kptfile
 
-	resources []resourceInfoWithSetters
+	resources []resourceInfoWithMutators
 
 	files map[string]string
 
@@ -101,37 +116,20 @@ func (p *pkg) withResource(resourceName string, mutators ...yaml.Filter) {
 	if !ok {
 		panic(fmt.Errorf("unknown resource %s", resourceName))
 	}
-	p.resources = append(p.resources, resourceInfoWithSetters{
+	p.resources = append(p.resources, resourceInfoWithMutators{
 		resourceInfo: resourceInfo,
-		setterRefs:   []SetterRef{},
 		mutators:     mutators,
 	})
 }
 
 // withRawResource configures the package to include the provided resource
 func (p *pkg) withRawResource(resourceName, manifest string, mutators ...yaml.Filter) {
-	p.resources = append(p.resources, resourceInfoWithSetters{
+	p.resources = append(p.resources, resourceInfoWithMutators{
 		resourceInfo: resourceInfo{
 			filename: resourceName,
 			manifest: manifest,
 		},
-		setterRefs: []SetterRef{},
-		mutators:   mutators,
-	})
-}
-
-// withResourceAndSetters configures the package to have the provided resource.
-// It also allows for specifying setterRefs for the resource and a set of
-// mutators that will update the content of the resource.
-func (p *pkg) withResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) {
-	resourceInfo, ok := resources[resourceName]
-	if !ok {
-		panic(fmt.Errorf("unknown resource %s", resourceName))
-	}
-	p.resources = append(p.resources, resourceInfoWithSetters{
-		resourceInfo: resourceInfo,
-		setterRefs:   setterRefs,
-		mutators:     mutators,
+		mutators: mutators,
 	})
 }
 
@@ -153,11 +151,8 @@ func (p *pkg) allReferencedRepos(collector map[string]bool) {
 	for i := range p.subPkgs {
 		p.subPkgs[i].pkg.allReferencedRepos(collector)
 	}
-	if p.Kptfile != nil {
-		for i := range p.Kptfile.Subpackages {
-			sp := p.Kptfile.Subpackages[i]
-			collector[sp.RepoRef] = true
-		}
+	if p.Kptfile != nil && p.Kptfile.Upstream != nil {
+		collector[p.Kptfile.Upstream.RepoRef] = true
 	}
 }
 
@@ -212,14 +207,6 @@ func (rp *RootPkg) WithRawResource(resourceName, manifest string, mutators ...ya
 	return rp
 }
 
-// WithResourceAndSetters configures the package to have the provided resource.
-// It also allows for specifying setterRefs for the resource and a set of
-// mutators that will update the content of the resource.
-func (rp *RootPkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) *RootPkg {
-	rp.pkg.withResourceAndSetters(resourceName, setterRefs, mutators...)
-	return rp
-}
-
 // WithFile configures the package to contain a file with the provided name
 // and the given content.
 func (rp *RootPkg) WithFile(name, content string) *RootPkg {
@@ -236,19 +223,22 @@ func (rp *RootPkg) WithSubPackages(ps ...*SubPkg) *RootPkg {
 
 // Build outputs the current data structure as a set of (nested) package
 // in the provided path.
-func (rp *RootPkg) Build(path string, pkgName string, repoPaths map[string]string) error {
+func (rp *RootPkg) Build(path string, pkgName string, reposInfo ReposInfo) error {
 	pkgPath := filepath.Join(path, pkgName)
 	err := os.Mkdir(pkgPath, 0700)
 	if err != nil {
 		return err
 	}
-	err = buildPkg(pkgPath, rp.pkg, pkgName, repoPaths)
+	if rp == nil {
+		return nil
+	}
+	err = buildPkg(pkgPath, rp.pkg, pkgName, reposInfo)
 	if err != nil {
 		return err
 	}
 	for i := range rp.pkg.subPkgs {
 		subPkg := rp.pkg.subPkgs[i]
-		err := buildSubPkg(pkgPath, subPkg, repoPaths)
+		err := buildSubPkg(pkgPath, subPkg, reposInfo)
 		if err != nil {
 			return err
 		}
@@ -294,14 +284,6 @@ func (sp *SubPkg) WithRawResource(resourceName, manifest string, mutators ...yam
 	return sp
 }
 
-// WithResourceAndSetters configures the package to have the provided resource.
-// It also allows for specifying setterRefs for the resource and a set of
-// mutators that will update the content of the resource.
-func (sp *SubPkg) WithResourceAndSetters(resourceName string, setterRefs []SetterRef, mutators ...yaml.Filter) *SubPkg {
-	sp.pkg.withResourceAndSetters(resourceName, setterRefs, mutators...)
-	return sp
-}
-
 // WithFile configures the package to contain a file with the provided name
 // and the given content.
 func (sp *SubPkg) WithFile(name, content string) *SubPkg {
@@ -318,9 +300,8 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 
 // Kptfile represents the Kptfile of a package.
 type Kptfile struct {
-	Setters      []Setter
-	Subpackages  []RemoteSubpackage
-	UpstreamLock UpstreamLock
+	Upstream     *Upstream
+	UpstreamLock *UpstreamLock
 }
 
 func NewKptfile() *Kptfile {
@@ -330,11 +311,12 @@ func NewKptfile() *Kptfile {
 // WithUpstream adds information about the upstream information to the Kptfile.
 // The upstream section of the Kptfile is only added if this information is
 // provided.
-func (k *Kptfile) WithUpstream(repo, dir, ref string) *Kptfile {
-	k.UpstreamLock = UpstreamLock{
-		Repo: repo,
-		Dir:  dir,
-		Ref:  ref,
+func (k *Kptfile) WithUpstream(repo, dir, ref, strategy string) *Kptfile {
+	k.Upstream = &Upstream{
+		Repo:     repo,
+		Dir:      dir,
+		Ref:      ref,
+		Strategy: strategy,
 	}
 	return k
 }
@@ -343,13 +325,49 @@ func (k *Kptfile) WithUpstream(repo, dir, ref string) *Kptfile {
 // Kptfile. Unlike WithUpstream, this function allows providing just a
 // reference to the repo rather than the actual path. The reference will
 // be resolved to an actual path when the package is written to disk.
-func (k *Kptfile) WithUpstreamRef(repoRef, dir, ref string) *Kptfile {
-	k.UpstreamLock = UpstreamLock{
+func (k *Kptfile) WithUpstreamRef(repoRef, dir, ref, strategy string) *Kptfile {
+	k.Upstream = &Upstream{
+		RepoRef:  repoRef,
+		Dir:      dir,
+		Ref:      ref,
+		Strategy: strategy,
+	}
+	return k
+}
+
+// WithUpstreamLock adds upstreamLock information to the Kptfile. If no
+// upstreamLock information is provided,
+func (k *Kptfile) WithUpstreamLock(repo, dir, ref, commit string) *Kptfile {
+	k.UpstreamLock = &UpstreamLock{
+		Repo:   repo,
+		Dir:    dir,
+		Ref:    ref,
+		Commit: commit,
+	}
+	return k
+}
+
+// WithUpstreamLockRef adds upstreamLock information to the Kptfile. But unlike
+// WithUpstreamLock, this function takes a the name to a repo and will resolve
+// the actual path when expanding the package. The commit SHA is also not provided,
+// but rather the index of a commit that will be resolved when expanding the
+// package.
+func (k *Kptfile) WithUpstreamLockRef(repoRef, dir, ref string, index int) *Kptfile {
+	k.UpstreamLock = &UpstreamLock{
 		RepoRef: repoRef,
 		Dir:     dir,
 		Ref:     ref,
+		Index:   index,
 	}
 	return k
+}
+
+type Upstream struct {
+	Repo     string
+	RepoRef  string
+	Dir      string
+	Ref      string
+	Strategy string
 }
 
 type UpstreamLock struct {
@@ -357,11 +375,8 @@ type UpstreamLock struct {
 	RepoRef string
 	Dir     string
 	Ref     string
-}
-
-func (k *Kptfile) WithSubpackages(subpackages ...RemoteSubpackage) *Kptfile {
-	k.Subpackages = subpackages
-	return k
+	Index   int
+	Commit  string
 }
 
 // RemoteSubpackage contains information about remote subpackages that should
@@ -378,86 +393,29 @@ type RemoteSubpackage struct {
 	LocalDir  string
 }
 
-func NewSubpackage(repoRef, directory, ref, strategy, localDir string) RemoteSubpackage {
-	return RemoteSubpackage{
-		RepoRef:   repoRef,
-		Directory: directory,
-		Ref:       ref,
-		Strategy:  strategy,
-		LocalDir:  localDir,
-	}
-}
-
-// WithSetters adds information about the setters for a Kptfile.
-func (k *Kptfile) WithSetters(setters ...Setter) *Kptfile {
-	k.Setters = setters
-	return k
-}
-
-// Setter contains the properties required for adding a setter to the
-// Kptfile.
-type Setter struct {
-	Name  string
-	Value string
-	IsSet bool
-}
-
-// NewSetter creates a new setter that is not marked as set
-func NewSetter(name, value string) Setter {
-	return Setter{
-		Name:  name,
-		Value: value,
-	}
-}
-
-// NewSetSetter creates a new setter that is marked as set.
-func NewSetSetter(name, value string) Setter {
-	return Setter{
-		Name:  name,
-		Value: value,
-		IsSet: true,
-	}
-}
-
-// SetterRef specifies the information for creating a new reference to
-// a setter in a resource.
-type SetterRef struct {
-	Path []string
-	Name string
-}
-
-// NewSetterRef creates a new setterRef with the given name and path.
-func NewSetterRef(name string, path ...string) SetterRef {
-	return SetterRef{
-		Path: path,
-		Name: name,
-	}
-}
-
 type resourceInfo struct {
 	filename string
 	manifest string
 }
 
-type resourceInfoWithSetters struct {
+type resourceInfoWithMutators struct {
 	resourceInfo resourceInfo
-	setterRefs   []SetterRef
 	mutators     []yaml.Filter
 }
 
-func buildSubPkg(path string, pkg *SubPkg, repoPaths map[string]string) error {
+func buildSubPkg(path string, pkg *SubPkg, reposInfo ReposInfo) error {
 	pkgPath := filepath.Join(path, pkg.Name)
 	err := os.Mkdir(pkgPath, 0700)
 	if err != nil {
 		return err
 	}
-	err = buildPkg(pkgPath, pkg.pkg, pkg.Name, repoPaths)
+	err = buildPkg(pkgPath, pkg.pkg, pkg.Name, reposInfo)
 	if err != nil {
 		return err
 	}
 	for i := range pkg.pkg.subPkgs {
 		subPkg := pkg.pkg.subPkgs[i]
-		err := buildSubPkg(pkgPath, subPkg, repoPaths)
+		err := buildSubPkg(pkgPath, subPkg, reposInfo)
 		if err != nil {
 			return err
 		}
@@ -465,9 +423,9 @@ func buildSubPkg(path string, pkg *SubPkg, repoPaths map[string]string) error {
 	return nil
 }
 
-func buildPkg(pkgPath string, pkg *pkg, pkgName string, repoPaths map[string]string) error {
+func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) error {
 	if pkg.Kptfile != nil {
-		content := buildKptfile(pkg, pkgName, repoPaths)
+		content := buildKptfile(pkg, pkgName, reposInfo)
 
 		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfilev1alpha2.KptFileName),
 			[]byte(content), 0600)
@@ -484,16 +442,6 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, repoPaths map[string]str
 			if err := r.PipeE(m); err != nil {
 				return err
 			}
-		}
-
-		for _, setterRef := range ri.setterRefs {
-			n, err := r.Pipe(yaml.PathGetter{
-				Path: setterRef.Path,
-			})
-			if err != nil {
-				return err
-			}
-			n.YNode().LineComment = fmt.Sprintf(`{"$openapi":"%s"}`, setterRef.Name)
 		}
 
 		filePath := filepath.Join(pkgPath, ri.resourceInfo.filename)
@@ -526,64 +474,54 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: {{.PkgName}}
-{{- if gt (len .Pkg.Kptfile.Subpackages) 0 }}
-subpackages:
-{{- range .Pkg.Kptfile.Subpackages }}
-- upstream:
-    git:
-      directory: {{.Directory}}
-      ref: {{.Ref}}
-      repo: {{.Repo}}
-    updateStrategy: {{.Strategy}}
-  localDir: {{.LocalDir}}
+{{- if .Pkg.Kptfile.Upstream }}
+upstream:
+  type: git
+  updateStrategy: {{.Pkg.Kptfile.Upstream.Strategy}}
+  git:
+    directory: {{.Pkg.Kptfile.Upstream.Dir}}
+    ref: {{.Pkg.Kptfile.Upstream.Ref}}
+    repo: {{.Pkg.Kptfile.Upstream.Repo}}
 {{- end }}
-{{- end }}
-{{- if gt (len .Pkg.Kptfile.Setters) 0 }}
-openAPI:
-  definitions:
-{{- range .Pkg.Kptfile.Setters }}
-    io.k8s.cli.setters.{{.Name}}:
-      x-k8s-cli:
-        setter:
-          name: {{.Name}}
-          value: {{.Value}}
-{{- if eq .IsSet true }}
-          isSet: true
-{{- end }}
-{{- end }}
-{{- end }}
-{{- if gt (len .Pkg.Kptfile.UpstreamLock.Repo) 0 }}
+{{- if .Pkg.Kptfile.UpstreamLock }}
 upstreamLock:
   type: git
   gitLock:
+    commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
     directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
     ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
     repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
-    commit: abc123
 {{- end }}
 `
 
-func buildKptfile(pkg *pkg, pkgName string, repoPaths map[string]string) string {
-	for i := range pkg.Kptfile.Subpackages {
-		repoRef := pkg.Kptfile.Subpackages[i].RepoRef
-		found := false
-		for n, repoPath := range repoPaths {
-			if n == repoRef {
-				pkg.Kptfile.Subpackages[i].Repo = repoPath
-				found = true
-			}
-		}
+type ReposInfo interface {
+	ResolveRepoRef(repoRef string) (string, bool)
+	ResolveCommitIndex(repoRef string, index int) (string, bool)
+}
+
+func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
+	if pkg.Kptfile.Upstream != nil && len(pkg.Kptfile.Upstream.RepoRef) > 0 {
+		repoRef := pkg.Kptfile.Upstream.RepoRef
+		repo, found := reposInfo.ResolveRepoRef(repoRef)
 		if !found {
-			panic(fmt.Errorf("paths for package %s not found", repoRef))
+			panic(fmt.Errorf("path for package %s not found", repoRef))
 		}
+		pkg.Kptfile.Upstream.Repo = repo
 	}
-	if pkg.Kptfile.UpstreamLock.RepoRef != "" {
+	if pkg.Kptfile.UpstreamLock != nil && len(pkg.Kptfile.UpstreamLock.RepoRef) > 0 {
 		repoRef := pkg.Kptfile.UpstreamLock.RepoRef
-		repo, found := repoPaths[repoRef]
+		repo, found := reposInfo.ResolveRepoRef(repoRef)
 		if !found {
-			panic(fmt.Errorf("paths for package %s not found", repoRef))
+			panic(fmt.Errorf("path for package %s not found", repoRef))
 		}
 		pkg.Kptfile.UpstreamLock.Repo = repo
+
+		index := pkg.Kptfile.UpstreamLock.Index
+		commit, found := reposInfo.ResolveCommitIndex(repoRef, index)
+		if !found {
+			panic(fmt.Errorf("can't find commit for index %d in repo %s", index, repoRef))
+		}
+		pkg.Kptfile.UpstreamLock.Commit = commit
 	}
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {
@@ -603,19 +541,19 @@ func buildKptfile(pkg *pkg, pkgName string, repoPaths map[string]string) string 
 
 // ExpandPkg writes the provided package to disk. The name of the root package
 // will just be set to "base".
-func ExpandPkg(t *testing.T, pkg *RootPkg, repoPaths map[string]string) string {
-	return ExpandPkgWithName(t, pkg, "base", repoPaths)
+func (rp *RootPkg) ExpandPkg(t *testing.T, reposInfo ReposInfo) string {
+	return rp.ExpandPkgWithName(t, "base", reposInfo)
 }
 
 // ExpandPkgWithName writes the provided package to disk and uses the given
 // rootName to set the value of the package directory and the metadata.name
 // field of the root package.
-func ExpandPkgWithName(t *testing.T, pkg *RootPkg, rootName string, repoPaths map[string]string) string {
+func (rp *RootPkg) ExpandPkgWithName(t *testing.T, rootName string, reposInfo ReposInfo) string {
 	dir, err := ioutil.TempDir("", "test-kpt-builder-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	err = pkg.Build(dir, rootName, repoPaths)
+	err = rp.Build(dir, rootName, reposInfo)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

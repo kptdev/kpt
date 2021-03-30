@@ -22,8 +22,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -32,7 +30,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
-	"sigs.k8s.io/kustomize/kyaml/setters2/settersutil"
 )
 
 // ResourceMergeUpdater updates a package by fetching the original and updated source
@@ -40,26 +37,25 @@ import (
 type ResourceMergeUpdater struct{}
 
 func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
-	g := options.KptFile.UpstreamLock.GitLock
+	if !options.IsRoot {
+		hasChanges, err := PkgHasUpdatedUpstream(options.LocalPath, options.OriginPath)
+		if err != nil {
+			return err
+		}
 
-	// get the original repo
-	original := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: g.Commit}
-	if err := fetch.ClonerUsingGitExec(original); err != nil {
-		return errors.Errorf("failed to clone git repo: original source: %v", err)
+		// If the upstream information in local has changed from origin, it
+		// means the user had updated the package independently and we don't
+		// want to override it.
+		if hasChanges {
+			return nil
+		}
 	}
-	defer os.RemoveAll(original.AbsPath())
-
-	// get the updated repo
-	updated := &git.RepoSpec{OrgRepo: options.ToRepo, Path: g.Directory, Ref: options.ToRef}
-	if err := fetch.ClonerUsingGitExec(updated); err != nil {
-		return errors.Errorf("failed to clone git repo: updated source: %v", err)
-	}
-	defer os.RemoveAll(updated.AbsPath())
 
 	// Find all subpackages in local, upstream and original. They are sorted
 	// in increasing order based on the depth of the subpackage relative to the
 	// root package.
-	subPkgPaths, err := findAllSubpackages(options.AbsPackagePath, updated.AbsPath(), original.AbsPath())
+	subPkgPaths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(options.LocalPath,
+		options.UpdatedPath, options.OriginPath)
 	if err != nil {
 		return err
 	}
@@ -67,34 +63,37 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	// Update each package and subpackage. Parent package is updated before
 	// subpackages to make sure auto-setters can work correctly.
 	for _, subPkgPath := range subPkgPaths {
-		localSubPkgPath := filepath.Join(options.AbsPackagePath, subPkgPath)
-		updatedSubPkgPath := filepath.Join(updated.AbsPath(), subPkgPath)
-		originalSubPkgPath := filepath.Join(original.AbsPath(), subPkgPath)
+		isRootPkg := false
+		if subPkgPath == "." && options.IsRoot {
+			isRootPkg = true
+		}
+		localSubPkgPath := filepath.Join(options.LocalPath, subPkgPath)
+		updatedSubPkgPath := filepath.Join(options.UpdatedPath, subPkgPath)
+		originalSubPkgPath := filepath.Join(options.OriginPath, subPkgPath)
 
-		err := u.updatePackage(subPkgPath, localSubPkgPath, updatedSubPkgPath, originalSubPkgPath)
+		err := u.updatePackage(subPkgPath, localSubPkgPath, updatedSubPkgPath, originalSubPkgPath, isRootPkg)
 		if err != nil {
 			return err
 		}
 	}
-
-	return fetch.UpsertKptfile(options.AbsPackagePath, filepath.Base(options.AbsPackagePath), updated)
+	return nil
 }
 
 // updatePackage updates the package in the location specified by localPath
 // using the provided paths to the updated version of the package and the
 // original version of the package.
-func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string) error {
-	localExists, err := exists(localPath)
+func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string, isRootPkg bool) error {
+	localExists, err := pkgutil.Exists(localPath)
 	if err != nil {
 		return err
 	}
 
-	updatedExists, err := exists(updatedPath)
+	updatedExists, err := pkgutil.Exists(updatedPath)
 	if err != nil {
 		return err
 	}
 
-	originalExists, err := exists(originalPath)
+	originalExists, err := pkgutil.Exists(originalPath)
 	if err != nil {
 		return err
 	}
@@ -105,7 +104,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 		return fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath)
 	// Package added in upstream
 	case !originalExists && !localExists && updatedExists:
-		if err := pkgutil.CopyPackage(updatedPath, localPath); err != nil {
+		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg); err != nil {
 			return err
 		}
 	// Package added locally
@@ -134,7 +133,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 			}
 		}
 	default:
-		if err := u.mergePackage(localPath, updatedPath, originalPath); err != nil {
+		if err := u.mergePackage(localPath, updatedPath, originalPath, subPkgPath, isRootPkg); err != nil {
 			return err
 		}
 	}
@@ -143,29 +142,20 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 
 // mergePackage merge a package. It does a 3-way merge by using the provided
 // paths to the local, updated and original versions of the package.
-func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath string) error {
-	kf, err := u.updatedKptfile(localPath, updatedPath, originalPath)
-	if err != nil {
-		return err
-	}
+func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath, _ string, isRootPkg bool) error {
+	if !isRootPkg {
+		kf, err := u.updatedKptfile(localPath, updatedPath, originalPath)
+		if err != nil {
+			return err
+		}
 
-	if err := kptfileutil.WriteFile(localPath, kf); err != nil {
-		return err
-	}
-
-	err = settersutil.SetAllSetterDefinitions(
-		false,
-		filepath.Join(localPath, kptfilev1alpha2.KptFileName),
-		originalPath,
-		updatedPath,
-		localPath,
-	)
-	if err != nil {
-		return err
+		if err := kptfileutil.WriteFile(localPath, kf); err != nil {
+			return err
+		}
 	}
 
 	// merge the Resources: original + updated + dest => dest
-	err = merge.Merge3{
+	err := merge.Merge3{
 		OriginalPath: originalPath,
 		UpdatedPath:  updatedPath,
 		DestPath:     localPath,
@@ -181,7 +171,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath 
 }
 
 // updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the update
-func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, originalPath string) (
+func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, _ string) (
 	kptfilev1alpha2.KptFile, error) {
 
 	updatedKf, err := kptfileutil.ReadFile(updatedPath)
@@ -192,27 +182,17 @@ func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, originalPat
 		}
 	}
 
-	originalKf, err := kptfileutil.ReadFile(originalPath)
-	if err != nil {
-		originalKf, err = kptfileutil.ReadFile(localPath)
-		if err != nil {
-			return kptfilev1alpha2.KptFile{}, err
-		}
-	}
-
 	localKf, err := kptfileutil.ReadFile(localPath)
 	if err != nil {
 		return kptfilev1alpha2.KptFile{}, err
 	}
 
-	// merge the subpackage information from upstream and local.
-	mergedSubpackages, err := kptfileutil.MergeSubpackages(localKf.Subpackages, updatedKf.Subpackages, originalKf.Subpackages)
-	if err != nil {
-		return localKf, err
+	if updatedKf.Upstream != nil {
+		localKf.Upstream = updatedKf.Upstream
 	}
-
-	localKf.Subpackages = mergedSubpackages
-	localKf.UpstreamLock = updatedKf.UpstreamLock
+	if updatedKf.UpstreamLock != nil {
+		localKf.UpstreamLock = updatedKf.UpstreamLock
+	}
 	return localKf, err
 }
 

@@ -15,10 +15,11 @@
 package pkgutil
 
 import (
-	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -26,14 +27,60 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
-type RemoteSubPkgInfo struct {
-	PackagePath          string
-	DeclaringKptfilePath string
+// TODO: There is overlap with the functionality in internal/pkg. We should try
+// to reduce duplication.
+
+// FindAllDirectSubpackages returns the paths to all immediate subpackages of the
+// provided path. It finds both remote and local subpackages, but it will not
+// find any nested packages. The path to the root package is not returned.
+func FindAllDirectSubpackages(path string) ([]string, error) {
+	packagePaths := make(map[string]bool)
+	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// don't copy the .git dir
+		if p != path {
+			rel := strings.TrimPrefix(p, path)
+			if copyutil.IsDotGitFolder(rel) {
+				return nil
+			}
+		}
+
+		// Any paths that are inside subpackages can be ignored since
+		// we only want the subpackages directly underneath the package.
+		for dir := range packagePaths {
+			if strings.HasPrefix(p, dir) {
+				return nil
+			}
+		}
+
+		if info.IsDir() {
+			_, err := os.Stat(filepath.Join(p, kptfilev1alpha2.KptFileName))
+			if err != nil && !os.IsNotExist(err) {
+				return err
+			}
+			if err == nil && p != path {
+				packagePaths[p] = true
+				return nil
+			}
+		}
+		return nil
+	})
+
+	var packageSlice []string
+	for p := range packagePaths {
+		packageSlice = append(packageSlice, p)
+	}
+
+	return packageSlice, err
 }
 
-// FindLocalSubpackages returns a slice with the paths to all local subpackages
-// under the provided path. Any remote subpackages are excluded.
-func FindLocalSubpackages(path string) ([]string, error) {
+// FindLocalRecursiveSubpackages returns a slice with the paths to all local subpackages
+// under the provided path. Any remote subpackages are excluded, and this includes local
+// subpackages within those nested remote subpackages. Nested local
+// subpackages are included. The path to the root package is not included.
+func FindLocalRecursiveSubpackages(path string) ([]string, error) {
 	var localSubPkgs []string
 	var remoteSubPkgs []string
 	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
@@ -51,20 +98,62 @@ func FindLocalSubpackages(path string) ([]string, error) {
 			return nil
 		}
 
-		pkgPath := filepath.Dir(p)
-		localSubPkgs = append(localSubPkgs, pkgPath)
+		if p == filepath.Join(path, kptfilev1alpha2.KptFileName) {
+			return nil
+		}
 
+		pkgPath := filepath.Dir(p)
 		kf, err := kptfileutil.ReadFile(pkgPath)
 		if err != nil {
 			return err
 		}
-		for _, sp := range kf.Subpackages {
-			spPath := filepath.Join(pkgPath, sp.LocalDir)
-			remoteSubPkgs = append(remoteSubPkgs, spPath)
+
+		if kf.Upstream == nil {
+			localSubPkgs = append(localSubPkgs, pkgPath)
+		} else {
+			remoteSubPkgs = append(remoteSubPkgs, pkgPath)
 		}
 		return nil
 	})
 	return localSubPkgs, err
+}
+
+// FindRemoteDirectSubpackages scans the filesystem underneath path and
+// returns a list of absolute paths to all immediate remote subpackages. This
+// means we don't go any deeper than one layer.
+func FindRemoteDirectSubpackages(path string) ([]string, error) {
+	var remoteSubPkgs []string
+	err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		for _, dir := range remoteSubPkgs {
+			if strings.HasPrefix(p, dir) {
+				return nil
+			}
+		}
+
+		if filepath.Base(p) != kptfilev1alpha2.KptFileName {
+			return nil
+		}
+
+		if p == filepath.Join(path, kptfilev1alpha2.KptFileName) {
+			return nil
+		}
+
+		pkgPath := filepath.Dir(p)
+		kf, err := kptfileutil.ReadFile(pkgPath)
+		if err != nil {
+			return err
+		}
+
+		if kf.Upstream != nil {
+			remoteSubPkgs = append(remoteSubPkgs, pkgPath)
+		}
+		return nil
+	})
+	return remoteSubPkgs, err
 }
 
 // WalkPackage walks the package defined at src and provides a callback for
@@ -105,7 +194,7 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 
 // CopyPackage copies the content of a single package from src to dst. It
 // will not copy resources belonging to any subpackages.
-func CopyPackage(src, dst string) error {
+func CopyPackage(src, dst string, copyRootKptfile bool) error {
 	return WalkPackage(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -119,6 +208,10 @@ func CopyPackage(src, dst string) error {
 		// make directories that don't exist
 		if info.IsDir() {
 			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+		}
+
+		if path == filepath.Join(src, kptfilev1alpha2.KptFileName) && !copyRootKptfile {
+			return nil
 		}
 
 		// copy file by reading and writing it
@@ -135,71 +228,169 @@ func CopyPackage(src, dst string) error {
 	})
 }
 
-// CheckForParentPackage checks the parent folder of the provided path and
-// looks for a Kptfile. It will return the path to the closest Kptfile if
-// one is found.
-func CheckForParentPackage(src string) (string, bool, error) {
-	path := src
-	for {
-		previous := path
-		path = filepath.Dir(path)
-		if path == previous {
-			return "", false, nil
-		}
-		found, err := kptfileutil.HasKptfile(path)
+func CopyPackageWithSubpackages(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return "", false, err
+			return err
 		}
-		if found {
-			return path, true, nil
+		// don't copy the .git dir
+		if path != src {
+			rel := strings.TrimPrefix(path, src)
+			if copyutil.IsDotGitFolder(rel) {
+				return nil
+			}
 		}
+
+		copyTo := strings.TrimPrefix(path, src)
+		if info.IsDir() {
+			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+		}
+
+		if copyTo == "/Kptfile" {
+			_, err := os.Stat(filepath.Join(dst, copyTo))
+			if err == nil {
+				return nil
+			}
+			if !os.IsNotExist(err) {
+				return err
+			}
+		}
+
+		// copy file by reading and writing it
+		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func RemovePackageContent(path string, removeRootKptfile bool) error {
+	// Walk the package (while ignoring subpackages) and delete all files.
+	// We capture the paths to any subdirectories in the package so we
+	// can handle those later. We can't do it while walking the package
+	// since we don't want to end up deleting directories that might
+	// contain a nested subpackage.
+	var dirs []string
+	if err := WalkPackage(path, func(p string, info os.FileInfo, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return err
+		}
+
+		if info.IsDir() {
+			if p != path {
+				dirs = append(dirs, p)
+			}
+			return nil
+		}
+
+		if p == filepath.Join(path, kptfilev1alpha2.KptFileName) && !removeRootKptfile {
+			return nil
+		}
+
+		return os.Remove(p)
+	}); err != nil {
+		return err
+	}
+
+	// Delete any of the directories in the package that are
+	// empty. We start with the most deeply nested directories
+	// so we can just check every directory for files/directories.
+	sort.Slice(dirs, SubPkgFirstSorter(dirs))
+	for _, p := range dirs {
+		f, err := os.Open(p)
+		if err != nil {
+			return err
+		}
+		// List up to one file or folder in the directory.
+		_, err = f.Readdirnames(1)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		// If the returned error is EOF, it means the folder
+		// was empty and we can remove it.
+		if err == io.EOF {
+			err = os.RemoveAll(p)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// RootPkgFirstSorter returns a "less" function that can be used with the
+// sort.Slice function to correctly sort package paths so parent packages
+// are always before subpackages.
+func RootPkgFirstSorter(paths []string) func(i, j int) bool {
+	return func(i, j int) bool {
+		iPath := paths[i]
+		jPath := paths[j]
+		if iPath == "." {
+			return true
+		}
+		if jPath == "." {
+			return false
+		}
+		iSegmentCount := len(strings.Split(iPath, "/"))
+		jSegmentCount := len(strings.Split(jPath, "/"))
+		return iSegmentCount < jSegmentCount
 	}
 }
 
-var emptyFunc = func() error { return nil }
-
-type kptFunc = func(string, kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error)
-
-// UpdateParentKptfile provides the basics for making changes to the Kptfile
-// of a parent package. It takes a path to the current pakcage and a mutator
-// function that is allows to make changes to the Kptfile of the parent package
-// if one is found. This function returns a function that can be used to revert
-// the changes to the Kptfile if needed.
-func UpdateParentKptfile(path string, f kptFunc) (func() error, error) {
-	if !filepath.IsAbs(path) {
-		return emptyFunc, fmt.Errorf("path must be absolute")
+// SubPkgFirstSorter returns a "less" function that can be used with the
+// sort.Slice function to correctly sort package paths so subpackages are
+// always before parent packages.
+func SubPkgFirstSorter(paths []string) func(i, j int) bool {
+	sorter := RootPkgFirstSorter(paths)
+	return func(i, j int) bool {
+		return !sorter(i, j)
 	}
+}
 
-	parentPath, found, err := CheckForParentPackage(path)
-	if err != nil {
-		return emptyFunc, err
+// FindLocalRecursiveSubpackagesForPaths traverses the provided package paths
+// and finds all local subpackages. A subpackage is a subdirectory underneath the
+// root that has a Kptfile in it, but that doesn't have an upstream reference.
+// The list is sorted in increasing order based on the depth of the subpackage
+// relative to the root package.
+func FindLocalRecursiveSubpackagesForPaths(pkgPaths ...string) ([]string, error) {
+	uniquePaths := make(map[string]bool)
+	uniquePaths["."] = true
+	for _, path := range pkgPaths {
+		paths, err := FindLocalRecursiveSubpackages(path)
+		if err != nil {
+			return []string{}, err
+		}
+		for _, p := range paths {
+			relPath, err := filepath.Rel(path, p)
+			if err != nil {
+				return []string{}, err
+			}
+			uniquePaths[relPath] = true
+		}
 	}
-
-	if found {
-		kf, err := kptfileutil.ReadFile(parentPath)
-		if err != nil {
-			return emptyFunc, err
-		}
-
-		// Read the file again so we have a copy that we can use
-		// to restore the original content if fetching the package fails.
-		orgKf, err := kptfileutil.ReadFile(parentPath)
-		if err != nil {
-			return emptyFunc, err
-		}
-
-		newKf, err := f(parentPath, kf)
-		if err != nil {
-			return emptyFunc, err
-		}
-
-		err = kptfileutil.WriteFile(parentPath, newKf)
-		if err != nil {
-			return emptyFunc, err
-		}
-		return func() error {
-			return kptfileutil.WriteFile(parentPath, orgKf)
-		}, nil
+	var paths []string
+	for p := range uniquePaths {
+		paths = append(paths, p)
 	}
-	return emptyFunc, nil
+	sort.Slice(paths, RootPkgFirstSorter(paths))
+	return paths, nil
+}
+
+// Exists returns true if a file or directory exists on the provided path,
+// and false otherwise.
+func Exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+	return !os.IsNotExist(err), nil
 }

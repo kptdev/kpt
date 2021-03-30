@@ -40,14 +40,13 @@ var TypeMeta = yaml.ResourceMeta{
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline"`
 
+	Upstream *Upstream `yaml:"upstream,omitempty"`
+
 	// UpstreamLock is a resolved locator for the last fetch of the package.
 	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty"`
 
 	// Info contains metadata such as license, documentation, etc.
 	Info *PackageInfo `yaml:"info,omitempty"`
-
-	// Subpackages declares the list of subpackages.
-	Subpackages []Subpackage `yaml:"subpackages,omitempty"`
 
 	// Pipeline declares the pipeline of functions.
 	Pipeline *Pipeline `yaml:"pipeline,omitempty"`
@@ -204,9 +203,21 @@ type Pipeline struct {
 }
 
 // String returns the string representation of Pipeline struct
-// The string returned is the struct content in Go default format
+// The string returned is the struct content in Go default format.
 func (p *Pipeline) String() string {
 	return fmt.Sprintf("%+v", *p)
+}
+
+// IsEmpty returns true if the pipeline doesn't contain any functions in any of
+// the function chains (mutators, validators).
+func (p *Pipeline) IsEmpty() bool {
+	if p == nil {
+		return true
+	}
+	if len(p.Mutators) == 0 && len(p.Validators) == 0 {
+		return true
+	}
+	return false
 }
 
 // Function specifies a KRM function.

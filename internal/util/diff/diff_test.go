@@ -25,10 +25,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -44,10 +46,10 @@ import (
 // 5. Run remote diff between master and cloned
 func TestCommand_RunRemoteDiff(t *testing.T) {
 	t.SkipNow()
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	// create a commit with dataset2 and tag it v2, then add another commit on top with dataset3
@@ -55,7 +57,7 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -63,29 +65,19 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: g.RepoDirectory,
-			Ref:     "refs/tags/v2",
-			Path:    "/",
-		},
-		Destination: filepath.Base(g.RepoDirectory),
-	}.Run()
-	assert.NoError(t, err)
-
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+	localPkg := createPackage(t, g, w)
 
 	diffOutput := &bytes.Buffer{}
 
 	err = (&Command{
-		Path:         localPkg,
+		Path:         localPkg.UniquePath.String(),
 		Ref:          "master",
 		DiffType:     "remote",
 		DiffTool:     "diff",
@@ -124,10 +116,10 @@ func TestCommand_RunRemoteDiff(t *testing.T) {
 // 5. add more data to the master branch, commit it
 // 5. Run combined diff between master and cloned
 func TestCommand_RunCombinedDiff(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -137,7 +129,7 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -145,28 +137,19 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset3)
 	assert.NoError(t, err)
-	err = g.Commit("new-data post-v2")
+	_, err = g.Commit("new-data post-v2")
 	assert.NoError(t, err)
 	commit2, err := g.GetCommit()
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: g.RepoDirectory,
-			Ref:     "refs/tags/v2",
-			Path:    "/",
-		},
-		Destination: localPkg,
-	}.Run()
-	assert.NoError(t, err)
+	localPkg := createPackage(t, g, w)
 
 	diffOutput := &bytes.Buffer{}
 
 	err = (&Command{
-		Path:         localPkg,
+		Path:         localPkg.UniquePath.String(),
 		Ref:          "master",
 		DiffType:     "combined",
 		DiffTool:     "diff",
@@ -206,10 +189,10 @@ func TestCommand_RunCombinedDiff(t *testing.T) {
 // 5. Update cloned package with dataset3
 // 6. Run remote diff and verify the output
 func TestCommand_Run_LocalDiff(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -219,7 +202,7 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	err = g.ReplaceData(testutil.Dataset2)
 	assert.NoError(t, err)
-	err = g.Commit("new-data for v2")
+	_, err = g.Commit("new-data for v2")
 	assert.NoError(t, err)
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -227,25 +210,16 @@ func TestCommand_Run_LocalDiff(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit0)
 
-	localPkg := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = fetch.Command{
-		RepoSpec: &git.RepoSpec{
-			OrgRepo: g.RepoDirectory,
-			Ref:     "refs/tags/v2",
-			Path:    "/",
-		},
-		Destination: localPkg,
-	}.Run()
-	assert.NoError(t, err)
+	localPkg := createPackage(t, g, w)
 
 	// make changes in local package
-	err = copyutil.CopyDir(filepath.Join(g.DatasetDirectory, testutil.Dataset3), localPkg)
+	err = copyutil.CopyDir(filepath.Join(g.DatasetDirectory, testutil.Dataset3), localPkg.UniquePath.String())
 	assert.NoError(t, err)
 
 	diffOutput := &bytes.Buffer{}
 
 	err = (&Command{
-		Path:         localPkg,
+		Path:         localPkg.UniquePath.String(),
 		Ref:          "master",
 		DiffType:     "combined",
 		DiffTool:     "diff",
@@ -290,4 +264,39 @@ func filterDiffMetadata(r io.Reader) string {
 		b.WriteString("\n")
 	}
 	return b.String()
+}
+
+func createPackage(t *testing.T, g *testutil.TestGitRepo, w *testutil.TestWorkspace) *pkg.Pkg {
+	localPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+	err := os.MkdirAll(localPath, 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	kf := kptfileutil.DefaultKptfile(g.RepoName)
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.Git{
+			Repo:      g.RepoDirectory,
+			Directory: "/",
+			Ref:       "refs/tags/v2",
+		},
+		UpdateStrategy: kptfilev1alpha2.FastForward,
+	}
+	err = kptfileutil.WriteFile(localPath, kf)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	p, err := pkg.New(localPath)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = fetch.Command{
+		Pkg: p,
+	}.Run()
+	assert.NoError(t, err)
+
+	return p
 }

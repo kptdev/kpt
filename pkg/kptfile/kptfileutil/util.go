@@ -41,7 +41,7 @@ func ReadFile(dir string) (kptfilev1alpha2.KptFile, error) {
 		f, err = os.Open(filepath.Join(dir, kptfilev1alpha2.KptFileName))
 	}
 	if err != nil {
-		return kptfilev1alpha2.KptFile{}, errors.Errorf("unable to read %s: %v", kptfilev1alpha2.KptFileName, err)
+		return kptfilev1alpha2.KptFile{}, err
 	}
 	defer f.Close()
 
@@ -156,21 +156,61 @@ func DefaultKptfile(name string) kptfilev1alpha2.KptFile {
 	}
 }
 
-// HasKptfile checks if there exists a Kptfile on the provided path.
-func HasKptfile(path string) (bool, error) {
-	_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
-
-	// If we got an error that wasn't IsNotExist, something went wrong and
-	// we don't really know if the file exists or not.
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
+func MergeAndUpdateLocal(local, updated, original string) error {
+	// hasUpdatedKf := true
+	updatedKf, err := ReadFile(updated)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		// hasUpdatedKf = false
 	}
 
-	// If the error is IsNotExist, we know the file doesn't exist.
-	if os.IsNotExist(err) {
-		return false, nil
+	// hasOriginalKf := true
+	originalKf, err := ReadFile(original)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		// hasOriginalKf = false
 	}
-	return true, nil
+
+	localKf, err := ReadFile(local)
+	if err != nil {
+		return err
+	}
+
+	newKf, err := Merge(localKf, updatedKf, originalKf)
+	if err != nil {
+		return err
+	}
+
+	return WriteFile(local, newKf)
+}
+
+func Merge(local, updated, _ kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
+	newKf, err := clone(local)
+	if err != nil {
+		return newKf, err
+	}
+
+	if updated.Upstream != nil {
+		newKf.Upstream = updated.Upstream
+	}
+	if updated.UpstreamLock != nil {
+		newKf.UpstreamLock = updated.UpstreamLock
+	}
+	return newKf, nil
+}
+
+func clone(kf kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
+	b, err := yaml.Marshal(kf)
+	if err != nil {
+		return kptfilev1alpha2.KptFile{}, err
+	}
+	var clonedKf kptfilev1alpha2.KptFile
+	err = yaml.Unmarshal(b, &clonedKf)
+	return clonedKf, err
 }
 
 // MergeSubpackages takes the subpackage information from local, updated

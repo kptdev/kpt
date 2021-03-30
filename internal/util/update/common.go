@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,78 +15,29 @@
 package update
 
 import (
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
+	"reflect"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
 
-// findAllSubpackages traverses the provided package paths
-// and finds all subpackages. A subpackage is a subdirectory underneath the
-// root that has a Kptfile in it.
-// The list is sorted in increasing order based on the depth of the subpackage
-// relative to the root package.
-func findAllSubpackages(pkgPaths ...string) ([]string, error) {
-	uniquePaths := make(map[string]bool)
-	uniquePaths["."] = true
-	for _, path := range pkgPaths {
-		paths, err := pkgutil.FindLocalSubpackages(path)
-		if err != nil {
-			return []string{}, err
-		}
-		for _, p := range paths {
-			relPath, err := filepath.Rel(path, p)
-			if err != nil {
-				return []string{}, err
-			}
-			uniquePaths[relPath] = true
-		}
-	}
-	var paths []string
-	for p := range uniquePaths {
-		paths = append(paths, p)
-	}
-	sort.Slice(paths, rootPkgFirstSorter(paths))
-	return paths, nil
-}
-
-// rootPkgFirstSorter returns a "less" function that can be used with the
-// sort.Slice function to correctly sort package paths so parent packages
-// are always before subpackages.
-func rootPkgFirstSorter(paths []string) func(i, j int) bool {
-	return func(i, j int) bool {
-		iPath := paths[i]
-		jPath := paths[j]
-		if iPath == "." {
-			return true
-		}
-		if jPath == "." {
-			return false
-		}
-		iSegmentCount := len(strings.Split(iPath, "/"))
-		jSegmentCount := len(strings.Split(jPath, "/"))
-		return iSegmentCount < jSegmentCount
-	}
-}
-
-// subPkgFirstSorter returns a "less" function that can be used with the
-// sort.Slice function to correctly sort package paths so subpackages are
-// always before parent packages.
-func subPkgFirstSorter(paths []string) func(i, j int) bool {
-	sorter := rootPkgFirstSorter(paths)
-	return func(i, j int) bool {
-		return !sorter(i, j)
-	}
-}
-
-// exists returns true if a file or directory exists on the provided path,
-// and false otherwise.
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err != nil && !os.IsNotExist(err) {
+// PkgHasUpdatedUpstream checks if the the local package has different
+// upstream information than origin.
+func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
+	originKf, err := kptfileutil.ReadFile(origin)
+	if err != nil {
 		return false, err
 	}
-	return !os.IsNotExist(err), nil
+
+	localKf, err := kptfileutil.ReadFile(local)
+	if err != nil {
+		return false, err
+	}
+
+	// If the upstream information in local has changed from origin, it
+	// means the user had updated the package independently and we don't
+	// want to override it.
+	if !reflect.DeepEqual(localKf.Upstream.Git, originKf.Upstream.Git) {
+		return true, nil
+	}
+	return false, nil
 }

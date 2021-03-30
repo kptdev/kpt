@@ -34,6 +34,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -110,7 +111,7 @@ data: {foo: bar}
 				assert.NoError(t, err, "unexpected error")
 				c.fn.ConfigPath = path.Base(tmp.Name())
 			}
-			cn, err := newFnConfig(&c.fn, os.TempDir())
+			cn, err := newFnConfig(&c.fn, pkg.UniquePath(os.TempDir()))
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")

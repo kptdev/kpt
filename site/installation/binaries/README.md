@@ -15,7 +15,7 @@ Download pre-compiled binaries.
 | [macOS (x64)][darwin]
 | [Windows (x64)][windows]
 
-```sh
+```shell
 # For linux/mac
 chmod +x kpt
 ```
@@ -23,7 +23,7 @@ chmod +x kpt
 **Note:** to run on **MacOS** the first time, it may be necessary to open the
 program from the finder with *ctrl-click open*.
 
-```sh
+```shell
 kpt version
 ```
 

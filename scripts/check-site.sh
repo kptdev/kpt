@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -o pipefail
+
+docker stop $(docker ps -q --filter ancestor=kpt-site-check:latest) &>/dev/null
+docker build site/ -t kpt-site-check:latest
+docker run -p 3000:80 -d kpt-site-check:latest 
+cd site
+npm i
+echo "Starting check."
+# Find all potential entrypoint READMEs while stripping out themes directory until it's removed
+# Convert them to valid URLs
+# Check each link for Docsify 404s
+find . -name README.md -printf "%P\n" | grep -v node_modules | grep -v themes \
+    | sed "s/README.md//" | sed "s/^/http:\/\/localhost:3000\//" \
+    | xargs -n1 sh -c '! (npx href-checker $0 --bad-content="404 - Not found" --silent --no-off-site -c=15 | grep .) || exit 255' 
+echo "Success."

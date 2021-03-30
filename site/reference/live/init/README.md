@@ -30,7 +30,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
 ```
@@ -44,7 +44,7 @@ kind delete cluster && kind create cluster
 <!--mdtogo:Examples-->
 
 <!-- @liveInit @verifyExamples-->
-```sh
+```shell
 # initialize a package
 kpt live init my-dir/
 ```
@@ -52,14 +52,14 @@ kpt live init my-dir/
 {{% hide %}}
 
 <!-- @removeInventoryTemplate @verifyExamples-->
-```sh
+```shell
 rm my-dir/inventory-template.yaml
 ```
 
 {{% /hide %}}
 
 <!-- @liveInit @verifyExamples-->
-```sh
+```shell
 # initialize a package with a specific name for the group of resources
 kpt live init --namespace=test my-dir/
 ```

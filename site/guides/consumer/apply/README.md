@@ -60,7 +60,7 @@ resources for deleted configuration.
 ### Command
 
 <!-- @fetchPackage @verifyGuides-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 helloworld
 ```
@@ -69,7 +69,7 @@ Grab a remote package to apply to a cluster.
 
 ### Output
 
-```sh
+```shell
 fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 ```
 
@@ -90,13 +90,13 @@ The inventory template must be created for a package to be applied using
 ### Init Command
 
 <!-- @liveInit @verifyGuides-->
-```sh
+```shell
 kpt live init helloworld
 ```
 
 ### Init Output
 
-```sh
+```shell
 namespace: default is used for inventory object
 Initialized: helloworld/inventory-template.yaml
 ```
@@ -136,7 +136,7 @@ kind delete cluster && kind create cluster
 ### Apply Command
 
 <!-- @liveApply @verifyGuides-->
-```sh
+```shell
 kpt live apply helloworld --reconcile-timeout=2m
 ```
 
@@ -145,7 +145,7 @@ been fully rolled out -- e.g. until the Pods are running.
 
 ### Apply Output
 
-```sh
+```shell
 configmap/inventory-17c4dd3c created
 service/helloworld-gke created
 deployment.apps/helloworld-gke created
@@ -168,13 +168,13 @@ Display the resources in the cluster using kubectl.
 
 ### Print Command
 
-```sh
+```shell
 kubectl get configmaps,deploy,services
 ```
 
 ### Print Output
 
-```sh
+```shell
 NAME                                 DATA   AGE
 configmap/inventory-28c4kc3c         2      2m47s
 
@@ -198,7 +198,7 @@ kubectl get deployments | tr -s ' ' | grep "deployment.apps/helloworld-gke 5/5"
 
 ### Command: `tree`
 
-```sh
+```shell
 kubectl get all -o yaml | kpt pkg tree
 ```
 
@@ -207,7 +207,7 @@ the resources.
 
 ### Output: `tree`
 
-```sh
+```shell
 .
 ├── [Resource]  Deployment default/helloworld-gke
 │   └── [Resource]  ReplicaSet default/helloworld-gke-5bf95f8869
@@ -227,7 +227,7 @@ resource configuration.
 
 ### Prune Command
 
-```sh
+```shell
 rm helloworld/deploy.yaml
 kpt live apply helloworld/ --reconcile-timeout=2m
 ```
@@ -238,7 +238,7 @@ Deployment.
 
 ### Prune Output
 
-```sh
+```shell
 service/helloworld-gke is Current: Service is ready
 resources failed to the reached Current status
 deployment.apps/helloworld-gke pruned
@@ -248,11 +248,11 @@ configmap/inventory-2911da3b pruned
 
 ### Print the live resources after pruning
 
-```sh
+```shell
 kubectl get deploy
 ```
 
-```sh
+```shell
 No resources found in default namespace.
 ```
 

@@ -30,7 +30,7 @@ executable into a container and invoking it as the container's `CMD` or
 Exec functions may be run imperatively using the `--exec-path` flag with
 `kpt fn run`.
 
-```sh
+```shell
 kpt fn run DIR/ --enable-exec --exec-path /path/to/executable
 ```
 
@@ -38,14 +38,14 @@ This is similar to building `/path/to/executable` into the container image
 `gcr.io/project/image:tag` and running -- except that the executable has access
 to the local machine.
 
-```sh
+```shell
 kpt fn run DIR/ --image gcr.io/project/image:tag
 ```
 
 Just like container functions, exec functions accept input as arguments after
 `--`.
 
-```sh
+```shell
 kpt fn run DIR/ --enable-exec --exec-path /path/to/executable -- foo=bar
 ```
 

@@ -20,19 +20,19 @@ All changes must be committed to git before running update
 
 ### Examples
 <!--mdtogo:Examples-->
-```sh
+```shell
 # update my-package-dir/
 git add . && git commit -m 'some message'
 kpt pkg update my-package-dir/
 ```
 
-```sh
+```shell
 # update my-package-dir/ to match the v1.3 branch or tag
 git add . && git commit -m 'some message'
 kpt pkg update my-package-dir/@v1.3
 ```
 
-```sh
+```shell
 # update applying a git patch
 git add . && git commit -m "package updates"
 kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
@@ -42,18 +42,18 @@ kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]
+kpt pkg update [PKG_PATH@VERSION] [flags]
 ```
 
 #### Args
 
 ```
-LOCAL_PKG_DIR:
-  Local package to update.  Directory must exist and contain a Kptfile
-  to be updated.
+PKG_PATH:
+  Local package path to update. Directory must exist and contain a Kptfile
+  to be updated. Defaults to the current working directory.
 
 VERSION:
-  A git tag, branch, ref or commit.  Specified after the local_package
+  A git tag, branch, ref or commit. Specified after the local_package
   with @ -- pkg@version.
   Defaults the local package version that was last fetched.
 

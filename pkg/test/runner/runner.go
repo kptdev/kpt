@@ -28,8 +28,8 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
-	CommandFn           string = "fn"
-	CommandPipeline     string = "pipeline"
+	CommandFnEval       string = "run"
+	CommandFnRender     string = "render"
 )
 
 // NewRunner returns a new runner for pkg
@@ -50,13 +50,17 @@ func NewRunner(testCase TestCase, c string) (*Runner, error) {
 
 // Run runs the test.
 func (r *Runner) Run() error {
-	if r.cmd == CommandFn {
-		return r.runFn()
+	switch r.cmd {
+	case CommandFnEval:
+		return r.runFnEval()
+	case CommandFnRender:
+		return r.runFnRender()
+	default:
+		return fmt.Errorf("invalid command %s", r.cmd)
 	}
-	return r.runPipeline()
 }
 
-func (r *Runner) runFn() error {
+func (r *Runner) runFnEval() error {
 	fmt.Printf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
 	if err != nil {
@@ -84,7 +88,7 @@ func (r *Runner) runFn() error {
 	}
 
 	// run function
-	kptArgs := []string{r.cmd, "run", tmpPkgPath, "--results-dir", resultsPath}
+	kptArgs := []string{"fn", "run", tmpPkgPath, "--results-dir", resultsPath}
 	if r.testCase.Config.Network {
 		kptArgs = append(kptArgs, "--network")
 	}
@@ -118,13 +122,18 @@ func (r *Runner) runFn() error {
 	return nil
 }
 
-func (r *Runner) runPipeline() error {
-	fmt.Printf("Running test against package %s\n", r.pkgName)
+func (r *Runner) runFnRender() error {
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	if r.testCase.Config.Debug {
+		fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, tmpDir)
+	}
+	if !r.testCase.Config.Debug {
+		// if debug is true, keep the test directory around for debugging
+		defer os.RemoveAll(tmpDir)
+	}
 	tmpPkgPath := filepath.Join(tmpDir, r.pkgName)
 	// create dir to store untouched pkg to compare against
 	orgPkgPath := filepath.Join(tmpDir, "original")
@@ -152,7 +161,7 @@ func (r *Runner) runPipeline() error {
 	// run function
 	var fnErr error
 	command := run.GetMain()
-	kptArgs := []string{r.cmd, "run", tmpPkgPath}
+	kptArgs := []string{"fn", "render", tmpPkgPath}
 	for i := 0; i < r.testCase.Config.RunCount; i++ {
 		command.SetArgs(kptArgs)
 		fnErr = command.Execute()
@@ -162,13 +171,6 @@ func (r *Runner) runPipeline() error {
 			}
 			break
 		}
-	}
-
-	// run formatter
-	command.SetArgs([]string{"cfg", "fmt", tmpPkgPath})
-	err = command.Execute()
-	if err != nil {
-		return fmt.Errorf("failed to run kpt cfg fmt: %w", err)
 	}
 
 	// Update the diff file or results file if updateExpectedEnv is set.

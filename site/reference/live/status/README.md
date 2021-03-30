@@ -27,7 +27,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
-```sh
+```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-app
 ```
@@ -47,13 +47,13 @@ kpt live apply my-app
 
 <!--mdtogo:Examples-->
 <!-- @liveStatus @verifyExamples-->
-```sh
+```shell
 # Monitor status for a set of resources based on manifests. Wait until all
 # resources have reconciled.
 kpt live status my-app/
 ```
 
-```sh
+```shell
 # Monitor status for a set of resources based on manifests. Output in table format:
 kpt live status my-app/ --poll-until=forever --output=table
 ```

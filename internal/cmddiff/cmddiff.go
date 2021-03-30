@@ -19,6 +19,7 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/diff"
@@ -29,7 +30,7 @@ import (
 func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
-		Use:          "diff LOCAL_PKG_DIR[@VERSION]",
+		Use:          "diff [PKG_PATH@VERSION] [flags]",
 		Short:        pkgdocs.DiffShort,
 		Long:         pkgdocs.DiffShort + "\n" + pkgdocs.DiffLong,
 		Example:      pkgdocs.DiffExamples,
@@ -68,17 +69,14 @@ type Runner struct {
 	diffType string
 }
 
-func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	dirVer := ""
-	if len(args) > 0 {
-		dirVer = args[0]
+func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		args = append(args, pkg.CurDir)
 	}
+	dirVer := args[0]
 	dir, version, err := argutil.ParseDirVersion(dirVer)
 	if err != nil {
 		return err
-	}
-	if dir == "" {
-		dir = "./"
 	}
 	if r.diffType == "" {
 		// pick sensible defaults for diff-type
@@ -92,7 +90,11 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		r.DiffType = diff.DiffType(r.diffType)
 	}
 
-	r.Path = dir
+	p, err := pkg.New(dir)
+	if err != nil {
+		return err
+	}
+	r.Path = string(p.UniquePath)
 	r.Ref = version
 
 	return r.Validate()

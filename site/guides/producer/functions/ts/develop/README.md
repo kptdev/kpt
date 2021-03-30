@@ -42,7 +42,7 @@ running in a local container.
 1. Download the [kind binary][download-kind] version 0.5.1 or higher
 1. Use this config file:
 
-   ```sh
+   ```shell
    cat > kind.yaml <<EOF
    kind: Cluster
    apiVersion: kind.sigs.k8s.io/v1alpha3
@@ -64,7 +64,7 @@ running in a local container.
 
 1. Create the cluster:
 
-   ```sh
+   ```shell
    kind create cluster --name=kpt-functions --config=kind.yaml --image=kindest/node:v1.15.7
    ```
 
@@ -73,7 +73,7 @@ running in a local container.
 You can also use a deployed cluster in GKE. The beta k8s feature is available
 only when using GKE's `--enable-kubernetes-alpha` flag, as seen here:
 
-```sh
+```shell
 gcloud container clusters create $USER-1-15 --cluster-version=latest --region=us-central1-a --project <PROJECT>
 gcloud container clusters get-credentials $USER-1-15 --zone us-central1-a --project <PROJECT>
 ```
@@ -84,7 +84,7 @@ The SDK uses the k8s server to generate the typescript classes. If your
 function uses a Custom Resource Definition, make sure you apply it to the
 cluster used for type generation:
 
-```sh
+```shell
 kubectl apply -f /path/to/my/crd.yaml
 ```
 
@@ -92,7 +92,7 @@ kubectl apply -f /path/to/my/crd.yaml
 
 To initialize a new NPM package, first create a package directory:
 
-```sh
+```shell
 mkdir my-package
 cd my-package
 ```
@@ -101,7 +101,7 @@ cd my-package
 
 Run the interactive initializer:
 
-```sh
+```shell
 npm init kpt-functions
 ```
 
@@ -124,7 +124,7 @@ This process will create the following:
 
 Next, install all package dependencies:
 
-```sh
+```shell
 npm install
 ```
 
@@ -133,7 +133,7 @@ directory.
 
 You can run your function directly:
 
-```sh
+```shell
 node dist/my_func_run.js --help
 ```
 
@@ -145,7 +145,7 @@ this.
 You can now start implementing the function using your favorite IDE, e.g.
 [VSCode]:
 
-```sh
+```shell
 code .
 ```
 
@@ -156,20 +156,20 @@ to use the typescript library.
 
 Once you've written some code, build the package with:
 
-```sh
+```shell
 npm run build
 ```
 
 Alternatively, run the following in a separate terminal. It will continuously
 build your function as you make changes:
 
-```sh
+```shell
 npm run watch
 ```
 
 To run the tests, use:
 
-```sh
+```shell
 npm test
 ```
 
@@ -187,14 +187,14 @@ runtime.
 
 - Install the pkg CLI.
 
-  ```sh
+  ```shell
   npm install -g pkg
   ```
 
 - Install your kpt-functions package module to create your function's
   distributable file.
 
-  ```sh
+  ```shell
   npm i
   ```
 
@@ -204,14 +204,14 @@ runtime.
    file. For a `my_fn` function built using the typescript SDK, this is
    `dist/my_fn_run.js`.
 
-   ```sh
+   ```shell
    npx pkg dist/my_fn_run.js
    ```
 
 1. Pass the path to the appropriate executable for your OS when running kpt
    using the exec runtime.
 
-   ```sh
+   ```shell
    kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- a=b
    ```
 
@@ -222,19 +222,19 @@ executable container image.
 
 To build the docker image:
 
-```sh
+```shell
 npm run kpt:docker-build
 ```
 
 You can now run the function container, e.g.:
 
-```sh
+```shell
 docker run gcr.io/kpt-functions-demo/my-func:dev --help
 ```
 
 To push the image to your container registry of choice:
 
-```sh
+```shell
 npm run kpt:docker-push
 ```
 
@@ -247,7 +247,7 @@ field at any time.
 The default value for the container image tag is `dev`. This can be overridden
 using`--tag` flag:
 
-```sh
+```shell
 npm run kpt:docker-build -- --tag=latest
 npm run kpt:docker-push -- --tag=latest
 ```

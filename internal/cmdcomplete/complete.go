@@ -60,7 +60,7 @@ func Complete(cmd *cobra.Command, skipHelp bool, visitFlags VisitFlags) *complet
 			visitFlags(cmd, flag, cc)
 		}
 		if flag.Name == "strategy" {
-			cc.Flags[flag.Name] = predict.Options(predict.OptValues(update.Strategies...))
+			cc.Flags[flag.Name] = predict.Options(predict.OptValues(update.StrategiesAsStrings()...))
 			return
 		}
 		if flag.Name == "pattern" {

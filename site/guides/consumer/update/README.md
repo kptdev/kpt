@@ -78,7 +78,7 @@ updated to later versions by merging in upstream changes.
 ### Initialize local Repository
 
 <!-- @InitRepo @verifyStaleGuides-->
-```sh
+```shell
 mkdir workspace
 cd workspace
 git init
@@ -87,7 +87,7 @@ git init
 ### Fetch Command
 
 <!-- @fetchPackage @verifyStaleGuides-->
-```sh
+```shell
 export REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $REPO/package-examples/helloworld-set@v0.3.0 helloworld
 ```
@@ -96,7 +96,7 @@ Fetch the `helloworld-set` package at version `v0.3.0`.
 
 ### Fetch Output
 
-```sh
+```shell
 fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld
 ```
 
@@ -113,7 +113,7 @@ resolved to the tag `v0.3.0`.
 ### Commit Local Repository 1st Version
 
 <!-- @commitLocalRepository @verifyStaleGuides-->
-```sh
+```shell
 git add .
 git commit -m "init"
 ```
@@ -137,7 +137,7 @@ Edit the contents of the package by making changes to it.
 
 The old package contents without local modifications.
 
-```sh
+```shell
 vi helloworld/deploy.yaml
 ```
 
@@ -182,7 +182,7 @@ has uncommitted changes.
 {{% /pageinfo %}}
 
 <!-- @commitLocalChanges @verifyStaleGuides-->
-```sh
+```shell
 git add .
 git commit -m "local package edits"
 ```
@@ -195,7 +195,7 @@ specified version and applying the upstream changes to the local package.
 ### Merge Command
 
 <!-- @mergeUpdates @verifyStaleGuides-->
-```sh
+```shell
 kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 ```
 
@@ -205,13 +205,13 @@ package, 3) the new upstream reference.
 
 ### Merge Output
 
-```sh
+```shell
 updating package helloworld to v0.5.0
 ```
 
 ### Merge Changes
 
-```sh
+```shell
 --- a/helloworld/deploy.yaml
 +++ b/helloworld/deploy.yaml
 @@ -31,7 +31,7 @@ spec:
@@ -233,7 +233,7 @@ index 0853ee1..c938fde 100644
 
 The Deployment was updated with a new image tag.
 
-```sh
+```shell
 --- a/helloworld/service.yaml
 +++ b/helloworld/service.yaml
 @@ -22,7 +22,7 @@ metadata:
@@ -249,7 +249,7 @@ The Deployment was updated with a new image tag.
 
 The Service was updated with a new `type`.
 
-```sh
+```shell
 --- a/helloworld/Kptfile
 +++ b/helloworld/Kptfile
 @@ -5,10 +5,10 @@ metadata:

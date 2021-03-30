@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -34,10 +33,10 @@ import (
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -66,7 +65,8 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, g.ReplaceData(testutil.Dataset2)) {
 		return
 	}
-	if !assert.NoError(t, g.Commit("modify upstream package -- ds2")) {
+	_, err = g.Commit("modify upstream package -- ds2")
+	if !assert.NoError(t, err) {
 		return
 	}
 
@@ -95,8 +95,17 @@ func TestCmd_execute(t *testing.T) {
 				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
 				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "master",
+				Directory: "/",
+			},
+			UpdateStrategy: kptfilev1alpha2.FastForward,
+		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
+			Type: kptfilev1alpha2.GitOrigin,
 			GitLock: &kptfilev1alpha2.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -110,10 +119,10 @@ func TestCmd_execute(t *testing.T) {
 }
 
 func TestCmd_failUnCommitted(t *testing.T) {
-	g, w, clean := testutil.SetupDefaultRepoAndWorkspace(t, testutil.Content{
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
-	}, map[string]string{})
+	})
 	defer clean()
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
@@ -136,7 +145,8 @@ func TestCmd_failUnCommitted(t *testing.T) {
 		return
 	}
 
-	if !assert.NoError(t, g.Commit("new dataset")) {
+	_, err = g.Commit("new dataset")
+	if !assert.NoError(t, err) {
 		return
 	}
 
@@ -177,9 +187,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{})
 	err := r.Command.Execute()
-	assert.EqualError(t, err, "accepts 1 arg(s), received 0")
+	assert.NoError(t, err)
 	assert.Equal(t, "", r.Update.Ref)
-	assert.Equal(t, update.Default, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 
 	// verify an error is thrown if multiple paths are specified
 	r = cmdupdate.NewRunner("kpt")
@@ -187,9 +197,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.RunE = failRun
 	r.Command.SetArgs([]string{"foo", "bar"})
 	err = r.Command.Execute()
-	assert.EqualError(t, err, "accepts 1 arg(s), received 2")
+	assert.EqualError(t, err, "accepts at most 1 arg(s), received 2")
 	assert.Equal(t, "", r.Update.Ref)
-	assert.Equal(t, update.Default, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.UpdateStrategyType(""), r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner("kpt")
@@ -197,9 +207,8 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.SetArgs([]string{"foo@refs/heads/foo"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, "foo", r.Update.Path)
 	assert.Equal(t, "refs/heads/foo", r.Update.Ref)
-	assert.Equal(t, update.FastForward, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner("kpt")
@@ -207,8 +216,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, "foo", r.Update.Path)
-	assert.Equal(t, update.ForceDeleteReplace, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ForceDeleteReplace, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 
 	r = cmdupdate.NewRunner("kpt")
@@ -216,8 +224,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "--strategy", "resource-merge"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, "foo", r.Update.Path)
-	assert.Equal(t, update.KResourceMerge, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 }
 
@@ -291,10 +298,7 @@ func TestCmd_path(t *testing.T) {
 
 			r := cmdupdate.NewRunner("kpt")
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error {
-				if !assert.Equal(t, test.expectedPath, r.Update.Path) {
-					t.FailNow()
-				}
-				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.FullPackagePath) {
+				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.Pkg.UniquePath.String()) {
 					t.FailNow()
 				}
 				return nil

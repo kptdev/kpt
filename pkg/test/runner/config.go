@@ -15,6 +15,7 @@ type TestCaseConfig struct {
 	Network  bool `json:"network,omitempty" yaml:"network,omitempty"`
 	RunCount int  `json:"runCount,omitempty" yaml:"runCount,omitempty"`
 	Skip     bool `json:"skip,omitempty" yaml:"skip,omitempty"`
+	Debug    bool `json:"debug,omitempty" yaml:"debug,omitempty"`
 }
 
 func newTestCaseConfig(path string) (TestCaseConfig, error) {

@@ -86,7 +86,10 @@ func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
 		return false, err
 	}
 
+	// Diffs in Upstream and UpstreamLock should be ignored.
+	pkg1Kf.Upstream = &kptfilev1alpha2.Upstream{}
 	pkg1Kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{}
+	pkg2Kf.Upstream = &kptfilev1alpha2.Upstream{}
 	pkg2Kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{}
 
 	pkg1Bytes, err := yaml.Marshal(pkg1Kf)
