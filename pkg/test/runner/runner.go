@@ -189,7 +189,9 @@ func (r *Runner) runFnRender() error {
 
 	// Update the diff file or results file if updateExpectedEnv is set.
 	if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
-		return updateExpected(tmpPkgPath, orgPkgPath, filepath.Join(r.testCase.Path, expectedDir))
+		// TODO: `fn render` doesn't support result file now
+		// use empty string to skip update results
+		return updateExpected(tmpPkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
 	}
 
 	// compare results
@@ -333,26 +335,26 @@ func newExpected(path string) (expected, error) {
 func updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
 	// We update results directory only when a result file already exists.
 	l, err := ioutil.ReadDir(resultsPath)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	if len(l) > 0 {
-		actualResults, err := readActualResults(resultsPath)
-		if err != nil {
-			return err
-		}
-		if actualResults != "" {
-			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
-				return err
-			}
-		}
-	} else {
+	if err != nil && os.IsNotExist(err) {
 		actualDiff, err := readActualDiff(tmpPkgPath)
 		if err != nil {
 			return err
 		}
 		if actualDiff != "" {
 			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedDiffFile), []byte(actualDiff+"\n"), 0666); err != nil {
+				return err
+			}
+		}
+	} else if len(l) > 0 {
+		actualResults, err := readActualResults(resultsPath)
+		if err != nil {
+			return err
+		}
+		if actualResults != "" {
+			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
 				return err
 			}
 		}
