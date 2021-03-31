@@ -263,21 +263,33 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 	return kptfileutil.UpdateUpstreamLockFromGit(p.UniquePath.String(), updated)
 }
 
+// checkPackageState checks the state of the package upstream and origin. Based
+// on whether the package exists and whether it is in the fetched or unfetched
+// state, we decide what needs to be done.
+// If the package should be updated in the regular way using one of the update
+// strategies, this function will return true as the first return value. If
+// the package should go through the regular merge, it is handled in this function
+// and the return value will be false.
 func checkPackageState(localPath, updatedPath, originPath string) (bool, error) {
-	updatedExists, err := pkgExists(updatedPath)
+	updatedExists, err := pkg.IsPackageDir(updatedPath)
 	if err != nil {
 		return false, err
 	}
 
-	originalExists, err := pkgExists(originPath)
+	originExists, err := pkg.IsPackageDir(originPath)
 	if err != nil {
 		return false, err
 	}
 
+	// Depending on whether origin and updated packages exists, we decide
+	// what is the right thing to do.
 	switch {
-	case !originalExists && !updatedExists:
+	case !originExists && !updatedExists:
+		// Package only exists in local. We don't need to do anything.
 		return false, nil
-	case originalExists && !updatedExists:
+	case originExists && !updatedExists:
+		// Package has been removed from upstream. We remove it if it has
+		// local changes.
 		hasChanges, err := PkgHasUpdatedUpstream(localPath, originPath)
 		if err != nil {
 			return false, err
@@ -288,9 +300,12 @@ func checkPackageState(localPath, updatedPath, originPath string) (bool, error) 
 			}
 		}
 		return false, nil
-	case !originalExists && updatedExists:
+	case !originExists && updatedExists:
+		// Package was added in both upstream and local. We don't have any
+		// reasonable way to merge this, so report an error.
 		return false, fmt.Errorf("package added in both local and upstream")
 	default:
+		// In this case, we have a package from both origin and upstream
 	}
 
 	// At this point we know that the package exists in both upstream and origin.
@@ -304,18 +319,13 @@ func checkPackageState(localPath, updatedPath, originPath string) (bool, error) 
 		return false, err
 	}
 
+	// If both updated and upstream is in the unfetched state, we just merge
+	// the Kptfile.
+	// TODO(mortent): Verify that this covers all the possible scenarios.
 	if originKf.UpstreamLock == nil || updatedKf.UpstreamLock == nil {
 		if err := kptfileutil.UpdateKptfile(localPath, updatedPath, originPath, true); err != nil {
 			return false, err
 		}
 	}
 	return true, nil
-}
-
-func pkgExists(path string) (bool, error) {
-	_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
-	}
-	return !os.IsNotExist(err), nil
 }
