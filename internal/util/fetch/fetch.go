@@ -101,7 +101,11 @@ func cloneAndCopy(r *git.RepoSpec, dest string) error {
 			r.Path, r.OrgRepo, r.Ref)
 	}
 
-	if err := UpsertKptfile(dest, r); err != nil {
+	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, r.AbsPath(), false); err != nil {
+		return err
+	}
+
+	if err := kptfileutil.UpdateUpstreamLockFromGit(dest, r); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil
@@ -240,32 +244,4 @@ func clonerUsingGitExec(repoSpec *git.RepoSpec) error {
 	}
 
 	return nil
-}
-
-// UpsertKptfile populates the KptFile values, merging any cloned KptFile and the
-// cloneFrom values.
-func UpsertKptfile(path string, spec *git.RepoSpec) error {
-	// read KptFile cloned with the package if it exists
-	kpgfile, err := kptfileutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	// find the git commit sha that we cloned the package at so we can write it to the KptFile
-	commit, err := git.LookupCommit(spec.AbsPath())
-	if err != nil {
-		return err
-	}
-
-	// populate the cloneFrom values so we know where the package came from
-	kpgfile.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
-		Type: kptfilev1alpha2.GitOrigin,
-		GitLock: &kptfilev1alpha2.GitLock{
-			Repo:      spec.OrgRepo,
-			Directory: spec.Path,
-			Ref:       spec.Ref,
-			Commit:    commit,
-		},
-	}
-	return kptfileutil.WriteFile(path, kpgfile)
 }

@@ -20,9 +20,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -33,13 +33,6 @@ func ReadFile(dir string) (kptfilev1alpha2.KptFile, error) {
 	kpgfile := kptfilev1alpha2.KptFile{ResourceMeta: kptfilev1alpha2.TypeMeta}
 
 	f, err := os.Open(filepath.Join(dir, kptfilev1alpha2.KptFileName))
-
-	// if we are in a package subdirectory, find the parent dir with the Kptfile.
-	// this is necessary to parse the duck-commands for sub-directories of a package
-	for os.IsNotExist(err) && filepath.Base(dir) == kptfilev1alpha2.KptFileName {
-		dir = filepath.Dir(dir)
-		f, err = os.Open(filepath.Join(dir, kptfilev1alpha2.KptFileName))
-	}
 	if err != nil {
 		return kptfilev1alpha2.KptFile{}, err
 	}
@@ -156,151 +149,109 @@ func DefaultKptfile(name string) kptfilev1alpha2.KptFile {
 	}
 }
 
-func MergeAndUpdateLocal(local, updated, original string) error {
-	// hasUpdatedKf := true
-	updatedKf, err := ReadFile(updated)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-		// hasUpdatedKf = false
+// UpdateKptfileWithoutOrigin updates the Kptfile in the package specified by
+// localPath with values from the package specified by updatedPath using a 3-way
+// merge strategy, but where origin does not have any values.
+// If updateUpstream is true, the values from the upstream and upstreamLock
+// sections will also be copied into local.
+func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bool) error {
+	localKf, err := ReadFile(localPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
 	}
 
-	// hasOriginalKf := true
-	originalKf, err := ReadFile(original)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-		// hasOriginalKf = false
+	updatedKf, err := ReadFile(updatedPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
 	}
 
-	localKf, err := ReadFile(local)
+	// TODO: Merge other parts of the Kptfile
+
+	if updateUpstream {
+		localKf = updateUpstreamAndUpstreamLock(localKf, updatedKf)
+	}
+
+	return WriteFile(localPath, localKf)
+}
+
+// UpdateKptfile updates the Kptfile in the package specified by localPath with
+// values from the packages specified in updatedPath using the package specified
+// by originPath as the common ancestor.
+// If updateUpstream is true, the values from the upstream and upstreamLock
+// sections will also be copied into local.
+func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream bool) error {
+	localKf, err := ReadFile(localPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	updatedKf, err := ReadFile(updatedPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// TODO: Merge other parts of the Kptfile
+
+	if updateUpstream {
+		localKf = updateUpstreamAndUpstreamLock(localKf, updatedKf)
+	}
+
+	return WriteFile(localPath, localKf)
+}
+
+// UpdateUpstreamLockFromGit updates the upstreamLock of the package specified
+// by path by using the values from spec. It will also populate the commit
+// field in upstreamLock using the latest commit of the git repo given
+// by spec.
+func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
+	// read KptFile cloned with the package if it exists
+	kpgfile, err := ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	newKf, err := Merge(localKf, updatedKf, originalKf)
+	// find the git commit sha that we cloned the package at so we can write it to the KptFile
+	commit, err := git.LookupCommit(spec.AbsPath())
 	if err != nil {
 		return err
 	}
 
-	return WriteFile(local, newKf)
+	// populate the cloneFrom values so we know where the package came from
+	kpgfile.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
+		Type: kptfilev1alpha2.GitOrigin,
+		GitLock: &kptfilev1alpha2.GitLock{
+			Repo:      spec.OrgRepo,
+			Directory: spec.Path,
+			Ref:       spec.Ref,
+			Commit:    commit,
+		},
+	}
+	return WriteFile(path, kpgfile)
 }
 
-func Merge(local, updated, _ kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
-	newKf, err := clone(local)
-	if err != nil {
-		return newKf, err
-	}
-
-	if updated.Upstream != nil {
-		newKf.Upstream = updated.Upstream
-	}
-	if updated.UpstreamLock != nil {
-		newKf.UpstreamLock = updated.UpstreamLock
-	}
-	return newKf, nil
-}
-
-func clone(kf kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
-	b, err := yaml.Marshal(kf)
-	if err != nil {
-		return kptfilev1alpha2.KptFile{}, err
-	}
-	var clonedKf kptfilev1alpha2.KptFile
-	err = yaml.Unmarshal(b, &clonedKf)
-	return clonedKf, err
-}
-
-// MergeSubpackages takes the subpackage information from local, updated
-// and original and does a 3-way merge. The result is returned as a new slice.
-// The passed in data structures are not changed.
-func MergeSubpackages(local, updated, original []kptfilev1alpha2.Subpackage) ([]kptfilev1alpha2.Subpackage, error) {
-	// find is a helper function that returns a subpackage with the provided
-	// key from the slice.
-	find := func(key string, slice []kptfilev1alpha2.Subpackage) (kptfilev1alpha2.Subpackage, bool) {
-		for i := range slice {
-			sp := slice[i]
-			if sp.LocalDir == key {
-				return sp, true
-			}
-		}
-		return kptfilev1alpha2.Subpackage{}, false
-	}
-
-	// Create a new slice to contain the merged result.
-	var merged []kptfilev1alpha2.Subpackage
-
-	// Create a slice that contains all keys available from both updated
-	// and local. We add keys from updated first, so subpackages added
-	// locally will be at the end of the slice after merge.
-	var dirKeys []string
-	for _, sp := range updated {
-		dirKeys = append(dirKeys, sp.LocalDir)
-	}
-	for _, sp := range local {
-		dirKeys = append(dirKeys, sp.LocalDir)
-	}
-
-	// The slice of keys might contain duplicates, so keep track of which
-	// keys we have seen.
-	seen := make(map[string]bool)
-	for _, key := range dirKeys {
-		// Skip subpackages that we have already merged.
-		if seen[key] {
-			continue
-		}
-		seen[key] = true
-
-		// Look up the package with the given name from all three sources.
-		l, lok := find(key, local)
-		u, uok := find(key, updated)
-		o, ook := find(key, original)
-
-		// If we find a remote subpackage defined in both local and updated, but
-		// not in the original, it must have been added both in local and updated.
-		// This is an error and the user must resolve this.
-		if !ook && uok && lok {
-			return merged, fmt.Errorf("remote subpackage with localDir %s added in both local and upstream", key)
-		}
-
-		// If not in either upstream or local, we don't need to add it.
-		if !lok && !uok {
-			continue
-		}
-
-		// If deleted from upstream, we only remove it if local is unchanged.
-		if ook && !uok {
-			if !reflect.DeepEqual(o, l) {
-				merged = append(merged, l)
-			}
-			continue
-		}
-
-		// If deleted from local, we don't want to re-add it from upstream.
-		if ook && !lok {
-			continue
-		}
-
-		// If key not found in local, we use the version from updated.
-		if !lok {
-			merged = append(merged, u)
-			continue
-		}
-		// If key not found in updated, we use the version from local.
-		if !uok {
-			merged = append(merged, l)
-			continue
-		}
-
-		// If we changes to local compared with original, we keep the local
-		// version. Otherwise, we take hte version from updated.
-		if reflect.DeepEqual(o, l) {
-			merged = append(merged, u)
-		} else {
-			merged = append(merged, l)
+func updateUpstreamAndUpstreamLock(localKf, updatedKf kptfilev1alpha2.KptFile) kptfilev1alpha2.KptFile {
+	if updatedKf.Upstream != nil {
+		localKf.Upstream = &kptfilev1alpha2.Upstream{
+			Type: updatedKf.Upstream.Type,
+			Git: &kptfilev1alpha2.Git{
+				Directory: updatedKf.Upstream.Git.Directory,
+				Repo:      updatedKf.Upstream.Git.Repo,
+				Ref:       updatedKf.Upstream.Git.Ref,
+			},
+			UpdateStrategy: updatedKf.Upstream.UpdateStrategy,
 		}
 	}
-	return merged, nil
+
+	if updatedKf.UpstreamLock != nil {
+		localKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
+			Type: updatedKf.UpstreamLock.Type,
+			GitLock: &kptfilev1alpha2.GitLock{
+				Commit:    updatedKf.UpstreamLock.GitLock.Commit,
+				Directory: updatedKf.UpstreamLock.GitLock.Directory,
+				Repo:      updatedKf.UpstreamLock.GitLock.Repo,
+				Ref:       updatedKf.UpstreamLock.GitLock.Ref,
+			},
+		}
+	}
+	return localKf
 }

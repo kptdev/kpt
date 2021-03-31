@@ -20,6 +20,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
@@ -104,335 +105,6 @@ func TestWalkPackage(t *testing.T) {
 	}
 }
 
-func TestFindAllDirectSubpackages(t *testing.T) {
-	testCases := map[string]struct {
-		pkg      *pkgbuilder.RootPkg
-		expected []string
-	}{
-		"includes remote subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-						).
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-			expected: []string{
-				"foo",
-			},
-		},
-		"includes local subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-			expected: []string{
-				"foo",
-			},
-		},
-		"does not include root package": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.DeploymentResource),
-			expected: []string{},
-		},
-		"does not include nested remote subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-						).
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("bar").
-								WithSubPackages(
-									pkgbuilder.NewSubPkg("zork").
-										WithKptfile(
-											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-										).
-										WithResource(pkgbuilder.ConfigMapResource),
-								),
-						),
-				),
-			expected: []string{
-				"foo",
-			},
-		},
-		"does not include nested local subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("zork").
-								WithKptfile().
-								WithResource(pkgbuilder.ConfigMapResource),
-						),
-					pkgbuilder.NewSubPkg("subpkg").
-						WithKptfile(),
-				),
-			expected: []string{
-				"foo",
-				"subpkg",
-			},
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
-
-			paths, err := pkgutil.FindAllDirectSubpackages(pkgPath)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			relPaths := toRelativePaths(t, paths, pkgPath)
-			sort.Strings(relPaths)
-
-			assert.Equal(t, tc.expected, relPaths)
-		})
-	}
-}
-
-func TestFindLocalRecursiveSubpackages(t *testing.T) {
-	testCases := map[string]struct {
-		pkg      *pkgbuilder.RootPkg
-		expected []string
-	}{
-		"does not include remote subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-						).
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-			expected: []string{},
-		},
-		"includes local subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-			expected: []string{
-				"foo",
-			},
-		},
-		"does not include root package": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.DeploymentResource),
-			expected: []string{},
-		},
-		"does not include nested remote subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-						).
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("bar").
-								WithSubPackages(
-									pkgbuilder.NewSubPkg("zork").
-										WithKptfile(
-											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-										).
-										WithResource(pkgbuilder.ConfigMapResource),
-								),
-						),
-				),
-			expected: []string{},
-		},
-		"includes nested local subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("zork").
-								WithKptfile().
-								WithResource(pkgbuilder.ConfigMapResource),
-						),
-					pkgbuilder.NewSubPkg("subpkg").
-						WithKptfile(),
-				),
-			expected: []string{
-				"foo",
-				"foo/zork",
-				"subpkg",
-			},
-		},
-		"does not include local subpackages within remote subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-						).
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("zork").
-								WithKptfile().
-								WithResource(pkgbuilder.ConfigMapResource),
-						),
-				),
-			expected: []string{},
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
-
-			paths, err := pkgutil.FindLocalRecursiveSubpackages(pkgPath)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			relPaths := toRelativePaths(t, paths, pkgPath)
-			sort.Strings(relPaths)
-
-			assert.Equal(t, tc.expected, relPaths)
-		})
-	}
-}
-
-func TestFindRemoteDirectSubpackages(t *testing.T) {
-	testCases := map[string]struct {
-		pkg      *pkgbuilder.RootPkg
-		expected []string
-	}{
-		"includes remote subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-						).
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-			expected: []string{
-				"foo",
-			},
-		},
-		"does not include local subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource),
-				),
-			expected: []string{},
-		},
-		"does not include root package": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithKptfile().
-				WithResource(pkgbuilder.DeploymentResource),
-			expected: []string{},
-		},
-		"does not include nested remote subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-						).
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("bar").
-								WithSubPackages(
-									pkgbuilder.NewSubPkg("zork").
-										WithKptfile(
-											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
-										).
-										WithResource(pkgbuilder.ConfigMapResource),
-								),
-						),
-				),
-			expected: []string{
-				"foo",
-			},
-		},
-		"does not include nested local subpackages": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithResource(pkgbuilder.DeploymentResource).
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("foo").
-						WithKptfile().
-						WithResource(pkgbuilder.ConfigMapResource).
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("zork").
-								WithKptfile().
-								WithResource(pkgbuilder.ConfigMapResource),
-						),
-					pkgbuilder.NewSubPkg("subpkg").
-						WithKptfile(),
-				),
-			expected: []string{},
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
-
-			paths, err := pkgutil.FindRemoteDirectSubpackages(pkgPath)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			relPaths := toRelativePaths(t, paths, pkgPath)
-			sort.Strings(relPaths)
-
-			assert.Equal(t, tc.expected, relPaths)
-		})
-	}
-}
-
 func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 	testCases := map[string]struct {
 		pkgs     []*pkgbuilder.RootPkg
@@ -452,9 +124,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 							WithResource(pkgbuilder.ConfigMapResource),
 					),
 			},
-			expected: []string{
-				".",
-			},
+			expected: []string{},
 		},
 		"includes local subpackages": {
 			pkgs: []*pkgbuilder.RootPkg{
@@ -467,7 +137,6 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 					),
 			},
 			expected: []string{
-				".",
 				"foo",
 			},
 		},
@@ -477,9 +146,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 					WithKptfile().
 					WithResource(pkgbuilder.DeploymentResource),
 			},
-			expected: []string{
-				".",
-			},
+			expected: []string{},
 		},
 		"does not include nested remote subpackages": {
 			pkgs: []*pkgbuilder.RootPkg{
@@ -507,9 +174,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 							),
 					),
 			},
-			expected: []string{
-				".",
-			},
+			expected: []string{},
 		},
 		"includes nested local subpackages": {
 			pkgs: []*pkgbuilder.RootPkg{
@@ -529,7 +194,6 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 					),
 			},
 			expected: []string{
-				".",
 				"foo",
 				"foo/zork",
 				"subpkg",
@@ -571,7 +235,6 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 					),
 			},
 			expected: []string{
-				".",
 				"bar",
 				"foo",
 				"foo/zork",
@@ -587,7 +250,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 				pkgPaths = append(pkgPaths, p.ExpandPkg(t, testutil.EmptyReposInfo))
 			}
 
-			paths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(pkgPaths...)
+			paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, pkgPaths...)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -597,20 +260,4 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 			assert.Equal(t, tc.expected, paths)
 		})
 	}
-}
-
-func TestCopyPackage(t *testing.T) {
-
-}
-
-func toRelativePaths(t *testing.T, paths []string, base string) []string {
-	relPaths := []string{}
-	for _, p := range paths {
-		r, err := filepath.Rel(base, p)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		relPaths = append(relPaths, r)
-	}
-	return relPaths
 }

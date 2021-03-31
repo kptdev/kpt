@@ -18,7 +18,6 @@ package pkg
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -77,7 +76,7 @@ func New(path string) (*Pkg, error) {
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 	if p.kptfile == nil {
-		kf, err := p.readKptfile()
+		kf, err := readKptfile(p.UniquePath.String())
 		if err != nil {
 			return nil, err
 		}
@@ -92,10 +91,10 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 // of Kptfile in code. One option is to follow Kubernetes approach to
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
-func (p *Pkg) readKptfile() (*kptfilev1alpha2.KptFile, error) {
+func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
 	kf := &kptfilev1alpha2.KptFile{}
 
-	f, err := os.Open(path.Join(string(p.UniquePath), kptfilev1alpha2.KptFileName))
+	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
 
 	if err != nil {
 		return kf, fmt.Errorf("unable to read %s: %w", kptfilev1alpha2.KptFileName, err)
@@ -145,14 +144,63 @@ func (p *Pkg) RelativePathTo(ancestorPkg *Pkg) (string, error) {
 // TODO: This does not support symlinks, so we need to figure out how
 // we should support that with kpt.
 func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
-	packagePaths := make(map[string]bool)
-	if err := filepath.Walk(p.UniquePath.String(), func(path string, info os.FileInfo, err error) error {
+	var subPkgs []*Pkg
+
+	packagePaths, err := Subpackages(p.UniquePath.String(), All, false)
+	if err != nil {
+		return subPkgs, err
+	}
+
+	for _, subPkgPath := range packagePaths {
+		subPkg, err := New(filepath.Join(p.UniquePath.String(), subPkgPath))
 		if err != nil {
-			return fmt.Errorf("failed to read package %s: %w", p, err)
+			return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", subPkgPath, err)
+		}
+		subPkgs = append(subPkgs, subPkg)
+	}
+
+	sort.Slice(subPkgs, func(i, j int) bool {
+		return subPkgs[i].DisplayPath < subPkgs[j].DisplayPath
+	})
+	return subPkgs, nil
+}
+
+// SubpackageMatcher is type for specifying the types of subpackages which
+// should be included when listing them.
+type SubpackageMatcher string
+
+const (
+	// All means all types of subpackages will be returned.
+	All SubpackageMatcher = "ALL"
+	// Local means only local subpackages will be returned.
+	Local SubpackageMatcher = "LOCAL"
+	// remote means only remote subpackages will be returned.
+	Remote SubpackageMatcher = "REMOTE"
+)
+
+// Subpackages returns a slice of paths to any subpackages of the provided path.
+// The matcher parameter decides if all types of subpackages should be considered,
+// and the recursive parameter determines if only direct subpackages are
+// considered. All returned paths will be relative to the provided rootPath.
+// The top level package is not considered a subpackage. If the provided path
+// doesn't exist, an empty slice will be returned.
+// Symlinks are ignored.
+func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]string, error) {
+	_, err := os.Stat(rootPath)
+	if err != nil && !os.IsNotExist(err) {
+		return []string{}, err
+	}
+	if os.IsNotExist(err) {
+		return []string{}, nil
+	}
+	packagePaths := make(map[string]bool)
+	if err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to read package %s: %w", rootPath, err)
 		}
 
 		// Ignore the root folder
-		if path == p.UniquePath.String() {
+		if path == rootPath {
 			return nil
 		}
 
@@ -174,28 +222,44 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 			// path to the slice and return SkipDir since we don't need to
 			// walk any deeper into the directory.
 			if isPkg {
-				packagePaths[path] = true
-				return filepath.SkipDir
+				kf, err := readKptfile(path)
+				if err != nil {
+					return fmt.Errorf("failed to read Kptfile at %s: %w", path, err)
+				}
+				switch matcher {
+				case Local:
+					if kf.Upstream == nil {
+						packagePaths[path] = true
+					}
+				case Remote:
+					if kf.Upstream != nil {
+						packagePaths[path] = true
+					}
+				case All:
+					packagePaths[path] = true
+				default:
+
+				}
+				if !recursive {
+					return filepath.SkipDir
+				}
+				return nil
 			}
 		}
 		return nil
 	}); err != nil {
-		return []*Pkg{}, fmt.Errorf("failed to read package at %s: %w", p, err)
+		return []string{}, fmt.Errorf("failed to read package at %s: %w", rootPath, err)
 	}
 
-	var subPkgs []*Pkg
+	paths := []string{}
 	for subPkgPath := range packagePaths {
-		subPkg, err := New(subPkgPath)
+		relPath, err := filepath.Rel(rootPath, subPkgPath)
 		if err != nil {
-			return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", subPkgPath, err)
+			return paths, fmt.Errorf("failed to find relative path for %s: %w", subPkgPath, err)
 		}
-		subPkgs = append(subPkgs, subPkg)
+		paths = append(paths, relPath)
 	}
-
-	sort.Slice(subPkgs, func(i, j int) bool {
-		return subPkgs[i].DisplayPath < subPkgs[j].DisplayPath
-	})
-	return subPkgs, nil
+	return paths, nil
 }
 
 // IsPackageDir checks if there exists a Kptfile on the provided path, i.e.
@@ -214,6 +278,18 @@ func IsPackageDir(path string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// IsPackageUnfetched returns true if a package has Upstream information,
+// but no UpstreamLock. For local packages that doesn't have Upstream
+// information, it will always return false.
+// If a Kptfile is not found on the provided path, an error will be returned.
+func IsPackageUnfetched(path string) (bool, error) {
+	kf, err := readKptfile(path)
+	if err != nil {
+		return false, err
+	}
+	return kf.Upstream != nil && kf.UpstreamLock == nil, nil
 }
 
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
@@ -286,13 +362,13 @@ func functionConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.S
 	for _, fn := range pl.Mutators {
 		if fn.ConfigPath != "" {
 			// TODO(droot): check if cleaning this path has some unnecessary side effects
-			fnConfigPaths.Insert(path.Clean(fn.ConfigPath))
+			fnConfigPaths.Insert(filepath.Clean(fn.ConfigPath))
 		}
 	}
 	for _, fn := range pl.Validators {
 		if fn.ConfigPath != "" {
 			// TODO(droot): check if cleaning this path has some unnecessary side effects
-			fnConfigPaths.Insert(path.Clean(fn.ConfigPath))
+			fnConfigPaths.Insert(filepath.Clean(fn.ConfigPath))
 		}
 	}
 	return fnConfigPaths

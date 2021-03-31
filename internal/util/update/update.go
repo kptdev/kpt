@@ -16,6 +16,7 @@
 package update
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -30,18 +31,28 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
 type UpdateOptions struct {
+	// RelPackagePath is the relative path of a subpackage to the root. If the
+	// package is root, the value here will be ".".
 	RelPackagePath string
 
+	// LocalPath is the absolute path to the package on the local fork.
 	LocalPath string
 
+	// OriginPath is the absolute path to the package in the on-disk clone
+	// of the origin ref of the repo.
 	OriginPath string
 
+	// UpdatedPath is the absolute path to the package in the on-disk clone
+	// of the updated ref of the repo.
 	UpdatedPath string
 
+	// IsRoot is true if the package is the root, i.e. the clones of
+	// updated and origin were fetched based on the information in the
+	// Kptfile from this package.
 	IsRoot bool
 
 	// DryRun configures AlphaGitPatch to print a patch rather
@@ -124,21 +135,21 @@ func (u Command) Run() error {
 	// require package is checked into git before trying to update it
 	g := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
 	if err := g.Run("status", "-s"); err != nil {
-		return errors.Errorf(
-			"kpt packages must be checked into a git repo before they are updated: %v", err)
+		return fmt.Errorf(
+			"kpt packages must be checked into a git repo before they are updated: %w", err)
 	}
 	if strings.TrimSpace(g.Stdout.String()) != "" {
-		return errors.Errorf("must commit package %s to git before attempting to update",
+		return fmt.Errorf("must commit package %s to git before attempting to update",
 			u.Pkg.UniquePath.String())
 	}
 
 	rootKf, err := u.Pkg.Kptfile()
 	if err != nil {
-		return errors.Errorf("unable to read package Kptfile: %w", err)
+		return fmt.Errorf("unable to read package Kptfile: %w", err)
 	}
 
 	if rootKf.Upstream == nil || rootKf.Upstream.Git == nil {
-		return errors.Errorf("kpt package must have an upstream reference")
+		return fmt.Errorf("kpt package must have an upstream reference")
 	}
 	if u.Repo != "" {
 		rootKf.Upstream.Git.Repo = u.Repo
@@ -162,7 +173,7 @@ func (u Command) Run() error {
 	for s.Len() > 0 {
 		p := s.Pop()
 
-		if err := u.updatePackage(p); err != nil {
+		if err := u.updateRootPackage(p); err != nil {
 			return err
 		}
 
@@ -177,8 +188,10 @@ func (u Command) Run() error {
 	return nil
 }
 
-//nolint:gocyclo
-func (u Command) updatePackage(p *pkg.Pkg) error {
+// updateRootPackage updates a local package. It will use the information
+// about upstream in the Kptfile to fetch upstream and origin, and then
+// recursively traverse the hierarchy to add/update/delete packages.
+func (u Command) updateRootPackage(p *pkg.Pkg) error {
 	kf, err := p.Kptfile()
 	if err != nil {
 		return err
@@ -192,13 +205,13 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 	gLock := kf.UpstreamLock.GitLock
 	original := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 	if err := fetch.ClonerUsingGitExec(original); err != nil {
-		return errors.Errorf("failed to clone git repo: original source: %v", err)
+		return fmt.Errorf("failed to clone git repo: original source: %w", err)
 	}
 	defer os.RemoveAll(original.AbsPath())
 
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 	if err := fetch.ClonerUsingGitExec(updated); err != nil {
-		return errors.Errorf("failed to clone git repo: updated source: %v", err)
+		return fmt.Errorf("failed to clone git repo: updated source: %w", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
 
@@ -216,103 +229,158 @@ func (u Command) updatePackage(p *pkg.Pkg) error {
 			isRoot = true
 		}
 
-		if !isRoot {
-			updatedExists, err := pkgExists(updatedPath)
-			if err != nil {
-				return err
-			}
-
-			originalExists, err := pkgExists(originPath)
-			if err != nil {
-				return err
-			}
-
-			switch {
-			case !originalExists && !updatedExists:
-				continue
-			case originalExists && !updatedExists:
-				hasChanges, err := PkgHasUpdatedUpstream(localPath, originPath)
-				if err != nil {
-					return err
-				}
-				if !hasChanges {
-					if err := os.RemoveAll(localPath); err != nil {
-						return err
-					}
-				}
-				continue
-			case !originalExists && updatedExists:
-				return fmt.Errorf("package added in both local and upstream")
-			default:
-			}
-
-			updatedFetched, err := pkgFetched(updatedPath)
-			if err != nil {
-				return err
-			}
-			originalFetched, err := pkgFetched(originPath)
-			if err != nil {
-				return err
-			}
-
-			if !originalFetched || !updatedFetched {
-				err := kptfileutil.MergeAndUpdateLocal(localPath, updatedPath, originPath)
-				if err != nil {
-					return err
-				}
-				continue
-			}
-		}
-
-		pkgKf, err := kptfileutil.ReadFile(localPath)
-		if err != nil {
-			return err
-		}
-		updater, found := strategies[pkgKf.Upstream.UpdateStrategy]
-		if !found {
-			return errors.Errorf("unrecognized update strategy %s", u.Strategy)
-		}
-		if err := updater().Update(UpdateOptions{
-			RelPackagePath: relPath,
-			LocalPath:      localPath,
-			UpdatedPath:    updatedPath,
-			OriginPath:     originPath,
-			IsRoot:         isRoot,
-			DryRun:         u.DryRun,
-			Verbose:        u.Verbose,
-			SimpleMessage:  u.SimpleMessage,
-			Output:         u.Output,
-		}); err != nil {
+		if err := u.updatePackage(relPath, localPath, updatedPath, originPath, isRoot); err != nil {
 			return err
 		}
 
-		paths, err := pkgutil.FindRemoteDirectSubpackages(localPath)
+		paths, err := pkgutil.FindSubpackagesForPaths(pkg.Remote, false,
+			localPath, updatedPath, originPath)
 		if err != nil {
 			return err
 		}
 		for _, path := range paths {
-			rel, err := filepath.Rel(p.UniquePath.String(), path)
-			if err != nil {
-				return err
-			}
-			s.Push(rel)
+			s.Push(filepath.Join(relPath, path))
 		}
 	}
-	return fetch.UpsertKptfile(p.UniquePath.String(), updated)
+
+	return kptfileutil.UpdateUpstreamLockFromGit(p.UniquePath.String(), updated)
 }
 
-func pkgExists(path string) (bool, error) {
-	_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
-	}
-	return !os.IsNotExist(err), nil
-}
-
-func pkgFetched(path string) (bool, error) {
-	kf, err := kptfileutil.ReadFile(path)
+// updatePackage takes care of updating a single package. The absolute paths to
+// the local, updated and origin packages are provided, as well as the path to the
+// package relative to the root.
+// The last parameter tells if this package is the root, i.e. the package
+// from which we got the information about upstream and origin.
+//nolint:gocyclo
+func (u Command) updatePackage(subPkgPath, localPath, updatedPath, originPath string, isRootPkg bool) error {
+	localExists, err := pkg.IsPackageDir(localPath)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return kf.UpstreamLock != nil, nil
+
+	// We need to handle the root package special here, since the copies
+	// from updated and origin might not have a Kptfile at the root.
+	updatedExists := isRootPkg
+	if !isRootPkg {
+		updatedExists, err = pkg.IsPackageDir(updatedPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	originExists := isRootPkg
+	if !isRootPkg {
+		originExists, err = pkg.IsPackageDir(originPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	switch {
+	case !originExists && !localExists && !updatedExists:
+		break
+	// Check if subpackage has been added both in upstream and in local. We
+	// can't make a sane merge here, so we treat it as an error.
+	case !originExists && localExists && updatedExists:
+		return fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath)
+
+	// Package added in upstream. We just copy the package. If the package
+	// contains any unfetched subpackages, those will be handled when we traverse
+	// the package hierarchy and that package is the root.
+	case !originExists && !localExists && updatedExists:
+		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg); err != nil {
+			return err
+		}
+
+	// Package added locally, so no action needed.
+	case !originExists && localExists && !updatedExists:
+		break
+
+	// Package deleted from both upstream and local, so no action needed.
+	case originExists && !localExists && !updatedExists:
+		break
+
+	// Package deleted from local
+	// In this case we assume the user knows what they are doing, so
+	// we don't re-add the updated package from upstream.
+	case originExists && !localExists && updatedExists:
+		break
+	// Package deleted from upstream
+	case originExists && localExists && !updatedExists:
+		// Check the diff. If there are local changes, we keep the subpackage.
+		diff, err := copyutil.Diff(originPath, localPath)
+		if err != nil {
+			return err
+		}
+		if diff.Len() == 0 {
+			if err := os.RemoveAll(localPath); err != nil {
+				return err
+			}
+		}
+	default:
+		if err := u.mergePackage(localPath, updatedPath, originPath, subPkgPath, isRootPkg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (u Command) mergePackage(localPath, updatedPath, originPath, relPath string, isRootPkg bool) error {
+	updatedUnfetched, err := pkg.IsPackageUnfetched(updatedPath)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) || !isRootPkg {
+			return err
+		}
+		// For root packages, there might not be a Kptfile in the upstream repo.
+		updatedUnfetched = false
+	}
+
+	originUnfetched, err := pkg.IsPackageUnfetched(originPath)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) || !isRootPkg {
+			return err
+		}
+		// For root packages, there might not be a Kptfile in origin.
+		originUnfetched = false
+	}
+
+	switch {
+	case updatedUnfetched && originUnfetched:
+		fallthrough
+	case updatedUnfetched && !originUnfetched:
+		// updated is unfetched, so can't have changes except for Kptfile.
+		// we can just merge that one.
+		return kptfileutil.UpdateKptfile(localPath, updatedPath, originPath, true)
+	case !updatedUnfetched && originUnfetched:
+		// This means that the package was unfetched when local forked from upstream,
+		// so the local fork and upstream might have fetched different versions of
+		// the package. We just return an error here.
+		// We might be able to compare the commit SHAs from local and updated
+		// to determine if they share the common upstream and then fetch origin
+		// using the common commit SHA. But this is a very advanced scenario,
+		// so we just return the error for now.
+		return fmt.Errorf("no origin available for package %q", localPath)
+	default:
+		// Both exists, so just go ahead as normal.
+	}
+
+	pkgKf, err := kptfileutil.ReadFile(localPath)
+	if err != nil {
+		return err
+	}
+	updater, found := strategies[pkgKf.Upstream.UpdateStrategy]
+	if !found {
+		return fmt.Errorf("unrecognized update strategy %s", u.Strategy)
+	}
+	return updater().Update(UpdateOptions{
+		RelPackagePath: relPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		OriginPath:     originPath,
+		IsRoot:         isRootPkg,
+		DryRun:         u.DryRun,
+		Verbose:        u.Verbose,
+		SimpleMessage:  u.SimpleMessage,
+		Output:         u.Output,
+	})
 }

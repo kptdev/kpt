@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -54,15 +55,15 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	// Find all subpackages in local, upstream and original. They are sorted
 	// in increasing order based on the depth of the subpackage relative to the
 	// root package.
-	subPkgPaths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(options.LocalPath,
-		options.UpdatedPath, options.OriginPath)
+	subPkgPaths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true,
+		options.LocalPath, options.UpdatedPath, options.OriginPath)
 	if err != nil {
 		return err
 	}
 
 	// Update each package and subpackage. Parent package is updated before
 	// subpackages to make sure auto-setters can work correctly.
-	for _, subPkgPath := range subPkgPaths {
+	for _, subPkgPath := range append([]string{"."}, subPkgPaths...) {
 		isRootPkg := false
 		if subPkgPath == "." && options.IsRoot {
 			isRootPkg = true
@@ -120,9 +121,6 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 	// Package deleted from upstream
 	case originalExists && localExists && !updatedExists:
 		// Check the diff. If there are local changes, we keep the subpackage.
-		// TODO(mortent): How should we handle (auto)setters and formatting here?
-		// It doesn't seem like there is an obvious way to tell auto-setter
-		// changes from manual user changes.
 		diff, err := copyutil.Diff(originalPath, localPath)
 		if err != nil {
 			return err
@@ -143,15 +141,8 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 // mergePackage merge a package. It does a 3-way merge by using the provided
 // paths to the local, updated and original versions of the package.
 func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath, _ string, isRootPkg bool) error {
-	if !isRootPkg {
-		kf, err := u.updatedKptfile(localPath, updatedPath, originalPath)
-		if err != nil {
-			return err
-		}
-
-		if err := kptfileutil.WriteFile(localPath, kf); err != nil {
-			return err
-		}
+	if err := kptfileutil.UpdateKptfile(localPath, updatedPath, originalPath, !isRootPkg); err != nil {
+		return err
 	}
 
 	// merge the Resources: original + updated + dest => dest
@@ -168,32 +159,6 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 	}
 
 	return ReplaceNonKRMFiles(updatedPath, originalPath, localPath)
-}
-
-// updatedKptfile returns a Kptfile to replace the existing local Kptfile as part of the update
-func (u ResourceMergeUpdater) updatedKptfile(localPath, updatedPath, _ string) (
-	kptfilev1alpha2.KptFile, error) {
-
-	updatedKf, err := kptfileutil.ReadFile(updatedPath)
-	if err != nil {
-		updatedKf, err = kptfileutil.ReadFile(localPath)
-		if err != nil {
-			return kptfilev1alpha2.KptFile{}, err
-		}
-	}
-
-	localKf, err := kptfileutil.ReadFile(localPath)
-	if err != nil {
-		return kptfilev1alpha2.KptFile{}, err
-	}
-
-	if updatedKf.Upstream != nil {
-		localKf.Upstream = updatedKf.Upstream
-	}
-	if updatedKf.UpstreamLock != nil {
-		localKf.UpstreamLock = updatedKf.UpstreamLock
-	}
-	return localKf, err
 }
 
 // replaceNonKRMFiles replaces the non KRM files in localDir with the corresponding files in updatedDir,
