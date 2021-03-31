@@ -10,9 +10,9 @@ description: >
     Print the resources in a file/directory
 -->
 
-Cat prints the resources in a file/directory as yaml to stdout.
+Prints the resources in a file/directory as yaml to stdout.
 
-Cat is useful for printing the resources in a file/directory which might
+`cat` is useful for printing the resources in a file/directory which might
 contain other non-resource files.
 
 ### Synopsis
@@ -74,12 +74,6 @@ metadata:
 
 --format
   format resource before printing. (default true)
-
---include-local
-  if true, include local-config in the output.
-
---only-local
-  if true, print only the local-config.
 
 --recurse-subpackages, -R
   print resources recursively in all the nested subpackages. (default true)
