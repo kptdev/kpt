@@ -133,7 +133,6 @@ func (r *Runner) runFnEval() error {
 		command.SetArgs(kptArgs)
 		outputWriter := bytes.NewBuffer(nil)
 		command.SetOutput(outputWriter)
-		var fnErr = command.Execute()
 		fnErr = command.Execute()
 		if fnErr != nil {
 			// if kpt fn run returns error, we should compare
