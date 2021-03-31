@@ -15,6 +15,7 @@
 package runner
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -127,13 +128,19 @@ func (r *Runner) runFnEval() error {
 	}
 	var output string
 	var fnErr error
+	command := run.GetMain()
 	for i := 0; i < r.testCase.Config.RunCount; i++ {
-		output, fnErr = runCommand("", "kpt", kptArgs)
+		command.SetArgs(kptArgs)
+		outputWriter := bytes.NewBuffer(nil)
+		command.SetOutput(outputWriter)
+		var fnErr = command.Execute()
+		fnErr = command.Execute()
 		if fnErr != nil {
 			// if kpt fn run returns error, we should compare
 			// the result
 			break
 		}
+		output = outputWriter.String()
 	}
 
 	// Update the diff file or results file if updateExpectedEnv is set.
