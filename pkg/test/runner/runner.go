@@ -76,8 +76,8 @@ func (r *Runner) Run() error {
 
 func (r *Runner) runFnEval() error {
 	fmt.Printf("Running test against package %s\n", r.pkgName)
-	if r.testCase.Config.ImperativeConfig.Image == "" &&
-		r.testCase.Config.ImperativeConfig.ExecPath == "" {
+	if r.testCase.Config.EvalConfig.Image == "" &&
+		r.testCase.Config.EvalConfig.ExecPath == "" {
 		return fmt.Errorf("either ExecPath or Image must be specified")
 	}
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
@@ -107,17 +107,21 @@ func (r *Runner) runFnEval() error {
 
 	// run function
 	kptArgs := []string{"fn", "eval", tmpPkgPath, "--results-dir", resultsPath}
-	if r.testCase.Config.Network {
+	if r.testCase.Config.EvalConfig.Network {
 		kptArgs = append(kptArgs, "--network")
 	}
-	if r.testCase.Config.ImperativeConfig.Image != "" {
-		kptArgs = append(kptArgs, "--image", r.testCase.Config.ImperativeConfig.Image)
-	} else if r.testCase.Config.ImperativeConfig.ExecPath != "" {
-		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.ImperativeConfig.ExecPath)
+	if r.testCase.Config.EvalConfig.Image != "" {
+		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
+	} else if r.testCase.Config.EvalConfig.ExecPath != "" {
+		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
 	}
-	if len(r.testCase.Config.ImperativeConfig.Args) > 0 {
+	if r.testCase.Config.EvalConfig.FnConfig != "" {
+		kptArgs = append(kptArgs, "--fn-config", r.testCase.Config.EvalConfig.FnConfig)
+	}
+	// args must be appended last
+	if len(r.testCase.Config.EvalConfig.Args) > 0 {
 		kptArgs = append(kptArgs, "--")
-		for k, v := range r.testCase.Config.ImperativeConfig.Args {
+		for k, v := range r.testCase.Config.EvalConfig.Args {
 			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
