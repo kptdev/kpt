@@ -11,6 +11,6 @@ description: >
 -->
 
 <!--mdtogo:Long-->
-`live` contains functionality for deploying local configuration
-packages to a cluster.
+The `live` command group contains functionality for deploying local
+`kpt` packages to a cluster.
 <!--mdtogo-->

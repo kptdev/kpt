@@ -3,35 +3,65 @@ package livedocs
 
 var LiveShort = `Reconcile configuration files with the live state`
 var LiveLong = `
-| Reads From              | Writes To                |
-|-------------------------|--------------------------|
-| local files             | cluster                  |
-| cluster                 | stdout                   |
-
-Live contains the next-generation versions of apply related commands for
-deploying local configuration packages to a cluster.
+The ` + "`" + `live` + "`" + ` command group contains functionality for deploying local
+` + "`" + `kpt` + "`" + ` packages to a cluster.
 `
 
-var ApplyShort = `Apply a package to the cluster (create, update, delete)`
+var ApplyShort = `Apply a package to the cluster (create, update, prune).`
 var ApplyLong = `
-  kpt live apply DIR [flags]
+  kpt live apply [PKG_PATH|-] [flags]
 
 Args:
-
-  DIR:
-    Path to a package directory.  The directory must contain exactly
-    one ConfigMap with the inventory object annotation.
+  PKG_PATH|-:
+    Path to the local package which should be applied to the cluster. It must 
+    contain a Kptfile with inventory information. Defaults to the current working
+    directory.
+    Using '-' as the package path will cause kpt to read resources from stdin.
 
 Flags:
-
+  --field-manager:
+    Identifier for the **owner** of the fields being applied. Only usable
+    when --server-side flag is specified. Default value is kubectl.
+  
+  --force-conflicts:
+    Force overwrite of field conflicts during apply due to different field
+    managers. Only usable when --server-side flag is specified.
+    Default value is false (error and failure when field managers conflict).
+    
+  --install-resource-group:
+    Install the ResourceGroup CRD into the cluster if it isn't already
+    available. Default is false.
+  
+  --inventory-policy:
+    Determines how to handle overlaps between the package being currently applied
+    and existing resources in the cluster. The available options are:
+    
+      * strict: If any of the resources already exist in the cluster, but doesn't
+        belong to the current package, it is considered an error.
+      * adopt: If a resource already exist in the cluster, but belongs to a 
+        different package, it is considered an error. Resources that doesn't belong
+        to other packages are adopted into the current package.
+        
+    The default value is ` + "`" + `strict` + "`" + `.
+    
+  --output:
+    Determines the output format for the status information. Must be one of the following:
+    
+      * events: The output will be a list of the status events as they become available.
+      * json: The output will be a list of the status events as they become available,
+        each formatted as a json object.
+      * table: The output will be presented as a table that will be updated inline
+        as the status of resources become available.
+  
+    The default value is ‘events’.
+    
   --poll-period:
     The frequency with which the cluster will be polled to determine
-    the status of the applied resources. The default value is every 2 seconds.
+    the status of the applied resources. The default value is 2 seconds.
   
-  --reconcile-timeout:
-    The threshold for how long to wait for all resources to reconcile before
-    giving up. If this flag is not set, kpt live apply will not wait for
-    resources to reconcile.
+  --prune-propagation-policy:
+    The propagation policy that should be used when pruning resources. The
+    default value here is 'Background'. The other options are 'Foreground' and 'Orphan'.
   
   --prune-timeout:
     The threshold for how long to wait for all pruned resources to be
@@ -39,217 +69,244 @@ Flags:
     wait. In most cases, it would also make sense to set the
     --prune-propagation-policy to Foreground when this flag is set.
   
-  --prune-propagation-policy:
-    The propagation policy kpt live apply should use when pruning resources. The
-    default value here is Background. The other options are Foreground and Orphan.
-  
-  --output:
-    This determines the output format of the command. The default value is
-    events, which will print the events as they happen. The other option is
-    table, which will show the output in a table format.
+  --reconcile-timeout:
+    The threshold for how long to wait for all resources to reconcile before
+    giving up. If this flag is not set, kpt live apply will not wait for
+    resources to reconcile.
   
   --server-side:
-    Boolean which sends the entire resource to the server during apply instead of
-    calculating a client-side patch. Default value is false (client-side). Available
-    in version v0.36.0 and above. If not available, the user will see: "error: unknown flag".
-  
-  --field-manager:
-    String specifying the **owner** of the fields being applied. Only usable
-    when --server-side flag is specified. Default value is kubectl. Available in
-    version v0.36.0 and above. If not available, the user will see: "error: unknown flag".
-  
-  --force-conflicts:
-    Boolean which forces overwrite of field conflicts during apply due to
-    different field managers. Only usable when --server-side flag is specified.
-    Default value is false (error and failure when field managers conflict).
-    Available in v0.36.0 and above. If not available, the user will see: "error: unknown flag".
-`
-var ApplyExamples = `
-  # apply resources and prune
-  kpt live apply my-dir/
-
-  # apply resources and wait for all the resources to be reconciled before pruning
-  kpt live apply --reconcile-timeout=15m my-dir/
-
-  # apply resources and specify how often to poll the cluster for resource status
-  kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir/
+    Perform the apply operation server-side rather than client-side.
+    Default value is false (client-side).
 `
 
 var DestroyShort = `Remove all previously applied resources in a package from the cluster`
 var DestroyLong = `
-  kpt live destroy DIR
+  kpt live destroy [PKG_PATH|-]
 
 Args:
 
-  DIR:
-    Path to a package directory.  The directory must contain exactly
-    one ConfigMap with the grouping object annotation.
+  PKG_PATH|-:
+    Path to the local package which should be deleted from the cluster. It must
+    contain a Kptfile with inventory information. Defaults to the current working
+    directory.
+    Using '-' as the package path will cause kpt to read resources from stdin.
+
+Flags:
+  --inventory-policy:
+    Determines how to handle overlaps between the package being currently applied
+    and existing resources in the cluster. The available options are:
+    
+      * strict: If any of the resources already exist in the cluster, but doesn't
+        belong to the current package, it is considered an error.
+      * adopt: If a resource already exist in the cluster, but belongs to a 
+        different package, it is considered an error. Resources that doesn't belong
+        to other packages are adopted into the current package.
+        
+    The default value is ` + "`" + `strict` + "`" + `.
+  
+  --output:
+    Determines the output format for the status information. Must be one of the following:
+    
+      * events: The output will be a list of the status events as they become available.
+      * json: The output will be a list of the status events as they become available,
+        each formatted as a json object.
+      * table: The output will be presented as a table that will be updated inline
+        as the status of resources become available.
+  
+    The default value is ‘events’.
 `
 var DestroyExamples = `
-  # remove all resources in a package from the cluster
-  kpt live destroy my-dir/
+  # remove all resources in the current package from the cluster.
+  kpt live destroy
 `
 
-var DiffShort = `Diff the local package config against the live cluster resources`
+var DiffShort = `Display the diff between the local package and the live cluster resources.`
 var DiffLong = `
-  kpt live diff DIR
-  
-  Output is always YAML.
-  
-  KUBECTL_EXTERNAL_DIFF environment variable can be used to select your own diff command. By default, the "diff" command
-  available in your path will be run with "-u" (unicode) and "-N" (treat new files as empty) options.
+  kpt live diff [PKG_PATH|-]
 
 Args:
+  PKG_PATH|-:
+    Path to the local package which should be diffed against the cluster. It must
+    contain a Kptfile with inventory information. Defaults to the current working
+    directory.
+    Using '-' as the package path will cause kpt to read resources from stdin.
 
-  DIR:
-    Path to a package directory.  The directory must contain exactly one ConfigMap with the inventory annotation.
+Environment Variables:
+  KUBECTL_EXTERNAL_DIFF:
+    Commandline diffing tool ('diff; by default) that will be used to show
+    changes.
+    
+    # Use meld to show changes
+    KPT_EXTERNAL_DIFF=meld kpt live diff
 
-Exit Status:
-
-  The following exit values shall be returned:
+Exit statuses:
+  The following exit values are returned:
   
-  0 No differences were found. 1 Differences were found. >1 kpt live or diff failed with an error.
-  
-  Note: KUBECTL_EXTERNAL_DIFF, if used, is expected to follow that convention.
+    * 0: No differences were found.
+    * 1: Differences were found.
+    * >1 kpt live or diff failed with an error.
 `
 var DiffExamples = `
-  # diff the config in "my-dir" against the live cluster resources
-  kpt live diff my-dir/
+  # diff the config in the current directory against the live cluster resources.
+  kpt live diff
   
-  # specify the local diff program to use
-  export KUBECTL_EXTERNAL_DIFF=meld; kpt live diff my-dir/
+  # specify the local diff program to use.
+  export KUBECTL_EXTERNAL_DIFF=meld; kpt live diff my-dir
 `
 
-var FetchK8sSchemaShort = `Fetch the OpenAPI schema from the cluster`
-var FetchK8sSchemaLong = `
-  kpt live fetch-k8s-schema [flags]
-
-Flags:
-
-  --pretty-print
-    Format the output before printing
-`
-var FetchK8sSchemaExamples = `
-  # print the schema for the cluster given by the current context
-  kpt live fetch-k8s-schema
-  
-  # print the schema after formatting using a named context
-  kpt live fetch-k8s-schema --context=myContext --pretty-print
-`
-
-var InitShort = `Initialize a package with a object to track previously applied resources`
+var InitShort = `Initialize a package with the information needed for inventory tracking.`
 var InitLong = `
-  kpt live init DIRECTORY [flags]
+  kpt live init [PKG_PATH] [flags]
 
 Args:
-
-  DIR:
-    Path to a package directory.  The directory must contain exactly
-    one ConfigMap with the grouping object annotation.
+  PKG_PATH:
+    Path to the local package which should be updated with inventory information.
+    It must contain a Kptfile. Defaults to the current working directory.
 
 Flags:
-
+  --force:
+    Forces the inventory values to be updated, even if they are already set.
+    Defaults to false.
+  
   --inventory-id:
-    Identifier for group of applied resources. Must be composed of valid label characters.
+    Inventory identifier for the package. This is used to detect overlap between 
+    packages that might use the same name and namespace for the inventory object.
+    Defaults to an auto-generated value.
+  
+  --name:
+    The name for the ResourceGroup resource that contains the inventory
+    for the package. Defaults to the name of the package.
+  
   --namespace:
-    namespace for the inventory object. If not provided, kpt will check if all the resources
-    in the package belong in the same namespace. If they are, that namespace will be used. If
-    they are not, the namespace in the user's context will be chosen.
+    The namespace for the ResourceGroup resource that contains the inventory
+    for the package. If not provided, kpt will check if all the resources
+    in the package belong in the same namespace. If they do, that namespace will 
+    be used. If they do not, the namespace in the user's context will be chosen.
 `
 var InitExamples = `
-  # initialize a package
-  kpt live init my-dir/
+  # initialize a package in the current directory.
+  kpt live init
 
-
-
-  # initialize a package with a specific name for the group of resources
-  kpt live init --namespace=test my-dir/
+  # initialize a package with a specific name for the group of resources.
+  kpt live init --namespace=test my-dir
 `
 
-var PreviewShort = `Preview prints the changes apply would make to the cluster`
+var PreviewShort = `Preview the changes apply would make to the cluster`
 var PreviewLong = `
-  kpt live preview DIRECTORY [flags]
+  kpt live preview [PKG_PATH|-] [flags]
 
 Args:
 
-  DIRECTORY:
-    One directory that contain k8s manifests. The directory
-    must contain exactly one ConfigMap with the grouping object annotation.
+  PKG_PATH|-:
+    Path to the local package for which a preview of the operations of apply
+    or destroy should be displayed. It must contain a Kptfile with inventory
+    information. Defaults to the current working directory.
+    Using '-' as the package path will cause kpt to read resources from stdin.
 
 Flags:
 
   --destroy:
-    If true, dry-run deletion of all resources.
-  
-  --server-side:
-    Boolean which performs the dry-run by sending the resource to the server.
-    Default value is false (client-side dry-run). Available
-    in version v0.36.0 and above. If not available, the user will see:
-    "error: unknown flag".
+    If true, preview deletion of all resources.
   
   --field-manager:
-    String that can be set if --server-side flag is also set, which defines
-    the resources field owner during dry-run. Available
-    in version v0.36.0 and above. If not available, the user will see:
-    "error: unknown flag".
+    Identifier for the **owner** of the fields being applied. Only usable
+    when --server-side flag is specified. Default value is kubectl.
   
   --force-conflicts:
-    Boolean that can be set if --server-side flag is also set, which overrides
-    field ownership conflicts during dry-run. Available
-    in version v0.36.0 and above. If not available, the user will see:
-    "error: unknown flag".
+    Force overwrite of field conflicts during apply due to different field
+    managers. Only usable when --server-side flag is specified.
+    Default value is false (error and failure when field managers conflict).
+  
+  --install-resource-group:
+    Install the ResourceGroup CRD into the cluster if it isn't already
+    available. Default is false.
+  
+  --inventory-policy:
+    Determines how to handle overlaps between the package being currently applied
+    and existing resources in the cluster. The available options are:
+    
+      * strict: If any of the resources already exist in the cluster, but doesn't
+        belong to the current package, it is considered an error.
+      * adopt: If a resource already exist in the cluster, but belongs to a 
+        different package, it is considered an error. Resources that doesn't belong
+        to other packages are adopted into the current package.
+        
+    The default value is ` + "`" + `strict` + "`" + `.
+  
+  --output:
+    Determines the output format for the status information. Must be one of the following:
+    
+      * events: The output will be a list of the status events as they become available.
+      * json: The output will be a list of the status events as they become available,
+        each formatted as a json object.
+      * table: The output will be presented as a table that will be updated inline
+        as the status of resources become available.
+  
+    The default value is ‘events’.
+  
+  --server-side:
+    Perform the apply operation server-side rather than client-side.
+    Default value is false (client-side).
 `
 var PreviewExamples = `
-  # preview apply for a package
-  kpt live preview my-dir/
+  # preview apply for the package in the current directory. 
+  kpt live preview
 
-  # preview destroy for a package
-  kpt live preview --destroy my-dir/
+  # preview destroy for a package in the my-dir directory.
+  kpt live preview --destroy my-dir
 `
 
-var StatusShort = `Status shows the status for the resources in the cluster`
+var StatusShort = `Display shows the status for the resources in the cluster`
 var StatusLong = `
-  kpt live status (DIR | STDIN) [flags]
+  kpt live status [PKG_PATH|-] [flags]
 
 Args:
 
-  DIR | STDIN:
-    Path to a directory if an argument is provided or reading from stdin if left
-    blank. In both situations one of the manifests must contain exactly one
-    ConfigMap with the inventory template annotation.
+  PKG_PATH|-:
+    Path to the local package for which the status of the package in the cluster
+    should be displayed. It must contain a Kptfile with inventory information.
+    Defaults to the current working directory.
+    Using '-' as the package path will cause kpt to read resources from stdin.
 
 Flags:
 
-  --poll-period (duration):
-    The frequency with which the cluster will be polled to determine the status
-    of the applied resources. The default value is every 2 seconds.
+  --output:
+    Determines the output format for the status information. Must be one of the following:
+    
+      * events: The output will be a list of the status events as they become available.
+      * json: The output will be a list of the status events as they become available,
+        each formatted as a json object.
+      * table: The output will be presented as a table that will be updated inline
+        as the status of resources become available.
   
-  --poll-until (string):
+    The default value is ‘events’.
+    
+  --poll-period:
+    The frequency with which the cluster will be polled to determine the status
+    of the applied resources. The default value is 2 seconds.
+  
+  --poll-until:
     When to stop polling for status and exist. Must be one of the following:
-      known:   Exit when the status for all resources have been found.
-      current: Exit when the status for all resources have reached the Current status.
-      deleted: Exit when the status for all resources have reached the NotFound
-               status, i.e. all the resources have been deleted from the live state.
-      forever: Keep polling for status until interrupted.
+    
+      * known: Exit when the status for all resources have been found.
+      * current: Exit when the status for all resources have reached the Current status.
+      * deleted: Exit when the status for all resources have reached the NotFound
+        status, i.e. all the resources have been deleted from the live state.
+      * forever: Keep polling for status until interrupted.
+    
     The default value is ‘known’.
   
-  --output (string):
-    Determines the output format for the status information. Must be one of the following:
-      events: The output will be a list of the status events as they become available.
-      table:  The output will be presented as a table that will be updated inline
-              as the status of resources become available.
-    The default value is ‘events’.
-  
-  --timeout (duration):
+  --timeout:
     Determines how long the command should run before exiting. This deadline will
     be enforced regardless of the value of the --poll-until flag. The default is
     to wait forever.
 `
 var StatusExamples = `
-  # Monitor status for a set of resources based on manifests. Wait until all
-  # resources have reconciled.
-  kpt live status my-app/
+  # Monitor status for the resources belonging to the package in the current
+  # directory. Wait until all resources have reconciled.
+  kpt live status
 
-  # Monitor status for a set of resources based on manifests. Output in table format:
-  kpt live status my-app/ --poll-until=forever --output=table
+  # Monitor status for the resources belonging to the package in the my-app
+  # directory. Output in table format:
+  kpt live status my-app --poll-until=forever --output=table
 `

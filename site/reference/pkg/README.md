@@ -4,16 +4,13 @@ linkTitle: "pkg"
 weight: 1
 type: docs
 description: >
-   Fetch, update, and sync configuration files using git
+   Get, update, and describe packages with resources
 ---
 <!--mdtogo:Short
-    Fetch, update, and sync configuration files using git
+    Get, update, and describe packages with resources
 -->
 
 <!--mdtogo:Long-->
-The `pkg` command group contains subcommands for fetching and updating `kpt` package
+The `pkg` command group contains subcommands for fetching, updating and describing `kpt` packages
 from git repositories.
-<!--mdtogo-->
-
-<!--mdtogo:Examples-->
 <!--mdtogo-->
