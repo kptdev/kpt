@@ -22,18 +22,23 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
-// Error is an implementation of the error interface used in the kpt
-// codebase.
+// Error is the type that implements error interface used in the kpt codebase.
 // It is based on the design in https://commandcenter.blogspot.com/2017/12/error-handling-in-upspin.html
+// The intent is to capture error information in a structured format so
+// that we can display it differently to different users for ex. kpt developers
+// are interested in operational trace along with more diagnostic information while
+// kpt end-users may be just interested in a concise and actionable information.
+// Representing errors in structured format helps us decouple the error information
+// from how it is surfaced to the end users.
 type Error struct {
-	// Path is the path name of the object involved in Kpt operation.
+	// Path is the path of the object (pkg, file) involved in kpt operation.
 	Path types.UniquePath
 
 	// Op is the operation being performed, for ex. pkg.get, fn.render
 	Op Op
 
-	// Kind refers to classs of errors
-	Kind Kind
+	// Class refers to class of errors
+	Class Class
 
 	// Err refers to wrapped error (if any)
 	Err error
@@ -53,9 +58,9 @@ func (e *Error) Error() string {
 		b.WriteString(string(e.Path))
 	}
 
-	if e.Kind != 0 {
+	if e.Class != 0 {
 		pad(b, ": ")
-		b.WriteString(e.Kind.String())
+		b.WriteString(e.Class.String())
 	}
 
 	if e.Err != nil {
@@ -84,26 +89,26 @@ func pad(b *strings.Builder, str string) {
 }
 
 func (e *Error) Zero() bool {
-	return e.Op == "" && e.Path == "" && e.Kind == 0 && e.Err == nil
+	return e.Op == "" && e.Path == "" && e.Class == 0 && e.Err == nil
 }
 
 // Op describes the operation being performed.
 type Op string
 
-// Kind describes the class of errors encountered.
-type Kind int
+// Class describes the class of errors encountered.
+type Class int
 
 const (
-	Other        Kind = iota // Unclassified. Will not be printed.
-	Exist                    // Item already exists.
-	Internal                 // Internal error.
-	InvalidParam             // Value is not valid.
-	MissingParam             // Required value is missing or empty.
-	Git                      // Errors from Git
+	Other        Class = iota // Unclassified. Will not be printed.
+	Exist                     // Item already exists.
+	Internal                  // Internal error.
+	InvalidParam              // Value is not valid.
+	MissingParam              // Required value is missing or empty.
+	Git                       // Errors from Git
 )
 
-func (k Kind) String() string {
-	switch k {
+func (c Class) String() string {
+	switch c {
 	case Other:
 		return "other error"
 	case Exist:
@@ -132,8 +137,8 @@ func E(args ...interface{}) error {
 			e.Path = a
 		case Op:
 			e.Op = a
-		case Kind:
-			e.Kind = a
+		case Class:
+			e.Class = a
 		case *Error:
 			cp := *a
 			e.Err = &cp
@@ -159,8 +164,8 @@ func E(args ...interface{}) error {
 		wrappedErr.Op = ""
 	}
 
-	if e.Kind == wrappedErr.Kind {
-		wrappedErr.Kind = 0
+	if e.Class == wrappedErr.Class {
+		wrappedErr.Class = 0
 	}
 
 	return e
