@@ -71,8 +71,7 @@ to be applied to the cluster.
 
 ## Apply the Package
 
-Once you've customized and rendered the Nginx package configuration, you can use kpt's `live`
-commands to deploy the package to your Kubernetes cluster.
+`kpt live` commands provide the functionality for deploying packages to a Kubernetes cluster.
 
 First, initialize the package:
 
@@ -80,7 +79,9 @@ First, initialize the package:
 $ kpt live init
 ```
 
-This adds some metadata to the `Kptfile` required to keep track of changes made to the state of the cluster.
+This adds some metadata to the `Kptfile` required to keep track of changes made to the state of the
+cluster. For example, if a resource is deleted from the package in the future, it will be pruned
+from the cluster.
 
 You can preview the changes that will be made to the cluster:
 
