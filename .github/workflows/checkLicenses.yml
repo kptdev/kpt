@@ -28,7 +28,9 @@ jobs:
       - uses: actions/checkout@v2
       - run: |
           ./scripts/create-licenses.sh
+      # Upload the licenses list so it's available if needed
       - uses: actions/upload-artifact@v2
         with:
           name: Licenses
           path: LICENSES.txt
+          retention-days: 7 # Reduce retention time from 90 days to 7
