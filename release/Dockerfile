@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.13-stretch
+FROM golang:1.15-stretch
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
 
