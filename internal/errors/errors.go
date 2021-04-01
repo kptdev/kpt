@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package errors defines the error handling used by Kpt codebase.
+// Package errors defines the error handling used by kpt codebase.
 package errors
 
 import (
