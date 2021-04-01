@@ -11,11 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Generate Sidebar
-        run: make site-gen-sidebar
-      - name: Normalize Book Introduction Pages
-        working-directory: site
-        run: find . -iname "00.md" -execdir mv {} README.md \; && sed -i s/00.md//g sidebar.md 
+      - name: Generate Site
+        run: make site-generate
       - uses: FirebaseExtended/action-hosting-deploy@276388dd6c2cde23455b30293105cc866c22282d # v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
