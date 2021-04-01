@@ -192,7 +192,7 @@
         return content.replace(
           asciinemaDirective,
           (_, fileName) =>
-            `<asciinema-player src="${window.location.origin}/static/casts/${fileName}.cast"></asciinema-player>`
+            `<asciinema-player src="${window.location.origin}/static/casts/${fileName}.cast" cols="160"></asciinema-player>`
         );
       }
     </script>
