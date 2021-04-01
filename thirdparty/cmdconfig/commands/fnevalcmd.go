@@ -41,7 +41,7 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
 
 	r.Command.Flags().BoolVar(
-		&r.IncludeMetaResources, "--include-meta-resources", false, "include package meta resources in function input")
+		&r.IncludeMetaResources, "include-meta-resources", false, "include package meta resources in function input")
 
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")

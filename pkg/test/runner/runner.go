@@ -118,6 +118,9 @@ func (r *Runner) runFnEval() error {
 	if r.testCase.Config.EvalConfig.FnConfig != "" {
 		kptArgs = append(kptArgs, "--fn-config", r.testCase.Config.EvalConfig.FnConfig)
 	}
+	if r.testCase.Config.EvalConfig.IncludeMetaResources {
+		kptArgs = append(kptArgs, "--include-meta-resources")
+	}
 	// args must be appended last
 	if len(r.testCase.Config.EvalConfig.Args) > 0 {
 		kptArgs = append(kptArgs, "--")
