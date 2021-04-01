@@ -109,3 +109,4 @@ Congrats! You should now have a rough idea of what kpt is and what you can do wi
 Now, let's delve into the details.
 
 TODO: Add the output from running all the commands.
+TODO: Version the nginx example using a tag.
