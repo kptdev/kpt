@@ -24,7 +24,7 @@ import (
 )
 
 func TestFnRender(t *testing.T) {
-	runTests(t, filepath.Join("..", "internal", "pipeline", "testdata"))
+	runTests(t, filepath.Join(".", "testdata", "fn-render"))
 }
 
 func TestFnEval(t *testing.T) {
