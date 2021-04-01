@@ -88,14 +88,12 @@ gencatalog:
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
 site-run-server:
+	rm -f site/sidebar.md
+	go run ./scripts/generate_site_sidebar > site/sidebar.md
 	npx http-server site/ -p 3000
 
 site-check:
 	./scripts/check-site.sh
-
-site-gen-sidebar:
-	rm -f site/sidebar.md
-	go run ./scripts/generate_site_sidebar > site/sidebar.md
 
 site-verify-guides:
 	./scripts/verifyGuides.sh
