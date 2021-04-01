@@ -88,9 +88,8 @@ gencatalog:
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
 site-generate:
-	rm -f site/sidebar.md
-	find . -iname "00.md" -execdir mv {} README.md \; && sed -i s/00.md//g sidebar.md
 	go run ./scripts/generate_site_sidebar > site/sidebar.md
+	(cd site && find . -iname "00.md" -execdir mv {} README.md \; && sed -i s/00.md//g sidebar.md)
 
 site-run-server:
 	make site-generate
