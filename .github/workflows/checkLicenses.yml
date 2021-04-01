@@ -17,10 +17,11 @@ on:
   push:
     branches:
       - master
-      - check-licenes
+      - next
   pull_request:
     branches:
       - master
+      - next
 jobs:
   build:
     runs-on: ubuntu-latest
