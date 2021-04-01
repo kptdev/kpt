@@ -1,7 +1,7 @@
 apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
-  name: cassandra
+  name: nginx
 pipeline:
   validators:
   # TODO: https://github.com/GoogleContainerTools/kpt/issues/1621
