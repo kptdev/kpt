@@ -50,12 +50,15 @@ type TestCaseConfig struct {
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 	// Debug means will the debug behavior be enabled. Default: false
+	// Debug behavior:
+	//  1. Keep the temporary directory used to run the test cases
+	//    after test.
 	Debug bool `json:"debug,omitempty" yaml:"debug,omitempty"`
 	// TestType is the type of the test case. Possible value: ['render', 'eval']
 	// Default: 'eval'
 	TestType string `json:"testType,omitempty" yaml:"testType,omitempty"`
 	// EvalConfig is the configs for eval tests
-	EvalConfig EvalTestCaseConfig `json:",inline" yaml:",inline"`
+	EvalConfig *EvalTestCaseConfig `json:",inline" yaml:",inline"`
 }
 
 func newTestCaseConfig(path string) (TestCaseConfig, error) {
@@ -76,9 +79,6 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	err = yaml.Unmarshal(b, &config)
 	if err != nil {
 		return config, fmt.Errorf("failed to unmarshal config file: %s\n: %w", string(b), err)
-	}
-	if config.EvalConfig.ExecPath != "" && config.EvalConfig.Image != "" {
-		return config, fmt.Errorf("either ExecPath or Image can be used")
 	}
 	if config.RunCount == 0 {
 		config.RunCount = 1

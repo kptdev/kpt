@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	"github.com/GoogleContainerTools/kpt/run"
 )
@@ -31,6 +32,7 @@ type Runner struct {
 	pkgName  string
 	testCase TestCase
 	cmd      string
+	t        *testing.T
 }
 
 const (
@@ -48,7 +50,7 @@ const (
 )
 
 // NewRunner returns a new runner for pkg
-func NewRunner(testCase TestCase, c string) (*Runner, error) {
+func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	info, err := os.Stat(testCase.Path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open path %s: %w", testCase.Path, err)
@@ -60,6 +62,7 @@ func NewRunner(testCase TestCase, c string) (*Runner, error) {
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
 		cmd:      c,
+		t:        t,
 	}, nil
 }
 
@@ -76,11 +79,7 @@ func (r *Runner) Run() error {
 }
 
 func (r *Runner) runFnEval() error {
-	fmt.Printf("Running test against package %s\n", r.pkgName)
-	if r.testCase.Config.EvalConfig.Image == "" &&
-		r.testCase.Config.EvalConfig.ExecPath == "" {
-		return fmt.Errorf("either ExecPath or Image must be specified")
-	}
+	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
@@ -156,6 +155,7 @@ func (r *Runner) runFnEval() error {
 }
 
 func (r *Runner) runFnRender() error {
+	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)

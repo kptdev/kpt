@@ -17,17 +17,18 @@
 package e2e_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
 )
 
 func TestFnRender(t *testing.T) {
-	runTests(t, "../internal/pipeline/testdata/")
+	runTests(t, filepath.Join("..", "internal", "pipeline", "testdata"))
 }
 
 func TestFnEval(t *testing.T) {
-	runTests(t, "./testdata/fn-eval")
+	runTests(t, filepath.Join(".", "testdata", "fn-eval"))
 }
 
 // runTests will scan test cases in 'path', run the command
@@ -43,7 +44,7 @@ func runTests(t *testing.T, path string) {
 		c := c // capture range variable
 		t.Run(c.Path, func(t *testing.T) {
 			t.Parallel()
-			r, err := runner.NewRunner(c, c.Config.TestType)
+			r, err := runner.NewRunner(t, c, c.Config.TestType)
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}
