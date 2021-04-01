@@ -15,12 +15,14 @@
 package runner
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	"github.com/GoogleContainerTools/kpt/run"
 )
@@ -30,6 +32,7 @@ type Runner struct {
 	pkgName  string
 	testCase TestCase
 	cmd      string
+	t        *testing.T
 }
 
 const (
@@ -42,12 +45,12 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
-	CommandFnEval       string = "run"
+	CommandFnEval       string = "eval"
 	CommandFnRender     string = "render"
 )
 
 // NewRunner returns a new runner for pkg
-func NewRunner(testCase TestCase, c string) (*Runner, error) {
+func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	info, err := os.Stat(testCase.Path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open path %s: %w", testCase.Path, err)
@@ -59,6 +62,7 @@ func NewRunner(testCase TestCase, c string) (*Runner, error) {
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
 		cmd:      c,
+		t:        t,
 	}, nil
 }
 
@@ -75,7 +79,7 @@ func (r *Runner) Run() error {
 }
 
 func (r *Runner) runFnEval() error {
-	fmt.Printf("Running test against package %s\n", r.pkgName)
+	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
@@ -102,25 +106,39 @@ func (r *Runner) runFnEval() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "run", tmpPkgPath, "--results-dir", resultsPath}
-	if r.testCase.Config.Network {
+	kptArgs := []string{"fn", "eval", tmpPkgPath, "--results-dir", resultsPath}
+	if r.testCase.Config.EvalConfig.Network {
 		kptArgs = append(kptArgs, "--network")
+	}
+	if r.testCase.Config.EvalConfig.Image != "" {
+		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
+	} else if r.testCase.Config.EvalConfig.ExecPath != "" {
+		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
+	}
+	if r.testCase.Config.EvalConfig.FnConfig != "" {
+		kptArgs = append(kptArgs, "--fn-config", r.testCase.Config.EvalConfig.FnConfig)
+	}
+	// args must be appended last
+	if len(r.testCase.Config.EvalConfig.Args) > 0 {
+		kptArgs = append(kptArgs, "--")
+		for k, v := range r.testCase.Config.EvalConfig.Args {
+			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
+		}
 	}
 	var output string
 	var fnErr error
+	command := run.GetMain()
 	for i := 0; i < r.testCase.Config.RunCount; i++ {
-		output, fnErr = runCommand("", "kpt", kptArgs)
+		command.SetArgs(kptArgs)
+		outputWriter := bytes.NewBuffer(nil)
+		command.SetOutput(outputWriter)
+		fnErr = command.Execute()
 		if fnErr != nil {
 			// if kpt fn run returns error, we should compare
 			// the result
 			break
 		}
-	}
-
-	// run formatter
-	_, err = runCommand("", "kpt", []string{"cfg", "fmt", tmpPkgPath})
-	if err != nil {
-		return fmt.Errorf("failed to run kpt cfg fmt: %w", err)
+		output = outputWriter.String()
 	}
 
 	// Update the diff file or results file if updateExpectedEnv is set.
@@ -137,6 +155,7 @@ func (r *Runner) runFnEval() error {
 }
 
 func (r *Runner) runFnRender() error {
+	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)

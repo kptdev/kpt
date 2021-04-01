@@ -17,20 +17,25 @@
 package e2e_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
 )
 
-func TestPipeline(t *testing.T) {
-	runPipelineTests(t, "../internal/pipeline/testdata/")
+func TestFnRender(t *testing.T) {
+	runTests(t, filepath.Join("..", "internal", "pipeline", "testdata"))
+}
+
+func TestFnEval(t *testing.T) {
+	runTests(t, filepath.Join(".", "testdata", "fn-eval"))
 }
 
 // runTests will scan test cases in 'path', run the command
-// `kpt pipeline run` on all of the packages in path, and test that
+// on all of the packages in path, and test that
 // the diff between the results and the original package is as
 // expected
-func runPipelineTests(t *testing.T, path string) {
+func runTests(t *testing.T, path string) {
 	cases, err := runner.ScanTestCases(path)
 	if err != nil {
 		t.Fatalf("failed to scan test cases: %s", err)
@@ -39,7 +44,7 @@ func runPipelineTests(t *testing.T, path string) {
 		c := c // capture range variable
 		t.Run(c.Path, func(t *testing.T) {
 			t.Parallel()
-			r, err := runner.NewRunner(c, runner.CommandFnRender)
+			r, err := runner.NewRunner(t, c, c.Config.TestType)
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}
