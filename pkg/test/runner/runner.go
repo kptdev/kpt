@@ -128,7 +128,7 @@ func (r *Runner) runFnEval() error {
 	var output string
 	var fnErr error
 	command := run.GetMain()
-	for i := 0; i < r.testCase.Config.RunCount; i++ {
+	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		command.SetArgs(kptArgs)
 		outputWriter := bytes.NewBuffer(nil)
 		command.SetOutput(outputWriter)
@@ -195,7 +195,7 @@ func (r *Runner) runFnRender() error {
 	var fnErr error
 	command := run.GetMain()
 	kptArgs := []string{"fn", "render", tmpPkgPath}
-	for i := 0; i < r.testCase.Config.RunCount; i++ {
+	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		command.SetArgs(kptArgs)
 		fnErr = command.Execute()
 		if fnErr != nil {
