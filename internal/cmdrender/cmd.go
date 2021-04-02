@@ -16,16 +16,18 @@
 package cmdrender
 
 import (
-	"fmt"
+	"context"
 	"os"
+
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
 
 // NewRunner returns a command runner
-func NewRunner(parent string) *Runner {
-	r := &Runner{}
+func NewRunner(ctx context.Context, parent string) *Runner {
+	r := &Runner{ctx: ctx}
 	c := &cobra.Command{
 		Use:     "render [DIR]",
 		Short:   "render",
@@ -39,14 +41,15 @@ func NewRunner(parent string) *Runner {
 	return r
 }
 
-func NewCommand(parent string) *cobra.Command {
-	return NewRunner(parent).Command
+func NewCommand(ctx context.Context, parent string) *cobra.Command {
+	return NewRunner(ctx, parent).Command
 }
 
 // Runner contains the run function pipeline run command
 type Runner struct {
 	pkgPath string
 	Command *cobra.Command
+	ctx     context.Context
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -54,7 +57,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()
 		if err != nil {
-			return fmt.Errorf("unable to get current dir: %w", err)
+			return errors.E(errors.Op("pkg.Read"), err)
 		}
 		r.pkgPath = wd
 	} else {
@@ -72,7 +75,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	executor := Executor{
 		PkgPath: r.pkgPath,
 	}
-	if err = executor.Execute(); err != nil {
+	if err = executor.Execute(r.ctx); err != nil {
 		return err
 	}
 	return nil

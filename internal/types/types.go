@@ -15,12 +15,34 @@
 // Package types defines the basic types used by the kpt codebase.
 package types
 
+import (
+	"os"
+	"path/filepath"
+	"strings"
+)
+
 // UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
 type UniquePath string
 
 // String returns the absolute path in string format.
 func (u UniquePath) String() string {
 	return string(u)
+}
+
+// RelativePath returns the relative path to current working directory.
+func (u UniquePath) RelativePath() string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return string(u)
+	}
+	rPath, err := filepath.Rel(cwd, string(u))
+	if err != nil {
+		return string(u)
+	}
+	if strings.HasPrefix(rPath, "..") {
+		return string(u)
+	}
+	return rPath
 }
 
 // DisplayPath represents Slash-separated path to the package directory on the filesytem relative

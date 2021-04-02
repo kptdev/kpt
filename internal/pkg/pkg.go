@@ -22,12 +22,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
 const CurDir = "."
@@ -92,19 +94,19 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
 func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
+	op := errors.Op("pkg.readKptfile")
 	kf := &kptfilev1alpha2.KptFile{}
 
 	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
-
 	if err != nil {
-		return kf, fmt.Errorf("unable to read %s: %w", kptfilev1alpha2.KptFileName, err)
+		return kf, errors.E(op, fmt.Errorf("package must have a %q: %w", kptfilev1alpha2.KptFileName, err))
 	}
 	defer f.Close()
 
 	d := yaml.NewDecoder(f)
 	d.KnownFields(true)
 	if err = d.Decode(kf); err != nil {
-		return kf, fmt.Errorf("unable to parse %s: %w", kptfilev1alpha2.KptFileName, err)
+		return kf, errors.E(op, fmt.Errorf("unable to parse %q: %w", kptfilev1alpha2.KptFileName, err))
 	}
 	return kf, nil
 }
@@ -190,6 +192,8 @@ const (
 // TODO: For now this accepts the path as a string type. See if we can leverage
 // the package type here.
 func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]string, error) {
+	op := errors.Op("pkg.Subpackages")
+
 	_, err := os.Stat(rootPath)
 	if err != nil && !os.IsNotExist(err) {
 		return []string{}, err
@@ -228,7 +232,7 @@ func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]
 			if isPkg {
 				kf, err := readKptfile(path)
 				if err != nil {
-					return fmt.Errorf("failed to read Kptfile at %s: %w", path, err)
+					return errors.E(op, types.UniquePath(path), err)
 				}
 				switch matcher {
 				case Local:
@@ -298,16 +302,18 @@ func IsPackageUnfetched(path string) (bool, error) {
 
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
 func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode, err error) {
+	op := errors.Op("pkg.readResources")
+
 	hasKptfile, err := IsPackageDir(p.UniquePath.String())
 	if err != nil {
-		return resources, fmt.Errorf("failed to check kptfile %w", err)
+		return nil, errors.E(op, p.UniquePath, err)
 	}
 	if !hasKptfile {
 		return nil, nil
 	}
 	pl, err := p.Pipeline()
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, p.UniquePath, err)
 	}
 
 	pkgReader := &kio.LocalPackageReader{
@@ -318,13 +324,12 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	}
 	resources, err = pkgReader.Read()
 	if err != nil {
-		err = fmt.Errorf("failed to read resources for pkg %s %w", p, err)
-		return resources, err
+		return resources, errors.E(op, p.UniquePath, err)
 	}
 	if !includeMetaResources {
 		resources, err = filterMetaResources(resources, pl)
 		if err != nil {
-			return resources, fmt.Errorf("failed to filter function config files: %w", err)
+			return resources, errors.E(op, p.UniquePath, err)
 		}
 	}
 	return resources, err

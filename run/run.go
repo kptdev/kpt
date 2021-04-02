@@ -16,6 +16,7 @@ package run
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -26,6 +27,7 @@ import (
 	kptcommands "github.com/GoogleContainerTools/kpt/commands"
 	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptopenapi "github.com/GoogleContainerTools/kpt/internal/util/openapi"
@@ -38,7 +40,7 @@ import (
 
 var pgr []string
 
-func GetMain() *cobra.Command {
+func GetMain(ctx context.Context) *cobra.Command {
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
 	installComp := false
 	cmd := &cobra.Command{
@@ -73,6 +75,12 @@ func GetMain() *cobra.Command {
 			return cmd.Usage()
 		},
 	}
+
+	// wire the global printer
+	pr := printer.New(cmd.OutOrStdout(), cmd.ErrOrStderr())
+
+	// create context with associated printer
+	ctx = printer.WithContext(ctx, pr)
 
 	f := newFactory(cmd)
 
@@ -124,7 +132,7 @@ func GetMain() *cobra.Command {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(kptcommands.GetKptCommands("kpt", f)...)
+	cmd.AddCommand(kptcommands.GetKptCommands(ctx, "kpt", f)...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,

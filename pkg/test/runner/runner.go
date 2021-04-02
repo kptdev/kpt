@@ -16,6 +16,7 @@ package runner
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -86,7 +87,7 @@ func (r *Runner) runFnEval() error {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
-	tmpPkgPath := filepath.Join(tmpDir, r.pkgName)
+	pkgPath := filepath.Join(tmpDir, r.pkgName)
 	// create result dir
 	resultsPath := filepath.Join(tmpDir, "results")
 	err = os.Mkdir(resultsPath, 0755)
@@ -95,19 +96,19 @@ func (r *Runner) runFnEval() error {
 	}
 
 	// copy package to temp directory
-	err = copyDir(r.testCase.Path, tmpPkgPath)
+	err = copyDir(r.testCase.Path, pkgPath)
 	if err != nil {
 		return fmt.Errorf("failed to copy package: %w", err)
 	}
 
 	// init and commit package files
-	err = r.preparePackage(tmpPkgPath)
+	err = r.preparePackage(pkgPath)
 	if err != nil {
 		return fmt.Errorf("failed to prepare package: %w", err)
 	}
 
 	// run function
-	kptArgs := []string{"fn", "eval", tmpPkgPath, "--results-dir", resultsPath}
+	kptArgs := []string{"fn", "eval", pkgPath, "--results-dir", resultsPath}
 	if r.testCase.Config.EvalConfig.Network {
 		kptArgs = append(kptArgs, "--network")
 	}
@@ -135,7 +136,7 @@ func (r *Runner) runFnEval() error {
 	}
 	var output string
 	var fnErr error
-	command := run.GetMain()
+	command := run.GetMain(context.Background())
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		command.SetArgs(kptArgs)
 		outputWriter := bytes.NewBuffer(nil)
@@ -149,11 +150,11 @@ func (r *Runner) runFnEval() error {
 		output = outputWriter.String()
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
-			return r.updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
+			return r.updateExpected(pkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
+		err = r.compareResult(fnErr, pkgPath, resultsPath)
 		if err != nil {
 			return fmt.Errorf("%w\nkpt output:\n%s", err, output)
 		}
@@ -175,39 +176,40 @@ func (r *Runner) runFnRender() error {
 		// if debug is true, keep the test directory around for debugging
 		defer os.RemoveAll(tmpDir)
 	}
-	tmpPkgPath := filepath.Join(tmpDir, r.pkgName)
+	pkgPath := filepath.Join(tmpDir, r.pkgName)
 	// create dir to store untouched pkg to compare against
-	orgPkgPath := filepath.Join(tmpDir, "original")
-	err = os.Mkdir(orgPkgPath, 0755)
+	origPkgPath := filepath.Join(tmpDir, "original")
+	err = os.Mkdir(origPkgPath, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create original dir %s: %w", orgPkgPath, err)
+		return fmt.Errorf("failed to create original dir %s: %w", origPkgPath, err)
 	}
 
 	// copy package to temp directory
-	err = copyDir(r.testCase.Path, tmpPkgPath)
+	err = copyDir(r.testCase.Path, pkgPath)
 	if err != nil {
 		return fmt.Errorf("failed to copy package: %w", err)
 	}
-	err = copyDir(r.testCase.Path, orgPkgPath)
+	err = copyDir(r.testCase.Path, origPkgPath)
 	if err != nil {
 		return fmt.Errorf("failed to copy package: %w", err)
 	}
 
 	// init and commit package files
-	err = r.preparePackage(tmpPkgPath)
+	err = r.preparePackage(pkgPath)
 	if err != nil {
 		return fmt.Errorf("failed to prepare package: %w", err)
 	}
 
 	// run function
 	var fnErr error
-	command := run.GetMain()
-	kptArgs := []string{"fn", "render", tmpPkgPath}
+	command := run.GetMain(context.Background())
+	kptArgs := []string{"fn", "render", pkgPath}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		command.SetArgs(kptArgs)
 		fnErr = command.Execute()
 		if fnErr != nil {
 			if r.testCase.Config.ExitCode != 0 {
+				r.t.Logf("%s", fnErr.Error())
 				return nil
 			}
 			break
@@ -216,11 +218,11 @@ func (r *Runner) runFnRender() error {
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			// TODO: `fn render` doesn't support result file now
 			// use empty string to skip update results
-			return r.updateExpected(tmpPkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
+			return r.updateExpected(pkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, tmpPkgPath, orgPkgPath)
+		err = r.compareResult(fnErr, pkgPath, origPkgPath)
 	}
 	return err
 }
