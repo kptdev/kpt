@@ -47,9 +47,9 @@ type EvalTestCaseConfig struct {
 type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
-	// RunCount is how many times the test will run. Each iteration will be
-	// immediately run after previous one. Default: 1
-	RunCount int `json:"runCount,omitempty" yaml:"runCount,omitempty"`
+	// NonIdempotent indicates if the test case is not idempotent.
+	// By default, tests are assumed to be idempotent, so it defaults to false.
+	NonIdempotent bool `json:"nonIdempotent,omitempty" yaml:"nonIdempotent,omitempty"`
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 	// Debug means will the debug behavior be enabled. Default: false
@@ -64,13 +64,19 @@ type TestCaseConfig struct {
 	EvalConfig *EvalTestCaseConfig `json:",inline" yaml:",inline"`
 }
 
+func (c *TestCaseConfig) RunCount() int {
+	if c.NonIdempotent {
+		return 1
+	}
+	return 2
+}
+
 func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	configPath := filepath.Join(path, expectedDir, expectedConfigFile)
 	b, err := ioutil.ReadFile(configPath)
 	if os.IsNotExist(err) {
 		// return default config
 		return TestCaseConfig{
-			RunCount: 1,
 			TestType: CommandFnRender,
 		}, nil
 	}
@@ -82,9 +88,6 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	err = yaml.Unmarshal(b, &config)
 	if err != nil {
 		return config, fmt.Errorf("failed to unmarshal config file: %s\n: %w", string(b), err)
-	}
-	if config.RunCount == 0 {
-		config.RunCount = 1
 	}
 	if config.TestType == "" {
 		// by default we test pipeline

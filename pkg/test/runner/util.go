@@ -74,6 +74,14 @@ func gitDiff(d, commit1, commit2 string) (string, error) {
 	return o, nil
 }
 
+func getCommitHash(d string) (string, error) {
+	o, err := runCommand(d, "git", []string{"log", "-n", "1", "--pretty=format:%h"})
+	if err != nil {
+		return "", fmt.Errorf("git log error: %w, output: %s", err, o)
+	}
+	return o, nil
+}
+
 func diffStrings(actual, expected string) (string, error) {
 	tmpDir, err := ioutil.TempDir("", "kpt-e2e-diff-*")
 	if err != nil {

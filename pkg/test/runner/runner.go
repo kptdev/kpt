@@ -29,10 +29,11 @@ import (
 
 // Runner runs an e2e test
 type Runner struct {
-	pkgName  string
-	testCase TestCase
-	cmd      string
-	t        *testing.T
+	pkgName       string
+	testCase      TestCase
+	cmd           string
+	t             *testing.T
+	initialCommit string
 }
 
 const (
@@ -131,7 +132,7 @@ func (r *Runner) runFnEval() error {
 	var output string
 	var fnErr error
 	command := run.GetMain()
-	for i := 0; i < r.testCase.Config.RunCount; i++ {
+	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		command.SetArgs(kptArgs)
 		outputWriter := bytes.NewBuffer(nil)
 		command.SetOutput(outputWriter)
@@ -142,18 +143,18 @@ func (r *Runner) runFnEval() error {
 			break
 		}
 		output = outputWriter.String()
+		// Update the diff file or results file if updateExpectedEnv is set.
+		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
+			return r.updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
+		}
+
+		// compare results
+		err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
+		if err != nil {
+			return fmt.Errorf("%w\nkpt output:\n%s", err, output)
+		}
 	}
 
-	// Update the diff file or results file if updateExpectedEnv is set.
-	if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
-		return updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
-	}
-
-	// compare results
-	err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
-	if err != nil {
-		return fmt.Errorf("%w\nkpt output:\n%s", err, output)
-	}
 	return nil
 }
 
@@ -198,7 +199,7 @@ func (r *Runner) runFnRender() error {
 	var fnErr error
 	command := run.GetMain()
 	kptArgs := []string{"fn", "render", tmpPkgPath}
-	for i := 0; i < r.testCase.Config.RunCount; i++ {
+	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		command.SetArgs(kptArgs)
 		fnErr = command.Execute()
 		if fnErr != nil {
@@ -207,17 +208,16 @@ func (r *Runner) runFnRender() error {
 			}
 			break
 		}
-	}
+		// Update the diff file or results file if updateExpectedEnv is set.
+		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
+			// TODO: `fn render` doesn't support result file now
+			// use empty string to skip update results
+			return r.updateExpected(tmpPkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
+		}
 
-	// Update the diff file or results file if updateExpectedEnv is set.
-	if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
-		// TODO: `fn render` doesn't support result file now
-		// use empty string to skip update results
-		return updateExpected(tmpPkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
+		// compare results
+		err = r.compareResult(fnErr, tmpPkgPath, orgPkgPath)
 	}
-
-	// compare results
-	err = r.compareResult(fnErr, tmpPkgPath, orgPkgPath)
 	return err
 }
 
@@ -232,7 +232,13 @@ func (r *Runner) preparePackage(pkgPath string) error {
 		return err
 	}
 
-	return gitCommit(pkgPath, "first")
+	err = gitCommit(pkgPath, "first")
+	if err != nil {
+		return err
+	}
+
+	r.initialCommit, err = getCommitHash(pkgPath)
+	return err
 }
 
 func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) error {
@@ -269,7 +275,7 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 	}
 
 	// compare diff
-	actual, err := readActualDiff(tmpPkgPath)
+	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
@@ -304,7 +310,7 @@ func readActualResults(resultsPath string) (string, error) {
 	return strings.TrimSpace(string(actualResults)), nil
 }
 
-func readActualDiff(path string) (string, error) {
+func readActualDiff(path, origHash string) (string, error) {
 	err := gitAddAll(path)
 	if err != nil {
 		return "", err
@@ -314,7 +320,7 @@ func readActualDiff(path string) (string, error) {
 		return "", err
 	}
 	// diff with first commit
-	actualDiff, err := gitDiff(path, "HEAD^", "HEAD")
+	actualDiff, err := gitDiff(path, origHash, "HEAD")
 	if err != nil {
 		return "", err
 	}
@@ -354,14 +360,14 @@ func newExpected(path string) (expected, error) {
 	return e, nil
 }
 
-func updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
+func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
 	// We update results directory only when a result file already exists.
 	l, err := ioutil.ReadDir(resultsPath)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
 	if err != nil && os.IsNotExist(err) {
-		actualDiff, err := readActualDiff(tmpPkgPath)
+		actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
 		if err != nil {
 			return err
 		}
