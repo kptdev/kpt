@@ -44,7 +44,8 @@ type EvalTestCaseConfig struct {
 type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
-	// NonIdempotent asks to not test idempotency of this test case. Default: false
+	// NonIdempotent indicates if the test case is not idempotent.
+	// By default, tests are assumed to be idempotent, so it defaults to false.
 	NonIdempotent bool `json:"nonIdempotent,omitempty" yaml:"nonIdempotent,omitempty"`
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
