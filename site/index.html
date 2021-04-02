@@ -110,7 +110,7 @@
         const pathname = window.location.pathname.toLowerCase();
 
         // Matches a path like /book/02-concepts/01-packages
-        const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)-?(.+)?/;
+        const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/;
         const bookPathMatch = pathname.match(bookPath);
 
         if (bookPathMatch) {
