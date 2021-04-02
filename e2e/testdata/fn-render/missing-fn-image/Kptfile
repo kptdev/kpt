@@ -5,4 +5,8 @@ metadata:
 pipeline:
   mutators:
   - image: gcr.io/kpt-fn/set-namespace:unstable
-    configPath: configmap.yaml # configmap.yaml doesn't exist
+    configMap:
+      namespace: staging
+  - image: gcr.io/kpt-fn/set-label1 # non-existing image
+    configMap:
+      tier: backend

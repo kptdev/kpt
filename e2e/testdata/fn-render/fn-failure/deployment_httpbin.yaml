@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: backend
+    tier: db
+  name: httpbin
+  namespace: staging
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: backend
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: backend
+        tier: db
+    spec:
+      containers:
+      - image: kennethreitz/httpbin
+        name: httpbin

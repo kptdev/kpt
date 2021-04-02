@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: ConfigMap
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: my-config
-  annotations:
-    config.k8s.io/function: |
-      container:
-        image: gcr.io/kpt-fn/set-namespace:unstable
-    config.kubernetes.io/local-config: 'true'
-data:
-  "namespace": "example-ns"
+  name: nginx-deployment
+spec:
+  replicas: 3
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+  name: custom
+spec:
+  image: nginx:1.2.3

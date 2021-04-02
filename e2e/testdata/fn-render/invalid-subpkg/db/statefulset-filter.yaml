@@ -1,0 +1,12 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
+metadata:
+  name: statefulset-filter
+source: |
+  # filter to return if resource is statefulset kind
+  def isStatefulSet(r):
+    return r["apiVersion"] == "apps/v1" and
+    r["kind"] == "StatefulSet"
+  
+  # filter out statefulsets
+  ctx.resource_list["items"] = [r for r in ctx.resource_list["items"] if not isStatefulSet(r)]
