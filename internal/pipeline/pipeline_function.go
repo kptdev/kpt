@@ -23,7 +23,7 @@ import (
 	"path"
 
 	"github.com/GoogleContainerTools/kpt/internal/pipeline/runtime"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -32,7 +32,7 @@ import (
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(f *kptfilev1alpha2.Function, pkgPath pkg.UniquePath) (kio.Filter, error) {
+func newFnRunner(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func newFnRunner(f *kptfilev1alpha2.Function, pkgPath pkg.UniquePath) (kio.Filte
 	}, nil
 }
 
-func newFnConfig(f *kptfilev1alpha2.Function, pkgPath pkg.UniquePath) (*yaml.RNode, error) {
+func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
 	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":
