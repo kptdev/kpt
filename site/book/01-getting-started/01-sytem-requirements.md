@@ -12,6 +12,10 @@ $ kpt version
 TODO: Clean up installation page.
 TODO: kpt 1.0 binaries needs to be available.
 
+## Git
+
+kpt requires that you have [Git] installed and configured.
+
 ## Docker
 
 kpt requires that you have [Docker] installed and configured.
@@ -24,4 +28,5 @@ For testing purposes, [kind] tool is useful for running ephemeral Kubernetes clu
 
 [install]: /installation/
 [docker]: https://docs.docker.com/get-docker/
+[git]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
 [kind]: https://kind.sigs.k8s.io/docs/user/quick-start/
