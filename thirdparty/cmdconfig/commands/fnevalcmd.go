@@ -40,6 +40,9 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
 
+	r.Command.Flags().BoolVar(
+		&r.IncludeMetaResources, "include-meta-resources", false, "include package meta resources in function input")
+
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 
@@ -64,19 +67,20 @@ func EvalCommand(name string) *cobra.Command {
 
 // EvalFnRunner contains the run function
 type EvalFnRunner struct {
-	IncludeSubpackages bool
-	Command            *cobra.Command
-	DryRun             bool
-	Image              string
-	ExecPath           string
-	FnConfigPath       string
-	RunFns             runfn.RunFns
-	ResultsDir         string
-	Network            bool
-	Mounts             []string
-	LogSteps           bool
-	Env                []string
-	AsCurrentUser      bool
+	IncludeSubpackages   bool
+	Command              *cobra.Command
+	DryRun               bool
+	Image                string
+	ExecPath             string
+	FnConfigPath         string
+	RunFns               runfn.RunFns
+	ResultsDir           string
+	Network              bool
+	Mounts               []string
+	LogSteps             bool
+	Env                  []string
+	AsCurrentUser        bool
+	IncludeMetaResources bool
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, args []string) error {
@@ -266,17 +270,18 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	r.RunFns = runfn.RunFns{
-		Functions:     fns,
-		Output:        output,
-		Input:         input,
-		Path:          path,
-		Network:       r.Network,
-		StorageMounts: storageMounts,
-		ResultsDir:    r.ResultsDir,
-		LogSteps:      r.LogSteps,
-		Env:           r.Env,
-		AsCurrentUser: r.AsCurrentUser,
-		FnConfigPath:  r.FnConfigPath,
+		Functions:            fns,
+		Output:               output,
+		Input:                input,
+		Path:                 path,
+		Network:              r.Network,
+		StorageMounts:        storageMounts,
+		ResultsDir:           r.ResultsDir,
+		LogSteps:             r.LogSteps,
+		Env:                  r.Env,
+		AsCurrentUser:        r.AsCurrentUser,
+		FnConfigPath:         r.FnConfigPath,
+		IncludeMetaResources: r.IncludeMetaResources,
 	}
 
 	// don't consider args for the function

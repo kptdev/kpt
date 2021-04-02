@@ -36,6 +36,9 @@ type EvalTestCaseConfig struct {
 	Args map[string]string `json:"args,omitempty" yaml:"args,omitempty"`
 	// Network indicates is network accessible from the function container. Default: false
 	Network bool `json:"network,omitempty" yaml:"network,omitempty"`
+	// IncludeMetaResources enables including meta resources, like Kptfile,
+	// in the function input. Default: false
+	IncludeMetaResources bool `json:"includeMetaResources,omitempty" yaml:"includeMetaResources,omitempty"`
 	// FnConfig is the path to the function config file.
 	FnConfig string `json:"fnConfig,omitempty" yaml:"fnConfig,omitempty"`
 }
