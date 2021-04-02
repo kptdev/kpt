@@ -12,4 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-exitCode: 0
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
+metadata:
+  name: httpbin-gen
+source: |
+  # AND conditional has syntax error forcing fn to fail
+  def isHTTPBin(r):
+    return r["apiVersion"] == "apps/v1" and r["kind"] == "Deployment" and 
+    r["metadata"]["name"] == "httpbin"
+  
+  # filter out the httpbin deployment
+  ctx.resource_list["items"] = [r for r in ctx.resource_list["items"] if not isHTTPBin(r)]

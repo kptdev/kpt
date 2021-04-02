@@ -6,11 +6,9 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
-	github.com/olekukonko/tablewriter v0.0.4
 	// TODO: find a library that have proper releases or just implement
 	// topsort in kpt.
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
-	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5

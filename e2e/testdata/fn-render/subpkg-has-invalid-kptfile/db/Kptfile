@@ -5,6 +5,7 @@ metadata:
 pipeline:
   mutators:
   - image: gcr.io/kpt-fn/starlark:unstable
+# malformed Kptfile
 configPath: statefulset-filter.yaml
   - image: gcr.io/kpt-fn/set-namespace:unstable
     configMap:
