@@ -77,9 +77,6 @@
                 .getElementsByClassName("sidebar-nav")
                 .item(0);
 
-              // Post-process UI elements like chapter number for the book outline in the sidebar.
-              processBookOutline(sidebar);
-
               // Only show child pages for currently active page to avoid sidebar cluttering.
               addSidebarCollapsibility(sidebar);
             });
@@ -132,32 +129,6 @@
         }
 
         return content;
-      }
-
-      function processBookOutline(sidebar) {
-        // Add book outline class to the sidebar item with the book link.
-        const bookItem = sidebar?.querySelectorAll("a[href='/book/']").item(0)
-          .parentNode;
-        bookItem.classList.add("book-outline");
-
-        // Add chapter and page numbers before each book entry.
-        const chapArray = Array.from(bookItem.children.item(1).children);
-        chapArray.forEach((chap, chapIndex) => {
-          const chapNumber = chapIndex + 1;
-          Array.from(
-            chap.children.item(1).children
-          ).forEach((page, pageIndex) =>
-            page.children
-              .item(0)
-              .insertAdjacentText(
-                "afterbegin",
-                `${chapNumber}.${pageIndex + 1} `
-              )
-          );
-          chap.children
-            .item(0)
-            .insertAdjacentText("afterbegin", `${chapNumber} `);
-        });
       }
 
       function addSidebarCollapsibility(sidebar) {
@@ -239,14 +210,6 @@
     /* Hide inactive lists whose titles aren't links. */
     .sidebar-nav ul a + ul.inactive {
       display: none;
-    }
-
-    .sidebar-nav ul a {
-      white-space: unset;
-    }
-
-    .sidebar-nav .book-outline ul {
-      margin-left: var(--sidebar-nav-indent);
     }
   </style>
 </html>

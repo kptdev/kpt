@@ -173,16 +173,17 @@ func printChapters(chapters []chapter) {
 	// Sort chapters in ascending order by chapter number.
 	sort.Slice(chapters, func(i, j int) bool { return chapters[i].Number < chapters[j].Number })
 
-	for _, chapterEntry := range chapters {
-		for pageNumber, pageEntry := range chapterEntry.Pages {
+	for chapterIndex, chapterEntry := range chapters {
+		chapterNumber := chapterIndex + 1
+		for pageIndex, pageEntry := range chapterEntry.Pages {
 			// Make path relative to site directory.
 			path := strings.Replace(pageEntry.Path, "site/", "", 1)
 
 			// Print non-chapter intro pages as children of chapter intro page.
-			if pageNumber == 0 {
-				fmt.Printf("\t- [%s](%s)\n", pageEntry.Name, path)
+			if pageIndex == 0 {
+				fmt.Printf("\t- [%d %s](%s)\n", chapterNumber, pageEntry.Name, path)
 			} else {
-				fmt.Printf("\t\t- [%s](%s)\n", pageEntry.Name, path)
+				fmt.Printf("\t\t- [%d.%d %s](%s)\n", chapterNumber, pageIndex, pageEntry.Name, path)
 			}
 		}
 	}
