@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package types defines the basic types used by the Kpt codebase.
+// Package types defines the basic types used by the kpt codebase.
 package types
 
 // UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
