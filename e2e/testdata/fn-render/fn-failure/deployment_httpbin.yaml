@@ -12,15 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: my-nginx-svc
   labels:
-    app: nginx
+    app: backend
+    tier: db
+  name: httpbin
+  namespace: staging
 spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
+  replicas: 4
   selector:
-    app: nginx
+    matchLabels:
+      app: backend
+      tier: db
+  template:
+    metadata:
+      labels:
+        app: backend
+        tier: db
+    spec:
+      containers:
+      - image: kennethreitz/httpbin
+        name: httpbin

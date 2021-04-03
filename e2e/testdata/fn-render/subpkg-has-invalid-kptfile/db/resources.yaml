@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: my-nginx-svc
-  labels:
-    app: nginx
+  name: db
 spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-  selector:
-    app: nginx
+  replicas: 3
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+  name: custom
+spec:
+  image: nginx:1.2.3

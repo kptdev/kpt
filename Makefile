@@ -74,6 +74,10 @@ test:
 test-docker:	
 	go test -cover --tags=docker ./...
 
+# target to run e2e tests for "kpt fn render" command
+test-fn-render:
+	go test -v --tags=docker --run=TestFnRender ./e2e/
+	
 vet:
 	go vet ./...
 

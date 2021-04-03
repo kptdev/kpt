@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Service
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
 metadata:
-  name: my-nginx-svc
-  labels:
-    app: nginx
-spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-  selector:
-    app: nginx
+  name: statefulset-filter
+source: |
+  # filter to return if resource is statefulset kind
+  # AND conditional has syntax error forcing function to fail
+  def isStatefulSet(r):
+    return r["apiVersion"] == "apps/v1" and
+    r["kind"] == "StatefulSet"
+  
+  # filter out statefulsets
+  ctx.resource_list["items"] = [r for r in ctx.resource_list["items"] if not isStatefulSet(r)]
