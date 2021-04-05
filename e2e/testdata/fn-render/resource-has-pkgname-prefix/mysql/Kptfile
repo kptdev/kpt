@@ -1,0 +1,9 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: mysql
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/set-annotation:unstable
+    configMap:
+      foo: bar

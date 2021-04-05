@@ -281,12 +281,13 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 		return resources, nil
 	}
 	for _, r := range resources {
-		meta, err := r.GetMeta()
+		currPath, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
 			return resources, err
 		}
-		if !strings.HasPrefix(meta.Annotations[kioutil.PathAnnotation], relPath) {
-			newPath := path.Join(relPath, meta.Annotations[kioutil.PathAnnotation])
+		// if currPath is relative to root pkg i.e. already has relPath, skip it
+		if !strings.HasPrefix(currPath, relPath+"/") {
+			newPath := path.Join(relPath, currPath)
 			err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath))
 			if err != nil {
 				return resources, err
