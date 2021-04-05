@@ -15,9 +15,6 @@
 
 set -o pipefail
 
-docker stop $(docker ps -q --filter ancestor=kpt-site-check:latest) &>/dev/null
-docker build site/ -t kpt-site-check:latest
-docker run -p 3000:80 -d kpt-site-check:latest 
 cd site
 npm i
 echo "Starting check."
