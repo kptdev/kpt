@@ -92,7 +92,7 @@ gencatalog:
 	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
 
 site-run-server:
-	chmod o+rx -R site/
+	setfacl -Rd -m o::rx site/ && chmod o+rx -R site/
 	docker stop $$(docker ps -q --filter ancestor=kpt-site:latest) || docker build site/ -t kpt-site:latest
 	docker run -v `pwd`/site:/usr/share/nginx/html -p 3000:80 -d kpt-site:latest
 
