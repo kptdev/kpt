@@ -9,7 +9,7 @@ description: >
 
 Use one of the kpt docker images.
 
-| Feature   |:`kpt`:|:`kpt-gcloud`:|
+| Feature   | `kpt` | `kpt-gcloud` |
 | --------- |:-----:|:------------:|
 | kpt       | X     | X            |
 | git       | X     | X            |
