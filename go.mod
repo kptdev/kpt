@@ -21,6 +21,6 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kubectl v0.20.4
 	sigs.k8s.io/cli-utils v0.24.0
-	sigs.k8s.io/kustomize/cmd/config v0.9.7
+	sigs.k8s.io/kustomize/cmd/config v0.9.9
 	sigs.k8s.io/kustomize/kyaml v0.10.15
 )
