@@ -177,7 +177,7 @@
       // title: Page Title
       // +++
       function processHugoTitleHeading(content) {
-        const titleBlock = /^[\+\-]{3}[\s\S]*^[\+\-]{3}$/m;
+        const titleBlock = /^[\+\-]{3}[\s\S]*?^[\+\-]{3}$/m;
         const titleMatch = content.match(/title:\s*["'](.*)["']/);
 
         const titleHeading = titleMatch ? `# ${titleMatch[1]}` : "";
