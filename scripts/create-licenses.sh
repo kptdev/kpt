@@ -169,7 +169,7 @@ mv ${V2_LICENSE_DIR}/v2/LICENSE ${V2_LICENSE_DIR}
 
 # Loop through every vendored package
 mozilla_repos=""
-for PACKAGE in $(go list -m -json all | jq -r .Path | sort -f); do
+for PACKAGE in $(go list -mod=mod -m -json all | jq -r .Path | sort -f); do
   if [[ -e "staging/src/${PACKAGE}" ]]; then
     # echo "$PACKAGE is a staging package, skipping" > /dev/stderr
     continue
