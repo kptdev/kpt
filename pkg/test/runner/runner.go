@@ -117,7 +117,11 @@ func (r *Runner) runFnEval() error {
 		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
 	}
 	if r.testCase.Config.EvalConfig.FnConfig != "" {
-		kptArgs = append(kptArgs, "--fn-config", r.testCase.Config.EvalConfig.FnConfig)
+		fnConfigPath, err := filepath.Abs(filepath.Join(r.testCase.Path, r.testCase.Config.EvalConfig.FnConfig))
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path to function config file: %w", err)
+		}
+		kptArgs = append(kptArgs, "--fn-config", fnConfigPath)
 	}
 	if r.testCase.Config.EvalConfig.IncludeMetaResources {
 		kptArgs = append(kptArgs, "--include-meta-resources")
