@@ -185,6 +185,8 @@ const (
 // The top level package is not considered a subpackage. If the provided path
 // doesn't exist, an empty slice will be returned.
 // Symlinks are ignored.
+// TODO: For now this accepts the path as a string type. See if we can leverage
+// the package type here.
 func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]string, error) {
 	_, err := os.Stat(rootPath)
 	if err != nil && !os.IsNotExist(err) {
