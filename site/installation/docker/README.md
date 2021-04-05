@@ -9,6 +9,13 @@ description: >
 
 Use one of the kpt docker images.
 
+| Feature   |:`kpt`:|:`kpt-gcloud`:|
+| --------- |:-----:|:------------:|
+| kpt       | X     | X            |
+| git       | X     | X            |
+| diffutils | X     | X            |
+| gcloud    |       | X            |
+
 ## [gcr.io/kpt-dev/kpt]
 
 ```shell
