@@ -15,14 +15,14 @@
 package commands
 
 import (
-	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/configcobra"
-
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport"
 	"github.com/GoogleContainerTools/kpt/internal/cmdfndoc"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/pipeline"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdeval"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdsink"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdsource"
+	"github.com/spf13/cobra"
 )
 
 func GetFnCommand(name string) *cobra.Command {
@@ -44,7 +44,7 @@ func GetFnCommand(name string) *cobra.Command {
 		},
 	}
 
-	eval := commands.EvalCommand(name)
+	eval := cmdeval.EvalCommand(name)
 	eval.Short = fndocs.RunShort
 	eval.Long = fndocs.RunShort + "\n" + fndocs.RunLong
 	eval.Example = fndocs.RunExamples
@@ -56,15 +56,9 @@ func GetFnCommand(name string) *cobra.Command {
 	doc.Long = fndocs.DocShort + "\n" + fndocs.DocLong
 	doc.Example = fndocs.DocExamples
 
-	source := configcobra.Source(name)
-	source.Short = fndocs.SourceShort
-	source.Long = fndocs.SourceShort + "\n" + fndocs.SourceLong
-	source.Example = fndocs.SourceExamples
+	source := cmdsource.NewCommand(name)
 
-	sink := configcobra.Sink(name)
-	sink.Short = fndocs.SinkShort
-	sink.Long = fndocs.SinkShort + "\n" + fndocs.SinkLong
-	sink.Example = fndocs.SinkExamples
+	sink := cmdsink.NewCommand(name)
 
 	functions.AddCommand(eval, render, doc, source, sink, cmdexport.ExportCommand())
 	return functions

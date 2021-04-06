@@ -20,8 +20,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdcat"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdtree"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/configcobra"
 )
 
 func GetPkgCommand(name string) *cobra.Command {
@@ -43,19 +44,10 @@ func GetPkgCommand(name string) *cobra.Command {
 		},
 	}
 
-	tree := configcobra.Tree(name)
-	tree.Short = pkgdocs.TreeShort
-	tree.Long = pkgdocs.TreeShort + "\n" + pkgdocs.TreeLong
-	tree.Example = pkgdocs.TreeExamples
-
-	cat := configcobra.Cat(name)
-	cat.Short = pkgdocs.CatShort
-	cat.Long = pkgdocs.CatShort + "\n" + pkgdocs.CatLong
-	cat.Example = pkgdocs.CatExamples
-
 	pkg.AddCommand(
 		cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdupdate.NewCommand(name), cmddiff.NewCommand(name), cat, tree,
+		cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
+		cmdcat.NewCommand(name), cmdtree.NewCommand(name),
 	)
 	return pkg
 }

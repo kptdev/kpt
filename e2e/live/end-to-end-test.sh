@@ -86,7 +86,6 @@ else
     # Tell kpt to build using the locally downloaded dependencies
     echo "Updating kpt/go.mod to reference locally downloaded repositories..."
     echo -e "\n\nreplace sigs.k8s.io/cli-utils => ../../../sigs.k8s.io/cli-utils" >> ${KPT_SRC_DIR}/go.mod
-    echo -e "replace sigs.k8s.io/kustomize/cmd/config => ../../../sigs.k8s.io/kustomize/cmd/config" >> ${KPT_SRC_DIR}/go.mod
     echo -e "replace sigs.k8s.io/kustomize/kyaml => ../../../sigs.k8s.io/kustomize/kyaml\n" >> ${KPT_SRC_DIR}/go.mod
     echo "Updating kpt/go.mod to reference locally downloaded repositories...SUCCESS"
     # Build kpt using the cloned directories

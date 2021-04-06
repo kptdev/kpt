@@ -698,10 +698,9 @@ sigs.k8s.io/cli-utils v0.22.1-0.20201117031003-fd39030f0508 h1:uty/Bj8/fa2xX6CUp
 sigs.k8s.io/cli-utils v0.22.1-0.20201117031003-fd39030f0508/go.mod h1:Mt1gLc/Nfa7Z3Lhbfk72uT2Kc4GNyuX4oMqEN9FbPMs=
 sigs.k8s.io/controller-runtime v0.6.0 h1:Fzna3DY7c4BIP6KwfSlrfnj20DJ+SeMBK8HSFvOk9NM=
 sigs.k8s.io/controller-runtime v0.6.0/go.mod h1:CpYf5pdNY/B352A1TFLAS2JVSlnGQ5O2cftPHndTroo=
+sigs.k8s.io/kustomize v1.0.11 h1:Yb+6DDt9+aR2AvQApvUaKS/ugteeG4MPyoFeUHiPOjk=
 sigs.k8s.io/kustomize v2.0.3+incompatible h1:JUufWFNlI44MdtnjUqVnvh29rR37PQFzPbLXqhyOyX0=
 sigs.k8s.io/kustomize v2.0.3+incompatible/go.mod h1:MkjgH3RdOWrievjo6c9T245dYlB5QeXV4WCbnt/PEpU=
-sigs.k8s.io/kustomize/cmd/config v0.8.5 h1:e8uMA7LjAUss3cMefVoOY2tFr92brCTUAA6CmWgq57M=
-sigs.k8s.io/kustomize/cmd/config v0.8.5/go.mod h1:PlZTWxL7Xi75mY64HBC9IVf2xwrEbzy3L7r7+19kON4=
 sigs.k8s.io/kustomize/kyaml v0.9.4 h1:DDuzZtjIzFqp2IPy4DTyCI69Cl3bDgcJODjI6sjF9NY=
 sigs.k8s.io/kustomize/kyaml v0.9.4/go.mod h1:UTm64bSWVdBUA8EQoYCxVOaBQxUdIOr5LKWxA4GNbkw=
 sigs.k8s.io/structured-merge-diff/v3 v3.0.0-20200116222232-67a7b8c61874/go.mod h1:PlARxl6Hbt/+BC80dRLi1qAmnMqwqDg62YvvVkZjemw=
