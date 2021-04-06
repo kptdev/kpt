@@ -15,13 +15,13 @@
 package commands
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/cmdcat"
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
-	"github.com/GoogleContainerTools/kpt/internal/cmdtree"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdcat"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdtree"
 	"github.com/spf13/cobra"
 )
 
