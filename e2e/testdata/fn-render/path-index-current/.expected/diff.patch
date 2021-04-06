@@ -1,0 +1,100 @@
+diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
+new file mode 100644
+index 0000000..988e49b
+--- /dev/null
++++ b/db/deployment_httpbin.yaml
+@@ -0,0 +1,22 @@
++apiVersion: apps/v1
++kind: Deployment
++metadata:
++  labels:
++    tier: db
++  name: httpbin
++  namespace: staging
++spec:
++  replicas: 4
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
++    spec:
++      containers:
++      - image: kennethreitz/httpbin
++        name: httpbin
++        ports:
++        - containerPort: 9876
+diff --git a/db/resources.yaml b/db/resources.yaml
+index af986cc..b0e8da9 100644
+--- a/db/resources.yaml
++++ b/db/resources.yaml
+@@ -1,20 +1,16 @@
+-# Copyright 2021 Google LLC
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-
+ apiVersion: apps/v1
+ kind: StatefulSet
+ metadata:
++  labels:
++    tier: db
+   name: db
++  namespace: staging
+ spec:
+-  replicas: 3
+\ No newline at end of file
++  replicas: 3
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
+diff --git a/resources.yaml b/resources.yaml
+index 10cd18b..5b8e411 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -11,17 +11,29 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
++  labels:
++    tier: db
+   name: nginx-deployment
++  namespace: staging
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
++  labels:
++    tier: db
+   name: custom
++  namespace: staging
+ spec:
+   image: nginx:1.2.3
