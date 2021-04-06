@@ -35,7 +35,6 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
-	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -81,10 +80,6 @@ func GetMain() *cobra.Command {
 	f := newFactory(cmd)
 
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		// register function to use Kptfile for OpenAPI
-		ext.KRMFileName = func() string {
-			return kptfilev1alpha2.KptFileName
-		}
 		err := kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
 		if err != nil {
 			return err

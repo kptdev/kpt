@@ -9,9 +9,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/cmd/config/runner"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -25,7 +25,7 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
-	runner.FixDocs(name, c)
+
 	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
 		"also print resources from subpackages.")
 	r.Command = c
