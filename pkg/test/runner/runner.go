@@ -367,10 +367,10 @@ func newExpected(path string) (expected, error) {
 func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
 	// We update results directory only when a result file already exists.
 	l, err := ioutil.ReadDir(resultsPath)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil {
 		return err
 	}
-	if err != nil && os.IsNotExist(err) {
+	if len(l) == 0 {
 		actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
 		if err != nil {
 			return err
@@ -380,7 +380,7 @@ func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath strin
 				return err
 			}
 		}
-	} else if len(l) > 0 {
+	} else {
 		actualResults, err := readActualResults(resultsPath)
 		if err != nil {
 			return err

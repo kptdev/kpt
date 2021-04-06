@@ -14,7 +14,7 @@
 
 runCount: 2
 testType: eval
-image: gcr.io/kpt-fn/set-namespace:unstable
+image: gcr.io/kpt-fn/set-namespace:v0.1
 includeMetaResources: true
 args:
   namespace: staging
