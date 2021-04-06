@@ -1,0 +1,9 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/set-annotation:unstable
+    configMap:
+      abc: def
