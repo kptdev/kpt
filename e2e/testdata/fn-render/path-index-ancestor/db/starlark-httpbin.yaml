@@ -54,7 +54,6 @@ source: |
     for r in resources:
       if is_httpbin(r):
         return
-
     resources.append(httpbin_deployment)
 
   ensure_httpbin(ctx.resource_list["items"])
