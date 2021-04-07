@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	pkgdiff "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -58,12 +59,12 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		return nil
 	}
 
-	subPkgPaths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(localPath, originalPath)
+	subPkgPaths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, localPath, originalPath)
 	if err != nil {
 		return err
 	}
 	aggDiff := sets.String{}
-	for _, subPkgPath := range subPkgPaths {
+	for _, subPkgPath := range append([]string{"."}, subPkgPaths...) {
 		localSubPkgPath := filepath.Join(localPath, subPkgPath)
 		originalSubPkgPath := filepath.Join(originalPath, subPkgPath)
 

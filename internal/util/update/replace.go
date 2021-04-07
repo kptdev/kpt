@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 )
 
@@ -28,12 +29,12 @@ import (
 type ReplaceUpdater struct{}
 
 func (u ReplaceUpdater) Update(options UpdateOptions) error {
-	paths, err := pkgutil.FindLocalRecursiveSubpackagesForPaths(options.LocalPath, options.UpdatedPath)
+	paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, options.LocalPath, options.UpdatedPath)
 	if err != nil {
 		return err
 	}
 
-	for _, p := range paths {
+	for _, p := range append([]string{"."}, paths...) {
 		isRootPkg := false
 		if p == "." && options.IsRoot {
 			isRootPkg = true
