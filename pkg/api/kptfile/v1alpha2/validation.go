@@ -96,9 +96,12 @@ func validateFunctionName(name string) error {
 	pathComponentRegexp := `(?:[a-z0-9](?:(?:[_.]|__|[-]*)[a-z0-9]+)*)`
 	domainComponentRegexp := `(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`
 	domainRegexp := fmt.Sprintf(`%s(?:\.%s)*(?:\:[0-9]+)?`, domainComponentRegexp, domainComponentRegexp)
-	nameRegexp := fmt.Sprintf(`^(?:%s\/)?%s(?:\/%s)*$`, domainRegexp,
+	nameRegexp := fmt.Sprintf(`(?:%s\/)?%s(?:\/%s)*`, domainRegexp,
 		pathComponentRegexp, pathComponentRegexp)
-	matched, err := regexp.MatchString(nameRegexp, name)
+	tagRegexp := `(?:[\w][\w.-]{0,127})`
+	r := fmt.Sprintf(`^(?:%s(?:\:%s)?)$`, nameRegexp, tagRegexp)
+
+	matched, err := regexp.MatchString(r, name)
 	if err != nil {
 		return err
 	}

@@ -143,6 +143,30 @@ func TestValidateFunctionName(t *testing.T) {
 			true,
 		},
 		{
+			"gcr.io/kpt-functions/generate-folders:unstable",
+			true,
+		},
+		{
+			"patch-strategic-merge:v1.3_beta",
+			true,
+		},
+		{
+			"gcr.io/kpt-functions/generate-folders:v1.2.3-alpha1",
+			true,
+		},
+		{
+			"patch-strategic-merge:x.y.z",
+			true,
+		},
+		{
+			"patch-strategic-merge::@!",
+			false,
+		},
+		{
+			"patch-strategic-merge:",
+			false,
+		},
+		{
 			"a.b.c:1234/foo/bar/generate-folders",
 			true,
 		},
