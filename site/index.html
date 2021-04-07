@@ -148,7 +148,7 @@
       // title: Page Title
       // +++
       function processHugoTitleHeading(content) {
-        const titleBlock = /^[\+\-]{3}[\s\S]*^[\+\-]{3}$/m;
+        const titleBlock = /^[\+\-]{3}[\s\S]*?^[\+\-]{3}$/m;
         const titleMatch = content.match(/title:\s*["'](.*)["']/);
 
         const titleHeading = titleMatch ? `# ${titleMatch[1]}` : "";
@@ -163,7 +163,7 @@
         return content.replace(
           asciinemaDirective,
           (_, fileName) =>
-            `<asciinema-player src="${window.location.origin}/static/casts/${fileName}.cast"></asciinema-player>`
+            `<asciinema-player src="${window.location.origin}/static/casts/${fileName}.cast" cols="160"></asciinema-player>`
         );
       }
     </script>
@@ -210,6 +210,19 @@
     /* Hide inactive lists whose titles aren't links. */
     .sidebar-nav ul a + ul.inactive {
       display: none;
+    }
+
+    .sidebar-nav ul a {
+      white-space: unset;
+    }
+
+    .sidebar-nav .book-outline ul {
+      margin-left: var(--sidebar-nav-indent);
+    }
+
+    .pagination-item-label > * {
+      z-index: -1;
+      position: relative;
     }
   </style>
 </html>

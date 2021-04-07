@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -44,7 +45,7 @@ func (e *Executor) Execute() error {
 	// initialize hydration context
 	hctx := &hydrationContext{
 		root: root,
-		pkgs: map[pkg.UniquePath]*pkgNode{},
+		pkgs: map[types.UniquePath]*pkgNode{},
 	}
 
 	resources, err := hydrate(root, hctx)
@@ -78,7 +79,7 @@ type hydrationContext struct {
 
 	// pkgs refers to the packages undergoing hydration. pkgs are key'd by their
 	// unique paths.
-	pkgs map[pkg.UniquePath]*pkgNode
+	pkgs map[types.UniquePath]*pkgNode
 
 	// inputFiles is a set of filepaths containing input resources to the
 	// functions across all the packages during hydration.
@@ -280,12 +281,13 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 		return resources, nil
 	}
 	for _, r := range resources {
-		meta, err := r.GetMeta()
+		currPath, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
 			return resources, err
 		}
-		if !strings.HasPrefix(meta.Annotations[kioutil.PathAnnotation], relPath) {
-			newPath := path.Join(relPath, meta.Annotations[kioutil.PathAnnotation])
+		// if currPath is relative to root pkg i.e. already has relPath, skip it
+		if !strings.HasPrefix(currPath, relPath+"/") {
+			newPath := path.Join(relPath, currPath)
 			err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath))
 			if err != nil {
 				return resources, err
@@ -297,7 +299,7 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 
 // fnChain returns a slice of function runners from the
 // functions and configs defined in pipeline.
-func fnChain(pl *kptfilev1alpha2.Pipeline, pkgPath pkg.UniquePath) ([]kio.Filter, error) {
+func fnChain(pl *kptfilev1alpha2.Pipeline, pkgPath types.UniquePath) ([]kio.Filter, error) {
 	fns := []kptfilev1alpha2.Function{}
 	fns = append(fns, pl.Mutators...)
 	// TODO: Validators cannot modify resources.

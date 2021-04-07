@@ -28,7 +28,6 @@ buildall:
 
 update-deps-to-head:
 	go get sigs.k8s.io/cli-utils@master
-	go get sigs.k8s.io/kustomize/cmd/config@master
 	go get sigs.k8s.io/kustomize/kyaml@master
 
 fix:
@@ -72,8 +71,12 @@ test:
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
 test-docker:	
-	go test -v -cover --tags=docker ./...	
+	go test -cover --tags=docker ./...
 
+# target to run e2e tests for "kpt fn render" command
+test-fn-render:
+	go test -v --tags=docker --run=TestFnRender ./e2e/
+	
 vet:
 	go vet ./...
 

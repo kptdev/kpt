@@ -11,7 +11,6 @@ require (
 	// TODO: find a library that have proper releases or just implement
 	// topsort in kpt.
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
-	github.com/pkg/errors v0.9.1
 	github.com/posener/complete/v2 v2.0.1-alpha.12
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
@@ -25,6 +24,5 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kubectl v0.18.10
 	sigs.k8s.io/cli-utils v0.22.1-0.20201117031003-fd39030f0508
-	sigs.k8s.io/kustomize/cmd/config v0.8.5
 	sigs.k8s.io/kustomize/kyaml v0.9.4
 )

@@ -6,7 +6,7 @@ This directory contains the files that are copied from 3rd-party projects and mo
 
 - `kyaml`: Files copied from [kyaml] v0.10.15 library
   - `runfn`: KRM function runner
-- `cmdconfig`: Files copied from [cmd/config] v0.9.7 library
+- `cmdconfig`: Files copied from [cmd/config] v0.9.9 library
   - `commands`: Command files copied from [cmd/config]
 
 # Copyright and Licenses

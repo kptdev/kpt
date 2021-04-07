@@ -1,34 +1,57 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package runner
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	"github.com/GoogleContainerTools/kpt/run"
 )
 
 // Runner runs an e2e test
 type Runner struct {
-	pkgName  string
-	testCase TestCase
-	cmd      string
+	pkgName       string
+	testCase      TestCase
+	cmd           string
+	t             *testing.T
+	initialCommit string
 }
 
 const (
+	// If this env is set to "true", this e2e test framework will update the
+	// expected diff and results if they already exist. If will not change
+	// config.yaml.
+	updateExpectedEnv string = "KPT_E2E_UPDATE_EXPECTED"
+
 	expectedDir         string = ".expected"
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
-	CommandFnEval       string = "run"
+	CommandFnEval       string = "eval"
 	CommandFnRender     string = "render"
 )
 
 // NewRunner returns a new runner for pkg
-func NewRunner(testCase TestCase, c string) (*Runner, error) {
+func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	info, err := os.Stat(testCase.Path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open path %s: %w", testCase.Path, err)
@@ -40,6 +63,7 @@ func NewRunner(testCase TestCase, c string) (*Runner, error) {
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
 		cmd:      c,
+		t:        t,
 	}, nil
 }
 
@@ -56,7 +80,7 @@ func (r *Runner) Run() error {
 }
 
 func (r *Runner) runFnEval() error {
-	fmt.Printf("Running test against package %s\n", r.pkgName)
+	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
@@ -83,36 +107,59 @@ func (r *Runner) runFnEval() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "run", tmpPkgPath, "--results-dir", resultsPath}
-	if r.testCase.Config.Network {
+	kptArgs := []string{"fn", "eval", tmpPkgPath, "--results-dir", resultsPath}
+	if r.testCase.Config.EvalConfig.Network {
 		kptArgs = append(kptArgs, "--network")
+	}
+	if r.testCase.Config.EvalConfig.Image != "" {
+		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
+	} else if r.testCase.Config.EvalConfig.ExecPath != "" {
+		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
+	}
+	if r.testCase.Config.EvalConfig.FnConfig != "" {
+		kptArgs = append(kptArgs, "--fn-config", r.testCase.Config.EvalConfig.FnConfig)
+	}
+	if r.testCase.Config.EvalConfig.IncludeMetaResources {
+		kptArgs = append(kptArgs, "--include-meta-resources")
+	}
+	// args must be appended last
+	if len(r.testCase.Config.EvalConfig.Args) > 0 {
+		kptArgs = append(kptArgs, "--")
+		for k, v := range r.testCase.Config.EvalConfig.Args {
+			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
+		}
 	}
 	var output string
 	var fnErr error
-	for i := 0; i < r.testCase.Config.RunCount; i++ {
-		output, fnErr = runCommand("", "kpt", kptArgs)
+	command := run.GetMain()
+	for i := 0; i < r.testCase.Config.RunCount(); i++ {
+		command.SetArgs(kptArgs)
+		outputWriter := bytes.NewBuffer(nil)
+		command.SetOutput(outputWriter)
+		fnErr = command.Execute()
 		if fnErr != nil {
 			// if kpt fn run returns error, we should compare
 			// the result
 			break
 		}
+		output = outputWriter.String()
+		// Update the diff file or results file if updateExpectedEnv is set.
+		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
+			return r.updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
+		}
+
+		// compare results
+		err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
+		if err != nil {
+			return fmt.Errorf("%w\nkpt output:\n%s", err, output)
+		}
 	}
 
-	// run formatter
-	_, err = runCommand("", "kpt", []string{"cfg", "fmt", tmpPkgPath})
-	if err != nil {
-		return fmt.Errorf("failed to run kpt cfg fmt: %w", err)
-	}
-
-	// compare results
-	err = r.compareResult(fnErr, tmpPkgPath, resultsPath)
-	if err != nil {
-		return fmt.Errorf("%w\nkpt output:\n%s", err, output)
-	}
 	return nil
 }
 
 func (r *Runner) runFnRender() error {
+	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
@@ -152,7 +199,7 @@ func (r *Runner) runFnRender() error {
 	var fnErr error
 	command := run.GetMain()
 	kptArgs := []string{"fn", "render", tmpPkgPath}
-	for i := 0; i < r.testCase.Config.RunCount; i++ {
+	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		command.SetArgs(kptArgs)
 		fnErr = command.Execute()
 		if fnErr != nil {
@@ -161,10 +208,16 @@ func (r *Runner) runFnRender() error {
 			}
 			break
 		}
-	}
+		// Update the diff file or results file if updateExpectedEnv is set.
+		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
+			// TODO: `fn render` doesn't support result file now
+			// use empty string to skip update results
+			return r.updateExpected(tmpPkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
+		}
 
-	// compare results
-	err = r.compareResult(fnErr, tmpPkgPath, orgPkgPath)
+		// compare results
+		err = r.compareResult(fnErr, tmpPkgPath, orgPkgPath)
+	}
 	return err
 }
 
@@ -179,7 +232,13 @@ func (r *Runner) preparePackage(pkgPath string) error {
 		return err
 	}
 
-	return gitCommit(pkgPath, "first")
+	err = gitCommit(pkgPath, "first")
+	if err != nil {
+		return err
+	}
+
+	r.initialCommit, err = getCommitHash(pkgPath)
+	return err
 }
 
 func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) error {
@@ -204,21 +263,29 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 		if err != nil {
 			return fmt.Errorf("failed to read actual results: %w", err)
 		}
+		diffOfResult, err := diffStrings(actual, expected.Results)
+		if err != nil {
+			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+		}
 		if actual != expected.Results {
-			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nExpected\n===\n%s",
-				actual, expected.Results)
+			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+				actual, diffOfResult)
 		}
 		return nil
 	}
 
 	// compare diff
-	actual, err := readActualDiff(tmpPkgPath)
+	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
 	if actual != expected.Diff {
-		return fmt.Errorf("actual diff doesn't match expected\nActual\n===\n%s\nExpected\n===\n%s",
-			actual, expected.Diff)
+		diffOfDiff, err := diffStrings(actual, expected.Diff)
+		if err != nil {
+			return fmt.Errorf("error when run diff of diff: %w: %s", err, diffOfDiff)
+		}
+		return fmt.Errorf("actual diff doesn't match expected\nActual\n===\n%s\nDiff of Diff\n===\n%s",
+			actual, diffOfDiff)
 	}
 	return nil
 }
@@ -243,7 +310,7 @@ func readActualResults(resultsPath string) (string, error) {
 	return strings.TrimSpace(string(actualResults)), nil
 }
 
-func readActualDiff(path string) (string, error) {
+func readActualDiff(path, origHash string) (string, error) {
 	err := gitAddAll(path)
 	if err != nil {
 		return "", err
@@ -253,7 +320,7 @@ func readActualDiff(path string) (string, error) {
 		return "", err
 	}
 	// diff with first commit
-	actualDiff, err := gitDiff(path, "HEAD^", "HEAD")
+	actualDiff, err := gitDiff(path, origHash, "HEAD")
 	if err != nil {
 		return "", err
 	}
@@ -291,4 +358,35 @@ func newExpected(path string) (expected, error) {
 	}
 
 	return e, nil
+}
+
+func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
+	// We update results directory only when a result file already exists.
+	l, err := ioutil.ReadDir(resultsPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if err != nil && os.IsNotExist(err) {
+		actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
+		if err != nil {
+			return err
+		}
+		if actualDiff != "" {
+			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedDiffFile), []byte(actualDiff+"\n"), 0666); err != nil {
+				return err
+			}
+		}
+	} else if len(l) > 0 {
+		actualResults, err := readActualResults(resultsPath)
+		if err != nil {
+			return err
+		}
+		if actualResults != "" {
+			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
