@@ -35,12 +35,12 @@ resources in its `deployment.yaml` file.
 
 The `Kptfile` is an example of a _meta resource_ in kpt. Meta resources are resources that
 are only needed for kpt itself to function, they do not have extrinsic meaning and are not
-applied to a cluster. We will see another example of a meta resources in the next section.
+applied to a cluster. We will see other types of a meta resources in the next section.
 
 kpt uses Git as the underlying version control system. A typical workflow starts by fetching an
 _upstream_ package from a Git to the local filesystem using `kpt pkg` commands. All other
 functionality (i.e. `kpt fn` and `kpt live`) use the package from the local filesystem, not the
-remote Git repository. You may think of this as the _vendoring_ concept from some programming
+remote Git repository. You may think of this as the _vendoring_ used by tooling for some programming
 languages. The main difference is that kpt is designed to enable you to modify the vendored package
 on the local filesystem and then later update the package by merging the local and upstream changes.
 

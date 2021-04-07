@@ -1,7 +1,7 @@
 In this section, we'll describe the typical workflows in kpt. We say "typical", because there is no
 single right way of using kpt. A user may choose to use some command but not another. This
 modularity is a key design principle. However, we still want to provide guidance on how the
-functionality could be used in a end-to-end real-world scenarios.
+functionality could be used in a end-to-end real-world scenario.
 
 A workflow in kpt can be best modelled as performing some verbs on the noun _package_.
 
