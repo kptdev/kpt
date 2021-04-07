@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testType: eval
-image: gcr.io/kpt-fn/set-namespace:v0.1
-args:
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
   namespace: staging

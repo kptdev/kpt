@@ -8,15 +8,10 @@ index 883da19..de849da 100644
    name: app
 +  namespace: staging
 diff --git a/resources.yaml b/resources.yaml
-index 10cd18b..254b9cd 100644
+index 7a494c9..254b9cd 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -11,11 +11,11 @@
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
--
- apiVersion: apps/v1
+@@ -15,6 +15,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -24,7 +19,7 @@ index 10cd18b..254b9cd 100644
  spec:
    replicas: 3
  ---
-@@ -23,5 +23,6 @@ apiVersion: custom.io/v1
+@@ -22,5 +23,6 @@ apiVersion: custom.io/v1
  kind: Custom
  metadata:
    name: custom

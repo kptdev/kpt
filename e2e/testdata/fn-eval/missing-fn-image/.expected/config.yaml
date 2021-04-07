@@ -13,6 +13,7 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/kpt-fn/set-namespace:v0.1
+exitCode: 1
+image: gcr.io/kpt-fn/dne # non-existing image
 args:
   namespace: staging
