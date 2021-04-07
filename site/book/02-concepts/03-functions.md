@@ -4,7 +4,8 @@ mechanism to automate mutation and validation of KRM resources. Some example use
 
 - Enforce all `Namespace` resources to have a `cost-center` label.
 - Add a label to resources based on some filtering criteria
-- Use a `Team` custom resource to generate a `Namespace` and associated organization-mandated defaults (e.g. `RBAC`, `ResourceQuota`, etc.) when bootstraping a new team
+- Use a `Team` custom resource to generate a `Namespace` and associated organization-mandated
+  defaults (e.g. `RBAC`, `ResourceQuota`, etc.) when bootstraping a new team
 - Bulk transformation of all `PodSecurityPolicy` resources to improve the security posture.
 
 Since functions are containerized, they can encapsulate different toolchains, languages, and
@@ -15,8 +16,8 @@ runtimes. For example, the function container image can encapsulate:
 - Invoke a bash script performing low-level operations
 - The interpreter for "executable configuration" such as `Starlark` or `Rego`
 
-To astute readers, this model will sound familiar: functions are the client-side analog to Kubernetes
-controllers: </br>
+To astute readers, this model will sound familiar: functions are the client-side analog to
+Kubernetes controllers: </br>
 
 |                  | Client-side              | Server-side       |
 | ---------------- | ------------------------ | ----------------- |
@@ -44,7 +45,8 @@ where:
 - `input items`: The input list of KRM resources to operate on.
 - `output items`: The output list obtained from adding, removing, or modifying items in the input.
 - `functionConfig`: An optional meta resource used to parameterize this invocation of the function.
-- `results`: An optional meta resource emitted by the function for observability and debugging purposes.
+- `results`: An optional meta resource emitted by the function for observability and debugging
+  purposes.
 
 Naturally, functions can be chained together in a pipeline:
 

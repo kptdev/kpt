@@ -2,7 +2,8 @@ A kpt package is a bundle of configuration _data_. It is represented as a direct
 KRM resources using YAML as the file format.
 
 A package is explicitly declared using a file named `Kptfile` containing a KRM resource of kind
-`Kptfile`. The Kptfile contains metadata about the package and is just a regular resource in the YAML format.
+`Kptfile`. The Kptfile contains metadata about the package and is just a regular resource in the
+YAML format.
 
 Just as directories can be nested, a package can contain another package, called a
 _subpackage_.
@@ -28,8 +29,8 @@ wordpress
 
 There are two packages in this example. The top-level `wordpress` package is declared using
 `wordpress/Kptfile`. This package contains 2 subdirectories. `wordpress/deployment` is a regular
-directory used for organizing resources that belong to the `wordpress` package itself. On the other hand,
-`wordpress/mysql` is a subpackage since it has a `Kptfile`. The `mysql` package contains 3
+directory used for organizing resources that belong to the `wordpress` package itself. On the other
+hand, `wordpress/mysql` is a subpackage since it has a `Kptfile`. The `mysql` package contains 3
 resources in its `deployment.yaml` file.
 
 The `Kptfile` is an example of a _meta resource_ in kpt. Meta resources are resources that
