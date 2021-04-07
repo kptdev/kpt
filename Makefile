@@ -96,9 +96,10 @@ site-generate:
 
 site-run-server:
 	make site-generate
-	npx http-server site/ -p 3000
+	./scripts/run-site.sh
 
 site-check:
+	make site-run-server
 	./scripts/check-site.sh
 
 site-verify-guides:

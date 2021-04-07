@@ -117,7 +117,11 @@ func (r *Runner) runFnEval() error {
 		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
 	}
 	if r.testCase.Config.EvalConfig.FnConfig != "" {
-		kptArgs = append(kptArgs, "--fn-config", r.testCase.Config.EvalConfig.FnConfig)
+		fnConfigPath, err := filepath.Abs(filepath.Join(r.testCase.Path, r.testCase.Config.EvalConfig.FnConfig))
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path to function config file: %w", err)
+		}
+		kptArgs = append(kptArgs, "--fn-config", fnConfigPath)
 	}
 	if r.testCase.Config.EvalConfig.IncludeMetaResources {
 		kptArgs = append(kptArgs, "--include-meta-resources")
@@ -363,10 +367,10 @@ func newExpected(path string) (expected, error) {
 func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
 	// We update results directory only when a result file already exists.
 	l, err := ioutil.ReadDir(resultsPath)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil {
 		return err
 	}
-	if err != nil && os.IsNotExist(err) {
+	if len(l) == 0 {
 		actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
 		if err != nil {
 			return err
@@ -376,7 +380,7 @@ func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath strin
 				return err
 			}
 		}
-	} else if len(l) > 0 {
+	} else {
 		actualResults, err := readActualResults(resultsPath)
 		if err != nil {
 			return err
