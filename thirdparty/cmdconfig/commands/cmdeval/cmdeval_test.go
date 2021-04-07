@@ -47,7 +47,7 @@ apiVersion: v1
 		},
 		{
 			name:   "config map stdin / stdout",
-			args:   []string{"eval", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args:   []string{"eval", "-", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			input:  os.Stdin,
 			output: os.Stdout,
 			expected: `

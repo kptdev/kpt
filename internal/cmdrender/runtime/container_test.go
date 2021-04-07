@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pipeline/runtime"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrender/runtime"
 	"github.com/stretchr/testify/assert"
 )
 

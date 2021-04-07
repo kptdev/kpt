@@ -26,7 +26,7 @@
 
 // Package pipeline provides struct definitions for Pipeline and utility
 // methods to read and write a pipeline resource.
-package pipeline
+package cmdrender
 
 import (
 	"io/ioutil"

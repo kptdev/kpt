@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package cmdget contains the get command
-package pipeline
+package cmdrender
 
 import (
 	"fmt"
@@ -64,7 +64,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Runner) runE(c *cobra.Command, args []string) error {
+func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	err := cmdutil.DockerCmdAvailable()
 	if err != nil {
 		return err
