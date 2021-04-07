@@ -1,4 +1,4 @@
-A kpt function (also known as a _KRM function_) is a containerized program that can perform CRUD
+A kpt function (also called a _KRM function_) is a containerized program that can perform CRUD
 operations on KRM resources stored on the local filesystem. kpt functions are the extensible
 mechanism to automate mutation and validation of KRM resources. Some example use cases:
 

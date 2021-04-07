@@ -17,7 +17,6 @@ For example, when consuming an upstream package, the initial workflow can look l
 First, you get a package from upstream. Then, you explore the content of the package to understand
 it better. Then you typically want to customize the package for you specific needs. Finally, you
 render the package which produces the final resources that can be directly applied to the cluster.
-Each verb is described below:
 
 This is an iterative process. There is usually a tight customize-render loop in order to produce
 the desired outcome.
