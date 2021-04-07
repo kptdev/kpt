@@ -87,7 +87,6 @@ site-run-server:
 	./scripts/run-site.sh
 
 site-check:
-	make site-run-server
 	./scripts/check-site.sh
 
 site-verify-examples:

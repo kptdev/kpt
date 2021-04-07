@@ -16,9 +16,6 @@
 //go:generate $GOBIN/mdtogo site/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference internal/docs/generated/overview --license=none --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/guides/consumer internal/guides/generated/consumer --license=none --recursive=true --strategy=guide
-//go:generate $GOBIN/mdtogo site/guides/ecosystem internal/guides/generated/ecosystem --license=none --recursive=true --strategy=guide
-//go:generate $GOBIN/mdtogo site/guides/producer internal/guides/generated/producer --license=none --recursive=true --strategy=guide
 package main
 
 import (
