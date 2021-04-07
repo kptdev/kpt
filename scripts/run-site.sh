@@ -13,15 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -o pipefail
-
-cd site
-npm i
-echo "Starting check."
-# Find all potential entrypoint READMEs while stripping out themes directory until it's removed
-# Convert them to valid URLs
-# Check each link for Docsify 404s
-find . -name README.md -printf "%P\n" | grep -v node_modules | grep -v themes \
-    | sed "s/README.md//" | sed "s/^/http:\/\/localhost:3000\//" \
-    | xargs -n1 sh -c '! (npx href-checker $0 --bad-content="404 - Not found" --silent --no-off-site -c=15 | grep .) || exit 255' 
-echo "Success."
+# Set read/execute permissions for newly created site files in macOS or Linux.
+setfacl -Rd -m o::rx site/ 2> /dev/null || chmod -R +a "everyone allow read,execute,file_inherit,directory_inherit" site/
+# Set read/execute permissions for existing site files.
+chmod -R o+rx site/
+# Terminate running kpt-site docker containers and rebuild.
+docker stop $(docker ps -q --filter ancestor=kpt-site:latest) || docker build site/ -t kpt-site:latest
+# Mount the site directory as the default content for the docker container.
+docker run -v `pwd`/site:/usr/share/nginx/html -p 3000:80 -d kpt-site:latest
