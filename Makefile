@@ -40,14 +40,10 @@ generate:
 	go install ./mdtogo
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
-	rm -rf internal/guides/generated
-	mkdir internal/guides/generated
 	GOBIN=$(GOBIN) go generate ./...
 	which addlicense || go get github.com/google/addlicense
-	$(GOBIN)/addlicense -y 2019 -l apache internal/docs/generated
-	$(GOBIN)/addlicense -y 2019 -l apache internal/guides/generated
+	$(GOBIN)/addlicense -y 2021 -l apache internal/docs/generated
 	go fmt ./internal/docs/generated/...
-	go fmt ./internal/guides/generated/...
 
 tidy:
 	go mod tidy
@@ -86,14 +82,6 @@ docker:
 lintdocs:
 	(cd site && npm run lint-fix)
 
-gencatalog:
-	rm site/content/en/guides/consumer/function/catalog/*/_index.md
-	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
-
-site-generate:
-	go run ./scripts/generate_site_sidebar > site/sidebar.md
-	(cd site && find . -iname "00.md" -execdir mv {} README.md \; && sed -i s/00.md//g sidebar.md)
-
 site-run-server:
 	make site-generate
 	./scripts/run-site.sh
@@ -101,9 +89,6 @@ site-run-server:
 site-check:
 	make site-run-server
 	./scripts/check-site.sh
-
-site-verify-guides:
-	./scripts/verifyGuides.sh
 
 site-verify-examples:
 	./scripts/verifyExamples.sh
