@@ -23,11 +23,11 @@ index 685f793..1765c5a 100644
 -  replicas: 3
 \ No newline at end of file
 +  replicas: 3
-diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
+diff --git a/notpkg/deployment_httpbin.yaml b/notpkg/deployment_httpbin.yaml
 new file mode 100644
 index 0000000..2307daf
 --- /dev/null
-+++ b/deployment_httpbin.yaml
++++ b/notpkg/deployment_httpbin.yaml
 @@ -0,0 +1,27 @@
 +apiVersion: apps/v1
 +kind: Deployment

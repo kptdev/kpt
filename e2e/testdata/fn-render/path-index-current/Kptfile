@@ -2,11 +2,3 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: app-with-generator
-pipeline:
-  mutators:
-  - image: gcr.io/kpt-fn/set-namespace:unstable
-    configMap:
-      namespace: staging
-  - image: gcr.io/kpt-fn/set-label:unstable
-    configMap:
-      tier: db

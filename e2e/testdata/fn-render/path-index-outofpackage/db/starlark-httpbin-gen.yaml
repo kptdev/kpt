@@ -24,7 +24,8 @@ source: |
         "name": "httpbin",
         "annotations": {
           "config.kubernetes.io/index": 0,
-          "config.kubernetes.io/path": "./deployment_httpbin.yaml"
+          # generates resource in directory that is not a package
+          "config.kubernetes.io/path": "../notpkg/deployment_httpbin.yaml"
         }
      },
      "spec": {
@@ -54,7 +55,6 @@ source: |
     for r in resources:
       if is_httpbin(r):
         return
-
     resources.append(httpbin_deployment)
 
   ensure_httpbin(ctx.resource_list["items"])

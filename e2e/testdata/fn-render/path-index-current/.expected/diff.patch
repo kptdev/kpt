@@ -1,33 +1,24 @@
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
-index 0000000..988e49b
+index 0000000..6d9fb79
 --- /dev/null
 +++ b/db/deployment_httpbin.yaml
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,13 @@
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+  labels:
-+    tier: db
 +  name: httpbin
-+  namespace: staging
 +spec:
 +  replicas: 4
-+  selector:
-+    matchLabels:
-+      tier: db
 +  template:
-+    metadata:
-+      labels:
-+        tier: db
 +    spec:
 +      containers:
-+      - image: kennethreitz/httpbin
-+        name: httpbin
++      - name: httpbin
++        image: kennethreitz/httpbin
 +        ports:
 +        - containerPort: 9876
 diff --git a/db/resources.yaml b/db/resources.yaml
-index 685f793..e550c7d 100644
+index 685f793..1765c5a 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ -1,7 +1,3 @@
@@ -38,7 +29,7 @@ index 685f793..e550c7d 100644
  # You may obtain a copy of the License at
  #
  #      http://www.apache.org/licenses/LICENSE-2.0
-@@ -11,9 +7,19 @@
+@@ -11,9 +7,9 @@
  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  # See the License for the specific language governing permissions and
  # limitations under the License.
@@ -46,49 +37,8 @@ index 685f793..e550c7d 100644
 +apiVersion: apps/v1 # Copyright 2021 Google LLC
  kind: StatefulSet
  metadata:
-+  labels:
-+    tier: db
    name: db
-+  namespace: staging
  spec:
 -  replicas: 3
 \ No newline at end of file
 +  replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        tier: db
-diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..5b8e411 100644
---- a/resources.yaml
-+++ b/resources.yaml
-@@ -14,13 +14,26 @@
- apiVersion: apps/v1
- kind: Deployment
- metadata:
-+  labels:
-+    tier: db
-   name: nginx-deployment
-+  namespace: staging
- spec:
-   replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        tier: db
- ---
- apiVersion: custom.io/v1
- kind: Custom
- metadata:
-+  labels:
-+    tier: db
-   name: custom
-+  namespace: staging
- spec:
-   image: nginx:1.2.3

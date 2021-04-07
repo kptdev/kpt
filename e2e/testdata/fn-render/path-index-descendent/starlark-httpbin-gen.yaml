@@ -24,6 +24,7 @@ source: |
         "name": "httpbin",
         "annotations": {
           "config.kubernetes.io/index": 0,
+          # generates resource in child directory
           "config.kubernetes.io/path": "./db/deployment_httpbin.yaml"
         }
      },
