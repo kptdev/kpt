@@ -54,26 +54,22 @@ code changes and the commit message should start with `Docs:`.
 
 ### Run the docs locally
 
-Make docs changes and test them by using hugo to run the kpt site locally. Hugo
-continuously builds your website as you make changes.
-
-- install hugo
-- `make servedocs`
+Make docs changes and test them by running the site in a docker container
+with `make site-run-server`.
 
 It's usually a good idea to test locally for the following:
 
 - Broken links
 - Rendering static content
-- Ordering of new pages using the "weight" key in the header
 
 ### Update docs
 
-Docs are under [site/] and use the [docsy] theme for hugo. Learn more about
-docsy from [docsy docs]. The site itself are generated from the markdown
-automatically after commit.
+Docs are under [site/] and use [docsify] to present the source markdown files.
+The sidebar is automatically updated for the site at deployment time.
 
 ### Adding or updating catalog functions
 
+<!-- TODO: Update this once the catalog is live. -->
 The config functions catalog is auto-generated using [this node package]. Update
 the catalog.json file with the appropriate information for your function like
 its type (source, sink, validator, transformer, or generator). Regenerate the
@@ -118,8 +114,7 @@ This includes:
 [google's open source community guidelines]:
   https://opensource.google.com/conduct/
 [code of conduct]: CODE_OF_CONDUCT.md
-[docsy]: https://github.com/google/docsy/
-[docsy docs]: https://www.docsy.dev/docs/
+[docsify]: https://docsify.js.org/
 [site/]: site/
 [w3 link checker]: https://validator.w3.org/checklink/
 [this node package]: site/content/en/guides/consumer/function/catalog/catalog/
