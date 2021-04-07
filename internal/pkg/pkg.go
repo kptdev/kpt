@@ -139,8 +139,10 @@ func (p *Pkg) RelativePathTo(ancestorPkg *Pkg) (string, error) {
 	return filepath.Rel(string(ancestorPkg.UniquePath), string(p.UniquePath))
 }
 
-// DirectSubpackages returns subpackages of a pkg.
-// A sub directory that has a Kptfile is considered a sub package.
+// DirectSubpackages returns subpackages of a pkg. It will return all direct
+// subpackages, i.e. subpackages that aren't nested inside other subpackages
+// under the current package. It will return packages that are nested inside
+// directories of the current package.
 // TODO: This does not support symlinks, so we need to figure out how
 // we should support that with kpt.
 func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {

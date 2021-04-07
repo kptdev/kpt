@@ -17,7 +17,6 @@ package update
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,6 +31,7 @@ import (
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	kyamlerrors "sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 type UpdateOptions struct {
@@ -129,27 +129,27 @@ func (u Command) Run() error {
 	}
 
 	if u.Pkg == nil {
-		return fmt.Errorf("pkg can not be nil")
+		return kyamlerrors.Errorf("pkg can not be nil")
 	}
 
 	// require package is checked into git before trying to update it
 	g := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
 	if err := g.Run("status", "-s"); err != nil {
-		return fmt.Errorf(
+		return kyamlerrors.Errorf(
 			"kpt packages must be checked into a git repo before they are updated: %w", err)
 	}
 	if strings.TrimSpace(g.Stdout.String()) != "" {
-		return fmt.Errorf("must commit package %s to git before attempting to update",
+		return kyamlerrors.Errorf("must commit package %s to git before attempting to update",
 			u.Pkg.UniquePath.String())
 	}
 
 	rootKf, err := u.Pkg.Kptfile()
 	if err != nil {
-		return fmt.Errorf("unable to read package Kptfile: %w", err)
+		return kyamlerrors.Errorf("unable to read package Kptfile: %w", err)
 	}
 
 	if rootKf.Upstream == nil || rootKf.Upstream.Git == nil {
-		return fmt.Errorf("kpt package must have an upstream reference")
+		return kyamlerrors.Errorf("kpt package must have an upstream reference")
 	}
 	if u.Repo != "" {
 		rootKf.Upstream.Git.Repo = u.Repo
@@ -205,13 +205,13 @@ func (u Command) updateRootPackage(p *pkg.Pkg) error {
 	gLock := kf.UpstreamLock.GitLock
 	original := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 	if err := fetch.ClonerUsingGitExec(original); err != nil {
-		return fmt.Errorf("failed to clone git repo: original source: %w", err)
+		return kyamlerrors.Errorf("failed to clone git repo: original source: %w", err)
 	}
 	defer os.RemoveAll(original.AbsPath())
 
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 	if err := fetch.ClonerUsingGitExec(updated); err != nil {
-		return fmt.Errorf("failed to clone git repo: updated source: %w", err)
+		return kyamlerrors.Errorf("failed to clone git repo: updated source: %w", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
 
@@ -282,7 +282,7 @@ func (u Command) updatePackage(subPkgPath, localPath, updatedPath, originPath st
 	// Check if subpackage has been added both in upstream and in local. We
 	// can't make a sane merge here, so we treat it as an error.
 	case !originExists && localExists && updatedExists:
-		return fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath)
+		return kyamlerrors.Errorf("subpackage %q added in both upstream and local", subPkgPath)
 
 	// Package added in upstream. We just copy the package. If the package
 	// contains any unfetched subpackages, those will be handled when we traverse
@@ -359,7 +359,7 @@ func (u Command) mergePackage(localPath, updatedPath, originPath, relPath string
 		// to determine if they share the common upstream and then fetch origin
 		// using the common commit SHA. But this is a very advanced scenario,
 		// so we just return the error for now.
-		return fmt.Errorf("no origin available for package %q", localPath)
+		return kyamlerrors.Errorf("no origin available for package %q", localPath)
 	default:
 		// Both exists, so just go ahead as normal.
 	}
@@ -370,7 +370,7 @@ func (u Command) mergePackage(localPath, updatedPath, originPath, relPath string
 	}
 	updater, found := strategies[pkgKf.Upstream.UpdateStrategy]
 	if !found {
-		return fmt.Errorf("unrecognized update strategy %s", u.Strategy)
+		return kyamlerrors.Errorf("unrecognized update strategy %s", u.Strategy)
 	}
 	return updater().Update(UpdateOptions{
 		RelPackagePath: relPath,

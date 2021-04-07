@@ -324,6 +324,19 @@ func TestSubpackages(t *testing.T) {
 		cases []variants
 	}{
 		"remote and local nested subpackages": {
+			// root
+			//  ├── remote-sub1 (remote)
+			//  │   ├── Kptfile
+			//  │   └── directory
+			//  │       └── remote-sub3 (remote)
+			//  │           └── Kptfile
+			//  └── local-sub1 (local)
+			//      ├── Kptfile
+			//      ├── directory
+			//      │   └── remote-sub3 (remote)
+			//      │       └── Kptfile
+			//      └── local-sub2 (local)
+			//          └── Kptfile
 			pkg: pkgbuilder.NewRootPkg().
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("remote-sub1").
@@ -413,6 +426,8 @@ func TestSubpackages(t *testing.T) {
 			},
 		},
 		"no subpackages": {
+			// root
+			//  └── Kptfile
 			pkg: pkgbuilder.NewRootPkg().
 				WithKptfile(),
 			cases: []variants{
@@ -424,6 +439,7 @@ func TestSubpackages(t *testing.T) {
 			},
 		},
 		"no Kptfile in root": {
+			// root
 			pkg: pkgbuilder.NewRootPkg(),
 			cases: []variants{
 				{
