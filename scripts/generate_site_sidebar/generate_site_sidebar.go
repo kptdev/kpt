@@ -130,7 +130,7 @@ func getChapterBlock(chapters []chapter) string {
 			}
 		}
 	}
-	return sb.String()
+	return strings.TrimRight(sb.String(), "\n")
 }
 
 type chapter struct {
