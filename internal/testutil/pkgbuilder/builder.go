@@ -20,6 +20,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"testing"
 	"text/template"
 
@@ -502,26 +504,24 @@ type ReposInfo interface {
 func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 	if pkg.Kptfile.Upstream != nil && len(pkg.Kptfile.Upstream.RepoRef) > 0 {
 		repoRef := pkg.Kptfile.Upstream.RepoRef
-		repo, found := reposInfo.ResolveRepoRef(repoRef)
-		if !found {
-			panic(fmt.Errorf("path for package %s not found", repoRef))
+		ref := pkg.Kptfile.Upstream.Ref
+		pkg.Kptfile.Upstream.Repo = resolveRepoRef(repoRef, reposInfo)
+
+		if newRef, ok := resolveCommitRef(repoRef, ref, reposInfo); ok {
+			pkg.Kptfile.Upstream.Ref = newRef
 		}
-		pkg.Kptfile.Upstream.Repo = repo
 	}
 	if pkg.Kptfile.UpstreamLock != nil && len(pkg.Kptfile.UpstreamLock.RepoRef) > 0 {
 		repoRef := pkg.Kptfile.UpstreamLock.RepoRef
-		repo, found := reposInfo.ResolveRepoRef(repoRef)
-		if !found {
-			panic(fmt.Errorf("path for package %s not found", repoRef))
-		}
-		pkg.Kptfile.UpstreamLock.Repo = repo
+		ref := pkg.Kptfile.UpstreamLock.Ref
+		pkg.Kptfile.UpstreamLock.Repo = resolveRepoRef(repoRef, reposInfo)
 
 		index := pkg.Kptfile.UpstreamLock.Index
-		commit, found := reposInfo.ResolveCommitIndex(repoRef, index)
-		if !found {
-			panic(fmt.Errorf("can't find commit for index %d in repo %s", index, repoRef))
+		pkg.Kptfile.UpstreamLock.Commit = resolveCommitIndex(repoRef, index, reposInfo)
+
+		if newRef, ok := resolveCommitRef(repoRef, ref, reposInfo); ok {
+			pkg.Kptfile.UpstreamLock.Ref = newRef
 		}
-		pkg.Kptfile.UpstreamLock.Commit = commit
 	}
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {
@@ -537,6 +537,35 @@ func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 	}
 	result := buf.String()
 	return result
+}
+
+func resolveRepoRef(repoRef string, reposInfo ReposInfo) string {
+	repo, found := reposInfo.ResolveRepoRef(repoRef)
+	if !found {
+		panic(fmt.Errorf("path for package %s not found", repoRef))
+	}
+	return repo
+}
+
+func resolveCommitIndex(repoRef string, index int, reposInfo ReposInfo) string {
+	commit, found := reposInfo.ResolveCommitIndex(repoRef, index)
+	if !found {
+		panic(fmt.Errorf("can't find commit for index %d in repo %s", index, repoRef))
+	}
+	return commit
+}
+
+func resolveCommitRef(repoRef, ref string, reposInfo ReposInfo) (string, bool) {
+	re := regexp.MustCompile(`^COMMIT-INDEX:([0-9]+)$`)
+	matches := re.FindStringSubmatch(ref)
+	if len(matches) != 2 {
+		return "", false
+	}
+	index, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return "", false
+	}
+	return resolveCommitIndex(repoRef, index, reposInfo), true
 }
 
 // ExpandPkg writes the provided package to disk. The name of the root package

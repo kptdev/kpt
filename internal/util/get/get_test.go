@@ -16,6 +16,7 @@ package get_test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -459,6 +460,118 @@ func TestCommand_Run_tag(t *testing.T) {
 	})
 }
 
+func TestCommand_Run_ref(t *testing.T) {
+	testCases := map[string]struct {
+		reposContent map[string][]testutil.Content
+		directory    string
+		ref          func(repos map[string]*testutil.TestGitRepo) string
+		expected     *pkgbuilder.RootPkg
+	}{
+		"package tag": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.SecretResource),
+							),
+						Branch: "master",
+						Tag:    "kafka/v2",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Tag: "v2",
+					},
+				},
+			},
+			directory: "kafka",
+			ref: func(_ map[string]*testutil.TestGitRepo) string {
+				return "v2"
+			},
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "kafka", "v2", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "kafka", "kafka/v2", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithResource(pkgbuilder.SecretResource),
+		},
+		"commit sha": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.SecretResource),
+							),
+						Branch: "master",
+						Tag:    "kafka/v2",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Tag: "v2",
+					},
+				},
+			},
+			directory: "kafka",
+			ref: func(repos map[string]*testutil.TestGitRepo) string {
+				return repos[testutil.Upstream].Commits[0]
+			},
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "kafka", "COMMIT-INDEX:0", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "kafka", "COMMIT-INDEX:0", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithResource(pkgbuilder.SecretResource),
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, tc.reposContent)
+			defer clean()
+			err := testutil.UpdateRepos(t, repos, tc.reposContent)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			ref := tc.ref(repos)
+
+			absPath := filepath.Join(w.WorkspaceDirectory, repos[testutil.Upstream].RepoName)
+			err = Command{
+				Git: &kptfilev1alpha2.Git{
+					Repo:      repos[testutil.Upstream].RepoDirectory,
+					Ref:       ref,
+					Directory: tc.directory,
+				},
+				Destination: absPath,
+			}.Run()
+			assert.NoError(t, err)
+
+			expectedPath := tc.expected.ExpandPkgWithName(t, repos[testutil.Upstream].RepoName, testutil.ToReposInfo(repos))
+
+			testutil.KptfileAwarePkgEqual(t, expectedPath, absPath)
+		})
+	}
+}
+
 // TestCommand_Run_failExistingDir verifies that command will fail without changing anything if the
 // directory already exists
 func TestCommand_Run_failExistingDir(t *testing.T) {
@@ -569,6 +682,28 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	})
 }
 
+func TestCommand_Run_nonexistingParentDir(t *testing.T) {
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	})
+	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, "more", "dirs", g.RepoName)
+	err := Command{
+		Git: &kptfilev1alpha2.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run()
+	assert.NoError(t, err)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+}
+
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	_, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
@@ -674,6 +809,27 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithUpstreamLockRef("upstream", "/", "master", 0),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"basic package with non-KRM files": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithFile("foo.txt", `this is a test`),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0),
+				).
+				WithFile("foo.txt", `this is a test`),
 		},
 		"basic package with no Kptfile in upstream": {
 			directory: "/",
@@ -1114,4 +1270,61 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
 		})
 	}
+}
+
+func TestCommand_Run_symlinks(t *testing.T) {
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Branch: "master",
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile().
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+		},
+	})
+	defer clean()
+	upstreamRepo := repos[testutil.Upstream]
+
+	// Create a symlink in the upstream repo
+	err := os.Symlink(filepath.Join(upstreamRepo.RepoDirectory, "subpkg"),
+		filepath.Join(upstreamRepo.RepoDirectory, "subpkg-sym"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
+	err = Command{
+		Git: &kptfilev1alpha2.Git{
+			Repo:      upstreamRepo.RepoDirectory,
+			Directory: "/",
+			Ref:       "master",
+		},
+		Destination: destinationDir,
+	}.Run()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	w.PackageDir = upstreamRepo.RepoName
+
+	expectedPkg := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+				WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithSubPackages(
+			pkgbuilder.NewSubPkg("subpkg").
+				WithKptfile().
+				WithResource(pkgbuilder.ConfigMapResource),
+		)
+	expectedPath := expectedPkg.ExpandPkgWithName(t, upstreamRepo.RepoName, testutil.ToReposInfo(repos))
+
+	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
 }
