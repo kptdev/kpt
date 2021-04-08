@@ -45,7 +45,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/mdtogo/cmddocs"
 	"github.com/GoogleContainerTools/kpt/mdtogo/common"
-	"github.com/GoogleContainerTools/kpt/mdtogo/guides"
 )
 
 var recursive bool
@@ -54,7 +53,6 @@ var strategy string
 
 const (
 	cmdDocsStrategy = "cmdDocs"
-	guideStrategy   = "guide"
 )
 
 func main() {
@@ -66,8 +64,6 @@ func main() {
 			switch a {
 			case "--strategy=cmdDocs":
 				strategy = cmdDocsStrategy
-			case "--strategy=guide":
-				strategy = guideStrategy
 			default:
 				fmt.Fprintf(os.Stderr, "Invalid strategy %s\n", a)
 				os.Exit(1)
@@ -97,9 +93,6 @@ func main() {
 	case cmdDocsStrategy:
 		docs := cmddocs.ParseCmdDocs(files)
 		err = cmddocs.Write(docs, dest, license)
-	case guideStrategy:
-		gds := guides.ParseGuideDocs(files)
-		err = guides.Write(gds, dest, license)
 	}
 
 	if err != nil {

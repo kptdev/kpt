@@ -104,20 +104,17 @@ A: [Please reach out!][contact]
 
 ### Next Steps
 
-- Learn about kpt [architecture] including major influences and a high-level
+- Learn about kpt [book] including major influences and a high-level
   comparison with kustomize.
 - Consult the [command reference] for how to use kpt.
-- Read kpt [guides] for how to produce and consume packages and integrate with
-  a wider ecosystem of tools.
 
 [kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
 [functions]: /reference/fn/run/
-[source functions]: /guides/consumer/function/catalog/sources/
-[Functions User Guide]: /guides/consumer/function/
+[source functions]: https://kpt.dev#todo
+[Functions User Guide]: https://kpt.dev#todo
 [updating]: /reference/pkg/update/
 [gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
 [contact]: /contact/
-[architecture]: /concepts/architecture/
+[book]: /book/
 [command reference]: /reference/
-[guides]: /guides/

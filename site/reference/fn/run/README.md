@@ -437,11 +437,11 @@ declarative functions will be **ignored**.
 * Find out how to structure a pipeline of functions from the
   [functions concepts] page.
 
-[Running Functions]: /guides/consumer/function/
+[Running Functions]: https://kpt.dev#todo
 [typescript result]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/kpt-functions/src/types.ts
 [Docker Volumes]: https://docs.docker.com/storage/volumes/
 [Issue 823]: https://github.com/GoogleContainerTools/kpt/issues/823/
 [Issue 824]: https://github.com/GoogleContainerTools/kpt/issues/824/
 [Issue 757]: https://github.com/GoogleContainerTools/kpt/issues/757/
-[function producer docs]: /guides/producer/functions/
-[functions concepts]: /concepts/functions/
+[function producer docs]: https://kpt.dev#todo
+[functions concepts]: https://kpt.dev#todo/

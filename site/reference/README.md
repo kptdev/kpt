@@ -182,15 +182,11 @@ by kpt.
 
 ### Next Steps
 
-- Learn about kpt [architecture] including major influences and a high-level
-  comparison with kustomize.
-- Read kpt [guides] for how to produce and consume packages and integrate with
-  a wider ecosystem of tools.
+- Learn about kpt concepts and usage by reading the kpt [book]
 - Consult the [FAQ] for answers to common questions.
 
 [pkg]: /reference/pkg/
 [fn]: /reference/fn/
 [live]: /reference/live/
-[architecture]: /concepts/architecture/
-[guides]: /guides/
+[book]: /book/
 [FAQ]: /faq/
