@@ -38,7 +38,7 @@ func GetPreviewRunner(provider provider.Provider, loader manifestreader.Manifest
 		loader:    loader,
 	}
 	cmd := &cobra.Command{
-		Use:                   "preview (DIRECTORY | STDIN)",
+		Use:                   "preview [DIR | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Preview the apply of a configuration"),
 		Args:                  cobra.MaximumNArgs(1),
@@ -87,6 +87,10 @@ type PreviewRunner struct {
 
 // RunE is the function run from the cobra command.
 func (r *PreviewRunner) RunE(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		// default to the current working directory
+		args = append(args, ".")
+	}
 	var ch <-chan event.Event
 
 	drs := common.DryRunClient

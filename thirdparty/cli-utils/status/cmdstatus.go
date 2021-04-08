@@ -33,7 +33,7 @@ func GetStatusRunner(provider provider.Provider, loader manifestreader.ManifestL
 		pollerFactoryFunc: pollerFactoryFunc,
 	}
 	c := &cobra.Command{
-		Use:  "status (DIRECTORY | STDIN)",
+		Use:  "status [DIR | -]",
 		RunE: r.runE,
 	}
 	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,
@@ -73,6 +73,10 @@ type StatusRunner struct {
 // poller to compute status for each of the resources. One of the printer
 // implementations takes care of printing the output.
 func (r *StatusRunner) runE(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		// default to the current working directory
+		args = append(args, ".")
+	}
 	_, err := common.DemandOneDirectory(args)
 	if err != nil {
 		return err

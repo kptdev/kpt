@@ -31,7 +31,7 @@ func GetApplyRunner(provider provider.Provider, loader manifestreader.ManifestLo
 		loader:    loader,
 	}
 	cmd := &cobra.Command{
-		Use:                   "apply (DIRECTORY | STDIN)",
+		Use:                   "apply [DIR | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Apply a configuration to a resource by package directory or stdin"),
 		RunE:                  r.RunE,
@@ -89,6 +89,10 @@ type ApplyRunner struct {
 }
 
 func (r *ApplyRunner) RunE(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		// default to the current working directory
+		args = append(args, ".")
+	}
 	prunePropPolicy, err := convertPropagationPolicy(r.prunePropagationPolicy)
 	if err != nil {
 		return err

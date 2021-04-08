@@ -29,7 +29,7 @@ func GetDestroyRunner(provider provider.Provider, loader manifestreader.Manifest
 		loader:    loader,
 	}
 	cmd := &cobra.Command{
-		Use:                   "destroy (DIRECTORY | STDIN)",
+		Use:                   "destroy [DIR | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Destroy all the resources related to configuration"),
 		RunE:                  r.RunE,
@@ -66,6 +66,10 @@ type DestroyRunner struct {
 }
 
 func (r *DestroyRunner) RunE(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		// default to the current working directory
+		args = append(args, ".")
+	}
 	inventoryPolicy, err := flagutils.ConvertInventoryPolicy(r.inventoryPolicy)
 	if err != nil {
 		return err

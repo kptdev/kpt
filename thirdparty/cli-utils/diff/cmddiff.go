@@ -25,11 +25,15 @@ const tmpDirPrefix = "diff-cmd"
 func NewCmdDiff(f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
 	options := diff.NewDiffOptions(ioStreams)
 	cmd := &cobra.Command{
-		Use:                   "diff (DIRECTORY | STDIN)",
+		Use:                   "diff [DIR | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Diff local config against cluster applied version"),
 		Args:                  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				// default to the current working directory
+				args = append(args, ".")
+			}
 			cleanupFunc, err := Initialize(options, f, args)
 			defer cleanupFunc()
 			util.CheckErr(err)
