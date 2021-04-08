@@ -92,7 +92,7 @@ gencatalog:
 
 site-generate:
 	go run ./scripts/generate_site_sidebar > site/sidebar.md
-	(cd site && find . -iname "00.md" -execdir cp {} README.md \; && sed -i s/00.md//g sidebar.md)
+	(cd site && find . -iname "00.md" -execdir cp {} README.md \; && sed -i.bak s/00.md//g sidebar.md && rm sidebar.md.bak)
 
 site-run-server:
 	make site-generate
