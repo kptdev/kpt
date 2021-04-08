@@ -122,4 +122,3 @@ This includes:
 [docsy docs]: https://www.docsy.dev/docs/
 [site/]: site/
 [w3 link checker]: https://validator.w3.org/checklink/
-[this node package]: site/content/en/guides/consumer/function/catalog/catalog/

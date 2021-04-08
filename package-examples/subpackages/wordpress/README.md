@@ -83,10 +83,10 @@ wordpress
       persistentvolumeclaim/wp-pv-claim created
       deployment.apps/wordpress created
       
-[tree]: https://googlecontainertools.github.io/kpt/reference/cfg/tree/
-[auto-setter]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#auto-setters
-[subpackage]: https://googlecontainertools.github.io/kpt/concepts/packaging/#subpackages
-[setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/
-[set]: https://googlecontainertools.github.io/kpt/reference/cfg/set/
-[required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#marking-a-field-as-required
-[list-setters]: https://googlecontainertools.github.io/kpt/reference/cfg/list-setters/
+[tree]: /reference/cfg/tree/
+[auto-setter]: https://kpt.dev#todo
+[subpackage]: https://kpt.dev#todo
+[setters]: https://kpt.dev#todo
+[set]: /reference/cfg/set/
+[required setters]: https://kpt.dev#todo
+[list-setters]: /reference/cfg/list-setters/
