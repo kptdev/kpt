@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"sigs.k8s.io/kustomize/kyaml/errors"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 )
 
 // RepoCacheDirEnv is the name of the environment variable that controls the cache directory
@@ -36,15 +36,16 @@ const RepoCacheDirEnv = "KPT_CACHE_DIR"
 // remote repository, falls back to "main" if master branch doesn't exist
 // Making it a var so that it can be overridden for local testing
 var DefaultRef = func(repo string) (string, error) {
+	const op errors.Op = "gitutil.DefaultRef"
 	masterRef := "master"
 	mainRef := "main"
 	masterExists, err := branchExists(repo, masterRef)
 	if err != nil {
-		return "", err
+		return "", errors.E(op, errors.Git, err)
 	}
 	mainExists, err := branchExists(repo, mainRef)
 	if err != nil {
-		return "", err
+		return "", errors.E(op, errors.Git, err)
 	}
 	if masterExists {
 		return masterRef, nil
@@ -56,9 +57,11 @@ var DefaultRef = func(repo string) (string, error) {
 
 // BranchExists checks if branch is present in the input repo
 func branchExists(repo, branch string) (bool, error) {
+	const op errors.Op = "gitutil.branchExists"
 	gitProgram, err := exec.LookPath("git")
 	if err != nil {
-		return false, errors.Wrap(err)
+		return false, errors.E(op, errors.Git,
+			fmt.Errorf("no 'git' program on path: %w", err))
 	}
 	stdOut := bytes.Buffer{}
 	stdErr := bytes.Buffer{}
@@ -69,7 +72,8 @@ func branchExists(repo, branch string) (bool, error) {
 	if err != nil {
 		// stdErr contains the error message for os related errors, git permission errors
 		// and if repo doesn't exist
-		return false, errors.Errorf("failed to lookup master(or main) branch %v: %s", err, strings.TrimSpace(stdErr.String()))
+		return false, errors.E(op, errors.Git,
+			fmt.Errorf("failed to lookup master(or main) branch %v: %s", err, strings.TrimSpace(stdErr.String())))
 	}
 	// stdOut contains the branch information if the branch is present in remote repo
 	// stdOut is empty if the repo doesn't have the input branch
@@ -85,12 +89,13 @@ func branchExists(repo, branch string) (bool, error) {
 // and hard reset to origin/main.
 // The refs will also be fetched so they are available locally.
 func NewUpstreamGitRunner(uri, dir string, required []string, optional []string) (*GitRunner, error) {
+	const op errors.Op = "gitutil.NewUpstreamGitRunner"
 	g := &GitRunner{}
 
 	// make sure the repo is fetched
 	cacheDir, err := g.cacheRepo(uri, dir, required, optional)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 	g.RepoDir = cacheDir
 	g.Dir = filepath.Join(cacheDir, dir)
@@ -126,9 +131,11 @@ type GitRunner struct {
 // Run runs a git command.
 // Omit the 'git' part of the command.
 func (g *GitRunner) Run(args ...string) error {
+	const op errors.Op = "gitutil.Run"
 	p, err := exec.LookPath("git")
 	if err != nil {
-		return errors.WrapPrefixf(err, "no 'git' program on path")
+		return errors.E(op, errors.Git,
+			fmt.Errorf("no 'git' program on path: %w", err))
 	}
 
 	cmd := exec.Command(p, args...)
@@ -150,7 +157,11 @@ func (g *GitRunner) Run(args ...string) error {
 	if g.Stdin != nil {
 		cmd.Stdin = g.Stdin
 	}
-	return cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		return errors.E(op, errors.Git, err)
+	}
+	return nil
 }
 
 // getRepoDir returns the cache directory name for a remote repo
@@ -159,6 +170,7 @@ func (g *GitRunner) getRepoDir(uri string) string {
 }
 
 func (g *GitRunner) getRepoCacheDir() (string, error) {
+	const op errors.Op = "gitutil.getRepoCacheDir"
 	var err error
 	dir := os.Getenv(RepoCacheDirEnv)
 	if dir != "" {
@@ -168,8 +180,8 @@ func (g *GitRunner) getRepoCacheDir() (string, error) {
 	// cache location unspecified, use UserHomeDir/.kpt/repos
 	dir, err = os.UserHomeDir()
 	if err != nil {
-		return "", errors.Errorf(
-			"failed to clone repo: trouble resolving cache directory: %v", err)
+		return "", errors.E(op, fmt.Errorf(
+			"failed to clone repo: trouble resolving cache directory: %w", err))
 	}
 	return filepath.Join(dir, ".kpt", "repos"), nil
 }
@@ -177,13 +189,14 @@ func (g *GitRunner) getRepoCacheDir() (string, error) {
 // cacheRepo fetches a remote repo to a cache location, and fetches the provided refs.
 func (g *GitRunner) cacheRepo(uri, dir string,
 	requiredRefs []string, optionalRefs []string) (string, error) {
+	const op errors.Op = "gitutil.cacheRepo"
 	kptCacheDir, err := g.getRepoCacheDir()
 	if err != nil {
-		return "", err
+		return "", errors.E(op, err)
 	}
 	if err := os.MkdirAll(kptCacheDir, 0700); err != nil {
-		return "", errors.Errorf(
-			"failed to clone repo: trouble creating cache directory: %v", err)
+		return "", errors.E(op, errors.IO, fmt.Errorf(
+			"failed to clone repo: trouble creating cache directory: %w", err))
 	}
 
 	// create the repo directory if it doesn't exist yet
@@ -192,11 +205,11 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 	repoCacheDir := filepath.Join(kptCacheDir, uriSha)
 	if _, err := os.Stat(repoCacheDir); os.IsNotExist(err) {
 		if err := gitRunner.Run("init", uriSha); err != nil {
-			return "", errors.Errorf("failed to clone repo: trouble running init: %v", err)
+			return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble running init: %w", err))
 		}
 		gitRunner.Dir = repoCacheDir
 		if err = gitRunner.Run("remote", "add", "origin", uri); err != nil {
-			return "", errors.Errorf("failed to clone repo: trouble adding origin: %v", err)
+			return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble adding origin: %w", err))
 		}
 	} else {
 		gitRunner.Dir = repoCacheDir
@@ -210,17 +223,17 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 				// fallback on fetching the origin -- some versions of git have an issue
 				// with fetching the first commit by sha.
 				if err = gitRunner.Run("fetch", "origin"); err != nil {
-					return "", errors.Errorf(
-						"failed to clone git repo: trouble fetching origin %v, "+
-							"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
+					return "", errors.E(op, errors.Git, fmt.Errorf(
+						"failed to clone git repo: trouble fetching origin, "+
+							"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", err))
 				}
 				triedFallback = true
 			}
 			// verify we got the commit
 			if err = gitRunner.Run("show", s); err != nil {
-				return "", errors.Errorf(
-					"failed to clone git repo: trouble fetching origin %s: %v, "+
-						"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", s, err)
+				return "", errors.E(op, errors.Git, fmt.Errorf(
+					"failed to clone git repo: trouble fetching origin %s, "+
+						"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", s, err))
 			}
 		}
 	}
@@ -232,31 +245,31 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 		}
 	}
 	if !found {
-		return "", errors.Errorf("failed to clone git repo: unable to find any matching refs: %s, "+
+		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone git repo: unable to find any matching refs: %s, "+
 			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials",
-			strings.Join(optionalRefs, ","))
+			strings.Join(optionalRefs, ",")))
 	}
 
 	if err = gitRunner.Run("fetch", "origin"); err != nil {
-		return "", errors.Errorf("failed to clone git repo: trouble fetching origin: %v, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
+		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone git repo: trouble fetching origin, "+
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", err))
 	}
 
 	defaultRef, err := DefaultRef(uri)
 	if err != nil {
-		return "", errors.Errorf("%v, please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", err)
+		return "", errors.E(op, errors.Git, fmt.Errorf("please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", err))
 	}
 
 	// reset the repo state
 	if err = gitRunner.Run("checkout", defaultRef); err != nil {
-		return "", errors.Errorf("failed to clone repo: trouble checking out %s: %v, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", defaultRef, err)
+		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble checking out %s, "+
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", defaultRef, err))
 	}
 
 	// TODO: make this safe for concurrent operations
 	if err = gitRunner.Run("reset", "--hard", "origin/"+defaultRef); err != nil {
-		return "", errors.Errorf("failed to clone repo: trouble reset to %s: %v, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials", defaultRef, err)
+		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble reset to %s, "+
+			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", defaultRef, err))
 	}
 	gitRunner.Dir = filepath.Join(repoCacheDir, dir)
 	return repoCacheDir, nil

@@ -22,6 +22,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/stretchr/testify/assert"
@@ -232,7 +233,7 @@ func TestCommand_Diff(t *testing.T) {
 				DiffTool:     "diff",
 				DiffToolOpts: "-r -i -w",
 				Output:       diffOutput,
-			}).Run()
+			}).Run(fake.CtxWithNilPrinter())
 			assert.NoError(t, err)
 
 			filteredOutput := filterDiffMetadata(diffOutput)

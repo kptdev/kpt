@@ -16,11 +16,14 @@
 package cmdget
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
@@ -29,8 +32,10 @@ import (
 )
 
 // NewRunner returns a command runner
-func NewRunner(parent string) *Runner {
-	r := &Runner{}
+func NewRunner(ctx context.Context, parent string) *Runner {
+	r := &Runner{
+		ctx: ctx,
+	}
 	c := &cobra.Command{
 		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY]",
 		Args:       cobra.MinimumNArgs(1),
@@ -49,30 +54,32 @@ func NewRunner(parent string) *Runner {
 	return r
 }
 
-func NewCommand(parent string) *cobra.Command {
-	return NewRunner(parent).Command
+func NewCommand(ctx context.Context, parent string) *cobra.Command {
+	return NewRunner(ctx, parent).Command
 }
 
 // Runner contains the run function
 type Runner struct {
+	ctx      context.Context
 	Get      get.Command
 	Command  *cobra.Command
 	strategy string
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
+	const op errors.Op = "cmdget.preRunE"
 	if len(args) == 1 {
 		args = append(args, pkg.CurDir)
 	}
 	t, err := parse.GitParseArgs(args)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	r.Get.Git = &t.Git
 	p, err := pkg.New(t.Destination)
 	if err != nil {
-		return err
+		return errors.E(op, types.UniquePath(t.Destination), err)
 	}
 	r.Get.Destination = string(p.UniquePath)
 
@@ -85,10 +92,11 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
+	const op errors.Op = "cmdget.runE"
 	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
 		r.Get.Git.Directory, r.Get.Git.Repo, r.Get.Destination)
-	if err := r.Get.Run(); err != nil {
-		return err
+	if err := r.Get.Run(r.ctx); err != nil {
+		return errors.E(op, types.UniquePath(r.Get.Destination), err)
 	}
 
 	return nil

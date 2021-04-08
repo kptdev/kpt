@@ -16,17 +16,22 @@
 package get
 
 import (
+	"context"
+	goerrors "errors"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // Command fetches a package from a git repository, copies it to a local
@@ -49,18 +54,19 @@ type Command struct {
 }
 
 // Run runs the Command.
-func (c Command) Run() error {
+func (c Command) Run(ctx context.Context) error {
+	const op errors.Op = "get.Run"
 	if err := (&c).DefaultValues(); err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
-	if _, err := os.Stat(c.Destination); !os.IsNotExist(err) {
-		return errors.Errorf("destination directory %s already exists", c.Destination)
+	if _, err := os.Stat(c.Destination); !goerrors.Is(err, os.ErrNotExist) {
+		return errors.E(op, errors.Exist, types.UniquePath(c.Destination), fmt.Errorf("destination directory already exists"))
 	}
 
 	err := os.MkdirAll(c.Destination, 0700)
 	if err != nil {
-		return err
+		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 	}
 
 	// normalize path to a filepath
@@ -79,16 +85,16 @@ func (c Command) Run() error {
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
 	if err != nil {
-		return err
+		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
 
 	p, err := pkg.New(c.Destination)
 	if err != nil {
-		return err
+		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
 
-	if err = c.fetchPackages(p); err != nil {
-		return errors.Wrap(err)
+	if err = c.fetchPackages(ctx, p); err != nil {
+		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
 	return nil
 }
@@ -96,7 +102,9 @@ func (c Command) Run() error {
 // fetchRemoteSubpackages goes through the root package and its subpackages
 // and fetches any remote subpackages referenced. It will also handle situations
 // where a remote subpackage references other remote subpackages.
-func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
+func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
+	const op errors.Op = "get.fetchPackages"
+	pr := printer.FromContextOrDie(ctx)
 	// Create a stack to keep track of all Kptfiles that needs to be checked
 	// for remote subpackages.
 	s := stack.NewPkgStack()
@@ -107,21 +115,25 @@ func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
 
 		kf, err := p.Kptfile()
 		if err != nil {
-			return err
+			return errors.E(op, p.UniquePath, err)
 		}
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
+			if rootPkg.UniquePath != p.UniquePath {
+				pr.Printf("fetching subpackage %s from %s to %s\n",
+					kf.Upstream.Git.Directory, kf.Upstream.Git.Repo, p.UniquePath)
+			}
 			err := (&fetch.Command{
 				Pkg: p,
-			}).Run()
+			}).Run(ctx)
 			if err != nil {
-				return err
+				return errors.E(op, p.UniquePath, err)
 			}
 		}
 
 		subPkgs, err := p.DirectSubpackages()
 		if err != nil {
-			return err
+			return errors.E(op, p.UniquePath, err)
 		}
 		for _, subPkg := range subPkgs {
 			s.Push(subPkg)
@@ -132,25 +144,26 @@ func (c Command) fetchPackages(rootPkg *pkg.Pkg) error {
 
 // DefaultValues sets values to the default values if they were unspecified
 func (c *Command) DefaultValues() error {
+	const op errors.Op = "get.DefaultValues"
 	if c.Git == nil {
-		return errors.Errorf("must specify git repo information")
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify git repo information"))
 	}
 	g := c.Git
 	if len(g.Repo) == 0 {
-		return errors.Errorf("must specify repo")
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
 	}
 	if len(g.Ref) == 0 {
-		return errors.Errorf("must specify ref")
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
 	}
 	if len(c.Destination) == 0 {
-		return errors.Errorf("must specify destination")
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify destination"))
 	}
 	if len(g.Directory) == 0 {
-		return errors.Errorf("must specify directory")
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
 	}
 
 	if !filepath.IsAbs(c.Destination) {
-		return errors.Errorf("destination must be an absolute path")
+		return errors.E(op, errors.InvalidParam, fmt.Errorf("destination must be an absolute path"))
 	}
 
 	// default the name to the destination name

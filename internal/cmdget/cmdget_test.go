@@ -23,6 +23,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
@@ -42,7 +43,7 @@ func TestCmd_execute(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
-	r := cmdget.NewRunner("kpt")
+	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	// defaults LOCAL_DEST_DIR to current working directory
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/"})
 	err := r.Command.Execute()
@@ -101,7 +102,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 		t.FailNow()
 	}
 
-	r := cmdget.NewRunner("kpt")
+	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
 	err = r.Command.Execute()
 
@@ -145,7 +146,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 
 // TestCmd_fail verifies that that command returns an error rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdget.NewRunner("kpt")
+	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "./"})
@@ -213,7 +214,8 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			},
 			runE: failRun,
 			validations: func(_ string, r *cmdget.Runner, err error) {
-				assert.EqualError(t, err, "ambiguous repo/dir@version specify '.git' in argument")
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "ambiguous repo/dir@version specify '.git' in argument")
 			},
 		},
 		"repo arg is split up correctly into ref and repo": {
@@ -373,7 +375,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			err = os.Mkdir(filepath.Join(d, "package"), 0700)
 			assert.NoError(t, err)
 
-			r := cmdget.NewRunner("kpt")
+			r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 			r.Command.SilenceErrors = true
 			r.Command.SilenceUsage = true
 			r.Command.RunE = tc.runE
