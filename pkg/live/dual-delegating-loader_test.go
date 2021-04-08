@@ -18,7 +18,7 @@ var configMapInv = `
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: test-ns
+  namespace: test-namespace
   name: inventory-111111
   labels:
     cli-utils.sigs.k8s.io/inventory-id: XXXX-YYYY-ZZZZ
@@ -107,7 +107,7 @@ func TestDualDelegatingProvider_Read(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			// Create the fake factory
-			tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+			tf := cmdtesting.NewTestFactory().WithNamespace("test-namespace")
 			defer tf.Cleanup()
 			// Set up the yaml manifests (including Kptfile) in temp dir.
 			dir, err := ioutil.TempDir("", "provider-test")
@@ -120,7 +120,7 @@ func TestDualDelegatingProvider_Read(t *testing.T) {
 
 			// Read objects using provider ManifestReader.
 			loader := NewDualDelegatingManifestReader(tf)
-			mr, err := loader.ManifestReader(nil, []string{dir})
+			mr, err := loader.ManifestReader(nil, dir)
 			if err != nil {
 				t.Fatalf("unexpected error %v", err)
 			}

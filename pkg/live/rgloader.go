@@ -39,14 +39,7 @@ func (f *ResourceGroupManifestLoader) InventoryInfo(objs []*unstructured.Unstruc
 
 // ManifestReader returns the ResourceGroup inventory object version of
 // the ManifestReader.
-func (f *ResourceGroupManifestLoader) ManifestReader(reader io.Reader, args []string) (manifestreader.ManifestReader, error) {
-	// Validate parameters.
-	if reader == nil && len(args) == 0 {
-		return nil, fmt.Errorf("unable to build ManifestReader without both reader or args")
-	}
-	if len(args) > 1 {
-		return nil, fmt.Errorf("expected one directory argument allowed; got (%s)", args)
-	}
+func (f *ResourceGroupManifestLoader) ManifestReader(reader io.Reader, path string) (manifestreader.ManifestReader, error) {
 	// Create ReaderOptions for subsequent ManifestReader.
 	namespace, enforceNamespace, err := f.factory.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
@@ -65,7 +58,7 @@ func (f *ResourceGroupManifestLoader) ManifestReader(reader io.Reader, args []st
 	// No arguments means stream (using reader), while one argument
 	// means path manifest reader.
 	var rgReader manifestreader.ManifestReader
-	if len(args) == 0 {
+	if path == "-" {
 		rgReader = &ResourceGroupStreamManifestReader{
 			streamReader: &manifestreader.StreamManifestReader{
 				ReaderName:    "stdin",
@@ -76,7 +69,7 @@ func (f *ResourceGroupManifestLoader) ManifestReader(reader io.Reader, args []st
 	} else {
 		rgReader = &ResourceGroupPathManifestReader{
 			pathReader: &manifestreader.PathManifestReader{
-				Path:          args[0],
+				Path:          path,
 				ReaderOptions: readerOptions,
 			},
 		}
