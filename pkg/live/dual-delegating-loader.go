@@ -4,7 +4,6 @@
 package live
 
 import (
-	"fmt"
 	"io"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -32,27 +31,22 @@ func NewDualDelegatingManifestReader(f util.Factory) *DualDelegatingManifestRead
 // Provider, then calls Read() for this ManifestReader to retrieve the objects
 // and to calculate the type of Inventory object is present. Returns a
 // CachedManifestReader with the read objects, or an error.
-func (cp *DualDelegatingManifestReader) ManifestReader(reader io.Reader, args []string) (manifestreader.ManifestReader, error) {
-	r, err := cp.manifestReader(reader, args)
+func (cp *DualDelegatingManifestReader) ManifestReader(reader io.Reader, path string) (manifestreader.ManifestReader, error) {
+	r, err := cp.manifestReader(reader, path)
 	if err != nil {
+		println("Phani here 1")
 		return nil, err
 	}
 	objs, err := r.Read()
 	if err != nil {
+		println("Phani here 2")
 		return nil, err
 	}
 	klog.V(4).Infof("ManifestReader read %d objects", len(objs))
 	return &CachedManifestReader{objs: objs}, nil
 }
 
-func (cp *DualDelegatingManifestReader) manifestReader(reader io.Reader, args []string) (manifestreader.ManifestReader, error) {
-	// Validate parameters.
-	if reader == nil && len(args) == 0 {
-		return nil, fmt.Errorf("unable to build ManifestReader without both reader or args")
-	}
-	if len(args) > 1 {
-		return nil, fmt.Errorf("expected one directory argument allowed; got (%s)", args)
-	}
+func (cp *DualDelegatingManifestReader) manifestReader(reader io.Reader, path string) (manifestreader.ManifestReader, error) {
 	// Create ReaderOptions for subsequent ManifestReader.
 	namespace, enforceNamespace, err := cp.factory.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
@@ -71,7 +65,7 @@ func (cp *DualDelegatingManifestReader) manifestReader(reader io.Reader, args []
 	// No arguments means stream (using reader), while one argument
 	// means path manifest reader.
 	var rgReader manifestreader.ManifestReader
-	if len(args) == 0 {
+	if path == "-" {
 		rgReader = &ResourceGroupStreamManifestReader{
 			streamReader: &manifestreader.StreamManifestReader{
 				ReaderName:    "stdin",
@@ -82,7 +76,7 @@ func (cp *DualDelegatingManifestReader) manifestReader(reader io.Reader, args []
 	} else {
 		rgReader = &ResourceGroupPathManifestReader{
 			pathReader: &manifestreader.PathManifestReader{
-				Path:          args[0],
+				Path:          path,
 				ReaderOptions: readerOptions,
 			},
 		}

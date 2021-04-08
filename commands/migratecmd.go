@@ -55,10 +55,14 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 		dir:         "",
 	}
 	cmd := &cobra.Command{
-		Use:                   "migrate DIRECTORY",
+		Use:                   "migrate [DIR | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Migrate inventory from ConfigMap to ResourceGroup custom resource"),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				// default to current working directory
+				args = append(args, ".")
+			}
 			fmt.Fprint(ioStreams.Out, "inventory migration...\n")
 			if err := r.Run(ioStreams.In, args); err != nil {
 				fmt.Fprint(ioStreams.Out, "failed\n")
@@ -194,7 +198,7 @@ func (mr *MigrateRunner) updateKptfile(args []string) error {
 // an error if one occurred.
 func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (inventory.InventoryInfo, error) {
 	fmt.Fprint(mr.ioStreams.Out, "  retrieve the current ConfigMap inventory...")
-	cmReader, err := mr.cmLoader.ManifestReader(reader, args)
+	cmReader, err := mr.cmLoader.ManifestReader(reader, args[0])
 	if err != nil {
 		return nil, err
 	}
@@ -232,12 +236,15 @@ func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]obje
 // object and applies the inventory object to the cluster. Returns
 // an error if one occurred.
 func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Reader, args []string) error {
+	if err := validateParams(reader, args); err != nil {
+		return err
+	}
 	fmt.Fprint(mr.ioStreams.Out, "  migrate inventory to ResourceGroup...")
 	if len(cmObjs) == 0 {
 		fmt.Fprint(mr.ioStreams.Out, "no inventory objects found\n")
 		return nil
 	}
-	rgReader, err := mr.rgLoader.ManifestReader(reader, args)
+	rgReader, err := mr.rgLoader.ManifestReader(reader, args[0])
 	if err != nil {
 		return err
 	}
@@ -316,4 +323,15 @@ func findResourceGroupInv(objs []*unstructured.Unstructured) (*unstructured.Unst
 		}
 	}
 	return nil, fmt.Errorf("resource group inventory object not found")
+}
+
+// validateParams validates input parameters and returns error if any
+func validateParams(reader io.Reader, args []string) error {
+	if reader == nil && len(args) == 0 {
+		return fmt.Errorf("unable to build ManifestReader without both reader or args")
+	}
+	if len(args) > 1 {
+		return fmt.Errorf("expected one directory argument allowed; got (%s)", args)
+	}
+	return nil
 }

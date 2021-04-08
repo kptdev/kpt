@@ -123,7 +123,7 @@ func TestSomething(t *testing.T) {
 
 			ref, err := spec.NewRef(test.includesRefString)
 			assert.NoError(t, err)
-			res, err := openapi.Resolve(&ref)
+			res, err := openapi.Resolve(&ref, openapi.Schema())
 			assert.NoError(t, err)
 			assert.NotNil(t, res)
 
@@ -132,13 +132,13 @@ func TestSomething(t *testing.T) {
 			if test.notIncludesRefString != "" {
 				ref2, err := spec.NewRef(test.notIncludesRefString)
 				assert.NoError(t, err)
-				res2, _ := openapi.Resolve(&ref2)
+				res2, _ := openapi.Resolve(&ref2, openapi.Schema())
 				assert.Nil(t, res2)
 			}
 
 			// Verify that we have the Kustomize openAPI included.
 			kustomizeRef, _ := spec.NewRef("#/definitions/io.k8s.api.apps.v1.Kustomization")
-			kustomizeRes, err := openapi.Resolve(&kustomizeRef)
+			kustomizeRes, err := openapi.Resolve(&kustomizeRef, openapi.Schema())
 			assert.NoError(t, err)
 			assert.NotNil(t, kustomizeRes)
 		})

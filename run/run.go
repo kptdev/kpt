@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -30,13 +29,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptopenapi "github.com/GoogleContainerTools/kpt/internal/util/openapi"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
-	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
 var pgr []string
@@ -85,14 +82,6 @@ func GetMain() *cobra.Command {
 			return err
 		}
 
-		if len(args) > 0 {
-			// add openAPI definitions from Kptfile to configured openAPI
-			_, addErr := openapi.AddSchemaFromFile(filepath.Join(args[0], kptfilev1alpha2.KptFileName))
-			if addErr != nil {
-				// do not throw error if schema doesn't exist or not readable from Kptfile
-				return nil
-			}
-		}
 		return nil
 	}
 
