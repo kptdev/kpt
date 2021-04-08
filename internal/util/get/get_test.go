@@ -811,6 +811,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 		},
+
 		"basic package with non-KRM files": {
 			directory: "/",
 			ref:       "master",
@@ -831,6 +832,35 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithUpstreamLockRef("upstream", "/", "master", 0),
 				).
 				WithFile("foo.txt", `this is a test`),
+		},
+		"basic package with pipeline": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+									),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0).
+						WithPipeline(
+							pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
 		},
 		"basic package with no Kptfile in upstream": {
 			directory: "/",
