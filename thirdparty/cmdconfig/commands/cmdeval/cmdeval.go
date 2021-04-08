@@ -21,7 +21,7 @@ import (
 func GetEvalFnRunner(name string) *EvalFnRunner {
 	r := &EvalFnRunner{}
 	c := &cobra.Command{
-		Use:     "eval [DIR]",
+		Use:     "eval [DIR | -]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
@@ -83,7 +83,7 @@ type EvalFnRunner struct {
 	IncludeMetaResources bool
 }
 
-func (r *EvalFnRunner) runE(c *cobra.Command, args []string) error {
+func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
 	return runner.HandleError(c, r.RunFns.Execute())
 }
 
@@ -224,11 +224,14 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image or --exec-path")
 	}
-
 	var dataItems []string
 	if c.ArgsLenAtDash() >= 0 {
-		dataItems = args[c.ArgsLenAtDash():]
+		dataItems = append(dataItems, args[c.ArgsLenAtDash():]...)
 		args = args[:c.ArgsLenAtDash()]
+	}
+	if len(args) == 0 {
+		// default to current working directory
+		args = append(args, ".")
 	}
 	if len(args) > 1 {
 		return errors.Errorf("0 or 1 arguments supported, function arguments go after '--'")
@@ -245,9 +248,11 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// set the output to stdout if in dry-run mode or no arguments are specified
 	var output io.Writer
 	var input io.Reader
-	if len(args) == 0 {
+	if args[0] == "-" {
 		output = c.OutOrStdout()
 		input = c.InOrStdin()
+		// clear args as it indicates stdin and not path
+		args = []string{}
 	} else if r.DryRun {
 		output = c.OutOrStdout()
 	}

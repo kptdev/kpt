@@ -21,6 +21,7 @@ func GetSourceRunner(name string) *SourceRunner {
 		Short:   fndocs.SourceShort,
 		Long:    fndocs.SourceLong,
 		Example: fndocs.SourceExamples,
+		Args:    cobra.MaximumNArgs(1),
 		RunE:    r.runE,
 	}
 	c.Flags().StringVar(&r.WrapKind, "wrap-kind", kio.ResourceListKind,
@@ -47,6 +48,10 @@ type SourceRunner struct {
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		// default to current working directory
+		args = append(args, ".")
+	}
 	// if there is a function-config specified, emit it
 	var functionConfig *yaml.RNode
 	if r.FunctionConfig != "" {
@@ -72,9 +77,6 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	var inputs []kio.Reader
 	for _, a := range args {
 		inputs = append(inputs, kio.LocalPackageReader{PackagePath: a, MatchFilesGlob: kio.MatchAll})
-	}
-	if len(inputs) == 0 {
-		inputs = []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}}
 	}
 
 	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()

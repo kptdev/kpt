@@ -14,7 +14,7 @@
 
 // Package pipeline provides struct definitions for Pipeline and utility
 // methods to read and write a pipeline resource.
-package pipeline
+package cmdrender
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/GoogleContainerTools/kpt/internal/pipeline/runtime"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrender/runtime"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"

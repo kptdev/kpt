@@ -97,7 +97,7 @@ kubectl get all -o yaml | kpt pkg tree \
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg tree [DIR | -<STDIN>] [flags]
+kpt pkg tree [DIR | -] [flags]
 ```
 
 #### Args
