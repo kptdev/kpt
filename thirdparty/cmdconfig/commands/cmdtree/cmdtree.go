@@ -19,7 +19,7 @@ import (
 func GetTreeRunner(name string) *TreeRunner {
 	r := &TreeRunner{}
 	c := &cobra.Command{
-		Use:     "tree [DIR | -<STDIN>]",
+		Use:     "tree [DIR | -]",
 		Short:   pkgdocs.TreeShort,
 		Long:    pkgdocs.TreeLong,
 		Example: pkgdocs.TreeExamples,

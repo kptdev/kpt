@@ -21,7 +21,7 @@ import (
 func GetEvalFnRunner(name string) *EvalFnRunner {
 	r := &EvalFnRunner{}
 	c := &cobra.Command{
-		Use:     "eval [DIR | -<STDIN>]",
+		Use:     "eval [DIR | -]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
