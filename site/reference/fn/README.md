@@ -89,7 +89,7 @@ See the [Functions Developer Guide] for more on producing functions.
 - Find out how to structure a pipeline of functions from the
   [functions concepts] page.
 
-[Functions Developer Guide]: https://kpt.dev#todo
+[Functions Developer Guide]: /book/05-developing-functions/
 [Typescript SDK]: https://kpt.dev#todo
 [sdk-ts-examples]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
 [Golang Libraries]: https://kpt.dev#todo
@@ -97,5 +97,5 @@ See the [Functions Developer Guide] for more on producing functions.
 [shell-example]: https://github.com/kubernetes-sigs/kustomize/blob/master/functions/examples/template-heredoc-cockroachdb/image/cockroachdb-template.sh
 [Starlark SDK]: https://kpt.dev#todo
 [starlark-example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/starlark/set_namespace.star
-[run functions]: https://kpt.dev#todo
-[functions concepts]: https://kpt.dev#todo
+[run functions]: /book/04-using-functions/01-running-functions-imperatively
+[functions concepts]: /book/04-using-functions/

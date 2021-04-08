@@ -112,7 +112,7 @@ A: [Please reach out!][contact]
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
 [functions]: /reference/fn/run/
 [source functions]: https://kpt.dev#todo
-[Functions User Guide]: https://kpt.dev#todo
+[Functions User Guide]: /book/04-using-functions/
 [updating]: /reference/pkg/update/
 [gcr.io/kpt-dev/kpt]: https://gcr.io/kpt-dev/kpt
 [contact]: /contact/

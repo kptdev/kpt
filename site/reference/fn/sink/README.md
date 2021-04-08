@@ -47,5 +47,5 @@ DIR:
 - See more examples of sink functions in the functions [catalog].
 
 [sink function]: https://kpt.dev#todo
-[functions concepts]: https://kpt.dev#todo
+[functions concepts]: /book/02-concepts/02-functions
 [catalog]: https://kpt.dev#todo
