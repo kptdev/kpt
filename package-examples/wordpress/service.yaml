@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: my-nginx
+  name: wordpress
+  labels:
+    app: wordpress
+  annotations:
+    projectId: "PROJECT_ID" # {"$kpt-set":"gcloud.core.project"}
+    teamname: "YOURTEAM" # {"$kpt-set":"teamname"}
 spec:
-  replicas: 3
+  ports:
+    - port: 80
   selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx:1.14.2
-        ports:
-        - containerPort: 80
+    app: wordpress
+    tier: frontend
+  type: LoadBalancer

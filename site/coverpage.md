@@ -1,9 +1,7 @@
-# KPT 
+# kpt
 
-> An OSS tool for building declarative workflows on top of resource configuration.
-
-- YAML + git means it just works with existing tools and frameworks.
-- Can fetch, customize, update, and apply Kubernetes configurations.
+> A Git-native, semantic-aware, extensible client-side tool for packaging, customizing, validating,
+> and applying Kubernetes resources.
 
 [Learn More](?id=overview)
 [GitHub](https://github.com/GoogleContainerTools/kpt)
