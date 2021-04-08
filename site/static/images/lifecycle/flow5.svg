@@ -1,28 +1,23 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="112.5px" preserveAspectRatio="none" style="width:525px;height:112px;" version="1.1" viewBox="0 0 525 112" width="525px" zoomAndPan="magnify"><defs/><g><!--MD5=[3a647a61df1c7067fe69e3daad57c818]
-entity Update--><rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="85.4167" x="7.2917" y="50"/><text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="43.75" x="28.125" y="83.4005">Update</text><!--MD5=[e30c707efd7f18ab65f67a8f41e32c22]
-entity Explore--><rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="87.5" x="155.2083" y="7.2917"/><text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="45.8333" x="176.0417" y="40.6921">Explore</text><!--MD5=[2e3af16c33024740abb21edbd20fc022]
-entity Edit--><rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="65.625" x="305.2083" y="7.2917"/><text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="23.9583" x="326.0417" y="40.6921">Edit</text><!--MD5=[3f7852d4a52afbe82ceb5afdd3cfef7b]
-entity Render--><rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="85.4167" x="433.3333" y="50"/><text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="43.75" x="454.1667" y="83.4005">Render</text><!--MD5=[fd0eb8645711c9063c7e95470f82ab26]
-link Update to Explore--><path d="M92.7396,66.5208 C110.5625,61.3333 131.4896,55.25 149.9583,49.8854 " fill="none" id="Update-to-Explore" style="stroke:#2196F3;stroke-width:3.125;"/><polygon fill="#2196F3" points="155.0938,48.3854,144.9271,47.0104,150.0938,49.8438,147.2604,55.0104,155.0938,48.3854" style="stroke:#2196F3;stroke-width:3.125;"/><!--MD5=[f85f8e74e28342987f22f88388a2fede]
-link Explore to Edit--><path d="M242.9688,35.9375 C261.1667,35.9375 282.1771,35.9375 299.7083,35.9375 " fill="none" id="Explore-to-Edit" style="stroke:#2196F3;stroke-width:3.125;"/><polygon fill="#2196F3" points="305.0417,35.9375,295.6667,31.7708,299.8333,35.9375,295.6667,40.1042,305.0417,35.9375" style="stroke:#2196F3;stroke-width:3.125;"/><!--MD5=[00d996fe98a3e58d08a048b07ed4fb40]
-link Edit to Render--><path d="M370.9375,45.9479 C387.8646,51.2708 409,57.9063 427.7917,63.8125 " fill="none" id="Edit-to-Render" style="stroke:#2196F3;stroke-width:3.125;"/><polygon fill="#2196F3" points="433.0313,65.4583,425.3374,58.6719,428.0627,63.8963,422.8382,66.6216,433.0313,65.4583" style="stroke:#2196F3;stroke-width:3.125;"/><!--MD5=[c8594f003f58d77b720c1f6d0e92394b]
-link Render to Update--><path d="M432.9479,80.7083 C413.9688,81.5417 391.2813,82.4063 370.8333,82.8125 C275.0208,84.7292 251.0208,84.7292 155.2083,82.8125 C136.6771,82.4375 116.3021,81.6979 98.5313,80.9479 " fill="none" id="Render-to-Update" style="stroke:#2196F3;stroke-width:3.125;"/><polygon fill="#2196F3" points="93.0938,80.7083,102.2817,85.2726,98.2973,80.9313,102.6386,76.9469,93.0938,80.7083" style="stroke:#2196F3;stroke-width:3.125;"/><!--MD5=[bac60bfcbcfb389d945d31abbfd03b19]
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="69.7917px" preserveAspectRatio="none" style="width:371px;height:69px;" version="1.1" viewBox="0 0 371 69" width="371.875px" zoomAndPan="magnify"><defs/><g><!--MD5=[6d9d1596a54b529e84f1cc18714b84fe]
+entity Create--><rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="82.2917" x="7.2917" y="7.2917"/><text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="40.625" x="28.125" y="40.6921">Create</text><!--MD5=[2e3af16c33024740abb21edbd20fc022]
+entity Edit--><rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="65.625" x="152.0833" y="7.2917"/><text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="23.9583" x="172.9167" y="40.6921">Edit</text><!--MD5=[3f7852d4a52afbe82ceb5afdd3cfef7b]
+entity Render--><rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="85.4167" x="280.2083" y="7.2917"/><text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="43.75" x="301.0417" y="40.6921">Render</text><!--MD5=[8bce3e562e691a39118f9c8be2505587]
+link Create to Edit--><path d="M89.7917,35.9375 C107.7292,35.9375 128.7292,35.9375 146.3229,35.9375 " fill="none" id="Create-to-Edit" style="stroke:#2196F3;stroke-width:3.125;"/><polygon fill="#2196F3" points="151.6667,35.9375,142.2917,31.7708,146.4583,35.9375,142.2917,40.1042,151.6667,35.9375" style="stroke:#2196F3;stroke-width:3.125;"/><!--MD5=[00d996fe98a3e58d08a048b07ed4fb40]
+link Edit to Render--><path d="M217.8125,47.3854 C234.7396,49.2917 255.875,49.7083 274.6667,48.6563 " fill="none" id="Edit-to-Render" style="stroke:#2196F3;stroke-width:3.125;"/><polygon fill="#2196F3" points="279.9063,48.3125,270.2775,44.7714,274.7092,48.655,270.8255,53.0866,279.9063,48.3125" style="stroke:#2196F3;stroke-width:3.125;"/><!--MD5=[8d9ec6ce7480f7e964e4eae5442db89e]
+link Render to Edit--><path d="M279.9063,22.8333 C261.7604,21.4271 240.7188,21.5729 223.1458,23.2396 " fill="none" id="Render-to-Edit" style="stroke:#2196F3;stroke-width:3.125;"/><polygon fill="#2196F3" points="217.8125,23.8125,227.5755,26.9646,222.9916,23.2618,226.6944,18.678,217.8125,23.8125" style="stroke:#2196F3;stroke-width:3.125;"/><!--MD5=[c8eed6d3a280ae9a3b66ff4dd124c25b]
 @startuml
 
 !include ../../common/all.puml
 
 left to right direction
 
-rectangle Update
-rectangle Explore
-rectangle Edit
+rectangle Create
+rectangle Edit 
 rectangle Render
 
-Update - -> Explore
-Explore - -> Edit
+Create - -> Edit 
 Edit - -> Render
-Render - -> Update
-
+Render - -> Edit 
 
 @enduml
 
@@ -727,16 +722,13 @@ skinparam folderBackgroundColor<<FA5 BOLD>> White
 
 left to right direction
 
-rectangle Update
-rectangle Explore
-rectangle Edit
+rectangle Create
+rectangle Edit 
 rectangle Render
 
-Update - -> Explore
-Explore - -> Edit
+Create - -> Edit 
 Edit - -> Render
-Render - -> Update
-
+Render - -> Edit 
 
 @enduml
 

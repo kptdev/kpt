@@ -11,34 +11,37 @@ _subpackage_.
 Let's take a look at an example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next \
-wordpress
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next
 $ kpt pkg tree wordpress/
-wordpress
+PKG: wordpress
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
-│   ├── [service.yaml]  Deployment wordpress
+│   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Pkg: mysql
+└── PKG: mysql
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
-There are two packages in this example. The top-level `wordpress` package is declared using
-`wordpress/Kptfile`. This package contains 2 subdirectories. `wordpress/deployment` is a regular
-directory used for organizing resources that belong to the `wordpress` package itself. On the other
-hand, `wordpress/mysql` is a subpackage since it has a `Kptfile`. The `mysql` package contains 3
-resources in its `deployment.yaml` file.
+This _package hierarchy_ contains two packages:
+
+1. `wordpress` is the top-level package in the hierarchy declared using `wordpress/Kptfile`. This
+   package contains 2 subdirectories. `wordpress/deployment` is a regular directory used for
+   organizing resources that belong to the `wordpress` package itself. The `wordpress` package contains
+   3 direct resources in 3 files: `service.yaml`, `deployment/deployment.yaml`, and
+   `deployment/volume.yaml`.
+2. `wordpress/mysql` is a subpackage of `wordpress` package since it contains a `Kptfile`. This
+   package contains 3 resources in `wordpress/mysql/deployment.yaml` file.
 
 The `Kptfile` is an example of a _meta resource_ in kpt. Meta resources are resources that
-are only needed for kpt itself to function, they do not have extrinsic meaning and are not
+are only consumed by the kpt tool. They do not have extrinsic meaning and are not
 applied to a cluster. We will see other types of a meta resources in the next section.
 
 kpt uses Git as the underlying version control system. A typical workflow starts by fetching an
-_upstream_ package from a Git to the local filesystem using `kpt pkg` commands. All other
+_upstream_ package from a Git repository to the local filesystem using `kpt pkg` commands. All other
 functionality (i.e. `kpt fn` and `kpt live`) use the package from the local filesystem, not the
 remote Git repository. You may think of this as the _vendoring_ used by tooling for some programming
 languages. The main difference is that kpt is designed to enable you to modify the vendored package
@@ -53,7 +56,7 @@ compatible with large corpus of existing Kubernetes configuration stored on Git 
 For example, `cockroachdb` is just a vanilla directory of KRM:
 
 ```shell
-kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb cockroachdb
+kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb
 ```
 
 We will go into details of how to work with packages in Chapter 3.

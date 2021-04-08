@@ -11,7 +11,7 @@ mechanism to automate mutation and validation of KRM resources. Some example use
 Since functions are containerized, they can encapsulate different toolchains, languages, and
 runtimes. For example, the function container image can encapsulate:
 
-- A Go binary built using kpt's official library
+- A binary built using kpt's official Go or Typescript SDK
 - Wrap an existing KRM tool such as `kubeval`
 - Invoke a bash script performing low-level operations
 - The interpreter for "executable configuration" such as `Starlark` or `Rego`

@@ -8,7 +8,7 @@ configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@next nginx
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@next
 $ cd nginx
 ```
 
@@ -19,7 +19,7 @@ Next, let's quickly view the content of the package:
 
 ```shell
 $ kpt pkg tree
-.
+PKG: nginx
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
 └── [svc.yaml]  Service my-nginx-svc
