@@ -243,7 +243,7 @@ var InitExamples = `
 
 var TreeShort = `Render resources using a tree structure`
 var TreeLong = `
-  kpt pkg tree [DIR | -<STDIN>] [flags]
+  kpt pkg tree [DIR | -] [flags]
 
 Args:
 

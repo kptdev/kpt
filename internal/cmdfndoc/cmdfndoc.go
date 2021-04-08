@@ -31,7 +31,7 @@ func NewRunner(parent string) *Runner {
 	r := &Runner{}
 	c := &cobra.Command{
 		Use:     "doc --image=IMAGE",
-		Args:    cobra.MaximumNArgs(1),
+		Args:    cobra.MaximumNArgs(0),
 		Short:   fndocs.DocShort,
 		Long:    fndocs.DocShort + "\n" + fndocs.DocLong,
 		Example: fndocs.DocExamples,
@@ -52,7 +52,7 @@ type Runner struct {
 	Command *cobra.Command
 }
 
-func (r *Runner) runE(c *cobra.Command, args []string) error {
+func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}

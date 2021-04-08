@@ -17,8 +17,8 @@ package commands
 import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport"
 	"github.com/GoogleContainerTools/kpt/internal/cmdfndoc"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrender"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/pipeline"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdeval"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdsink"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdsource"
@@ -49,7 +49,7 @@ func GetFnCommand(name string) *cobra.Command {
 	eval.Long = fndocs.RunShort + "\n" + fndocs.RunLong
 	eval.Example = fndocs.RunExamples
 
-	render := pipeline.NewCommand(name)
+	render := cmdrender.NewCommand(name)
 
 	doc := cmdfndoc.NewCommand(name)
 	doc.Short = fndocs.DocShort

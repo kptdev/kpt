@@ -37,7 +37,7 @@ func ExportCommand() *cobra.Command {
 func GetExportRunner() *ExportRunner {
 	r := &ExportRunner{PipelineConfig: &types.PipelineConfig{}}
 	c := &cobra.Command{
-		Use:     "export DIR/",
+		Use:     "export [DIR]",
 		Short:   fndocs.ExportShort,
 		Long:    fndocs.ExportLong,
 		Example: fndocs.ExportExamples,
@@ -77,7 +77,11 @@ type ExportRunner struct {
 }
 
 func (r *ExportRunner) preRunE(cmd *cobra.Command, args []string) (err error) {
-	r.Dir = args[0]
+	// default to current working directory
+	r.Dir = "."
+	if len(args) > 0 {
+		r.Dir = args[0]
+	}
 
 	if len(r.WorkflowOrchestrator) == 0 {
 		return fmt.Errorf(
@@ -109,7 +113,7 @@ func (r *ExportRunner) preRunE(cmd *cobra.Command, args []string) (err error) {
 }
 
 // runE generates the pipeline and writes it into a file or stdout.
-func (r *ExportRunner) runE(c *cobra.Command, args []string) error {
+func (r *ExportRunner) runE(c *cobra.Command, _ []string) error {
 	pipeline, e := r.Pipeline.Init(r.PipelineConfig).Generate()
 
 	if e != nil {
