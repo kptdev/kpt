@@ -38,6 +38,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -53,6 +54,7 @@ var strategy string
 
 const (
 	cmdDocsStrategy = "cmdDocs"
+	futureStrategy  = "future" // please replace it with the next strategy we add
 )
 
 func main() {
@@ -93,6 +95,8 @@ func main() {
 	case cmdDocsStrategy:
 		docs := cmddocs.ParseCmdDocs(files)
 		err = cmddocs.Write(docs, dest, license)
+	case futureStrategy:
+		err = errors.New("this strategy should not be used, please replace it with a real strategy")
 	}
 
 	if err != nil {
