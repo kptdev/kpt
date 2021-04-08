@@ -56,7 +56,7 @@ you apply the package. Afterwards, you may observe the status of the package on 
 
 You typically want to store the package on Git:
 
-![img](/static/images/lifecycle/flow3.svg)
+![img](/static/images/lifecycle/flow4.svg)
 
 - **Publish**: Using `git commit`
 

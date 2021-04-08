@@ -17,7 +17,7 @@ runtimes. For example, the function container image can encapsulate:
 - The interpreter for "executable configuration" such as `Starlark` or `Rego`
 
 To astute readers, this model will sound familiar: functions are the client-side analog to
-Kubernetes controllers: </br>
+Kubernetes controllers:
 
 |                  | Client-side              | Server-side       |
 | ---------------- | ------------------------ | ----------------- |
@@ -25,12 +25,12 @@ Kubernetes controllers: </br>
 | **Data**         | YAML files on filesystem | resources on etcd |
 | **Programs**     | functions                | controllers       |
 
-</br> Just as Kubernetes system orchestrates server-side programs, kpt CLI orchestrates client-side
-programs operating on configuration. By standardizing the input and output of the function
+Just as Kubernetes system orchestrates server-side containers, kpt CLI orchestrates client-side
+containers operating on configuration. By standardizing the input and output of the function
 containers, and how the containers are executed, kpt can provide the following guarantees:
 
 - Functions are interoperable
-- Functions can be chained together in pipeline
+- Functions can be chained together
 - Functions are hermetic. For correctness, security and speed, it's desirable to be able to run
   functions hermetically without any privileges; preventing out-of-band access to the host
   filesystem and networking.
@@ -52,15 +52,15 @@ Naturally, functions can be chained together in a pipeline:
 
 ![img](/static/images/pipeline.svg)
 
-There are two different commands that execute a function corresponding to two fundamentally
-different workflows:
+There are two different CLI commands that execute functions corresponding to two fundamentally
+different approaches:
 
 - `kpt fn render`: Executes the pipeline of functions declared in the package and its subpackages.
   This is a declarative way to run functions.
 - `kpt fn eval`: Executes a given function on the package. The image to run and the `functionConfig`
-  is specified as CLI argument. This is an imperative way to run functions. Since the user
-  explicitly ask for the function to be executed, an imperative invocation can be more privileged
-  and low-level than an declarative invocation. For example, it can optionally operate on meta
-  resources or have access to the host system.
+  is specified as CLI argument. This is an imperative way to run functions. Since the function is
+  provided explicitly by the user, an imperative invocation can be more privileged and low-level
+  than an declarative invocation. For example, it can optionally operate on meta resources or have
+  access to the host system.
 
 We will discuss how to run functions in Chapter 4 and how to develop functions in Chapter 5.
