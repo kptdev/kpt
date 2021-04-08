@@ -82,11 +82,16 @@ docker:
 lintdocs:
 	(cd site && npm run lint-fix)
 
+site-generate:
+	go run ./scripts/generate_site_sidebar > site/sidebar.md
+	(cd site && find . -iname "00.md" -execdir mv {} README.md \; && sed -i s/00.md//g sidebar.md)
+
 site-run-server:
 	make site-generate
 	./scripts/run-site.sh
 
 site-check:
+	make site-run-server
 	./scripts/check-site.sh
 
 site-verify-examples:
