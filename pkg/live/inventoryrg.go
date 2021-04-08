@@ -47,7 +47,7 @@ type InventoryResourceGroup struct {
 }
 
 func (icm *InventoryResourceGroup) Strategy() inventory.InventoryStrategy {
-	return inventory.LabelStrategy
+	return inventory.NameStrategy
 }
 
 var _ inventory.Inventory = &InventoryResourceGroup{}

@@ -34,12 +34,10 @@ func NewDualDelegatingManifestReader(f util.Factory) *DualDelegatingManifestRead
 func (cp *DualDelegatingManifestReader) ManifestReader(reader io.Reader, path string) (manifestreader.ManifestReader, error) {
 	r, err := cp.manifestReader(reader, path)
 	if err != nil {
-		println("Phani here 1")
 		return nil, err
 	}
 	objs, err := r.Read()
 	if err != nil {
-		println("Phani here 2")
 		return nil, err
 	}
 	klog.V(4).Infof("ManifestReader read %d objects", len(objs))
