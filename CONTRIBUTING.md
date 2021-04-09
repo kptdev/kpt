@@ -77,17 +77,6 @@ catalog page with:
 
 `make gencatalog`
 
-### Adding or updating diagrams
-
-- Diagrams are created using Omnigraffle
-- Open site/diagrams/diagrams.graffle in omnigraffle
-- Change the diagram you want (or add a new canvas)
-- **Convert text to shapes!!!** -> Edit -> Objects -> Convert Text to Shapes
-- Export the canvas as an svg to `site/static/images`
-- **Undo convert text to shapes!!!** with command-z
-  - This is important
-- Reference the image using the `svg` shortcode
-
 ### Adding or updating asciinema
 
 - asciinema casts are under `site/static/casts`
