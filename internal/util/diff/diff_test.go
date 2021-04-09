@@ -37,12 +37,12 @@ func TestCommand_Diff(t *testing.T) {
 		expDiff      string
 	}{
 
-		// 1. add data to the master branch
-		// 2. commit and tag the master branch
-		// 3. add more data to the master branch, commit it
-		// 4. clone at the tag
-		// 5. add more data to the master branch, commit it
-		// 5. Run remote diff between master and cloned
+		// 1. add data to the upstream master branch
+		// 2. commit and tag the upstream master branch
+		// 3. add more data to the upstream master branch, commit it
+		// 4. create a local clone at the tag
+		// 5. add more data to the upstream master branch, commit it
+		// 6. Run remote diff between upstream and the local fork.
 		"remoteDiff": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
@@ -75,12 +75,12 @@ func TestCommand_Diff(t *testing.T) {
 `,
 		},
 
-		// 1. add data to the master branch
-		// 2. commit and tag the master branch
-		// 3. add more data to the master branch, commit it
-		// 4. clone at the tag
-		// 5. add more data to the master branch, commit it
-		// 5. Run combined diff between master and cloned
+		// 1. add data to the upstream master branch
+		// 2. commit and tag the upstream master branch
+		// 3. add more data to the upstream master branch, commit it
+		// 4. create a local clone at the tag
+		// 5. add more data to the upstream master branch, commit it
+		// 6. Run combined diff between upstream and the local fork
 		"combinedDiff": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
@@ -113,13 +113,13 @@ func TestCommand_Diff(t *testing.T) {
 `,
 		},
 
-		// 1. add data to the master branch
-		// 2. commit and tag the master branch
-		// 3. add more data to the master branch, commit it
-		// 4. clone at the tag
-		// 5. add more data to the master branch, commit it
-		// 5. Update cloned package with dataset3
-		// 6. Run remote diff and verify the output
+		// 1. add data to the upstream master branch
+		// 2. commit and tag the upstream master branch
+		// 3. add more data to the upstream master branch, commit it
+		// 4. create a local clone at the tag
+		// 5. add more data to the upstream master branch, commit it
+		// 6. Update the local fork with dataset3
+		// 7. Run remote diff and verify the output
 		"localDiff": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
