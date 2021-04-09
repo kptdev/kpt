@@ -18,6 +18,7 @@ package update
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -188,6 +189,35 @@ func (u Command) Run() error {
 	return nil
 }
 
+// repoClone is an interface that represents a clone of a repo on the local
+// disk.
+type repoClone interface {
+	AbsPath() string
+}
+
+// newNilRepoClone creates a new nilRepoClone that implements the repoClone
+// interface
+func newNilRepoClone() (*nilRepoClone, error) {
+	dir, err := ioutil.TempDir("", "kpt-empty-")
+	return &nilRepoClone{
+		dir: dir,
+	}, err
+}
+
+// nilRepoClone is an implementation of the repoClone interface, but that
+// just represents an empty directory. This simplifies the logic for update
+// since we don't have to special case situations where we don't have
+// upstream and/or origin.
+type nilRepoClone struct {
+	dir string
+}
+
+// AbsPath returns the absolute path to the local directory for the repo. For
+// the nilRepoClone, this will always be an empty directory.
+func (nrc *nilRepoClone) AbsPath() string {
+	return nrc.dir
+}
+
 // updateRootPackage updates a local package. It will use the information
 // about upstream in the Kptfile to fetch upstream and origin, and then
 // recursively traverse the hierarchy to add/update/delete packages.
@@ -202,18 +232,27 @@ func (u Command) updateRootPackage(p *pkg.Pkg) error {
 	}
 
 	g := kf.Upstream.Git
-	gLock := kf.UpstreamLock.GitLock
-	original := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
-	if err := fetch.ClonerUsingGitExec(original); err != nil {
-		return kyamlerrors.Errorf("failed to clone git repo: original source: %w", err)
-	}
-	defer os.RemoveAll(original.AbsPath())
-
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 	if err := fetch.ClonerUsingGitExec(updated); err != nil {
 		return kyamlerrors.Errorf("failed to clone git repo: updated source: %w", err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
+
+	var origin repoClone
+	if kf.UpstreamLock != nil {
+		gLock := kf.UpstreamLock.GitLock
+		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
+		if err := fetch.ClonerUsingGitExec(originRepoSpec); err != nil {
+			return kyamlerrors.Errorf("failed to clone git repo: original source: %w", err)
+		}
+		origin = originRepoSpec
+	} else {
+		origin, err = newNilRepoClone()
+		if err != nil {
+			return err
+		}
+	}
+	defer os.RemoveAll(origin.AbsPath())
 
 	s := stack.New()
 	s.Push(".")
@@ -222,7 +261,7 @@ func (u Command) updateRootPackage(p *pkg.Pkg) error {
 		relPath := s.Pop()
 		localPath := filepath.Join(p.UniquePath.String(), relPath)
 		updatedPath := filepath.Join(updated.AbsPath(), relPath)
-		originPath := filepath.Join(original.AbsPath(), relPath)
+		originPath := filepath.Join(origin.AbsPath(), relPath)
 
 		isRoot := false
 		if relPath == "." {
