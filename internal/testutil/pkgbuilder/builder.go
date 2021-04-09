@@ -539,6 +539,8 @@ func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 	return result
 }
 
+// resolveRepoRef looks up the repo path for a repo from the reposInfo
+// object based on the provided reference.
 func resolveRepoRef(repoRef string, reposInfo ReposInfo) string {
 	repo, found := reposInfo.ResolveRepoRef(repoRef)
 	if !found {
@@ -547,6 +549,9 @@ func resolveRepoRef(repoRef string, reposInfo ReposInfo) string {
 	return repo
 }
 
+// resolveCommitIndex looks up the commit SHA for a specific commit in a repo.
+// It looks up the repo based on the provided repoRef and returns the commit for
+// the commit with the provided index.
 func resolveCommitIndex(repoRef string, index int, reposInfo ReposInfo) string {
 	commit, found := reposInfo.ResolveCommitIndex(repoRef, index)
 	if !found {
@@ -555,6 +560,11 @@ func resolveCommitIndex(repoRef string, index int, reposInfo ReposInfo) string {
 	return commit
 }
 
+// resolveCommitRef looks up the commit SHA for a commit with the index given
+// through a special string format as the ref. If the string value follows the
+// correct format, the commit will looked up from the repo given by the RepoRef
+// and returned with the second value being true. If the ref string does not
+// follow the correct format, the second return value will be false.
 func resolveCommitRef(repoRef, ref string, reposInfo ReposInfo) (string, bool) {
 	re := regexp.MustCompile(`^COMMIT-INDEX:([0-9]+)$`)
 	matches := re.FindStringSubmatch(ref)
