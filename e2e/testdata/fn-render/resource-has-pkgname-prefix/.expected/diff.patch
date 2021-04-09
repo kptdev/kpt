@@ -1,12 +1,8 @@
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index cbbe597..6b307e8 100644
+index eb6a122..b9e519d 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
-@@ -11,33 +11,36 @@
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
--
+@@ -14,32 +14,36 @@
  apiVersion: v1
  kind: Service
  metadata:
@@ -25,7 +21,8 @@ index cbbe597..6b307e8 100644
  spec:
 +  clusterIP: None
    ports:
-   - port: 3306
+-  - port: 3306
++    - port: 3306
    selector:
      app: wordpress
      tier: mysql
@@ -48,8 +45,12 @@ index cbbe597..6b307e8 100644
 +  name: mysql-pv-claim
  spec:
    accessModes:
-   - ReadWriteOnce
-@@ -48,12 +51,14 @@ spec:
+-  - ReadWriteOnce
++    - ReadWriteOnce
+   resources:
+     requests:
+       storage: 20Gi
+@@ -47,12 +51,14 @@ spec:
  apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
  kind: Deployment
  metadata:
@@ -68,7 +69,7 @@ index cbbe597..6b307e8 100644
  spec:
    selector:
      matchLabels:
-@@ -63,25 +68,28 @@ spec:
+@@ -62,26 +68,29 @@ spec:
      type: Recreate
    template:
      metadata:
@@ -83,32 +84,47 @@ index cbbe597..6b307e8 100644
 -      - image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
 -        name: mysql
 -        env:
-+      - env:
-         - name: MYSQL_ROOT_PASSWORD
-           valueFrom:
-             secretKeyRef:
+-        - name: MYSQL_ROOT_PASSWORD
+-          valueFrom:
+-            secretKeyRef:
 -              name: mysql-pass
-               key: password
-+              name: mysql-pass
-+        image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
-+        name: mysql
-         ports:
-         - containerPort: 3306
+-              key: password
+-        ports:
+-        - containerPort: 3306
++        - env:
++            - name: MYSQL_ROOT_PASSWORD
++              valueFrom:
++                secretKeyRef:
++                  key: password
++                  name: mysql-pass
++          image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
            name: mysql
-         volumeMounts:
+-        volumeMounts:
 -        - name: mysql-persistent-storage
 -          mountPath: /var/lib/mysql
-+        - mountPath: /var/lib/mysql
-+          name: mysql-persistent-storage
++          ports:
++            - containerPort: 3306
++              name: mysql
++          volumeMounts:
++            - mountPath: /var/lib/mysql
++              name: mysql-persistent-storage
        volumes:
-       - name: mysql-persistent-storage
-         persistentVolumeClaim:
+-      - name: mysql-persistent-storage
+-        persistentVolumeClaim:
+-          claimName: mysql-pv-claim
++        - name: mysql-persistent-storage
++          persistentVolumeClaim:
++            claimName: mysql-pv-claim
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index ee54311..60f1d52 100644
+index d762212..6837328 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
-@@ -10,12 +10,13 @@
- apiVersion: v1 # Copyright 2019 Google LLC
+@@ -8,18 +8,19 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-apiVersion: v1 
++apiVersion: v1
  kind: Service
  metadata:
 -  name: wordpress
@@ -124,8 +140,12 @@ index ee54311..60f1d52 100644
 +  name: wordpress
  spec:
    ports:
-   - port: 80
-@@ -27,12 +28,13 @@ spec:
+-  - port: 80
++    - port: 80
+   selector:
+     app: wordpress
+     tier: frontend
+@@ -28,15 +29,16 @@ spec:
  apiVersion: v1
  kind: PersistentVolumeClaim
  metadata:
@@ -142,8 +162,12 @@ index ee54311..60f1d52 100644
 +  name: wp-pv-claim
  spec:
    accessModes:
-   - ReadWriteOnce
-@@ -43,12 +45,13 @@ spec:
+-  - ReadWriteOnce
++    - ReadWriteOnce
+   resources:
+     requests:
+       storage: 20Gi
+@@ -44,12 +46,13 @@ spec:
  apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
  kind: Deployment
  metadata:
@@ -161,7 +185,7 @@ index ee54311..60f1d52 100644
  spec:
    selector:
      matchLabels:
-@@ -58,27 +61,29 @@ spec:
+@@ -59,28 +62,30 @@ spec:
      type: Recreate
    template:
      metadata:
@@ -175,25 +199,38 @@ index ee54311..60f1d52 100644
 -      - image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
 -        name: wordpress
 -        env:
-+      - env:
-         - name: WORDPRESS_DB_HOST
-           value: wordpress-mysql
-         - name: WORDPRESS_DB_PASSWORD
-           valueFrom:
-             secretKeyRef:
+-        - name: WORDPRESS_DB_HOST
+-          value: wordpress-mysql
+-        - name: WORDPRESS_DB_PASSWORD
+-          valueFrom:
+-            secretKeyRef:
 -              name: mysql-pass
-               key: password
-+              name: mysql-pass
-+        image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
-+        name: wordpress
-         ports:
-         - containerPort: 80
+-              key: password
+-        ports:
+-        - containerPort: 80
++        - env:
++            - name: WORDPRESS_DB_HOST
++              value: wordpress-mysql
++            - name: WORDPRESS_DB_PASSWORD
++              valueFrom:
++                secretKeyRef:
++                  key: password
++                  name: mysql-pass
++          image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
            name: wordpress
-         volumeMounts:
+-        volumeMounts:
 -        - name: wordpress-persistent-storage
 -          mountPath: /var/www/html
-+        - mountPath: /var/www/html
-+          name: wordpress-persistent-storage
++          ports:
++            - containerPort: 80
++              name: wordpress
++          volumeMounts:
++            - mountPath: /var/www/html
++              name: wordpress-persistent-storage
        volumes:
-       - name: wordpress-persistent-storage
-         persistentVolumeClaim:
+-      - name: wordpress-persistent-storage
+-        persistentVolumeClaim:
+-          claimName: wp-pv-claim
++        - name: wordpress-persistent-storage
++          persistentVolumeClaim:
++            claimName: wp-pv-claim
