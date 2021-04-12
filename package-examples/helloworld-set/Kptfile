@@ -1,0 +1,14 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: helloworld-set
+packageMetadata:
+  shortDescription: kpt example
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        replicas: 5
+        image: gcr.io/kpt-dev/helloworld-gke
+        tag: latest
+        http-port: 80
