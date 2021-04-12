@@ -83,52 +83,52 @@ spec:
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  metadata:
-    labels:
-      app: nginx2
-    name: foo
-    annotations:
-      app: nginx2
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'f1.yaml'
-  spec:
-    replicas: 1
-- kind: Service
-  metadata:
-    name: foo
-    annotations:
-      app: nginx
-      config.kubernetes.io/index: '1'
-      config.kubernetes.io/path: 'f1.yaml'
-  spec:
-    selector:
-      app: nginx
-- apiVersion: v1
-  kind: Abstraction
-  metadata:
-    name: foo
-    annotations:
-      config.kubernetes.io/function: |
-        container:
-          image: gcr.io/example/reconciler:v1
-      config.kubernetes.io/local-config: "true"
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'f2.yaml'
-  spec:
-    replicas: 3
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    labels:
-      app: nginx
-    name: bar
-    annotations:
-      app: nginx
-      config.kubernetes.io/index: '1'
-      config.kubernetes.io/path: 'f2.yaml'
-  spec:
-    replicas: 3
+  - kind: Deployment
+    metadata:
+      labels:
+        app: nginx2
+      name: foo
+      annotations:
+        app: nginx2
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'f1.yaml'
+    spec:
+      replicas: 1
+  - kind: Service
+    metadata:
+      name: foo
+      annotations:
+        app: nginx
+        config.kubernetes.io/index: '1'
+        config.kubernetes.io/path: 'f1.yaml'
+    spec:
+      selector:
+        app: nginx
+  - apiVersion: v1
+    kind: Abstraction
+    metadata:
+      name: foo
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/example/reconciler:v1
+        config.kubernetes.io/local-config: "true"
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'f2.yaml'
+    spec:
+      replicas: 3
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app: nginx
+      name: bar
+      annotations:
+        app: nginx
+        config.kubernetes.io/index: '1'
+        config.kubernetes.io/path: 'f2.yaml'
+    spec:
+      replicas: 3
 `, b.String()) {
 		return
 	}
@@ -208,52 +208,52 @@ spec:
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- kind: Deployment
-  metadata:
-    labels:
-      app: nginx2
-    name: foo
-    annotations:
-      app: nginx2
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'f1.yaml'
-  spec:
-    replicas: 1
-- kind: Service
-  metadata:
-    name: foo
-    annotations:
-      app: nginx
-      config.kubernetes.io/index: '1'
-      config.kubernetes.io/path: 'f1.yaml'
-  spec:
-    selector:
-      app: nginx
-- apiVersion: v1
-  kind: Abstraction
-  metadata:
-    name: foo
-    annotations:
-      config.kubernetes.io/function: |
-        container:
-          image: gcr.io/example/reconciler:v1
-      config.kubernetes.io/local-config: "true"
-      config.kubernetes.io/index: '0'
-      config.kubernetes.io/path: 'f2.yaml'
-  spec:
-    replicas: 3
-- apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    labels:
-      app: nginx
-    name: bar
-    annotations:
-      app: nginx
-      config.kubernetes.io/index: '1'
-      config.kubernetes.io/path: 'f2.yaml'
-  spec:
-    replicas: 3
+  - kind: Deployment
+    metadata:
+      labels:
+        app: nginx2
+      name: foo
+      annotations:
+        app: nginx2
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'f1.yaml'
+    spec:
+      replicas: 1
+  - kind: Service
+    metadata:
+      name: foo
+      annotations:
+        app: nginx
+        config.kubernetes.io/index: '1'
+        config.kubernetes.io/path: 'f1.yaml'
+    spec:
+      selector:
+        app: nginx
+  - apiVersion: v1
+    kind: Abstraction
+    metadata:
+      name: foo
+      annotations:
+        config.kubernetes.io/function: |
+          container:
+            image: gcr.io/example/reconciler:v1
+        config.kubernetes.io/local-config: "true"
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'f2.yaml'
+    spec:
+      replicas: 3
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app: nginx
+      name: bar
+      annotations:
+        app: nginx
+        config.kubernetes.io/index: '1'
+        config.kubernetes.io/path: 'f2.yaml'
+    spec:
+      replicas: 3
 `, b.String()) {
 		return
 	}
@@ -318,13 +318,8 @@ func TestSourceCommandJSON(t *testing.T) {
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
-    "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json'}},
-  "spec": {"replicas": 1}}
-- {"apiVersion": "v1", "kind": "Abstraction", "metadata": {"name": "foo", "annotations": {
-      "config.kubernetes.io/function": "container:\n  image: gcr.io/example/reconciler:v1\n",
-      "config.kubernetes.io/local-config": "true", config.kubernetes.io/index: '0',
-      config.kubernetes.io/path: 'f2.json'}}, "spec": {"replicas": 3}}
+  - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo", "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
+  - {"apiVersion": "v1", "kind": "Abstraction", "metadata": {"name": "foo", "annotations": {"config.kubernetes.io/function": "container:\n  image: gcr.io/example/reconciler:v1\n", "config.kubernetes.io/local-config": "true", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f2.json'}}, "spec": {"replicas": 3}}
 `, b.String()) {
 		return
 	}
