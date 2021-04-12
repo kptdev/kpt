@@ -36,7 +36,6 @@ type testSuite struct {
 }
 
 func TestPipeline(t *testing.T) {
-	t.Skip()
 	testSuites := []testSuite{
 		githubActionsTestSuite,
 		cloudBuildTestSuite,

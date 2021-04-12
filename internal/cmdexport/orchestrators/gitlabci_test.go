@@ -24,14 +24,13 @@ var gitlabCITestCases = []testCase{
 		},
 		expected: `
 stages:
-  - run-kpt-functions
+    - run-kpt-functions
 kpt:
     stage: run-kpt-functions
     image: docker
     services:
-      - docker:dind
-    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest
-        fn run /app
+        - docker:dind
+    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest fn run /app
 `,
 	},
 	{
@@ -45,14 +44,13 @@ kpt:
 		},
 		expected: `
 stages:
-  - run-kpt-functions
+    - run-kpt-functions
 kpt:
     stage: run-kpt-functions
     image: docker
     services:
-      - docker:dind
-    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest
-        fn run /app/resources --fn-path /app/config/label-namespace.yaml /app/config/application-cr.yaml
+        - docker:dind
+    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest fn run /app/resources --fn-path /app/config/label-namespace.yaml /app/config/application-cr.yaml
 `,
 	},
 }
