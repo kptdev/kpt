@@ -27,5 +27,5 @@ spec:
     app: hello
   ports:
   - protocol: TCP
-    port: 80 # {"$kpt-set":"http-port"}
+    port: 80 # kpt-set: ${http-port}
     targetPort: http
