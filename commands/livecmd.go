@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/destroy"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/diff"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/initcmd"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/preview"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status"
 	"github.com/spf13/cobra"
@@ -60,26 +59,15 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 		ErrOut: os.Stderr,
 	}
 
-	// The default provider is for ConfigMap inventory, but if the magic env
-	// var exists, then the provider which handles both ConfigMap and ResourceGroup
-	// inventory objects is used. If a package has both inventory objects, then
-	// an error is thrown.
-	var p provider.Provider = provider.NewProvider(f)
-	var l manifestreader.ManifestLoader = manifestreader.NewManifestLoader(f)
-	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
-		klog.V(2).Infoln("provider supports ResourceGroup and ConfigMap inventory")
-		p = live.NewDualDelegatingProvider(f)
-		l = live.NewDualDelegatingManifestReader(f)
-	}
+	// The provider handles both ConfigMap and ResourceGroup inventory objects.
+	// If a package has both inventory objects, then an error is thrown.
+	klog.V(2).Infoln("provider supports ResourceGroup and ConfigMap inventory")
+	p := live.NewDualDelegatingProvider(f)
+	l := live.NewDualDelegatingManifestReader(f)
 
-	// The default init command creates the ConfigMap inventory yaml. If the magic
-	// env var exists, then we use the init command which updates a Kptfile for
-	// the ResourceGroup inventory object.
-	initCmd := initcmd.NewCmdInit(f, ioStreams)
-	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
-		klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
-		initCmd = NewCmdInit(f, ioStreams)
-	}
+	// Init command which updates a Kptfile for the ResourceGroup inventory object.
+	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
+	initCmd := NewCmdInit(f, ioStreams)
 	initCmd.Short = livedocs.InitShort
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples
@@ -115,21 +103,16 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd,
 		fetchOpenAPICmd, statusCmd)
 
-	// If the magic env var exists, then add the migrate to change
-	// from ConfigMap to ResourceGroup inventory object. Also add
-	// the install-resource-group command.
-	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
-		klog.V(2).Infoln("adding kpt live migrate command")
-		// Create a ConfigMap and a ResourceGroup provider for the
-		// migrate command, and add the migrate command to live command.
-		cmProvider := provider.NewProvider(f)
-		rgProvider := live.NewResourceGroupProvider(f)
-		cmLoader := manifestreader.NewManifestLoader(f)
-		rgLoader := live.NewResourceGroupManifestLoader(f)
-		migrateCmd := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
-		installRGCmd := GetInstallRGRunner(f, ioStreams).Command
-		liveCmd.AddCommand(migrateCmd, installRGCmd)
-	}
+	// Add the migrate command to change from ConfigMap to ResourceGroup inventory
+	// object. Also add the install-resource-group command.
+	klog.V(2).Infoln("adding kpt live migrate command")
+	cmProvider := provider.NewProvider(f)
+	rgProvider := live.NewResourceGroupProvider(f)
+	cmLoader := manifestreader.NewManifestLoader(f)
+	rgLoader := live.NewResourceGroupManifestLoader(f)
+	migrateCmd := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
+	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
+	liveCmd.AddCommand(migrateCmd, installRGCmd)
 
 	return liveCmd
 }
