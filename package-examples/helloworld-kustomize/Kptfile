@@ -6,4 +6,4 @@ pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:unstable
       configMap:
-        message: foobar
+        target: foobar
