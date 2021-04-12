@@ -48,8 +48,9 @@ func NewRunner(parent string) *Runner {
 	c.Flags().StringVarP(&r.Update.Repo, "repo", "r", "",
 		"git repo url for updating contents.  defaults to the repo the package was fetched from.")
 	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1alpha2.ResourceMerge),
-		"update strategy for preserving changes to the local package -- must be one of: "+
-			strings.Join(update.StrategiesAsStrings(), ","))
+		"the update strategy that will be used when updating the package. This will change "+
+			"the default strategy for the package -- must be one of: "+
+			strings.Join(kptfilev1alpha2.UpdateStrategiesAsStrings(), ","))
 	c.Flags().BoolVar(&r.Update.DryRun, "dry-run", false,
 		"print the git patch rather than merging it.")
 	c.Flags().BoolVar(&r.Update.Verbose, "verbose", false,

@@ -42,8 +42,8 @@ const (
 // - Modify upstream with new content
 // - Update the local package to fetch the upstream content
 func TestCommand_Run_noRefChanges(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -91,8 +91,8 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 }
 
 func TestCommand_Run_subDir(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -203,8 +203,8 @@ func TestCommand_Run_noChanges(t *testing.T) {
 }
 
 func TestCommand_Run_noCommit(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -250,8 +250,8 @@ func TestCommand_Run_noCommit(t *testing.T) {
 }
 
 func TestCommand_Run_noAdd(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -486,8 +486,8 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 // TestCommand_Run_toBranchRef verifies the package contents are set to the contents of the branch
 // it was updated to.
 func TestCommand_Run_toBranchRef(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -547,8 +547,8 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
 // it was updated to.
 func TestCommand_Run_toTagRef(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -663,8 +663,8 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid
 func TestCommand_Run_failInvalidPath(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			path := filepath.Join("fake", "path")
 			err := Command{
@@ -680,8 +680,8 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 
 // TestCommand_Run_failInvalidRef verifies Run fails if the ref is invalid
 func TestCommand_Run_failInvalidRef(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			g := &testutil.TestSetupManager{
 				T: t,
