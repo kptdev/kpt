@@ -16,6 +16,7 @@ package orchestrators
 
 import "github.com/GoogleContainerTools/kpt/internal/cmdexport/types"
 
+//nolint:lll
 var gitlabCITestCases = []testCase{
 	{
 		description: "generate a GitLab CI pipeline against the current directory",
@@ -31,7 +32,7 @@ kpt:
     services:
         - docker:dind
     script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest fn run /app
-`, //nolint:lll
+`,
 	},
 	{
 		description: "generate a GitLab CI pipeline with --fn-path",
@@ -51,7 +52,7 @@ kpt:
     services:
         - docker:dind
     script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest fn run /app/resources --fn-path /app/config/label-namespace.yaml /app/config/application-cr.yaml
-`, //nolint:lll
+`,
 	},
 }
 

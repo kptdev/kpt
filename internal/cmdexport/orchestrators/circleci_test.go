@@ -31,6 +31,7 @@ type circleCIOrbTestCase struct {
 	expected    string
 }
 
+//nolint:lll
 var circleCIOrbTestCases = []circleCIOrbTestCase{
 	{
 		description: "generate a CircleCI Orb",
