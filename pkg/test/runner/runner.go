@@ -15,17 +15,14 @@
 package runner
 
 import (
-	"bytes"
-	"context"
 	"fmt"
+	"go/build"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/GoogleContainerTools/kpt/run"
 )
 
 // Runner runs an e2e test
@@ -35,6 +32,22 @@ type Runner struct {
 	cmd           string
 	t             *testing.T
 	initialCommit string
+	kptBin        string
+}
+
+func getKptBin() (string, error) {
+	// try PATH
+	p, err := exec.LookPath("kpt")
+	if err == nil {
+		return p, nil
+	}
+	// try GOPATH/bin
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
+	gobin := filepath.Join(gopath, "bin")
+	return exec.LookPath(filepath.Join(gobin, "kpt"))
 }
 
 const (
@@ -52,7 +65,7 @@ const (
 )
 
 // NewRunner returns a new runner for pkg
-func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
+func NewRunner(t *testing.T, testCase TestCase, c, kptBin string) (*Runner, error) {
 	info, err := os.Stat(testCase.Path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open path %s: %w", testCase.Path, err)
@@ -60,11 +73,18 @@ func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	if !info.IsDir() {
 		return nil, fmt.Errorf("path %s is not a directory", testCase.Path)
 	}
+	if kptBin == "" {
+		kptBin, err = getKptBin()
+		if err != nil {
+			return nil, fmt.Errorf("failed to find kpt in PATH and GOPATH/bin: %w", err)
+		}
+	}
 	return &Runner{
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
 		cmd:      c,
 		t:        t,
+		kptBin:   kptBin,
 	}, nil
 }
 
@@ -134,20 +154,8 @@ func (r *Runner) runFnEval() error {
 			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
-	var output string
-	var fnErr error
-	command := run.GetMain(context.Background())
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		command.SetArgs(kptArgs)
-		outputWriter := bytes.NewBuffer(nil)
-		command.SetOutput(outputWriter)
-		fnErr = command.Execute()
-		if fnErr != nil {
-			// if kpt fn run returns error, we should compare
-			// the result
-			break
-		}
-		output = outputWriter.String()
+		output, fnErr := runCommand("", r.kptBin, kptArgs)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			return r.updateExpected(pkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
@@ -201,18 +209,13 @@ func (r *Runner) runFnRender() error {
 	}
 
 	// run function
-	var fnErr error
-	command := run.GetMain(context.Background())
 	kptArgs := []string{"fn", "render", pkgPath}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		command.SetArgs(kptArgs)
-		fnErr = command.Execute()
-		if fnErr != nil {
-			if r.testCase.Config.ExitCode != 0 {
-				r.t.Logf("%s", fnErr.Error())
-				return nil
-			}
-			break
+		_, fnErr := runCommand("", r.kptBin, kptArgs)
+		if fnErr != nil && r.testCase.Config.ExitCode != 0 {
+			// TODO: compare render results
+			r.t.Logf("%s", fnErr.Error())
+			return nil
 		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
@@ -264,7 +267,7 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	if exitCode != 0 {
+	if exitCode != 0 && expected.Results != "" {
 		actual, err := readActualResults(resultsPath)
 		if err != nil {
 			return fmt.Errorf("failed to read actual results: %w", err)
