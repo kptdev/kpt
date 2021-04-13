@@ -31,6 +31,7 @@ type circleCIOrbTestCase struct {
 	expected    string
 }
 
+//nolint:lll
 var circleCIOrbTestCases = []circleCIOrbTestCase{
 	{
 		description: "generate a CircleCI Orb",
@@ -47,17 +48,17 @@ var circleCIOrbTestCases = []circleCIOrbTestCase{
 executors:
     kpt-container:
         docker:
-          - image: gcr.io/kpt-dev/kpt:latest
+            - image: gcr.io/kpt-dev/kpt:latest
 commands:
     run-functions:
         steps:
-          - run: kpt fn run resources
+            - run: kpt fn run resources
 jobs:
     run-kpt-functions:
         executor: kpt-container
         steps:
-          - setup_remote_docker
-          - run-functions
+            - setup_remote_docker
+            - run-functions
 `,
 	},
 	{
@@ -78,18 +79,17 @@ jobs:
 executors:
     kpt-container:
         docker:
-          - image: gcr.io/kpt-dev/kpt:latest
+            - image: gcr.io/kpt-dev/kpt:latest
 commands:
     run-functions:
         steps:
-          - run: kpt fn run resources --fn-path config/gate-keeper.yaml --fn-path
-                config/label-namespace.yaml
+            - run: kpt fn run resources --fn-path config/gate-keeper.yaml --fn-path config/label-namespace.yaml
 jobs:
     run-kpt-functions:
         executor: kpt-container
         steps:
-          - setup_remote_docker
-          - run-functions
+            - setup_remote_docker
+            - run-functions
 `,
 	},
 }
@@ -124,21 +124,21 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gcr.io/kpt-dev/kpt:latest
+                    - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:
-                  - run: kpt fn run local-resources
+                    - run: kpt fn run local-resources
         jobs:
             run-functions:
                 executor: kpt-container
                 steps:
-                  - setup_remote_docker
-                  - kpt-fn-run
+                    - setup_remote_docker
+                    - kpt-fn-run
 workflows:
     main:
         jobs:
-          - kpt/run-functions
+            - kpt/run-functions
 `,
 	},
 	{
@@ -154,21 +154,21 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gcr.io/kpt-dev/kpt:latest
+                    - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:
-                  - run: kpt fn run local-resources --fn-path functions.yaml
+                    - run: kpt fn run local-resources --fn-path functions.yaml
         jobs:
             run-functions:
                 executor: kpt-container
                 steps:
-                  - setup_remote_docker
-                  - kpt-fn-run
+                    - setup_remote_docker
+                    - kpt-fn-run
 workflows:
     main:
         jobs:
-          - kpt/run-functions
+            - kpt/run-functions
 `,
 	},
 }

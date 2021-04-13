@@ -22,6 +22,6 @@ spec:
   selector:
     app: java
   ports:
-  - name: "80"
-    port: 80
-    targetPort: 80
+    - name: "80"
+      port: 80
+      targetPort: 80

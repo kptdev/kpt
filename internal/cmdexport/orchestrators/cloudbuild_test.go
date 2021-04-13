@@ -25,11 +25,11 @@ var cloudBuildTestCases = []testCase{
 		},
 		expected: `
 steps:
-  - name: gcr.io/kpt-dev/kpt:latest
-    args:
-      - fn
-      - run
-      - .
+    - name: gcr.io/kpt-dev/kpt:latest
+      args:
+        - fn
+        - run
+        - .
 `,
 	},
 	{
@@ -40,13 +40,13 @@ steps:
 		},
 		expected: `
 steps:
-  - name: gcr.io/kpt-dev/kpt:latest
-    args:
-      - fn
-      - run
-      - resources
-      - --fn-path
-      - config/function.yaml
+    - name: gcr.io/kpt-dev/kpt:latest
+      args:
+        - fn
+        - run
+        - resources
+        - --fn-path
+        - config/function.yaml
 `,
 	},
 	{
@@ -57,14 +57,14 @@ steps:
 		},
 		expected: `
 steps:
-  - name: gcr.io/kpt-dev/kpt:latest
-    args:
-      - fn
-      - run
-      - resources
-      - --fn-path
-      - config/function1.yaml
-      - config/function2.yaml
+    - name: gcr.io/kpt-dev/kpt:latest
+      args:
+        - fn
+        - run
+        - resources
+        - --fn-path
+        - config/function1.yaml
+        - config/function2.yaml
 `,
 	},
 }

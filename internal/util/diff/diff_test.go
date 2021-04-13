@@ -61,17 +61,17 @@ func TestCommand_Diff(t *testing.T) {
 			diffType: DiffTypeRemote,
 			expDiff: `
 39c39
-<         - containerPort: 80
+<             - containerPort: 80
 ---
->         - containerPort: 8081
+>             - containerPort: 8081
 25,27c25,27
-<   - name: "80"
-<     port: 80
-<     targetPort: 80
+<     - name: "80"
+<       port: 80
+<       targetPort: 80
 ---
->   - name: "8081"
->     port: 8081
->     targetPort: 8081
+>     - name: "8081"
+>       port: 8081
+>       targetPort: 8081
 `,
 		},
 
@@ -99,17 +99,17 @@ func TestCommand_Diff(t *testing.T) {
 			diffType: DiffTypeCombined,
 			expDiff: `
 39c39
-<         - containerPort: 80
+<             - containerPort: 80
 ---
->         - containerPort: 8081
+>             - containerPort: 8081
 25,27c25,27
-<   - name: "80"
-<     port: 80
-<     targetPort: 80
+<     - name: "80"
+<       port: 80
+<       targetPort: 80
 ---
->   - name: "8081"
->     port: 8081
->     targetPort: 8081
+>     - name: "8081"
+>       port: 8081
+>       targetPort: 8081
 `,
 		},
 
@@ -138,17 +138,17 @@ func TestCommand_Diff(t *testing.T) {
 			diffType: DiffTypeCombined,
 			expDiff: `
 39c39
-<         - containerPort: 8081
+<             - containerPort: 8081
 ---
->         - containerPort: 80
+>             - containerPort: 80
 25,27c25,27
-<   - name: "8081"
-<     port: 8081
-<     targetPort: 8081
+<     - name: "8081"
+<       port: 8081
+<       targetPort: 8081
 ---
->   - name: "80"
->     port: 80
->     targetPort: 80
+>     - name: "80"
+>       port: 80
+>       targetPort: 80
 `,
 		},
 

@@ -60,14 +60,14 @@ name: kpt
 "on":
     push:
         branches:
-          - master
+            - master
 jobs:
     Kpt:
         runs-on: ubuntu-latest
         steps:
-          - name: Run all kpt functions
-            uses: docker://gcr.io/kpt-dev/kpt:latest
-            with:
+            - name: Run all kpt functions
+              uses: docker://gcr.io/kpt-dev/kpt:latest
+              with:
                 args: fn run .
 `,
 	},
@@ -85,14 +85,14 @@ name: kpt
 "on":
     push:
         branches:
-          - master
+            - master
 jobs:
     Kpt:
         runs-on: ubuntu-latest
         steps:
-          - name: Run all kpt functions
-            uses: docker://gcr.io/kpt-dev/kpt:latest
-            with:
+            - name: Run all kpt functions
+              uses: docker://gcr.io/kpt-dev/kpt:latest
+              with:
                 args: fn run .
 `,
 	},
@@ -107,14 +107,14 @@ name: kpt
 "on":
     push:
         branches:
-          - master
+            - master
 jobs:
     Kpt:
         runs-on: ubuntu-latest
         steps:
-          - name: Run all kpt functions
-            uses: docker://gcr.io/kpt-dev/kpt:latest
-            with:
+            - name: Run all kpt functions
+              uses: docker://gcr.io/kpt-dev/kpt:latest
+              with:
                 args: fn run . --fn-path function.yaml
 `,
 	},
@@ -134,13 +134,13 @@ jobs:
 		},
 		expected: `
 steps:
-  - name: gcr.io/kpt-dev/kpt:latest
-    args:
-      - fn
-      - run
-      - .
-      - --fn-path
-      - functions
+    - name: gcr.io/kpt-dev/kpt:latest
+      args:
+        - fn
+        - run
+        - .
+        - --fn-path
+        - functions
 `,
 	},
 	{
@@ -178,13 +178,13 @@ function paths are not within the current working directory:
 		},
 		expected: `
 steps:
-  - name: gcr.io/kpt-dev/kpt:latest
-    args:
-      - fn
-      - run
-      - .
-      - --fn-path
-      - functions
+    - name: gcr.io/kpt-dev/kpt:latest
+      args:
+        - fn
+        - run
+        - .
+        - --fn-path
+        - functions
 `,
 	},
 	{
@@ -204,14 +204,13 @@ steps:
 		},
 		expected: `
 stages:
-  - run-kpt-functions
+    - run-kpt-functions
 kpt:
     stage: run-kpt-functions
     image: docker
     services:
-      - docker:dind
-    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest
-        fn run /app/resources --fn-path /app/functions
+        - docker:dind
+    script: docker run -v $PWD:/app -v /var/run/docker.sock:/var/run/docker.sock gcr.io/kpt-dev/kpt:latest fn run /app/resources --fn-path /app/functions
 `,
 	},
 	{
@@ -292,21 +291,21 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gcr.io/kpt-dev/kpt:latest
+                    - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:
-                  - run: kpt fn run resources
+                    - run: kpt fn run resources
         jobs:
             run-functions:
                 executor: kpt-container
                 steps:
-                  - setup_remote_docker
-                  - kpt-fn-run
+                    - setup_remote_docker
+                    - kpt-fn-run
 workflows:
     main:
         jobs:
-          - kpt/run-functions
+            - kpt/run-functions
 `,
 	},
 	{
@@ -325,21 +324,21 @@ orbs:
         executors:
             kpt-container:
                 docker:
-                  - image: gcr.io/kpt-dev/kpt:latest
+                    - image: gcr.io/kpt-dev/kpt:latest
         commands:
             kpt-fn-run:
                 steps:
-                  - run: kpt fn run resources --fn-path config/functions.yaml
+                    - run: kpt fn run resources --fn-path config/functions.yaml
         jobs:
             run-functions:
                 executor: kpt-container
                 steps:
-                  - setup_remote_docker
-                  - kpt-fn-run
+                    - setup_remote_docker
+                    - kpt-fn-run
 workflows:
     main:
         jobs:
-          - kpt/run-functions
+            - kpt/run-functions
 `,
 	},
 }
