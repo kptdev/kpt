@@ -1,22 +1,8 @@
 diff --git a/db/resources.yaml b/db/resources.yaml
-index 685f793..1765c5a 100644
+index 685f793..ac1fd96 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -1,7 +1,3 @@
--# Copyright 2021 Google LLC
--#
--# Licensed under the Apache License, Version 2.0 (the "License");
--# you may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #      http://www.apache.org/licenses/LICENSE-2.0
-@@ -11,9 +7,9 @@
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
--apiVersion: apps/v1
-+apiVersion: apps/v1 # Copyright 2021 Google LLC
- kind: StatefulSet
+@@ -16,4 +16,4 @@ kind: StatefulSet
  metadata:
    name: db
  spec:
@@ -25,7 +11,7 @@ index 685f793..1765c5a 100644
 +  replicas: 3
 diff --git a/notpkg/deployment_httpbin.yaml b/notpkg/deployment_httpbin.yaml
 new file mode 100644
-index 0000000..2307daf
+index 0000000..458acea
 --- /dev/null
 +++ b/notpkg/deployment_httpbin.yaml
 @@ -0,0 +1,27 @@
@@ -38,10 +24,10 @@ index 0000000..2307daf
 +  template:
 +    spec:
 +      containers:
-+      - name: httpbin
-+        image: kennethreitz/httpbin
-+        ports:
-+        - containerPort: 9876
++        - name: httpbin
++          image: kennethreitz/httpbin
++          ports:
++            - containerPort: 9876
 +---
 +apiVersion: apps/v1
 +kind: Deployment
@@ -52,7 +38,7 @@ index 0000000..2307daf
 +  template:
 +    spec:
 +      containers:
-+      - name: httpbin
-+        image: kennethreitz/httpbin
-+        ports:
-+        - containerPort: 9876
++        - name: httpbin
++          image: kennethreitz/httpbin
++          ports:
++            - containerPort: 9876
