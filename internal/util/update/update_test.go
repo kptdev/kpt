@@ -678,6 +678,47 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 	}
 }
 
+// TestCommand_Run_failInvalidRepo verifies Run fails if the repo is invalid
+func TestCommand_Run_failInvalidRepo(t *testing.T) {
+	for i := range Strategies {
+		strategy := Strategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
+			g := &testutil.TestSetupManager{
+				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Data: testutil.Dataset2,
+						},
+					},
+				},
+			}
+			defer g.Clean()
+			if !g.Init() {
+				return
+			}
+
+			err := Command{
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Repo:     "fake",
+				Strategy: strategy,
+			}.Run()
+			if !assert.Error(t, err) {
+				return
+			}
+			assert.Contains(t, err.Error(), "failed to clone git repo")
+
+			if !g.AssertLocalDataEquals(testutil.Dataset1) {
+				return
+			}
+		})
+	}
+}
+
 // TestCommand_Run_failInvalidRef verifies Run fails if the ref is invalid
 func TestCommand_Run_failInvalidRef(t *testing.T) {
 	for i := range Strategies {
