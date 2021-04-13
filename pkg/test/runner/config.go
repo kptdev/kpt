@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -27,8 +28,11 @@ import (
 // function run
 type EvalTestCaseConfig struct {
 	// ExecPath is a path to the executable file that will be run as function
-	// Mutually exclusive with Image
+	// Mutually exclusive with Image.
+	// The path should be separated by slash '/'
 	ExecPath string `json:"execPath,omitempty" yaml:"execPath,omitempty"`
+	// execUniquePath is an absolute, OS-specific path to exec file.
+	execUniquePath types.UniquePath
 	// Image is the image name for the function
 	Image string `json:"image,omitempty" yaml:"image,omitempty"`
 	// Args are the arguments that will be passed into function.
@@ -40,7 +44,10 @@ type EvalTestCaseConfig struct {
 	// in the function input. Default: false
 	IncludeMetaResources bool `json:"includeMetaResources,omitempty" yaml:"includeMetaResources,omitempty"`
 	// FnConfig is the path to the function config file.
+	// The path should be separated by slash '/'
 	FnConfig string `json:"fnConfig,omitempty" yaml:"fnConfig,omitempty"`
+	// fnConfigUniquePath is an absolute, OS-specific path to function config file.
+	fnConfigUniquePath types.UniquePath
 }
 
 // TestCaseConfig contains the config information for the test case
@@ -92,6 +99,18 @@ func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	if config.TestType == "" {
 		// by default we test pipeline
 		config.TestType = CommandFnRender
+	}
+	if config.EvalConfig != nil {
+		config.EvalConfig.fnConfigUniquePath, err = fromSlashPath(filepath.Join(path, expectedDir), config.EvalConfig.FnConfig)
+		if err != nil {
+			return config, fmt.Errorf("failed to get UniquePath from slash path %s: %w",
+				config.EvalConfig.FnConfig, err)
+		}
+		config.EvalConfig.execUniquePath, err = fromSlashPath(filepath.Join(path, expectedDir), config.EvalConfig.ExecPath)
+		if err != nil {
+			return config, fmt.Errorf("failed to get UniquePath from slash path %s: %w",
+				config.EvalConfig.ExecPath, err)
+		}
 	}
 	return config, nil
 }
@@ -150,4 +169,22 @@ func ScanTestCases(path string) (*TestCases, error) {
 		return nil, fmt.Errorf("failed to scan test cases in %s", path)
 	}
 	return &cases, nil
+}
+
+// fromSlashPath returns a UniquePath according to the input slash 'path'.
+// 'base' should be an OS-specific base path which will be joined with 'path'
+// if 'path' is not absolute.
+func fromSlashPath(base, path string) (types.UniquePath, error) {
+	if path == "" {
+		return types.UniquePath(""), nil
+	}
+	path = filepath.FromSlash(path)
+	if filepath.IsAbs(path) {
+		return types.UniquePath(path), nil
+	}
+	p, err := filepath.Abs(filepath.Join(base, path))
+	if err != nil {
+		return "", err
+	}
+	return types.UniquePath(p), nil
 }

@@ -23,6 +23,11 @@ func (u UniquePath) String() string {
 	return string(u)
 }
 
+// Empty returns true if the UniquePath is empty
+func (u UniquePath) Empty() bool {
+	return len(u) == 0
+}
+
 // DisplayPath represents Slash-separated path to the package directory on the filesytem relative
 // to current working directory.
 // This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
