@@ -15,16 +15,14 @@
 package runner
 
 import (
-	"bytes"
 	"fmt"
+	"go/build"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/GoogleContainerTools/kpt/run"
 )
 
 // Runner runs an e2e test
@@ -34,6 +32,7 @@ type Runner struct {
 	cmd           string
 	t             *testing.T
 	initialCommit string
+	kptBin        string
 }
 
 const (
@@ -50,8 +49,23 @@ const (
 	CommandFnRender     string = "render"
 )
 
+func getKptBin() (string, error) {
+	// try PATH
+	p, err := exec.LookPath("kpt")
+	if err == nil {
+		return p, nil
+	}
+	// try GOPATH/bin
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
+	gobin := filepath.Join(gopath, "bin")
+	return exec.LookPath(filepath.Join(gobin, "kpt"))
+}
+
 // NewRunner returns a new runner for pkg
-func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
+func NewRunner(t *testing.T, testCase TestCase, c string, kptBin string) (*Runner, error) {
 	info, err := os.Stat(testCase.Path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open path %s: %w", testCase.Path, err)
@@ -59,11 +73,18 @@ func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	if !info.IsDir() {
 		return nil, fmt.Errorf("path %s is not a directory", testCase.Path)
 	}
+	if kptBin == "" {
+		kptBin, err = getKptBin()
+		if err != nil {
+			return nil, fmt.Errorf("failed to find kpt in PATH and GOPATH/bin: %w", err)
+		}
+	}
 	return &Runner{
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
 		cmd:      c,
 		t:        t,
+		kptBin:   kptBin,
 	}, nil
 }
 
@@ -113,15 +134,11 @@ func (r *Runner) runFnEval() error {
 	}
 	if r.testCase.Config.EvalConfig.Image != "" {
 		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
-	} else if r.testCase.Config.EvalConfig.ExecPath != "" {
-		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
+	} else if r.testCase.Config.EvalConfig.execUniquePath.String() != "" {
+		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.execUniquePath.String())
 	}
-	if r.testCase.Config.EvalConfig.FnConfig != "" {
-		fnConfigPath, err := filepath.Abs(filepath.Join(r.testCase.Path, r.testCase.Config.EvalConfig.FnConfig))
-		if err != nil {
-			return fmt.Errorf("failed to get absolute path to function config file: %w", err)
-		}
-		kptArgs = append(kptArgs, "--fn-config", fnConfigPath)
+	if r.testCase.Config.EvalConfig.fnConfigUniquePath.String() != "" {
+		kptArgs = append(kptArgs, "--fn-config", r.testCase.Config.EvalConfig.fnConfigUniquePath.String())
 	}
 	if r.testCase.Config.EvalConfig.IncludeMetaResources {
 		kptArgs = append(kptArgs, "--include-meta-resources")
@@ -133,20 +150,9 @@ func (r *Runner) runFnEval() error {
 			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
-	var output string
-	var fnErr error
-	command := run.GetMain()
+
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		command.SetArgs(kptArgs)
-		outputWriter := bytes.NewBuffer(nil)
-		command.SetOutput(outputWriter)
-		fnErr = command.Execute()
-		if fnErr != nil {
-			// if kpt fn run returns error, we should compare
-			// the result
-			break
-		}
-		output = outputWriter.String()
+		output, fnErr := runCommand("", r.kptBin, kptArgs)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			return r.updateExpected(tmpPkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
@@ -200,17 +206,11 @@ func (r *Runner) runFnRender() error {
 	}
 
 	// run function
-	var fnErr error
-	command := run.GetMain()
 	kptArgs := []string{"fn", "render", tmpPkgPath}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		command.SetArgs(kptArgs)
-		fnErr = command.Execute()
-		if fnErr != nil {
-			if r.testCase.Config.ExitCode != 0 {
-				return nil
-			}
-			break
+		_, fnErr := runCommand("", r.kptBin, kptArgs)
+		if fnErr != nil && r.testCase.Config.ExitCode != 0 {
+			return nil
 		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
@@ -252,17 +252,18 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 	}
 	// get exit code
 	exitCode := 0
-	if e, ok := exitErr.(*exec.ExitError); ok {
-		exitCode = e.ExitCode()
-	} else if exitErr != nil {
-		return fmt.Errorf("cannot get exit code, received error '%w'", exitErr)
+	if exitErr != nil {
+		// TODO: We cannot get the kpt exitcode because we directly invoke main
+		// function in the test. Need to find a way to get the exit code
+		// from run.GetMain(). Use 1 as exitcode here when there is error.
+		exitCode = 1
 	}
 
 	if exitCode != r.testCase.Config.ExitCode {
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	if exitCode != 0 {
+	if exitCode != 0 && expected.Results != "" {
 		actual, err := readActualResults(resultsPath)
 		if err != nil {
 			return fmt.Errorf("failed to read actual results: %w", err)
@@ -365,30 +366,31 @@ func newExpected(path string) (expected, error) {
 }
 
 func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
-	// We update results directory only when a result file already exists.
-	l, err := ioutil.ReadDir(resultsPath)
+	if resultsPath != "" {
+		// We update results directory only when a result file already exists.
+		l, err := ioutil.ReadDir(resultsPath)
+		if err != nil {
+			return err
+		}
+		if len(l) > 0 {
+			actualResults, err := readActualResults(resultsPath)
+			if err != nil {
+				return err
+			}
+			if actualResults != "" {
+				if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return err
 	}
-	if len(l) == 0 {
-		actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
-		if err != nil {
+	if actualDiff != "" {
+		if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedDiffFile), []byte(actualDiff+"\n"), 0666); err != nil {
 			return err
-		}
-		if actualDiff != "" {
-			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedDiffFile), []byte(actualDiff+"\n"), 0666); err != nil {
-				return err
-			}
-		}
-	} else {
-		actualResults, err := readActualResults(resultsPath)
-		if err != nil {
-			return err
-		}
-		if actualResults != "" {
-			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
-				return err
-			}
 		}
 	}
 
