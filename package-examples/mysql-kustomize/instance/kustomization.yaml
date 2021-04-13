@@ -24,7 +24,7 @@ configMapGenerator:
   # for bootstrapping the root table grants -- set to false after bootstrapped
   - "skip-grant-tables=true" # kpt-set: skip-grant-tables=${skip-grant-tables}
   - "mysql-user=" # kpt-set: mysql-user=${mysql-user}
-  - "mysql-database=" # kpt-set: $mysql-database=${mysql-database}
+  - "mysql-database=" # kpt-set: mysql-database=${mysql-database}
 secretGenerator:
 - name: mysql
   behavior: merge
