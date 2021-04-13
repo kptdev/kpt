@@ -1,6 +1,9 @@
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
-  name: function-export
-packageMetadata:
-  shortDescription: example package for kpt fn export
+  name: kpt-function-export-example
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-functions/label-namespace
+  validators:
+    - image: gcr.io/kpt-functions/gatekeeper-validate
