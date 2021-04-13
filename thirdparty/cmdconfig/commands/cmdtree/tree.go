@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/xlab/treeprint"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -36,11 +37,10 @@ var GraphStructures = []string{string(TreeStructureGraph), string(TreeStructureP
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
 // used for printing rather than updating or editing.
 type TreeWriter struct {
-	Writer          io.Writer
-	Root            string
-	Fields          []TreeWriterField
-	Structure       TreeStructure
-	OpenAPIFileName string
+	Writer    io.Writer
+	Root      string
+	Fields    []TreeWriterField
+	Structure TreeStructure
 }
 
 // TreeWriterField configures a Resource field to be included in the tree
@@ -76,7 +76,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		// create a new branch for the package
 		createOk := pkg != "." // special edge case logic for tree on current working dir
 		if createOk {
-			branch = branch.AddBranch(branchName(p.Root, pkg, p.OpenAPIFileName))
+			branch = branch.AddBranch(branchName(p.Root, pkg))
 		}
 
 		// cache the branch for this package
@@ -92,7 +92,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	}
 
 	out := tree.String()
-	_, err := os.Stat(filepath.Join(p.Root, p.OpenAPIFileName))
+	_, err := os.Stat(filepath.Join(p.Root, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
 		out = PkgPrefix + out
 	}
@@ -103,12 +103,12 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 
 // branchName takes the root directory and relative path to the directory
 // and returns the branch name
-func branchName(root, dirRelPath, openAPIFileName string) string {
+func branchName(root, dirRelPath string) string {
 	name := filepath.Base(dirRelPath)
-	_, err := os.Stat(filepath.Join(root, dirRelPath, openAPIFileName))
+	_, err := os.Stat(filepath.Join(root, dirRelPath, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
 		// add Pkg: prefix indicating that it is a separate package as it has
-		// openAPIFile
+		// Kptfile
 		return PkgPrefix + name
 	}
 	return name

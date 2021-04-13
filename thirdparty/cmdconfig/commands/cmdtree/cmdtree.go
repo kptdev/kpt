@@ -59,9 +59,8 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
 		Outputs: []kio.Writer{TreeWriter{
-			Root:            root,
-			Writer:          c.OutOrStdout(),
-			OpenAPIFileName: kptfilev1alpha2.KptFileName,
+			Root:   root,
+			Writer: c.OutOrStdout(),
 		}},
 	}.Execute())
 }
