@@ -309,7 +309,7 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: foo:bar
+    - image: foo:bar
 `,
 			updated: `
 apiVersion: kpt.dev/v1alpha2
@@ -318,8 +318,10 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: foo:bar
-  - image: some:image
+    - image: foo:bar
+      configMap:
+        source: updated
+    - image: some:image
 `,
 			local: `
 apiVersion: kpt.dev/v1alpha2
@@ -328,8 +330,10 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: my:image
-  - image: foo:bar
+    - image: my:image
+      configMap:
+        source: local
+    - image: foo:bar
 `,
 			updateUpstream: true,
 			expected: `
@@ -339,8 +343,10 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: foo:bar
-  - image: some:image
+    - image: foo:bar
+      configMap:
+        source: updated
+    - image: some:image
 `,
 		},
 
@@ -352,7 +358,7 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: foo:bar
+    - image: foo:bar
 `,
 			updated: `
 apiVersion: kpt.dev/v1alpha2
@@ -361,7 +367,7 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: foo:bar
+    - image: foo:bar
 `,
 			local: `
 apiVersion: kpt.dev/v1alpha2
@@ -370,8 +376,13 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: my:image
-  - image: foo:bar
+    - image: my:image
+      config:
+        apiVersion: kpt.dev/v1alpha2
+        kind: Function
+        spec:
+          foo: bar
+    - image: foo:bar
 `,
 			updateUpstream: true,
 			expected: `
@@ -381,8 +392,13 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: my:image
-  - image: foo:bar
+    - image: my:image
+      config:
+        apiVersion: kpt.dev/v1alpha2
+        kind: Function
+        spec:
+          foo: bar
+    - image: foo:bar
 `,
 		},
 
@@ -406,8 +422,8 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: my:image
-  - image: foo:bar
+    - image: my:image
+    - image: foo:bar
 `,
 			updateUpstream: true,
 			expected: `
@@ -417,8 +433,8 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: my:image
-  - image: foo:bar
+    - image: my:image
+    - image: foo:bar
 `,
 		},
 
@@ -430,7 +446,7 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: foo:bar
+    - image: foo:bar
 `,
 			updated: `
 apiVersion: kpt.dev/v1alpha2
@@ -445,8 +461,8 @@ metadata:
   name: foo
 pipeline:
   mutators:
-  - image: my:image
-  - image: foo:bar
+    - image: my:image
+    - image: foo:bar
 `,
 			updateUpstream: false,
 			expected: `
