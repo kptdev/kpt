@@ -16,7 +16,6 @@ package runner
 
 import (
 	"fmt"
-	"go/build"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -35,19 +34,11 @@ type Runner struct {
 	kptBin        string
 }
 
-func getKptBin() (string, error) {
-	// try PATH
-	p, err := exec.LookPath("kpt")
-	if err == nil {
-		return p, nil
+func getKptBin() string {
+	if p := os.Getenv(kptBinEnv); p != "" {
+		return p
 	}
-	// try GOPATH/bin
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		gopath = build.Default.GOPATH
-	}
-	gobin := filepath.Join(gopath, "bin")
-	return exec.LookPath(filepath.Join(gobin, "kpt"))
+	return "kpt"
 }
 
 const (
@@ -55,6 +46,7 @@ const (
 	// expected diff and results if they already exist. If will not change
 	// config.yaml.
 	updateExpectedEnv string = "KPT_E2E_UPDATE_EXPECTED"
+	kptBinEnv         string = "KPT_E2E_BINARY"
 
 	expectedDir         string = ".expected"
 	expectedResultsFile string = "results.yaml"
@@ -65,7 +57,7 @@ const (
 )
 
 // NewRunner returns a new runner for pkg
-func NewRunner(t *testing.T, testCase TestCase, c, kptBin string) (*Runner, error) {
+func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	info, err := os.Stat(testCase.Path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open path %s: %w", testCase.Path, err)
@@ -73,12 +65,8 @@ func NewRunner(t *testing.T, testCase TestCase, c, kptBin string) (*Runner, erro
 	if !info.IsDir() {
 		return nil, fmt.Errorf("path %s is not a directory", testCase.Path)
 	}
-	if kptBin == "" {
-		kptBin, err = getKptBin()
-		if err != nil {
-			return nil, fmt.Errorf("failed to find kpt in PATH and GOPATH/bin: %w", err)
-		}
-	}
+	kptBin := getKptBin()
+	t.Logf("Using kpt binary: %s", kptBin)
 	return &Runner{
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,

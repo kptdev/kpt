@@ -44,7 +44,7 @@ func runTests(t *testing.T, path string) {
 		c := c // capture range variable
 		t.Run(c.Path, func(t *testing.T) {
 			t.Parallel()
-			r, err := runner.NewRunner(t, c, c.Config.TestType, "")
+			r, err := runner.NewRunner(t, c, c.Config.TestType)
 			if err != nil {
 				t.Fatalf("failed to create test runner: %s", err)
 			}
