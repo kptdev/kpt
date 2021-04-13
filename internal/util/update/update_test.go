@@ -680,41 +680,36 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 
 // TestCommand_Run_failInvalidRepo verifies Run fails if the repo is invalid
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
-	for _, strategy := range kptfilev1alpha2.UpdateStrategies {
-		t.Run(string(strategy), func(t *testing.T) {
-			g := &testutil.TestSetupManager{
-				T: t,
-				ReposChanges: map[string][]testutil.Content{
-					testutil.Upstream: {
-						{
-							Data:   testutil.Dataset1,
-							Branch: "master",
-						},
-						{
-							Data: testutil.Dataset2,
-						},
-					},
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Data:   testutil.Dataset1,
+					Branch: "master",
 				},
-			}
-			defer g.Clean()
-			if !g.Init() {
-				return
-			}
+				{
+					Data: testutil.Dataset2,
+				},
+			},
+		},
+	}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
 
-			err := Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-				Repo:     "fake",
-				Strategy: strategy,
-			}.Run()
-			if !assert.Error(t, err) {
-				return
-			}
-			assert.Contains(t, err.Error(), "failed to clone git repo")
+	err := Command{
+		Pkg:  pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Repo: "fake",
+	}.Run()
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "failed to clone git repo")
 
-			if !g.AssertLocalDataEquals(testutil.Dataset1) {
-				return
-			}
-		})
+	if !g.AssertLocalDataEquals(testutil.Dataset1) {
+		return
 	}
 }
 
