@@ -95,7 +95,7 @@ in VSCode.
 This includes:
 
 - Lint docs with markdownlint to standardize them and make them easier to
-  update. `make lintdocs`
+  update.
 - Run the kpt website through the [W3 Link Checker] in recursive mode and fix
   warnings and errors.
 
