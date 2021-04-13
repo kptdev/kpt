@@ -80,20 +80,6 @@ var strategies = map[kptfilev1alpha2.UpdateStrategyType]func() Updater{
 	kptfilev1alpha2.ResourceMerge:      func() Updater { return ResourceMergeUpdater{} },
 }
 
-var Strategies = []kptfilev1alpha2.UpdateStrategyType{
-	kptfilev1alpha2.FastForward,
-	kptfilev1alpha2.ForceDeleteReplace,
-	kptfilev1alpha2.ResourceMerge,
-}
-
-func StrategiesAsStrings() []string {
-	var strs []string
-	for _, s := range Strategies {
-		strs = append(strs, string(s))
-	}
-	return strs
-}
-
 // Command updates the contents of a local package to a different version.
 type Command struct {
 	// Pkg captures information about the package that should be updated.
