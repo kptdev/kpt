@@ -5,5 +5,8 @@ metadata:
 pipeline:
   mutators:
     - image: gcr.io/kpt-functions/label-namespace
+      configMap:
+        label_name: color
+        label_value: blue      
   validators:
     - image: gcr.io/kpt-functions/gatekeeper-validate
