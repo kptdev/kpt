@@ -24,14 +24,10 @@ const (
 	// Resources packages.
 	TreeStructurePackage TreeStructure = "directory"
 
-	// TreeStructureOwners configures TreeWriter to generate the tree structure off of the
-	// Resource owners.
-	TreeStructureGraph TreeStructure = "owners"
-
 	PkgPrefix = "PKG: "
 )
 
-var GraphStructures = []string{string(TreeStructureGraph), string(TreeStructurePackage)}
+var GraphStructures = []string{string(TreeStructurePackage)}
 
 // TreeWriter prints the package structured as a tree.
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
@@ -116,23 +112,11 @@ func branchName(root, dirRelPath string) string {
 
 // Write writes the ascii tree to p.Writer
 func (p TreeWriter) Write(nodes []*yaml.RNode) error {
-	switch p.Structure {
-	case TreeStructurePackage:
-		return p.packageStructure(nodes)
-	case TreeStructureGraph:
-		return p.graphStructure(nodes)
-	}
-
-	// If any resource has an owner reference, default to the graph structure. Otherwise, use package structure.
-	for _, node := range nodes {
-		if owners, _ := node.Pipe(yaml.Lookup("metadata", "ownerReferences")); owners != nil {
-			return p.graphStructure(nodes)
-		}
-	}
 	return p.packageStructure(nodes)
 }
 
 // node wraps a tree node, and any children nodes
+//nolint
 type node struct {
 	p TreeWriter
 	*yaml.RNode
@@ -166,109 +150,6 @@ func (a node) Tree(root treeprint.Tree) error {
 		}
 	}
 	return nil
-}
-
-// graphStructure writes the tree using owners for structure
-func (p TreeWriter) graphStructure(nodes []*yaml.RNode) error {
-	resourceToOwner := map[string]*node{}
-	root := &node{}
-	// index each of the nodes by their owner
-	for _, n := range nodes {
-		ownerVal, err := ownerToString(n)
-		if err != nil {
-			return err
-		}
-		var owner *node
-		if ownerVal == "" {
-			// no owner -- attach to the root
-			owner = root
-		} else {
-			// owner found -- attach to the owner
-			var found bool
-			owner, found = resourceToOwner[ownerVal]
-			if !found {
-				// initialize the owner if not found
-				resourceToOwner[ownerVal] = &node{p: p}
-				owner = resourceToOwner[ownerVal]
-			}
-		}
-
-		nodeVal, err := nodeToString(n)
-		if err != nil {
-			return err
-		}
-		val, found := resourceToOwner[nodeVal]
-		if !found {
-			// initialize the node if not found -- may have already been initialized if it
-			// is the owner of another node
-			resourceToOwner[nodeVal] = &node{p: p}
-			val = resourceToOwner[nodeVal]
-		}
-		val.RNode = n
-		owner.children = append(owner.children, val)
-	}
-
-	for k, v := range resourceToOwner {
-		if v.RNode == nil {
-			return fmt.Errorf(
-				"owner '%s' not found in input, but found as an owner of input objects", k)
-		}
-	}
-
-	// print the tree
-	tree := treeprint.New()
-	if err := root.Tree(tree); err != nil {
-		return err
-	}
-
-	_, err := io.WriteString(p.Writer, tree.String())
-	return err
-}
-
-// nodeToString generates a string to identify the node -- matches ownerToString format
-func nodeToString(node *yaml.RNode) (string, error) {
-	meta, err := node.GetMeta()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s %s/%s", meta.Kind, meta.Namespace, meta.Name), nil
-}
-
-// ownerToString generate a string to identify the owner -- matches nodeToString format
-func ownerToString(node *yaml.RNode) (string, error) {
-	meta, err := node.GetMeta()
-	if err != nil {
-		return "", err
-	}
-	namespace := meta.Namespace
-
-	owners, err := node.Pipe(yaml.Lookup("metadata", "ownerReferences"))
-	if err != nil {
-		return "", err
-	}
-	if owners == nil {
-		return "", nil
-	}
-
-	elements, err := owners.Elements()
-	if err != nil {
-		return "", err
-	}
-	if len(elements) == 0 {
-		return "", err
-	}
-	owner := elements[0]
-	var kind, name string
-
-	if value := owner.Field("kind"); !value.IsNilOrEmpty() {
-		kind = value.Value.YNode().Value
-	}
-	if value := owner.Field("name"); !value.IsNilOrEmpty() {
-		name = value.Value.YNode().Value
-	}
-
-	return fmt.Sprintf("%s %s/%s", kind, namespace, name), nil
 }
 
 // index indexes the Resources by their package
