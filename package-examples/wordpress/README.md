@@ -1,6 +1,7 @@
 # wordpress
 
-This is an example of a kpt package which has a subpackage in it.
+Here is an example to get, view, customize and apply contents of an example kpt package with a subpackage
+in its directory tree.
 
 ## Steps
 
@@ -15,7 +16,7 @@ This is an example of a kpt package which has a subpackage in it.
 
 Get the example package on to local using `kpt pkg get`
 
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/subpackages/wordpress
+    $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/subpackages/wordpress
 
       fetching package /package-examples/subpackages/wordpress from https://github.com/GoogleContainerTools/kpt to wordpress
 
@@ -23,7 +24,7 @@ $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/s
 
 List the package contents in a tree structure.
 
-$ kpt pkg tree wordpress/
+    $ kpt pkg tree wordpress/
 
       PKG: wordpress
       ├── [Kptfile]  Kptfile wordpress
@@ -39,7 +40,7 @@ $ kpt pkg tree wordpress/
 
 ### Configure namespace
 
-By default, the packages will be deployed into `default` namespace. Provide a namespace by
+By default, these packages will be deployed into `default` namespace. Provide a namespace by
 adding [set-namespace] function to the pipeline definition in `wordpress/Kptfile`.
 
     pipeline:
@@ -55,30 +56,29 @@ You may declare new desired values for the setters by editing the `Kptfile` dire
 
 ### Render the declared values
 
-$ kpt fn render wordpress/
+    $ kpt fn render wordpress/
 
 ### Apply the package
 
 Apply all the contents of the package recursively to the cluster
 
-$ kpt live init wordpress/
+    $ kpt live init wordpress/
 
-    namespace: default is used for inventory object
-    Initialized: wordpress/inventory-template.yaml
-    
-$ kubectl create ns my-space
+      namespace: default is used for inventory object
+      Initialized: wordpress/inventory-template.yaml
 
-    namespace/my-space created
-    
-$ kpt live apply wordpress/
+    $ kubectl create ns my-space
 
-    service/wordpress-mysql created
-    persistentvolumeclaim/mysql-pv-claim created
-    deployment.apps/wordpress-mysql created
-    service/wordpress created
-    persistentvolumeclaim/wp-pv-claim created
-    deployment.apps/wordpress created
+      namespace/my-space created
 
+    $ kpt live apply wordpress/
+
+      service/wordpress-mysql created
+      persistentvolumeclaim/mysql-pv-claim created
+      deployment.apps/wordpress-mysql created
+      service/wordpress created
+      persistentvolumeclaim/wp-pv-claim created
+      deployment.apps/wordpress created
 
 [tree]: ../../../site/reference/pkg/tree
 [set-namespace]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/set-namespace
