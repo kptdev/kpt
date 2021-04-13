@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # This file configures the hello-world app which serves public web traffic.
-apiVersion: apps/v1 # This file configures the hello-world app which serves public web traffic.
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: helloworld-gke
