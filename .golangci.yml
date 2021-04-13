@@ -29,9 +29,7 @@ linters:
     - govet
     - ineffassign
     - interfacer
-# lll fails for some tests (thirdparty/cmdconfig/cmdsource/_test.go)
-# Figure out how to exclude files with issues.
-#    - lll
+    - lll
     - misspell
     - nakedret
     - scopelint

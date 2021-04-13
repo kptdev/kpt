@@ -315,6 +315,7 @@ func TestSourceCommandJSON(t *testing.T) {
 		return
 	}
 
+	//nolint:lll
 	expected := `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
