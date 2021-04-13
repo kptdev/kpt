@@ -680,8 +680,7 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 
 // TestCommand_Run_failInvalidRepo verifies Run fails if the repo is invalid
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for _, strategy := range kptfilev1alpha2.UpdateStrategies {
 		t.Run(string(strategy), func(t *testing.T) {
 			g := &testutil.TestSetupManager{
 				T: t,
