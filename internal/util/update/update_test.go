@@ -661,6 +661,49 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 	}
 }
 
+func TestCommand_Run_noUpstreamReference(t *testing.T) {
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
+			// Setup the test upstream and local packages
+			g := &testutil.TestSetupManager{
+				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: "master",
+						},
+						{
+							Data: testutil.Dataset2,
+						},
+					},
+				},
+			}
+			defer g.Clean()
+			if !g.Init() {
+				return
+			}
+
+			pkg := pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath())
+			kptfile, err := pkg.Kptfile()
+			if !assert.NoError(t, err) {
+				return
+			}
+			kptfile.Upstream = nil
+
+			// Update the local package
+			err = Command{
+				Pkg:      pkg,
+				Strategy: strategy,
+			}.Run()
+
+			assert.Contains(t, err.Error(), "must have an upstream reference")
+
+		})
+	}
+}
+
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid
 func TestCommand_Run_failInvalidPath(t *testing.T) {
 	for i := range kptfilev1alpha2.UpdateStrategies {
