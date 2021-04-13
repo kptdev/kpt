@@ -7,12 +7,12 @@ pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:unstable
       configMap:
-        mysql-user: "foo"
-        mysql-database: "bar"
-        skip-grant-tables: "true"
+        mysql-user: ""
+        mysql-database: ""
+        skip-grant-tables: ""
         cpu: 100m
         memory: 256Mi
         port: 3306
     - image: gcr.io/kpt-fn/set-namespace:unstable
       configMap:
-        namespace: "ns-test"
+        namespace: ""
