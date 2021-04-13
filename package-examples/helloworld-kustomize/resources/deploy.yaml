@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
       - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:latest
+        image: gcr.io/kpt-dev/helloworld-gke:0.3.0
         ports:
         - name: http
           containerPort: 80
