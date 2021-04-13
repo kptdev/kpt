@@ -15,7 +15,7 @@
 apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
-  name: httpbin-gen
+  name: duplicate-path-generator
 source: |
   httpbin_deployment = {
      "apiVersion": "apps/v1",
@@ -23,8 +23,8 @@ source: |
      "metadata": {
         "name": "httpbin",
         "annotations": {
+          # generates resource with duplicate path and index
           "config.kubernetes.io/index": 0,
-          # generates resource in current directory
           "config.kubernetes.io/path": "./resources.yaml"
         }
      },

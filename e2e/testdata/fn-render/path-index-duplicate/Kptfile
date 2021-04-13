@@ -5,4 +5,4 @@ metadata:
 pipeline:
   mutators:
   - image: gcr.io/kpt-fn/starlark:unstable
-    configPath: starlark-httpbin-gen.yaml
+    configPath: starlark-gen-duplicate-path.yaml.

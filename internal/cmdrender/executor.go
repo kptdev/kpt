@@ -316,31 +316,31 @@ func fnChain(pl *kptfilev1alpha2.Pipeline, pkgPath types.UniquePath) ([]kio.Filt
 	return runners, nil
 }
 
-// errorIfDuplicateAnnotation returns an error if the same index/path is on multiple resources
-func errorIfDuplicateAnnotation(nodes []*yaml.RNode) error {
+// detectPathConflicts returns an error if the same index/path is on multiple resources
+func detectPathConflicts(nodes []*yaml.RNode) error {
 	// map has structure path -> index -> bool
 	// to keep track of paths and indexes found
 	pathIndexes := make(map[string]map[string]bool)
 	for _, node := range nodes {
-		filepath, index, err := kioutil.GetFileAnnotations(node)
+		fp, index, err := kioutil.GetFileAnnotations(node)
 		if err != nil {
 			return err
 		}
-		filepath = strings.TrimPrefix(filepath, "./")
-		if pathIndexes[filepath] == nil {
-			pathIndexes[filepath] = make(map[string]bool)
+		fp = path.Clean(fp)
+		if pathIndexes[fp] == nil {
+			pathIndexes[fp] = make(map[string]bool)
 		}
-		if _, ok := pathIndexes[filepath][index]; ok {
-			return fmt.Errorf("duplicate path and index %s %s", filepath, index)
+		if _, ok := pathIndexes[fp][index]; ok {
+			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
 		}
-		pathIndexes[filepath][index] = true
+		pathIndexes[fp][index] = true
 	}
 	return nil
 }
 
 // trackInputFiles records file paths of input resources in the hydration context.
 func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
-	if err := errorIfDuplicateAnnotation(input); err != nil {
+	if err := detectPathConflicts(input); err != nil {
 		return err
 	}
 	if hctx.inputFiles == nil {
@@ -359,7 +359,7 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 // trackOutputfiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
-	if err := errorIfDuplicateAnnotation(hctx.root.resources); err != nil {
+	if err := detectPathConflicts(hctx.root.resources); err != nil {
 		return err
 	}
 	outputSet := sets.String{}
