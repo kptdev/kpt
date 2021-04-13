@@ -10,9 +10,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# The hello service provides a load-balancing proxy over the hello-app
 # pods. By specifying the type as a 'LoadBalancer', Kubernetes Engine will
 # create an external HTTP load balancer.
-apiVersion: v1 # The hello service provides a load-balancing proxy over the hello-app
+apiVersion: v1
 kind: Service
 metadata:
   name: helloworld-gke
