@@ -428,6 +428,8 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 	}
 }
 
+// AddKptfileToWorkspace writes the provided Kptfile to the workspace
+// and makes a commit.
 func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.KptFile) {
 	err := os.MkdirAll(w.FullPackagePath(), 0700)
 	if !assert.NoError(t, err) {
