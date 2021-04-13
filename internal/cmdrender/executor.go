@@ -318,6 +318,9 @@ func fnChain(pl *kptfilev1alpha2.Pipeline, pkgPath types.UniquePath) ([]kio.Filt
 
 // trackInputFiles records file paths of input resources in the hydration context.
 func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
+	if err := detectPathConflicts(input); err != nil {
+		return err
+	}
 	if hctx.inputFiles == nil {
 		hctx.inputFiles = sets.String{}
 	}
@@ -334,6 +337,9 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 // trackOutputfiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
+	if err := detectPathConflicts(hctx.root.resources); err != nil {
+		return err
+	}
 	outputSet := sets.String{}
 
 	for _, r := range hctx.root.resources {
@@ -344,6 +350,28 @@ func trackOutputFiles(hctx *hydrationContext) error {
 		outputSet.Insert(path)
 	}
 	hctx.outputFiles = outputSet
+	return nil
+}
+
+// detectPathConflicts returns an error if the same index/path is on multiple resources
+func detectPathConflicts(nodes []*yaml.RNode) error {
+	// map has structure path -> index -> bool
+	// to keep track of paths and indexes found
+	pathIndexes := make(map[string]map[string]bool)
+	for _, node := range nodes {
+		fp, index, err := kioutil.GetFileAnnotations(node)
+		if err != nil {
+			return err
+		}
+		fp = path.Clean(fp)
+		if pathIndexes[fp] == nil {
+			pathIndexes[fp] = make(map[string]bool)
+		}
+		if _, ok := pathIndexes[fp][index]; ok {
+			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
+		}
+		pathIndexes[fp][index] = true
+	}
 	return nil
 }
 

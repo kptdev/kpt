@@ -1,6 +1,3 @@
-Let's jump to an example that demonstrates a typical kpt workflow and quickly
-introduce important concepts and features. Following chapters will cover these concepts in detail.
-
 In this example, you are going to configure and deploy Nginx to a Kubernetes cluster.
 
 ## Fetch the package
@@ -11,7 +8,7 @@ configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@next nginx
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@next
 $ cd nginx
 ```
 
@@ -22,7 +19,7 @@ Next, let's quickly view the content of the package:
 
 ```shell
 $ kpt pkg tree
-.
+PKG: nginx
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
 └── [svc.yaml]  Service my-nginx-svc

@@ -17,10 +17,10 @@ kind: Deployment
 metadata:
   name: my-nginx
 spec:
+  replicas: 3
   selector:
     matchLabels:
       app: nginx
-  replicas: 3
   template:
     metadata:
       labels:

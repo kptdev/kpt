@@ -41,6 +41,11 @@ type Command struct {
 
 	// Name is the name to give the package.  Defaults to the destination.
 	Name string
+
+	// UpdateStrategy is the strategy that will be configured in the package
+	// Kptfile. This determines how changes will be merged when updating the
+	// package.
+	UpdateStrategy kptfilev1alpha2.UpdateStrategyType
 }
 
 // Run runs the Command.
@@ -69,7 +74,7 @@ func (c Command) Run() error {
 	kf.Upstream = &kptfilev1alpha2.Upstream{
 		Type:           kptfilev1alpha2.GitOrigin,
 		Git:            c.Git,
-		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+		UpdateStrategy: c.UpdateStrategy,
 	}
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
@@ -151,6 +156,11 @@ func (c *Command) DefaultValues() error {
 	// default the name to the destination name
 	if len(c.Name) == 0 {
 		c.Name = filepath.Base(c.Destination)
+	}
+
+	// default the update strategy to resource-merge
+	if len(c.UpdateStrategy) == 0 {
+		c.UpdateStrategy = kptfilev1alpha2.ResourceMerge
 	}
 
 	return nil

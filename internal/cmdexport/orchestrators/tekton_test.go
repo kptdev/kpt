@@ -45,21 +45,21 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: source
-        mountPath: /source
+        - name: source
+          mountPath: /source
     steps:
-      - name: run-kpt-functions
-        image: gcr.io/kpt-dev/kpt:latest
-        args:
-          - fn
-          - run
-          - $(workspaces.source.path)/local-resources
-        volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
+        - name: run-kpt-functions
+          image: gcr.io/kpt-dev/kpt:latest
+          args:
+            - fn
+            - run
+            - $(workspaces.source.path)/local-resources
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
     volumes:
-      - name: docker-socket
-        hostPath:
+        - name: docker-socket
+          hostPath:
             path: /var/run/docker.sock
             type: Socket
 `,
@@ -80,23 +80,23 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: source
-        mountPath: /source
+        - name: source
+          mountPath: /source
     steps:
-      - name: run-kpt-functions
-        image: gcr.io/kpt-dev/kpt:latest
-        args:
-          - fn
-          - run
-          - $(workspaces.source.path)/local-resources
-          - --fn-path
-          - $(workspaces.source.path)/config
-        volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
+        - name: run-kpt-functions
+          image: gcr.io/kpt-dev/kpt:latest
+          args:
+            - fn
+            - run
+            - $(workspaces.source.path)/local-resources
+            - --fn-path
+            - $(workspaces.source.path)/config
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
     volumes:
-      - name: docker-socket
-        hostPath:
+        - name: docker-socket
+          hostPath:
             path: /var/run/docker.sock
             type: Socket
 `,
@@ -117,25 +117,25 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: source
-        mountPath: /source
+        - name: source
+          mountPath: /source
     steps:
-      - name: run-kpt-functions
-        image: gcr.io/kpt-dev/kpt:latest
-        args:
-          - fn
-          - run
-          - $(workspaces.source.path)/local-resources
-          - --fn-path
-          - $(workspaces.source.path)/config/gate-keeper.yaml
-          - --fn-path
-          - $(workspaces.source.path)/config/label-namespace.yaml
-        volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
+        - name: run-kpt-functions
+          image: gcr.io/kpt-dev/kpt:latest
+          args:
+            - fn
+            - run
+            - $(workspaces.source.path)/local-resources
+            - --fn-path
+            - $(workspaces.source.path)/config/gate-keeper.yaml
+            - --fn-path
+            - $(workspaces.source.path)/config/label-namespace.yaml
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
     volumes:
-      - name: docker-socket
-        hostPath:
+        - name: docker-socket
+          hostPath:
             path: /var/run/docker.sock
             type: Socket
 `,
@@ -170,21 +170,21 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: source
-        mountPath: /source
+        - name: source
+          mountPath: /source
     steps:
-      - name: run-kpt-functions
-        image: gcr.io/kpt-dev/kpt:latest
-        args:
-          - fn
-          - run
-          - $(workspaces.source.path)/local-resources
-        volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
+        - name: run-kpt-functions
+          image: gcr.io/kpt-dev/kpt:latest
+          args:
+            - fn
+            - run
+            - $(workspaces.source.path)/local-resources
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
     volumes:
-      - name: docker-socket
-        hostPath:
+        - name: docker-socket
+          hostPath:
             path: /var/run/docker.sock
             type: Socket
 ---
@@ -194,14 +194,14 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: shared-workspace
+        - name: shared-workspace
     tasks:
-      - name: kpt
-        taskRef:
+        - name: kpt
+          taskRef:
             name: run-kpt-functions
-        workspaces:
-          - name: source
-            workspace: shared-workspace
+          workspaces:
+            - name: source
+              workspace: shared-workspace
 `,
 	},
 	{
@@ -217,23 +217,23 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: source
-        mountPath: /source
+        - name: source
+          mountPath: /source
     steps:
-      - name: run-kpt-functions
-        image: gcr.io/kpt-dev/kpt:latest
-        args:
-          - fn
-          - run
-          - $(workspaces.source.path)/local-resources
-          - --fn-path
-          - $(workspaces.source.path)/config
-        volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
+        - name: run-kpt-functions
+          image: gcr.io/kpt-dev/kpt:latest
+          args:
+            - fn
+            - run
+            - $(workspaces.source.path)/local-resources
+            - --fn-path
+            - $(workspaces.source.path)/config
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
     volumes:
-      - name: docker-socket
-        hostPath:
+        - name: docker-socket
+          hostPath:
             path: /var/run/docker.sock
             type: Socket
 ---
@@ -243,14 +243,14 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: shared-workspace
+        - name: shared-workspace
     tasks:
-      - name: kpt
-        taskRef:
+        - name: kpt
+          taskRef:
             name: run-kpt-functions
-        workspaces:
-          - name: source
-            workspace: shared-workspace
+          workspaces:
+            - name: source
+              workspace: shared-workspace
 `,
 	},
 	{
@@ -266,25 +266,25 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: source
-        mountPath: /source
+        - name: source
+          mountPath: /source
     steps:
-      - name: run-kpt-functions
-        image: gcr.io/kpt-dev/kpt:latest
-        args:
-          - fn
-          - run
-          - $(workspaces.source.path)/local-resources
-          - --fn-path
-          - $(workspaces.source.path)/config/gate-keeper.yaml
-          - --fn-path
-          - $(workspaces.source.path)/config/label-namespace.yaml
-        volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
+        - name: run-kpt-functions
+          image: gcr.io/kpt-dev/kpt:latest
+          args:
+            - fn
+            - run
+            - $(workspaces.source.path)/local-resources
+            - --fn-path
+            - $(workspaces.source.path)/config/gate-keeper.yaml
+            - --fn-path
+            - $(workspaces.source.path)/config/label-namespace.yaml
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
     volumes:
-      - name: docker-socket
-        hostPath:
+        - name: docker-socket
+          hostPath:
             path: /var/run/docker.sock
             type: Socket
 ---
@@ -294,14 +294,14 @@ metadata:
     name: run-kpt-functions
 spec:
     workspaces:
-      - name: shared-workspace
+        - name: shared-workspace
     tasks:
-      - name: kpt
-        taskRef:
+        - name: kpt
+          taskRef:
             name: run-kpt-functions
-        workspaces:
-          - name: source
-            workspace: shared-workspace
+          workspaces:
+            - name: source
+              workspace: shared-workspace
 `,
 	},
 }

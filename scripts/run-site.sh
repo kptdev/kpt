@@ -21,3 +21,4 @@ chmod -R o+rx site/
 docker stop $(docker ps -q --filter ancestor=kpt-site:latest) || docker build site/ -t kpt-site:latest
 # Mount the site directory as the default content for the docker container.
 docker run -v `pwd`/site:/usr/share/nginx/html -p 3000:80 -d kpt-site:latest
+echo "Serving docs at http://127.0.0.1:3000"

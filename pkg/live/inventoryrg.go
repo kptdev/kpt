@@ -46,6 +46,10 @@ type InventoryResourceGroup struct {
 	objMetas []object.ObjMetadata
 }
 
+func (icm *InventoryResourceGroup) Strategy() inventory.InventoryStrategy {
+	return inventory.NameStrategy
+}
+
 var _ inventory.Inventory = &InventoryResourceGroup{}
 var _ inventory.InventoryInfo = &InventoryResourceGroup{}
 

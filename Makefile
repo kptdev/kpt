@@ -72,7 +72,13 @@ test-docker:
 # target to run e2e tests for "kpt fn render" command
 test-fn-render:
 	go test -v --tags=docker --run=TestFnRender ./e2e/
-	
+
+# target to flush kpt-fn cache
+flush-fn-cache:
+	for fn in set-namespace set-label set-annotation starlark; do \
+		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
+	done
+
 vet:
 	go vet ./...
 
