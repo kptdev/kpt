@@ -14,9 +14,5 @@ pipeline:
         memory: 256Mi
         port: 3306
     - image: gcr.io/kpt-fn/set-namespace:unstable
-      config:
-        apiVersion: fn.kpt.dev/v1alpha1
-        kind: SetNamespaceConfig
-        metadata:
-          name: my-config
-        namespace: color
+      configMap:
+        namespace: "ns-test"
