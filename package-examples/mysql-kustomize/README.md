@@ -18,8 +18,7 @@ To connect to the database:
 
 To edit the package:
 
-    kpt cfg list-setters mysql-kustomize
-    kpt cfg set mysql-kustomize SETTER VALUE
+    kpt fn eval --image gcr.io/kpt-fn/apply-setters:VERSION mysql-kustomize --  [setter_name=setter_value]
 
 # Description
 

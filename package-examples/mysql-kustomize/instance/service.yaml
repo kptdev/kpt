@@ -19,5 +19,5 @@ metadata:
 spec:
   ports:
   - name: mysql
-    port: 3306 # {"$ref":"#/definitions/io.k8s.cli.setters.port"}
+    port: 3306 # kpt-set: ${port}
     targetPort: mysql

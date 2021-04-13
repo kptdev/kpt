@@ -40,8 +40,8 @@ spec:
               key: mysql-root-password
         ports:
         - name: mysql
-          containerPort: 3306 # {"$ref":"#/definitions/io.k8s.cli.setters.port"}
+          containerPort: 3306 # kpt-set: ${port}
         resources:
           requests:
-            cpu: 100m # {"$ref":"#/definitions/io.k8s.cli.setters.cpu"}
-            memory: 256Mi # {"$ref":"#/definitions/io.k8s.cli.setters.memory"}
+            cpu: 100m # kpt-set: ${cpu}
+            memory: 256Mi # kpt-set: ${memory}

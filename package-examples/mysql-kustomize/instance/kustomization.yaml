@@ -16,15 +16,15 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 #
 # namespace is the namespace the mysql instance is run in
-namespace: "" # {"$ref":"#/definitions/io.k8s.cli.setters.namespace"}
+namespace: ""
 configMapGenerator:
 - name: mysql
   behavior: merge
   literals:
   # for bootstrapping the root table grants -- set to false after bootstrapped
-  - "skip-grant-tables=true" # {"$ref":"#/definitions/io.k8s.cli.substitutions.skip-grant-tables"}
-  - "mysql-user=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-user"}
-  - "mysql-database=" # {"$ref":"#/definitions/io.k8s.cli.substitutions.mysql-database"}
+  - "skip-grant-tables=true" # kpt-set: skip-grant-tables=${skip-grant-tables}
+  - "mysql-user=" # kpt-set: mysql-user=${mysql-user}
+  - "mysql-database=" # kpt-set: $mysql-database=${mysql-database}
 secretGenerator:
 - name: mysql
   behavior: merge
