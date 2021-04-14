@@ -61,13 +61,7 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 
 Initialize the inventory object:
 
-    $ kpt live init helloworld-kustomize/
+    $ kubectl apply -k helloworld-kustomize
 
-      TODO
-
-
-Apply all the contents of the package recursively to the cluster
-
-    $ kpt live apply helloworld-kustomize/
-
-      TODO
+      service/helloworld-gke created
+      deployment.apps/helloworld-gke created

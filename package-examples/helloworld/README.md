@@ -37,9 +37,6 @@ Initialize the inventory object:
 
     $ kpt live init helloworld/
 
-      namespace: default is used for inventory object
-      Initialized: helloworld/inventory-template.yaml
-
 Apply all the contents of the package recursively to the cluster
 
     $ kpt live apply helloworld/
