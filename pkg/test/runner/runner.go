@@ -38,7 +38,7 @@ func getKptBin() (string, error) {
 	if p := os.Getenv(kptBinEnv); p != "" {
 		return p, nil
 	}
-	return "", fmt.Errorf("Must specify env '%s' for kpt binary path", kptBinEnv)
+	return "", fmt.Errorf("must specify env '%s' for kpt binary path", kptBinEnv)
 }
 
 const (
