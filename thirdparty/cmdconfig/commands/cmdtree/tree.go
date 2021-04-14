@@ -90,6 +90,15 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	out := tree.String()
 	_, err := os.Stat(filepath.Join(p.Root, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
+		if p.Root == "." {
+			// replace . with the current working dir name
+			d, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			out = strings.TrimPrefix(out, ".")
+			out = filepath.Base(d) + out
+		}
 		out = PkgPrefix + out
 	}
 
