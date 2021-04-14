@@ -1,19 +1,73 @@
-helloworld-kustomize
-==================================================
+# helloworld-kustomize
 
-# NAME
+This is a simple package that showcases a kpt package that has a kustomize
+patch in it.
 
-  helloworld-kustomize
+## Steps
 
-# SYNOPSIS
+This is a sample workflow where 
 
-  kubectl apply --recursive -f helloworld-kustomize
+1. [Fetch the package](#fetch-the-package)
+2. [View the package contents](#view-the-package-contents)
+3. [Configure functions](#configure-functions)
+4. [Render the declared values](#render-the-declared-values)
+5. [Apply the package](#apply-the-package)
 
-# Description
+### Fetch the package
 
-a sample where the upstream package contains a kustomize patch that contains a setter.  One can run the pipeline in the package
-```
-kpt fn render .
-```
-and observe the message environment variable in the patch change.  You can also see documentation on `apply-setters` function to see a full range
-of ways to apply the changes.
+Get the example package on to local using `kpt pkg get`
+
+    $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize
+
+      fetching package /package-examples/helloworld-kustomize from https://github.com/GoogleContainerTools/kpt to helloworld-kustomize
+
+### View the package contents
+
+List the package contents in a tree structure.
+
+    $ kpt pkg tree helloworld-kustomize/
+
+      PKG: helloworld-kustomize
+      ├── [Kptfile]  Kptfile helloworld-kustomize
+      ├── patches
+      │   └── [patch.yaml]  Deployment helloworld-gke
+      └── resources
+          ├── [deploy.yaml]  Deployment helloworld-gke
+          └── [service.yaml]  Service helloworld-gke
+
+### Configure functions
+
+The package contains a function pipeline in the `Kptfile` which has
+one `apply-setter` function.  The `apply-setter` function allows you to
+set a simple value throughout the package configuration.  In this case the
+value of the setter goes into the `patch.yaml`.  You can set the target
+environment variable to a value different of your choice (different
+than `foobar`)
+
+    pipeline:
+      mutators:
+        - image: gcr.io/kpt-fn/apply-setters:unstable
+          configMap:
+            target: foobar
+
+
+### Render the declared values
+
+Render the changes in the hydration pipeline by using `kpt fn render` command:
+
+    $ kpt fn render helloworld-kustomize/
+
+### Apply the package
+
+Initialize the inventory object:
+
+    $ kpt live init helloworld-kustomize/
+
+      TODO
+
+
+Apply all the contents of the package recursively to the cluster
+
+    $ kpt live apply helloworld-kustomize/
+
+      TODO
