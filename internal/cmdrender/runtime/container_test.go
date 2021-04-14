@@ -18,9 +18,11 @@ package runtime_test
 
 import (
 	"bytes"
+	"context"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdrender/runtime"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,9 +47,13 @@ func TestContainerFn(t *testing.T) {
 
 	for _, tt := range tests {
 		tt := tt
+		ctx := context.Background()
 		t.Run(tt.name, func(t *testing.T) {
-			instance := runtime.ContainerFn{}
-			instance.Image = tt.image
+			outBuff, errBuff := &bytes.Buffer{}, &bytes.Buffer{}
+			instance := runtime.ContainerFn{
+				Ctx:   printer.WithContext(ctx, printer.New(outBuff, errBuff)),
+				Image: tt.image,
+			}
 			input := bytes.NewBufferString(tt.input)
 			output := &bytes.Buffer{}
 			err := instance.Run(input, output)

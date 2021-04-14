@@ -15,6 +15,8 @@
 package commands
 
 import (
+	"context"
+
 	"github.com/GoogleContainerTools/kpt/internal/cmdexport"
 	"github.com/GoogleContainerTools/kpt/internal/cmdfndoc"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrender"
@@ -25,7 +27,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GetFnCommand(name string) *cobra.Command {
+func GetFnCommand(ctx context.Context, name string) *cobra.Command {
 	functions := &cobra.Command{
 		Use:     "fn",
 		Short:   fndocs.FnShort,
@@ -49,7 +51,7 @@ func GetFnCommand(name string) *cobra.Command {
 	eval.Long = fndocs.RunShort + "\n" + fndocs.RunLong
 	eval.Example = fndocs.RunExamples
 
-	render := cmdrender.NewCommand(name)
+	render := cmdrender.NewCommand(ctx, name)
 
 	doc := cmdfndoc.NewCommand(name)
 	doc.Short = fndocs.DocShort

@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	goerrors "errors"
+
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
@@ -36,6 +38,9 @@ type Error struct {
 
 	// Op is the operation being performed, for ex. pkg.get, fn.render
 	Op Op
+
+	// Fn is the kpt function being run either as part of "fn render" or "fn eval"
+	Fn Fn
 
 	// Class refers to class of errors
 	Class Class
@@ -55,7 +60,18 @@ func (e *Error) Error() string {
 	if e.Path != "" {
 		pad(b, ": ")
 		b.WriteString("pkg ")
-		b.WriteString(string(e.Path))
+		// try to print relative path of the pkg if we can else use abs path
+		relPath, err := e.Path.RelativePath()
+		if err != nil {
+			relPath = string(e.Path)
+		}
+		b.WriteString(relPath)
+	}
+
+	if e.Fn != "" {
+		pad(b, ": ")
+		b.WriteString("fn ")
+		b.WriteString(string(e.Fn))
 	}
 
 	if e.Class != 0 {
@@ -64,7 +80,8 @@ func (e *Error) Error() string {
 	}
 
 	if e.Err != nil {
-		if wrappedErr, ok := e.Err.(*Error); ok {
+		var wrappedErr *Error
+		if As(e.Err, &wrappedErr) {
 			if !wrappedErr.Zero() {
 				pad(b, ":\n\t")
 				b.WriteString(wrappedErr.Error())
@@ -89,11 +106,18 @@ func pad(b *strings.Builder, str string) {
 }
 
 func (e *Error) Zero() bool {
-	return e.Op == "" && e.Path == "" && e.Class == 0 && e.Err == nil
+	return e.Op == "" && e.Path == "" && e.Fn == "" && e.Class == 0 && e.Err == nil
+}
+
+func (e *Error) Unwrap() error {
+	return e.Err
 }
 
 // Op describes the operation being performed.
 type Op string
+
+// Fn describes the kpt function associated with the error.
+type Fn string
 
 // Class describes the class of errors encountered.
 type Class int
@@ -137,6 +161,8 @@ func E(args ...interface{}) error {
 			e.Path = a
 		case Op:
 			e.Op = a
+		case Fn:
+			e.Fn = a
 		case Class:
 			e.Class = a
 		case *Error:
@@ -150,12 +176,10 @@ func E(args ...interface{}) error {
 			panic(fmt.Errorf("unknown type %T for value %v in call to error.E", a, a))
 		}
 	}
-
 	wrappedErr, ok := e.Err.(*Error)
 	if !ok {
 		return e
 	}
-
 	if e.Path == wrappedErr.Path {
 		wrappedErr.Path = ""
 	}
@@ -164,9 +188,23 @@ func E(args ...interface{}) error {
 		wrappedErr.Op = ""
 	}
 
+	if e.Fn == wrappedErr.Fn {
+		wrappedErr.Fn = ""
+	}
+
 	if e.Class == wrappedErr.Class {
 		wrappedErr.Class = 0
 	}
-
 	return e
+}
+
+// Is reports whether any error in err's chain matches target.
+func Is(err, target error) bool {
+	return goerrors.Is(err, target)
+}
+
+// As finds the first error in err's chain that matches target, and if so, sets
+// target to that error value and returns true. Otherwise, it returns false.
+func As(err error, target interface{}) bool {
+	return goerrors.As(err, target)
 }

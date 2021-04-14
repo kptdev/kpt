@@ -17,12 +17,14 @@
 package cmdrender
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdrender/runtime"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -32,14 +34,16 @@ import (
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
+func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 
 	cfn := &runtime.ContainerFn{
+		Path:  pkgPath,
 		Image: f.Image,
+		Ctx:   ctx,
 	}
 
 	return &runtimeutil.FunctionFilter{
@@ -49,21 +53,25 @@ func newFnRunner(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Fil
 }
 
 func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
+	const op errors.Op = "fn.readConfig"
+	var fn errors.Fn = errors.Fn(f.Image)
+
 	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":
-		path := path.Join(string(pkgPath), f.ConfigPath)
+		path := filepath.Join(string(pkgPath), f.ConfigPath)
 		file, err := os.Open(path)
 		if err != nil {
-			return nil, fmt.Errorf("failed to open config file path %s: %w", f.ConfigPath, err)
+			return nil, errors.E(op, fn,
+				fmt.Errorf("missing function config %q", f.ConfigPath))
 		}
 		b, err := ioutil.ReadAll(file)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read content from config file: %w", err)
+			return nil, errors.E(op, fn, err)
 		}
 		node, err = yaml.Parse(string(b))
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse config %s: %w", string(b), err)
+			return nil, errors.E(op, fn, fmt.Errorf("invalid function config %q %w", f.ConfigPath, err))
 		}
 		// directly use the config from file
 		return node, nil
@@ -76,22 +84,19 @@ func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.R
 			return nil, nil
 		}
 		// create a ConfigMap only for configMap config
-		configNode, err := yaml.Parse(`
+		configNode := yaml.MustParse(`
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: function-input
 data: {}
 `)
+		err := configNode.PipeE(yaml.SetField("data", node))
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse function config skeleton: %w", err)
-		}
-		err = configNode.PipeE(yaml.SetField("data", node))
-		if err != nil {
-			return nil, fmt.Errorf("failed to set 'data' field: %w", err)
+			return nil, errors.E(op, fn, err)
 		}
 		return configNode, nil
 	}
-	// no need to reutrn ConfigMap if no config given
+	// no need to return ConfigMap if no config given
 	return nil, nil
 }
