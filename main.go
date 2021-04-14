@@ -22,6 +22,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -54,6 +55,7 @@ func main() {
 
 	if err := cmd.Execute(); err != nil {
 		handleErr(cmd, err)
+		os.Exit(1)
 	}
 }
 
