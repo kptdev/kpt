@@ -15,8 +15,6 @@
 package runner
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -24,8 +22,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/GoogleContainerTools/kpt/run"
 )
 
 // Runner runs an e2e test
@@ -35,6 +31,14 @@ type Runner struct {
 	cmd           string
 	t             *testing.T
 	initialCommit string
+	kptBin        string
+}
+
+func getKptBin() (string, error) {
+	if p := os.Getenv(kptBinEnv); p != "" {
+		return p, nil
+	}
+	return "", fmt.Errorf("must specify env '%s' for kpt binary path", kptBinEnv)
 }
 
 const (
@@ -42,6 +46,7 @@ const (
 	// expected diff and results if they already exist. If will not change
 	// config.yaml.
 	updateExpectedEnv string = "KPT_E2E_UPDATE_EXPECTED"
+	kptBinEnv         string = "KPT_E2E_BIN"
 
 	expectedDir         string = ".expected"
 	expectedResultsFile string = "results.yaml"
@@ -60,11 +65,17 @@ func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	if !info.IsDir() {
 		return nil, fmt.Errorf("path %s is not a directory", testCase.Path)
 	}
+	kptBin, err := getKptBin()
+	if err != nil {
+		return nil, fmt.Errorf("failed to find kpt binary: %w", err)
+	}
+	t.Logf("Using kpt binary: %s", kptBin)
 	return &Runner{
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
 		cmd:      c,
 		t:        t,
+		kptBin:   kptBin,
 	}, nil
 }
 
@@ -114,15 +125,11 @@ func (r *Runner) runFnEval() error {
 	}
 	if r.testCase.Config.EvalConfig.Image != "" {
 		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
-	} else if r.testCase.Config.EvalConfig.ExecPath != "" {
-		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
+	} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
+		kptArgs = append(kptArgs, "--exec-path", string(r.testCase.Config.EvalConfig.execUniquePath))
 	}
-	if r.testCase.Config.EvalConfig.FnConfig != "" {
-		fnConfigPath, err := filepath.Abs(filepath.Join(r.testCase.Path, r.testCase.Config.EvalConfig.FnConfig))
-		if err != nil {
-			return fmt.Errorf("failed to get absolute path to function config file: %w", err)
-		}
-		kptArgs = append(kptArgs, "--fn-config", fnConfigPath)
+	if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
+		kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
 	}
 	if r.testCase.Config.EvalConfig.IncludeMetaResources {
 		kptArgs = append(kptArgs, "--include-meta-resources")
@@ -134,20 +141,11 @@ func (r *Runner) runFnEval() error {
 			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
-	var output string
-	var fnErr error
-	command := run.GetMain(context.Background())
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		command.SetArgs(kptArgs)
-		outputWriter := bytes.NewBuffer(nil)
-		command.SetOutput(outputWriter)
-		fnErr = command.Execute()
+		output, fnErr := runCommand("", r.kptBin, kptArgs)
 		if fnErr != nil {
-			// if kpt fn run returns error, we should compare
-			// the result
-			break
+			r.t.Logf("kpt error output: %s", output)
 		}
-		output = outputWriter.String()
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			return r.updateExpected(pkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
@@ -156,7 +154,12 @@ func (r *Runner) runFnEval() error {
 		// compare results
 		err = r.compareResult(fnErr, pkgPath, resultsPath)
 		if err != nil {
-			return fmt.Errorf("%w\nkpt output:\n%s", err, output)
+			return err
+		}
+		// we passed result check, now we should break if the command error
+		// is expected
+		if fnErr != nil {
+			break
 		}
 	}
 
@@ -201,30 +204,32 @@ func (r *Runner) runFnRender() error {
 	}
 
 	// run function
-	var fnErr error
-	command := run.GetMain(context.Background())
 	kptArgs := []string{"fn", "render", pkgPath}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		command.SetArgs(kptArgs)
-		fnErr = command.Execute()
-		if fnErr != nil {
-			if r.testCase.Config.ExitCode != 0 {
-				r.t.Logf("%s", fnErr.Error())
-				return nil
-			}
-			break
-		}
+		output, fnErr := runCommand("", r.kptBin, kptArgs)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			// TODO: `fn render` doesn't support result file now
 			// use empty string to skip update results
 			return r.updateExpected(pkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
 		}
-
+		if fnErr != nil {
+			r.t.Logf("kpt error output: %s", output)
+		}
 		// compare results
-		err = r.compareResult(fnErr, pkgPath, origPkgPath)
+		// TODO: `fn render` doesn't support result file now
+		// use empty string for results dir
+		err = r.compareResult(fnErr, pkgPath, "")
+		if err != nil {
+			return err
+		}
+		// we passed result check, now we should break if the command error
+		// is expected
+		if fnErr != nil {
+			break
+		}
 	}
-	return err
+	return nil
 }
 
 func (r *Runner) preparePackage(pkgPath string) error {
@@ -264,24 +269,22 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	if exitCode != 0 {
-		actual, err := readActualResults(resultsPath)
-		if err != nil {
-			return fmt.Errorf("failed to read actual results: %w", err)
-		}
-		diffOfResult, err := diffStrings(actual, expected.Results)
-		if err != nil {
-			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
-		}
-		if actual != expected.Results {
-			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
-				actual, diffOfResult)
-		}
-		return nil
+	// compare results
+	actual, err := readActualResults(resultsPath)
+	if err != nil {
+		return fmt.Errorf("failed to read actual results: %w", err)
+	}
+	diffOfResult, err := diffStrings(actual, expected.Results)
+	if err != nil {
+		return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+	}
+	if actual != expected.Results {
+		return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+			actual, diffOfResult)
 	}
 
 	// compare diff
-	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
+	actual, err = readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
@@ -301,12 +304,20 @@ func (r *Runner) Skip() bool {
 }
 
 func readActualResults(resultsPath string) (string, error) {
+	// no results
+	if resultsPath == "" {
+		return "", nil
+	}
 	l, err := ioutil.ReadDir(resultsPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to get files in results dir: %w", err)
 	}
-	if len(l) != 1 {
-		return "", fmt.Errorf("unexpected results files number %d, should be 1", len(l))
+	if len(l) > 1 {
+		return "", fmt.Errorf("unexpected results files number %d, should be 0 or 1", len(l))
+	}
+	if len(l) == 0 {
+		// no result file
+		return "", nil
 	}
 	resultsFile := l[0].Name()
 	actualResults, err := ioutil.ReadFile(filepath.Join(resultsPath, resultsFile))

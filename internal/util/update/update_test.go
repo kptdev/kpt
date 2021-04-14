@@ -663,6 +663,30 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 	}
 }
 
+func TestCommand_Run_noUpstreamReference(t *testing.T) {
+	_, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Branch: "master",
+			},
+		},
+	})
+	defer clean()
+
+	name := "test-package"
+	w.PackageDir = name
+	kf := kptfileutil.DefaultKptfile(name)
+	testutil.AddKptfileToWorkspace(t, w, kf)
+
+	// Update the local package
+	err := Command{
+		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run()
+
+	assert.Contains(t, err.Error(), "must have an upstream reference")
+
+}
+
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid
 func TestCommand_Run_failInvalidPath(t *testing.T) {
 	for i := range kptfilev1alpha2.UpdateStrategies {

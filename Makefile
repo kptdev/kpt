@@ -66,12 +66,16 @@ test:
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
-test-docker:	
-	go test -cover --tags=docker ./...
+test-docker: build
+	KPT_E2E_BIN=$(GOBIN)/kpt go test -cover --tags=docker ./...
 
 # target to run e2e tests for "kpt fn render" command
-test-fn-render:
-	go test -v --tags=docker --run=TestFnRender ./e2e/
+test-fn-render: build
+	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnRender ./e2e/
+
+# target to run e2e tests for "kpt fn eval" command
+test-fn-eval: build
+	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnEval ./e2e/
 
 # target to flush kpt-fn cache
 flush-fn-cache:
