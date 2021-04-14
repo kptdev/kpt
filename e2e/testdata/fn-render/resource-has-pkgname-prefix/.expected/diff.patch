@@ -116,10 +116,10 @@ index eb6a122..b9e519d 100644
 +          persistentVolumeClaim:
 +            claimName: mysql-pv-claim
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index d762212..6837328 100644
+index a300019..83e1463 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
-@@ -8,18 +8,19 @@
+@@ -9,18 +9,19 @@
  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  # See the License for the specific language governing permissions and
  # limitations under the License.
@@ -145,7 +145,7 @@ index d762212..6837328 100644
    selector:
      app: wordpress
      tier: frontend
-@@ -28,15 +29,16 @@ spec:
+@@ -29,15 +30,16 @@ spec:
  apiVersion: v1
  kind: PersistentVolumeClaim
  metadata:
@@ -167,7 +167,7 @@ index d762212..6837328 100644
    resources:
      requests:
        storage: 20Gi
-@@ -44,12 +46,13 @@ spec:
+@@ -45,12 +47,13 @@ spec:
  apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
  kind: Deployment
  metadata:
@@ -185,7 +185,7 @@ index d762212..6837328 100644
  spec:
    selector:
      matchLabels:
-@@ -59,28 +62,30 @@ spec:
+@@ -60,28 +63,30 @@ spec:
      type: Recreate
    template:
      metadata:

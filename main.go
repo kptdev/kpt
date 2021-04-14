@@ -19,22 +19,35 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
+	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
+	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/logs"
-	"sigs.k8s.io/cli-utils/pkg/errors"
+	cliutilserror "sigs.k8s.io/cli-utils/pkg/errors"
 )
 
 func main() {
 	var logFlags flag.FlagSet
+	var err error
 
-	cmd := run.GetMain()
+	ctx := context.Background()
+
+	cmd := run.GetMain(ctx)
 	logs.InitLogs()
-	defer logs.FlushLogs()
+	defer func() {
+		logs.FlushLogs()
+		if err != nil {
+			os.Exit(1)
+		}
+	}()
 
 	// Enable commandline flags for klog.
 	// logging will help in collecting debugging information from users
@@ -46,10 +59,22 @@ func main() {
 	_ = cmd.Flags().Set("logtostderr", "false")
 	_ = cmd.Flags().Set("alsologtostderr", "false")
 
-	if err := cmd.Execute(); err != nil {
-		cmdutil.PrintErrorStacktrace(err)
-		// TODO: find a way to avoid having to provide `kpt live` as a
-		// parameter here.
-		errors.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
+	err = cmd.Execute()
+	if err != nil {
+		handleErr(cmd, err)
 	}
+}
+
+func handleErr(cmd *cobra.Command, err error) {
+	var kptErr *errors.Error
+
+	if errors.As(err, &kptErr) {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", kptErr.Error())
+		return
+	}
+	// fmt.Fprintf(cmd.ErrOrStderr(), "%s\n", err)
+	cmdutil.PrintErrorStacktrace(err)
+	// TODO: find a way to avoid having to provide `kpt live` as a
+	// parameter here.
+	cliutilserror.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
 }

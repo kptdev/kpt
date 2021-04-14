@@ -193,132 +193,193 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 		return "master", nil
 	}
 
-	r := cmdget.NewRunner("kpt")
-	r.Command.SilenceErrors = true
-	r.Command.SilenceUsage = true
-	r.Command.RunE = failRun
-	r.Command.SetArgs([]string{})
-	err := r.Command.Execute()
-	assert.EqualError(t, err, "requires at least 1 arg(s), only received 0")
+	testCases := map[string]struct {
+		argsFunc    func(dir string) []string
+		runE        func(*cobra.Command, []string) error
+		validations func(dir string, r *cmdget.Runner, err error)
+	}{
+		"must have at least 1 arg": {
+			argsFunc: func(dir string) []string {
+				return []string{}
+			},
+			runE: failRun,
+			validations: func(_ string, r *cmdget.Runner, err error) {
+				assert.EqualError(t, err, "requires at least 1 arg(s), only received 0")
+			},
+		},
+		"must provide unambiguous repo, dir and version": {
+			argsFunc: func(dir string) []string {
+				return []string{"foo", "bar", "baz"}
+			},
+			runE: failRun,
+			validations: func(_ string, r *cmdget.Runner, err error) {
+				assert.EqualError(t, err, "ambiguous repo/dir@version specify '.git' in argument")
+			},
+		},
+		"repo arg is split up correctly into ref and repo": {
+			argsFunc: func(dir string) []string {
+				return []string{"something://foo.git/@master", "./"}
+			},
+			runE: NoOpRunE,
+			validations: func(_ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "something://foo", r.Get.Git.Repo)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "foo"), r.Get.Destination)
+			},
+		},
+		"repo arg is split up correctly into ref, directory and repo": {
+			argsFunc: func(dir string) []string {
+				return []string{"file://foo.git/blueprints/java", "."}
+			},
+			runE: NoOpRunE,
+			validations: func(_ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "file://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
+			},
+		},
+		"current working dir -- should use package name": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://foo.git/blueprints/java", "foo/../bar/../"}
+			},
+			runE: NoOpRunE,
+			validations: func(_ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
+			},
+		},
+		"clean relative path": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://foo.git/blueprints/java", "./foo/../bar/../baz"}
+			},
+			runE: NoOpRunE,
+			validations: func(_ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "baz"), r.Get.Destination)
+			},
+		},
+		"clean absolute path": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://foo.git/blueprints/java", "/foo/../bar/../baz"}
+			},
+			runE: NoOpRunE,
+			validations: func(_ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, "/baz", r.Get.Destination)
+			},
+		},
+		"provide an absolute destination directory": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://foo.git", filepath.Join(dir, "package", "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "package", "my-app"), r.Get.Destination)
+			},
+		},
+		"package in a subdirectory": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://github.com/foo/bar.git/baz", filepath.Join(dir, "package", "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
+				assert.Equal(t, "/baz", r.Get.Git.Directory)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "package", "my-app"), r.Get.Destination)
+			},
+		},
+		"package in a subdirectory at a specific ref": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://github.com/foo/bar.git/baz@v1", filepath.Join(dir, "package", "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
+				assert.Equal(t, "/baz", r.Get.Git.Directory)
+				assert.Equal(t, "v1", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "package", "my-app"), r.Get.Destination)
+			},
+		},
+		"provided directory already exists": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://foo.git", filepath.Join(dir, "package")}
+			},
+			runE: NoOpRunE,
+			validations: func(dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "package", "foo"), r.Get.Destination)
+			},
+		},
+		"invalid repo": {
+			argsFunc: func(dir string) []string {
+				return []string{"/", filepath.Join(dir, "package", "my-app")}
+			},
+			runE: failRun,
+			validations: func(dir string, r *cmdget.Runner, err error) {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "specify '.git'")
+			},
+		},
+		"valid strategy provided": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://foo.git", filepath.Join(dir, "package"), "--strategy=fast-forward"}
+			},
+			runE: NoOpRunE,
+			validations: func(dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "https://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "package", "foo"), r.Get.Destination)
+				assert.Equal(t, kptfilev1alpha2.FastForward, r.Get.UpdateStrategy)
+			},
+		},
+		"invalid strategy provided": {
+			argsFunc: func(dir string) []string {
+				return []string{"https://foo.git", filepath.Join(dir, "package"), "--strategy=does-not-exist"}
+			},
+			runE: failRun,
+			validations: func(dir string, r *cmdget.Runner, err error) {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "unknown update strategy \"does-not-exist\"")
+			},
+		},
+	}
 
-	r = cmdget.NewRunner("kpt")
-	r.Command.SilenceErrors = true
-	r.Command.SilenceUsage = true
-	r.Command.RunE = failRun
-	r.Command.SetArgs([]string{"foo", "bar", "baz"})
-	err = r.Command.Execute()
-	assert.EqualError(t, err, "ambiguous repo/dir@version specify '.git' in argument")
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			d, err := ioutil.TempDir("", "kpt")
+			assert.NoError(t, err)
+			defer os.RemoveAll(d)
+			err = os.Mkdir(filepath.Join(d, "package"), 0700)
+			assert.NoError(t, err)
 
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"something://foo.git/@master", "./"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "something://foo", r.Get.Git.Repo)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "foo"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"file://foo.git/blueprints/java", "."})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "file://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
-
-	// current working dir -- should use package name
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "foo/../bar/../"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
-
-	// current working dir -- should use package name
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "./foo/../bar/../"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
-
-	// clean relative path
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "./foo/../bar/../baz"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "baz"), r.Get.Destination)
-
-	// clean absolute path
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "/foo/../bar/../baz"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, "/baz", r.Get.Destination)
-
-	d, err := ioutil.TempDir("", "kpt")
-	assert.NoError(t, err)
-	defer os.RemoveAll(d)
-	err = os.Mkdir(filepath.Join(d, "package"), 0700)
-	assert.NoError(t, err)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://github.com/foo/bar.git/baz", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
-	assert.Equal(t, "/baz", r.Get.Git.Directory)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://github.com/foo/bar/.git/baz", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
-	assert.Equal(t, "/baz", r.Get.Git.Directory)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://github.com/foo/bar.git/baz@v1", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
-	assert.Equal(t, "/baz", r.Get.Git.Directory)
-	assert.Equal(t, "v1", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git", filepath.Join(d, "package")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "foo"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"/", filepath.Join(d, "package", "my-app")})
-	err = r.Command.Execute()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "specify '.git'")
+			r := cmdget.NewRunner("kpt")
+			r.Command.SilenceErrors = true
+			r.Command.SilenceUsage = true
+			r.Command.RunE = tc.runE
+			r.Command.SetArgs(tc.argsFunc(d))
+			err = r.Command.Execute()
+			tc.validations(d, r, err)
+		})
+	}
 }

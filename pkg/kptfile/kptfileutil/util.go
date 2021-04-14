@@ -26,6 +26,7 @@ import (
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
 // ReadFile reads the KptFile in the given directory
@@ -165,7 +166,10 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		return err
 	}
 
-	// TODO: Merge other parts of the Kptfile
+	localKf, err = merge(localKf, updatedKf, kptfilev1alpha2.KptFile{})
+	if err != nil {
+		return err
+	}
 
 	if updateUpstream {
 		localKf = updateUpstreamAndUpstreamLock(localKf, updatedKf)
@@ -190,7 +194,15 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		return err
 	}
 
-	// TODO: Merge other parts of the Kptfile
+	originKf, err := ReadFile(originPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	localKf, err = merge(localKf, updatedKf, originKf)
+	if err != nil {
+		return err
+	}
 
 	if updateUpstream {
 		localKf = updateUpstreamAndUpstreamLock(localKf, updatedKf)
@@ -227,6 +239,70 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 		},
 	}
 	return WriteFile(path, kpgfile)
+}
+
+func merge(localKf, updatedKf, originalKf kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
+	localBytes, err := yaml.Marshal(localKf)
+	if err != nil {
+		return kptfilev1alpha2.KptFile{}, err
+	}
+
+	updatedBytes, err := yaml.Marshal(updatedKf)
+	if err != nil {
+		return kptfilev1alpha2.KptFile{}, err
+	}
+
+	originalBytes, err := yaml.Marshal(originalKf)
+	if err != nil {
+		return kptfilev1alpha2.KptFile{}, err
+	}
+
+	mergedBytes, err := merge3.MergeStrings(string(localBytes), string(originalBytes), string(updatedBytes), false)
+	if err != nil {
+		return kptfilev1alpha2.KptFile{}, err
+	}
+
+	var mergedKf kptfilev1alpha2.KptFile
+	err = yaml.Unmarshal([]byte(mergedBytes), &mergedKf)
+	if err != nil {
+		return mergedKf, err
+	}
+
+	// The merge algorithm currently lets values from upstream take precedence,
+	// and we don't want that for name and namespace. So updating those values
+	// in the merge Kptfile.
+	mergedKf.ObjectMeta.Name = localKf.Name
+	mergedKf.ObjectMeta.Namespace = localKf.Namespace
+
+	// We don't want the values from upstream here, so we set the values back
+	// to what was already in local.
+	mergedKf.Upstream = nil
+	mergedKf.UpstreamLock = nil
+
+	if localKf.Upstream != nil {
+		mergedKf.Upstream = &kptfilev1alpha2.Upstream{
+			Type: localKf.Upstream.Type,
+			Git: &kptfilev1alpha2.Git{
+				Directory: localKf.Upstream.Git.Directory,
+				Repo:      localKf.Upstream.Git.Repo,
+				Ref:       localKf.Upstream.Git.Ref,
+			},
+			UpdateStrategy: localKf.Upstream.UpdateStrategy,
+		}
+	}
+
+	if localKf.UpstreamLock != nil {
+		mergedKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
+			Type: localKf.UpstreamLock.Type,
+			GitLock: &kptfilev1alpha2.GitLock{
+				Commit:    localKf.UpstreamLock.GitLock.Commit,
+				Directory: localKf.UpstreamLock.GitLock.Directory,
+				Repo:      localKf.UpstreamLock.GitLock.Repo,
+				Ref:       localKf.UpstreamLock.GitLock.Ref,
+			},
+		}
+	}
+	return mergedKf, nil
 }
 
 func updateUpstreamAndUpstreamLock(localKf, updatedKf kptfilev1alpha2.KptFile) kptfilev1alpha2.KptFile {

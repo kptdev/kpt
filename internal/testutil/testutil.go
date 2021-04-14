@@ -428,6 +428,28 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 	}
 }
 
+// AddKptfileToWorkspace writes the provided Kptfile to the workspace
+// and makes a commit.
+func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.KptFile) {
+	err := os.MkdirAll(w.FullPackagePath(), 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = kptfileutil.WriteFile(w.FullPackagePath(), kf)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.NoError(t, gitutil.NewLocalGitRunner(w.WorkspaceDirectory).Run("add", ".")) {
+		t.FailNow()
+	}
+	_, err = w.Commit("added Kptfile")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+}
+
 // SetupRepos creates repos and returns a mapping from name to TestGitRepos.
 // This only creates the first version of each repo as given by the first item
 // in the repoContent slice.

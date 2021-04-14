@@ -15,6 +15,7 @@
 package commands
 
 import (
+	"context"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -30,9 +31,9 @@ func NormalizeCommand(c ...*cobra.Command) {
 }
 
 // GetKptCommands returns the set of kpt commands to be registered
-func GetKptCommands(name string, f util.Factory) []*cobra.Command {
+func GetKptCommands(ctx context.Context, name string, f util.Factory) []*cobra.Command {
 	var c []*cobra.Command
-	fnCmd := GetFnCommand(name)
+	fnCmd := GetFnCommand(ctx, name)
 	pkgCmd := GetPkgCommand(name)
 	liveCmd := GetLiveCommand(name, f)
 

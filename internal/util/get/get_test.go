@@ -785,6 +785,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 	testCases := map[string]struct {
 		directory      string
 		ref            string
+		updateStrategy kptfilev1alpha2.UpdateStrategyType
 		reposContent   map[string][]testutil.Content
 		expectedResult *pkgbuilder.RootPkg
 		expectedErrMsg string
@@ -810,6 +811,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 		},
+
 		"basic package with non-KRM files": {
 			directory: "/",
 			ref:       "master",
@@ -831,6 +833,35 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				).
 				WithFile("foo.txt", `this is a test`),
 		},
+		"basic package with pipeline": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+									),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0).
+						WithPipeline(
+							pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
 		"basic package with no Kptfile in upstream": {
 			directory: "/",
 			ref:       "master",
@@ -847,6 +878,27 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"basic package with explicit update strategy": {
+			directory:      "/",
+			ref:            "master",
+			updateStrategy: kptfilev1alpha2.FastForward,
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "fast-forward").
 						WithUpstreamLockRef("upstream", "/", "master", 0),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
@@ -1235,7 +1287,8 @@ func TestCommand_Run_subpackages(t *testing.T) {
 					Directory: tc.directory,
 					Ref:       tc.ref,
 				},
-				Destination: destinationDir,
+				Destination:    destinationDir,
+				UpdateStrategy: tc.updateStrategy,
 			}.Run()
 
 			if tc.expectedErrMsg != "" {

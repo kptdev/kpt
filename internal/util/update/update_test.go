@@ -42,8 +42,8 @@ const (
 // - Modify upstream with new content
 // - Update the local package to fetch the upstream content
 func TestCommand_Run_noRefChanges(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -91,8 +91,8 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 }
 
 func TestCommand_Run_subDir(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -203,8 +203,8 @@ func TestCommand_Run_noChanges(t *testing.T) {
 }
 
 func TestCommand_Run_noCommit(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -250,8 +250,8 @@ func TestCommand_Run_noCommit(t *testing.T) {
 }
 
 func TestCommand_Run_noAdd(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -486,8 +486,8 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 // TestCommand_Run_toBranchRef verifies the package contents are set to the contents of the branch
 // it was updated to.
 func TestCommand_Run_toBranchRef(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -547,8 +547,8 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
 // it was updated to.
 func TestCommand_Run_toTagRef(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -663,8 +663,8 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid
 func TestCommand_Run_failInvalidPath(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			path := filepath.Join("fake", "path")
 			err := Command{
@@ -678,10 +678,45 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 	}
 }
 
+// TestCommand_Run_failInvalidRepo verifies Run fails if the repo is invalid
+func TestCommand_Run_failInvalidRepo(t *testing.T) {
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Data:   testutil.Dataset1,
+					Branch: "master",
+				},
+				{
+					Data: testutil.Dataset2,
+				},
+			},
+		},
+	}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+
+	err := Command{
+		Pkg:  pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Repo: "fake",
+	}.Run()
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "failed to clone git repo")
+
+	if !g.AssertLocalDataEquals(testutil.Dataset1) {
+		return
+	}
+}
+
 // TestCommand_Run_failInvalidRef verifies Run fails if the ref is invalid
 func TestCommand_Run_failInvalidRef(t *testing.T) {
-	for i := range Strategies {
-		strategy := Strategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			g := &testutil.TestSetupManager{
 				T: t,
@@ -2720,6 +2755,325 @@ func TestRun_remote_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 		},
+		"fast-forward updates can be used even if subpackages has changes": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge").
+											WithUpstreamLockRef("foo", "/", "master", 0),
+									).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge").
+											WithUpstreamLockRef("foo", "/", "master", 0),
+									).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "master",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "master", "fast-forward").
+							WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.ConfigMapResource,
+								pkgbuilder.SetAnnotation("foo", "bar")),
+					),
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "fast-forward").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.SecretResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master", "resource-merge").
+								WithUpstreamLockRef("foo", "/", "master", 0),
+						).
+						WithResource(pkgbuilder.ConfigMapResource,
+							pkgbuilder.SetAnnotation("foo", "bar")),
+				),
+		},
+		"Kptfiles in unfetched subpackages are merged": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "v1.0", "resource-merge"),
+									),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
+											WithPipeline(
+												pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+											),
+									),
+							),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+						Tag:    "v1.0",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+					).
+					WithResource(pkgbuilder.ConfigMapResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "v1.0", 0).
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
+									),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					),
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
+								WithUpstreamLockRef("foo", "/", "v1.0", 0).
+								WithPipeline(
+									pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+								),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+		},
+		"Kptfile in the root package is merged": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+									),
+							).
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:v1"),
+									),
+							).
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "master", 0).
+							WithPipeline(
+								pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+								pkgbuilder.NewFunction("gcr.io/kpt-dev/zork:v1"),
+							),
+					).
+					WithResource(pkgbuilder.ConfigMapResource),
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1).
+						WithPipeline(
+							pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+							pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:v1"),
+						),
+				).
+				WithResource(pkgbuilder.ConfigMapResource),
+		},
+		"Kptfile in the nested package is merged": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge").
+											WithUpstreamLockRef("foo", "/", "master", 0).
+											WithPipeline(
+												pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+											),
+									).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge").
+											WithUpstreamLockRef("foo", "/", "master", 1).
+											WithPipeline(
+												pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+												pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
+											),
+									).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+									),
+							).
+							WithResource(pkgbuilder.ConfigMapResource),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:v1"),
+									),
+							).
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+					).
+					WithResource(pkgbuilder.ConfigMapResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0).
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/zork:v1"),
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+									),
+							).
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master", "resource-merge").
+								WithUpstreamLockRef("foo", "/", "master", 1).
+								WithPipeline(
+									pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+									pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
+								),
+						).
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -2772,6 +3126,125 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedPath := tc.expectedLocal.ExpandPkgWithName(t,
 				g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
 			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
+		})
+	}
+}
+
+func TestRootPackageIsUnfetched(t *testing.T) {
+	testCases := map[string]struct {
+		reposChanges   map[string][]testutil.Content
+		directory      string
+		ref            string
+		expectedLocal  *pkgbuilder.RootPkg
+		expectedErrMsg string
+	}{
+		"unfetched with no subpackages": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+					},
+				},
+			},
+			directory: "/",
+			ref:       "main",
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"unfetched with subpackages": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg-1").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "fast-forward"),
+									),
+								pkgbuilder.NewSubPkg("subpkg-2").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "fast-forward").
+											WithUpstreamLockRef("foo", "/", "master", 0),
+									).
+									WithResource(pkgbuilder.SecretResource),
+							),
+						Branch: "main",
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource),
+						Branch: "master",
+					},
+				},
+			},
+			directory: "/",
+			ref:       "main",
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg-1").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master", "fast-forward").
+								WithUpstreamLockRef("foo", "/", "master", 0),
+						).
+						WithResource(pkgbuilder.SecretResource),
+					pkgbuilder.NewSubPkg("subpkg-2").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master", "fast-forward").
+								WithUpstreamLockRef("foo", "/", "master", 0),
+						).
+						WithResource(pkgbuilder.SecretResource),
+				),
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, tc.reposChanges)
+			defer clean()
+
+			name := "test-package"
+			w.PackageDir = name
+			kf := kptfileutil.DefaultKptfile(name)
+			kf.Upstream = &kptfilev1alpha2.Upstream{
+				Type: kptfilev1alpha2.GitOrigin,
+				Git: &kptfilev1alpha2.Git{
+					Repo:      repos[testutil.Upstream].RepoDirectory,
+					Directory: tc.directory,
+					Ref:       tc.ref,
+				},
+				UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			}
+			testutil.AddKptfileToWorkspace(t, w, kf)
+
+			err := Command{
+				Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
+			}.Run()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			expectedPath := tc.expectedLocal.ExpandPkgWithName(t, name, testutil.ToReposInfo(repos))
+			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
 		})
 	}
 }

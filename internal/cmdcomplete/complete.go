@@ -18,7 +18,7 @@ package cmdcomplete
 import (
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/update"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/posener/complete/v2"
 	"github.com/posener/complete/v2/predict"
 	"github.com/spf13/cobra"
@@ -60,7 +60,7 @@ func Complete(cmd *cobra.Command, skipHelp bool, visitFlags VisitFlags) *complet
 			visitFlags(cmd, flag, cc)
 		}
 		if flag.Name == "strategy" {
-			cc.Flags[flag.Name] = predict.Options(predict.OptValues(update.StrategiesAsStrings()...))
+			cc.Flags[flag.Name] = predict.Options(predict.OptValues(kptfilev1alpha2.UpdateStrategiesAsStrings()...))
 			return
 		}
 		if flag.Name == "pattern" {

@@ -22,7 +22,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-errors/errors"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
+	goerrors "github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +43,7 @@ func FixDocs(old, new string, c *cobra.Command) {
 func PrintErrorStacktrace(err error) {
 	e := os.Getenv(StackTraceOnErrors)
 	if StackOnError || e == trueString || e == "1" {
-		if err, ok := err.(*errors.Error); ok {
+		if err, ok := err.(*goerrors.Error); ok {
 			fmt.Fprintf(os.Stderr, "%s", err.Stack())
 		}
 	}
@@ -88,14 +89,18 @@ func ResolveAbsAndRelPaths(path string) (string, string, error) {
 // DockerCmdAvailable runs `docker ps` to check that the docker command is
 // available, and returns an error with installation instructions if it is not
 func DockerCmdAvailable() error {
+	const op errors.Op = "docker.check"
+
+	suggestedText := `Docker is required to run this command.
+To install docker, follow the instructions at https://docs.docker.com/get-docker/
+`
+	buffer := &bytes.Buffer{}
+
 	cmd := exec.Command("docker", "version")
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	cmd.Stderr = buffer
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf(stderr.String() +
-			`Docker is required to run this command. 
-To install docker, follow the instructions at https://docs.docker.com/get-docker/`)
+		return errors.E(op, fmt.Errorf("%s", suggestedText))
 	}
 	return nil
 }

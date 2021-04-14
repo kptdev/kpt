@@ -54,19 +54,24 @@ type EvalTestCaseConfig struct {
 type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
+
 	// NonIdempotent indicates if the test case is not idempotent.
 	// By default, tests are assumed to be idempotent, so it defaults to false.
 	NonIdempotent bool `json:"nonIdempotent,omitempty" yaml:"nonIdempotent,omitempty"`
+
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
+
 	// Debug means will the debug behavior be enabled. Default: false
 	// Debug behavior:
 	//  1. Keep the temporary directory used to run the test cases
 	//    after test.
 	Debug bool `json:"debug,omitempty" yaml:"debug,omitempty"`
+
 	// TestType is the type of the test case. Possible value: ['render', 'eval']
 	// Default: 'eval'
 	TestType string `json:"testType,omitempty" yaml:"testType,omitempty"`
+
 	// EvalConfig is the configs for eval tests
 	EvalConfig *EvalTestCaseConfig `json:",inline" yaml:",inline"`
 }

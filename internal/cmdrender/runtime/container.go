@@ -15,12 +15,15 @@
 package runtime
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"time"
+
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
 // containerNetworkName is a type for network name used in container
@@ -41,6 +44,8 @@ type ContainerFnPermission struct {
 // ContainerFn implements a KRMFn which run a containerized
 // KRM function
 type ContainerFn struct {
+	Ctx  context.Context
+	Path types.UniquePath
 	// Image is the container image to run
 	Image string
 	// Container function will be killed after this timeour.
@@ -49,18 +54,24 @@ type ContainerFn struct {
 	Perm    ContainerFnPermission
 }
 
-// Run implements KRMFn. It will run the container function with
-// stdin from r and write the output to w
+// Run runs the container function using docker runtime.
+// It reads the input from the given reader and writes the output
+// to the provided writer.
 func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
+	pr := printer.FromContextOrDie(f.Ctx)
+	errSink := bytes.Buffer{}
 	cmd, cancel := f.getDockerCmd()
 	defer cancel()
 	cmd.Stdin = reader
 	cmd.Stdout = writer
-	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("error in running container: %w", err)
+	cmd.Stderr = &errSink
+
+	pr.PkgPrintf(f.Path, "running function %q: ", f.Image)
+	if err := cmd.Run(); err != nil {
+		pr.Printf("FAILED\n")
+		return fmt.Errorf("%s", errSink.String())
 	}
+	pr.Printf("SUCCESS\n")
 	return nil
 }
 
