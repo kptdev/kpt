@@ -98,11 +98,20 @@
         const paginationFooters = Array.from(
           document.getElementsByClassName("docsify-pagination-container")
         );
-        const isBookPage =
-          document.location.pathname.toLowerCase().startsWith("/book") &&
-          document.location.pathname.length > 6;
+        const isBookPage = document.location.pathname
+          .toLowerCase()
+          .startsWith("/book");
         paginationFooters.forEach(
           (el) => (el.style.display = isBookPage ? "flex" : "none")
+        );
+
+        const previousPaginationButtons = Array.from(
+          document.getElementsByClassName("pagination-item--previous")
+        );
+        const isBookCover =
+          isBookPage && document.location.pathname.toLowerCase().length < 7;
+        previousPaginationButtons.forEach(
+          (el) => (el.style.display = isBookCover ? "none" : "flex")
         );
       }
 
