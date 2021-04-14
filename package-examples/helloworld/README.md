@@ -1,6 +1,7 @@
 # helloworld
 
-Sample helloworld package.  Showcases what a bare bones package is which doesn't do anything beyond declaring the current directory as a `kpt` package. 
+Sample helloworld package.  Showcases what a bare bones package is which 
+doesn't do anything beyond declaring the current directory as a `kpt` package. 
 
 ## Steps
 
@@ -25,7 +26,8 @@ List the package contents in a tree structure.
 
   $ kpt pkg tree helloworld/
 
-    helloworld
+    PKG: helloworld
+    ├── [Kptfile]  Kptfile helloworld
     ├── [deploy.yaml]  Deployment helloworld-gke
     └── [service.yaml]  Service helloworld-gke
 
@@ -49,5 +51,5 @@ Apply all the contents of the package recursively to the cluster
     0 resource(s) pruned, 0 skipped, 0 failed
 
 [tree]: ../../../site/reference/pkg/tree
-[apply]: ../../../site/reference/live/init
-[apply]: ../../../site/reference/live/apply
+[live init]: ../../../site/reference/live/init
+[live apply]: ../../../site/reference/live/apply
