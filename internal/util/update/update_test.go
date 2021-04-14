@@ -35,7 +35,7 @@ import (
 
 const (
 	kptRepo         = "github.com/GoogleContainerTools/kpt"
-	mainBranch      = "master"
+	masterBranch    = "master"
 	testPackageName = "test-package"
 )
 
@@ -54,7 +54,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 						{
 							Data: testutil.Dataset2,
@@ -84,7 +84,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(upstreamRepo.RepoName, commit, mainBranch,
+			if !g.AssertKptfile(upstreamRepo.RepoName, commit, masterBranch,
 				strategy) {
 				return
 			}
@@ -103,7 +103,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 						{
 							Tag:  "v1.2",
@@ -164,7 +164,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 					},
 				},
@@ -197,7 +197,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			if !g.AssertKptfile(upstreamRepo.RepoName, commit, mainBranch, u.updater) {
+			if !g.AssertKptfile(upstreamRepo.RepoName, commit, masterBranch, u.updater) {
 				return
 			}
 		})
@@ -215,7 +215,7 @@ func TestCommand_Run_noCommit(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 					},
 				},
@@ -262,7 +262,7 @@ func TestCommand_Run_noAdd(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 					},
 				},
@@ -308,7 +308,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			strategy: kptfilev1alpha2.ResourceMerge,
 			initialUpstream: testutil.Content{
 				Data:   testutil.Dataset1,
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 			updatedUpstream: testutil.Content{
 				Data: testutil.Dataset2,
@@ -327,7 +327,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			strategy: kptfilev1alpha2.FastForward,
 			initialUpstream: testutil.Content{
 				Data:   testutil.Dataset1,
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 			updatedUpstream: testutil.Content{
 				Data: testutil.Dataset2,
@@ -352,7 +352,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			strategy: kptfilev1alpha2.ForceDeleteReplace,
 			initialUpstream: testutil.Content{
 				Data:   testutil.Dataset1,
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 			updatedUpstream: testutil.Content{
 				Data: testutil.Dataset2,
@@ -372,7 +372,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			initialUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 			updatedUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
@@ -398,7 +398,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			initialUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 			updatedUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
@@ -450,7 +450,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			// run the command
 			err = Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-				Ref:      mainBranch,
+				Ref:      masterBranch,
 				Strategy: tc.strategy,
 			}.Run()
 
@@ -477,7 +477,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			if !g.AssertLocalDataEquals(expectedPath) {
 				t.FailNow()
 			}
-			if !g.AssertKptfile(g.Repos[testutil.Upstream].RepoName, expectedCommit, mainBranch,
+			if !g.AssertKptfile(g.Repos[testutil.Upstream].RepoName, expectedCommit, masterBranch,
 				tc.strategy) {
 				t.FailNow()
 			}
@@ -498,7 +498,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 						{
 							Data:   testutil.Dataset2,
@@ -506,7 +506,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 						},
 						{
 							Data:   testutil.Dataset3,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 					},
 				},
@@ -559,7 +559,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 						{
 							Data: testutil.Dataset2,
@@ -619,7 +619,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 						{
 							Data: testutil.Dataset5,
@@ -686,7 +686,7 @@ func TestCommand_Run_badUpstreamLockRepo(t *testing.T) {
 			{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 		},
 	})
@@ -700,7 +700,7 @@ func TestCommand_Run_badUpstreamLockRepo(t *testing.T) {
 		Git: &kptfilev1alpha2.Git{
 			Repo:      repos[testutil.Upstream].RepoDirectory,
 			Directory: dir,
-			Ref:       mainBranch,
+			Ref:       masterBranch,
 		},
 		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 	}
@@ -709,7 +709,7 @@ func TestCommand_Run_badUpstreamLockRepo(t *testing.T) {
 		GitLock: &kptfilev1alpha2.GitLock{
 			Repo:      "fake",
 			Directory: dir,
-			Ref:       mainBranch,
+			Ref:       masterBranch,
 		},
 	}
 	testutil.AddKptfileToWorkspace(t, w, kf)
@@ -730,7 +730,7 @@ func TestCommand_Run_badUpstreamLockRef(t *testing.T) {
 			{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 		},
 	})
@@ -744,7 +744,7 @@ func TestCommand_Run_badUpstreamLockRef(t *testing.T) {
 		Git: &kptfilev1alpha2.Git{
 			Repo:      repos[testutil.Upstream].RepoDirectory,
 			Directory: dir,
-			Ref:       mainBranch,
+			Ref:       masterBranch,
 		},
 		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 	}
@@ -773,7 +773,7 @@ func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
 			{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
-				Branch: mainBranch,
+				Branch: masterBranch,
 			},
 		},
 	})
@@ -787,7 +787,7 @@ func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
 		Git: &kptfilev1alpha2.Git{
 			Repo:      repos[testutil.Upstream].RepoDirectory,
 			Directory: dir,
-			Ref:       mainBranch,
+			Ref:       masterBranch,
 		},
 		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 	}
@@ -796,7 +796,7 @@ func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
 		GitLock: &kptfilev1alpha2.GitLock{
 			Repo:      repos[testutil.Upstream].RepoDirectory,
 			Directory: "fake",
-			Ref:       mainBranch,
+			Ref:       masterBranch,
 		},
 	}
 	testutil.AddKptfileToWorkspace(t, w, kf)
@@ -819,7 +819,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 			testutil.Upstream: {
 				{
 					Data:   testutil.Dataset1,
-					Branch: mainBranch,
+					Branch: masterBranch,
 				},
 				{
 					Data: testutil.Dataset2,
@@ -857,7 +857,7 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 					testutil.Upstream: {
 						{
 							Data:   testutil.Dataset1,
-							Branch: mainBranch,
+							Branch: masterBranch,
 						},
 						{
 							Data: testutil.Dataset2,
@@ -897,7 +897,7 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 			testutil.Upstream: {
 				{
 					Data:   testutil.Dataset1,
-					Branch: mainBranch,
+					Branch: masterBranch,
 				},
 				{
 					Data: testutil.Dataset2,
@@ -939,7 +939,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -967,8 +967,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -994,7 +994,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 				},
 			},
@@ -1016,8 +1016,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 0),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 0),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1039,8 +1039,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 0),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 0),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1060,7 +1060,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1092,8 +1092,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1117,8 +1117,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1140,7 +1140,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1184,8 +1184,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1207,7 +1207,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1225,8 +1225,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						),
 				},
 			},
@@ -1238,7 +1238,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					{
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile(),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1264,8 +1264,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1290,7 +1290,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 									WithKptfile(pkgbuilder.NewKptfile()).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1313,8 +1313,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1330,8 +1330,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1351,7 +1351,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1381,8 +1381,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1404,8 +1404,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1427,7 +1427,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 									WithKptfile(pkgbuilder.NewKptfile()).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1445,8 +1445,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						),
 				},
 			},
@@ -1463,7 +1463,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 									WithKptfile(pkgbuilder.NewKptfile()).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1489,8 +1489,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
@@ -1512,8 +1512,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						),
 				},
 			},
@@ -1529,7 +1529,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(pkgbuilder.NewKptfile()),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1552,8 +1552,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithResource(pkgbuilder.DeploymentResource).
 						WithResource(pkgbuilder.ConfigMapResource).
@@ -1577,7 +1577,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 									WithKptfile(pkgbuilder.NewKptfile()).
 									WithFile("information", "first version"),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1601,8 +1601,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithFile("data.txt", "updated content").
 						WithSubPackages(
@@ -1621,7 +1621,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile(pkgbuilder.NewKptfile()).
 							WithFile("data.txt", "initial content"),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1643,8 +1643,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithFile("data.txt", "local content"),
 				},
@@ -1661,8 +1661,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("upstream", "/", mainBranch, "PLACEHOLDER").
-								WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+								WithUpstreamRef("upstream", "/", masterBranch, "PLACEHOLDER").
+								WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 						).
 						WithFile("data.txt", "updated content"),
 				},
@@ -1785,10 +1785,10 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("foo").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge"),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1808,7 +1808,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1821,8 +1821,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -1846,10 +1846,10 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("foo").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "fast-forward"),
+											WithUpstreamRef("foo", "/", masterBranch, "fast-forward"),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1869,7 +1869,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1887,8 +1887,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 						pkgbuilder.NewSubPkg("foo").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", mainBranch, "fast-forward").
-									WithUpstreamLockRef("foo", "/", mainBranch, 0),
+									WithUpstreamRef("foo", "/", masterBranch, "fast-forward").
+									WithUpstreamLockRef("foo", "/", masterBranch, 0),
 							).
 							WithResource(pkgbuilder.DeploymentResource,
 								pkgbuilder.SetFieldPath("34", "spec", "replicas")),
@@ -1907,10 +1907,10 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("foo").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge"),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1930,7 +1930,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -1949,8 +1949,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 						pkgbuilder.NewSubPkg("foo").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-									WithUpstreamLockRef("foo", "/", mainBranch, 0),
+									WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+									WithUpstreamLockRef("foo", "/", masterBranch, 0),
 							).
 							WithResource(pkgbuilder.DeploymentResource,
 								pkgbuilder.SetFieldPath("34", "spec", "replicas")),
@@ -1959,8 +1959,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
@@ -1987,10 +1987,10 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("foo").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge"),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2000,7 +2000,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("foo").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge"),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
 									),
 							),
 					},
@@ -2014,10 +2014,10 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("bar", "/", mainBranch, "fast-forward"),
+											WithUpstreamRef("bar", "/", masterBranch, "fast-forward"),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2027,7 +2027,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("bar", "/", mainBranch, "resource-merge"),
+											WithUpstreamRef("bar", "/", masterBranch, "resource-merge"),
 									),
 							),
 					},
@@ -2037,7 +2037,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					}, {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
@@ -2048,24 +2048,24 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("foo").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-								WithUpstreamLockRef("foo", "/", mainBranch, 1),
+								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+								WithUpstreamLockRef("foo", "/", masterBranch, 1),
 						).
 						WithResource(pkgbuilder.ConfigMapResource).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
 								WithKptfile(
 									pkgbuilder.NewKptfile().
-										WithUpstreamRef("bar", "/", mainBranch, "resource-merge").
-										WithUpstreamLockRef("bar", "/", mainBranch, 1),
+										WithUpstreamRef("bar", "/", masterBranch, "resource-merge").
+										WithUpstreamLockRef("bar", "/", masterBranch, 1),
 								).
 								WithResource(pkgbuilder.ConfigMapResource),
 						),
@@ -2082,21 +2082,21 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("foo").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.DeploymentResource).
 									WithSubPackages(
 										pkgbuilder.NewSubPkg("bar").
 											WithKptfile(
 												pkgbuilder.NewKptfile().
-													WithUpstreamRef("bar", "/", mainBranch, "fast-forward").
-													WithUpstreamLockRef("bar", "/", mainBranch, 0),
+													WithUpstreamRef("bar", "/", masterBranch, "fast-forward").
+													WithUpstreamLockRef("bar", "/", masterBranch, 0),
 											).
 											WithResource(pkgbuilder.DeploymentResource),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2106,16 +2106,16 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("foo").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 1),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 1),
 									).
 									WithResource(pkgbuilder.ConfigMapResource).
 									WithSubPackages(
 										pkgbuilder.NewSubPkg("bar").
 											WithKptfile(
 												pkgbuilder.NewKptfile().
-													WithUpstreamRef("bar", "/", mainBranch, "resource-merge").
-													WithUpstreamLockRef("bar", "/", mainBranch, 1),
+													WithUpstreamRef("bar", "/", masterBranch, "resource-merge").
+													WithUpstreamLockRef("bar", "/", masterBranch, 1),
 											).
 											WithResource(pkgbuilder.ConfigMapResource),
 									),
@@ -2131,12 +2131,12 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("bar", "/", mainBranch, "fast-forward").
-											WithUpstreamLockRef("bar", "/", mainBranch, 0),
+											WithUpstreamRef("bar", "/", masterBranch, "fast-forward").
+											WithUpstreamLockRef("bar", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2146,8 +2146,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("bar", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("bar", "/", mainBranch, 1),
+											WithUpstreamRef("bar", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("bar", "/", masterBranch, 1),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
 							),
@@ -2158,7 +2158,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					}, {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
@@ -2169,24 +2169,24 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("foo").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-								WithUpstreamLockRef("foo", "/", mainBranch, 1),
+								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+								WithUpstreamLockRef("foo", "/", masterBranch, 1),
 						).
 						WithResource(pkgbuilder.ConfigMapResource).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("bar").
 								WithKptfile(
 									pkgbuilder.NewKptfile().
-										WithUpstreamRef("bar", "/", mainBranch, "resource-merge").
-										WithUpstreamLockRef("bar", "/", mainBranch, 1),
+										WithUpstreamRef("bar", "/", masterBranch, "resource-merge").
+										WithUpstreamLockRef("bar", "/", masterBranch, 1),
 								).
 								WithResource(pkgbuilder.ConfigMapResource),
 						),
@@ -2208,7 +2208,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 									).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2264,8 +2264,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -2294,7 +2294,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 									).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2350,8 +2350,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -2380,7 +2380,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 									).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2401,8 +2401,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},
@@ -2422,7 +2422,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 									).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2450,8 +2450,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
-							WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-							WithUpstreamLockRef("upstream", "/", mainBranch, 0),
+							WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+							WithUpstreamLockRef("upstream", "/", masterBranch, 0),
 					).
 					WithResource(pkgbuilder.ConfigMapResource).
 					WithSubPackages(
@@ -2467,8 +2467,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -2500,13 +2500,13 @@ func TestRun_remote_subpackages(t *testing.T) {
 										pkgbuilder.NewSubPkg("bar").
 											WithKptfile(
 												pkgbuilder.NewKptfile().
-													WithUpstreamRef("bar", "/", mainBranch, "resource-merge").
-													WithUpstreamLockRef("bar", "/", mainBranch, 0),
+													WithUpstreamRef("bar", "/", masterBranch, "resource-merge").
+													WithUpstreamLockRef("bar", "/", masterBranch, 0),
 											).
 											WithResource(pkgbuilder.DeploymentResource),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2523,8 +2523,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("bar").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("bar", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("bar", "/", mainBranch, 0),
+											WithUpstreamRef("bar", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("bar", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
@@ -2536,15 +2536,15 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 				},
 			},
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},
@@ -2555,7 +2555,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.DeploymentResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2577,8 +2577,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
-							WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-							WithUpstreamLockRef("upstream", "/", mainBranch, 0),
+							WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+							WithUpstreamLockRef("upstream", "/", masterBranch, 0),
 					).
 					WithResource(pkgbuilder.DeploymentResource).
 					WithSubPackages(
@@ -2597,8 +2597,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef("upstream", "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef("upstream", "/", mainBranch, 1),
+						WithUpstreamRef("upstream", "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef("upstream", "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -2621,7 +2621,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2680,7 +2680,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2690,8 +2690,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
 							),
@@ -2702,23 +2702,23 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 				},
 			},
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 1),
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpkg").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-								WithUpstreamLockRef("foo", "/", mainBranch, 0),
+								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+								WithUpstreamLockRef("foo", "/", masterBranch, 0),
 						).
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
@@ -2734,12 +2734,12 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2749,8 +2749,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.ConfigMapResource).
 									WithResource(pkgbuilder.DeploymentResource,
@@ -2763,7 +2763,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 				},
 			},
@@ -2771,16 +2771,16 @@ func TestRun_remote_subpackages(t *testing.T) {
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
-							WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-							WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 0),
+							WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0),
 					).
 					WithResource(pkgbuilder.DeploymentResource),
 			},
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 1),
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 		},
@@ -2795,10 +2795,10 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge"),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2808,8 +2808,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 1),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 1),
 									).
 									WithResource(pkgbuilder.DeploymentResource),
 							),
@@ -2820,7 +2820,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2842,12 +2842,12 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2857,7 +2857,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge"),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
 									),
 							),
 					},
@@ -2867,23 +2867,23 @@ func TestRun_remote_subpackages(t *testing.T) {
 						Pkg: pkgbuilder.NewRootPkg().
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 				},
 			},
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 1),
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpkg").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-								WithUpstreamLockRef("foo", "/", mainBranch, 0),
+								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+								WithUpstreamLockRef("foo", "/", masterBranch, 0),
 						).
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
@@ -2898,12 +2898,12 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -2912,8 +2912,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
 							),
@@ -2923,7 +2923,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 					{
 						Pkg: pkgbuilder.NewRootPkg().
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 				},
 			},
@@ -2931,16 +2931,16 @@ func TestRun_remote_subpackages(t *testing.T) {
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
-							WithUpstreamRef(testutil.Upstream, "/", mainBranch, "fast-forward").
-							WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 0),
+							WithUpstreamRef(testutil.Upstream, "/", masterBranch, "fast-forward").
+							WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0),
 					).
 					WithResource(pkgbuilder.DeploymentResource).
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("subpkg").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-									WithUpstreamLockRef("foo", "/", mainBranch, 0),
+									WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+									WithUpstreamLockRef("foo", "/", masterBranch, 0),
 							).
 							WithResource(pkgbuilder.ConfigMapResource,
 								pkgbuilder.SetAnnotation("foo", "bar")),
@@ -2949,16 +2949,16 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/", mainBranch, "fast-forward").
-						WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 1),
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "fast-forward").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.SecretResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpkg").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-								WithUpstreamLockRef("foo", "/", mainBranch, 0),
+								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+								WithUpstreamLockRef("foo", "/", masterBranch, 0),
 						).
 						WithResource(pkgbuilder.ConfigMapResource,
 							pkgbuilder.SetAnnotation("foo", "bar")),
@@ -2978,7 +2978,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 											WithUpstreamRef("foo", "/", "v1.0", "resource-merge"),
 									),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -3010,8 +3010,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
-							WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-							WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 0),
+							WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0),
 					).
 					WithResource(pkgbuilder.ConfigMapResource).
 					WithSubPackages(
@@ -3030,8 +3030,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 1),
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
@@ -3059,7 +3059,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -3078,8 +3078,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
-							WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-							WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 0).
+							WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0).
 							WithPipeline(
 								pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
 								pkgbuilder.NewFunction("gcr.io/kpt-dev/zork:v1"),
@@ -3090,8 +3090,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 1).
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1).
 						WithPipeline(
 							pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
 							pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:v1"),
@@ -3110,15 +3110,15 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0).
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0).
 											WithPipeline(
 												pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
 											),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
 							),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -3128,8 +3128,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-											WithUpstreamLockRef("foo", "/", mainBranch, 1).
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+											WithUpstreamLockRef("foo", "/", masterBranch, 1).
 											WithPipeline(
 												pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
 												pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
@@ -3149,7 +3149,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 					{
 						Pkg: pkgbuilder.NewRootPkg().
@@ -3168,16 +3168,16 @@ func TestRun_remote_subpackages(t *testing.T) {
 				Pkg: pkgbuilder.NewRootPkg().
 					WithKptfile(
 						pkgbuilder.NewKptfile().
-							WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-							WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 0),
+							WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0),
 					).
 					WithResource(pkgbuilder.ConfigMapResource).
 					WithSubPackages(
 						pkgbuilder.NewSubPkg("subpkg").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-									WithUpstreamLockRef("foo", "/", mainBranch, 0).
+									WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+									WithUpstreamLockRef("foo", "/", masterBranch, 0).
 									WithPipeline(
 										pkgbuilder.NewFunction("gcr.io/kpt-dev/zork:v1"),
 										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
@@ -3189,16 +3189,16 @@ func TestRun_remote_subpackages(t *testing.T) {
 			expectedLocal: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/", mainBranch, "resource-merge").
-						WithUpstreamLockRef(testutil.Upstream, "/", mainBranch, 1),
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1),
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpkg").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "resource-merge").
-								WithUpstreamLockRef("foo", "/", mainBranch, 1).
+								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+								WithUpstreamLockRef("foo", "/", masterBranch, 1).
 								WithPipeline(
 									pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
 									pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
@@ -3301,13 +3301,13 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 								pkgbuilder.NewSubPkg("subpkg-1").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "fast-forward"),
+											WithUpstreamRef("foo", "/", masterBranch, "fast-forward"),
 									),
 								pkgbuilder.NewSubPkg("subpkg-2").
 									WithKptfile(
 										pkgbuilder.NewKptfile().
-											WithUpstreamRef("foo", "/", mainBranch, "fast-forward").
-											WithUpstreamLockRef("foo", "/", mainBranch, 0),
+											WithUpstreamRef("foo", "/", masterBranch, "fast-forward").
+											WithUpstreamLockRef("foo", "/", masterBranch, 0),
 									).
 									WithResource(pkgbuilder.SecretResource),
 							),
@@ -3318,7 +3318,7 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 					{
 						Pkg: pkgbuilder.NewRootPkg().
 							WithResource(pkgbuilder.SecretResource),
-						Branch: mainBranch,
+						Branch: masterBranch,
 					},
 				},
 			},
@@ -3335,15 +3335,15 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 					pkgbuilder.NewSubPkg("subpkg-1").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "fast-forward").
-								WithUpstreamLockRef("foo", "/", mainBranch, 0),
+								WithUpstreamRef("foo", "/", masterBranch, "fast-forward").
+								WithUpstreamLockRef("foo", "/", masterBranch, 0),
 						).
 						WithResource(pkgbuilder.SecretResource),
 					pkgbuilder.NewSubPkg("subpkg-2").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstreamRef("foo", "/", mainBranch, "fast-forward").
-								WithUpstreamLockRef("foo", "/", mainBranch, 0),
+								WithUpstreamRef("foo", "/", masterBranch, "fast-forward").
+								WithUpstreamLockRef("foo", "/", masterBranch, 0),
 						).
 						WithResource(pkgbuilder.SecretResource),
 				),
