@@ -29,6 +29,11 @@ func (u UniquePath) String() string {
 	return string(u)
 }
 
+// Empty returns true if the UniquePath is empty
+func (u UniquePath) Empty() bool {
+	return len(u) == 0
+}
+
 // RelativePath returns the relative path to current working directory.
 func (u UniquePath) RelativePath() (string, error) {
 	cwd, err := os.Getwd()

@@ -125,15 +125,11 @@ func (r *Runner) runFnEval() error {
 	}
 	if r.testCase.Config.EvalConfig.Image != "" {
 		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
-	} else if r.testCase.Config.EvalConfig.ExecPath != "" {
-		kptArgs = append(kptArgs, "--exec-path", r.testCase.Config.EvalConfig.ExecPath)
+	} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
+		kptArgs = append(kptArgs, "--exec-path", string(r.testCase.Config.EvalConfig.execUniquePath))
 	}
-	if r.testCase.Config.EvalConfig.FnConfig != "" {
-		fnConfigPath, err := filepath.Abs(filepath.Join(r.testCase.Path, r.testCase.Config.EvalConfig.FnConfig))
-		if err != nil {
-			return fmt.Errorf("failed to get absolute path to function config file: %w", err)
-		}
-		kptArgs = append(kptArgs, "--fn-config", fnConfigPath)
+	if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
+		kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
 	}
 	if r.testCase.Config.EvalConfig.IncludeMetaResources {
 		kptArgs = append(kptArgs, "--include-meta-resources")
