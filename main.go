@@ -36,12 +36,18 @@ import (
 
 func main() {
 	var logFlags flag.FlagSet
+	var err error
 
 	ctx := context.Background()
 
 	cmd := run.GetMain(ctx)
 	logs.InitLogs()
-	defer logs.FlushLogs()
+	defer func() {
+		logs.FlushLogs()
+		if err != nil {
+			os.Exit(1)
+		}
+	}()
 
 	// Enable commandline flags for klog.
 	// logging will help in collecting debugging information from users
@@ -53,9 +59,9 @@ func main() {
 	_ = cmd.Flags().Set("logtostderr", "false")
 	_ = cmd.Flags().Set("alsologtostderr", "false")
 
-	if err := cmd.Execute(); err != nil {
+	err = cmd.Execute()
+	if err != nil {
 		handleErr(cmd, err)
-		os.Exit(1)
 	}
 }
 
