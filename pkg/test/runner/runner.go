@@ -34,11 +34,11 @@ type Runner struct {
 	kptBin        string
 }
 
-func getKptBin() string {
+func getKptBin() (string, error) {
 	if p := os.Getenv(kptBinEnv); p != "" {
-		return p
+		return p, nil
 	}
-	return "kpt"
+	return "", fmt.Errorf("Must specify env '%s' for kpt binary path", kptBinEnv)
 }
 
 const (
@@ -46,7 +46,7 @@ const (
 	// expected diff and results if they already exist. If will not change
 	// config.yaml.
 	updateExpectedEnv string = "KPT_E2E_UPDATE_EXPECTED"
-	kptBinEnv         string = "KPT_E2E_BINARY"
+	kptBinEnv         string = "KPT_E2E_BIN"
 
 	expectedDir         string = ".expected"
 	expectedResultsFile string = "results.yaml"
@@ -65,7 +65,10 @@ func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	if !info.IsDir() {
 		return nil, fmt.Errorf("path %s is not a directory", testCase.Path)
 	}
-	kptBin := getKptBin()
+	kptBin, err := getKptBin()
+	if err != nil {
+		return nil, fmt.Errorf("failed to find kpt binary: %w", err)
+	}
 	t.Logf("Using kpt binary: %s", kptBin)
 	return &Runner{
 		pkgName:  filepath.Base(testCase.Path),
@@ -199,21 +202,20 @@ func (r *Runner) runFnRender() error {
 	// run function
 	kptArgs := []string{"fn", "render", pkgPath}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		_, fnErr := runCommand("", r.kptBin, kptArgs)
-		if fnErr != nil && r.testCase.Config.ExitCode != 0 {
-			// TODO: compare render results
-			r.t.Logf("%s", fnErr.Error())
-			return nil
-		}
+		output, fnErr := runCommand("", r.kptBin, kptArgs)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			// TODO: `fn render` doesn't support result file now
 			// use empty string to skip update results
 			return r.updateExpected(pkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
 		}
-
+		if fnErr != nil {
+			r.t.Logf("kpt error output: %s", output)
+		}
 		// compare results
-		err = r.compareResult(fnErr, pkgPath, origPkgPath)
+		// TODO: `fn render` doesn't support result file now
+		// use empty string for results dir
+		err = r.compareResult(fnErr, pkgPath, "")
 	}
 	return err
 }
@@ -255,24 +257,22 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	if exitCode != 0 && expected.Results != "" {
-		actual, err := readActualResults(resultsPath)
-		if err != nil {
-			return fmt.Errorf("failed to read actual results: %w", err)
-		}
-		diffOfResult, err := diffStrings(actual, expected.Results)
-		if err != nil {
-			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
-		}
-		if actual != expected.Results {
-			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
-				actual, diffOfResult)
-		}
-		return nil
+	// compare results
+	actual, err := readActualResults(resultsPath)
+	if err != nil {
+		return fmt.Errorf("failed to read actual results: %w", err)
+	}
+	diffOfResult, err := diffStrings(actual, expected.Results)
+	if err != nil {
+		return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+	}
+	if actual != expected.Results {
+		return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+			actual, diffOfResult)
 	}
 
 	// compare diff
-	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
+	actual, err = readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
@@ -292,12 +292,20 @@ func (r *Runner) Skip() bool {
 }
 
 func readActualResults(resultsPath string) (string, error) {
+	// no results
+	if resultsPath == "" {
+		return "", nil
+	}
 	l, err := ioutil.ReadDir(resultsPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to get files in results dir: %w", err)
 	}
-	if len(l) != 1 {
-		return "", fmt.Errorf("unexpected results files number %d, should be 1", len(l))
+	if len(l) > 1 {
+		return "", fmt.Errorf("unexpected results files number %d, should be 0 or 1", len(l))
+	}
+	if len(l) == 0 {
+		// no result file
+		return "", nil
 	}
 	resultsFile := l[0].Name()
 	actualResults, err := ioutil.ReadFile(filepath.Join(resultsPath, resultsFile))

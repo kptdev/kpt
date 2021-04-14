@@ -1,0 +1,4 @@
+name: set-namespace
+items:
+  - message: 'failed to configure function: input namespace cannot be empty'
+    severity: error
