@@ -318,6 +318,88 @@ openAPI:
 	}
 }
 
+func TestTreeCommand_CurDirInput(t *testing.T) {
+	d, err := ioutil.TempDir("", "tree-test")
+	defer os.RemoveAll(d)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = os.MkdirAll(filepath.Join(d, "Mainpkg", "Subpkg"), 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = os.Chdir(filepath.Join(d, "Mainpkg"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "f2.yaml"), []byte(`kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: Mainpkg
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: Subpkg
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := GetTreeRunner("")
+	r.Command.SetArgs([]string{})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, `PKG: Mainpkg
+├── [Kptfile]  Kptfile Mainpkg
+├── [f1.yaml]  Deployment foo
+└── PKG: Subpkg
+    ├── [Kptfile]  Kptfile Subpkg
+    └── [f2.yaml]  Deployment bar
+`, b.String()) {
+		return
+	}
+}
+
 func TestTreeCommand_stdin(t *testing.T) {
 	// fmt the files
 	b := &bytes.Buffer{}
