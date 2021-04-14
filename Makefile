@@ -82,7 +82,7 @@ flush-fn-cache:
 	for fn in set-namespace set-label set-annotation starlark; do \
 		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
 	done
-	
+
 vet:
 	go vet ./...
 
