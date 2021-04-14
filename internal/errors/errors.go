@@ -60,7 +60,12 @@ func (e *Error) Error() string {
 	if e.Path != "" {
 		pad(b, ": ")
 		b.WriteString("pkg ")
-		b.WriteString(e.Path.RelativePath())
+		// try to print relative path of the pkg if we can else use abs path
+		relPath, err := e.Path.RelativePath()
+		if err != nil {
+			relPath = string(e.Path)
+		}
+		b.WriteString(relPath)
 	}
 
 	if e.Fn != "" {

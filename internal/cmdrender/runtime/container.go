@@ -58,7 +58,7 @@ type ContainerFn struct {
 // It reads the input from the given reader and writes the output
 // to the provided writer.
 func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
-	pr := printer.FromContext(f.Ctx)
+	pr := printer.FromContextOrDie(f.Ctx)
 	errSink := bytes.Buffer{}
 	cmd, cancel := f.getDockerCmd()
 	defer cancel()

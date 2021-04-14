@@ -41,8 +41,9 @@ type Executor struct {
 
 // Execute runs a pipeline.
 func (e *Executor) Execute(ctx context.Context) error {
-	op := errors.Op("fn.render")
-	pr := printer.FromContext(ctx)
+	const op errors.Op = "fn.render"
+
+	pr := printer.FromContextOrDie(ctx)
 
 	root, err := newPkgNode(e.PkgPath, nil)
 	if err != nil {
@@ -115,7 +116,7 @@ type pkgNode struct {
 
 // newPkgNode returns a pkgNode instance given a path or pkg.
 func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
-	op := errors.Op("pkg.read")
+	const op errors.Op = "pkg.read"
 
 	if path == "" && p == nil {
 		return pn, fmt.Errorf("missing package path %s or package", path)
@@ -161,7 +162,7 @@ func (s hydrationState) String() string {
 
 // hydrate hydrates given pkg and returns wet resources.
 func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
-	op := errors.Op("pkg.render")
+	const op errors.Op = "pkg.render"
 
 	curr, found := hctx.pkgs[pn.pkg.UniquePath]
 	if found {
@@ -253,7 +254,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
 func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode) ([]*yaml.RNode, error) {
-	op := errors.Op("pipeline.run")
+	const op errors.Op = "pipeline.run"
 
 	if len(input) == 0 {
 		return nil, nil

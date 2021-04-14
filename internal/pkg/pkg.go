@@ -22,14 +22,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
 const CurDir = "."
@@ -94,7 +93,8 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
 func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
-	op := errors.Op("pkg.readKptfile")
+	const op errors.Op = "pkg.readKptfile"
+
 	kf := &kptfilev1alpha2.KptFile{}
 
 	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
@@ -192,7 +192,7 @@ const (
 // TODO: For now this accepts the path as a string type. See if we can leverage
 // the package type here.
 func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]string, error) {
-	op := errors.Op("pkg.Subpackages")
+	const op errors.Op = "pkg.Subpackages"
 
 	_, err := os.Stat(rootPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -302,7 +302,7 @@ func IsPackageUnfetched(path string) (bool, error) {
 
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
 func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode, err error) {
-	op := errors.Op("pkg.readResources")
+	const op errors.Op = "pkg.readResources"
 
 	hasKptfile, err := IsPackageDir(p.UniquePath.String())
 	if err != nil {

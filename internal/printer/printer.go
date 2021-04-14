@@ -41,8 +41,13 @@ type printer struct {
 // PkgPrintf accepts an optional pkgpath to display the message with
 // package context.
 func (pr *printer) PkgPrintf(pkgPath types.UniquePath, format string, args ...interface{}) {
+	// try to print relative path of the pkg if we can else use abs path
+	relPath, err := pkgPath.RelativePath()
+	if err != nil {
+		relPath = string(pkgPath)
+	}
 	if string(pkgPath) != "" {
-		format = fmt.Sprintf("package %q: ", pkgPath.RelativePath()) + format
+		format = fmt.Sprintf("package %q: ", relPath) + format
 	}
 	fmt.Fprintf(pr.outStream, format, args...)
 }
@@ -65,13 +70,13 @@ func (pr *printer) Printf(format string, args ...interface{}) {
 // Helper functions to set and retrieve printer instance from a context.
 // Defining them here avoids the context key collision.
 
-// FromContext returns associated printer instance.
-func FromContext(ctx context.Context) Printer {
+// FromContext returns printer instance associated with the context.
+func FromContextOrDie(ctx context.Context) Printer {
 	pr, ok := ctx.Value(printerKey).(*printer)
 	if ok {
 		return pr
 	}
-	return nil
+	panic("printer missing in context")
 }
 
 // WithContext creates new context from the given parent context

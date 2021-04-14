@@ -89,7 +89,8 @@ func ResolveAbsAndRelPaths(path string) (string, string, error) {
 // DockerCmdAvailable runs `docker ps` to check that the docker command is
 // available, and returns an error with installation instructions if it is not
 func DockerCmdAvailable() error {
-	op := errors.Op("docker.check")
+	const op errors.Op = "docker.check"
+
 	suggestedText := `Docker is required to run this command.
 To install docker, follow the instructions at https://docs.docker.com/get-docker/
 `
@@ -99,7 +100,7 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 	cmd.Stderr = buffer
 	err := cmd.Run()
 	if err != nil {
-		return errors.E(op, suggestedText, fmt.Errorf("%s", suggestedText))
+		return errors.E(op, fmt.Errorf("%s", suggestedText))
 	}
 	return nil
 }

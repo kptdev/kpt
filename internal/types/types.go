@@ -30,19 +30,19 @@ func (u UniquePath) String() string {
 }
 
 // RelativePath returns the relative path to current working directory.
-func (u UniquePath) RelativePath() string {
+func (u UniquePath) RelativePath() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		return string(u)
+		return "", err
 	}
 	rPath, err := filepath.Rel(cwd, string(u))
 	if err != nil {
-		return string(u)
+		return string(u), err
 	}
 	if strings.HasPrefix(rPath, "..") {
-		return string(u)
+		return string(u), nil
 	}
-	return rPath
+	return rPath, nil
 }
 
 // DisplayPath represents Slash-separated path to the package directory on the filesytem relative

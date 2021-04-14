@@ -53,8 +53,8 @@ func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types
 }
 
 func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
-	op := errors.Op("fn.readConfig")
-	fn := errors.Fn(f.Image)
+	const op errors.Op = "fn.readConfig"
+	var fn errors.Fn = errors.Fn(f.Image)
 
 	var node *yaml.RNode
 	switch {

@@ -53,11 +53,13 @@ type Runner struct {
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
+	const op errors.Op = "fn.preRunE"
+
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()
 		if err != nil {
-			return errors.E(errors.Op("pkg.Read"), err)
+			return errors.E(op, err)
 		}
 		r.pkgPath = wd
 	} else {
