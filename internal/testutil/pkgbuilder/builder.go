@@ -304,6 +304,7 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 type Kptfile struct {
 	Upstream     *Upstream
 	UpstreamLock *UpstreamLock
+	Pipeline     *Pipeline
 }
 
 func NewKptfile() *Kptfile {
@@ -379,6 +380,27 @@ type UpstreamLock struct {
 	Ref     string
 	Index   int
 	Commit  string
+}
+
+func (k *Kptfile) WithPipeline(functions ...Function) *Kptfile {
+	k.Pipeline = &Pipeline{
+		Functions: functions,
+	}
+	return k
+}
+
+type Pipeline struct {
+	Functions []Function
+}
+
+func NewFunction(image string) Function {
+	return Function{
+		Image: image,
+	}
+}
+
+type Function struct {
+	Image string
 }
 
 // RemoteSubpackage contains information about remote subpackages that should
@@ -493,6 +515,13 @@ upstreamLock:
     directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
     ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
     repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
+{{- end }}
+{{- if .Pkg.Kptfile.Pipeline }}
+pipeline:
+  mutators:
+{{- range .Pkg.Kptfile.Pipeline.Functions }}
+  - image: {{ .Image }}
+{{- end }}
 {{- end }}
 `
 
