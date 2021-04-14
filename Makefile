@@ -70,11 +70,11 @@ test-docker: build
 	KPT_E2E_BIN=$(GOBIN)/kpt go test -cover --tags=docker ./...
 
 # target to run e2e tests for "kpt fn render" command
-test-fn-render:
+test-fn-render: build
 	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnRender ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
-test-fn-eval:
+test-fn-eval: build
 	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnEval ./e2e/
 
 # target to flush kpt-fn cache

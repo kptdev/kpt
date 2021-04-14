@@ -147,6 +147,9 @@ func (r *Runner) runFnEval() error {
 	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		output, fnErr := runCommand("", r.kptBin, kptArgs)
+		if fnErr != nil {
+			r.t.Logf("kpt error output: %s", output)
+		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			return r.updateExpected(pkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
@@ -155,7 +158,12 @@ func (r *Runner) runFnEval() error {
 		// compare results
 		err = r.compareResult(fnErr, pkgPath, resultsPath)
 		if err != nil {
-			return fmt.Errorf("%w\nkpt output:\n%s", err, output)
+			return err
+		}
+		// we passed result check, now we should break if the command error
+		// is expected
+		if fnErr != nil {
+			break
 		}
 	}
 
@@ -216,8 +224,16 @@ func (r *Runner) runFnRender() error {
 		// TODO: `fn render` doesn't support result file now
 		// use empty string for results dir
 		err = r.compareResult(fnErr, pkgPath, "")
+		if err != nil {
+			return err
+		}
+		// we passed result check, now we should break if the command error
+		// is expected
+		if fnErr != nil {
+			break
+		}
 	}
-	return err
+	return nil
 }
 
 func (r *Runner) preparePackage(pkgPath string) error {
