@@ -749,24 +749,29 @@ func TestCommand_Run_badUpstreamLockRepo(t *testing.T) {
 }
 
 func TestCommand_Run_badUpstreamLockRef(t *testing.T) {
-	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
-		testutil.Upstream: {
-			{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithResource(pkgbuilder.DeploymentResource),
-				Branch: masterBranch,
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.DeploymentResource),
+					Branch: masterBranch,
+				},
 			},
-		},
-	})
-	defer clean()
+		}}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+	upstreamRepo := g.Repos[testutil.Upstream]
 
-	w.PackageDir = testPackageName
 	dir := "/"
 	kf := kptfileutil.DefaultKptfile(testPackageName)
 	kf.Upstream = &kptfilev1alpha2.Upstream{
 		Type: kptfilev1alpha2.GitOrigin,
 		Git: &kptfilev1alpha2.Git{
-			Repo:      repos[testutil.Upstream].RepoDirectory,
+			Repo:      upstreamRepo.RepoDirectory,
 			Directory: dir,
 			Ref:       masterBranch,
 		},
@@ -775,16 +780,17 @@ func TestCommand_Run_badUpstreamLockRef(t *testing.T) {
 	kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 		Type: kptfilev1alpha2.GitOrigin,
 		GitLock: &kptfilev1alpha2.GitLock{
-			Repo:      repos[testutil.Upstream].RepoDirectory,
+			Repo:      upstreamRepo.RepoDirectory,
 			Directory: dir,
 			Ref:       "fake",
 		},
 	}
-	testutil.AddKptfileToWorkspace(t, w, kf)
+
+	testutil.AddKptfileToWorkspace(t, g.LocalWorkspace, kf)
 
 	// Update the local package
 	err := Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 	}.Run()
 	if !assert.NoError(t, err) {
 		t.FailNow()
