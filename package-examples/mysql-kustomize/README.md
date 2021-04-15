@@ -1,28 +1,88 @@
-upstream
-==================================================
+# mysql-kustomize
 
-# NAME
+This is a package that has several hydration functions in it's pipeline
+as well as utilzing kustomize to patch an upstream configuration.  The 
+upstream configuration is saved in the /upstream folder and the instance
+patch is hydrated using kpt functions.
 
-  mysql-kustomize
+For the final configuration kustomize is used to apply the local patch onto 
+the upstream configuration.
 
-# SYNOPSIS
+## Steps
 
-To apply the package:
+1. [Fetch the package](#fetch-the-package)
+2. [View the package contents](#view-the-package-contents)
+3. [Configure functions](#configure-functions)
+4. [Render the declared values](#render-the-declared-values)
+5. [Apply the package](#apply-the-package)
 
-    kustomize build mysql-kustomize/instance | kubectl apply -R -f -
+### Fetch the package
 
-To connect to the database:
+Get the example package on to local using `kpt pkg get`
 
-    kubectl run -t -i mysql-debug --image mysql:5.7.14 bash
-    mysql -u root -h mysql-0.mysql -pPASSWORD
+  $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/mysql-kustomize
 
-To edit the package:
+    fetching package /package-examples/mysql-kustomize from https://github.com/GoogleContainerTools/kpt to mysql-kustomize
 
-    kpt fn eval --image gcr.io/kpt-fn/apply-setters:VERSION mysql-kustomize --  [setter_name=setter_value]
+### View the package contents
 
-# Description
+List the package contents in a tree structure.
 
-The mysql-kustomize package runs a single instance of the mysql database
-as a StatefulSet.
+  $ kpt pkg tree mysql-kustomize/
 
-# SEE ALSO
+    PKG: mysql-kustomize
+    ├── [Kptfile]  Kptfile consumer
+    ├── instance
+    │   ├── [kustomization.yaml]  Kustomization local instance kustomization
+    │   ├── [service.yaml]  Service none
+    │   └── [statefulset.yaml]  StatefulSet mysql
+    └── upstream
+        ├── [kustomization.yaml]  Kustomization upstream kustomization
+        ├── [service.yaml]  Service mysql
+        ├── [service.yaml]  Service mysql-read
+        └── [statefulset.yaml]  StatefulSet mysql
+
+### Configure functions
+
+The package contains a function pipeline in the `Kptfile` which has
+one `apply-setters` and `set-namespace` functions.  The `apply-setters` 
+function allows you to set a simple value throughout the package configuration.
+The `set-namespace` function allows you to set the namespace on the resources.
+
+    pipeline:
+    mutators:
+        - image: gcr.io/kpt-fn/apply-setters:unstable
+        configMap:
+            mysql-user: userone
+            mysql-database: maindb
+            skip-grant-tables: true
+            cpu: 100m
+            memory: 256Mi
+            port: 3306
+        - image: gcr.io/kpt-fn/set-namespace:unstable
+        configMap:
+            namespace: ns-test
+
+
+### Render the declared values
+
+Render the changes in the hydration pipeline by using `kpt fn render` command:
+
+  $ kpt fn render mysql-kustomize/
+
+    package "mysql-kustomize": running function "gcr.io/kpt-fn/apply-setters:unstable": SUCCESS
+    package "mysql-kustomize": rendered successfully
+
+### Apply the package
+
+Initialize the inventory object:
+
+  $ kpt live init mysql-kustomize/
+
+Apply all the contents of the package recursively to the cluster
+
+  $ kustomize build mysql-kustomize/instance | kpt live apply
+
+    TODO
+
+
