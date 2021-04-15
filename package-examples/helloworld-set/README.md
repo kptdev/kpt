@@ -1,7 +1,7 @@
 # helloworld-set
 
-This is a simple package that showcases a kpt package that has a kustomize
-patch in it.
+This is a simple package that showcases a kpt package that has a number of
+setters in it.
 
 ## Steps
 
@@ -36,10 +36,8 @@ List the package contents in a tree structure.
 
 The package contains a function pipeline in the `Kptfile` which has
 one `apply-setter` function.  The `apply-setter` function allows you to
-set a simple value throughout the package configuration.  In this case the
-value of the setter goes into the `patch.yaml`.  You can set the target
-environment variable to a value different of your choice (different
-than `foobar`)
+set a simple value throughout the package configuration.  In this case
+you can set the replicas, image, tag and http port of a simple application.
 
   pipeline:
     mutators:
