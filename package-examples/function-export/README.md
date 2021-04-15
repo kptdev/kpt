@@ -2,8 +2,9 @@
 
 This is a package that has both a setter and a validation function.  It shows
 how you can use gatekeeper to perform checks that are run during rendering.
-Early feedback minimizes the cost of doing the fix and feedback during 
-design time is the easiest one to address.
+Putting a validation function  into your package allows you to give package 
+consumers guidance on what acceptable configuration is while giving them 
+the freedom to customize.
 
 ## Steps
 
@@ -42,8 +43,8 @@ List the package contents in a tree structure.
 ### Configure functions
 
 The package contains a function pipeline in the `Kptfile` which has
-one `apply-setter` and `gatekeeper-validate` functions.  
-The `apply-setter` function allows you to set a simple value throughout the 
+one `apply-setters` and `gatekeeper-validate` functions.  
+The `apply-setters` function allows you to set a simple value throughout the 
 package configuration.  In this case it's namespace label.  The
 `gatekeeper-validate` function allows you to use gatekeeper for checks on
 the configuration.
@@ -100,5 +101,3 @@ Apply all the contents of the package recursively to the cluster
   $ kpt live apply function-export/
 
     TODO: getting error: can't find scope for resource K8sRequiredLabels.constraints.gatekeeper.sh deployment-must-have-owner
-
-
