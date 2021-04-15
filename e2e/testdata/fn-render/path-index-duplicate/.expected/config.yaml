@@ -15,3 +15,4 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 exitCode: 1
+stdErr: "resource at path \"resources.yaml\" and index \"0\" already exists"

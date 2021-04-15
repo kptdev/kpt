@@ -13,3 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
+stdErr: "docker: Error response from daemon: manifest for gcr.io/kpt-fn/set-label1:latest not found: manifest unknown: Failed to fetch \"latest\" from request \"/v2/kpt-fn/set-label1/manifests/latest\"."

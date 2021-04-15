@@ -142,7 +142,7 @@ func (r *Runner) runFnEval() error {
 		}
 	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		output, fnErr := runCommand("", r.kptBin, kptArgs)
+		output, _, fnErr := runCommand("", r.kptBin, kptArgs)
 		if fnErr != nil {
 			r.t.Logf("kpt error output: %s", output)
 		}
@@ -206,7 +206,17 @@ func (r *Runner) runFnRender() error {
 	// run function
 	kptArgs := []string{"fn", "render", pkgPath}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		output, fnErr := runCommand("", r.kptBin, kptArgs)
+		output, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
+		if fnErr != nil {
+			if r.testCase.Config.ExitCode != 0 {
+				expected := r.testCase.Config.StdErr
+				if !strings.Contains(stderr, expected) {
+					return fmt.Errorf("wanted %s, got %s", expected, stderr)
+				}
+				return nil
+			}
+			break
+		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			// TODO: `fn render` doesn't support result file now
