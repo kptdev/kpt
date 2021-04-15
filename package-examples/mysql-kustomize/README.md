@@ -71,6 +71,7 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
   $ kpt fn render mysql-kustomize/
 
     package "mysql-kustomize": running function "gcr.io/kpt-fn/apply-setters:unstable": SUCCESS
+    package "mysql-kustomize": running function "gcr.io/kpt-fn/set-namespace:unstable": SUCCESS
     package "mysql-kustomize": rendered successfully
 
 ### Apply the package
@@ -83,4 +84,4 @@ Apply all the contents of the package recursively to the cluster
 
   $ kustomize build mysql-kustomize/instance | kpt live apply
 
-    TODO
+    TODO: this doesn't work right now.
