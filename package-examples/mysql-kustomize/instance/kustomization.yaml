@@ -35,8 +35,12 @@ resources:
 - "../upstream"
 patches:
 - path: statefulset.yaml
+  target:
+    version: app/v1
+    kind: StatefulSet
+    name: mysql
 - path: service.yaml
   target:
     version: v1
     kind: Service
-    name: mysql.*
+    name: mysql
