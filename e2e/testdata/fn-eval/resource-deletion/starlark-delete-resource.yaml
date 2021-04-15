@@ -15,7 +15,16 @@
 apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
-  name: delete-all
+  name: delete-resource
 source: |
-  # delete all resources
-  ctx.resource_list["items"] = ctx.resource_list["items"][:1]
+  # delete Custom resource
+  def delete_resource(resource_list):
+    ret = []
+    for i in range(0, len(resource_list)):
+      res = resource_list[i]
+      if res["apiVersion"] == "custom.io/v1" and res["kind"] == "Custom":
+        continue
+      ret.append(res)
+    return ret
+
+  ctx.resource_list["items"] = delete_resource(ctx.resource_list["items"])
