@@ -65,9 +65,29 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 
   $ kpt fn render function-export/
 
-    package "function-export": running function "gcr.io/kpt-fn/apply-setters:unstable": SUCCESS
-    package "function-export": running function "gcr.io/kustomize-functions/example-tshirt:v0.1.0": SUCCESS
+    package "function-export": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
+    package "function-export": running function "gcr.io/kpt-functions/gatekeeper-validate": SUCCESS
     package "function-export": rendered successfully
+
+
+If you remove the owner label from `resources.yaml` and re-run the rendering
+you should see an error:
+
+
+  $ kpt fn render function-export/
+
+    kpt fn render function-export/ 
+    package "function-export": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
+    package "function-export": running function "gcr.io/kpt-functions/gatekeeper-validate": FAILED
+    fn.render: pkg function-export:
+            pkg.render:
+            pipeline.run: Error: Found 1 violations:
+
+    [1] Deployment objects should have an 'owner' label indicating who created them.
+
+    name: "nginx-deployment"
+    path: resources/resources.yaml
+
 
 ### Apply the package
 
@@ -79,9 +99,6 @@ Apply all the contents of the package recursively to the cluster
 
   $ kpt live apply function-export/
 
-    service/helloworld-gke created
-    deployment.apps/helloworld-gke created
-    2 resource(s) applied. 2 created, 0 unchanged, 0 configured, 0 failed
-    0 resource(s) pruned, 0 skipped, 0 failed
+    TODO: getting error: can't find scope for resource K8sRequiredLabels.constraints.gatekeeper.sh deployment-must-have-owner
 
 
