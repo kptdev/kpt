@@ -37,8 +37,10 @@ List the package contents in a tree structure.
 ### Configure functions
 
 The package contains a function pipeline in the `Kptfile` which has
-one `apply-setter` and 'example-tshirt' functions.  The `apply-setter` function allows you to set a simple value throughout the package configuration.  In 
-this case the value sets the t-shirt size.  You can set it to medium.
+one `apply-setters` and 'example-tshirt' functions.  The `apply-setters` 
+function allows you to set a simple value throughout the package 
+configuration.  In this case the value sets the t-shirt size.  You can 
+set it to medium.
 
   pipeline:
     mutators:

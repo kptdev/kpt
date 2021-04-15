@@ -38,7 +38,7 @@ List the package contents in a tree structure.
 ### Configure functions
 
 The package contains a function pipeline in the `Kptfile` which has
-one `apply-setter` function.  The `apply-setter` function allows you to
+one `apply-setters` function.  The `apply-setters` function allows you to
 set a simple value throughout the package configuration.  In this case the
 value of the setter goes into the `patch.yaml`.  You can set the target
 environment variable to a value different of your choice (different
