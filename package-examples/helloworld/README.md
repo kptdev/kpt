@@ -5,9 +5,6 @@ doesn't do anything beyond declaring the current directory as a `kpt` package.
 
 ## Steps
 
-This is a simple workflow on a package that requires no configuration or
-customization.
-
 1. [Fetch the package](#fetch-the-package)
 2. [View the package contents](#view-the-package-contents)
 3. [Apply the package](#apply-the-package)

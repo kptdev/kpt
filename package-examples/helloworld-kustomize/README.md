@@ -5,8 +5,6 @@ patch in it.
 
 ## Steps
 
-This is a sample workflow where 
-
 1. [Fetch the package](#fetch-the-package)
 2. [View the package contents](#view-the-package-contents)
 3. [Configure functions](#configure-functions)
