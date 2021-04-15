@@ -76,12 +76,11 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 
 ### Apply the package
 
-Initialize the inventory object:
+Apply all the contents of the package using kustomize build and kubectl.
 
-  $ kpt live init mysql-kustomize/
+  $ kustomize build mysql-kustomize/instance | kubectl apply -f -
 
-Apply all the contents of the package recursively to the cluster
-
-  $ kustomize build mysql-kustomize/instance | kpt live apply
-
-    TODO: this doesn't work right now.
+    configmap/mysql-md76k5d77k created
+    secret/mysql-h4896b7hgh created
+    service/mysql created
+    statefulset.apps/mysql created
