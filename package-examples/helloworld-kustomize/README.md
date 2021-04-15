@@ -1,6 +1,6 @@
 # helloworld-kustomize
 
-This is a simple package that showcases a kpt package that has a kustomize
+This is an example of a kpt package that has a kustomize
 patch in it.
 
 ## Steps
