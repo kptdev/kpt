@@ -14,3 +14,4 @@
 
 exitCode: 1
 stdErr: "fn gcr.io/kpt-fn/set-label:unstable: missing function config \"labelconfig1.yaml\""
+stdOut: "running function \"gcr.io/kpt-fn/set-label:unstable\": SUCCESS"
