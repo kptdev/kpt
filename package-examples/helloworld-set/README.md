@@ -37,7 +37,7 @@ List the package contents in a tree structure.
 The package contains a function pipeline in the `Kptfile` which has
 one `apply-setters` function.  The `apply-setters` function allows you to
 set a simple value throughout the package configuration.  In this case
-you can set the replicas, image, tag and http port of a simple application.
+you can set the replicas, image, tag and http-port of a simple application.
 
   pipeline:
     mutators:
