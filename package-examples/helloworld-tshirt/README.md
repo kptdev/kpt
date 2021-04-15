@@ -55,6 +55,7 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
   $ kpt fn render helloworld-tshirt/
 
     package "helloworld-tshirt": running function "gcr.io/kpt-fn/apply-setters:unstable": SUCCESS
+    package "helloworld-tshirt": running function "gcr.io/kustomize-functions/example-tshirt:v0.1.0": SUCCESS
     package "helloworld-tshirt": rendered successfully
 
 ### Apply the package
