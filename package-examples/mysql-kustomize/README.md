@@ -2,11 +2,11 @@
 
 This is a package that has several hydration functions in it's pipeline
 as well as utilzing kustomize to patch an upstream configuration.  The 
-upstream configuration is saved in the /upstream folder and the instance
-patch is hydrated using kpt functions.
+upstream configuration is saved in the /upstream folder and the /instance
+patch is configured using kpt functions.
 
-For the final configuration kustomize is used to apply the local patch onto 
-the upstream configuration.
+For the final configuration kustomize is used to build the patched config
+with `kpt live apply` doing the deployment.
 
 ## Steps
 
@@ -49,9 +49,9 @@ one `apply-setters` and `set-namespace` functions.  The `apply-setters`
 function allows you to set a simple value throughout the package configuration.
 The `set-namespace` function allows you to set the namespace on the resources.
 
-    pipeline:
+  pipeline:
     mutators:
-        - image: gcr.io/kpt-fn/apply-setters:unstable
+      - image: gcr.io/kpt-fn/apply-setters:unstable
         configMap:
             mysql-user: userone
             mysql-database: maindb
@@ -59,7 +59,7 @@ The `set-namespace` function allows you to set the namespace on the resources.
             cpu: 100m
             memory: 256Mi
             port: 3306
-        - image: gcr.io/kpt-fn/set-namespace:unstable
+      - image: gcr.io/kpt-fn/set-namespace:unstable
         configMap:
             namespace: ns-test
 
@@ -84,5 +84,3 @@ Apply all the contents of the package recursively to the cluster
   $ kustomize build mysql-kustomize/instance | kpt live apply
 
     TODO
-
-
