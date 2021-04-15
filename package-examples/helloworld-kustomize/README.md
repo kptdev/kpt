@@ -59,7 +59,7 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 
 ### Apply the package
 
-Initialize the inventory object:
+Since this is a kustomize example we will be using `kubectl -k`:
 
     $ kubectl apply -k helloworld-kustomize
 
