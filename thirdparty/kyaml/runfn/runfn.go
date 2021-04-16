@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -88,10 +89,6 @@ type RunFns struct {
 	// IncludeMetaResources indicates will kpt add pkg meta resources such as
 	// Kptfile to the input resources to the function.
 	IncludeMetaResources bool
-
-	// pipeline represents the pipeline in the package that the function will
-	// run against. It will be nil if there is no pipeline.
-	pipeline *v1alpha2.Pipeline
 }
 
 // Execute runs the command
@@ -115,15 +112,51 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
-func (r RunFns) getPipelineConfigFilterFn() kio.LocalPackageSkipFileFunc {
-	fnConfigPaths := pkg.FunctionConfigFilePaths(r.pipeline)
+func (r RunFns) getPipelineConfigFilterFn() (kio.LocalPackageSkipFileFunc, error) {
+	fnConfigPaths := sets.String{}
+	// TODO: eventually walking all sub-packages should be handled by
+	// pkg.FunctionConfigFilePaths
+	err := filepath.Walk(r.Path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return fmt.Errorf("failed to traverse package: %w", err)
+		}
+		if !info.IsDir() {
+			return nil
+		}
+		p, err := pkg.New(path)
+		if err != nil {
+			// we ignore the error here and consider this is not
+			// a package but don't return filepath.SkipDir because
+			// there might be sub-package in the sub-directory
+			return nil
+		}
+		pl, err := p.Pipeline()
+		if err != nil {
+			return nil
+		}
+		paths := pkg.FunctionConfigFilePaths(pl).List()
+		for i := range paths {
+			paths[i] = filepath.Join(path, paths[i])
+			// convert to relative path to top level package
+			paths[i], err = filepath.Rel(r.Path, paths[i])
+			if err != nil {
+				return err
+			}
+		}
+		fnConfigPaths.Insert(paths...)
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
+	}
+
 	return func(relPath string) bool {
 		if len(fnConfigPaths) == 0 || r.IncludeMetaResources {
 			return false
 		}
 		// relPath is cleaned so we can directly use it here
 		return fnConfigPaths.Has(relPath)
-	}
+	}, nil
 }
 
 func (r RunFns) getNodesAndFilters() (
@@ -139,10 +172,14 @@ func (r RunFns) getNodesAndFilters() (
 		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
 	}
 	if r.Path != "" {
+		piplineConfigFilter, err := r.getPipelineConfigFilterFn()
+		if err != nil {
+			return nil, nil, outputPkg, err
+		}
 		outputPkg = &kio.LocalPackageReadWriter{
 			PackagePath:    r.Path,
 			MatchFilesGlob: matchFilesGlob,
-			FileSkipFunc:   r.getPipelineConfigFilterFn(),
+			FileSkipFunc:   piplineConfigFilter,
 		}
 	}
 
@@ -345,15 +382,6 @@ func (r *RunFns) init() error {
 		}
 		if r.Input == nil {
 			r.Input = os.Stdin
-		}
-	} else {
-		// init pipeline
-		p, err := pkg.New(r.Path)
-		if err == nil {
-			kf, err := p.Kptfile()
-			if err == nil {
-				r.pipeline = kf.Pipeline
-			}
 		}
 	}
 

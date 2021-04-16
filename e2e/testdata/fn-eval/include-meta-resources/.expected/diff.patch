@@ -10,8 +10,40 @@ index cdf6fa7..3903734 100644
  pipeline:
    mutators:
      - configPath: labelconfig.yaml
+diff --git a/db/Kptfile b/db/Kptfile
+index 7d7cf73..0c5b45c 100644
+--- a/db/Kptfile
++++ b/db/Kptfile
+@@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1alpha2
+ kind: Kptfile
+ metadata:
+   name: db
++  namespace: staging
+ pipeline:
+   mutators:
+     - configPath: labelconfig.yaml
+diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
+index ad6b09d..eff71c2 100644
+--- a/db/labelconfig.yaml
++++ b/db/labelconfig.yaml
+@@ -17,3 +17,4 @@ data:
+ kind: ConfigMap
+ metadata:
+   name: db-label-config
++  namespace: staging
+diff --git a/db/resources.yaml b/db/resources.yaml
+index ac1fd96..64ec0ee 100644
+--- a/db/resources.yaml
++++ b/db/resources.yaml
+@@ -15,5 +15,6 @@ apiVersion: apps/v1
+ kind: StatefulSet
+ metadata:
+   name: db
++  namespace: staging
+ spec:
+   replicas: 3
 diff --git a/labelconfig.yaml b/labelconfig.yaml
-index 1e35c4b..617b945 100644
+index bb5d15c..162c62f 100644
 --- a/labelconfig.yaml
 +++ b/labelconfig.yaml
 @@ -17,3 +17,4 @@ data:
