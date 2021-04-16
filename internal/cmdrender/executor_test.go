@@ -130,7 +130,7 @@ metadata:
 apiVersion: v1
 kind: Custom
 metadata:
-  name: b
+  name: b1
   annotations:
     config.kubernetes.io/path: 'my/path/b.yaml'
     config.kubernetes.io/index: '1'
@@ -162,7 +162,7 @@ metadata:
 apiVersion: v1
 kind: Custom
 metadata:
-  name: b
+  name: b2
   annotations:
     config.kubernetes.io/path: 'my/path/b.yaml'
     config.kubernetes.io/index: '1'
@@ -249,7 +249,7 @@ metadata:
 			fmt.Println("1")
 			t.FailNow()
 		}
-		err = detectPathConflicts(n)
+		_, err = detectPathConflicts(n)
 		if err != nil && tc.expectedErr == "" {
 			t.Errorf("unexpected error %s", err.Error())
 			t.FailNow()

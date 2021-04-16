@@ -55,13 +55,16 @@ func (e *Executor) Execute(ctx context.Context) error {
 		root: root,
 		pkgs: map[types.UniquePath]*pkgNode{},
 	}
-
 	resources, err := hydrate(ctx, root, hctx)
 	if err != nil {
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
 	if err = trackOutputFiles(hctx); err != nil {
+		return err
+	}
+	resources, err = detectPathConflicts(resources)
+	if err != nil {
 		return err
 	}
 
@@ -234,6 +237,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
 
+
 	output, err = curr.runPipeline(ctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
@@ -339,9 +343,6 @@ func fnChain(ctx context.Context, pl *kptfilev1alpha2.Pipeline, pkgPath types.Un
 
 // trackInputFiles records file paths of input resources in the hydration context.
 func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
-	if err := detectPathConflicts(input); err != nil {
-		return err
-	}
 	if hctx.inputFiles == nil {
 		hctx.inputFiles = sets.String{}
 	}
@@ -358,11 +359,7 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 // trackOutputfiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
-	if err := detectPathConflicts(hctx.root.resources); err != nil {
-		return err
-	}
 	outputSet := sets.String{}
-
 	for _, r := range hctx.root.resources {
 		path, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
@@ -375,25 +372,45 @@ func trackOutputFiles(hctx *hydrationContext) error {
 }
 
 // detectPathConflicts returns an error if the same index/path is on multiple resources
-func detectPathConflicts(nodes []*yaml.RNode) error {
-	// map has structure path -> index -> bool
+// if there are nodes that are exact duplicates of each other, it removes the duplicate
+func detectPathConflicts(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	// map has structure path -> index -> RNode
 	// to keep track of paths and indexes found
-	pathIndexes := make(map[string]map[string]bool)
+	pathIndexes := make(map[string]map[string]*yaml.RNode)
+	var result []*yaml.RNode
+
 	for _, node := range nodes {
 		fp, index, err := kioutil.GetFileAnnotations(node)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		fp = path.Clean(fp)
 		if pathIndexes[fp] == nil {
-			pathIndexes[fp] = make(map[string]bool)
+			pathIndexes[fp] = make(map[string]*yaml.RNode)
 		}
-		if _, ok := pathIndexes[fp][index]; ok {
-			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
+		if match, ok := pathIndexes[fp][index]; ok {
+			// path conflict, check if resource has the same content
+			if !duplicateNode(match, node) {
+				return nil, fmt.Errorf("resource at path %q and index %q already exists", fp, index)
+			}
+		} else {
+			result = append(result, node)
 		}
-		pathIndexes[fp][index] = true
+		pathIndexes[fp][index] = node
 	}
-	return nil
+	return result, nil
+}
+
+func duplicateNode(node1 *yaml.RNode, node2 *yaml.RNode) bool {
+	n1, err := node1.String()
+	if err != nil {
+		return false
+	}
+	n2, err := node2.String()
+	if err != nil {
+		return false
+	}
+	return strings.ReplaceAll(n1, "'", "") == strings.ReplaceAll(n2, "'", "")
 }
 
 // pruneResources compares the input and output of the hydration and prunes
