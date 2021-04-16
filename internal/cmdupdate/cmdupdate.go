@@ -16,24 +16,27 @@
 package cmdupdate
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 // NewRunner returns a command runner.
-func NewRunner(parent string) *Runner {
-	r := &Runner{}
+func NewRunner(ctx context.Context, parent string) *Runner {
+	r := &Runner{
+		ctx: ctx,
+	}
 	c := &cobra.Command{
 		Use:        "update [PKG_PATH@VERSION] [flags]",
 		Short:      docs.UpdateShort,
@@ -60,19 +63,21 @@ func NewRunner(parent string) *Runner {
 	return r
 }
 
-func NewCommand(parent string) *cobra.Command {
-	return NewRunner(parent).Command
+func NewCommand(ctx context.Context, parent string) *cobra.Command {
+	return NewRunner(ctx, parent).Command
 }
 
 // Runner contains the run function.
 // TODO, support listing versions
 type Runner struct {
+	ctx      context.Context
 	strategy string
 	Update   update.Command
 	Command  *cobra.Command
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
+	const op errors.Op = "cmdupdate.preRunE"
 	if len(args) == 0 {
 		args = append(args, pkg.CurDir)
 	}
@@ -84,12 +89,12 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 	parts := strings.Split(args[0], "@")
 	if len(parts) > 2 {
-		return errors.Errorf("at most 1 version permitted")
+		return errors.E(op, errors.InvalidParam, fmt.Errorf("at most 1 version permitted"))
 	}
 
 	p, err := pkg.New(parts[0])
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
 	r.Update.Pkg = p
@@ -98,10 +103,10 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	// this consistently across all commands.
 	relPath, err := resolveRelPath(p.UniquePath)
 	if err != nil {
-		return err
+		return errors.E(op, p.UniquePath, err)
 	}
 	if strings.HasPrefix(relPath, pkg.ParentDir) {
-		return errors.Errorf("package path must be under current working directory")
+		return errors.E(op, p.UniquePath, fmt.Errorf("package path must be under current working directory"))
 	}
 
 	if len(parts) > 1 {
@@ -111,6 +116,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
+	const op errors.Op = "cmdupdate.runE"
 	if len(r.Update.Ref) > 0 {
 		fmt.Fprintf(c.ErrOrStderr(), "updating package %s to %s\n",
 			r.Update.Pkg.UniquePath, r.Update.Ref)
@@ -118,22 +124,25 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		fmt.Fprintf(c.ErrOrStderr(), "updating package %s\n",
 			r.Update.Pkg.UniquePath)
 	}
-	if err := r.Update.Run(); err != nil {
-		return err
+	if err := r.Update.Run(r.ctx); err != nil {
+		return errors.E(op, r.Update.Pkg.UniquePath, err)
 	}
 
 	return nil
 }
 
 func resolveRelPath(path types.UniquePath) (string, error) {
+	const op errors.Op = "cmdupdate.resolveRelPath"
 	cwd, err := os.Getwd()
 	if err != nil {
-		return "", err
+		return "", errors.E(op, errors.IO,
+			fmt.Errorf("error looking up current working directory: %w", err))
 	}
 
 	relPath, err := filepath.Rel(cwd, path.String())
 	if err != nil {
-		return "", err
+		return "", errors.E(op, errors.IO,
+			fmt.Errorf("error resolving the relative path: %w", err))
 	}
 	return relPath, nil
 }

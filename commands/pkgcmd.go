@@ -15,6 +15,8 @@
 package commands
 
 import (
+	"context"
+
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
@@ -25,7 +27,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GetPkgCommand(name string) *cobra.Command {
+func GetPkgCommand(ctx context.Context, name string) *cobra.Command {
 	pkg := &cobra.Command{
 		Use:     "pkg",
 		Short:   pkgdocs.PkgShort,
@@ -45,8 +47,8 @@ func GetPkgCommand(name string) *cobra.Command {
 	}
 
 	pkg.AddCommand(
-		cmdget.NewCommand(name), cmdinit.NewCommand(name),
-		cmdupdate.NewCommand(name), cmddiff.NewCommand(name),
+		cmdget.NewCommand(ctx, name), cmdinit.NewCommand(name),
+		cmdupdate.NewCommand(ctx, name), cmddiff.NewCommand(ctx, name),
 		cmdcat.NewCommand(name), cmdtree.NewCommand(name),
 	)
 	return pkg

@@ -34,7 +34,7 @@ func NormalizeCommand(c ...*cobra.Command) {
 func GetKptCommands(ctx context.Context, name string, f util.Factory) []*cobra.Command {
 	var c []*cobra.Command
 	fnCmd := GetFnCommand(ctx, name)
-	pkgCmd := GetPkgCommand(name)
+	pkgCmd := GetPkgCommand(ctx, name)
 	liveCmd := GetLiveCommand(name, f)
 
 	c = append(c, pkgCmd, fnCmd, liveCmd)

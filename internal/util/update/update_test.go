@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	pkgtest "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
@@ -70,7 +71,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !assert.NoError(t, Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
-			}.Run()) {
+			}.Run(fake.CtxWithNilPrinter())) {
 				return
 			}
 
@@ -122,7 +123,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "v1.2",
 				Strategy: strategy,
-			}.Run()) {
+			}.Run(fake.CtxWithNilPrinter())) {
 				return
 			}
 
@@ -177,7 +178,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			err := Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: u.updater,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 			if u.err == "" {
 				if !assert.NoError(t, err) {
 					return
@@ -236,11 +237,11 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			err = Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 			if !assert.Error(t, err) {
 				return
 			}
-			assert.Contains(t, err.Error(), "must commit package")
+			assert.Contains(t, err.Error(), "package must be committed to git before attempting to update")
 
 			if !g.AssertLocalDataEquals(testutil.Dataset3) {
 				return
@@ -283,11 +284,11 @@ func TestCommand_Run_noAdd(t *testing.T) {
 			err = Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 			if !assert.Error(t, err) {
 				return
 			}
-			assert.Contains(t, err.Error(), "must commit package")
+			assert.Contains(t, err.Error(), "package must be committed to git before attempting to update")
 		})
 	}
 }
@@ -450,7 +451,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "master",
 				Strategy: tc.strategy,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 
 			// check the error response
 			if tc.expectedErr == "" {
@@ -520,7 +521,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "exp",
-			}.Run()) {
+			}.Run(fake.CtxWithNilPrinter())) {
 				return
 			}
 
@@ -580,7 +581,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
-			}.Run()) {
+			}.Run(fake.CtxWithNilPrinter())) {
 				return
 			}
 
@@ -637,7 +638,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
-			}.Run()) {
+			}.Run(fake.CtxWithNilPrinter())) {
 				t.FailNow()
 			}
 
@@ -679,7 +680,7 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 	// Update the local package
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 
 	assert.Contains(t, err.Error(), "must have an upstream reference")
 
@@ -694,7 +695,7 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 			err := Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, path),
 				Strategy: strategy,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 			if assert.Error(t, err) {
 				assert.Contains(t, err.Error(), "no such file or directory")
 			}
@@ -726,11 +727,11 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	err := Command{
 		Pkg:  pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 		Repo: "fake",
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	assert.Contains(t, err.Error(), "failed to clone git repo")
+	assert.Contains(t, err.Error(), "'fake' does not appear to be a git repository")
 
 	if !g.AssertLocalDataEquals(testutil.Dataset1) {
 		return
@@ -765,11 +766,11 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "exp",
 				Strategy: strategy,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 			if !assert.Error(t, err) {
 				return
 			}
-			assert.Contains(t, err.Error(), "failed to clone git repo")
+			assert.Contains(t, err.Error(), "unknown revision or path not in the working tree")
 
 			if !g.AssertLocalDataEquals(testutil.Dataset1) {
 				return
@@ -805,7 +806,7 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 	err := Command{
 		Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 		Strategy: strategy,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err, strategy) {
 		return
 	}
@@ -1584,7 +1585,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 				err := Command{
 					Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 					Strategy: strategy,
-				}.Run()
+				}.Run(fake.CtxWithNilPrinter())
 
 				result := findExpectedResultForStrategy(test.expectedResults, strategy)
 
@@ -3118,7 +3119,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 
 			err := Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -3262,7 +3263,7 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 
 			err := Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
