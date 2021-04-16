@@ -748,7 +748,7 @@ func TestCommand_Run_badUpstreamLockRepo(t *testing.T) {
 	}
 }
 
-func TestCommand_Run_badUpstreamLockRef(t *testing.T) {
+func TestCommand_Run_badUpstreamLockCommit(t *testing.T) {
 	g := &testutil.TestSetupManager{
 		T: t,
 		ReposChanges: map[string][]testutil.Content{
@@ -782,7 +782,7 @@ func TestCommand_Run_badUpstreamLockRef(t *testing.T) {
 		GitLock: &kptfilev1alpha2.GitLock{
 			Repo:      upstreamRepo.RepoDirectory,
 			Directory: dir,
-			Ref:       "fake",
+			Commit:    "fake",
 		},
 	}
 
@@ -792,8 +792,9 @@ func TestCommand_Run_badUpstreamLockRef(t *testing.T) {
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 	}.Run()
-	if !assert.NoError(t, err) {
-		t.FailNow()
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "failed to clone git repo")
 	}
 }
 
