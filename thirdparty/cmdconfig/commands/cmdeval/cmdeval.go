@@ -287,6 +287,9 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		AsCurrentUser:        r.AsCurrentUser,
 		FnConfigPath:         r.FnConfigPath,
 		IncludeMetaResources: r.IncludeMetaResources,
+		// fn eval should remove all files when all resources
+		// are deleted.
+		ContinueOnEmptyResult: true,
 	}
 
 	// don't consider args for the function

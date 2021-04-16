@@ -1,9 +1,4 @@
 - [Installation](installation/)
-    - [Docker](installation/docker/)
-    - [gcloud](installation/gcloud/)
-    - [Homebrew](installation/homebrew/)
-    - [Source](installation/source/)
-    - [Binaries](installation/binaries/)
 - [Book](book/)
 {{bookLayout}}
 - [Reference](reference/)

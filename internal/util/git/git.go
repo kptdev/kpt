@@ -16,10 +16,13 @@
 package git
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 )
 
 // RepoSpec specifies a git repository and a branch and path therein.
@@ -76,13 +79,14 @@ func isAWSHost(host string) bool {
 // lookupCommit looks up the sha of the current commit on the repo at the
 // provided path.
 func LookupCommit(repoPath string) (string, error) {
+	const op errors.Op = "git.LookupCommit"
 	cmd := exec.Command("git", "rev-parse", "--verify", "HEAD")
 	cmd.Dir = repoPath
 	cmd.Env = os.Environ()
 	cmd.Stderr = os.Stderr
 	b, err := cmd.Output()
 	if err != nil {
-		return "", err
+		return "", errors.E(op, errors.Git, fmt.Errorf("unable to look up commit: %w", err))
 	}
 	commit := strings.TrimSpace(string(b))
 	return commit, nil

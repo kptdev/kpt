@@ -179,9 +179,10 @@ apiVersion: v1
 			args: []string{"eval", "dir", "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:       "dir",
-				ResultsDir: "foo/",
-				Env:        []string{},
+				Path:                  "dir",
+				ResultsDir:            "foo/",
+				Env:                   []string{},
+				ContinueOnEmptyResult: true,
 			},
 			expected: `
 metadata:
@@ -214,9 +215,10 @@ apiVersion: v1
 			args: []string{"eval", "dir", "--log-steps", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:     "dir",
-				LogSteps: true,
-				Env:      []string{},
+				Path:                  "dir",
+				LogSteps:              true,
+				Env:                   []string{},
+				ContinueOnEmptyResult: true,
 			},
 			expected: `
 metadata:
@@ -234,8 +236,9 @@ apiVersion: v1
 			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path: "dir",
-				Env:  []string{"FOO=BAR", "BAR"},
+				Path:                  "dir",
+				Env:                   []string{"FOO=BAR", "BAR"},
+				ContinueOnEmptyResult: true,
 			},
 			expected: `
 metadata:
@@ -253,9 +256,10 @@ apiVersion: v1
 			args: []string{"eval", "dir", "--as-current-user", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
-				Path:          "dir",
-				AsCurrentUser: true,
-				Env:           []string{},
+				Path:                  "dir",
+				AsCurrentUser:         true,
+				Env:                   []string{},
+				ContinueOnEmptyResult: true,
 			},
 			expected: `
 metadata:

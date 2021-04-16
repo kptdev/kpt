@@ -20,12 +20,13 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmddiff"
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCmdInvalidDiffType(t *testing.T) {
-	runner := cmddiff.NewRunner("")
+	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
 	runner.C.SetArgs([]string{"--diff-type", "invalid"})
 	runner.C.SilenceErrors = true
 	err := runner.C.Execute()
@@ -35,7 +36,7 @@ func TestCmdInvalidDiffType(t *testing.T) {
 }
 
 func TestCmdInvalidDiffTool(t *testing.T) {
-	runner := cmddiff.NewRunner("")
+	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
 	runner.C.SetArgs([]string{"--diff-tool", "nodiff"})
 	runner.C.SilenceErrors = true
 	err := runner.C.Execute()
@@ -55,12 +56,12 @@ func TestCmdExecute(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
-	getRunner := cmdget.NewRunner("")
+	getRunner := cmdget.NewRunner(fake.CtxWithNilPrinter(), "")
 	getRunner.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
 	err := getRunner.Command.Execute()
 	assert.NoError(t, err)
 
-	runner := cmddiff.NewRunner("")
+	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
 	runner.C.SetArgs([]string{dest, "--diff-type", "local"})
 	runner.C.SilenceErrors = true
 	err = runner.C.Execute()
