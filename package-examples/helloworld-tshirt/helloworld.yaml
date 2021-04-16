@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: examples.config.kubernetes.io/v1alpha1
-kind: ResourceSizer
-metadata:
-  annotations:
-    config.kubernetes.io/local-config: "true"
-    config.k8s.io/function: |-
-      container:
-        image: gcr.io/kustomize-functions/example-tshirt:v0.1.0
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,7 +19,7 @@ metadata:
   labels:
     app: hello
   annotations:
-    tshirt-size: 'small' # {"$ref":"#/definitions/io.k8s.cli.setters.tshirt-size"}
+    tshirt-size: 'small' # kpt-set: ${tshirt-size}
 spec:
   replicas: 5
   selector:
@@ -51,7 +42,7 @@ spec:
         resources:
           requests:
             cpu: 200m
-            memory: 50MiB
+            memory: 50M
 ---
 apiVersion: v1
 kind: Service

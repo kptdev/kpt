@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apps/v1
-kind: Deployment
+# The hello service provides a load-balancing proxy over the hello-app
+# pods. By specifying the type as a 'LoadBalancer', Kubernetes Engine will
+# create an external HTTP load balancer.
+apiVersion: v1
+kind: Service
 metadata:
   name: helloworld-gke
+  labels:
+    app: hello
 spec:
-  template:
-    spec:
-      containers:
-      - name: helloworld-gke
-        env:
-        - name: MESSAGE
-          value: 'patch' # {"$ref":"#/definitions/io.k8s.cli.setters.message"}
+  type: NodePort
+  selector:
+    app: hello
+  ports:
+  - protocol: TCP
+    port: 80 # kpt-set: ${http-port}
+    targetPort: http

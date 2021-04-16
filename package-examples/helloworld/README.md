@@ -5,9 +5,6 @@ doesn't do anything beyond declaring the current directory as a `kpt` package.
 
 ## Steps
 
-This is a simple workflow on a package that requires no configuration or
-customization.
-
 1. [Fetch the package](#fetch-the-package)
 2. [View the package contents](#view-the-package-contents)
 3. [Apply the package](#apply-the-package)
@@ -36,9 +33,6 @@ List the package contents in a tree structure.
 Initialize the inventory object:
 
     $ kpt live init helloworld/
-
-      namespace: default is used for inventory object
-      Initialized: helloworld/inventory-template.yaml
 
 Apply all the contents of the package recursively to the cluster
 
