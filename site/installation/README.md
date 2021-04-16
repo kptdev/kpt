@@ -67,12 +67,6 @@ An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 docker run gcr.io/kpt-dev/kpt-gcloud version
 ```
 
-[gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
-
-[gcr.io/kpt-dev/kpt-gcloud]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
-
-[cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
-
 ## Binaries
 
 Download pre-compiled binaries.
@@ -109,6 +103,10 @@ with `go get`.
 ```shell
 kpt help
 ```
+
+[gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
+[gcr.io/kpt-dev/kpt-gcloud]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
+[cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 
 [linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
 [darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
