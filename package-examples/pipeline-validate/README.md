@@ -1,4 +1,4 @@
-# function-export
+# pipeline-validate
 
 This example package demonstrates how you can modify the config and ensure 
 that modifications are compliant with the policies. This package uses:
@@ -25,18 +25,18 @@ validate and apply the package:
 
 Get the example package on to local using `kpt pkg get`
 
-  $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/function-export
+  $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate
 
-    fetching package /package-examples/function-export from https://github.com/GoogleContainerTools/kpt to function-export
+    fetching package /package-examples/pipeline-validate from https://github.com/GoogleContainerTools/kpt to pipeline-validate
 
 ### View the package contents
 
 List the package contents in a tree structure.
 
-  $ kpt pkg tree function-export/
+  $ kpt pkg tree pipeline-validate/
 
-    PKG: function-export
-    ├── [Kptfile]  Kptfile kpt-function-export-example
+    PKG: pipeline-validate
+    ├── [Kptfile]  Kptfile kpt-pipeline-validate-example
     └── resources
         ├── [resources.yaml]  Namespace development
         ├── [resources.yaml]  Deployment development/nginx-deployment
@@ -68,23 +68,23 @@ the configuration.
 
 Render the changes in the rendering pipeline by using `kpt fn render` command:
 
-  $ kpt fn render function-export/
+  $ kpt fn render pipeline-validate/
 
-    package "function-export": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
-    package "function-export": running function "gcr.io/kpt-functions/gatekeeper-validate": SUCCESS
-    package "function-export": rendered successfully
+    package "pipeline-validate": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
+    package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": SUCCESS
+    package "pipeline-validate": rendered successfully
 
 
 If you remove the owner label from `resources.yaml` and re-run the rendering
 you should see an error:
 
 
-  $ kpt fn render function-export/
+  $ kpt fn render pipeline-validate/
 
-    kpt fn render function-export/ 
-    package "function-export": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
-    package "function-export": running function "gcr.io/kpt-functions/gatekeeper-validate": FAILED
-    fn.render: pkg function-export:
+    kpt fn render pipeline-validate/ 
+    package "pipeline-validate": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
+    package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": FAILED
+    fn.render: pkg pipeline-validate:
             pkg.render:
             pipeline.run: Error: Found 1 violations:
 
@@ -98,10 +98,10 @@ you should see an error:
 
 Initialize the inventory object:
 
-  $ kpt live init function-export/
+  $ kpt live init pipeline-validate/
 
 Apply all the contents of the package recursively to the cluster
 
-  $ kpt live apply function-export/
+  $ kpt live apply pipeline-validate/
 
     TODO: getting error: can't find scope for resource K8sRequiredLabels.constraints.gatekeeper.sh deployment-must-have-owner

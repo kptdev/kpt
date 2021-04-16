@@ -1,7 +1,7 @@
 apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
-  name: kpt-function-export-example
+  name: kpt-pipeline-validate-example
 pipeline:
   mutators:
     - image: gcr.io/kpt-functions/label-namespace
