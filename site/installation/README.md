@@ -95,10 +95,6 @@ program from the finder with *ctrl-click open*.
 kpt version
 ```
 
-[linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
-[darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
-[windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
-
 ## Source
 
 Install by compiling the source.
@@ -113,3 +109,7 @@ with `go get`.
 ```shell
 kpt help
 ```
+
+[linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
+[darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
+[windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
