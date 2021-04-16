@@ -47,18 +47,25 @@ List the package contents in a tree structure.
 ### Configure functions
 
 The package contains a function pipeline in the `Kptfile` which has
-one `apply-setters` and `gatekeeper-validate` functions.  
-The `apply-setters` function allows you to set a simple value throughout the 
-package configuration.  In this case it's namespace label.  The
-`gatekeeper-validate` function allows you to use gatekeeper for checks on
-the configuration.
+one `set-label` and `gatekeeper-validate` functions.  
+The `set-label` function allows you to set one or more labels to any
+resource in your configuration.  In this case it's namespace label as
+defined by the fieldSpecs.  The `gatekeeper-validate` function allows 
+you to use gatekeeper for checks on the configuration.
 
   pipeline:
     mutators:
-      - image: gcr.io/kpt-functions/label-namespace
-        configMap:
-          label_name: color
-          label_value: blue      
+      - image: gcr.io/kpt-fn/set-label:unstable
+        config:
+          apiVersion: fn.kpt.dev/v1alpha1
+          kind: SetLabelConfig
+          metadata:
+            name: label-color-blue
+          labels:
+            color: blue
+          fieldSpecs:
+            - kind: Namespace
+              create: true        
     validators:
       - image: gcr.io/kpt-functions/gatekeeper-validate
 
@@ -70,7 +77,7 @@ Render the changes in the rendering pipeline by using `kpt fn render` command:
 
   $ kpt fn render pipeline-validate/
 
-    package "pipeline-validate": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
+    package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
     package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": SUCCESS
     package "pipeline-validate": rendered successfully
 
@@ -81,8 +88,7 @@ you should see an error:
 
   $ kpt fn render pipeline-validate/
 
-    kpt fn render pipeline-validate/ 
-    package "pipeline-validate": running function "gcr.io/kpt-functions/label-namespace": SUCCESS
+    package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
     package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": FAILED
     fn.render: pkg pipeline-validate:
             pkg.render:
