@@ -110,4 +110,7 @@ Apply all the contents of the package recursively to the cluster
 
   $ kpt live apply pipeline-validate/
 
-    TODO: getting error: can't find scope for resource K8sRequiredLabels.constraints.gatekeeper.sh deployment-must-have-owner
+    namespace/development unchanged
+    deployment.apps/nginx-deployment created
+    2 resource(s) applied. 1 created, 1 unchanged, 0 configured, 0 failed
+    0 resource(s) pruned, 0 skipped, 0 failed

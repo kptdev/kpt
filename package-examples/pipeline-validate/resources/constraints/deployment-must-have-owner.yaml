@@ -16,6 +16,8 @@ apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sRequiredLabels
 metadata:
   name: deployment-must-have-owner
+  annotations:
+    config.kubernetes.io/local-config: "true"  
 spec:
   match:
     kinds:

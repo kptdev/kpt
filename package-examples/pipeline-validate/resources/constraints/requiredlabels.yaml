@@ -15,6 +15,8 @@ apiVersion: templates.gatekeeper.sh/v1beta1
 kind: ConstraintTemplate
 metadata:
   name: k8srequiredlabels
+  annotations:
+    config.kubernetes.io/local-config: "true"
 spec:
   crd:
     spec:
