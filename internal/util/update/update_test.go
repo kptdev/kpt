@@ -811,7 +811,7 @@ func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
 	defer clean()
 
 	w.PackageDir = testPackageName
-	dir := "/"
+	dir := "/fake"
 	kf := kptfileutil.DefaultKptfile(testPackageName)
 	kf.Upstream = &kptfilev1alpha2.Upstream{
 		Type: kptfilev1alpha2.GitOrigin,
@@ -826,7 +826,7 @@ func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
 		Type: kptfilev1alpha2.GitOrigin,
 		GitLock: &kptfilev1alpha2.GitLock{
 			Repo:      repos[testutil.Upstream].RepoDirectory,
-			Directory: "fake",
+			Directory: dir,
 			Ref:       masterBranch,
 		},
 	}
@@ -838,7 +838,7 @@ func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
 	}.Run(fake.CtxWithNilPrinter())
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "added in both upstream and local")
+		assert.Contains(t, err.Error(), "no such file or directory")
 	}
 }
 
