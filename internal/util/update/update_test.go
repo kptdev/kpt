@@ -668,15 +668,14 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 	_, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
 		testutil.Upstream: {
 			{
-				Branch: "master",
+				Branch: masterBranch,
 			},
 		},
 	})
 	defer clean()
 
-	name := "test-package"
-	w.PackageDir = name
-	kf := kptfileutil.DefaultKptfile(name)
+	w.PackageDir = testPackageName
+	kf := kptfileutil.DefaultKptfile(testPackageName)
 	testutil.AddKptfileToWorkspace(t, w, kf)
 
 	// Update the local package
@@ -795,7 +794,7 @@ func TestCommand_Run_badUpstreamLockCommit(t *testing.T) {
 	}.Run(fake.CtxWithNilPrinter())
 
 	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "failed to clone git repo")
+		assert.Contains(t, err.Error(), "unknown revision or path")
 	}
 }
 
