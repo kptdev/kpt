@@ -37,6 +37,9 @@ type RunFns struct {
 	// Path is the path to the directory containing functions
 	Path string
 
+	// absPath is the absolute version of Path
+	absPath string
+
 	// FnConfigPath specifies a config file which contains the configs used in
 	// function input. It can be absolute or relative to kpt working directory.
 	// The exact format depends on the OS.
@@ -93,15 +96,8 @@ type RunFns struct {
 
 // Execute runs the command
 func (r RunFns) Execute() error {
-	// make the path absolute so it works on mac
-	var err error
-	r.Path, err = filepath.Abs(r.Path)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
 	// default the containerFilterProvider if it hasn't been override.  Split out for testing.
-	err = (&r).init()
+	err := (&r).init()
 	if err != nil {
 		return err
 	}
@@ -116,7 +112,7 @@ func (r RunFns) getPipelineConfigFilterFn() (kio.LocalPackageSkipFileFunc, error
 	fnConfigPaths := sets.String{}
 	// TODO: eventually walking all sub-packages should be handled by
 	// pkg.FunctionConfigFilePaths
-	err := filepath.Walk(r.Path, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(r.absPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to traverse package: %w", err)
 		}
@@ -138,7 +134,7 @@ func (r RunFns) getPipelineConfigFilterFn() (kio.LocalPackageSkipFileFunc, error
 		for i := range paths {
 			paths[i] = filepath.Join(path, paths[i])
 			// convert to relative path to top level package
-			paths[i], err = filepath.Rel(r.Path, paths[i])
+			paths[i], err = filepath.Rel(r.absPath, paths[i])
 			if err != nil {
 				return err
 			}
@@ -177,7 +173,7 @@ func (r RunFns) getNodesAndFilters() (
 			return nil, nil, outputPkg, err
 		}
 		outputPkg = &kio.LocalPackageReadWriter{
-			PackagePath:    r.Path,
+			PackagePath:    r.absPath,
 			MatchFilesGlob: matchFilesGlob,
 			FileSkipFunc:   piplineConfigFilter,
 		}
@@ -382,6 +378,13 @@ func (r *RunFns) init() error {
 		}
 		if r.Input == nil {
 			r.Input = os.Stdin
+		}
+	} else {
+		// make the path absolute so it works on mac
+		var err error
+		r.absPath, err = filepath.Abs(r.Path)
+		if err != nil {
+			return errors.Wrap(err)
 		}
 	}
 
