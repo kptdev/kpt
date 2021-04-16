@@ -1,10 +1,14 @@
 # function-export
 
-This is a package that has both a setter and a validation function.  It shows
-how you can use gatekeeper to perform checks that are run during rendering.
-Putting a validation function  into your package allows you to give package 
-consumers guidance on what acceptable configuration is while giving them 
-the freedom to customize.
+This example package demonstrates how you can modify the config and ensure 
+that modifications are compliant with the policies. This package uses:
+
+1. a `mutator` function called `label-namespace` to customize (or modify) the config
+2. a `validator` function `gatekeeper` to ensure changes are inline with the policy 
+
+Putting a validation function into your package allows you to give package
+consumers instant feedback on whether their customization violates config
+policy.
 
 ## Steps
 
@@ -62,7 +66,7 @@ the configuration.
 
 ### Render the declared values
 
-Render the changes in the hydration pipeline by using `kpt fn render` command:
+Render the changes in the rendering pipeline by using `kpt fn render` command:
 
   $ kpt fn render function-export/
 
