@@ -10,7 +10,7 @@ menu:
 
 Users can get kpt in a variety of ways:
 1. Install with [GCloud](#GCloud)
-1. On MacOS install with [Homebrew](#Homebrew)
+1. Install with [Homebrew](#Homebrew) on MacOS
 1. Use [Docker](#Docker)
 1. Download [Binaries](#Binaries) 
 1. Build from [Source](#Source)
