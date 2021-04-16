@@ -12,8 +12,5 @@ pipeline:
           name: label-color-blue
         labels:
           color: blue
-        fieldSpecs:
-          - kind: Namespace
-            create: true
   validators:
     - image: gcr.io/kpt-functions/gatekeeper-validate

@@ -3,7 +3,7 @@
 This example package demonstrates how you can modify the config and ensure 
 that modifications are compliant with the policies. This package uses:
 
-1. a `mutator` function called `label-namespace` to customize (or modify) the config
+1. a `mutator` function called `set-label` to customize (or modify) the config
 2. a `validator` function `gatekeeper` to ensure changes are inline with the policy 
 
 Putting a validation function into your package allows you to give package
@@ -48,9 +48,8 @@ List the package contents in a tree structure.
 
 The package contains a function pipeline in the `Kptfile` which has
 one `set-label` and `gatekeeper-validate` functions.  
-The `set-label` function allows you to set one or more labels to any
-resource in your configuration.  In this case it's namespace label as
-defined by the fieldSpecs.  The `gatekeeper-validate` function allows 
+The `set-label` function allows you to set one or more labels to every
+resource that supports labeles.  The `gatekeeper-validate` function allows 
 you to use gatekeeper for checks on the configuration.
 
   pipeline:
@@ -63,13 +62,8 @@ you to use gatekeeper for checks on the configuration.
             name: label-color-blue
           labels:
             color: blue
-          fieldSpecs:
-            - kind: Namespace
-              create: true        
     validators:
       - image: gcr.io/kpt-functions/gatekeeper-validate
-
-
 
 ### Render the declared values
 
