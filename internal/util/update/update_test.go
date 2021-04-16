@@ -742,7 +742,7 @@ func TestCommand_Run_badUpstreamLockRepo(t *testing.T) {
 	// Update the local package
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "does not appear to be a git repository")
@@ -792,7 +792,7 @@ func TestCommand_Run_badUpstreamLockCommit(t *testing.T) {
 	// Update the local package
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "failed to clone git repo")
@@ -836,7 +836,7 @@ func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
 	// Update the local package
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "added in both upstream and local")
