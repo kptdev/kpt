@@ -1,0 +1,9 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: helloworld-kustomize
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        target: foobar

@@ -16,6 +16,7 @@
 package diff
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -95,7 +96,7 @@ type Command struct {
 	PkgGetter PkgGetter
 }
 
-func (c *Command) Run() error {
+func (c *Command) Run(ctx context.Context) error {
 	c.DefaultValues()
 
 	kptFile, err := kptfileutil.ReadFile(c.Path)
@@ -120,7 +121,7 @@ func (c *Command) Run() error {
 	}
 
 	// get the upstreamPkg at current version
-	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.UpstreamLock.GitLock.Repo,
+	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.GitLock.Repo,
 		kptFile.UpstreamLock.GitLock.Directory,
 		kptFile.UpstreamLock.GitLock.Commit)
 	if err != nil {
@@ -145,7 +146,7 @@ func (c *Command) Run() error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkg, err = c.PkgGetter.GetPkg(kptFile.UpstreamLock.GitLock.Repo,
+		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.GitLock.Repo,
 			kptFile.UpstreamLock.GitLock.Directory,
 			c.Ref)
 		if err != nil {
@@ -283,13 +284,13 @@ func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
 
 // PkgGetter knows how to fetch a package given a git repo, path and ref.
 type PkgGetter interface {
-	GetPkg(repo, path, ref string) (dir string, err error)
+	GetPkg(ctx context.Context, repo, path, ref string) (dir string, err error)
 }
 
 // defaultPkgGetter uses fetch.Command abstraction to implement PkgGetter.
 type defaultPkgGetter struct{}
 
-func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
+func (pg defaultPkgGetter) GetPkg(ctx context.Context, repo, path, ref string) (string, error) {
 	dir, err := ioutil.TempDir("", "kpt-")
 	if err != nil {
 		return dir, err
@@ -318,6 +319,6 @@ func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 	cmdGet := &fetch.Command{
 		Pkg: p,
 	}
-	err = cmdGet.Run()
+	err = cmdGet.Run(ctx)
 	return dir, err
 }

@@ -16,6 +16,7 @@
 package cmddiff
 
 import (
+	"context"
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -27,8 +28,10 @@ import (
 )
 
 // NewRunner returns a command runner.
-func NewRunner(parent string) *Runner {
-	r := &Runner{}
+func NewRunner(ctx context.Context, parent string) *Runner {
+	r := &Runner{
+		ctx: ctx,
+	}
 	c := &cobra.Command{
 		Use:          "diff [PKG_PATH@VERSION] [flags]",
 		Short:        pkgdocs.DiffShort,
@@ -58,12 +61,13 @@ func NewRunner(parent string) *Runner {
 }
 
 // NewCommand returns a diff command instance.
-func NewCommand(parent string) *cobra.Command {
-	return NewRunner(parent).C
+func NewCommand(ctx context.Context, parent string) *cobra.Command {
+	return NewRunner(ctx, parent).C
 }
 
 // Runner contains the run function
 type Runner struct {
+	ctx context.Context
 	diff.Command
 	C        *cobra.Command
 	diffType string
@@ -101,5 +105,5 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	return r.Run()
+	return r.Run(r.ctx)
 }

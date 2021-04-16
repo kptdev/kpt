@@ -378,30 +378,31 @@ func newExpected(path string) (expected, error) {
 }
 
 func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath string) error {
-	// We update results directory only when a result file already exists.
-	l, err := ioutil.ReadDir(resultsPath)
+	if resultsPath != "" {
+		// We update results directory only when a result file already exists.
+		l, err := ioutil.ReadDir(resultsPath)
+		if err != nil {
+			return err
+		}
+		if len(l) > 0 {
+			actualResults, err := readActualResults(resultsPath)
+			if err != nil {
+				return err
+			}
+			if actualResults != "" {
+				if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return err
 	}
-	if len(l) == 0 {
-		actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
-		if err != nil {
+	if actualDiff != "" {
+		if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedDiffFile), []byte(actualDiff+"\n"), 0666); err != nil {
 			return err
-		}
-		if actualDiff != "" {
-			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedDiffFile), []byte(actualDiff+"\n"), 0666); err != nil {
-				return err
-			}
-		}
-	} else {
-		actualResults, err := readActualResults(resultsPath)
-		if err != nil {
-			return err
-		}
-		if actualResults != "" {
-			if err := ioutil.WriteFile(filepath.Join(sourceOfTruthPath, expectedResultsFile), []byte(actualResults+"\n"), 0666); err != nil {
-				return err
-			}
 		}
 	}
 
