@@ -337,7 +337,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 
 // filterMetaResources filters kpt metadata files such as Kptfile, function configs.
 func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (output []*yaml.RNode, err error) {
-	pathsToExclude := functionConfigFilePaths(pl)
+	pathsToExclude := FunctionConfigFilePaths(pl)
 	for _, r := range input {
 		meta, err := r.GetMeta()
 		if err != nil {
@@ -360,9 +360,9 @@ func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (out
 	return output, nil
 }
 
-// functionConfigFilePaths returns paths to function config files referred in the
+// FunctionConfigFilePaths returns paths to function config files referred in the
 // given pipeline.
-func functionConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.String) {
+func FunctionConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.String) {
 	if pl == nil {
 		return nil
 	}
