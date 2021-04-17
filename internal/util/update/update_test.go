@@ -704,141 +704,90 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 	}
 }
 
-func TestCommand_Run_badUpstreamLockRepo(t *testing.T) {
-	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
-		testutil.Upstream: {
-			{
+func TestCommand_Run_badUpstreamLock(t *testing.T) {
+	testCases := map[string]struct {
+		dir              string
+		commit           string
+		repo             string
+		expectedErrorMsg string
+	}{
+		"bad commit": {
+			dir:              "/",
+			commit:           "fake",
+			repo:             testutil.Upstream,
+			expectedErrorMsg: "unknown revision or path"},
+		"bad dir": {
+			dir:              "/fake",
+			commit:           "",
+			repo:             testutil.Upstream,
+			expectedErrorMsg: "no such file or directory"},
+		"bad repo": {
+			dir:              "/",
+			commit:           "",
+			repo:             "fake",
+			expectedErrorMsg: "does not appear to be a git repository"},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			upstreamContent := testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
 				Branch: masterBranch,
-			},
-		},
-	})
-	defer clean()
+			}
 
-	w.PackageDir = testPackageName
-	dir := "/"
-	kf := kptfileutil.DefaultKptfile(testPackageName)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.Git{
-			Repo:      repos[testutil.Upstream].RepoDirectory,
-			Directory: dir,
-			Ref:       masterBranch,
-		},
-		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
-	}
-	kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
-		Type: kptfilev1alpha2.GitOrigin,
-		GitLock: &kptfilev1alpha2.GitLock{
-			Repo:      "fake",
-			Directory: dir,
-			Ref:       masterBranch,
-		},
-	}
-	testutil.AddKptfileToWorkspace(t, w, kf)
-
-	// Update the local package
-	err := Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
-
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "does not appear to be a git repository")
-	}
-}
-
-func TestCommand_Run_badUpstreamLockCommit(t *testing.T) {
-	g := &testutil.TestSetupManager{
-		T: t,
-		ReposChanges: map[string][]testutil.Content{
-			testutil.Upstream: {
-				{
-					Pkg: pkgbuilder.NewRootPkg().
-						WithResource(pkgbuilder.DeploymentResource),
-					Branch: masterBranch,
+			// Using a TestSetupManager for just the remote repo to get a directory
+			// for use in the local UpstreamLock.
+			remote := &testutil.TestSetupManager{
+				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						upstreamContent,
+					},
 				},
-			},
-		}}
-	defer g.Clean()
-	if !g.Init() {
-		return
-	}
-	upstreamRepo := g.Repos[testutil.Upstream]
+			}
 
-	dir := "/"
-	kf := kptfileutil.DefaultKptfile(testPackageName)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.Git{
-			Repo:      upstreamRepo.RepoDirectory,
-			Directory: dir,
-			Ref:       masterBranch,
-		},
-		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
-	}
-	kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
-		Type: kptfilev1alpha2.GitOrigin,
-		GitLock: &kptfilev1alpha2.GitLock{
-			Repo:      upstreamRepo.RepoDirectory,
-			Directory: dir,
-			Commit:    "fake",
-		},
-	}
+			defer remote.Clean()
 
-	testutil.AddKptfileToWorkspace(t, g.LocalWorkspace, kf)
+			if !remote.Init() {
+				return
+			}
 
-	// Update the local package
-	err := Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+			// If tc.repo exists in the testbed, use its repo directory for the UpstreamLock.
+			repo := remote.Repos[tc.repo]
+			repoDir := tc.repo
+			if repo != nil {
+				repoDir = repo.RepoDirectory
+			}
 
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "unknown revision or path")
-	}
-}
+			local := &testutil.TestSetupManager{
+				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						upstreamContent,
+					},
+				},
+				LocalChanges: []testutil.Content{{
+					Pkg: pkgbuilder.NewRootPkg().WithKptfile(pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, tc.dir, masterBranch, "resource-merge").
+						WithUpstreamLock(repoDir, tc.dir, masterBranch, tc.commit),
+					),
+				}},
+			}
 
-func TestCommand_Run_badUpstreamLockDir(t *testing.T) {
-	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
-		testutil.Upstream: {
-			{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithResource(pkgbuilder.DeploymentResource),
-				Branch: masterBranch,
-			},
-		},
-	})
-	defer clean()
+			defer local.Clean()
 
-	w.PackageDir = testPackageName
-	dir := "/fake"
-	kf := kptfileutil.DefaultKptfile(testPackageName)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.Git{
-			Repo:      repos[testutil.Upstream].RepoDirectory,
-			Directory: dir,
-			Ref:       masterBranch,
-		},
-		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
-	}
-	kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
-		Type: kptfilev1alpha2.GitOrigin,
-		GitLock: &kptfilev1alpha2.GitLock{
-			Repo:      repos[testutil.Upstream].RepoDirectory,
-			Directory: dir,
-			Ref:       masterBranch,
-		},
-	}
-	testutil.AddKptfileToWorkspace(t, w, kf)
+			if !local.Init() {
+				return
+			}
+			// Update the local package
+			err := Command{
+				Pkg: pkgtest.CreatePkgOrFail(t, local.LocalWorkspace.FullPackagePath()),
+			}.Run(fake.CtxWithNilPrinter())
 
-	// Update the local package
-	err := Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
-
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "no such file or directory")
+			if assert.Error(t, err) {
+				assert.Contains(t, err.Error(), tc.expectedErrorMsg)
+			}
+		})
 	}
 }
 
