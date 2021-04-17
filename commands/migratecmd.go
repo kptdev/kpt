@@ -21,6 +21,7 @@ import (
 	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
+	"sigs.k8s.io/cli-utils/cmd/flagutils"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -198,7 +199,7 @@ func (mr *MigrateRunner) updateKptfile(args []string) error {
 // an error if one occurred.
 func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (inventory.InventoryInfo, error) {
 	fmt.Fprint(mr.ioStreams.Out, "  retrieve the current ConfigMap inventory...")
-	cmReader, err := mr.cmLoader.ManifestReader(reader, args)
+	cmReader, err := mr.cmLoader.ManifestReader(reader, flagutils.PathFromArgs(args))
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +246,7 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, oldID string, 
 		fmt.Fprintln(mr.ioStreams.Out, "success")
 		return nil
 	}
-	rgReader, err := mr.rgLoader.ManifestReader(reader, args)
+	rgReader, err := mr.rgLoader.ManifestReader(reader, flagutils.PathFromArgs(args))
 	if err != nil {
 		return err
 	}

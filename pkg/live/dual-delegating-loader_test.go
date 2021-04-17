@@ -120,7 +120,7 @@ func TestDualDelegatingProvider_Read(t *testing.T) {
 
 			// Read objects using provider ManifestReader.
 			loader := NewDualDelegatingManifestReader(tf)
-			mr, err := loader.ManifestReader(nil, []string{dir})
+			mr, err := loader.ManifestReader(nil, dir)
 			if err != nil {
 				t.Fatalf("unexpected error %v", err)
 			}

@@ -92,6 +92,10 @@ func (icm *InventoryResourceGroup) ID() string {
 	return ""
 }
 
+func (icm *InventoryResourceGroup) Strategy() inventory.InventoryStrategy {
+	return inventory.NameStrategy
+}
+
 // Load is an Inventory interface function returning the set of
 // object metadata from the wrapped ResourceGroup, or an error.
 func (icm *InventoryResourceGroup) Load() ([]object.ObjMetadata, error) {
