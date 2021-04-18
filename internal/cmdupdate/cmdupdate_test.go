@@ -15,6 +15,7 @@
 package cmdupdate_test
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -31,6 +32,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
@@ -54,11 +59,16 @@ func TestCmd_execute(t *testing.T) {
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
 		return
 	}
-	gitRunner := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
-	if !assert.NoError(t, gitRunner.Run("add", ".")) {
+	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	_, err = gitRunner.Run(context.Background(), "add", ".")
+	if !assert.NoError(t, err) {
 		return
 	}
-	if !assert.NoError(t, gitRunner.Run("commit", "-m", "commit local package -- ds1")) {
+	_, err = gitRunner.Run(context.Background(), "commit", "-m", "commit local package -- ds1")
+	if !assert.NoError(t, err) {
 		return
 	}
 

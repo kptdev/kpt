@@ -136,7 +136,11 @@ func (c *Command) Run(ctx context.Context) error {
 	var upstreamTargetPkg string
 
 	if c.Ref == "" {
-		c.Ref, err = gitutil.DefaultRef(kptFile.UpstreamLock.GitLock.Repo)
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.GitLock.Repo)
+		if err != nil {
+			return err
+		}
+		c.Ref, err = gur.GetDefaultBranch(ctx)
 		if err != nil {
 			return err
 		}

@@ -221,12 +221,6 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 		return errors.E(op, types.UniquePath(path), err)
 	}
 
-	// find the git commit sha that we cloned the package at so we can write it to the KptFile
-	commit, err := git.LookupCommit(spec.AbsPath())
-	if err != nil {
-		return errors.E(op, types.UniquePath(spec.AbsPath()), err)
-	}
-
 	// populate the cloneFrom values so we know where the package came from
 	kpgfile.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 		Type: kptfilev1alpha2.GitOrigin,
@@ -234,7 +228,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 			Repo:      spec.OrgRepo,
 			Directory: spec.Path,
 			Ref:       spec.Ref,
-			Commit:    commit,
+			Commit:    spec.Commit,
 		},
 	}
 	err = WriteFile(path, kpgfile)

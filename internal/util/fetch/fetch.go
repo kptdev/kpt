@@ -15,13 +15,12 @@
 package fetch
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -33,6 +32,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
 // Command takes the upstream information in the Kptfile at the path for the
@@ -99,17 +99,19 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 	const op errors.Op = "fetch.cloneAndCopy"
 	p := printer.FromContextOrDie(ctx)
 	p.Printf("cloning %s@%s\n", r.OrgRepo, r.Ref)
-	if err := ClonerUsingGitExec(ctx, r); err != nil {
+	err := ClonerUsingGitExec(ctx, r)
+	if err != nil {
 		return errors.E(op, errors.Git, types.UniquePath(dest), err)
 	}
 	defer os.RemoveAll(r.Dir)
 
+	sourcePath := filepath.Join(r.Dir, r.Path)
 	p.Printf("copying %q to %s\n", r.Path, dest)
-	if err := pkgutil.CopyPackageWithSubpackages(r.AbsPath(), dest); err != nil {
+	if err := pkgutil.CopyPackageWithSubpackages(sourcePath, dest); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
-	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, r.AbsPath(), false); err != nil {
+	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, sourcePath, false); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
@@ -127,142 +129,46 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 // refs.
 func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 	const op errors.Op = "fetch.ClonerUsingGitExec"
-	// look for a tag with the directory as a prefix for versioning
-	// subdirectories independently
-	originalRef := repoSpec.Ref
-	if repoSpec.Path != "" && !strings.Contains(repoSpec.Ref, "refs") {
-		// join the directory with the Ref (stripping the preceding '/' if it exists)
-		repoSpec.Ref = path.Join(strings.TrimLeft(repoSpec.Path, "/"), repoSpec.Ref)
-	}
 
-	defaultRef, err := gitutil.DefaultRef(repoSpec.OrgRepo)
+	upGitRunner, err := gitutil.NewGitUpstreamRepo(ctx, repoSpec.CloneSpec())
 	if err != nil {
-		return errors.E(op, errors.Git, err)
+		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
 
-	// clone the repo to a tmp directory.
-	// delete the tmp directory later.
-	err = clonerUsingGitExec(ctx, repoSpec)
-	if err != nil && originalRef != repoSpec.Ref {
-		repoSpec.Ref = originalRef
-		err = clonerUsingGitExec(ctx, repoSpec)
+	packageRef := path.Join(strings.TrimLeft(repoSpec.Path, "/"), repoSpec.Ref)
+	if _, found := upGitRunner.ResolveTag(packageRef); found {
+		repoSpec.Ref = packageRef
 	}
 
+	dir, err := upGitRunner.GetRepo(ctx, []string{repoSpec.Ref})
 	if err != nil {
-		if strings.HasPrefix(repoSpec.Path, "blob/") {
-			p := printer.FromContextOrDie(ctx)
-			p.Printf("git repo contains /blob/, you may need to remove /blob/%s", defaultRef)
-			return errors.E(op, errors.Git, err)
-		}
-		return errors.E(op, errors.Git, err)
+		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
 
-	return nil
-}
+	gitRunner, err := gitutil.NewLocalGitRunner(dir)
+	if err != nil {
+		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
+	}
 
-// clonerUsingGitExec is the implementation for cloning a repo from git into
-// a local temp directory. This is used by the public ClonerUsingGitExec
-// function to allow trying multiple different refs.
-func clonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
-	const op errors.Op = "fetch.clonerUsingGitExec"
-	var err error
+	commit, found := upGitRunner.ResolveRef(repoSpec.Ref)
+	if !found {
+		commit = repoSpec.Ref
+	}
+
+	_, err = gitRunner.Run(ctx, "reset", "--hard", commit)
+	if err != nil {
+		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
+	}
+
 	repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
 	}
-	err = runGitExec(ctx, repoSpec.Dir, "init", repoSpec.Dir)
+	repoSpec.Commit = commit
+
+	err = copyutil.CopyDir(dir, repoSpec.Dir)
 	if err != nil {
-		return errors.E(op, errors.Git, fmt.Errorf("trouble initializing empty git repo in %s: %w",
-			repoSpec.Dir, err))
-	}
-
-	err = runGitExec(ctx, repoSpec.Dir, "remote", "add", "origin", repoSpec.CloneSpec())
-	if err != nil {
-		return errors.E(op, errors.Git, fmt.Errorf("error adding remote %s: %w", repoSpec.CloneSpec(), err))
-	}
-	if repoSpec.Ref == "" {
-		repoSpec.Ref, err = gitutil.DefaultRef(repoSpec.Dir)
-		if err != nil {
-			return errors.E(op, errors.Git, fmt.Errorf("error looking up default branch for repo: %w", err))
-		}
-	}
-
-	err = func() error {
-		err = runGitExec(ctx, repoSpec.Dir, "fetch", "origin", "--depth=1", repoSpec.Ref)
-		if err != nil {
-			return errors.E(op, errors.Git, fmt.Errorf("trouble fetching %s, "+
-				"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", repoSpec.Ref, err))
-		}
-
-		err = runGitExec(ctx, repoSpec.Dir, "reset", "--hard", "FETCH_HEAD")
-		if err != nil {
-			return errors.E(op, errors.Git,
-				fmt.Errorf("trouble hard resetting empty repository to %s: %w", repoSpec.Ref, err))
-		}
-		return nil
-	}()
-	if err != nil {
-		err := runGitExec(ctx, repoSpec.Dir, "fetch", "origin")
-		if err != nil {
-			return errors.E(op, errors.Git, fmt.Errorf("trouble fetching origin, "+
-				"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", err))
-		}
-
-		err = runGitExec(ctx, repoSpec.Dir, "reset", "--hard", repoSpec.Ref)
-		if err != nil {
-			return errors.E(op, errors.Git, fmt.Errorf("trouble hard resetting empty repository to %s, "+
-				"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", repoSpec.Ref, err))
-		}
-	}
-
-	err = runGitExec(ctx, repoSpec.Dir, "submodule", "update", "--init", "--recursive")
-	if err != nil {
-		return errors.E(op, errors.Git, fmt.Errorf("trouble fetching submodules for %s, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", repoSpec.Ref, err))
-	}
-
-	return nil
-}
-
-func runGitExec(ctx context.Context, dir string, args ...string) error {
-	const op errors.Op = "fetch.runGitExec"
-	gitProgram, err := exec.LookPath("git")
-	if err != nil {
-		return errors.E(op, errors.Git,
-			fmt.Errorf("no 'git' program on path: %w", err))
-	}
-
-	var outBuf bytes.Buffer
-	var errBuf bytes.Buffer
-
-	cmd := exec.CommandContext(ctx, gitProgram, args...)
-	cmd.Dir = dir
-	cmd.Stdout = &outBuf
-	cmd.Stderr = &errBuf
-
-	err = cmd.Run()
-	if err != nil {
-		return &GitExecError{
-			Args:   args,
-			Err:    err,
-			StdErr: errBuf.String(),
-			StdOut: outBuf.String(),
-		}
+		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))
 	}
 	return nil
-}
-
-type GitExecError struct {
-	Args   []string
-	Err    error
-	StdErr string
-	StdOut string
-}
-
-func (e *GitExecError) Error() string {
-	b := new(strings.Builder)
-	b.WriteString(e.Err.Error())
-	b.WriteString(": ")
-	b.WriteString(e.StdErr)
-	return b.String()
 }

@@ -71,7 +71,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if len(args) == 1 {
 		args = append(args, pkg.CurDir)
 	}
-	t, err := parse.GitParseArgs(args)
+	t, err := parse.GitParseArgs(r.ctx, args)
 	if err != nil {
 		return errors.E(op, err)
 	}

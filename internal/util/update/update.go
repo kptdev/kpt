@@ -124,11 +124,16 @@ func (u Command) Run(ctx context.Context) error {
 	}
 
 	// require package is checked into git before trying to update it
-	g := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
-	if err := g.Run("status", "-s"); err != nil {
+	g, err := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
+	if err != nil {
+		return err
+	}
+
+	rr, err := g.Run(ctx, "status", "-s")
+	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
-	if strings.TrimSpace(g.Stdout.String()) != "" {
+	if strings.TrimSpace(rr.Stdout) != "" {
 		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must be committed "+
 			"to git before attempting to update"))
 	}
