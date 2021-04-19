@@ -19,11 +19,11 @@ on:
   push:
     branches:
       - next
+      - diff-testing
   pull_request:
     branches:
       - next
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -41,3 +41,35 @@ jobs:
         git config --global user.name Your Name
         make all
         make test-docker
+    - name: "Upload Linux Binary"
+      uses: actions/upload-artifact@v2
+      with:
+        path: kpt-linux
+    - name: "Upload Darwin (MacOS) Binary"
+      uses: actions/upload-artifact@v2
+      with:
+        path: kpt-darwin
+    - name: "Upload Windows Binary"
+      uses: actions/upload-artifact@v2
+      with:
+        path: kpt-windows.exe
+  
+  validate-binaries:
+    name: "Validate Binaries"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            binary: kpt-linux
+          - os: macos-latest
+            binary: kpt-darwin
+          - os: windows-latest
+            binary: kpt-windows.exe
+    steps:
+      - name: Download Binary
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.binary }}
+          path: "kpt"
+      - run: "./kpt version"
