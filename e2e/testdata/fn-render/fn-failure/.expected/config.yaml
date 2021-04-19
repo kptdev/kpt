@@ -15,3 +15,5 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 exitCode: 1
+stdErr: "httpbin-gen:4:1: got newline, want primary expression"
+stdOut: "running function \"gcr.io/kpt-fn/starlark:unstable\": FAILED"

@@ -13,3 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
+stdErr: "missing-kptfile/Kptfile: no such file or directory"
