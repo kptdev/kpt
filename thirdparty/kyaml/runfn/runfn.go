@@ -22,10 +22,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
-	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
@@ -37,8 +37,8 @@ type RunFns struct {
 	// Path is the path to the directory containing functions
 	Path string
 
-	// absPath is the absolute version of Path
-	absPath string
+	// uniquePath is the absolute version of Path
+	uniquePath types.UniquePath
 
 	// FnConfigPath specifies a config file which contains the configs used in
 	// function input. It can be absolute or relative to kpt working directory.
@@ -108,50 +108,8 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
-// toTopLevelPkgRelPath converts the file path which should be relative to the
-// sub-package that it belongs to to a path relative to top level package.
-// topLevelPkgAbsPath and subPkgAbsPath must be absolute path. file is a
-// relative path which is relative to subPkgAbsPath.
-func toTopLevelPkgRelPath(topLevelPkgAbsPath, subPkgAbsPath, file string) (string, error) {
-	return filepath.Rel(topLevelPkgAbsPath, filepath.Join(subPkgAbsPath, file))
-}
-
 func (r RunFns) getPipelineConfigFilterFn() (kio.LocalPackageSkipFileFunc, error) {
-	fnConfigPaths := sets.String{}
-	// TODO: eventually walking all sub-packages should be handled by
-	// pkg.FunctionConfigFilePaths
-	err := filepath.Walk(r.absPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("failed to traverse package: %w", err)
-		}
-		if !info.IsDir() {
-			return nil
-		}
-		p, err := pkg.New(path)
-		if err != nil {
-			// we ignore the error here and consider this is not
-			// a package but don't return filepath.SkipDir because
-			// there might be sub-package in the sub-directory
-			return nil
-		}
-		pl, err := p.Pipeline()
-		if err != nil {
-			return nil
-		}
-		paths := pkg.FunctionConfigFilePaths(pl).List()
-		for i := range paths {
-			// convert to path relative to top level package
-			paths[i], err = toTopLevelPkgRelPath(r.absPath, path, paths[i])
-			if err != nil {
-				return fmt.Errorf(
-					"failed to convert path %s in subpackage %s to path relative to top level package %s",
-					paths[i], path, r.absPath,
-				)
-			}
-		}
-		fnConfigPaths.Insert(paths...)
-		return nil
-	})
+	fnConfigPaths, err := pkg.PkgFnConfigFilePaths(r.uniquePath, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
 	}
@@ -183,7 +141,7 @@ func (r RunFns) getNodesAndFilters() (
 			return nil, nil, outputPkg, err
 		}
 		outputPkg = &kio.LocalPackageReadWriter{
-			PackagePath:    r.absPath,
+			PackagePath:    string(r.uniquePath),
 			MatchFilesGlob: matchFilesGlob,
 			FileSkipFunc:   piplineConfigFilter,
 		}
@@ -392,10 +350,11 @@ func (r *RunFns) init() error {
 	} else {
 		// make the path absolute so it works on mac
 		var err error
-		r.absPath, err = filepath.Abs(r.Path)
+		absPath, err := filepath.Abs(r.Path)
 		if err != nil {
 			return errors.Wrap(err)
 		}
+		r.uniquePath = types.UniquePath(absPath)
 	}
 
 	// functionFilterProvider set the filter provider
