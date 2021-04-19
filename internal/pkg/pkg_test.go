@@ -627,6 +627,7 @@ func TestPkgFnConfigFilePaths(t *testing.T) {
 			}()
 
 			for _, v := range tc.cases {
+				v := v
 				t.Run(fmt.Sprintf("recursive:%t", v.recursive), func(t *testing.T) {
 					paths, err := PkgFnConfigFilePaths(types.UniquePath(pkgPath), v.recursive)
 					if !assert.NoError(t, err) {
