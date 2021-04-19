@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -103,7 +104,7 @@ func (g *TestSetupManager) Init() bool {
 			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
-		}}.Run()) {
+		}}.Run(fake.CtxWithNilPrinter())) {
 		return false
 	}
 	localGit := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)

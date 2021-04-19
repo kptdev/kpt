@@ -1,0 +1,14 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: test1
+upstream:
+  type: git
+  git:
+    repo: git@github.com:yuwenma/blueprint-helloworld
+    directory: /
+    ref: master
+inventory:
+  namespace: rbac-error
+  name: inventory-82393036
+  inventoryID: ed68c3d787d4355ac1886ee852f7a4c0537d9818-1618448890187393263

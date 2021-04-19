@@ -15,11 +15,11 @@
 package get_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
@@ -37,8 +37,11 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 
 	err := Command{
 		Destination: w.WorkspaceDirectory,
-	}.Run()
-	assert.EqualError(t, err, "must specify git repo information")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify git repo information")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -51,8 +54,11 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 			Repo: "foo",
 		},
 		Destination: w.WorkspaceDirectory,
-	}.Run()
-	assert.EqualError(t, err, "must specify ref")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify ref")
 }
 
 // TestCommand_Run verifies that Command will clone the HEAD of the master branch.
@@ -74,7 +80,7 @@ func TestCommand_Run(t *testing.T) {
 		Ref:       "master",
 		Directory: "/",
 	},
-		Destination: absPath}.Run()
+		Destination: absPath}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -133,7 +139,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	err := Command{Git: &kptfilev1alpha2.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -194,7 +200,7 @@ func TestCommand_Run_destination(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -258,7 +264,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 			Directory: subdir,
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -338,7 +344,7 @@ func TestCommand_Run_branch(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -421,7 +427,7 @@ func TestCommand_Run_tag(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -562,7 +568,7 @@ func TestCommand_Run_ref(t *testing.T) {
 					Directory: tc.directory,
 				},
 				Destination: absPath,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 			assert.NoError(t, err)
 
 			expectedPath := tc.expected.ExpandPkgWithName(t, repos[testutil.Upstream].RepoName, testutil.ToReposInfo(repos))
@@ -591,7 +597,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the KptFile contains the expected values
@@ -645,8 +651,11 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
-	assert.EqualError(t, err, fmt.Sprintf("destination directory %s already exists", absPath))
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "destination directory already exists")
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
@@ -699,7 +708,7 @@ func TestCommand_Run_nonexistingParentDir(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
 }
@@ -719,7 +728,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 			Ref:       "refs/heads/master",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -743,7 +752,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 			Ref:       "refs/heads/foo",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -769,7 +778,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 			Ref:       "refs/tags/foo",
 		},
 		Destination: filepath.Join(w.WorkspaceDirectory, g.RepoDirectory),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -1289,7 +1298,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				},
 				Destination:    destinationDir,
 				UpdateStrategy: tc.updateStrategy,
-			}.Run()
+			}.Run(fake.CtxWithNilPrinter())
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -1359,7 +1368,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 			Ref:       "master",
 		},
 		Destination: destinationDir,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

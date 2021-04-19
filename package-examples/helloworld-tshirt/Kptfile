@@ -1,0 +1,10 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: helloworld-tshirt
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        tshirt-size: small
+    - image: gcr.io/kustomize-functions/example-tshirt:v0.1.0

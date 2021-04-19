@@ -86,7 +86,7 @@ func (pr *printer) Printf(format string, args ...interface{}) {
 
 // FromContext returns printer instance associated with the context.
 func FromContextOrDie(ctx context.Context) Printer {
-	pr, ok := ctx.Value(printerKey).(*printer)
+	pr, ok := ctx.Value(printerKey).(Printer)
 	if ok {
 		return pr
 	}
