@@ -36,7 +36,7 @@ $ git init
 
 # get the package
 $ export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-$ kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.3.0 helloworld
+$ kpt pkg get $SRC_REPO/package-examples/helloworld-set@next helloworld
 
 # add helloworld to your workspace
 $ git add .
