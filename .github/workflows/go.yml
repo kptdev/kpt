@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - next
-      - diff-testing
   pull_request:
     branches:
       - next
