@@ -17,3 +17,5 @@ exitCode: 1
 image: gcr.io/kpt-fn/dne # non-existing image
 args:
   namespace: staging
+stdErr: "Failed to fetch \"latest\" from request \"/v2/kpt-fn/dne/manifests/latest\""
+
