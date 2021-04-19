@@ -44,14 +44,17 @@ jobs:
     - name: "Upload Linux Binary"
       uses: actions/upload-artifact@v2
       with:
+        name: kpt-linux
         path: kpt-linux
     - name: "Upload Darwin (MacOS) Binary"
       uses: actions/upload-artifact@v2
       with:
+        name: kpt-darwin
         path: kpt-darwin
     - name: "Upload Windows Binary"
       uses: actions/upload-artifact@v2
       with:
+        name: kpt-windows.exe
         path: kpt-windows.exe
   
   validate-binaries:
