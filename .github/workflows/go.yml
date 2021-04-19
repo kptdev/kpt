@@ -46,22 +46,27 @@ jobs:
       with:
         name: kpt-linux
         path: kpt-linux
+        retention-days: 1
     - name: "Upload Darwin (MacOS) Binary"
       uses: actions/upload-artifact@v2
       with:
         name: kpt-darwin
         path: kpt-darwin
+        retention-days: 1
     - name: "Upload Windows Binary"
       uses: actions/upload-artifact@v2
       with:
         name: kpt-windows.exe
         path: kpt-windows.exe
+        retention-days: 1
   
   validate-binaries:
     name: "Validate Binaries"
     needs: "build"
     runs-on: ${{ matrix.os }}
     strategy:
+      # Do not fail fast for validation. This gives us signals for all OS's.
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -76,4 +81,7 @@ jobs:
         with:
           name: ${{ matrix.binary }}
           path: "kpt"
+      - name: Update permissions
+        if: matrix.os != 'windows-latest'
+        run: chmod +x ./kpt/*
       - run: "./kpt/${{ matrix.binary }} version"
