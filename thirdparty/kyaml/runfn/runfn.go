@@ -108,6 +108,14 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
+// toTopLevelPkgRelPath converts the file path which should be relative to the
+// sub-package that it belongs to to a path relative to top level package.
+// topLevelPkgAbsPath and subPkgAbsPath must be absolute path. file is a
+// relative path which is relative to subPkgAbsPath.
+func toTopLevelPkgRelPath(topLevelPkgAbsPath, subPkgAbsPath, file string) (string, error) {
+	return filepath.Rel(topLevelPkgAbsPath, filepath.Join(subPkgAbsPath, file))
+}
+
 func (r RunFns) getPipelineConfigFilterFn() (kio.LocalPackageSkipFileFunc, error) {
 	fnConfigPaths := sets.String{}
 	// TODO: eventually walking all sub-packages should be handled by
@@ -132,11 +140,13 @@ func (r RunFns) getPipelineConfigFilterFn() (kio.LocalPackageSkipFileFunc, error
 		}
 		paths := pkg.FunctionConfigFilePaths(pl).List()
 		for i := range paths {
-			paths[i] = filepath.Join(path, paths[i])
-			// convert to relative path to top level package
-			paths[i], err = filepath.Rel(r.absPath, paths[i])
+			// convert to path relative to top level package
+			paths[i], err = toTopLevelPkgRelPath(r.absPath, path, paths[i])
 			if err != nil {
-				return err
+				return fmt.Errorf(
+					"failed to convert path %s in subpackage %s to path relative to top level package %s",
+					paths[i], path, r.absPath,
+				)
 			}
 		}
 		fnConfigPaths.Insert(paths...)
