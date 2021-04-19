@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -27,8 +28,10 @@ const (
 )
 
 func (kf *KptFile) Validate() error {
+	const op errors.Op = "kptfile.validate"
 	if err := kf.Pipeline.validate(); err != nil {
-		return fmt.Errorf("pipeline is not valid: %w", err)
+		err =  fmt.Errorf("pipeline is not valid: %w", err)
+		return errors.E(op, err)
 	}
 	// TODO: validate other fields
 	return nil
@@ -38,6 +41,7 @@ func (kf *KptFile) Validate() error {
 // 'mutators' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
 func (p *Pipeline) validate() error {
+	const op errors.Op = "pipeline.validate"
 	if p == nil {
 		return nil
 	}
@@ -48,7 +52,8 @@ func (p *Pipeline) validate() error {
 		f := fns[i]
 		err := f.validate()
 		if err != nil {
-			return fmt.Errorf("function %q is invalid: %w", f.Image, err)
+			err = fmt.Errorf("function %q is invalid: %w", f.Image, err)
+			return errors.E(op, err)
 		}
 	}
 	return nil
