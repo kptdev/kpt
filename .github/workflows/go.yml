@@ -76,4 +76,4 @@ jobs:
         with:
           name: ${{ matrix.binary }}
           path: "kpt"
-      - run: "./kpt version"
+      - run: "./kpt/${{ matrix.binary }} version"
