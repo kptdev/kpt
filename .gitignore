@@ -32,3 +32,8 @@ package-lock.json
 
 # local tmp directory (in case you download packages here)
 tmp/
+
+# Ignore binaries
+kpt-darwin
+kpt-linux
+kpt-windows.exe

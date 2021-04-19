@@ -22,9 +22,9 @@ build:
 all: license fix vet fmt lint test build buildall tidy
 
 buildall:
-	GOOS=windows go build -o /dev/null
-	GOOS=linux go build -o /dev/null
-	GOOS=darwin go build -o /dev/null
+	GOOS=windows go build -o kpt-windows.exe
+	GOOS=linux go build -o kpt-linux
+	GOOS=darwin go build -o kpt-darwin
 
 update-deps-to-head:
 	go get sigs.k8s.io/cli-utils@master
