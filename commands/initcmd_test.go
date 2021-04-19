@@ -9,10 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var (
@@ -199,6 +201,70 @@ func TestKptInitOptions_updateKptfile(t *testing.T) {
 			assert.Equal(t, inventoryName, kf.Inventory.Name)
 			assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
 			assert.Equal(t, inventoryID, kf.Inventory.InventoryID)
+		})
+	}
+}
+
+func TestInitCmd(t *testing.T) {
+	testCases := map[string]struct {
+		name       string
+		namespace  string
+		id         string
+		expectedID string
+	}{
+		"generates an inventory id if one is not provided": {
+			name:       "foo",
+			namespace:  "bar",
+			id:         "",
+			expectedID: "0717f9c46d01349e9d575ab1a5131886fb086a43",
+		},
+		"uses the inventory id if one is provided": {
+			name:       "foo",
+			namespace:  "bar",
+			id:         "abc123",
+			expectedID: "abc123",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+			defer tf.Cleanup()
+			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+			dir, err := ioutil.TempDir("", "kpt-init-options-test")
+			assert.NoError(t, err)
+			kf := kptfile.KptFile{
+				ResourceMeta: yaml.ResourceMeta{
+					ObjectMeta: yaml.ObjectMeta{
+						NameMeta: yaml.NameMeta{
+							Name: filepath.Base(dir),
+						},
+					},
+					TypeMeta: yaml.TypeMeta{
+						APIVersion: kptfile.TypeMeta.APIVersion,
+						Kind:       kptfile.TypeMeta.Kind},
+				},
+			}
+			err = kptfileutil.WriteFile(dir, kf)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			io := NewKptInitOptions(tf, ioStreams)
+			io.name = tc.name
+			io.namespace = tc.namespace
+			io.inventoryID = tc.id
+			err = io.Run([]string{dir})
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			newKf, err := kptfileutil.ReadFile(dir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			assert.Contains(t, newKf.Inventory.InventoryID, tc.expectedID)
 		})
 	}
 }

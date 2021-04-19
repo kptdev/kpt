@@ -79,12 +79,14 @@ func (io *KptInitOptions) Run(args []string) error {
 		randomSuffix := common.RandomStr(time.Now().UTC().UnixNano())
 		io.name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
 	}
-	// Set the init options inventory id label.
-	id, err := generateID(io.name, io.namespace, time.Now())
-	if err != nil {
-		return err
+	if io.inventoryID == "" {
+		// Set the init options inventory id label.
+		id, err := generateID(io.name, io.namespace, time.Now())
+		if err != nil {
+			return err
+		}
+		io.inventoryID = id
 	}
-	io.inventoryID = id
 	if !io.Quiet {
 		fmt.Fprintf(io.ioStreams.Out, "namespace: %s is used for inventory object\n", io.namespace)
 	}
@@ -189,5 +191,6 @@ func NewCmdInit(f cmdutil.Factory, ioStreams genericclioptions.IOStreams) *cobra
 	cmd.Flags().StringVar(&io.name, "name", "", "Inventory object name")
 	cmd.Flags().BoolVar(&io.force, "force", false, "Set inventory values even if already set in Kptfile")
 	cmd.Flags().BoolVar(&io.Quiet, "quiet", false, "If true, do not print output during initialization of Kptfile")
+	cmd.Flags().StringVar(&io.inventoryID, "inventory-id", "", "Inventory id for the package")
 	return cmd
 }
