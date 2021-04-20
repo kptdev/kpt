@@ -105,5 +105,4 @@ site-check:
 	./scripts/check-site.sh
 
 site-verify-examples:
-	@echo TODO: re-enable after sample update
-	# ./scripts/verifyExamples.sh
+	./scripts/verifyExamples.sh
