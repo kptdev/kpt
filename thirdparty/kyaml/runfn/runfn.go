@@ -108,6 +108,10 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
+// functionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
+// invoked by kio.LocalPackageReader when it reads the package. The filter will return
+// true if the file should be skipped during reading. Skipped files will not be included
+// in all steps following.
 func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
 	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
 	if err != nil {
