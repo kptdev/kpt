@@ -53,7 +53,8 @@ kpt live init my-dir/
 
 <!-- @removeInventoryTemplate @verifyExamples-->
 ```shell
-rm my-dir/inventory-template.yaml
+rm -r my-dir
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
 ```
 
 {{% /hide %}}
