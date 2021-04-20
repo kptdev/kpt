@@ -749,9 +749,8 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 			}
 
 			// If tc.repo exists in the testbed, use its repo directory for the UpstreamLock.
-			repo := g.Repos[tc.repo]
 			repoDir := tc.repo
-			if repo != nil {
+			if repo, repoExists := g.Repos[tc.repo]; repoExists {
 				repoDir = repo.RepoDirectory
 			}
 			localChanges := []testutil.Content{{
