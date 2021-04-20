@@ -108,8 +108,8 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
-func (r RunFns) getPipelineConfigFilterFn() (kio.LocalPackageSkipFileFunc, error) {
-	fnConfigPaths, err := pkg.PkgFnConfigFilePaths(r.uniquePath, true)
+func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
+	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
 	}
@@ -136,14 +136,14 @@ func (r RunFns) getNodesAndFilters() (
 		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
 	}
 	if r.Path != "" {
-		piplineConfigFilter, err := r.getPipelineConfigFilterFn()
+		functionConfigFilter, err := r.functionConfigFilterFunc()
 		if err != nil {
 			return nil, nil, outputPkg, err
 		}
 		outputPkg = &kio.LocalPackageReadWriter{
 			PackagePath:    string(r.uniquePath),
 			MatchFilesGlob: matchFilesGlob,
-			FileSkipFunc:   piplineConfigFilter,
+			FileSkipFunc:   functionConfigFilter,
 		}
 	}
 

@@ -513,7 +513,7 @@ func TestSubpackages_symlinks(t *testing.T) {
 	assert.Equal(t, []string{"subpkg"}, paths)
 }
 
-func TestPkgFnConfigFilePaths(t *testing.T) {
+func TestFunctionConfigFilePaths(t *testing.T) {
 	type variants struct {
 		recursive bool
 		expected  []string
@@ -629,7 +629,7 @@ func TestPkgFnConfigFilePaths(t *testing.T) {
 			for _, v := range tc.cases {
 				v := v
 				t.Run(fmt.Sprintf("recursive:%t", v.recursive), func(t *testing.T) {
-					paths, err := PkgFnConfigFilePaths(types.UniquePath(pkgPath), v.recursive)
+					paths, err := FunctionConfigFilePaths(types.UniquePath(pkgPath), v.recursive)
 					if !assert.NoError(t, err) {
 						t.FailNow()
 					}
