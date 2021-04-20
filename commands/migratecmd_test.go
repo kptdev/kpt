@@ -147,7 +147,7 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
 			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
-			err = migrateRunner.updateKptfile([]string{dir})
+			err = migrateRunner.updateKptfile([]string{dir}, testInventoryID)
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
@@ -164,8 +164,8 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 				if len(kf.Inventory.Name) == 0 {
 					t.Errorf("inventory name not set in Kptfile")
 				}
-				if len(kf.Inventory.InventoryID) == 0 {
-					t.Errorf("inventory id not set in Kptfile")
+				if kf.Inventory.InventoryID != testInventoryID {
+					t.Errorf("inventory id not set in Kptfile: %s", kf.Inventory.InventoryID)
 				}
 			} else if kf.Inventory != nil {
 				t.Errorf("inventory shouldn't be set during dryrun")

@@ -22,36 +22,35 @@ var (
 )
 
 var kptFile = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alph2
 kind: Kptfile
 metadata:
   name: test1
 upstreamLock:
   type: git
   gitLock:
-    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
     ref: master
 `
 
+const testInventoryID = "SSSSSSSSSS-RRRRR"
+
 var kptFileWithInventory = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
 upstreamLock:
   type: git
   gitLock:
-    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
     ref: master
 inventory:
     name: foo
     namespace: test-namespace
-    inventoryID: SSSSSSSSSS-RRRRR
-`
+    inventoryID: ` + testInventoryID + "\n"
 
 var testTime = time.Unix(5555555, 66666666)
 
