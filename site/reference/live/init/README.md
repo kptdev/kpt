@@ -39,6 +39,12 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
 ```
 kind delete cluster && kind create cluster
 ```
+
+<!-- @installResourceGroup @verifyExamples-->
+```
+kpt live install-resource-group
+```
+
 {{% /hide %}}
 
 <!--mdtogo:Examples-->
