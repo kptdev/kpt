@@ -733,9 +733,7 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 				Branch: masterBranch,
 			}
 
-			// Using a TestSetupManager for just the remote repo to get a directory
-			// for use in the local UpstreamLock.
-			remote := &testutil.TestSetupManager{
+			g := &testutil.TestSetupManager{
 				T: t,
 				ReposChanges: map[string][]testutil.Content{
 					testutil.Upstream: {
@@ -744,42 +742,32 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 				},
 			}
 
-			defer remote.Clean()
+			defer g.Clean()
 
-			if !remote.Init() {
+			if !g.Init() {
 				return
 			}
 
 			// If tc.repo exists in the testbed, use its repo directory for the UpstreamLock.
-			repo := remote.Repos[tc.repo]
+			repo := g.Repos[tc.repo]
 			repoDir := tc.repo
 			if repo != nil {
 				repoDir = repo.RepoDirectory
 			}
-
-			local := &testutil.TestSetupManager{
-				T: t,
-				ReposChanges: map[string][]testutil.Content{
-					testutil.Upstream: {
-						upstreamContent,
-					},
-				},
-				LocalChanges: []testutil.Content{{
-					Pkg: pkgbuilder.NewRootPkg().WithKptfile(pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, tc.dir, masterBranch, "resource-merge").
-						WithUpstreamLock(repoDir, tc.dir, masterBranch, tc.commit),
-					),
-				}},
+			localChanges := []testutil.Content{{
+				Pkg: pkgbuilder.NewRootPkg().WithKptfile(pkgbuilder.NewKptfile().
+					WithUpstreamRef(testutil.Upstream, tc.dir, masterBranch, "resource-merge").
+					WithUpstreamLock(repoDir, tc.dir, masterBranch, tc.commit),
+				),
+			}}
+			err := testutil.UpdateGitDir(g.T, testutil.Local, g.LocalWorkspace, localChanges, g.Repos)
+			if !assert.NoError(t, err) {
+				t.FailNow()
 			}
 
-			defer local.Clean()
-
-			if !local.Init() {
-				return
-			}
 			// Update the local package
-			err := Command{
-				Pkg: pkgtest.CreatePkgOrFail(t, local.LocalWorkspace.FullPackagePath()),
+			err = Command{
+				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 			}.Run(fake.CtxWithNilPrinter())
 
 			if assert.Error(t, err) {
