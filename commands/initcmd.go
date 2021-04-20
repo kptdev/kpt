@@ -77,12 +77,14 @@ func (io *KptInitOptions) Run(args []string) error {
 		randomSuffix := common.RandomStr(time.Now().UTC().UnixNano())
 		io.name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
 	}
-	// Set the init options inventory id label.
-	id, err := generateID(io.name, io.namespace, time.Now())
-	if err != nil {
-		return err
+	// Set the init options inventory id label, if not already set.
+	if io.inventoryID == "" {
+		id, err := generateID(io.name, io.namespace, time.Now())
+		if err != nil {
+			return err
+		}
+		io.inventoryID = id
 	}
-	io.inventoryID = id
 	// Finally, update these values in the Inventory section of the Kptfile.
 	return io.updateKptfile()
 }
