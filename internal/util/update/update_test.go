@@ -718,12 +718,10 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 			expectedErrorMsg: "unknown revision or path"},
 		"bad dir": {
 			dir:              "/fake",
-			commit:           "",
 			repo:             testutil.Upstream,
 			expectedErrorMsg: "no such file or directory"},
 		"bad repo": {
 			dir:              "/",
-			commit:           "",
 			repo:             "fake",
 			expectedErrorMsg: "does not appear to be a git repository"},
 	}
