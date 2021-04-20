@@ -314,7 +314,12 @@ func (u Command) updatePackage(subPkgPath, localPath, updatedPath, originPath st
 	}
 
 	originExists := isRootPkg
-	if !isRootPkg {
+	if isRootPkg {
+		_, err := os.Stat(originPath)
+		if err != nil {
+			return errors.E(op, types.UniquePath(localPath), err)
+		}
+	} else {
 		originExists, err = pkg.IsPackageDir(originPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
