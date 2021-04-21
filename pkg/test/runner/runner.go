@@ -144,7 +144,7 @@ func (r *Runner) runFnEval() error {
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
 		if fnErr != nil {
-			r.t.Logf("kpt error output: %s", stdout)
+			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
@@ -311,10 +311,7 @@ func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpP
 func (r *Runner) compareOutput(stdout string, stderr string) error {
 	expectedStderr := r.testCase.Config.StdErr
 	if expectedStderr == "" && stderr != "" {
-		// special case for fn-eval/invalid-fn-config-file
-		if !strings.Contains(stderr, "I am not a valid config file") {
-			return fmt.Errorf("unexpected stderr %s", stderr)
-		}
+		return fmt.Errorf("unexpected stderr %s", stderr)
 	}
 	if !strings.Contains(stderr, expectedStderr) {
 		return fmt.Errorf("wanted stderr %s, got %s", expectedStderr, stderr)
