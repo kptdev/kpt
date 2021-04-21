@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdfetchk8sschema"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/destroy"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/diff"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/preview"
@@ -67,7 +68,7 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
-	initCmd := NewCmdInit(f, ioStreams)
+	initCmd := cmdliveinit.NewCmdInit(f, ioStreams)
 	initCmd.Short = livedocs.InitShort
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples

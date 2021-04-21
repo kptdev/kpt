@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/cmdliveinit"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -33,7 +34,7 @@ type MigrateRunner struct {
 
 	dir         string
 	dryRun      bool
-	initOptions *KptInitOptions
+	initOptions *cmdliveinit.KptInitOptions
 	cmProvider  provider.Provider
 	rgProvider  provider.Provider
 	cmLoader    manifestreader.ManifestLoader
@@ -47,7 +48,7 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 	r := &MigrateRunner{
 		ioStreams:   ioStreams,
 		dryRun:      false,
-		initOptions: NewKptInitOptions(cmProvider.Factory(), ioStreams),
+		initOptions: cmdliveinit.NewKptInitOptions(cmProvider.Factory(), ioStreams),
 		cmProvider:  cmProvider,
 		rgProvider:  rgProvider,
 		cmLoader:    cmLoader,
@@ -73,8 +74,8 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&r.initOptions.name, "name", "", "Inventory object name")
-	cmd.Flags().BoolVar(&r.initOptions.force, "force", false, "Set inventory values even if already set in Kptfile")
+	cmd.Flags().StringVar(&r.initOptions.Name, "name", "", "Inventory object name")
+	cmd.Flags().BoolVar(&r.initOptions.Force, "force", false, "Set inventory values even if already set in Kptfile")
 	cmd.Flags().BoolVar(&r.dryRun, "dry-run", false, "Do not actually migrate, but show steps")
 
 	r.Command = cmd
@@ -185,9 +186,9 @@ func (mr *MigrateRunner) updateKptfile(args []string, prevID string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  updating Kptfile inventory values...")
 	if !mr.dryRun {
 		// Set inventory ID from previous inventory object.
-		mr.initOptions.inventoryID = prevID
+		mr.initOptions.InventoryID = prevID
 		if err := mr.initOptions.Run(args); err != nil {
-			if _, exists := err.(*InvExistsError); exists {
+			if _, exists := err.(*cmdliveinit.InvExistsError); exists {
 				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
 			} else {
 				return err
