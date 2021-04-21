@@ -16,11 +16,17 @@ package openapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/GoogleContainerTools/kpt/internal/util/openapi/augments"
 	"io/ioutil"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/yaml"
 
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
 )
 
@@ -28,6 +34,10 @@ const (
 	SchemaSourceBuiltin = "builtin"
 	SchemaSourceFile    = "file"
 	SchemaSourceCluster = "cluster"
+
+	BuiltinSchemaVersion = "v1204"
+	KubernetesAssetName  = "kubernetesapi/v1204/swagger.json"
+	KustomizeAssetName   = "kustomizationapi/swagger.json"
 )
 
 var SchemaSources = fmt.Sprintf("{%q, %q, %q}", SchemaSourceBuiltin, SchemaSourceCluster, SchemaSourceFile)
@@ -51,7 +61,8 @@ func ConfigureOpenAPI(factory util.Factory, k8sSchemaSource, k8sSchemaPath strin
 		}
 		return ConfigureOpenAPISchema(openAPISchema)
 	case SchemaSourceBuiltin:
-		return nil
+		openAPISchema := kubernetesapi.OpenAPIMustAsset[BuiltinSchemaVersion](KubernetesAssetName)
+		return ConfigureOpenAPISchema(openAPISchema)
 	default:
 		return fmt.Errorf("unknown schema source %s. Must be one of %s",
 			k8sSchemaSource, SchemaSources)
@@ -77,14 +88,89 @@ func ReadOpenAPISchemaFromDisk(path string) ([]byte, error) {
 
 func ConfigureOpenAPISchema(openAPISchema []byte) error {
 	openapi.SuppressBuiltInSchemaUse()
-
-	err := openapi.AddSchema(openAPISchema)
+	openAPISchema, err := addExtensionsToBuiltinTypes(openAPISchema)
 	if err != nil {
 		return err
 	}
-	// Also add make sure the Kustomize openAPI is always added regardless
-	// of where we got the Kubernetes openAPI schema.
-	// TODO: Refactor the openapi package in kyaml so we don't need to
-	// know the name of the kustomize asset here.
-	return openapi.AddSchema(kustomizationapi.MustAsset("kustomizationapi/swagger.json"))
+	if err := openapi.AddSchema(openAPISchema); err != nil {
+		return err
+	}
+	// Kustomize schema should always be added
+	return openapi.AddSchema(kustomizationapi.MustAsset(KustomizeAssetName))
+}
+
+// GetJSONSchema returns the JSON OpenAPI schema being used in kyaml
+func GetJSONSchema() ([]byte, error) {
+	schema := openapi.Schema()
+	if schema == nil {
+		return nil, nil
+	}
+	output, err := openapi.Schema().MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	var jsonSchema map[string]interface{}
+	if err := json.Unmarshal(output, &jsonSchema); err != nil {
+		return nil, err
+	}
+	if output, err = json.MarshalIndent(jsonSchema, "", "  "); err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+func GetSchemaKRM() (*kyaml.RNode, error) {
+	schema, err := kyaml.Parse(`
+apiVersion: kpt.dev/v1
+kind: OpenAPI
+metadata:
+  name: openAPI
+  annotations:
+    config.kubernetes.io/path: "openapi_openAPI.yaml"
+  `)
+	if err != nil {
+		return nil, fmt.Errorf("invalid openapi")
+	}
+	n, err := schema.Pipe(kyaml.LookupCreate(kyaml.ScalarNode, "data"))
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create")
+	}
+	j, err := GetJSONSchema()
+	if err != nil {
+		return nil, err
+	}
+	y, err := yaml.JSONToYAML(j)
+	if err != nil {
+		return nil, err
+	}
+	r, err := kyaml.Parse(string(y))
+	if err != nil {
+		return nil, err
+	}
+	n.SetYNode(r.YNode())
+	return schema, nil
+}
+
+func RemoveSchemaKRM(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+	var result []*kyaml.RNode
+	for _, n := range nodes {
+		meta, _ := n.GetMeta()
+		if meta.APIVersion == "kpt.dev/v1" && n.GetKind() == "OpenAPI" {
+			continue
+		}
+		result = append(result, n)
+	}
+	return result, nil
+}
+
+func addExtensionsToBuiltinTypes(openAPISchema []byte) ([]byte, error) {
+	patch, err := jsonpatch.DecodePatch([]byte(augments.JsonPatchBuiltin))
+	if err != nil {
+		return nil, err
+	}
+	modified, err := patch.Apply(openAPISchema)
+	if err != nil {
+		return nil, err
+	}
+	return modified, nil
 }

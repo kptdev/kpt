@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
+	github.com/evanphx/json-patch/v5 v5.2.0 // indirect
 	github.com/go-errors/errors v1.0.1
 	github.com/go-openapi/spec v0.19.5
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
@@ -24,4 +25,5 @@ require (
 	k8s.io/kubectl v0.20.4
 	sigs.k8s.io/cli-utils v0.25.0
 	sigs.k8s.io/kustomize/kyaml v0.10.17
+	sigs.k8s.io/yaml v1.2.0 // indirect
 )

@@ -5,6 +5,7 @@ package runfn
 
 import (
 	"fmt"
+	"github.com/GoogleContainerTools/kpt/internal/util/openapi"
 	"io"
 	"os"
 	"os/user"
@@ -139,6 +140,11 @@ func (r RunFns) getNodesAndFilters() (
 	if err != nil {
 		return nil, nil, outputPkg, err
 	}
+	schemaKRM, err := openapi.GetSchemaKRM()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	buff.Nodes = append(buff.Nodes, schemaKRM)
 	return buff, fltrs, outputPkg, nil
 }
 
@@ -186,11 +192,12 @@ func (r RunFns) runFunctions(
 		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
 
+	outputBuffer := &kio.PackageBuffer{}
 	var err error
 	pipeline := kio.Pipeline{
 		Inputs:                []kio.Reader{input},
 		Filters:               fltrs,
-		Outputs:               outputs,
+		Outputs:              []kio.Writer{outputBuffer},
 		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
 	if r.LogSteps {
@@ -230,6 +237,17 @@ func (r RunFns) runFunctions(
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf(strings.Join(errs, "\n---\n"))
+	}
+
+	// write to outputs
+	if outputBuffer.Nodes, err = openapi.RemoveSchemaKRM(outputBuffer.Nodes); err != nil {
+		return err
+	}
+	for i := range outputs {
+		err = outputs[i].Write(outputBuffer.Nodes)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
