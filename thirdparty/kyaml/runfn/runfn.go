@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
@@ -34,6 +36,9 @@ type RunFns struct {
 
 	// Path is the path to the directory containing functions
 	Path string
+
+	// uniquePath is the absolute version of Path
+	uniquePath types.UniquePath
 
 	// FnConfigPath specifies a config file which contains the configs used in
 	// function input. It can be absolute or relative to kpt working directory.
@@ -91,15 +96,8 @@ type RunFns struct {
 
 // Execute runs the command
 func (r RunFns) Execute() error {
-	// make the path absolute so it works on mac
-	var err error
-	r.Path, err = filepath.Abs(r.Path)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
 	// default the containerFilterProvider if it hasn't been override.  Split out for testing.
-	err = (&r).init()
+	err := (&r).init()
 	if err != nil {
 		return err
 	}
@@ -108,6 +106,25 @@ func (r RunFns) Execute() error {
 		return err
 	}
 	return r.runFunctions(nodes, output, fltrs)
+}
+
+// functionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
+// invoked by kio.LocalPackageReader when it reads the package. The filter will return
+// true if the file should be skipped during reading. Skipped files will not be included
+// in all steps following.
+func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
+	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
+	}
+
+	return func(relPath string) bool {
+		if len(fnConfigPaths) == 0 || r.IncludeMetaResources {
+			return false
+		}
+		// relPath is cleaned so we can directly use it here
+		return fnConfigPaths.Has(relPath)
+	}, nil
 }
 
 func (r RunFns) getNodesAndFilters() (
@@ -123,7 +140,15 @@ func (r RunFns) getNodesAndFilters() (
 		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
 	}
 	if r.Path != "" {
-		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path, MatchFilesGlob: matchFilesGlob}
+		functionConfigFilter, err := r.functionConfigFilterFunc()
+		if err != nil {
+			return nil, nil, outputPkg, err
+		}
+		outputPkg = &kio.LocalPackageReadWriter{
+			PackagePath:    string(r.uniquePath),
+			MatchFilesGlob: matchFilesGlob,
+			FileSkipFunc:   functionConfigFilter,
+		}
 	}
 
 	if r.Input == nil {
@@ -326,6 +351,14 @@ func (r *RunFns) init() error {
 		if r.Input == nil {
 			r.Input = os.Stdin
 		}
+	} else {
+		// make the path absolute so it works on mac
+		var err error
+		absPath, err := filepath.Abs(r.Path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		r.uniquePath = types.UniquePath(absPath)
 	}
 
 	// functionFilterProvider set the filter provider
