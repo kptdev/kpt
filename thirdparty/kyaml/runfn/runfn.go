@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/openapi"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -168,6 +169,11 @@ func (r RunFns) getNodesAndFilters() (
 	if err != nil {
 		return nil, nil, outputPkg, err
 	}
+	schemaKRM, err := openapi.GetSchemaKRM()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	buff.Nodes = append(buff.Nodes, schemaKRM)
 	return buff, fltrs, outputPkg, nil
 }
 
@@ -472,3 +478,4 @@ func (r RunFns) isOutputDisabled() bool {
 	// if output is not nil we will write the resources to stdout
 	return r.Output != nil
 }
+

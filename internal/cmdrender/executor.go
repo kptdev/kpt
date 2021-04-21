@@ -17,6 +17,7 @@ package cmdrender
 import (
 	"context"
 	"fmt"
+	"github.com/GoogleContainerTools/kpt/internal/util/openapi"
 	"os"
 	"path"
 	"path/filepath"
@@ -34,7 +35,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Executor hydrates a given pkg.
@@ -151,7 +152,7 @@ type pkgNode struct {
 
 	// KRM resources that we have gathered post hydration for this package.
 	// These inludes resources at this pkg as well all it's children.
-	resources []*yaml.RNode
+	resources []*kyaml.RNode
 }
 
 // newPkgNode returns a pkgNode instance given a path or pkg.
@@ -201,7 +202,7 @@ func (s hydrationState) String() string {
 }
 
 // hydrate hydrates given pkg and returns wet resources.
-func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
+func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*kyaml.RNode, err error) {
 	const op errors.Op = "pkg.render"
 
 	curr, found := hctx.pkgs[pn.pkg.UniquePath]
@@ -230,7 +231,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		return nil, errors.E(op, curr.pkg.UniquePath, err)
 	}
 
-	var input []*yaml.RNode
+	var input []*kyaml.RNode
 
 	// determine sub packages to be hydrated
 	subpkgs, err := curr.pkg.DirectSubpackages()
@@ -239,7 +240,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	}
 	// hydrate recursively and gather hydated transitive resources.
 	for _, subpkg := range subpkgs {
-		var transitiveResources []*yaml.RNode
+		var transitiveResources []*kyaml.RNode
 		var subPkgNode *pkgNode
 
 		if subPkgNode, err = newPkgNode("", subpkg); err != nil {
@@ -293,14 +294,14 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 }
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
-func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*kyaml.RNode) ([]*kyaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
 	pr := printer.FromContextOrDie(ctx)
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
 	// package structure. We should have function to get the relative package
 	// path here.
 	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
-
+	
 	if len(input) == 0 {
 		return nil, nil
 	}
@@ -333,7 +334,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 }
 
 // runMutators runs a set of mutators functions on given input resources.
-func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*kyaml.RNode) ([]*kyaml.RNode, error) {
 	if len(input) == 0 {
 		return input, nil
 	}
@@ -352,6 +353,12 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 
+	schemaKRM, err := openapi.GetSchemaKRM()
+	if err != nil {
+		return nil, err
+	}
+	input = append(input, schemaKRM)
+
 	output := &kio.PackageBuffer{}
 	// create a kio pipeline from kyaml library to execute the function chains
 	mutation := kio.Pipeline{
@@ -366,14 +373,14 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 	hctx.executedFunctionCnt += len(mutators)
-	return output.Nodes, nil
+	return openapi.RemoveSchemaKRM(output.Nodes)
 }
 
 // runValidators runs a set of validator functions on input resources.
 // We bail out on first validation failure today, but the logic can be
 // improved to report multiple failures. Reporting multiple failures
 // will require changes to the way we print errors
-func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) error {
+func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*kyaml.RNode) error {
 	if len(input) == 0 {
 		return nil
 	}
@@ -403,7 +410,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 	return nil
 }
 
-func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
+func cloneResources(input []*kyaml.RNode) (output []*kyaml.RNode) {
 	for _, resource := range input {
 		output = append(output, resource.Copy())
 	}
@@ -417,7 +424,7 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 // path annotation in each resource points to path relative to that package.
 // But the resources are written to the file system at the root package level, so
 // the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
-func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, error) {
+func adjustRelPath(resources []*kyaml.RNode, relPath string) ([]*kyaml.RNode, error) {
 	if relPath == "" {
 		return resources, nil
 	}
@@ -429,7 +436,7 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 		// if currPath is relative to root pkg i.e. already has relPath, skip it
 		if !strings.HasPrefix(currPath, relPath+"/") {
 			newPath := path.Join(relPath, currPath)
-			err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath))
+			err = r.PipeE(kyaml.SetAnnotation(kioutil.PathAnnotation, newPath))
 			if err != nil {
 				return resources, err
 			}
@@ -453,7 +460,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 }
 
 // trackInputFiles records file paths of input resources in the hydration context.
-func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
+func trackInputFiles(hctx *hydrationContext, input []*kyaml.RNode) error {
 	if hctx.inputFiles == nil {
 		hctx.inputFiles = sets.String{}
 	}
