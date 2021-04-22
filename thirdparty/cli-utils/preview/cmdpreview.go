@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
@@ -87,6 +89,17 @@ type PreviewRunner struct {
 
 // RunE is the function run from the cobra command.
 func (r *PreviewRunner) RunE(cmd *cobra.Command, args []string) error {
+	// Install ResourceGroup CRD if it does not already exist, and reset
+	// the RESTMapper to make the CRD available.
+	err := live.ApplyResourceGroupCRD(r.provider.Factory())
+	if err == nil {
+		if err := live.ResetRESTMapper(r.provider.Factory()); err != nil {
+			return err
+		}
+	} else if !apierrors.IsAlreadyExists(err) {
+		return err
+	}
+
 	if len(args) == 0 {
 		// default to the current working directory
 		args = append(args, ".")

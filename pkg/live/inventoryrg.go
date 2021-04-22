@@ -16,11 +16,13 @@ package live
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/restmapper"
 	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util"
@@ -278,6 +280,27 @@ func stringToUnstructured(str string) (*unstructured.Unstructured, error) {
 		return nil, err
 	}
 	return &unstructured.Unstructured{Object: m}, nil
+}
+
+// Called after applying a CRD to reset the RESTMapper, so the recently
+// applied CRD will be available from the RESTMapper.
+func ResetRESTMapper(factory cmdutil.Factory) error {
+	mapper, err := factory.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+	val := reflect.ValueOf(mapper)
+	if val.Type().Kind() != reflect.Struct {
+		return fmt.Errorf("unexpected RESTMapper type: %s", val.Type().String())
+	}
+	fv := val.FieldByName("RESTMapper")
+	ddRESTMapper, ok := fv.Interface().(*restmapper.DeferredDiscoveryRESTMapper)
+	if !ok {
+		return fmt.Errorf("unexpected RESTMapper type")
+	}
+	ddRESTMapper.Reset()
+	klog.V(4).Infoln("reset RESTMapper")
+	return nil
 }
 
 // resourceGroupCRDs maps the apiextensions version to the ResourceGroup

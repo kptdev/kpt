@@ -33,10 +33,6 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
-// resourceGroupEnv is an environment variable which hides code to implement
-// the ResourceGroup inventory object and migrating to ResourceGroup inventory.
-const resourceGroupEnv = "RESOURCE_GROUP_INVENTORY"
-
 func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	liveCmd := &cobra.Command{
 		Use:   "live",

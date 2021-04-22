@@ -4,8 +4,6 @@
 package commands
 
 import (
-	"os"
-
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/apply"
 	"github.com/spf13/cobra"
@@ -42,18 +40,22 @@ func (w *ApplyRunnerWrapper) Command() *cobra.Command {
 	return w.applyRunner.Command
 }
 
-// RunE runs the ResourceGroup CRD installation as a pre-step if an
-// environment variable exists. Then the wrapped ApplyRunner is
-// invoked. Returns an error if one happened. Swallows the
-// "AlreadyExists" error for CRD installation.
+// RunE runs the ResourceGroup CRD installation as a pre-step.
 func (w *ApplyRunnerWrapper) RunE(cmd *cobra.Command, args []string) error {
-	if _, exists := os.LookupEnv(resourceGroupEnv); exists {
-		klog.V(4).Infoln("wrapper applyRunner detected environment variable")
-		err := live.ApplyResourceGroupCRD(w.factory)
-		if err != nil && !apierrors.IsAlreadyExists(err) {
+	// Install ResourceGroup CRD if it does not already exist, and reset
+	// the RESTMapper to make the CRD available.
+	err := live.ApplyResourceGroupCRD(w.factory)
+	if err == nil {
+		if err := live.ResetRESTMapper(w.factory); err != nil {
 			return err
 		}
+	} else if !apierrors.IsAlreadyExists(err) {
+		return err
 	}
 	klog.V(4).Infoln("wrapper applyRunner run...")
+	if len(args) == 0 {
+		// default to the current working directory
+		args = append(args, ".")
+	}
 	return w.applyRunner.RunE(cmd, args)
 }

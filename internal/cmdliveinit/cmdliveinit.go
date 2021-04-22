@@ -58,8 +58,9 @@ func NewKptInitOptions(f cmdutil.Factory, ioStreams genericclioptions.IOStreams)
 // Complete fills in fields for KptInitOptions based on the passed "args".
 func (io *KptInitOptions) Run(args []string) error {
 	// Set the init options directory.
-	if len(args) != 1 {
-		return fmt.Errorf("need one 'directory' arg; have %d", len(args))
+	if len(args) == 0 {
+		// default to the current working directory
+		args = append(args, ".")
 	}
 	dir, err := config.NormalizeDir(args[0])
 	if err != nil {
