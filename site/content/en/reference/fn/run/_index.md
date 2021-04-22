@@ -165,6 +165,7 @@ kind: ConfigMap
 metadata:
   name: build
   annotations:
+    config.kubernetes.io/local-config: 'true'
     config.kubernetes.io/function: |
       container:
         image: gcr.io/kpt-functions/kustomize-build
@@ -198,6 +199,7 @@ apiVersion: example.com/v1alpha1
 kind: ExampleFunction
 metadata:
   annotations:
+    config.kubernetes.io/local-config: 'true'
     config.kubernetes.io/function: |
       container:
         image: gcr.io/example.com/image:v1.0.0
@@ -386,6 +388,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   annotations:
+    config.kubernetes.io/local-config: 'true'
     config.kubernetes.io/function: |
       container:
         image: gcr.io/example.com/my-fn
@@ -396,6 +399,7 @@ apiVersion: v1
 kind: MyType
 metadata:
   annotations:
+    config.kubernetes.io/local-config: 'true'
     config.kubernetes.io/function: |
       container:
         image: gcr.io/example.com/other-fn
