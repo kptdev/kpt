@@ -703,41 +703,6 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 	}
 }
 
-// TestCommand_Run_failInvalidRepo verifies Run fails if the repo is invalid
-func TestCommand_Run_failInvalidRepo(t *testing.T) {
-	g := &testutil.TestSetupManager{
-		T: t,
-		ReposChanges: map[string][]testutil.Content{
-			testutil.Upstream: {
-				{
-					Data:   testutil.Dataset1,
-					Branch: "master",
-				},
-				{
-					Data: testutil.Dataset2,
-				},
-			},
-		},
-	}
-	defer g.Clean()
-	if !g.Init() {
-		return
-	}
-
-	err := Command{
-		Pkg:  pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-		Repo: "fake",
-	}.Run(fake.CtxWithNilPrinter())
-	if !assert.Error(t, err) {
-		t.FailNow()
-	}
-	assert.Contains(t, err.Error(), "'fake' does not appear to be a git repository")
-
-	if !g.AssertLocalDataEquals(testutil.Dataset1) {
-		return
-	}
-}
-
 // TestCommand_Run_failInvalidRef verifies Run fails if the ref is invalid
 func TestCommand_Run_failInvalidRef(t *testing.T) {
 	for i := range kptfilev1alpha2.UpdateStrategies {
