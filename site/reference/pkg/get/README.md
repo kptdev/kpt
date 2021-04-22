@@ -17,6 +17,7 @@ local directory.
 ```
 kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY] [flags]
 ```
+
 #### Args
 ```
 REPO_URI:
@@ -54,6 +55,13 @@ LOCAL_DEST_DIRECTORY:
       since it was fetched.
     * force-delete-replace: Wipe all the local changes to the package and replace
       it with the remote version.
+```
+
+#### Env Vars
+```
+KPT_CACHE_DIR:
+  Controls where to cache remote packages when fetching them.
+  Defaults to ~/.kpt/repos/
 ```
 <!--mdtogo-->
 

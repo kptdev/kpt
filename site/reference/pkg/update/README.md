@@ -9,35 +9,11 @@ description: >
     Apply upstream package updates
 -->
 
-{{< asciinema key="pkg-update" rows="10" preload="1" >}}
-
 Update pulls in upstream changes and merges them into a local package.
 Changes may be applied using one of several strategies.
 
-{{% pageinfo color="primary" %}}
-All changes must be committed to git before running update
-{{% /pageinfo %}}
-
-### Examples
-<!--mdtogo:Examples-->
-```shell
-# update my-package-dir/
-git add . && git commit -m 'some message'
-kpt pkg update my-package-dir/
-```
-
-```shell
-# update my-package-dir/ to match the v1.3 branch or tag
-git add . && git commit -m 'some message'
-kpt pkg update my-package-dir/@v1.3
-```
-
-```shell
-# update applying a git patch
-git add . && git commit -m "package updates"
-kpt pkg  update my-package-dir/@master --strategy alpha-git-patch
-```
-<!--mdtogo-->
+Since this will update the local package, all changes must be committed to 
+git before running update
 
 ### Synopsis
 <!--mdtogo:Long-->
@@ -55,7 +31,7 @@ PKG_PATH:
 VERSION:
   A git tag, branch, ref or commit. Specified after the local_package
   with @ -- pkg@version.
-  Defaults the local package version that was last fetched.
+  Defaults the ref specified in the Upstream section of the package Kptfile.
 
   Version types:
     * branch: update the local contents to the tip of the remote branch
@@ -67,33 +43,45 @@ VERSION:
 
 ```
 --strategy:
-  Controls how changes to the local package are handled.  Defaults to fast-forward.
+  Defines which strategy should be used to update the package. This will change
+  the update strategy for the current kpt package for future updates. If a
+  strategy is not provided, the strategy specified in the package Kptfile will
+  be used.
 
     * resource-merge: perform a structural comparison of the original /
-      updated Resources, and merge the changes into the local package.
+      updated resources, and merge the changes into the local package.
     * fast-forward: fail without updating if the local package was modified
       since it was fetched.
-    * alpha-git-patch: use 'git format-patch' and 'git am' to apply a
-      patch of the changes between the source version and destination
-      version.
-    * force-delete-replace: WIPE ALL LOCAL CHANGES TO THE PACKAGE.
-      DELETE the local package at local_pkg_dir/ and replace it
-      with the remote version.
-
--r, --repo:
-  Git repo url for updating contents.  Defaults to the repo the package
-  was fetched from.
-
---dry-run
-  Print the 'alpha-git-patch' strategy patch rather than merging it.
+    * force-delete-replace: Wipe all the local changes to the package and replace
+      it with the remote version.
 ```
 
 #### Env Vars
 
 ```
 KPT_CACHE_DIR:
-  Controls where to cache remote packages when fetching them to update
-  local packages.
+  Controls where to cache remote packages when fetching them.
   Defaults to ~/.kpt/repos/
+```
+<!--mdtogo-->
+
+### Examples
+<!--mdtogo:Examples-->
+```shell
+# update my-package-dir/
+git add . && git commit -m 'some message'
+kpt pkg update my-package-dir/
+```
+
+```shell
+# update my-package-dir/ to match the v1.3 branch or tag
+git add . && git commit -m 'some message'
+kpt pkg update my-package-dir/@v1.3
+```
+
+```shell
+# update with the fastforward strategy
+git add . && git commit -m "package updates"
+kpt pkg  update my-package-dir/@master --strategy fast-forward
 ```
 <!--mdtogo-->

@@ -19,6 +19,74 @@ It can display differences between:
 The diff tool can be specified.  By default, the local 'diff' command is used to
 display differences.
 
+### Synopsis
+<!--mdtogo:Long-->
+```
+kpt pkg diff [PKG_PATH@VERSION] [flags]
+```
+
+#### Args
+
+```
+PKG_PATH:
+  Local package path to compare. Command will fail if the directory doesn't exist, or does not
+  contain a Kptfile. Defaults to the current working directory.
+
+VERSION:
+  A git tag, branch, or commit. Specified after the local_package with @ -- pkg_dir@version.
+  Defaults to the local package version that was last fetched.
+```
+
+#### Flags
+
+```
+--diff-type:
+  The type of changes to view (local by default). Following types are
+  supported:
+
+  local: shows changes in local package relative to upstream source package
+         at original version
+  remote: shows changes in upstream source package at target version
+          relative to original version
+  combined: shows changes in local package relative to upstream source
+            package at target version
+  3way: shows changes in local package and source package at target version
+        relative to original version side by side
+
+--diff-tool:
+  Commandline tool (diff by default) for showing the changes.
+  Note that it overrides the KPT_EXTERNAL_DIFF environment variable.
+  
+  # Show changes using 'meld' commandline tool
+  kpt pkg diff @master --diff-tool meld
+
+--diff-opts:
+  Commandline options to use with the diffing tool.
+  Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
+  # Show changes using "diff" with recurive options
+  kpt pkg diff @master --diff-tool meld --diff-opts "-r"
+```
+
+#### Environment Variables
+
+```
+KPT_EXTERNAL_DIFF:
+   Commandline diffing tool (diff by default) that will be used to show
+   changes.
+   # Use meld to show changes
+   KPT_EXTERNAL_DIFF=meld kpt pkg diff
+
+KPT_EXTERNAL_DIFF_OPTS:
+   Commandline options to use for the diffing tool. For ex.
+   # Using "-a" diff option
+   KPT_EXTERNAL_DIFF_OPTS="-a" kpt pkg diff --diff-tool meld
+   
+KPT_CACHE_DIR:
+   Controls where to cache remote packages when fetching them.
+   Defaults to ~/.kpt/repos/
+```
+<!--mdtogo-->
+
 ### Examples
 
 {{% hide %}}
@@ -69,69 +137,5 @@ kpt pkg diff @v0.4.0 --diff-type combined
 # Show 3way changes between the local package, upstream package at original
 # version and upstream package at target version using meld
 kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
-```
-<!--mdtogo-->
-
-### Synopsis
-<!--mdtogo:Long-->
-```
-kpt pkg diff [PKG_PATH@VERSION] [flags]
-```
-
-#### Args
-
-```
-PKG_PATH:
-  Local package path to compare. Command will fail if the directory doesn't exist, or does not
-  contain a Kptfile. Defaults to the current working directory.
-
-VERSION:
-  A git tag, branch, ref or commit. Specified after the local_package with @ -- pkg_dir@version.
-  Defaults to the local package version that was last fetched.
-```
-
-#### Flags
-
-```
---diff-type:
-  The type of changes to view (local by default). Following types are
-  supported:
-
-  local: shows changes in local package relative to upstream source package
-         at original version
-  remote: shows changes in upstream source package at target version
-          relative to original version
-  combined: shows changes in local package relative to upstream source
-            package at target version
-  3way: shows changes in local package and source package at target version
-        relative to original version side by side
-
---diff-tool:
-  Commandline tool (diff by default) for showing the changes.
-  Note that it overrides the KPT_EXTERNAL_DIFF environment variable.
-  
-  # Show changes using 'meld' commandline tool
-  kpt pkg diff @master --diff-tool meld
-
---diff-opts:
-  Commandline options to use with the diffing tool.
-  Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
-  # Show changes using "diff" with recurive options
-  kpt pkg diff @master --diff-tool meld --diff-opts "-r"
-```
-
-#### Environment Variables
-
-```
-KPT_EXTERNAL_DIFF:
-   Commandline diffing tool (diff by default) that will be used to show
-   changes.
-   # Use meld to show changes
-   KPT_EXTERNAL_DIFF=meld kpt pkg diff
-
-KPT_EXTERNAL_DIFF_OPTS:
-   Commandline options to use for the diffing tool. For ex.
-   # Using "-a" diff option
-   KPT_EXTERNAL_DIFF_OPTS="-a" kpt pkg diff --diff-tool meld
 ```
 <!--mdtogo-->
