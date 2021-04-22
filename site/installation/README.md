@@ -9,11 +9,33 @@ menu:
 ---
 
 Users can get kpt in a variety of ways:
+1. Download [Binaries](#Binaries) 
 1. Install with [GCloud](#GCloud)
 1. Install with [Homebrew](#Homebrew) on MacOS
 1. Use [Docker](#Docker)
-1. Download [Binaries](#Binaries) 
 1. Build from [Source](#Source)
+
+## Binaries
+
+Download pre-compiled binaries.
+
+| Platform
+| ------------------------
+| [Linux (x64)][linux]
+| [macOS (x64)][darwin]
+| [Windows (x64)][windows]
+
+```shell
+# For linux/mac
+chmod +x kpt
+```
+
+**Note:** to run on **MacOS** the first time, it may be necessary to open the
+program from the finder with *ctrl-click open*.
+
+```shell
+kpt version
+```
 
 ## GCloud
 
@@ -65,28 +87,6 @@ An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
 docker run gcr.io/kpt-dev/kpt-gcloud version
-```
-
-## Binaries
-
-Download pre-compiled binaries.
-
-| Platform
-| ------------------------
-| [Linux (x64)][linux]
-| [macOS (x64)][darwin]
-| [Windows (x64)][windows]
-
-```shell
-# For linux/mac
-chmod +x kpt
-```
-
-**Note:** to run on **MacOS** the first time, it may be necessary to open the
-program from the finder with *ctrl-click open*.
-
-```shell
-kpt version
 ```
 
 ## Source
