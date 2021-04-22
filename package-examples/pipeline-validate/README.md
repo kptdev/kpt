@@ -56,7 +56,7 @@ you to use gatekeeper for checks on the configuration.
     mutators:
       - image: gcr.io/kpt-fn/set-label:unstable
         config:
-          apiVersion: fn.kpt.dev/v1alpha1
+          apiVersion: fn.kpt.dev/v1alpha2
           kind: SetLabelConfig
           metadata:
             name: label-color-blue

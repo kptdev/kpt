@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: fn.kpt.dev/v1alpha1
+apiVersion: fn.kpt.dev/v1alpha2
 kind: StarlarkRun
 metadata:
   name: httpbin-gen

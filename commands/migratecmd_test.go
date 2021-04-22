@@ -26,7 +26,7 @@ var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
 var rgInvStr = `
-apiVersion: "kpt.dev/v1alpha1"
+apiVersion: "kpt.dev/v1alpha2"
 kind: ResourceGroup
 metadata:
   namespace: test-inventory-namespace
@@ -37,7 +37,7 @@ metadata:
 
 var rgInvObj = &unstructured.Unstructured{
 	Object: map[string]interface{}{
-		"apiVersion": "kpt.dev/v1alpha1",
+		"apiVersion": "kpt.dev/v1alpha2",
 		"kind":       "ResourceGroup",
 		"metadata": map[string]interface{}{
 			"name":      inventoryObjName,

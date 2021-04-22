@@ -43,7 +43,7 @@ inventory:
 `
 
 var kptFileMissingID = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
@@ -59,7 +59,7 @@ inventory:
   name: inventory-obj-name
 `
 var kptFileWithAnnotations = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1

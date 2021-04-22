@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Example ResourceGroup custom resource
-apiVersion: "kpt.dev/v1alpha1"
+apiVersion: "kpt.dev/v1alpha2"
 kind: ResourceGroup
 metadata:
   namespace: default

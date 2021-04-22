@@ -29,7 +29,7 @@ var testInventoryLabel = "test-inventory-label"
 
 var inventoryObj = &unstructured.Unstructured{
 	Object: map[string]interface{}{
-		"apiVersion": "kpt.dev/v1alpha1",
+		"apiVersion": "kpt.dev/v1alpha2",
 		"kind":       "ResourceGroup",
 		"metadata": map[string]interface{}{
 			"name":      inventoryObjName,
