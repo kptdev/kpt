@@ -130,17 +130,23 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 	const op errors.Op = "fetch.ClonerUsingGitExec"
 
-	upGitRunner, err := gitutil.NewGitUpstreamRepo(ctx, repoSpec.CloneSpec())
+	// Create a local representation of the upstream repo. This will initialize
+	// the cache for the specified repo uri if it isn't already there. It also
+	// fetches and caches all tag and branch refs from the upstream repo.
+	upstreamRepo, err := gitutil.NewGitUpstreamRepo(ctx, repoSpec.CloneSpec())
 	if err != nil {
 		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
 
+	// Check if we have a ref in the upstream that matches the package-specific
+	// reference. If we do, we use that reference.
 	packageRef := path.Join(strings.TrimLeft(repoSpec.Path, "/"), repoSpec.Ref)
-	if _, found := upGitRunner.ResolveTag(packageRef); found {
+	if _, found := upstreamRepo.ResolveTag(packageRef); found {
 		repoSpec.Ref = packageRef
 	}
 
-	dir, err := upGitRunner.GetRepo(ctx, []string{repoSpec.Ref})
+	// Pull the required ref into the repo git cache.
+	dir, err := upstreamRepo.GetRepo(ctx, []string{repoSpec.Ref})
 	if err != nil {
 		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
@@ -150,22 +156,34 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
 
-	commit, found := upGitRunner.ResolveRef(repoSpec.Ref)
+	// Find the commit SHA for the ref that was just fetched. We need the SHA
+	// rather than the ref to be able to do a hard reset of the cache repo.
+	commit, found := upstreamRepo.ResolveRef(repoSpec.Ref)
 	if !found {
 		commit = repoSpec.Ref
 	}
 
+	// Reset the local repo to the commit we need. Doing a hard reset instead of
+	// a checkout means we don't create any local branches so we don't need to
+	// worry about fast-forwarding them with changes from upstream. It also makes
+	// sure that any changes in the local worktree are cleaned out.
 	_, err = gitRunner.Run(ctx, "reset", "--hard", commit)
 	if err != nil {
 		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
 
+	// We need to create a temp directory where we can copy the content of the repo.
+	// During update, we need to checkout multiple versions of the same repo, so
+	// we can't do merges directly from the cache.
 	repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
 	}
 	repoSpec.Commit = commit
 
+	// Copy the content of the repo into the temp directory.
+	// TODO: See if we can avoid copying everything in the repo if the
+	// repoSpec.Path property is a subdirectory of the repo.
 	err = copyutil.CopyDir(dir, repoSpec.Dir)
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))

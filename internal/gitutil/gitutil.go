@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 )
@@ -47,6 +48,7 @@ func NewLocalGitRunner(pkg string) (*GitLocalRunner, error) {
 	return &GitLocalRunner{
 		gitPath: p,
 		Dir:     pkg,
+		Debug:   false,
 	}, nil
 }
 
@@ -57,6 +59,9 @@ type GitLocalRunner struct {
 
 	// Dir is the directory the commands are run in.
 	Dir string
+
+	// Debug enables output of debug information to stderr.
+	Debug bool
 }
 
 type RunResult struct {
@@ -101,7 +106,15 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, args ...string) 
 		cmd.Stderr = cmdStderr
 	}
 
+	if g.Debug {
+		_, _ = fmt.Fprintf(os.Stderr, "[%s]\n", strings.Join(args, ","))
+	}
+	start := time.Now()
 	err := cmd.Run()
+	duration := time.Since(start)
+	if g.Debug {
+		_, _ = fmt.Fprintf(os.Stderr, "duration: %v\n", duration)
+	}
 	if err != nil {
 		return RunResult{}, errors.E(op, errors.Git, &GitExecError{
 			Args:   args,
