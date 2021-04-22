@@ -34,7 +34,7 @@ import (
 // resource used to store inventory.
 var ResourceGroupGVK = schema.GroupVersionKind{
 	Group:   "kpt.dev",
-	Version: "v1alpha1",
+	Version: "v1alpha2",
 	Kind:    "ResourceGroup",
 }
 
