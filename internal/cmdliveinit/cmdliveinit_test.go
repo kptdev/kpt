@@ -1,10 +1,11 @@
 // Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
-package commands
+package cmdliveinit
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -170,6 +171,7 @@ func TestKptInitOptions_updateKptfile(t *testing.T) {
 			// Set up temp directory with Ktpfile
 			dir, err := ioutil.TempDir("", "kpt-init-options-test")
 			assert.NoError(t, err)
+			defer os.RemoveAll(dir)
 			p := filepath.Join(dir, "Kptfile")
 			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
@@ -177,10 +179,10 @@ func TestKptInitOptions_updateKptfile(t *testing.T) {
 			// Create KptInitOptions and call Run()
 			initOptions := NewKptInitOptions(tf, ioStreams)
 			initOptions.dir = dir
-			initOptions.force = tc.force
-			initOptions.name = tc.name
+			initOptions.Force = tc.force
+			initOptions.Name = tc.name
 			initOptions.namespace = tc.namespace
-			initOptions.inventoryID = tc.inventoryID
+			initOptions.InventoryID = tc.inventoryID
 			err = initOptions.updateKptfile()
 
 			// Check if there should be an error
@@ -198,6 +200,53 @@ func TestKptInitOptions_updateKptfile(t *testing.T) {
 			assert.Equal(t, inventoryName, kf.Inventory.Name)
 			assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
 			assert.Equal(t, inventoryID, kf.Inventory.InventoryID)
+		})
+	}
+}
+
+func TestKptInit_noargs(t *testing.T) {
+	testCases := map[string]struct {
+		kptfile     string
+		name        string
+		namespace   string
+		inventoryID string
+	}{
+		"Empty inventory name is an error": {
+			kptfile:     kptFile,
+			name:        "",
+			namespace:   inventoryNamespace,
+			inventoryID: inventoryID,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			// Set up fake test factory
+			tf := cmdtesting.NewTestFactory().WithNamespace("test-namespace")
+			defer tf.Cleanup()
+			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+			// Set up temp directory with Ktpfile
+			dir, err := ioutil.TempDir("", "kpt-init-options-test")
+			assert.NoError(t, err)
+			defer os.RemoveAll(dir)
+			p := filepath.Join(dir, "Kptfile")
+			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
+			assert.NoError(t, err)
+			err = os.Chdir(dir)
+			assert.NoError(t, err)
+
+			// Create KptInitOptions and call Run()
+			cmd := NewCmdInit(tf, ioStreams)
+			cmd.SetArgs([]string{})
+			err = cmd.Execute()
+			assert.NoError(t, err)
+
+			// Otherwise, validate the kptfile values
+			assert.NoError(t, err)
+			kf, err := kptfileutil.ReadFile(dir)
+			assert.NoError(t, err)
+			assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
 		})
 	}
 }

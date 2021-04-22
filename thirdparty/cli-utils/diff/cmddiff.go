@@ -25,7 +25,7 @@ const tmpDirPrefix = "diff-cmd"
 func NewCmdDiff(f util.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
 	options := diff.NewDiffOptions(ioStreams)
 	cmd := &cobra.Command{
-		Use:                   "diff [DIR | -]",
+		Use:                   "diff [PKG_PATH | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Diff local config against cluster applied version"),
 		Args:                  cobra.MaximumNArgs(1),

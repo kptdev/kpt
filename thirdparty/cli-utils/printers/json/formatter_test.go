@@ -97,7 +97,7 @@ func TestFormatter_FormatApplyEvent(t *testing.T) {
 			},
 			statusCollector: &fakeCollector{
 				m: map[object.ObjMetadata]event.StatusEvent{
-					object.ObjMetadata{ //nolint:gofmt
+					{ //nolint:gofmt
 						GroupKind: schema.GroupKind{
 							Group: "apps",
 							Kind:  "Deployment",
