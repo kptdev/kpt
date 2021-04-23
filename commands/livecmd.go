@@ -18,8 +18,8 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdfetchk8sschema"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/destroy"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/diff"

@@ -48,16 +48,10 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		SuggestFor: []string{"rebase", "replace"},
 	}
 
-	c.Flags().StringVarP(&r.Update.Repo, "repo", "r", "",
-		"git repo url for updating contents.  defaults to the repo the package was fetched from.")
 	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1alpha2.ResourceMerge),
 		"the update strategy that will be used when updating the package. This will change "+
 			"the default strategy for the package -- must be one of: "+
 			strings.Join(kptfilev1alpha2.UpdateStrategiesAsStrings(), ","))
-	c.Flags().BoolVar(&r.Update.DryRun, "dry-run", false,
-		"print the git patch rather than merging it.")
-	c.Flags().BoolVar(&r.Update.Verbose, "verbose", false,
-		"print verbose logging information.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
