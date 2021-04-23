@@ -706,22 +706,15 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 
 func TestCommand_Run_badUpstreamLock(t *testing.T) {
 	testCases := map[string]struct {
-		dir              string
 		commit           string
 		repo             string
 		expectedErrorMsg string
 	}{
 		"bad commit": {
-			dir:              "/",
 			commit:           "fake",
 			repo:             testutil.Upstream,
 			expectedErrorMsg: "unknown revision or path"},
-		"bad dir": {
-			dir:              "/fake",
-			repo:             testutil.Upstream,
-			expectedErrorMsg: "no such file or directory"},
 		"bad repo": {
-			dir:              "/",
 			repo:             "fake",
 			expectedErrorMsg: "does not appear to be a git repository"},
 	}
@@ -755,8 +748,8 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 			}
 			localChanges := []testutil.Content{{
 				Pkg: pkgbuilder.NewRootPkg().WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstreamRef(testutil.Upstream, tc.dir, masterBranch, "resource-merge").
-					WithUpstreamLock(repoDir, tc.dir, masterBranch, tc.commit),
+					WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+					WithUpstreamLock(repoDir, "/", masterBranch, tc.commit),
 				),
 			}}
 			err := testutil.UpdateGitDir(g.T, testutil.Local, g.LocalWorkspace, localChanges, g.Repos)
@@ -764,7 +757,7 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 				t.FailNow()
 			}
 
-			// Update the local package
+			// Update the local package.
 			err = Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 			}.Run(fake.CtxWithNilPrinter())
