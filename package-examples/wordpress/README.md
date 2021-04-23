@@ -17,38 +17,42 @@ and apply setters for individual packages.
 
 Get the example package on to local using `kpt pkg get`
 
-    $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress
+```sh
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next
 
-      fetching package /package-examples/wordpress from https://github.com/GoogleContainerTools/kpt to wordpress
+fetching package /package-examples/wordpress from https://github.com/GoogleContainerTools/kpt to wordpress
+```
 
 ### View the package contents
 
 List the package contents in a tree structure.
 
-    $ kpt pkg tree wordpress/
+```sh
+$ kpt pkg tree wordpress/
 
-      PKG: wordpress
-      ├── [Kptfile]  Kptfile wordpress
-      ├── [service.yaml]  Service wordpress
-      ├── deployment
-      │   ├── [deployment.yaml]  Deployment wordpress
-      │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-      └── PKG: mysql
-          ├── [Kptfile]  Kptfile mysql
-          ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
-          ├── [deployment.yaml]  Deployment wordpress-mysql
-          └── [deployment.yaml]  Service wordpress-mysql
+PKG: wordpress
+├── [Kptfile]  Kptfile wordpress
+├── [service.yaml]  Service wordpress
+├── deployment
+│   ├── [deployment.yaml]  Deployment wordpress
+│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+└── PKG: mysql
+  ├── [Kptfile]  Kptfile mysql
+  ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
+  ├── [deployment.yaml]  Deployment wordpress-mysql
+  └── [deployment.yaml]  Service wordpress-mysql
+```
 
 ### Configure namespace
 
 By default, these packages will be deployed into `default` namespace. Provide a namespace by
 adding [set-namespace] function to the pipeline definition in `wordpress/Kptfile`.
 
-    pipeline:
-      mutators:
-      - image: gcr.io/kpt-fn/set-namespace:v0
-        configMap:
-          namespace: my-space
+```sh
+- image: gcr.io/kpt-fn/set-namespace:v0.1
+  configMap:
+    namespace: my-space
+```
 
 ### Configure setter values
 
@@ -58,28 +62,36 @@ new value `wp-tag: 4.9-aapache` in `wordpress/Kptfile` and `ms-tag: 5.7` in `wor
 
 ### Render the declared values
 
-    $ kpt fn render wordpress/
+```sh
+$ kpt fn render wordpress/
+```
 
 ### Apply the package
 
 Apply all the contents of the package recursively to the cluster
 
-    $ kpt live init wordpress/
+```sh
+$ kpt live init wordpress/
 
-      namespace: default is used for inventory object
-      Initialized: wordpress/inventory-template.yaml
+namespace: default is used for inventory object
+Initialized: wordpress/inventory-template.yaml
+```
 
-    $ kubectl create ns my-space
+```sh
+$ kubectl create ns my-space
 
-      namespace/my-space created
+namespace/my-space created
+```
 
-    $ kpt live apply wordpress/
+```sh
+$ kpt live apply wordpress/
 
-      service/wordpress-mysql created
-      persistentvolumeclaim/mysql-pv-claim created
-      deployment.apps/wordpress-mysql created
-      service/wordpress created
-      persistentvolumeclaim/wp-pv-claim created
-      deployment.apps/wordpress created
+service/wordpress-mysql created
+persistentvolumeclaim/mysql-pv-claim created
+deployment.apps/wordpress-mysql created
+service/wordpress created
+persistentvolumeclaim/wp-pv-claim created
+deployment.apps/wordpress created
+```
 
 [set-namespace]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/set-namespace

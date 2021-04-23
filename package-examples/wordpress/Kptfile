@@ -2,9 +2,14 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: wordpress
+info:
+  site: https://github.com/GoogleContainerTools/kpt
+  description: This is an example wordpress package with mysql subpackage
+  email:
+  - pmarupaka@google.com
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/apply-setters:v0
+  - image: gcr.io/kpt-fn/apply-setters:v0.1
     configMap:
       wp-image: wordpress
       wp-tag: 4.8-apache
