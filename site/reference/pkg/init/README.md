@@ -28,16 +28,16 @@ DIR:
 
 ```
 --description
-  short description of the package. (default "sample description")
+  Short description of the package. (default "sample description")
 
 --name
-  package name.  defaults to the directory base name.
+  The Package name. Defaults to the directory base name.
 
---keyWords
-  list of keywords describing the package.
+--keywords
+  A list of keywords describing the package.
 
 --site
-  link to page with information about the package.
+  Link to page with information about the package.
 ```
 <!--mdtogo-->
 
@@ -58,9 +58,14 @@ cd $TEST_HOME
 
 <!-- @pkgInit @verifyStaleExamples-->
 ```shell
-# writes Kptfile package meta if it doesn't already exists
+# Creates a new Kptfile with metadata in the my-pkg directory.
 mkdir my-pkg
 kpt pkg init my-pkg --keyWords kpt.dev/app=cockroachdb \
     --description "my cockroachdb implementation"
+```
+
+```shell
+# Creates a new Kptfile without metadata in the current directory.
+kpt pkg init
 ```
 <!--mdtogo-->

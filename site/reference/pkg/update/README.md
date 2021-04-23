@@ -48,9 +48,9 @@ VERSION:
   strategy is not provided, the strategy specified in the package Kptfile will
   be used.
 
-    * resource-merge: perform a structural comparison of the original /
+    * resource-merge: Perform a structural comparison of the original /
       updated resources, and merge the changes into the local package.
-    * fast-forward: fail without updating if the local package was modified
+    * fast-forward: Fail without updating if the local package was modified
       since it was fetched.
     * force-delete-replace: Wipe all the local changes to the package and replace
       it with the remote version.
@@ -61,27 +61,29 @@ VERSION:
 ```
 KPT_CACHE_DIR:
   Controls where to cache remote packages when fetching them.
-  Defaults to ~/.kpt/repos/
+  Defaults to <HOME>/.kpt/repos/
+  On macOS and Linux <HOME> is determined by the $HOME env variable, while on
+  Windows it is given by the %USERPROFILE% env variable.
 ```
 <!--mdtogo-->
 
 ### Examples
 <!--mdtogo:Examples-->
 ```shell
-# update my-package-dir/
+# Update package in the current directory.
 git add . && git commit -m 'some message'
-kpt pkg update my-package-dir/
+kpt pkg update
 ```
 
 ```shell
-# update my-package-dir/ to match the v1.3 branch or tag
+# Update my-package-dir/ to match the v1.3 branch or tag.
 git add . && git commit -m 'some message'
 kpt pkg update my-package-dir/@v1.3
 ```
 
 ```shell
-# update with the fastforward strategy
+# Update with the fast-forward strategy.
 git add . && git commit -m "package updates"
-kpt pkg  update my-package-dir/@master --strategy fast-forward
+kpt pkg update my-package-dir/@master --strategy fast-forward
 ```
 <!--mdtogo-->

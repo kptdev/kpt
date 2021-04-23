@@ -48,7 +48,7 @@ func NewRunner(parent string) *Runner {
 
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
 	c.Flags().StringVar(&r.Name, "name", "", "package name.  defaults to the directory base name.")
-	c.Flags().StringSliceVar(&r.KeyWords, "keyWords", []string{}, "list of keyWords for the package.")
+	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
 	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
@@ -62,7 +62,7 @@ func NewCommand(parent string) *cobra.Command {
 // Runner contains the run function
 type Runner struct {
 	Command     *cobra.Command
-	KeyWords    []string
+	Keywords    []string
 	Name        string
 	Description string
 	Site        string
@@ -98,7 +98,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			Info: &kptfilev1alpha2.PackageInfo{
 				Description: r.Description,
 				Site:        r.Site,
-				Keywords:    r.KeyWords,
+				Keywords:    r.Keywords,
 			},
 		}
 
