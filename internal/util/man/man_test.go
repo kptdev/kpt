@@ -35,7 +35,7 @@ func TestMan_Execute(t *testing.T) {
 
 	// write the KptFile
 	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java
@@ -197,7 +197,7 @@ func TestMan_Execute_failNoManPage(t *testing.T) {
 
 	// write the KptFile
 	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java
@@ -230,7 +230,7 @@ func TestMan_Execute_failBadPath(t *testing.T) {
 
 	// write the KptFile
 	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java
@@ -259,7 +259,7 @@ func TestMan_Execute_failLocation(t *testing.T) {
 
 	// write the KptFile
 	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java

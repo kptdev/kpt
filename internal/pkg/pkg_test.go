@@ -129,7 +129,7 @@ kind: Custom
 spec:
   image: nginx:1.2.3`,
 				`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: mysql
@@ -140,7 +140,7 @@ setterDefinitions:
 setterValues:
   replicas: 5`,
 				`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Pipeline
 sources:
   - "."`,
