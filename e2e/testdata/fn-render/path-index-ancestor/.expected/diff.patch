@@ -1,0 +1,19 @@
+diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
+new file mode 100644
+index 0000000..fa83ef1
+--- /dev/null
++++ b/deployment_httpbin.yaml
+@@ -0,0 +1,13 @@
++apiVersion: apps/v1
++kind: Deployment
++metadata:
++  name: httpbin
++spec:
++  replicas: 4
++  template:
++    spec:
++      containers:
++        - name: httpbin
++          image: kennethreitz/httpbin
++          ports:
++            - containerPort: 9876
