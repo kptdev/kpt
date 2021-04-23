@@ -42,6 +42,9 @@ type Error struct {
 	// Fn is the kpt function being run either as part of "fn render" or "fn eval"
 	Fn Fn
 
+	// Repo is the git repo used for get, update or diff
+	Repo Repo
+
 	// Class refers to class of errors
 	Class Class
 
@@ -72,6 +75,12 @@ func (e *Error) Error() string {
 		pad(b, ": ")
 		b.WriteString("fn ")
 		b.WriteString(string(e.Fn))
+	}
+
+	if e.Repo != "" {
+		pad(b, ": ")
+		b.WriteString("repo ")
+		b.WriteString(string(e.Repo))
 	}
 
 	if e.Class != 0 {
@@ -118,6 +127,9 @@ type Op string
 
 // Fn describes the kpt function associated with the error.
 type Fn string
+
+// Repo describes the repo associated with the error.
+type Repo string
 
 // Class describes the class of errors encountered.
 type Class int
@@ -169,6 +181,8 @@ func E(args ...interface{}) error {
 			e.Op = a
 		case Fn:
 			e.Fn = a
+		case Repo:
+			e.Repo = a
 		case Class:
 			e.Class = a
 		case *Error:
@@ -196,6 +210,10 @@ func E(args ...interface{}) error {
 
 	if e.Fn == wrappedErr.Fn {
 		wrappedErr.Fn = ""
+	}
+
+	if e.Repo == wrappedErr.Repo {
+		wrappedErr.Repo = ""
 	}
 
 	if e.Class == wrappedErr.Class {

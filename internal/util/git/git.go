@@ -37,6 +37,9 @@ type RepoSpec struct {
 	// Dir where the orgRepo is cloned to.
 	Dir string
 
+	// Commit is the commit for the version that was added to Dir.
+	Commit string
+
 	// Relative path in the repository, and in the cloneDir,
 	// to a Kustomization.
 	Path string

@@ -16,6 +16,7 @@ package testutil
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -419,9 +420,14 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 	err := w.SetupTestWorkspace()
 	assert.NoError(t, err)
 
-	gr := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
-	if !assert.NoError(t, gr.Run("init")) {
-		assert.FailNowf(t, "%s %s", gr.Stdout.String(), gr.Stderr.String())
+	gr, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	rr, err := gr.Run(context.Background(), "init")
+	if !assert.NoError(t, err) {
+		assert.FailNowf(t, "%s %s", rr.Stdout, rr.Stderr)
 	}
 	return w, func() {
 		_ = w.RemoveAll()
@@ -441,7 +447,12 @@ func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.Kp
 		t.FailNow()
 	}
 
-	if !assert.NoError(t, gitutil.NewLocalGitRunner(w.WorkspaceDirectory).Run("add", ".")) {
+	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	_, err = gitRunner.Run(context.Background(), "add", ".")
+	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 	_, err = w.Commit("added Kptfile")
@@ -815,6 +826,23 @@ func Chdir(t *testing.T, path string) func() {
 		t.FailNow()
 	}
 	return revertFunc
+}
+
+// ConfigureTestKptCache sets up a temporary directory for the kpt git
+// cache, sets the env variable so it will be used for tests, and cleans
+// up the directory afterwards.
+func ConfigureTestKptCache(m *testing.M) int {
+	cacheDir, err := ioutil.TempDir("", "kpt-test-cache-repos-")
+	if err != nil {
+		panic(fmt.Errorf("error creating temp dir for cache: %w", err))
+	}
+	defer func() {
+		_ = os.RemoveAll(cacheDir)
+	}()
+	if err := os.Setenv(gitutil.RepoCacheDirEnv, cacheDir); err != nil {
+		panic(fmt.Errorf("error setting repo cache env variable: %w", err))
+	}
+	return m.Run()
 }
 
 var EmptyReposInfo = &ReposInfo{}

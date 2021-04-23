@@ -29,6 +29,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
+
 func setupWorkspace(t *testing.T) (*testutil.TestGitRepo, *testutil.TestWorkspace, func()) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
@@ -448,7 +452,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "failed to lookup master(or main) branch") {
+	if !assert.Contains(t, err.Error(), "'foo' does not appear to be a git repository") {
 		t.FailNow()
 	}
 }

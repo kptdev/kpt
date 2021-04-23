@@ -15,6 +15,7 @@
 package cmddiff_test
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -24,6 +25,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 func TestCmdInvalidDiffType(t *testing.T) {
 	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
