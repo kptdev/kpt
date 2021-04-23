@@ -6,7 +6,7 @@ info:
   site: https://github.com/GoogleContainerTools/kpt
   description: This is an example wordpress package with mysql subpackage
   email:
-  - pmarupaka@google.com
+  - kpt-team@google.com
 pipeline:
   mutators:
   - image: gcr.io/kpt-fn/apply-setters:v0.1
