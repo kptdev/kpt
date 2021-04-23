@@ -52,9 +52,8 @@ $ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-value=80 put-value
 
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
 performed repeatedly, there is a _declarative_ way to define a pipeline of functions as part of the
-package (in the `Kptfile`).
-
-For example, you can declare `set-namespace` function and new desired value in the `pipeline` section of `Kptfile`:
+package (in the `Kptfile`). For example, you can declare `set-namespace` function and new desired value
+in the `pipeline` section of `Kptfile`. This function will set the `namespace` on all the resources in the package.
 
 ```shell
 pipeline:
