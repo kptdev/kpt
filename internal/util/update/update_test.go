@@ -755,7 +755,7 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 			}
 			localChanges := []testutil.Content{{
 				Pkg: pkgbuilder.NewRootPkg().WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+					WithUpstreamRef(testutil.Upstream, tc.dir, masterBranch, "resource-merge").
 					WithUpstreamLock(repoDir, tc.dir, masterBranch, tc.commit),
 				),
 			}}
@@ -764,7 +764,7 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 				t.FailNow()
 			}
 
-			// Update the local package.
+			// Update the local package
 			err = Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 			}.Run(fake.CtxWithNilPrinter())
