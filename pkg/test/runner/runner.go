@@ -142,9 +142,9 @@ func (r *Runner) runFnEval() error {
 		}
 	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		output, _, fnErr := runCommand("", r.kptBin, kptArgs)
+		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
 		if fnErr != nil {
-			r.t.Logf("kpt error output: %s", output)
+			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
@@ -152,7 +152,7 @@ func (r *Runner) runFnEval() error {
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, "", "", pkgPath, resultsPath)
+		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsPath)
 		if err != nil {
 			return err
 		}
