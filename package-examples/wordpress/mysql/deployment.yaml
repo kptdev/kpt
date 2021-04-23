@@ -18,9 +18,6 @@ metadata:
   name: wordpress-mysql
   labels:
     app: wordpress
-  annotations:
-    projectId: 'PROJECT_ID' # {"$kpt-set":"gcloud.core.project"}
-    teamname: 'YOURTEAM' # {"$kpt-set":"teamname"}
 spec:
   ports:
   - port: 3306
@@ -35,9 +32,6 @@ metadata:
   name: mysql-pv-claim
   labels:
     app: wordpress
-  annotations:
-    projectId: 'PROJECT_ID' # {"$kpt-set":"gcloud.core.project"}
-    teamname: 'YOURTEAM' # {"$kpt-set":"teamname"}
 spec:
   accessModes:
   - ReadWriteOnce
@@ -51,9 +45,6 @@ metadata:
   name: wordpress-mysql
   labels:
     app: wordpress
-  annotations:
-    projectId: 'PROJECT_ID' # {"$kpt-set":"gcloud.core.project"}
-    teamname: 'YOURTEAM' # {"$kpt-set":"teamname"}
 spec:
   selector:
     matchLabels:
@@ -68,7 +59,7 @@ spec:
         tier: mysql
     spec:
       containers:
-      - image: mysql:5.6 # {"$kpt-set":"image-tag"}
+      - image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
         name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
