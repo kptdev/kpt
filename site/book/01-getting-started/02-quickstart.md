@@ -35,7 +35,7 @@ At this point, you typically want to customize the package. With kpt, you can us
 approaches depending on your use case.
 
 You may want to manually edit the files. For example, modify the value of `spec.replicas`
-in the `Deployment` resource using your favorite editor:
+in `deployment.yaml` using your favorite editor:
 
 ```shell
 $ vim deployment.yaml
@@ -44,21 +44,33 @@ $ vim deployment.yaml
 Often, you want to automatically mutate and/or validate resources in a package.
 `kpt fn` commands enable you to execute programs called _kpt functions_.
 
-For example, you can automatically set a label with key `env` on all the resources in the package:
+For example, you can automatically search and replace the existing `port` value on all the resources in the package:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 -- env=dev
+$ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-value=80 put-value=8080
 ```
 
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
 performed repeatedly, there is a _declarative_ way to define a pipeline of functions as part of the
-package (in the `Kptfile`). This pipeline is executed using the `render` command:
+package (in the `Kptfile`).
+
+For example, you can declare `set-namespace` function and new desired value in the `pipeline` section of `Kptfile`:
+
+```shell
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/set-namespace:v0.1
+    configMap:
+      namespace: my-space
+```
+
+This pipeline is executed using the `render` command:
 
 ```shell
 $ kpt fn render
 ```
 
-In this case, the author of the Nginx package has already declared a function (`kubeval`) that
+In this case, the author of the `nginx` package has already declared a function (`kubeval`) that
 validates the resources using their OpenAPI schema.
 
 In general, regardless of the how you choose to customize the package — whether by manually editing
@@ -79,6 +91,12 @@ $ kpt live init
 This adds some metadata to the `Kptfile` required to keep track of changes made to the state of the
 cluster. For example, if a resource is deleted from the package in the future, it will be pruned
 from the cluster.
+
+Create the namespace with name `my-space`
+
+```sh
+$ kubectl create ns my-space
+```
 
 You can preview the changes that will be made to the cluster:
 
