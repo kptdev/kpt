@@ -52,15 +52,15 @@ $ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-value=80 put-value
 
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
 performed repeatedly, there is a _declarative_ way to define a pipeline of functions as part of the
-package (in the `Kptfile`). For example, you can declare `set-namespace` function and new desired value
-in the `pipeline` section of `Kptfile`. This function will set the `namespace` on all the resources in the package.
+package (in the `Kptfile`). For example, you can declare `set-label` function in the `pipeline`
+section of `Kptfile`. This function will set the `label` on all the resources in the package.
 
 ```shell
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-namespace:v0.1
-    configMap:
-      namespace: my-space
+    - image: gcr.io/kpt-fn/set-label:v0.1
+      configMap:
+        env: dev
 ```
 
 This pipeline is executed using the `render` command:
@@ -90,12 +90,6 @@ $ kpt live init
 This adds some metadata to the `Kptfile` required to keep track of changes made to the state of the
 cluster. For example, if a resource is deleted from the package in the future, it will be pruned
 from the cluster.
-
-Create the namespace with name `my-space`
-
-```sh
-$ kubectl create ns my-space
-```
 
 You can preview the changes that will be made to the cluster:
 
