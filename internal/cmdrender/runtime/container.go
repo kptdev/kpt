@@ -88,6 +88,10 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"run", "--rm", "-i",
 		"-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
 		"--network", string(network),
+		// TODO: this env is only used in TS SDK to print the errors
+		// to stderr. We don't need this once we support structured
+		// results.
+		"-e", "LOG_TO_STDERR=true",
 		"--security-opt=no-new-privileges",
 	}
 	args = append(args, f.Image)
