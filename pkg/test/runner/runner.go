@@ -142,9 +142,9 @@ func (r *Runner) runFnEval() error {
 		}
 	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		output, fnErr := runCommand("", r.kptBin, kptArgs)
+		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
 		if fnErr != nil {
-			r.t.Logf("kpt error output: %s", output)
+			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
@@ -152,7 +152,7 @@ func (r *Runner) runFnEval() error {
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, pkgPath, resultsPath)
+		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsPath)
 		if err != nil {
 			return err
 		}
@@ -206,20 +206,21 @@ func (r *Runner) runFnRender() error {
 	// run function
 	kptArgs := []string{"fn", "render", pkgPath}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		output, fnErr := runCommand("", r.kptBin, kptArgs)
+		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			// TODO: `fn render` doesn't support result file now
 			// use empty string to skip update results
 			return r.updateExpected(pkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
 		}
+
 		if fnErr != nil {
-			r.t.Logf("kpt error output: %s", output)
+			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// compare results
 		// TODO: `fn render` doesn't support result file now
 		// use empty string for results dir
-		err = r.compareResult(fnErr, pkgPath, "")
+		err = r.compareResult(fnErr, stdout, stderr, pkgPath, "")
 		if err != nil {
 			return err
 		}
@@ -252,7 +253,7 @@ func (r *Runner) preparePackage(pkgPath string) error {
 	return err
 }
 
-func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) error {
+func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
 	expected, err := newExpected(tmpPkgPath)
 	if err != nil {
 		return err
@@ -267,6 +268,13 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 
 	if exitCode != r.testCase.Config.ExitCode {
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
+	}
+
+	if exitCode != 0 {
+		err := r.compareOutput(stdout, stderr)
+		if err != nil {
+			return err
+		}
 	}
 
 	// compare results
@@ -295,6 +303,25 @@ func (r *Runner) compareResult(exitErr error, tmpPkgPath, resultsPath string) er
 		}
 		return fmt.Errorf("actual diff doesn't match expected\nActual\n===\n%s\nDiff of Diff\n===\n%s",
 			actual, diffOfDiff)
+	}
+	return nil
+}
+
+// check stdout and stderr against expected
+func (r *Runner) compareOutput(stdout string, stderr string) error {
+	expectedStderr := r.testCase.Config.StdErr
+	if expectedStderr == "" && stderr != "" {
+		return fmt.Errorf("unexpected stderr %s", stderr)
+	}
+	if !strings.Contains(stderr, expectedStderr) {
+		return fmt.Errorf("wanted stderr %s, got %s", expectedStderr, stderr)
+	}
+	expectedStdout := r.testCase.Config.StdOut
+	if expectedStdout == "" && stdout != "" {
+		return fmt.Errorf("unexpected stdout %s", stdout)
+	}
+	if !strings.Contains(stdout, expectedStdout) {
+		return fmt.Errorf("wanted stdout %s, got %s", expectedStdout, stdout)
 	}
 	return nil
 }

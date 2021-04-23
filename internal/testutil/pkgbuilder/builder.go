@@ -400,7 +400,13 @@ func NewFunction(image string) Function {
 }
 
 type Function struct {
-	Image string
+	Image      string
+	ConfigPath string
+}
+
+func (f Function) WithConfigPath(configPath string) Function {
+	f.ConfigPath = configPath
+	return f
 }
 
 // RemoteSubpackage contains information about remote subpackages that should
@@ -521,6 +527,9 @@ pipeline:
   mutators:
 {{- range .Pkg.Kptfile.Pipeline.Functions }}
   - image: {{ .Image }}
+{{- if .ConfigPath }}
+  - configPath: {{ .ConfigPath }}
+{{- end }}
 {{- end }}
 {{- end }}
 `

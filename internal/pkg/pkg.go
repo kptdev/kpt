@@ -337,7 +337,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 
 // filterMetaResources filters kpt metadata files such as Kptfile, function configs.
 func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (output []*yaml.RNode, err error) {
-	pathsToExclude := functionConfigFilePaths(pl)
+	pathsToExclude := fnConfigFilePaths(pl)
 	for _, r := range input {
 		meta, err := r.GetMeta()
 		if err != nil {
@@ -360,9 +360,9 @@ func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (out
 	return output, nil
 }
 
-// functionConfigFilePaths returns paths to function config files referred in the
+// fnConfigFilePaths returns paths to function config files referred in the
 // given pipeline.
-func functionConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.String) {
+func fnConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.String) {
 	if pl == nil {
 		return nil
 	}
@@ -381,4 +381,52 @@ func functionConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.S
 		}
 	}
 	return fnConfigPaths
+}
+
+// FunctionConfigFilePaths returns a set of config file paths that used by
+// package pipeline. rootPath is the path to the package. recursive decides
+// will config file paths in subpackages will be returned. Returned paths
+// are all relative to rootPath.
+func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.String, error) {
+	const op errors.Op = "pkg.FunctionConfigFilePaths"
+	ok, err := IsPackageDir(string(rootPath))
+	if err != nil {
+		return nil, errors.E(op, rootPath, err)
+	}
+	var pkgPaths []types.UniquePath
+	if ok {
+		pkgPaths = []types.UniquePath{rootPath}
+	}
+	if recursive {
+		subPkgPaths, err := Subpackages(string(rootPath), All, true)
+		if err != nil {
+			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get subpackage paths: %w", err))
+		}
+		for _, spp := range subPkgPaths {
+			// sub package paths are all relative to rootPath
+			pkgPaths = append(pkgPaths, types.UniquePath(filepath.Join(string(rootPath), spp)))
+		}
+	}
+	fnConfigPaths := sets.String{}
+	for _, uniquePath := range pkgPaths {
+		path := string(uniquePath)
+		p, err := New(path)
+		if err != nil {
+			return nil, errors.E(op, rootPath, err)
+		}
+		pl, err := p.Pipeline()
+		if err != nil {
+			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get pipeline in package %s: %w", path, err))
+		}
+		// function file path are relative to the package which it's in
+		for _, ffp := range fnConfigFilePaths(pl).List() {
+			fnRelPath, err := filepath.Rel(string(rootPath), filepath.Join(path, ffp))
+			if err != nil {
+				return nil, errors.E(op, rootPath, fmt.Errorf("failed to get path relative to %s from %s: %w",
+					rootPath, filepath.Join(path, ffp), err))
+			}
+			fnConfigPaths.Insert(fnRelPath)
+		}
+	}
+	return fnConfigPaths, nil
 }

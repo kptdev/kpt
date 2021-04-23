@@ -15,6 +15,7 @@
 package runner
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -22,64 +23,68 @@ import (
 	"path/filepath"
 )
 
-func runCommand(pwd, name string, arg []string) (string, error) {
+func runCommand(pwd, name string, arg []string) (string, string, error) {
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = pwd
-	o, err := cmd.CombinedOutput()
-	return string(o), err
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
 }
 
 func copyDir(src, dst string) error {
-	_, err := runCommand("", "cp", []string{"-r", src, dst})
+	_, _, err := runCommand("", "cp", []string{"-r", src, dst})
 	return err
 }
 
 func gitInit(d string) error {
-	o, err := runCommand(d, "git", []string{"init"})
+	stdout, stderr, err := runCommand(d, "git", []string{"init"})
 	if err != nil {
-		return fmt.Errorf("git init error: %w, output: %s", err, o)
+		return fmt.Errorf("git init error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
 	return nil
 }
 
 func gitAddAll(d string) error {
-	o, err := runCommand(d, "git", []string{"add", "--all"})
+	stdout, stderr, err := runCommand(d, "git", []string{"add", "--all"})
 	if err != nil {
-		return fmt.Errorf("git commit error: %w, output: %s", err, o)
+		return fmt.Errorf("git commit error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
 	return nil
 }
 
 func gitCommit(d, msg string) error {
-	o, err := runCommand(d, "git", []string{"config", "user.name", "none"})
+	stdout, stderr, err := runCommand(d, "git", []string{"config", "user.name", "none"})
 	if err != nil {
-		return fmt.Errorf("git config error: %w, output: %s", err, o)
+		return fmt.Errorf("git config error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
-	o, err = runCommand(d, "git", []string{"config", "user.email", "none"})
+	stdout, stderr, err = runCommand(d, "git", []string{"config", "user.email", "none"})
 	if err != nil {
-		return fmt.Errorf("git config error: %w, output: %s", err, o)
+		return fmt.Errorf("git config error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
-	o, err = runCommand(d, "git", []string{"commit", "-m", msg, "--allow-empty"})
+	stdout, stderr, err = runCommand(d, "git", []string{"commit", "-m", msg, "--allow-empty"})
 	if err != nil {
-		return fmt.Errorf("git commit error: %w, output: %s", err, o)
+		return fmt.Errorf("git commit error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
 	return nil
 }
 
 func gitDiff(d, commit1, commit2 string) (string, error) {
-	o, err := runCommand(d, "git", []string{"diff", commit1, commit2})
+	stdout, stderr, err := runCommand(d, "git", []string{"diff", commit1, commit2})
 	if err != nil {
-		return "", fmt.Errorf("git diff error: %w, output: %s", err, o)
+		return "", fmt.Errorf("git diff error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
-	return o, nil
+	return stdout, nil
 }
 
 func getCommitHash(d string) (string, error) {
-	o, err := runCommand(d, "git", []string{"log", "-n", "1", "--pretty=format:%h"})
+	stdout, stderr, err := runCommand(d, "git", []string{"log", "-n", "1", "--pretty=format:%h"})
 	if err != nil {
-		return "", fmt.Errorf("git log error: %w, output: %s", err, o)
+		return "", fmt.Errorf("git log error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
-	return o, nil
+	return stdout, nil
 }
 
 func diffStrings(actual, expected string) (string, error) {
@@ -97,6 +102,6 @@ func diffStrings(actual, expected string) (string, error) {
 		return "", fmt.Errorf("failed to write file %s", expectedPath)
 	}
 	// diff is expected to exit with 1 so we ignore the error here
-	output, _ := runCommand(tmpDir, "diff", []string{"-u", expectedPath, actualPath})
+	output, _, _ := runCommand(tmpDir, "diff", []string{"-u", expectedPath, actualPath})
 	return output, nil
 }

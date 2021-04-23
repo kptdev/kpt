@@ -18,9 +18,6 @@ metadata:
   name: wp-pv-claim
   labels:
     app: wordpress
-  annotations:
-    projectId: "PROJECT_ID" # {"$kpt-set":"gcloud.core.project"}
-    teamname: "YOURTEAM" # {"$kpt-set":"teamname"}
 spec:
   accessModes:
     - ReadWriteOnce

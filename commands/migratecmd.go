@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +34,7 @@ type MigrateRunner struct {
 
 	dir         string
 	dryRun      bool
-	initOptions *KptInitOptions
+	initOptions *cmdliveinit.KptInitOptions
 	cmProvider  provider.Provider
 	rgProvider  provider.Provider
 	cmLoader    manifestreader.ManifestLoader
@@ -47,7 +48,7 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 	r := &MigrateRunner{
 		ioStreams:   ioStreams,
 		dryRun:      false,
-		initOptions: NewKptInitOptions(cmProvider.Factory(), ioStreams),
+		initOptions: cmdliveinit.NewKptInitOptions(cmProvider.Factory(), ioStreams),
 		cmProvider:  cmProvider,
 		rgProvider:  rgProvider,
 		cmLoader:    cmLoader,
@@ -73,8 +74,8 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&r.initOptions.name, "name", "", "Inventory object name")
-	cmd.Flags().BoolVar(&r.initOptions.force, "force", false, "Set inventory values even if already set in Kptfile")
+	cmd.Flags().StringVar(&r.initOptions.Name, "name", "", "Inventory object name")
+	cmd.Flags().BoolVar(&r.initOptions.Force, "force", false, "Set inventory values even if already set in Kptfile")
 	cmd.Flags().BoolVar(&r.dryRun, "dry-run", false, "Do not actually migrate, but show steps")
 
 	r.Command = cmd
@@ -121,10 +122,6 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	if err := mr.applyCRD(); err != nil {
 		return err
 	}
-	// Update the Kptfile with the resource group values (e.g. namespace, name, id).
-	if err := mr.updateKptfile(args); err != nil {
-		return err
-	}
 	// Retrieve the current ConfigMap inventory objects.
 	cmInvObj, err := mr.retrieveConfigMapInv(bytes.NewReader(stdinBytes), args)
 	if err != nil {
@@ -134,6 +131,12 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 			return nil
 		}
 		klog.V(4).Infof("error retrieving ConfigMap inventory object: %s", err)
+		return err
+	}
+	cmInventoryID := cmInvObj.ID()
+	klog.V(4).Infof("previous inventoryID: %s", cmInventoryID)
+	// Update the Kptfile with the resource group values (e.g. namespace, name, id).
+	if err := mr.updateKptfile(args, cmInventoryID); err != nil {
 		return err
 	}
 	cmObjs, err := mr.retrieveInvObjs(cmInvObj)
@@ -179,11 +182,13 @@ func (mr *MigrateRunner) applyCRD() error {
 }
 
 // updateKptfile installs the "inventory" fields in the Kptfile.
-func (mr *MigrateRunner) updateKptfile(args []string) error {
+func (mr *MigrateRunner) updateKptfile(args []string, prevID string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  updating Kptfile inventory values...")
 	if !mr.dryRun {
+		// Set inventory ID from previous inventory object.
+		mr.initOptions.InventoryID = prevID
 		if err := mr.initOptions.Run(args); err != nil {
-			if _, exists := err.(*InvExistsError); exists {
+			if _, exists := err.(*cmdliveinit.InvExistsError); exists {
 				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
 			} else {
 				return err
@@ -212,6 +217,8 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 		if _, ok := err.(inventory.NoInventoryObjError); ok { //nolint
 			fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
 		}
+	} else {
+		fmt.Fprintf(mr.ioStreams.Out, "success (inventory-id: %s)\n", cmInv.ID())
 	}
 	return cmInv, err
 }
@@ -220,6 +227,7 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 // inventory object by querying the inventory object in the cluster,
 // or an error if one occurred.
 func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]object.ObjMetadata, error) {
+	fmt.Fprint(mr.ioStreams.Out, "  retrieve ConfigMap inventory objs...")
 	cmInvClient, err := mr.cmProvider.InventoryClient()
 	if err != nil {
 		return nil, err
@@ -242,6 +250,10 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 	fmt.Fprint(mr.ioStreams.Out, "  migrate inventory to ResourceGroup...")
 	if len(cmObjs) == 0 {
 		fmt.Fprint(mr.ioStreams.Out, "no inventory objects found\n")
+		return nil
+	}
+	if mr.dryRun {
+		fmt.Fprintln(mr.ioStreams.Out, "success")
 		return nil
 	}
 	rgReader, err := mr.rgLoader.ManifestReader(reader, args[0])
@@ -278,6 +290,9 @@ func (mr *MigrateRunner) deleteConfigMapInv(invObj inventory.InventoryInfo) erro
 	if err != nil {
 		return err
 	}
+	if mr.dryRun {
+		cmInvClient.SetDryRunStrategy(common.DryRunClient)
+	}
 	if err = cmInvClient.DeleteInventoryObj(invObj); err != nil {
 		return err
 	}
@@ -299,10 +314,12 @@ func (mr *MigrateRunner) deleteConfigMapFile() error {
 		}
 		if len(cmFilename) > 0 {
 			fmt.Fprintf(mr.ioStreams.Out, "deleting inventory template file: %s...", cmFilename)
-			err = os.Remove(cmFilename)
-			if err != nil {
-				fmt.Fprint(mr.ioStreams.Out, "failed\n")
-				return err
+			if !mr.dryRun {
+				err = os.Remove(cmFilename)
+				if err != nil {
+					fmt.Fprint(mr.ioStreams.Out, "failed\n")
+					return err
+				}
 			}
 			fmt.Fprint(mr.ioStreams.Out, "success\n")
 		}

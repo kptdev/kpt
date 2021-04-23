@@ -32,13 +32,19 @@ cd $TEST_HOME
 <!-- @fetchPackage @verifyExamples-->
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 my-dir
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
 ```
 
 <!-- @createKindCluster @verifyExamples-->
 ```
 kind delete cluster && kind create cluster
 ```
+
+<!-- @installResourceGroup @verifyExamples-->
+```
+kpt live install-resource-group
+```
+
 {{% /hide %}}
 
 <!--mdtogo:Examples-->
@@ -53,7 +59,8 @@ kpt live init my-dir/
 
 <!-- @removeInventoryTemplate @verifyExamples-->
 ```shell
-rm my-dir/inventory-template.yaml
+rm -r my-dir
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
 ```
 
 {{% /hide %}}

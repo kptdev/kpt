@@ -38,7 +38,7 @@ The following are examples of running each kpt command group.
 
 ```shell
 # get a package
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.5.0 helloworld
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@next helloworld
 fetching package /package-examples/helloworld-set from \
   https://github.com/GoogleContainerTools/kpt to helloworld
 ```

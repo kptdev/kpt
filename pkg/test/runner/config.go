@@ -55,6 +55,14 @@ type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
 
+	// StdErr is the expected standard error output and should be checked
+	// when a nonzero exit code is expected. Default: ""
+	StdErr string `json:"stdErr,omitempty" yaml:"stdErr,omitempty"`
+
+	// StdOut is the expected standard output from running the command.
+	// Default: ""
+	StdOut string `json:"stdOut,omitempty" yaml:"stdOut,omitempty"`
+
 	// NonIdempotent indicates if the test case is not idempotent.
 	// By default, tests are assumed to be idempotent, so it defaults to false.
 	NonIdempotent bool `json:"nonIdempotent,omitempty" yaml:"nonIdempotent,omitempty"`

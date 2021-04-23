@@ -33,7 +33,9 @@ func NewTablePrinter(ioStreams genericclioptions.IOStreams) *tablePrinter {
 
 // Print take an event channel and outputs the status events on the channel
 // until the channel is closed .
-func (t *tablePrinter) Print(ch <-chan event.Event, identifiers []object.ObjMetadata, cancelFunc collector.Observer) {
+// nolint
+func (t *tablePrinter) Print(ch <-chan event.Event, identifiers []object.ObjMetadata,
+	cancelFunc collector.ObserverFunc) {
 	coll := collector.NewResourceStatusCollector(identifiers)
 	stop := make(chan struct{})
 

@@ -17,6 +17,7 @@ package update_test
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -39,6 +40,10 @@ const (
 	masterBranch    = "master"
 	testPackageName = "test-package"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 // TestCommand_Run_noRefChanges updates a package without specifying a new ref.
 // - Get a package using  a branch ref

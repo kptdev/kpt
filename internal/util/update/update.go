@@ -18,7 +18,6 @@ package update
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -58,19 +57,6 @@ type UpdateOptions struct {
 	// updated and origin were fetched based on the information in the
 	// Kptfile from this package.
 	IsRoot bool
-
-	// DryRun configures AlphaGitPatch to print a patch rather
-	// than apply it
-	DryRun bool
-
-	// Verbose configures updaters to write verbose output
-	Verbose bool
-
-	// SimpleMessage is used for testing so commit messages in patches
-	// don't contain the names of generated paths
-	SimpleMessage bool
-
-	Output io.Writer
 }
 
 // Updater updates a local package
@@ -92,43 +78,29 @@ type Command struct {
 	// Ref is the ref to update to
 	Ref string
 
-	// Repo is the repo to update to
-	Repo string
-
 	// Strategy is the update strategy to use
 	Strategy kptfilev1alpha2.UpdateStrategyType
-
-	// DryRun if set will print the patch instead of applying it
-	DryRun bool
-
-	// Verbose if set will print verbose information about the commands being run
-	Verbose bool
-
-	// SimpleMessage if set will create simple git commit messages that omit values
-	// generated for tests
-	SimpleMessage bool
-
-	// Output is where dry-run information is written
-	Output io.Writer
 }
 
 // Run runs the Command.
 func (u Command) Run(ctx context.Context) error {
 	const op errors.Op = "update.Run"
-	if u.Output == nil {
-		u.Output = os.Stdout
-	}
 
 	if u.Pkg == nil {
 		return errors.E(op, errors.MissingParam, "pkg must be provided")
 	}
 
 	// require package is checked into git before trying to update it
-	g := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
-	if err := g.Run("status", "-s"); err != nil {
+	g, err := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
+	if err != nil {
+		return err
+	}
+
+	rr, err := g.Run(ctx, "status", "-s")
+	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
-	if strings.TrimSpace(g.Stdout.String()) != "" {
+	if strings.TrimSpace(rr.Stdout) != "" {
 		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must be committed "+
 			"to git before attempting to update"))
 	}
@@ -141,9 +113,6 @@ func (u Command) Run(ctx context.Context) error {
 	if rootKf.Upstream == nil || rootKf.Upstream.Git == nil {
 		return errors.E(op, u.Pkg.UniquePath,
 			fmt.Errorf("package must have an upstream reference"))
-	}
-	if u.Repo != "" {
-		rootKf.Upstream.Git.Repo = u.Repo
 	}
 	if u.Ref != "" {
 		rootKf.Upstream.Git.Ref = u.Ref
@@ -426,10 +395,6 @@ func (u Command) mergePackage(localPath, updatedPath, originPath, relPath string
 		UpdatedPath:    updatedPath,
 		OriginPath:     originPath,
 		IsRoot:         isRootPkg,
-		DryRun:         u.DryRun,
-		Verbose:        u.Verbose,
-		SimpleMessage:  u.SimpleMessage,
-		Output:         u.Output,
 	}); err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}

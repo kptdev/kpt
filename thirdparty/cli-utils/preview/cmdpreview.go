@@ -13,8 +13,8 @@ import (
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
 
-	"sigs.k8s.io/cli-utils/cmd/flagutils"
-	"sigs.k8s.io/cli-utils/cmd/printers"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -38,7 +38,7 @@ func GetPreviewRunner(provider provider.Provider, loader manifestreader.Manifest
 		loader:    loader,
 	}
 	cmd := &cobra.Command{
-		Use:                   "preview [DIR | -]",
+		Use:                   "preview [PKG_PATH | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Preview the apply of a configuration"),
 		Args:                  cobra.MaximumNArgs(1),

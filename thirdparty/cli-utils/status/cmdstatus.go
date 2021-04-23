@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/cli-utils/cmd/flagutils"
-	"sigs.k8s.io/cli-utils/cmd/status/printers"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
@@ -33,7 +33,7 @@ func GetStatusRunner(provider provider.Provider, loader manifestreader.ManifestL
 		pollerFactoryFunc: pollerFactoryFunc,
 	}
 	c := &cobra.Command{
-		Use:  "status [DIR | -]",
+		Use:  "status [PKG_PATH | -]",
 		RunE: r.runE,
 	}
 	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,

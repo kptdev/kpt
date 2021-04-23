@@ -15,15 +15,19 @@
 package gitutil
 
 import (
+	"bufio"
 	"bytes"
-	"crypto/sha256"
-	"encoding/base64"
+	"context"
+	"crypto/md5"
+	"encoding/base32"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 )
@@ -32,144 +36,282 @@ import (
 // for remote repos.  Defaults to UserHomeDir/.kpt/repos if unspecified.
 const RepoCacheDirEnv = "KPT_CACHE_DIR"
 
-// DefaultRef returns the DefaultRef to "master" if master branch exists in
-// remote repository, falls back to "main" if master branch doesn't exist
-// Making it a var so that it can be overridden for local testing
-var DefaultRef = func(repo string) (string, error) {
-	const op errors.Op = "gitutil.DefaultRef"
-	masterRef := "master"
-	mainRef := "main"
-	masterExists, err := branchExists(repo, masterRef)
+// NewLocalGitRunner returns a new GitLocalRunner for a local package.
+func NewLocalGitRunner(pkg string) (*GitLocalRunner, error) {
+	const op errors.Op = "gitutil.NewLocalGitRunner"
+	p, err := exec.LookPath("git")
 	if err != nil {
-		return "", errors.E(op, errors.Git, err)
-	}
-	mainExists, err := branchExists(repo, mainRef)
-	if err != nil {
-		return "", errors.E(op, errors.Git, err)
-	}
-	if masterExists {
-		return masterRef, nil
-	} else if mainExists {
-		return mainRef, nil
-	}
-	return masterRef, nil
-}
-
-// BranchExists checks if branch is present in the input repo
-func branchExists(repo, branch string) (bool, error) {
-	const op errors.Op = "gitutil.branchExists"
-	gitProgram, err := exec.LookPath("git")
-	if err != nil {
-		return false, errors.E(op, errors.Git,
+		return nil, errors.E(op, errors.Git,
 			fmt.Errorf("no 'git' program on path: %w", err))
 	}
-	stdOut := bytes.Buffer{}
-	stdErr := bytes.Buffer{}
-	cmd := exec.Command(gitProgram, "ls-remote", repo, branch)
-	cmd.Stderr = &stdErr
-	cmd.Stdout = &stdOut
-	err = cmd.Run()
-	if err != nil {
-		// stdErr contains the error message for os related errors, git permission errors
-		// and if repo doesn't exist
-		return false, errors.E(op, errors.Git,
-			fmt.Errorf("failed to lookup master(or main) branch %v: %s", err, strings.TrimSpace(stdErr.String())))
-	}
-	// stdOut contains the branch information if the branch is present in remote repo
-	// stdOut is empty if the repo doesn't have the input branch
-	if strings.TrimSpace(stdOut.String()) != "" {
-		return true, nil
-	}
-	return false, nil
+
+	return &GitLocalRunner{
+		gitPath: p,
+		Dir:     pkg,
+		Debug:   false,
+	}, nil
 }
 
-// NewUpstreamGitRunner returns a new GitRunner for an upstream package.
-//
-// The upstream package repo will be fetched to a local cache directory under $HOME/.kpt
-// and hard reset to origin/main.
-// The refs will also be fetched so they are available locally.
-func NewUpstreamGitRunner(uri, dir string, required []string, optional []string) (*GitRunner, error) {
-	const op errors.Op = "gitutil.NewUpstreamGitRunner"
-	g := &GitRunner{}
+// GitLocalRunner runs git commands in a local git repo.
+type GitLocalRunner struct {
+	// Path to the git executable.
+	gitPath string
 
-	// make sure the repo is fetched
-	cacheDir, err := g.cacheRepo(uri, dir, required, optional)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	g.RepoDir = cacheDir
-	g.Dir = filepath.Join(cacheDir, dir)
-	return g, nil
-}
-
-// NewLocalGitRunner returns a new GitRunner for a local package.
-func NewLocalGitRunner(pkg string) *GitRunner {
-	return &GitRunner{Dir: pkg}
-}
-
-// GitRunner runs git commands in a git repo.
-type GitRunner struct {
 	// Dir is the directory the commands are run in.
 	Dir string
 
-	// RepoDir is the directory of the git repo containing the package
-	RepoDir string
+	// Debug enables output of debug information to stderr.
+	Debug bool
+}
 
-	// Stderr is where the git command Stderr is written
-	Stderr *bytes.Buffer
-
-	// Stdin is where the git command Stdin is read from
-	Stdin *bytes.Buffer
-
-	// Stdout is where the git command Stdout is written
-	Stdout *bytes.Buffer
-
-	// Verbose prints verbose command information
-	Verbose bool
+type RunResult struct {
+	Stdout string
+	Stderr string
 }
 
 // Run runs a git command.
 // Omit the 'git' part of the command.
-func (g *GitRunner) Run(args ...string) error {
-	const op errors.Op = "gitutil.Run"
-	p, err := exec.LookPath("git")
-	if err != nil {
-		return errors.E(op, errors.Git,
-			fmt.Errorf("no 'git' program on path: %w", err))
-	}
+// The first return value contains the output to Stdout and Stderr when
+// running the command.
+func (g *GitLocalRunner) Run(ctx context.Context, args ...string) (RunResult, error) {
+	return g.run(ctx, false, args...)
+}
 
-	cmd := exec.Command(p, args...)
+// RunVerbose runs a git command.
+// Omit the 'git' part of the command.
+// The first return value contains the output to Stdout and Stderr when
+// running the command.
+func (g *GitLocalRunner) RunVerbose(ctx context.Context, args ...string) (RunResult, error) {
+	return g.run(ctx, true, args...)
+}
+
+// run runs a git command.
+// Omit the 'git' part of the command.
+// The first return value contains the output to Stdout and Stderr when
+// running the command.
+func (g *GitLocalRunner) run(ctx context.Context, verbose bool, args ...string) (RunResult, error) {
+	const op errors.Op = "gitutil.run"
+
+	cmd := exec.CommandContext(ctx, g.gitPath, args...)
 	cmd.Dir = g.Dir
 	cmd.Env = os.Environ()
 
-	g.Stdout = &bytes.Buffer{}
-	g.Stderr = &bytes.Buffer{}
-	if g.Verbose {
-		// print the command
-		fmt.Println(cmd.Args)
-		cmd.Stdout = io.MultiWriter(g.Stdout, os.Stdout)
-		cmd.Stdout = io.MultiWriter(g.Stderr, os.Stderr)
+	cmdStdout := &bytes.Buffer{}
+	cmdStderr := &bytes.Buffer{}
+	if verbose {
+		cmd.Stdout = io.MultiWriter(cmdStdout, os.Stdout)
+		cmd.Stderr = io.MultiWriter(cmdStderr, os.Stderr)
 	} else {
-		cmd.Stdout = g.Stdout
-		cmd.Stderr = g.Stderr
+		cmd.Stdout = cmdStdout
+		cmd.Stderr = cmdStderr
 	}
 
-	if g.Stdin != nil {
-		cmd.Stdin = g.Stdin
+	if g.Debug {
+		_, _ = fmt.Fprintf(os.Stderr, "[%s]\n", strings.Join(args, ","))
 	}
-	err = cmd.Run()
+	start := time.Now()
+	err := cmd.Run()
+	duration := time.Since(start)
+	if g.Debug {
+		_, _ = fmt.Fprintf(os.Stderr, "duration: %v\n", duration)
+	}
 	if err != nil {
-		return errors.E(op, errors.Git, err)
+		return RunResult{}, errors.E(op, errors.Git, &GitExecError{
+			Args:   args,
+			Err:    err,
+			StdOut: cmdStdout.String(),
+			StdErr: cmdStderr.String(),
+		})
 	}
+	return RunResult{
+		Stdout: cmdStdout.String(),
+		Stderr: cmdStderr.String(),
+	}, nil
+}
+
+type GitExecError struct {
+	Args   []string
+	Err    error
+	StdErr string
+	StdOut string
+}
+
+func (e *GitExecError) Error() string {
+	b := new(strings.Builder)
+	b.WriteString(e.Err.Error())
+	b.WriteString(": ")
+	b.WriteString(e.StdErr)
+	return b.String()
+}
+
+// NewGitUpstreamRepo returns a new GitUpstreamRepo for an upstream package.
+func NewGitUpstreamRepo(ctx context.Context, uri string) (*GitUpstreamRepo, error) {
+	const op errors.Op = "gitutil.NewGitUpstreamRepo"
+
+	g := &GitUpstreamRepo{
+		URI: uri,
+	}
+	if err := g.updateRefs(ctx); err != nil {
+		return nil, errors.E(op, errors.Repo(uri), err)
+	}
+	return g, nil
+}
+
+// GitUpstreamRepo runs git commands in a local git repo.
+type GitUpstreamRepo struct {
+	URI string
+
+	// Heads contains all head refs in the upstream repo as well as the
+	// each of the are referencing.
+	Heads map[string]string
+
+	// Tags contains all tag refs in the upstream repo as well as the
+	// each of the are referencing.
+	Tags map[string]string
+}
+
+// updateRefs fetches all refs from the upstream git repo, parses the results
+// and caches all refs and the commit they reference. Not that this doesn't
+// download any objects, only refs.
+func (gur *GitUpstreamRepo) updateRefs(ctx context.Context) error {
+	const op errors.Op = "gitutil.updateRefs"
+	repoCacheDir, err := gur.cacheRepo(ctx, gur.URI, []string{}, []string{})
+	if err != nil {
+		return errors.E(op, errors.Repo(gur.URI), err)
+	}
+
+	gitRunner, err := NewLocalGitRunner(repoCacheDir)
+	if err != nil {
+		return errors.E(op, errors.Repo(gur.URI), err)
+	}
+
+	rr, err := gitRunner.Run(ctx, "ls-remote", "--heads", "--tags", "--refs", "origin")
+	if err != nil {
+		// TODO: This should only fail if we can't connect to the repo. We should
+		// consider exposing the error message from git to the user here.
+		return errors.E(op, errors.Repo(gur.URI), err)
+	}
+
+	heads := make(map[string]string)
+	tags := make(map[string]string)
+
+	re := regexp.MustCompile(`^([a-z0-9]+)\s+refs/(heads|tags)/(.+)$`)
+	scanner := bufio.NewScanner(bytes.NewBufferString(rr.Stdout))
+	for scanner.Scan() {
+		txt := scanner.Text()
+		res := re.FindStringSubmatch(txt)
+		if len(res) == 0 {
+			continue
+		}
+		switch res[2] {
+		case "heads":
+			heads[res[3]] = res[1]
+		case "tags":
+			tags[res[3]] = res[1]
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return errors.E(op, errors.Repo(gur.URI), errors.Git,
+			fmt.Errorf("error parsing response from git: %w", err))
+	}
+	gur.Heads = heads
+	gur.Tags = tags
 	return nil
 }
 
-// getRepoDir returns the cache directory name for a remote repo
-func (g *GitRunner) getRepoDir(uri string) string {
-	return base64.URLEncoding.EncodeToString(sha256.New().Sum([]byte(uri)))[:32]
+// GetRepo fetches all the provided refs and the objects. It will fetch it
+// to the cache repo and returns the path to the local git clone in the cache
+// directory.
+func (gur *GitUpstreamRepo) GetRepo(ctx context.Context, refs []string) (string, error) {
+	const op errors.Op = "gitutil.GetRepo"
+	dir, err := gur.cacheRepo(ctx, gur.URI, refs, []string{})
+	if err != nil {
+		return "", errors.E(op, errors.Repo(gur.URI), err)
+	}
+	return dir, nil
 }
 
-func (g *GitRunner) getRepoCacheDir() (string, error) {
+// GetDefaultBranch returns the name of the branch pointed to by the
+// HEAD symref. This is the default branch of the repository.
+func (gur *GitUpstreamRepo) GetDefaultBranch(ctx context.Context) (string, error) {
+	const op errors.Op = "gitutil.GetDefaultBranch"
+	cacheRepo, err := gur.cacheRepo(ctx, gur.URI, []string{}, []string{})
+	if err != nil {
+		return "", errors.E(op, errors.Repo(gur.URI), err)
+	}
+
+	gitRunner, err := NewLocalGitRunner(cacheRepo)
+	if err != nil {
+		return "", errors.E(op, errors.Repo(gur.URI), err)
+	}
+
+	rr, err := gitRunner.Run(ctx, "ls-remote", "--symref", "origin", "HEAD")
+	if err != nil {
+		return "", errors.E(op, errors.Repo(gur.URI), err)
+	}
+	if rr.Stdout == "" {
+		return "", errors.E(op, errors.Repo(gur.URI),
+			fmt.Errorf("unable to detect default branch in repo"))
+	}
+
+	re := regexp.MustCompile(`ref: refs/heads/([^\s/]+)\s*HEAD`)
+	match := re.FindStringSubmatch(rr.Stdout)
+	if len(match) != 2 {
+		return "", errors.E(op, errors.Repo(gur.URI), errors.Git,
+			fmt.Errorf("unexpected response from git when determining default branch: %s", rr.Stdout))
+	}
+	return match[1], nil
+}
+
+// ResolveBranch resolves the branch to a commit SHA. This happens based on the
+// cached information about refs in the upstream repo. If the branch doesn't exist
+// in the upstream repo, the last return value will be false.
+func (gur *GitUpstreamRepo) ResolveBranch(branch string) (string, bool) {
+	if strings.HasPrefix(branch, "refs/heads/") {
+		branch = strings.TrimPrefix(branch, "refs/heads/")
+	}
+	for head, commit := range gur.Heads {
+		if head == branch {
+			return commit, true
+		}
+	}
+	return "", false
+}
+
+// ResolveTag resolves the tag to a commit SHA. This happens based on the
+// cached information about refs in the upstream repo. If the tag doesn't exist
+// in the upstream repo, the last return value will be false.
+func (gur *GitUpstreamRepo) ResolveTag(tag string) (string, bool) {
+	if strings.HasPrefix(tag, "refs/tags/") {
+		tag = strings.TrimPrefix(tag, "refs/tags/")
+	}
+	for t, commit := range gur.Tags {
+		if t == tag {
+			return commit, true
+		}
+	}
+	return "", false
+}
+
+// ResolveRef resolves the ref (either tag or branch) to a commit SHA. If the
+// ref doesn't exist in the upstream repo, the last return value will be false.
+func (gur *GitUpstreamRepo) ResolveRef(ref string) (string, bool) {
+	commit, found := gur.ResolveBranch(ref)
+	if found {
+		return commit, true
+	}
+	return gur.ResolveTag(ref)
+}
+
+// getRepoDir returns the cache directory name for a remote repo
+// This takes the md5 hash of the repo uri and then base32 encodes it to make
+// sure it doesn't contain characters that isn't legal in directory names.
+func (gur *GitUpstreamRepo) getRepoDir(uri string) string {
+	return strings.ToLower(base32.StdEncoding.EncodeToString(md5.New().Sum([]byte(uri))))
+}
+
+// getRepoCacheDir
+func (gur *GitUpstreamRepo) getRepoCacheDir() (string, error) {
 	const op errors.Op = "gitutil.getRepoCacheDir"
 	var err error
 	dir := os.Getenv(RepoCacheDirEnv)
@@ -180,36 +322,38 @@ func (g *GitRunner) getRepoCacheDir() (string, error) {
 	// cache location unspecified, use UserHomeDir/.kpt/repos
 	dir, err = os.UserHomeDir()
 	if err != nil {
-		return "", errors.E(op, fmt.Errorf(
-			"failed to clone repo: trouble resolving cache directory: %w", err))
+		return "", errors.E(op, errors.IO, fmt.Errorf(
+			"error looking up user home dir: %w", err))
 	}
 	return filepath.Join(dir, ".kpt", "repos"), nil
 }
 
 // cacheRepo fetches a remote repo to a cache location, and fetches the provided refs.
-func (g *GitRunner) cacheRepo(uri, dir string,
-	requiredRefs []string, optionalRefs []string) (string, error) {
+func (gur *GitUpstreamRepo) cacheRepo(ctx context.Context, uri string, requiredRefs []string, optionalRefs []string) (string, error) {
 	const op errors.Op = "gitutil.cacheRepo"
-	kptCacheDir, err := g.getRepoCacheDir()
+	kptCacheDir, err := gur.getRepoCacheDir()
 	if err != nil {
 		return "", errors.E(op, err)
 	}
 	if err := os.MkdirAll(kptCacheDir, 0700); err != nil {
 		return "", errors.E(op, errors.IO, fmt.Errorf(
-			"failed to clone repo: trouble creating cache directory: %w", err))
+			"error creating cache directory for repo: %w", err))
 	}
 
 	// create the repo directory if it doesn't exist yet
-	gitRunner := GitRunner{Dir: kptCacheDir}
-	uriSha := g.getRepoDir(uri)
+	gitRunner, err := NewLocalGitRunner(kptCacheDir)
+	if err != nil {
+		return "", errors.E(op, errors.Repo(uri), err)
+	}
+	uriSha := gur.getRepoDir(uri)
 	repoCacheDir := filepath.Join(kptCacheDir, uriSha)
 	if _, err := os.Stat(repoCacheDir); os.IsNotExist(err) {
-		if err := gitRunner.Run("init", uriSha); err != nil {
-			return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble running init: %w", err))
+		if _, err := gitRunner.Run(ctx, "init", uriSha); err != nil {
+			return "", errors.E(op, errors.Git, fmt.Errorf("error running `git init`: %w", err))
 		}
 		gitRunner.Dir = repoCacheDir
-		if err = gitRunner.Run("remote", "add", "origin", uri); err != nil {
-			return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble adding origin: %w", err))
+		if _, err = gitRunner.Run(ctx, "remote", "add", "origin", uri); err != nil {
+			return "", errors.E(op, errors.Git, fmt.Errorf("error adding origin remote: %w", err))
 		}
 	} else {
 		gitRunner.Dir = repoCacheDir
@@ -218,59 +362,37 @@ func (g *GitRunner) cacheRepo(uri, dir string,
 	// fetch the specified refs
 	triedFallback := false
 	for _, s := range requiredRefs {
-		if err = gitRunner.Run("fetch", "origin", s); err != nil {
+		if _, err := gitRunner.Run(ctx, "fetch", "origin", "--depth=1", s); err != nil {
 			if !triedFallback { // only fallback to fetch origin once
-				// fallback on fetching the origin -- some versions of git have an issue
-				// with fetching the first commit by sha.
-				if err = gitRunner.Run("fetch", "origin"); err != nil {
+				// fallback on fetching the origin. If the user provided a short sha,
+				// we need to fetch all objects in order to resolve it into the full
+				// sha.
+				// TODO: See if there is a way to resolve a short sha into a complete
+				// sha without fetching. Haven't found one so far...
+				if _, retryErr := gitRunner.Run(ctx, "fetch", "origin"); retryErr != nil {
+					// We are using the original error here.
 					return "", errors.E(op, errors.Git, fmt.Errorf(
-						"failed to clone git repo: trouble fetching origin, "+
-							"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", err))
+						"error running `git fetch` for origin: %w", err))
 				}
 				triedFallback = true
 			}
 			// verify we got the commit
-			if err = gitRunner.Run("show", s); err != nil {
+			if _, err = gitRunner.Run(ctx, "show", s); err != nil {
 				return "", errors.E(op, errors.Git, fmt.Errorf(
-					"failed to clone git repo: trouble fetching origin %s, "+
-						"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", s, err))
+					"error verifying results from fetch: %w", err))
 			}
 		}
 	}
 
 	var found bool
 	for _, s := range optionalRefs {
-		if err := gitRunner.Run("fetch", "origin", s); err == nil {
+		if _, err := gitRunner.Run(ctx, "fetch", "origin", s); err == nil {
 			found = true
 		}
 	}
-	if !found {
-		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone git repo: unable to find any matching refs: %s, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials",
+	if !found && len(optionalRefs) > 0 {
+		return "", errors.E(op, errors.Git, fmt.Errorf("unable to find any refs %s",
 			strings.Join(optionalRefs, ",")))
 	}
-
-	if err = gitRunner.Run("fetch", "origin"); err != nil {
-		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone git repo: trouble fetching origin, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", err))
-	}
-
-	defaultRef, err := DefaultRef(uri)
-	if err != nil {
-		return "", errors.E(op, errors.Git, fmt.Errorf("please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", err))
-	}
-
-	// reset the repo state
-	if err = gitRunner.Run("checkout", defaultRef); err != nil {
-		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble checking out %s, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", defaultRef, err))
-	}
-
-	// TODO: make this safe for concurrent operations
-	if err = gitRunner.Run("reset", "--hard", "origin/"+defaultRef); err != nil {
-		return "", errors.E(op, errors.Git, fmt.Errorf("failed to clone repo: trouble reset to %s, "+
-			"please run 'git clone <REPO>; stat <DIR/SUBDIR>' to verify credentials: %w", defaultRef, err))
-	}
-	gitRunner.Dir = filepath.Join(repoCacheDir, dir)
 	return repoCacheDir, nil
 }

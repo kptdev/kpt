@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
-	"sigs.k8s.io/cli-utils/cmd/flagutils"
-	"sigs.k8s.io/cli-utils/cmd/printers"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -31,7 +31,7 @@ func GetApplyRunner(provider provider.Provider, loader manifestreader.ManifestLo
 		loader:    loader,
 	}
 	cmd := &cobra.Command{
-		Use:                   "apply [DIR | -]",
+		Use:                   "apply [PKG_PATH | -]",
 		DisableFlagsInUseLine: true,
 		Short:                 i18n.T("Apply a configuration to a resource by package directory or stdin"),
 		RunE:                  r.RunE,

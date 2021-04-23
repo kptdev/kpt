@@ -713,6 +713,103 @@ assertPodNotExists "pod-c" "test-namespace"
 assertPodNotExists "pod-d" "test-namespace"
 printResult
 
+###########################################################
+#  Test Migrate from ConfigMap inventory to ResourceGroup
+###########################################################
+
+createTestSuite
+waitForDefaultServiceAccount
+
+# Setup: kpt live apply ConfigMap inventory
+# Applies resources in "migrate-case-1a" directory.
+echo "Testing kpt live apply with ConfigMap inventory"
+echo "kpt live apply e2e/live/testdata/migrate-case-1a"
+# Prerequisite: set up the ConfigMap inventory file
+# Copy Kptfile into "migrate-case-1a" WITHOUT inventory information. This ensures
+# the apply uses the ConfigMap inventory-template.yaml during the apply.
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
+cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
+${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+assertContains "namespace/test-rg-namespace unchanged"
+assertContains "pod/pod-a created"
+assertContains "pod/pod-b created"
+assertContains "pod/pod-c created"
+assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
+assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
+# Validate resources in the cluster
+assertCMInventory "test-rg-namespace" "4"
+assertPodExists "pod-a" "test-rg-namespace"
+assertPodExists "pod-b" "test-rg-namespace"
+assertPodExists "pod-c" "test-rg-namespace"
+printResult
+
+# Test: kpt live migrate from ConfigMap to ResourceGroup inventory
+# Migrates resources in "migrate-case-1a" directory.
+echo "Testing migrate dry-run from ConfigMap to ResourceGroup inventory"
+echo "kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a"
+# Run migrate dry-run and verify that the migrate did not actually happen
+${BIN_DIR}/kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "retrieve the current ConfigMap inventory...success (inventory-id:"
+assertContains "updating Kptfile inventory values...success"
+assertContains "retrieve ConfigMap inventory objs...success (4 inventory objects)"
+assertContains "migrate inventory to ResourceGroup...success"
+assertContains "deleting old ConfigMap inventory object...success"
+assertContains "deleting inventory template file"
+assertContains "inventory migration...success"
+# Migrate did not actually happen in dry-run, so ConfigMap inventory still exists
+assertCMInventory "test-rg-namespace" "4"
+printResult
+
+# Now actually run the migrate and verify the new ResourceGroup inventory exists
+echo "Testing migrate from ConfigMap to ResourceGroup inventory"
+echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
+# Prerequisite: set up the ConfigMap inventory file
+cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "retrieve the current ConfigMap inventory...success (inventory-id:"
+assertContains "updating Kptfile inventory values...success"
+assertContains "retrieve ConfigMap inventory objs...success (4 inventory objects)"
+assertContains "migrate inventory to ResourceGroup...success"
+assertContains "deleting old ConfigMap inventory object...success"
+assertContains "deleting inventory template file"
+assertContains "inventory migration...success"
+# Validate resources in the cluster
+assertPodExists "pod-a" "test-rg-namespace"
+assertPodExists "pod-b" "test-rg-namespace"
+assertPodExists "pod-c" "test-rg-namespace"
+assertRGInventory "test-rg-namespace"
+# Run it again, and validate the output
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...already installed...success"
+assertContains "retrieve the current ConfigMap inventory...no ConfigMap inventory...completed"
+assertContains "inventory migration...success"
+printResult
+
+# Test: kpt live apply/prune
+# "rg-test-case-1b" directory is "rg-test-case-1a" directory with "pod-a" removed and "pod-d" added.
+echo "Testing apply/prune after migrate"
+echo "kpt live apply e2e/live/testdata/migrate-case-1b"
+cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b
+${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b > $OUTPUT_DIR/status
+assertContains "namespace/test-rg-namespace unchanged"
+assertContains "pod/pod-b unchanged"
+assertContains "pod/pod-c unchanged"
+assertContains "pod/pod-d created"
+assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured, 0 failed"
+assertContains "pod/pod-a pruned"
+assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
+wait 2
+# Validate resources in the cluster
+# ResourceGroup inventory with four inventory items.
+assertRGInventory "test-rg-namespace" "4"
+assertPodNotExists "pod-a" "test-rg-namespace"
+assertPodExists "pod-b" "test-rg-namespace"
+assertPodExists "pod-c" "test-rg-namespace"
+assertPodExists "pod-d" "test-rg-namespace"
+printResult
+
 # Clean-up the k8s cluster
 echo "Cleaning up cluster"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
