@@ -1,84 +1,74 @@
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index eb6a122..b9e519d 100644
+index eb6a122..1fecfa4 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
-@@ -14,32 +14,36 @@
- apiVersion: v1
- kind: Service
- metadata:
--  name: wordpress-mysql
-+  annotations:
+@@ -18,14 +18,16 @@ metadata:
+   labels:
+     app: wordpress
+   annotations:
+-    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+-    teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
 +    foo: bar
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
-   labels:
-     app: wordpress
--  annotations:
--    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
--    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+  name: wordpress-mysql
  spec:
-+  clusterIP: None
-   ports:
+-  ports:
 -  - port: 3306
-+    - port: 3306
    selector:
      app: wordpress
      tier: mysql
--  clusterIP: None
++  ports:
++    - port: 3306
+   clusterIP: None
  ---
  apiVersion: v1
- kind: PersistentVolumeClaim
- metadata:
--  name: mysql-pv-claim
-+  annotations:
+@@ -35,14 +37,16 @@ metadata:
+   labels:
+     app: wordpress
+   annotations:
+-    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+-    teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
 +    foo: bar
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
-   labels:
-     app: wordpress
--  annotations:
--    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
--    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+  name: mysql-pv-claim
  spec:
-   accessModes:
+-  accessModes:
 -  - ReadWriteOnce
-+    - ReadWriteOnce
    resources:
      requests:
        storage: 20Gi
-@@ -47,12 +51,14 @@ spec:
++  accessModes:
++    - ReadWriteOnce
+ ---
  apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
  kind: Deployment
- metadata:
--  name: wordpress-mysql
-+  annotations:
+@@ -51,37 +55,42 @@ metadata:
+   labels:
+     app: wordpress
+   annotations:
+-    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+-    teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
 +    foo: bar
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
-   labels:
-     app: wordpress
--  annotations:
--    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
--    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+  name: wordpress-mysql
  spec:
    selector:
      matchLabels:
-@@ -62,26 +68,29 @@ spec:
-     type: Recreate
+       app: wordpress
+       tier: mysql
+-  strategy:
+-    type: Recreate
    template:
      metadata:
-+      annotations:
-+        abc: def
-+        foo: bar
        labels:
          app: wordpress
          tier: mysql
++      annotations:
++        abc: def
++        foo: bar
      spec:
        containers:
 -      - image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
@@ -91,23 +81,24 @@ index eb6a122..b9e519d 100644
 -              key: password
 -        ports:
 -        - containerPort: 3306
-+        - env:
-+            - name: MYSQL_ROOT_PASSWORD
-+              valueFrom:
-+                secretKeyRef:
-+                  key: password
-+                  name: mysql-pass
-+          image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
-           name: mysql
+-          name: mysql
 -        volumeMounts:
 -        - name: mysql-persistent-storage
 -          mountPath: /var/lib/mysql
++        - name: mysql
++          image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
 +          ports:
-+            - containerPort: 3306
-+              name: mysql
++            - name: mysql
++              containerPort: 3306
++          env:
++            - name: MYSQL_ROOT_PASSWORD
++              valueFrom:
++                secretKeyRef:
++                  name: mysql-pass
++                  key: password
 +          volumeMounts:
-+            - mountPath: /var/lib/mysql
-+              name: mysql-persistent-storage
++            - name: mysql-persistent-storage
++              mountPath: /var/lib/mysql
        volumes:
 -      - name: mysql-persistent-storage
 -        persistentVolumeClaim:
@@ -115,85 +106,77 @@ index eb6a122..b9e519d 100644
 +        - name: mysql-persistent-storage
 +          persistentVolumeClaim:
 +            claimName: mysql-pv-claim
++  strategy:
++    type: Recreate
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index a300019..83e1463 100644
+index 693b8d4..3cbda32 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
-@@ -9,18 +9,19 @@
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
--apiVersion: v1 
-+apiVersion: v1
- kind: Service
- metadata:
--  name: wordpress
-+  annotations:
+@@ -16,15 +16,16 @@ metadata:
+   labels:
+     app: wordpress
+   annotations:
+-    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+-    teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
-   labels:
-     app: wordpress
--  annotations:
--    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
--    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+  name: wordpress
  spec:
-   ports:
+-  ports:
 -  - port: 80
-+    - port: 80
++  type: LoadBalancer
    selector:
      app: wordpress
      tier: frontend
-@@ -29,15 +30,16 @@ spec:
+-  type: LoadBalancer
++  ports:
++    - port: 80
+ ---
  apiVersion: v1
  kind: PersistentVolumeClaim
- metadata:
--  name: wp-pv-claim
-+  annotations:
+@@ -33,14 +34,15 @@ metadata:
+   labels:
+     app: wordpress
+   annotations:
+-    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+-    teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
-   labels:
-     app: wordpress
--  annotations:
--    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
--    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+  name: wp-pv-claim
  spec:
-   accessModes:
+-  accessModes:
 -  - ReadWriteOnce
-+    - ReadWriteOnce
    resources:
      requests:
        storage: 20Gi
-@@ -45,12 +47,13 @@ spec:
++  accessModes:
++    - ReadWriteOnce
+ ---
  apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
  kind: Deployment
- metadata:
--  name: wordpress
-+  annotations:
+@@ -49,39 +51,42 @@ metadata:
+   labels:
+     app: wordpress
+   annotations:
+-    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+-    teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
-   labels:
-     app: wordpress
--  annotations:
--    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
--    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+  name: wordpress
  spec:
    selector:
      matchLabels:
-@@ -60,28 +63,30 @@ spec:
-     type: Recreate
+       app: wordpress
+       tier: frontend
+-  strategy:
+-    type: Recreate
    template:
      metadata:
-+      annotations:
-+        abc: def
        labels:
          app: wordpress
          tier: frontend
++      annotations:
++        abc: def
      spec:
        containers:
 -      - image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
@@ -208,25 +191,26 @@ index a300019..83e1463 100644
 -              key: password
 -        ports:
 -        - containerPort: 80
-+        - env:
+-          name: wordpress
+-        volumeMounts:
+-        - name: wordpress-persistent-storage
+-          mountPath: /var/www/html
++        - name: wordpress
++          image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
++          ports:
++            - name: wordpress
++              containerPort: 80
++          env:
 +            - name: WORDPRESS_DB_HOST
 +              value: wordpress-mysql
 +            - name: WORDPRESS_DB_PASSWORD
 +              valueFrom:
 +                secretKeyRef:
-+                  key: password
 +                  name: mysql-pass
-+          image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
-           name: wordpress
--        volumeMounts:
--        - name: wordpress-persistent-storage
--          mountPath: /var/www/html
-+          ports:
-+            - containerPort: 80
-+              name: wordpress
++                  key: password
 +          volumeMounts:
-+            - mountPath: /var/www/html
-+              name: wordpress-persistent-storage
++            - name: wordpress-persistent-storage
++              mountPath: /var/www/html
        volumes:
 -      - name: wordpress-persistent-storage
 -        persistentVolumeClaim:
@@ -234,3 +218,5 @@ index a300019..83e1463 100644
 +        - name: wordpress-persistent-storage
 +          persistentVolumeClaim:
 +            claimName: wp-pv-claim
++  strategy:
++    type: Recreate
