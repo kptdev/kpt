@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
@@ -43,6 +44,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		Example:    docs.GetExamples,
 		RunE:       r.runE,
 		PreRunE:    r.preRunE,
+		PostRunE:   r.postRunE,
 		SuggestFor: []string{"clone", "cp", "fetch"},
 	}
 	cmdutil.FixDocs("kpt", parent, c)
@@ -96,5 +98,14 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return errors.E(op, types.UniquePath(r.Get.Destination), err)
 	}
 
+	return nil
+}
+
+func (r *Runner) postRunE(_ *cobra.Command, _ []string) error {
+	const op errors.Op = "cmdget.postRunE"
+	err := addmergecomment.Process(r.Get.Destination)
+	if err != nil {
+		return errors.E(op, types.UniquePath(r.Get.Destination), err)
+	}
 	return nil
 }

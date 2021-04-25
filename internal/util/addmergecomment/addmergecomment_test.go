@@ -1,0 +1,156 @@
+package addmergecomment
+
+import (
+	"io/ioutil"
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestAddMetadataComment(t *testing.T) {
+	var tests = []struct {
+		name     string
+		input    string
+		expected string
+		errMsg   string
+	}{
+		{
+			name: "Add kpt merge annotation with name and namespace",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: my-space
+spec:
+  replicas: 3
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata: # kpt-merge: my-space/nginx-deployment
+  name: nginx-deployment
+  namespace: my-space
+spec:
+  replicas: 3
+ `,
+		},
+		{
+			name: "Add kpt merge comment with name and no namespace",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata: # kpt-merge: default/nginx-deployment
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+		},
+		{
+			name: "Add kpt merge comment with name and no namespace",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata: # kpt-merge: default/nginx-deployment
+  name: nginx-deployment
+spec:
+  replicas: 3
+ `,
+		},
+		{
+			name: "Skip adding kpt merge comment if already present",
+			input: `
+apiVersion: apps/v1
+kind: Deployment
+metadata: # kpt-merge: my-space/nginx-deployment
+  name: nginx-deployment-new
+spec:
+  replicas: 3
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata: # kpt-merge: my-space/nginx-deployment
+  name: nginx-deployment-new
+spec:
+  replicas: 3
+ `,
+		},
+		{
+			name: "Skip adding kpt merge comment if already present",
+			input: `
+apiVersion: apps/v1
+kind: MyKind
+spec:
+  replicas: 3
+ `,
+			expected: `
+apiVersion: apps/v1
+kind: MyKind
+spec:
+  replicas: 3
+ `,
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			baseDir, err := ioutil.TempDir("", "")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			defer os.RemoveAll(baseDir)
+
+			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = Process(baseDir)
+			if test.errMsg != "" {
+				if !assert.NotNil(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), test.errMsg) {
+					t.FailNow()
+				}
+			}
+
+			if test.errMsg == "" && !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualResources, err := ioutil.ReadFile(r.Name())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t,
+				strings.TrimSpace(test.expected),
+				strings.TrimSpace(string(actualResources))) {
+				t.FailNow()
+			}
+		})
+	}
+}

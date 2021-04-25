@@ -16,6 +16,7 @@ package cmdget_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -24,9 +25,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -52,7 +55,11 @@ func TestCmd_execute(t *testing.T) {
 	err := r.Command.Execute()
 
 	assert.NoError(t, err)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest)
+	expected, cleanExpected := addMergeCommentToExpected(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1))
+	defer cleanExpected()
+
+	// verify the cloned contents matches the repository with merge comment added
+	g.AssertEqual(t, expected, dest)
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -110,7 +117,11 @@ func TestCmdMainBranch_execute(t *testing.T) {
 	err = r.Command.Execute()
 
 	assert.NoError(t, err)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest)
+	expected, cleanExpected := addMergeCommentToExpected(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1))
+	defer cleanExpected()
+
+	// verify the cloned contents matches the repository with merge comment added
+	g.AssertEqual(t, expected, dest)
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -379,9 +390,30 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			r.Command.SilenceErrors = true
 			r.Command.SilenceUsage = true
 			r.Command.RunE = tc.runE
+			r.Command.PostRunE = nil
 			r.Command.SetArgs(tc.argsFunc(g.RepoDirectory, w.WorkspaceDirectory))
 			err := r.Command.Execute()
 			tc.validations(g.RepoDirectory, w.WorkspaceDirectory, r, err)
 		})
 	}
+}
+
+// addMergeCommentToExpected copies the expected path directory contents to
+// new temp directory and adds merge comment to the resources in directory
+// it also returns the cleanup function to clean the created temp directory
+func addMergeCommentToExpected(t *testing.T, path string) (string, func()) {
+	expected, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+
+	err = copyutil.CopyDir(path, expected)
+	assert.NoError(t, err)
+
+	err = addmergecomment.Process(expected)
+	assert.NoError(t, err)
+
+	clean := func() {
+		os.RemoveAll(expected)
+	}
+
+	return expected, clean
 }
