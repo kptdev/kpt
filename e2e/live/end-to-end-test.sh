@@ -429,13 +429,33 @@ printResult
 echo "Testing init for Kptfile/ResourceGroup"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a
+${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile > $OUTPUT_DIR/status 2>&1
 assertContains "inventory:"
 assertContains "namespace: rg-test-namespace"
 assertContains "name: inventory-"
 assertContains "inventoryID:"
+printResult
+
+echo "Testing init Kptfile/ResourceGroup already initialized"
+echo "kpt live init e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...failed"
+assertContains "error: ResourceGroup configuration has already been created."
+printResult
+
+echo "Testing init force Kptfile/ResourceGroup"
+echo "kpt live init --force e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --force e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
+printResult
+
+echo "Testing init quiet Kptfile/ResourceGroup"
+echo "kpt live init --quiet e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertNotContains "initializing Kptfile inventory info"
 printResult
 
 # Test: Basic kpt live preview
