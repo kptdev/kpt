@@ -13,6 +13,7 @@ import (
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
 
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"sigs.k8s.io/cli-utils/pkg/apply"
@@ -58,6 +59,8 @@ func GetPreviewRunner(provider provider.Provider, loader manifestreader.Manifest
 	cmd.Flags().StringVar(&r.inventoryPolicy, flagutils.InventoryPolicyFlag, flagutils.InventoryPolicyStrict,
 		"It determines the behavior when the resources don't belong to current inventory. Available options "+
 			fmt.Sprintf("%q and %q.", flagutils.InventoryPolicyStrict, flagutils.InventoryPolicyAdopt))
+	cmd.Flags().BoolVar(&r.installCRD, "install-resource-group", false,
+		"If true, install the inventory ResourceGroup CRD before previewing.")
 
 	r.Command = cmd
 	return r
@@ -83,10 +86,31 @@ type PreviewRunner struct {
 	serverSideOptions common.ServerSideOptions
 	output            string
 	inventoryPolicy   string
+	installCRD        bool // Install the ResourceGroup CRD before previewing
 }
 
 // RunE is the function run from the cobra command.
 func (r *PreviewRunner) RunE(cmd *cobra.Command, args []string) error {
+	// Install the inventory ResourceGroup CRD prior to applying if
+	// the flag/option is present. Otherwise, check if the CRD exists
+	// and report a failure.
+	if r.installCRD {
+		fmt.Fprint(r.ioStreams.Out, "installing inventory ResourceGroup CRD...")
+		err := live.InstallResourceGroupCRD(r.provider.Factory())
+		if err == nil {
+			fmt.Fprintln(r.ioStreams.Out, "success")
+		} else {
+			fmt.Fprintln(r.ioStreams.Out, "failed")
+			fmt.Fprintln(r.ioStreams.Out, "run 'kpt live install-resource-group' to try again")
+			return err
+		}
+	} else if !live.ResourceGroupCRDApplied(r.provider.Factory()) {
+		// Otherwise, report the inventory ResourceGroup if missing.
+		fmt.Fprintln(r.ioStreams.Out, "inventory ResourceGroup CRD is missing")
+		fmt.Fprintln(r.ioStreams.Out, "run 'kpt live install-resource-group' to remedy")
+		// Do NOT return here, since it breaks legacy ConfigMap applies.
+	}
+
 	if len(args) == 0 {
 		// default to the current working directory
 		args = append(args, ".")

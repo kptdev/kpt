@@ -15,19 +15,30 @@
 package live
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/klog"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"k8s.io/kubectl/pkg/util"
+	"sigs.k8s.io/cli-utils/pkg/apply/event"
+	"sigs.k8s.io/cli-utils/pkg/apply/task"
+	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/object"
+	utilfactory "sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+const (
+	applyCRDTimeout      = 10 * time.Second
+	applyCRDPollInterval = 2 * time.Second
 )
 
 // ResourceGroupGVK is the group/version/kind of the custom
@@ -216,23 +227,109 @@ var crdGroupKind = schema.GroupKind{
 	Kind:  "CustomResourceDefinition",
 }
 
-// ApplyResourceGroupCRD applies the custom resource definition for the
-// ResourceGroup. The apiextensions version applied is based on the RESTMapping
-// returned by the RESTMapper. Returns an error if one occurs, including an
-// "Already Exists" error.
-func ApplyResourceGroupCRD(factory cmdutil.Factory) error {
-	// Create the mapping from the CustomResourceDefinision GroupKind.
+// ResourceGroupCRDApplied returns true if the inventory ResourceGroup
+// CRD is available from the current RESTMapper, or false otherwise.
+func ResourceGroupCRDApplied(factory cmdutil.Factory) bool {
 	mapper, err := factory.ToRESTMapper()
 	if err != nil {
-		return err
+		klog.V(4).Infof("error retrieving RESTMapper when checking ResourceGroup CRD: %s\n", err)
+		return false
 	}
+	_, err = mapper.RESTMapping(ResourceGroupGVK.GroupKind())
+	if err != nil {
+		klog.V(7).Infof("error retrieving ResourceGroup RESTMapping: %s\n", err)
+		return false
+	}
+	return true
+}
+
+// InstallResourceGroupCRD applies the custom resource definition for the
+// ResourceGroup by creating and running a TaskQueue of Tasks necessary.
+// The Tasks are 1) Apply CRD task, 2) Wait Task (for CRD to become
+// established), and 3) Reset RESTMapper task. Returns an error if
+// a non-"AlreadyExists" error is returned on the event channel.
+// Runs the CRD installation in a separate goroutine (timeout
+// ensures no hanging).
+func InstallResourceGroupCRD(factory cmdutil.Factory) error {
+	eventChannel := make(chan event.Event)
+	go func() {
+		defer close(eventChannel)
+		mapper, err := factory.ToRESTMapper()
+		if err != nil {
+			handleError(eventChannel, err)
+			return
+		}
+		crd, err := rgCRD(mapper)
+		if err != nil {
+			handleError(eventChannel, err)
+			return
+		}
+		// Create the task to apply the ResourceGroup CRD.
+		applyRGTask := NewApplyCRDTask(factory, crd)
+		objs := object.UnstructuredsToObjMetas([]*unstructured.Unstructured{crd})
+		// Create the tasks to apply the ResourceGroup CRD.
+		tasks := []taskrunner.Task{
+			applyRGTask,
+			taskrunner.NewWaitTask(
+				objs,
+				taskrunner.AllCurrent,
+				applyCRDTimeout),
+			&task.ResetRESTMapperTask{
+				Mapper: mapper,
+			},
+		}
+		// Create the task queue channel, and send tasks in order into the channel.
+		taskQueue := make(chan taskrunner.Task, len(tasks))
+		for _, t := range tasks {
+			taskQueue <- t
+		}
+		statusPoller, err := utilfactory.NewStatusPoller(factory)
+		if err != nil {
+			handleError(eventChannel, err)
+			return
+		}
+		// Run the task queue.
+		runner := taskrunner.NewTaskStatusRunner(objs, statusPoller)
+		err = runner.Run(context.Background(), taskQueue, eventChannel, taskrunner.Options{
+			PollInterval:     applyCRDPollInterval,
+			UseCache:         true,
+			EmitStatusEvents: true,
+		})
+		if err != nil {
+			handleError(eventChannel, err)
+			return
+		}
+	}()
+
+	// Return the error on the eventChannel if it exists; return
+	// closes the channel. "AlreadyExists" is NOT an error.
+	for e := range eventChannel {
+		if e.Type == event.ErrorType {
+			err := e.ErrorEvent.Err
+			if !apierrors.IsAlreadyExists(err) {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// handleError sends an error onto the event channel.
+func handleError(eventChannel chan event.Event, err error) {
+	eventChannel <- event.Event{
+		Type: event.ErrorType,
+		ErrorEvent: event.ErrorEvent{
+			Err: err,
+		},
+	}
+}
+
+// rgCRD returns the ResourceGroup CRD in Unstructured format or an error.
+func rgCRD(mapper meta.RESTMapper) (*unstructured.Unstructured, error) {
 	mapping, err := mapper.RESTMapping(crdGroupKind)
 	if err != nil {
-		return err
-	}
-	client, err := factory.UnstructuredClientForMapping(mapping)
-	if err != nil {
-		return err
+		return nil, err
 	}
 	// mapping contains the full GVK version, which is used to determine
 	// the version of the ResourceGroup CRD to create. We have defined the
@@ -242,23 +339,13 @@ func ApplyResourceGroupCRD(factory cmdutil.Factory) error {
 	rgCRDStr, ok := resourceGroupCRDs[version]
 	if !ok {
 		klog.V(4).Infof("ResourceGroup CRD version %s not found", version)
-		return err
+		return nil, err
 	}
 	crd, err := stringToUnstructured(rgCRDStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// Set the "last-applied-annotation" so future applies work correctly.
-	if err := util.CreateApplyAnnotation(crd, unstructured.UnstructuredJSONScheme); err != nil {
-		return err
-	}
-	// Apply the CRD to the cluster and ignore already exists error.
-	var clearResourceVersion = false
-	var emptyNamespace = ""
-	helper := resource.NewHelper(client, mapping)
-	klog.V(4).Infoln("applying ResourceGroup CRD...")
-	_, err = helper.Create(emptyNamespace, clearResourceVersion, crd)
-	return err
+	return crd, nil
 }
 
 // stringToUnstructured transforms a single resource represented by

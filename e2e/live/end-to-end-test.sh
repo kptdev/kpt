@@ -401,6 +401,55 @@ downloadPreviousKpt
 echo
 set +e                          # Do not stop the test for errors
 
+#############################################################
+#  Tests without initial ResourceGroup inventory installation
+#############################################################
+
+createTestSuite
+waitForDefaultServiceAccount
+
+# Basic init as setup for follow-on tests
+# Test: Preview without ResourceGroup CRD installation fails
+echo "[ResourceGroup] Testing initial preview without ResourceGroup inventory CRD"
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
+${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a
+echo "kpt live preview e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live preview e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertContains "inventory ResourceGroup CRD is missing"
+assertContains "run 'kpt live install-resource-group' to remedy"
+printResult
+
+# Test: Apply without ResourceGroup CRD installation fails
+echo "[ResourceGroup] Testing basic apply without ResourceGroup inventory CRD"
+echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertContains "inventory ResourceGroup CRD is missing"
+assertContains "run 'kpt live install-resource-group' to remedy"
+printResult
+
+# Test: Apply forcing ResourceGroup CRD installation succeeds
+echo "[ResourceGroup] Testing create inventory CRD before basic apply"
+echo "kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertContains "namespace/rg-test-namespace"
+assertContains "pod/pod-a created"
+assertContains "pod/pod-b created"
+assertContains "pod/pod-c created"
+assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
+assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
+wait 2
+# Validate resources in the cluster
+# ConfigMap inventory with four inventory items.
+assertRGInventory "rg-test-namespace" "4"
+printResult
+
+# Cleanup by resetting Kptfile
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
+
+###########################################################
+#  Tests operations with ResourceGroup inventory CRD
+###########################################################
+
 createTestSuite
 waitForDefaultServiceAccount
 
@@ -412,7 +461,7 @@ kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
 assertContains "error: the server doesn't have a resource type \"resourcegroups\""
 # Next, add the ResourceGroup CRD
 ${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status
-assertContains "installing ResourceGroup custom resource definition...success"
+assertContains "installing inventory ResourceGroup CRD...success"
 kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
 assertContains "No resources found"
 # Add a simple ResourceGroup custom resource, and verify it exists in the cluster.
@@ -422,7 +471,7 @@ kubectl get resourcegroups.kpt.dev --no-headers > $OUTPUT_DIR/status
 assertContains "example-inventory"
 # Finally, add the ResourceGroup CRD again, and check it says it already exists.
 ${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status 2>&1
-assertContains "...already installed...success"
+assertContains "...success"
 printResult
 
 # Test: Basic Kptfile/ResourceGroup inititalizing inventory info
@@ -802,7 +851,7 @@ assertPodExists "pod-c" "test-rg-namespace"
 assertRGInventory "test-rg-namespace"
 # Run it again, and validate the output
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
-assertContains "ensuring ResourceGroup CRD exists in cluster...already installed...success"
+assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "retrieve the current ConfigMap inventory...no ConfigMap inventory...completed"
 assertContains "inventory migration...success"
 printResult
