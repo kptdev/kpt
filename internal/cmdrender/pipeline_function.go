@@ -34,22 +34,16 @@ import (
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(
-	ctx context.Context,
-	f *kptfilev1alpha2.Function,
-	pkgPath types.UniquePath,
-	truncateOutput bool,
-) (kio.Filter, error) {
+func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 
 	cfn := &runtime.ContainerFn{
-		Path:           pkgPath,
-		Image:          f.Image,
-		Ctx:            ctx,
-		TruncateOutput: truncateOutput,
+		Path:  pkgPath,
+		Image: f.Image,
+		Ctx:   ctx,
 	}
 
 	return &runtimeutil.FunctionFilter{

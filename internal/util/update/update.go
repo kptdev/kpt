@@ -198,7 +198,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	g := kf.Upstream.Git
 
 	pr := printer.FromContextOrDie(ctx)
-	pr.Printf("updating package %s from %s/%s@%s\n",
+	pr.Printf(nil, "updating package %s from %s/%s@%s\n",
 		filepath.Base(p.UniquePath.String()), g.Repo, g.Directory, g.Ref)
 
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
@@ -236,7 +236,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 		if relPath == "." {
 			isRoot = true
 		} else {
-			pr.Printf("updating subpackage %s\n", relPath)
+			pr.Printf(nil, "updating subpackage %s\n", relPath)
 		}
 
 		if err := u.updatePackage(relPath, localPath, updatedPath, originPath, isRoot); err != nil {

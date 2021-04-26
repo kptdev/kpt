@@ -35,10 +35,11 @@ import (
 
 // Executor hydrates a given pkg.
 type Executor struct {
-	PkgPath        string
-	Printer        printer.Printer
-	TruncateOutput bool
+	PkgPath string
+	Printer printer.Printer
 }
+
+var executedFunctionCnt = 0
 
 // Execute runs a pipeline.
 func (e *Executor) Execute(ctx context.Context) error {
@@ -57,7 +58,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		pkgs: map[types.UniquePath]*pkgNode{},
 	}
 
-	resources, err := hydrate(ctx, root, hctx, e.TruncateOutput)
+	resources, err := hydrate(ctx, root, hctx)
 	if err != nil {
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
@@ -76,7 +77,8 @@ func (e *Executor) Execute(ctx context.Context) error {
 		return err
 	}
 
-	pr.PkgPrintf(root.pkg.UniquePath, "rendered successfully\n")
+	pr.Printf(nil, "Successfully executed %d function(s) in %d package(s).\n", executedFunctionCnt, len(hctx.pkgs))
+	// TODO: Output the complete result file path here
 	return nil
 }
 
@@ -162,7 +164,7 @@ func (s hydrationState) String() string {
 }
 
 // hydrate hydrates given pkg and returns wet resources.
-func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext, truncateOutput bool) (output []*yaml.RNode, err error) {
+func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
 	const op errors.Op = "pkg.render"
 
 	curr, found := hctx.pkgs[pn.pkg.UniquePath]
@@ -207,7 +209,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext, truncateO
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
 
-		transitiveResources, err = hydrate(ctx, subPkgNode, hctx, truncateOutput)
+		transitiveResources, err = hydrate(ctx, subPkgNode, hctx)
 		if err != nil {
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
@@ -235,7 +237,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext, truncateO
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
 
-	output, err = curr.runPipeline(ctx, input, truncateOutput)
+	output, err = curr.runPipeline(ctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
@@ -254,10 +256,11 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext, truncateO
 }
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
-func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode, truncateOutput bool) ([]*yaml.RNode, error) {
+func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
 	pr := printer.FromContextOrDie(ctx)
-	pr.Printf("Package %q:\n", pn.pkg.DisplayPath)
+	// we only print package name here
+	pr.Printf(printer.NewOpt().WithPkgPath(pn.pkg.UniquePath), "\n\n")
 
 	if len(input) == 0 {
 		return nil, nil
@@ -272,7 +275,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode, truncat
 		return input, nil
 	}
 
-	fnChain, err := fnChain(ctx, pl, pn.pkg.UniquePath, truncateOutput)
+	fnChain, err := fnChain(ctx, pl, pn.pkg.UniquePath)
 	if err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
@@ -290,6 +293,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode, truncat
 	if err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
+	executedFunctionCnt += len(fnChain)
+	// print a new line after a pipeline running
+	pr.Printf(nil, "\n")
 	return output.Nodes, nil
 }
 
@@ -323,7 +329,7 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 
 // fnChain returns a slice of function runners from the
 // functions and configs defined in pipeline.
-func fnChain(ctx context.Context, pl *kptfilev1alpha2.Pipeline, pkgPath types.UniquePath, truncateOutput bool) ([]kio.Filter, error) {
+func fnChain(ctx context.Context, pl *kptfilev1alpha2.Pipeline, pkgPath types.UniquePath) ([]kio.Filter, error) {
 	fns := []kptfilev1alpha2.Function{}
 	fns = append(fns, pl.Mutators...)
 	// TODO: Validators cannot modify resources.
@@ -331,7 +337,7 @@ func fnChain(ctx context.Context, pl *kptfilev1alpha2.Pipeline, pkgPath types.Un
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFnRunner(ctx, &fn, pkgPath, truncateOutput)
+		r, err := newFnRunner(ctx, &fn, pkgPath)
 		if err != nil {
 			return nil, err
 		}

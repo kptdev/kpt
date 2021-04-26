@@ -15,4 +15,4 @@
 exitCode: 1
 disableOutputTruncate: true
 stdErr: "failed to configure function: function config must be a ConfigMap or SetLabelConfig"
-stdOut: "[RUNNING] \"gcr.io/kpt-fn/set-label:unstable\"\n  [FAIL] \"gcr.io/kpt-fn/set-label:unstable\""
+stdOut: "[RUNNING] \"gcr.io/kpt-fn/set-label:unstable\"\n[FAIL] \"gcr.io/kpt-fn/set-label:unstable\""

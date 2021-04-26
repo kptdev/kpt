@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnoutput
+package printer
 
 import (
 	"testing"
@@ -31,7 +31,7 @@ func TestFnFailureString(t *testing.T) {
 			name:      "no truncate - empty stderr",
 			fnFailure: FnFailure{},
 			expected: `Stderr:
-  
+  ""
 Exit Code: 0
 `,
 		},
@@ -43,8 +43,8 @@ error message2`,
 				ExitCode: 1,
 			},
 			expected: `Stderr:
-  error message1
-  error message2
+  "error message1"
+  "error message2"
 Exit Code: 1
 `,
 		},
@@ -59,11 +59,11 @@ error message`,
 				ExitCode: 1,
 			},
 			expected: `Stderr:
-  error message
-  error message
-  error message
-  error message
-  error message
+  "error message"
+  "error message"
+  "error message"
+  "error message"
+  "error message"
 Exit Code: 1
 `,
 		},
@@ -78,10 +78,10 @@ error message`,
 			},
 			truncate: true,
 			expected: `Stderr:
-  error message
-  error message
-  error message
-  error message
+  "error message"
+  "error message"
+  "error message"
+  "error message"
 Exit Code: 1
 `,
 		},
@@ -97,10 +97,10 @@ error message`,
 			},
 			truncate: true,
 			expected: `Stderr:
-  error message
-  error message
-  error message
-  error message
+  "error message"
+  "error message"
+  "error message"
+  "error message"
   ...(1 line(s) truncated)
 Exit Code: 1
 `,
@@ -120,10 +120,10 @@ error message`,
 			},
 			truncate: true,
 			expected: `Stderr:
-  error message
-  error message
-  error message
-  error message
+  "error message"
+  "error message"
+  "error message"
+  "error message"
   ...(4 line(s) truncated)
 Exit Code: 1
 `,
@@ -132,8 +132,8 @@ Exit Code: 1
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			s, err := tc.fnFailure.String(tc.truncate)
-			assert.NoError(t, err)
+			DisableOutputTruncate = !tc.truncate
+			s := tc.fnFailure.String()
 			assert.EqualValues(t, tc.expected, s)
 		})
 	}

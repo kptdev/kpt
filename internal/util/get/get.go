@@ -120,7 +120,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
 			if rootPkg.UniquePath != p.UniquePath {
-				pr.Printf("fetching subpackage %s from %s to %s\n",
+				pr.Printf(nil, "fetching subpackage %s from %s to %s\n",
 					kf.Upstream.Git.Directory, kf.Upstream.Git.Repo, p.UniquePath)
 			}
 			err := (&fetch.Command{

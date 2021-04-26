@@ -25,14 +25,64 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
+const (
+	fnFailureTruncateLines = 4
+	// FnFailureIndentation is the number of spaces at the beginning of each
+	// line of function failure messages.
+	FnFailureIndentation = 2
+	// FnIndentation is the number of spaces at the beginning of each line of
+	// function running progress.
+	FnIndentation = 0
+)
+
+// DisableOutputTruncate defines should output be truncated
+var DisableOutputTruncate bool
+
 // Printer defines capabilities to display content in kpt CLI.
 // The main intention, at the moment, is to abstract away printing
 // output in the CLI so that we can evolve the kpt CLI UX.
 type Printer interface {
-	PkgPrintf(pkgPath types.UniquePath, format string, args ...interface{})
-	Printf(format string, args ...interface{})
-	IndentPrintf(indentation int, format string, a ...interface{})
-	IndentPrintfE(indentation int, format string, a ...interface{})
+	Printf(opt *Options, format string, args ...interface{})
+	PrintPrintable(opt *Options, p Printable)
+}
+
+type Printable interface {
+	String() string
+}
+
+// Options are optional options for printer
+type Options struct {
+	// Indetation is the number of spaces added at the beginning
+	// of each line
+	Indentation int
+	// Stderr indicates should output be printed to stderr instead
+	// of stdout
+	Stderr bool
+	// PkgPath is the unique path to the package
+	PkgPath types.UniquePath
+}
+
+// NewOpt returns a pointer to new options
+func NewOpt() *Options {
+	return &Options{}
+}
+
+// WithPkgPath sets the package path in options
+func (opt *Options) WithPkgPath(p types.UniquePath) *Options {
+	opt.PkgPath = p
+	return opt
+}
+
+// WithIndentation sets the output indentation in options
+func (opt *Options) WithIndentation(i int) *Options {
+	opt.Indentation = i
+	return opt
+}
+
+// WithPkgPath sets output to stderr in options
+func (opt *Options) WithStderr(b bool) *Options {
+	opt.Stderr = b
+	return opt
 }
 
 // New returns an instance of Printer.
@@ -55,20 +105,6 @@ type printer struct {
 	errStream io.Writer
 }
 
-// PkgPrintf accepts an optional pkgpath to display the message with
-// package context.
-func (pr *printer) PkgPrintf(pkgPath types.UniquePath, format string, args ...interface{}) {
-	// try to print relative path of the pkg if we can else use abs path
-	relPath, err := pkgPath.RelativePath()
-	if err != nil {
-		relPath = string(pkgPath)
-	}
-	if string(pkgPath) != "" {
-		format = fmt.Sprintf("package %q: ", relPath) + format
-	}
-	fmt.Fprintf(pr.outStream, format, args...)
-}
-
 // The key type is unexported to prevent collisions with context keys defined in
 // other packages.
 type contextKey int
@@ -78,22 +114,36 @@ type contextKey int
 // different integer values.
 const printerKey contextKey = 0
 
-// Printf is the wrapper over fmt.Printf that displays the output to
-// the configured output writer.
-func (pr *printer) Printf(format string, args ...interface{}) {
-	fmt.Fprintf(pr.outStream, format, args...)
+// PrintPrintable prints a printable object according to opt
+func (pr *printer) PrintPrintable(opt *Options, p Printable) {
+	pr.Printf(opt, p.String())
 }
 
-// IndentPrintf formats according to a format specifier and writes to stdout.
-// It will add specified indentations to each line of the string.
-func (pr *printer) IndentPrintf(indentation int, format string, a ...interface{}) {
-	indentPrintf(pr.outStream, indentation, format, a...)
-}
-
-// IndentPrintfE formats according to a format specifier and writes to stderr.
-// It will add specified indentations to each line of the string.
-func (pr *printer) IndentPrintfE(indentation int, format string, a ...interface{}) {
-	indentPrintf(pr.errStream, indentation, format, a...)
+// Printf is the wrapper over fmt.Printf that displays the output according
+// to the opt.
+func (pr *printer) Printf(opt *Options, format string, args ...interface{}) {
+	if opt == nil {
+		fmt.Fprintf(pr.outStream, format, args...)
+		return
+	}
+	o := pr.outStream
+	if opt.Stderr {
+		o = pr.errStream
+	}
+	if !opt.PkgPath.Empty() {
+		// try to print relative path of the pkg if we can else use abs path
+		relPath, err := opt.PkgPath.RelativePath()
+		if err != nil {
+			relPath = string(opt.PkgPath)
+		}
+		format = fmt.Sprintf("Package %q: ", relPath) + format
+	}
+	if opt.Indentation != 0 {
+		// we need to add indentation to each line
+		indentPrintf(o, opt.Indentation, format, args...)
+		return
+	}
+	fmt.Fprintf(o, format, args...)
 }
 
 func indentPrintf(w io.Writer, indentation int, format string, a ...interface{}) {
@@ -113,6 +163,46 @@ func indentPrintf(w io.Writer, indentation int, format string, a ...interface{})
 			fmt.Fprint(w, strings.Repeat(" ", indentation)+l+newline)
 		}
 	}
+}
+
+// FnFailure contains the information about the function failure that will
+// be outputted.
+type FnFailure struct {
+	// Stderr is the content written to function stderr
+	Stderr string `yaml:"stderr,omitempty"`
+	// ExitCode is the exit code returned from function
+	ExitCode int `yaml:"exitCode,omitempty"`
+	// TODO: add Results after structured results are supported
+}
+
+// String returns string representation of the failure. truncate is used
+// to control whether the contents will be truncated.
+func (ff *FnFailure) String() string {
+	var b strings.Builder
+	b.WriteString("Stderr:\n")
+
+	lineIndent := strings.Repeat(" ", 2)
+	if DisableOutputTruncate {
+		// stderr string should have indentations
+		for _, s := range strings.Split(ff.Stderr, "\n") {
+			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
+		}
+	} else {
+		printedLines := 0
+		lines := strings.Split(ff.Stderr, "\n")
+		for i, s := range lines {
+			if i >= fnFailureTruncateLines {
+				break
+			}
+			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
+			printedLines++
+		}
+		if printedLines < len(lines) {
+			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated)\n", len(lines)-printedLines))
+		}
+	}
+	b.WriteString(fmt.Sprintf("Exit Code: %d\n", ff.ExitCode))
+	return b.String()
 }
 
 // Helper functions to set and retrieve printer instance from a context.

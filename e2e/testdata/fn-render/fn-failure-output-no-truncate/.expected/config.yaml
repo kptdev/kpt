@@ -17,4 +17,4 @@
 exitCode: 1
 disableOutputTruncate: true
 stdErr: "ERR  - stdin: Failed initializing schema file:///tmp/master-standalone-strict/custom-custom-v1.json: open /tmp/master-standalone-strict/custom-custom-v1.json: no such file or directory"
-stdOut: "[RUNNING] \"gcr.io/kpt-fn/kubeval:v0.1\"\n  [FAIL] \"gcr.io/kpt-fn/kubeval:v0.1\""
+stdOut: "[RUNNING] \"gcr.io/kpt-fn/kubeval:v0.1\"\n[FAIL] \"gcr.io/kpt-fn/kubeval:v0.1\""
