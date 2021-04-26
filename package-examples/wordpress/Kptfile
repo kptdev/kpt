@@ -3,9 +3,8 @@ kind: Kptfile
 metadata:
   name: wordpress
 info:
-  site: https://github.com/GoogleContainerTools/kpt
   description: This is an example wordpress package with mysql subpackage
-  email:
+  emails:
   - kpt-team@google.com
 pipeline:
   mutators:
