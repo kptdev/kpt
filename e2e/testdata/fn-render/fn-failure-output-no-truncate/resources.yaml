@@ -12,6 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-exitCode: 1
-stdErr: 'fn gcr.io/kpt-fn/set-label:unstable: missing function config "labelconfig1.yaml"'
-stdOut: "[RUNNING] \"gcr.io/kpt-fn/set-label:unstable\"\n  [PASS] \"gcr.io/kpt-fn/set-label:unstable\""
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: invalid
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+  name: custom
+spec:
+  image: nginx:1.2.3

@@ -14,4 +14,4 @@
 
 exitCode: 1
 stdErr: "statefulset-filter:5:1: got newline, want primary expression"
-stdOut: "running function \"gcr.io/kpt-fn/starlark:unstable\": FAILED"
+stdOut: "[RUNNING] \"gcr.io/kpt-fn/starlark:unstable\"\n  [FAIL] \"gcr.io/kpt-fn/starlark:unstable\""

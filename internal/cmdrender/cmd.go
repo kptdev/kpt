@@ -38,6 +38,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
+	r.Command.Flags().BoolVar(&r.disableOutputTruncate, "disable-output-truncate",
+		false, "Disable the truncation for function error output")
 	return r
 }
 
@@ -47,9 +49,10 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function pipeline run command
 type Runner struct {
-	pkgPath string
-	Command *cobra.Command
-	ctx     context.Context
+	pkgPath               string
+	Command               *cobra.Command
+	ctx                   context.Context
+	disableOutputTruncate bool
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -75,7 +78,8 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 	executor := Executor{
-		PkgPath: r.pkgPath,
+		PkgPath:        r.pkgPath,
+		TruncateOutput: !r.disableOutputTruncate,
 	}
 	if err = executor.Execute(r.ctx); err != nil {
 		return err

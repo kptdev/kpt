@@ -14,4 +14,4 @@
 
 exitCode: 1
 stdErr: "failed to configure function: function config must be a ConfigMap or SetLabelConfig"
-stdOut: "running function \"gcr.io/kpt-fn/set-label:unstable\": FAILED"
+stdOut: "[RUNNING] \"gcr.io/kpt-fn/set-label:unstable\"\n  [FAIL] \"gcr.io/kpt-fn/set-label:unstable\""

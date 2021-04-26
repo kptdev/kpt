@@ -80,6 +80,9 @@ type TestCaseConfig struct {
 	// Default: 'eval'
 	TestType string `json:"testType,omitempty" yaml:"testType,omitempty"`
 
+	// DisableOutputTruncate indicates should error output be truncated
+	DisableOutputTruncate bool `json:"disableOutputTruncate,omitempty" yaml:"disableOutputTruncate,omitempty"`
+
 	// EvalConfig is the configs for eval tests
 	EvalConfig *EvalTestCaseConfig `json:",inline" yaml:",inline"`
 }

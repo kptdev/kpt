@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
@@ -30,6 +31,8 @@ import (
 type Printer interface {
 	PkgPrintf(pkgPath types.UniquePath, format string, args ...interface{})
 	Printf(format string, args ...interface{})
+	IndentPrintf(indentation int, format string, a ...interface{})
+	IndentPrintfE(indentation int, format string, a ...interface{})
 }
 
 // New returns an instance of Printer.
@@ -79,6 +82,37 @@ const printerKey contextKey = 0
 // the configured output writer.
 func (pr *printer) Printf(format string, args ...interface{}) {
 	fmt.Fprintf(pr.outStream, format, args...)
+}
+
+// IndentPrintf formats according to a format specifier and writes to stdout.
+// It will add specified indentations to each line of the string.
+func (pr *printer) IndentPrintf(indentation int, format string, a ...interface{}) {
+	indentPrintf(pr.outStream, indentation, format, a...)
+}
+
+// IndentPrintfE formats according to a format specifier and writes to stderr.
+// It will add specified indentations to each line of the string.
+func (pr *printer) IndentPrintfE(indentation int, format string, a ...interface{}) {
+	indentPrintf(pr.errStream, indentation, format, a...)
+}
+
+func indentPrintf(w io.Writer, indentation int, format string, a ...interface{}) {
+	s := fmt.Sprintf(format, a...)
+	lines := strings.Split(s, "\n")
+	for i, l := range lines {
+		// don't add newline for last line to respect the original input
+		// format
+		newline := "\n"
+		if i == len(lines)-1 {
+			newline = ""
+		}
+		if l == "" {
+			// don't print indentation when the line is empty
+			fmt.Fprint(w, newline)
+		} else {
+			fmt.Fprint(w, strings.Repeat(" ", indentation)+l+newline)
+		}
+	}
 }
 
 // Helper functions to set and retrieve printer instance from a context.

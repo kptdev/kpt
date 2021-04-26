@@ -24,15 +24,18 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/fnoutput"
 )
 
 // containerNetworkName is a type for network name used in container
 type containerNetworkName string
 
 const (
-	networkNameNone containerNetworkName = "none"
-	networkNameHost containerNetworkName = "host"
-	defaultTimeout  time.Duration        = 5 * time.Minute
+	networkNameNone     containerNetworkName = "none"
+	networkNameHost     containerNetworkName = "host"
+	defaultTimeout      time.Duration        = 5 * time.Minute
+	fnIdentation                             = 2
+	fnFailureIdentation                      = 4
 )
 
 // ContainerFnPermission contains the permission of container
@@ -50,8 +53,9 @@ type ContainerFn struct {
 	Image string
 	// Container function will be killed after this timeour.
 	// The default value is 5 minutes.
-	Timeout time.Duration
-	Perm    ContainerFnPermission
+	Timeout        time.Duration
+	Perm           ContainerFnPermission
+	TruncateOutput bool
 }
 
 // Run runs the container function using docker runtime.
@@ -66,12 +70,28 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	cmd.Stdout = writer
 	cmd.Stderr = &errSink
 
-	pr.PkgPrintf(f.Path, "running function %q: ", f.Image)
+	pr.IndentPrintf(fnIdentation, "[RUNNING] %q\n", f.Image)
 	if err := cmd.Run(); err != nil {
-		pr.Printf("FAILED\n")
-		return fmt.Errorf("%s", errSink.String())
+		pr.IndentPrintf(fnIdentation, "[FAIL] %q\n", f.Image)
+		var exitCode int
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		} else {
+			return fmt.Errorf("cannot get function exit code: %w", err)
+		}
+		ff := fnoutput.FnFailure{
+			ExitCode: exitCode,
+			Stderr:   errSink.String(),
+		}
+		errStr, err := ff.String(f.TruncateOutput)
+		if err != nil {
+			return fmt.Errorf("failed to get function output string: %w", err)
+		}
+		pr.IndentPrintfE(fnFailureIdentation, errStr)
+		// TODO: write complete details to a file
+		return fmt.Errorf("function %q failed", f.Image)
 	}
-	pr.Printf("SUCCESS\n")
+	pr.IndentPrintf(fnIdentation, "[PASS] %q\n", f.Image)
 	return nil
 }
 

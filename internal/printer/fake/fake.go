@@ -29,6 +29,10 @@ func (np *NilPrinter) PkgPrintf(types.UniquePath, string, ...interface{}) {}
 
 func (np *NilPrinter) Printf(string, ...interface{}) {}
 
+func (np *NilPrinter) IndentPrintf(indentation int, format string, a ...interface{}) {}
+
+func (np *NilPrinter) IndentPrintfE(indentation int, format string, a ...interface{}) {}
+
 // CtxWithNilPrinter returns a new context with the NilPrinter added.
 func CtxWithNilPrinter() context.Context {
 	ctx := context.Background()

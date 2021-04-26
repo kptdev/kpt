@@ -14,4 +14,4 @@
 
 exitCode: 1
 stdErr: "missing Resource metadata"
-stdOut: "running function \"gcr.io/kpt-fn/set-namespace:unstable\": SUCCESS"
+stdOut: "[RUNNING] \"gcr.io/kpt-fn/set-namespace:unstable\"\n  [PASS] \"gcr.io/kpt-fn/set-namespace:unstable\""

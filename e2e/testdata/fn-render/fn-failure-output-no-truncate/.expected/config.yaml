@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# One of the functions in the pipeline fails resulting in
+# non-zero exit code and no changes in the resources.
 exitCode: 1
-stdErr: 'fn gcr.io/kpt-fn/set-label:unstable: missing function config "labelconfig1.yaml"'
-stdOut: "[RUNNING] \"gcr.io/kpt-fn/set-label:unstable\"\n  [PASS] \"gcr.io/kpt-fn/set-label:unstable\""
+disableOutputTruncate: true
+stdErr: "ERR  - stdin: Failed initializing schema file:///tmp/master-standalone-strict/custom-custom-v1.json: open /tmp/master-standalone-strict/custom-custom-v1.json: no such file or directory"
+stdOut: "[RUNNING] \"gcr.io/kpt-fn/kubeval:v0.1\"\n  [FAIL] \"gcr.io/kpt-fn/kubeval:v0.1\""

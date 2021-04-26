@@ -205,6 +205,9 @@ func (r *Runner) runFnRender() error {
 
 	// run function
 	kptArgs := []string{"fn", "render", pkgPath}
+	if r.testCase.Config.DisableOutputTruncate {
+		kptArgs = append(kptArgs, "--disable-output-truncate")
+	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
 		// Update the diff file or results file if updateExpectedEnv is set.
