@@ -96,6 +96,7 @@
         issueIcon.classList.add("material-icons");
         const createIssue = document.createElement("a");
         createIssue.target = "_blank";
+        createIssue.title = "Create documentation issue";
         createIssue.appendChild(issueIcon);
 
         const editIcon = document.createElement("span");
@@ -103,6 +104,7 @@
         editIcon.classList.add("material-icons");
         const editPage = document.createElement("a");
         editPage.target = "_blank";
+        editPage.target = "Edit this page";
         editPage.appendChild(editIcon);
 
         // Refresh widget links.
