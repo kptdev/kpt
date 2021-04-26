@@ -15,6 +15,10 @@
       href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
     />
     <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/asciinema-player@2.6.1/resources/public/css/asciinema-player.css"
     />
@@ -68,10 +72,10 @@
             // Add title to book Markdown pages based on directory structure.
             hook.beforeEach(processBookPageTitle);
 
-            addGitHubWidget(hook);
-
             // Show navigation footer for book pages.
             hook.doneEach(showBookPageFooters);
+
+            addGitHubWidget(hook);
 
             // Process elements in the navigation sidebar.
             hook.doneEach(function () {
@@ -87,40 +91,33 @@
       };
 
       function addGitHubWidget(hook) {
-        const githubWidget = document.createElement("div");
+        const issueIcon = document.createElement("span");
+        issueIcon.innerText = "bug_report";
+        issueIcon.classList.add("material-icons");
+        const createIssue = document.createElement("a");
+        createIssue.target = "_blank";
+        createIssue.appendChild(issueIcon);
 
-        // Initialize widget.
-        hook.mounted(function () {
-          githubWidget.classList.add("sidebar-nav", "github-widget");
-          githubWidget.appendChild(document.createElement("ul"));
-          document
-            .getElementsByClassName("sidebar")
-            .item(0)
-            .appendChild(githubWidget);
-        });
+        const editIcon = document.createElement("span");
+        editIcon.innerText = "edit";
+        editIcon.classList.add("material-icons");
+        const editPage = document.createElement("a");
+        editPage.target = "_blank";
+        editPage.appendChild(editIcon);
 
         // Refresh widget links.
         hook.doneEach(function () {
-          const ul = document.createElement("ul");
-          const createIssue = document.createElement("a");
-          createIssue.target = "_blank";
-          createIssue.innerText = "Create documentation issue";
           createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title}`;
 
-          const editPage = document.createElement("a");
-          editPage.target = "_blank";
-          editPage.innerText = "Edit this page";
           let path = document.location.pathname;
           path += path.endsWith("/") ? "README.md" : ".md";
           editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/next/site${path}`;
 
-          ul.appendChild(createIssue);
-          ul.appendChild(editPage);
-          document
-            .getElementsByClassName("github-widget")
-            .item(0)
-            .children.item(0)
-            .replaceWith(ul);
+          const container = document.createElement("div");
+          container.classList.add("github-widget");
+          container.appendChild(createIssue);
+          container.appendChild(editPage);
+          document.getElementById("main").appendChild(container);
         });
       }
 
@@ -281,9 +278,13 @@
       margin-left: var(--sidebar-nav-indent);
     }
 
-    .sidebar .github-widget {
-      bottom: 0;
-      position: absolute;
+    .docsify-pagination-container {
+      margin-bottom: -24px;
+    }
+
+    .github-widget {
+      display: flex;
+      justify-content: center;
     }
 
     .pagination-item-label {
