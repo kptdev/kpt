@@ -133,12 +133,12 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: mysql
-setterDefinitions:
-  replicas:
-    description: "replica setter"
-    type: integer
-setterValues:
-  replicas: 5`,
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        replicas: 5
+`,
 				`
 apiVersion: kpt.dev/v1alpha2
 kind: Pipeline
