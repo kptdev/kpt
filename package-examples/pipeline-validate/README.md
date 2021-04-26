@@ -25,7 +25,7 @@ validate and apply the package:
 
 Get the example package on to local using `kpt pkg get`
 
-```
+```shell
   $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate
 
     fetching package /package-examples/pipeline-validate from https://github.com/GoogleContainerTools/kpt to pipeline-validate
@@ -35,7 +35,7 @@ Get the example package on to local using `kpt pkg get`
 
 List the package contents in a tree structure.
 
-```
+```shell
   $ kpt pkg tree pipeline-validate/
 
     PKG: pipeline-validate
@@ -56,7 +56,7 @@ The `set-label` function allows you to set one or more labels to every
 resource that supports labeles.  The `gatekeeper-validate` function allows 
 you to use gatekeeper for checks on the configuration.
 
-```
+```yaml
   pipeline:
     mutators:
       - image: gcr.io/kpt-fn/set-label:unstable
@@ -75,7 +75,7 @@ you to use gatekeeper for checks on the configuration.
 
 Render the changes in the rendering pipeline by using `kpt fn render` command:
 
-```
+```shell
   $ kpt fn render pipeline-validate/
 
     package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
@@ -86,7 +86,7 @@ Render the changes in the rendering pipeline by using `kpt fn render` command:
 If you remove the owner label from `resources.yaml` and re-run the rendering
 you should see an error:
 
-```
+```shell
   $ kpt fn render pipeline-validate/
 
     package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
@@ -105,13 +105,13 @@ you should see an error:
 
 Initialize the inventory object:
 
-```
+```shell
   $ kpt live init pipeline-validate/
 ```
 
 Apply all the contents of the package recursively to the cluster
 
-```
+```shell
   $ kpt live apply pipeline-validate/
 
     namespace/development unchanged

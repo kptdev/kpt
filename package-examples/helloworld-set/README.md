@@ -15,7 +15,7 @@ setters in it.
 
 Get the example package on to local using `kpt pkg get`
 
-```
+```shell
   $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set
 
     fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld-set
@@ -25,7 +25,7 @@ Get the example package on to local using `kpt pkg get`
 
 List the package contents in a tree structure.
 
-```
+```shell
   $ kpt pkg tree helloworld-set/
 
     PKG: helloworld-set
@@ -41,7 +41,7 @@ one `apply-setters` function.  The `apply-setters` function allows you to
 set a simple value throughout the package configuration.  In this case
 you can set the replicas, image, tag and http-port of a simple application.
 
-```
+```yaml
   pipeline:
     mutators:
       - image: gcr.io/kpt-fn/apply-setters:unstable
@@ -56,7 +56,7 @@ you can set the replicas, image, tag and http-port of a simple application.
 
 Render the changes in the hydration pipeline by using `kpt fn render` command:
 
-```
+```shell
   $ kpt fn render helloworld-set/
 
     package "helloworld-set": running function "gcr.io/kpt-fn/apply-setters:unstable": SUCCESS
@@ -67,13 +67,13 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 
 Initialize the inventory object:
 
-```
+```shell
   $ kpt live init helloworld-set/
 ```
 
 Apply all the contents of the package recursively to the cluster
 
-```
+```shell
   $ kpt live apply helloworld-set/
 
     service/helloworld-gke created

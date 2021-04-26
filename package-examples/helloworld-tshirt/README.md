@@ -17,7 +17,7 @@ resource sizes.
 
 Get the example package on to local using `kpt pkg get`
 
-```
+```shell
   $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt
 
     fetching package /package-examples/helloworld-tshirt from https://github.com/GoogleContainerTools/kpt to helloworld-tshirt
@@ -27,7 +27,7 @@ Get the example package on to local using `kpt pkg get`
 
 List the package contents in a tree structure.
 
-```
+```shell
   $ kpt pkg tree helloworld-tshirt/
 
     PKG: helloworld-tshirt
@@ -44,7 +44,7 @@ function allows you to set a simple value throughout the package
 configuration.  In this case the value sets the t-shirt size.  You can 
 set it to medium.
 
-```
+```yaml
   pipeline:
     mutators:
       - image: gcr.io/kpt-fn/apply-setters:unstable
@@ -57,7 +57,7 @@ set it to medium.
 
 Render the changes in the hydration pipeline by using `kpt fn render` command:
 
-```
+```shell
   $ kpt fn render helloworld-tshirt/
 
     package "helloworld-tshirt": running function "gcr.io/kpt-fn/apply-setters:unstable": SUCCESS
@@ -69,13 +69,13 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 
 Initialize the inventory object:
 
-```
+```shell
   $ kpt live init helloworld-tshirt/
 ```
 
 Apply all the contents of the package recursively to the cluster
 
-```
+```shell
   $ kpt live apply helloworld-tshirt/
 
     service/helloworld-gke created

@@ -15,7 +15,7 @@ patch in it.
 
 Get the example package on to local using `kpt pkg get`
 
-```
+```shell
     $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize
 
       fetching package /package-examples/helloworld-kustomize from https://github.com/GoogleContainerTools/kpt to helloworld-kustomize
@@ -25,7 +25,7 @@ Get the example package on to local using `kpt pkg get`
 
 List the package contents in a tree structure.
 
-```
+```shell
     $ kpt pkg tree helloworld-kustomize/
 
       PKG: helloworld-kustomize
@@ -46,7 +46,7 @@ value of the setter goes into the `patch.yaml`.  You can set the target
 environment variable to a value different of your choice (different
 than `foobar`)
 
-```
+```yaml
     pipeline:
       mutators:
         - image: gcr.io/kpt-fn/apply-setters:unstable
@@ -58,7 +58,7 @@ than `foobar`)
 
 Render the changes in the hydration pipeline by using `kpt fn render` command:
 
-```
+```shell
     $ kpt fn render helloworld-kustomize/
 ```
 
@@ -66,7 +66,7 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 
 Since this is a kustomize example we will be using `kubectl -k`:
 
-```
+```shell
     $ kubectl apply -k helloworld-kustomize
 
       service/helloworld-gke created
