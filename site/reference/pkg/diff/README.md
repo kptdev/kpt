@@ -9,14 +9,14 @@ description: >
    Show differences between a local package and upstream
 -->
 
-The diff command displays differences between upstream and local packages.
+`diff` displays differences between upstream and local packages.
 
 It can display differences between:
 
 - The local package and the upstream version which the local package was based on.
 - The local package and the latest version of the upstream package. 
 
-The diff command fetches the versions of a package that are needed, but
+`diff` fetches the versions of a package that are needed, but
 it delegates displaying the differences to a command line diffing tool. By 
 default, the 'diff' command line tool is used, but this can be changed with either the
 `diff-tool` flag or the `KPT_EXTERNAL_DIFF` env variable.
@@ -31,7 +31,7 @@ kpt pkg diff [PKG_PATH@VERSION] [flags]
 
 ```
 PKG_PATH:
-  Local package path to compare. Command will fail if the directory doesn't exist, or does not
+  Local package path to compare. diff will fail if the directory doesn't exist, or does not
   contain a Kptfile. Defaults to the current working directory.
 
 VERSION:

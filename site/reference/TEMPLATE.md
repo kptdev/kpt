@@ -10,7 +10,7 @@ One line description of the command
 -->
 
 Short description of the command. The command should be referred to verbatim and
-not be capitalized, for example the get, update, fn.
+not be capitalized, for example `get`, `update`, `fn`.
 The documentation for each command should be focused and concise. Any fundamental
 concepts or concerns cutting across many command should be covered in the kpt book
 and the reference docs should provide deep links to the relevant content.

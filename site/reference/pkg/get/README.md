@@ -9,7 +9,7 @@ description: >
     Fetch a package from a git repo.
 -->
 
-Get fetches a remote package from a git subdirectory and writes it to a new
+`get` fetches a remote package from a git subdirectory and writes it to a new
 local directory.
 
 ### Synopsis

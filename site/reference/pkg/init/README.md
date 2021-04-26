@@ -9,7 +9,7 @@ description: >
     Initialize an empty package
 -->
 
-Init initializes an existing empty directory as an empty kpt package.
+`init` initializes an existing empty directory as an empty kpt package.
 
 ### Synopsis
 <!--mdtogo:Long-->
@@ -21,7 +21,7 @@ kpt pkg init [DIR] [flags]
 
 ```
 DIR:
-  Init fails if DIR does not already exist. Defaults to the current working directory.
+  init fails if DIR does not already exist. Defaults to the current working directory.
 ```
 
 #### Flags
@@ -31,7 +31,7 @@ DIR:
   Short description of the package. (default "sample description")
 
 --name
-  The Package name. Defaults to the directory base name.
+  The package name. Defaults to the directory base name.
 
 --keywords
   A list of keywords describing the package.
