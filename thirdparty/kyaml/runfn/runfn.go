@@ -169,11 +169,10 @@ func (r RunFns) getNodesAndFilters() (
 	if err != nil {
 		return nil, nil, outputPkg, err
 	}
-	schemaKRM, err := openapi.GetSchemaKRM()
+	err = openapi.StartLocalServer()
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	buff.Nodes = append(buff.Nodes, schemaKRM)
 	return buff, fltrs, outputPkg, nil
 }
 

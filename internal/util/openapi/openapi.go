@@ -18,11 +18,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/GoogleContainerTools/kpt/internal/util/openapi/augments"
 	"io/ioutil"
-	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
-	"sigs.k8s.io/yaml"
+	"net/http"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/openapi/augments"
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -119,48 +118,22 @@ func GetJSONSchema() ([]byte, error) {
 	return output, nil
 }
 
-func GetSchemaKRM() (*kyaml.RNode, error) {
-	schema, err := kyaml.Parse(`
-apiVersion: kpt.dev/v1
-kind: OpenAPI
-metadata:
-  name: openAPI
-  annotations:
-    config.kubernetes.io/path: "openapi_openAPI.yaml"
-  `)
-	if err != nil {
-		return nil, fmt.Errorf("invalid openapi")
-	}
-	n, err := schema.Pipe(kyaml.LookupCreate(kyaml.ScalarNode, "data"))
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create")
-	}
-	j, err := GetJSONSchema()
-	if err != nil {
-		return nil, err
-	}
-	y, err := yaml.JSONToYAML(j)
-	if err != nil {
-		return nil, err
-	}
-	r, err := kyaml.Parse(string(y))
-	if err != nil {
-		return nil, err
-	}
-	n.SetYNode(r.YNode())
-	return schema, nil
-}
+func StartLocalServer() error {
+	http.HandleFunc("/OpenAPI", func(w http.ResponseWriter, r *http.Request){
+		//schema, err := GetJSONSchema()
+		//if err != nil {
+		//	fmt.Fprintf(w, "error getting schema: %w", err.Error())
+		//}
+		fmt.Fprintf(w, "hello!\n")
+	})
 
-func RemoveSchemaKRM(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
-	var result []*kyaml.RNode
-	for _, n := range nodes {
-		meta, _ := n.GetMeta()
-		if meta.APIVersion == "kpt.dev/v1" && n.GetKind() == "OpenAPI" {
-			continue
-		}
-		result = append(result, n)
-	}
-	return result, nil
+	var err error
+	go func() {
+		fmt.Printf("Starting server at port 8080\n")
+		err = http.ListenAndServe(":8080", nil)
+	}()
+
+	return err
 }
 
 func addExtensionsToBuiltinTypes(openAPISchema []byte) ([]byte, error) {

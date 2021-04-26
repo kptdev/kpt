@@ -353,11 +353,10 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 
-	schemaKRM, err := openapi.GetSchemaKRM()
+	err = openapi.StartLocalServer()
 	if err != nil {
 		return nil, err
 	}
-	input = append(input, schemaKRM)
 
 	output := &kio.PackageBuffer{}
 	// create a kio pipeline from kyaml library to execute the function chains
@@ -373,7 +372,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 	hctx.executedFunctionCnt += len(mutators)
-	return openapi.RemoveSchemaKRM(output.Nodes)
+	return output.Nodes, nil
 }
 
 // runValidators runs a set of validator functions on input resources.
