@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -58,6 +59,12 @@ type ContainerFn struct {
 // It reads the input from the given reader and writes the output
 // to the provided writer.
 func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
+	// check and pull image before running to avoid polluting CLI
+	// output
+	err := f.prepareImage()
+	if err != nil {
+		return fmt.Errorf("failed to check function existence: %w", err)
+	}
 	pr := printer.FromContextOrDie(f.Ctx)
 	errSink := bytes.Buffer{}
 	cmd, cancel := f.getDockerCmd()
@@ -118,4 +125,35 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	return exec.CommandContext(ctx, path, args...), cancel
+}
+
+// prepareImage will check local images and pull it if it doesn't
+// exist.
+func (f *ContainerFn) prepareImage() error {
+	// check image existence
+	path := "docker"
+	args := []string{"image", "ls", f.Image}
+	cmd := exec.Command(path, args...)
+	var output []byte
+	var err error
+	if output, err = cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to check function %q: %w", f.Image, err)
+	}
+	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
+		// image exists locally
+		return nil
+	}
+	args = []string{"image", "pull", f.Image}
+	// setup timeout
+	timeout := defaultTimeout
+	if f.Timeout != 0 {
+		timeout = f.Timeout
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd = exec.CommandContext(ctx, path, args...)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("function %q doesn't exist: %w", f.Image, err)
+	}
+	return nil
 }
