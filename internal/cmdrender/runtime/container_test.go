@@ -51,7 +51,7 @@ func TestContainerFn(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			outBuff, errBuff := &bytes.Buffer{}, &bytes.Buffer{}
 			instance := runtime.ContainerFn{
-				Ctx:   printer.WithContext(ctx, printer.New(outBuff, errBuff, true)),
+				Ctx:   printer.WithContext(ctx, printer.New(outBuff, errBuff)),
 				Image: tt.image,
 			}
 			input := bytes.NewBufferString(tt.input)
