@@ -151,8 +151,8 @@ Output:
 
 ```sh
 wordpress/mysql/
-unable to find setter with name image, creating new setter with value wordpress
-unable to find setter with name tag, creating new setter with value 4.8
+unable to find setter with name image, creating new setter with value mysql
+unable to find setter with name tag, creating new setter with value 5.6
 created substitution "image-tag"
 ```
 
@@ -180,8 +180,8 @@ wordpress/
 wordpress/mysql/
          NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
   gcloud.core.project   PROJECT_ID                          3       No
-  image                 wordpress                           1       No
-  tag                   4.8                                 1       No
+  image                 mysql                               1       No
+  tag                   5.6                                 1       No
   teamname              YOURTEAM                            3       Yes
 --------------- ----------------- --------------
   SUBSTITUTION       PATTERN       REFERENCES
