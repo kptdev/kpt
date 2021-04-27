@@ -3,10 +3,10 @@ title: "Update"
 linkTitle: "update"
 type: docs
 description: >
-   Apply upstream package updates
+   Apply upstream package updates.
 ---
 <!--mdtogo:Short
-    Apply upstream package updates
+    Apply upstream package updates.
 -->
 
 `update` pulls in upstream changes and merges them into a local package.
@@ -18,7 +18,7 @@ git before running `update`
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt pkg update [PKG_PATH@VERSION] [flags]
+kpt pkg update [PKG_PATH][@VERSION] [flags]
 ```
 
 #### Args
@@ -44,9 +44,9 @@ VERSION:
 ```
 --strategy:
   Defines which strategy should be used to update the package. This will change
-  the update strategy for the current kpt package for future updates. If a
-  strategy is not provided, the strategy specified in the package Kptfile will
-  be used.
+  the update strategy for the current kpt package for the current and future 
+  updates. If a strategy is not provided, the strategy specified in the package
+  Kptfile will be used.
 
     * resource-merge: Perform a structural comparison of the original /
       updated resources, and merge the changes into the local package.

@@ -3,10 +3,10 @@ title: "Diff"
 linkTitle: "diff"
 type: docs
 description: >
-   Show differences between a local package and upstream
+   Show differences between a local package and upstream.
 ---
 <!--mdtogo:Short
-   Show differences between a local package and upstream
+   Show differences between a local package and upstream.
 -->
 
 `diff` displays differences between upstream and local packages.

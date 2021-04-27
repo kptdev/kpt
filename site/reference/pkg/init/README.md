@@ -3,10 +3,10 @@ title: "Init"
 linkTitle: "init"
 type: docs
 description: >
-   Initialize an empty package
+   Initialize an empty package.
 ---
 <!--mdtogo:Short
-    Initialize an empty package
+    Initialize an empty package.
 -->
 
 `init` initializes an existing empty directory as an empty kpt package.
