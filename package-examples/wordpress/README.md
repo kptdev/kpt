@@ -48,7 +48,7 @@ PKG: wordpress
 By default, these packages will be deployed into `default` namespace. Provide a namespace by
 adding [set-namespace] function to the pipeline definition in `wordpress/Kptfile`.
 
-```sh
+```yaml
 - image: gcr.io/kpt-fn/set-namespace:v0.1
   configMap:
     namespace: my-space
