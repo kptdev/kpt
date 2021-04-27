@@ -109,7 +109,7 @@ upstreamLock:
 func TestReadFile_failRead(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: cockroachdb
@@ -133,7 +133,7 @@ upstream:
 func TestReadFile_failUnmarshal(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: cockroachdb
