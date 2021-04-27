@@ -175,8 +175,7 @@ type FnFailure struct {
 	// TODO: add Results after structured results are supported
 }
 
-// String returns string representation of the failure. truncate is used
-// to control whether the contents will be truncated.
+// String returns string representation of the failure.
 func (ff *FnFailure) String() string {
 	var b strings.Builder
 	b.WriteString("Stderr:\n")
