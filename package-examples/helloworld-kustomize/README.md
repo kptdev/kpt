@@ -16,9 +16,9 @@ patch in it.
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-    $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-kustomize
 
-      fetching package /package-examples/helloworld-kustomize from https://github.com/GoogleContainerTools/kpt to helloworld-kustomize
+fetching package /package-examples/helloworld-kustomize from https://github.com/GoogleContainerTools/kpt to helloworld-kustomize
 ```
 
 ### View the package contents
@@ -26,15 +26,15 @@ Get the example package on to local using `kpt pkg get`
 List the package contents in a tree structure.
 
 ```shell
-    $ kpt pkg tree helloworld-kustomize/
+$ kpt pkg tree helloworld-kustomize/
 
-      PKG: helloworld-kustomize
-      ├── [Kptfile]  Kptfile helloworld-kustomize
-      ├── patches
-      │   └── [patch.yaml]  Deployment helloworld-gke
-      └── resources
-          ├── [deploy.yaml]  Deployment helloworld-gke
-          └── [service.yaml]  Service helloworld-gke
+PKG: helloworld-kustomize
+├── [Kptfile]  Kptfile helloworld-kustomize
+├── patches
+│   └── [patch.yaml]  Deployment helloworld-gke
+└── resources
+    ├── [deploy.yaml]  Deployment helloworld-gke
+    └── [service.yaml]  Service helloworld-gke
 ```
 
 ### Configure functions
@@ -47,11 +47,11 @@ environment variable to a value different of your choice (different
 than `foobar`)
 
 ```yaml
-    pipeline:
-      mutators:
-        - image: gcr.io/kpt-fn/apply-setters:unstable
-          configMap:
-            target: foobar
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        target: foobar
 ```
 
 ### Render the declared values
@@ -59,7 +59,7 @@ than `foobar`)
 Render the changes in the hydration pipeline by using `kpt fn render` command:
 
 ```shell
-    $ kpt fn render helloworld-kustomize/
+$ kpt fn render helloworld-kustomize/
 ```
 
 ### Apply the package
@@ -67,8 +67,8 @@ Render the changes in the hydration pipeline by using `kpt fn render` command:
 Since this is a kustomize example we will be using `kubectl -k`:
 
 ```shell
-    $ kubectl apply -k helloworld-kustomize
+$ kubectl apply -k helloworld-kustomize
 
-      service/helloworld-gke created
-      deployment.apps/helloworld-gke created
+service/helloworld-gke created
+deployment.apps/helloworld-gke created
 ```
