@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// These tests depend on `diff` which is not available on Windows
+// +build !windows
+
 // Package diff_test tests the diff package
 package diff_test
 
@@ -241,6 +244,13 @@ func TestCommand_Diff(t *testing.T) {
 		})
 	}
 }
+
+// Test case: no packages supplied to diff
+// Test case: one package supplied to diff
+// Test case: package supplied to diff directory does not exist
+// Test case: Package supplied to diff is not a kpt package/empty dir
+// Test case: Upstream package does not exist
+// Test case: 3-way diff not supported with diffutils
 
 // filterDiffMetadata removes information from the diff output that is test-run
 // specific for ex. removing directory name being used.
