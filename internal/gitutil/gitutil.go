@@ -365,6 +365,8 @@ loop:
 		// either the ref (short commit, tag, branch) can be resolved to a full
 		// commit sha, or if the provided ref is already a valid full commit sha (note
 		// that this will happen even if the commit doesn't exist in the local repo).
+		// We ignore the error here since an error just means the ref didn't exist,
+		// which we detect by checking the output to stdout.
 		rr, _ := gitRunner.Run(ctx, "rev-parse", "--verify", "-q", s)
 		// If the output is the same as the ref, then the ref was already a full
 		// commit sha.
