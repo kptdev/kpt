@@ -37,7 +37,7 @@ PKG: helloworld
 Initialize the inventory object:
 
 ```shell
-  $ kpt live init helloworld/
+$ kpt live init helloworld/
 ```
 
 Apply all the contents of the package recursively to the cluster
