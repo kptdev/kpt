@@ -1,5 +1,5 @@
 ---
-title: "Get"
+title: "`get`"
 linkTitle: "get"
 type: docs
 description: >

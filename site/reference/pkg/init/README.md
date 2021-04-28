@@ -1,5 +1,5 @@
 ---
-title: "Init"
+title: "`init`"
 linkTitle: "init"
 type: docs
 description: >

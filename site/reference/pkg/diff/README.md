@@ -1,5 +1,5 @@
 ---
-title: "Diff"
+title: "`diff`"
 linkTitle: "diff"
 type: docs
 description: >

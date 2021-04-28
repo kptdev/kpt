@@ -1,6 +1,6 @@
 ---
-title: "command name"
-linkTitle: "command name"
+title: "`cmd`"
+linkTitle: "cmd"
 type: docs
 description: >
 One line description of the command

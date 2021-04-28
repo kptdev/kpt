@@ -1,5 +1,5 @@
 ---
-title: "Update"
+title: "`update`"
 linkTitle: "update"
 type: docs
 description: >

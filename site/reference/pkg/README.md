@@ -1,5 +1,5 @@
 ---
-title: "Pkg"
+title: "`pkg`"
 linkTitle: "pkg"
 weight: 1
 type: docs
@@ -11,8 +11,6 @@ description: >
 -->
 
 <!--mdtogo:Long-->
-The `pkg` command group contains subcommands for fetching and updating kpt package
-from git repositories. They are focused on providing porcelain on top of 
-workflows which would otherwise require wrapping git to pull clone subdirectories
-and perform updates by merging resources rather than files.
+The `pkg` command group contains subcommands for fetching and updating `kpt` package
+from git repositories.
 <!--mdtogo-->
