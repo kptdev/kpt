@@ -47,7 +47,6 @@ func NewRunner(parent string) *Runner {
 	}
 
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
-	c.Flags().StringVar(&r.Name, "name", "", "package name.  defaults to the directory base name.")
 	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
 	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
 	cmdutil.FixDocs("kpt", parent, c)
@@ -76,9 +75,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if r.Name == "" {
-		r.Name = filepath.Base(string(p.UniquePath))
-	}
+	r.Name = filepath.Base(string(p.UniquePath))
 
 	dp := string(p.DisplayPath)
 	if _, err = os.Stat(dp); os.IsNotExist(err) {
@@ -159,16 +156,16 @@ var manTemplate = `# {{.Name}}
 
 ### Fetch the package
 'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] {{.Name}}'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/get/
+Details: https://kpt.dev/reference/pkg/get/
 
 ### View package content
 'kpt pkg tree {{.Name}}'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/tree/
+Details: https://kpt.dev/reference/pkg/tree/
 
 ### Apply the package
 '''
 kpt live init {{.Name}}
 kpt live apply {{.Name}} --reconcile-timeout=2m --output=table
 '''
-Details: https://googlecontainertools.github.io/kpt/reference/live/
+Details: https://kpt.dev/reference/live/
 `

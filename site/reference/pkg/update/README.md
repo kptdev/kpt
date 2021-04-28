@@ -13,7 +13,7 @@ description: >
 Changes may be applied using one of several strategies.
 
 Since this will update the local package, all changes must be committed to 
-git before running `update`
+git before running `update`.
 
 ### Synopsis
 <!--mdtogo:Long-->
