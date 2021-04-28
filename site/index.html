@@ -112,7 +112,8 @@
           createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title}`;
 
           let path = document.location.pathname;
-          path += path.endsWith("/") ? "README.md" : ".md";
+          const pageName = path.startsWith("/book") ? "00.md" : "README.md";
+          path += path.endsWith("/") ? pageName : ".md";
           editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/next/site${path}`;
 
           const container = document.createElement("div");
