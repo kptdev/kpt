@@ -90,6 +90,9 @@
         ],
       };
 
+      // Matches a path like /book/02-concepts/01-packages
+      const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/;
+
       function addGitHubWidget(hook) {
         const issueIcon = document.createElement("span");
         issueIcon.innerText = "bug_report";
@@ -112,7 +115,7 @@
           createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title}`;
 
           let path = document.location.pathname;
-          const pageName = path.startsWith("/book") ? "00.md" : "README.md";
+          const pageName = path.match(bookPath) ? "00.md" : "README.md";
           path += path.endsWith("/") ? pageName : ".md";
           editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/next/site${path}`;
 
@@ -170,8 +173,6 @@
       function processBookPageTitle(content) {
         const pathname = window.location.pathname.toLowerCase();
 
-        // Matches a path like /book/02-concepts/01-packages
-        const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/;
         const bookPathMatch = pathname.match(bookPath);
 
         if (bookPathMatch) {
