@@ -17,5 +17,6 @@ RUN apk update && apk upgrade && \
     apk add --no-cache git less man diffutils bash openssh docker-cli && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
+# This is set up for the Dockerfile to be used by goreleaser: https://goreleaser.com/customization/docker/
 COPY kpt /usr/local/bin/kpt
 ENTRYPOINT ["kpt"]

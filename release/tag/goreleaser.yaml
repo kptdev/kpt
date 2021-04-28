@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This defines the build for goreleaser (https://goreleaser.com/). It is
+# executed through a Github Action that is triggered by new tags being created
+# in the kpt repo.
 builds:
   - env:
       - CGO_ENABLED=0

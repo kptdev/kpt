@@ -23,7 +23,7 @@ Download pre-compiled binaries.
 | ------------------------
 | [Linux (x64)][linux]
 | [macOS (x64)][darwin]
-| [Windows (x64)][windows]
+| Windows (x64) (coming later)
 
 ```shell
 # For linux/mac
@@ -108,6 +108,6 @@ kpt help
 [gcr.io/kpt-dev/kpt-gcloud]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 
-[linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
-[darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
-[windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
+[linux]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_linux_amd64
+[darwin]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_darwin_amd64
+[windows]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_windows_amd64.exe

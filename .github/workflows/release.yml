@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Go
+name: kpt Release
 on:
   push:
     tags:
-      - "v1.0.0-*"
+      - "v[1-9].*.*"
 
 jobs:
   build:
