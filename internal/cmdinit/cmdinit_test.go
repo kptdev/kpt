@@ -61,18 +61,18 @@ my description
 
 ### Fetch the package
 'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] my-pkg'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/get/
+Details: https://kpt.dev/reference/pkg/get/
 
 ### View package content
 'kpt pkg tree my-pkg'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/tree/
+Details: https://kpt.dev/reference/pkg/tree/
 
 ### Apply the package
 '''
 kpt live init my-pkg
 kpt live apply my-pkg --reconcile-timeout=2m --output=table
 '''
-Details: https://googlecontainertools.github.io/kpt/reference/live/
+Details: https://kpt.dev/reference/live/
 `, "'", "`"), string(b))
 }
 
