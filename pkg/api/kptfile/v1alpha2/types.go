@@ -188,9 +188,6 @@ type PackageInfo struct {
 
 	// Keywords is a list of keywords for this package.
 	Keywords []string `yaml:"keywords,omitempty"`
-
-	// Man is the path to documentation about the package
-	Man string `yaml:"man,omitempty"`
 }
 
 // Subpackages declares a local or remote subpackage.
