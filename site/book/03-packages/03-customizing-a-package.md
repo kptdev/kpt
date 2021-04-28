@@ -1,1 +1,0 @@
-How to customize a package

@@ -11,7 +11,7 @@ _subpackage_.
 Let's take a look at an example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1
 $ kpt pkg tree wordpress/
 PKG: wordpress
 ├── [Kptfile]  Kptfile wordpress
@@ -56,7 +56,9 @@ compatible with large corpus of existing Kubernetes configuration stored on Git 
 For example, `cockroachdb` is just a vanilla directory of KRM:
 
 ```shell
-kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb
+$ kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb
 ```
 
-We will go into details of how to work with packages in Chapter 3.
+We will go into details of how to work with packages in [Chapter 3].
+
+[chapter 3]: /book/03-packages/
