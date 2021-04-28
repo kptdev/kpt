@@ -111,10 +111,9 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 }
 
 func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
-	network := networkNameNone
-	if f.Perm.AllowNetwork {
-		network = networkNameHost
-	}
+
+	network := networkNameHost
+
 	uidgid := "nobody"
 	if f.UIDGID != "" {
 		uidgid = f.UIDGID
@@ -126,6 +125,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--network", string(network),
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
+		"--add-host=host.docker.internal:host-gateway",
 	}
 	if f.ImagePullPolicy == NeverPull {
 		args = append(args, "--pull", "never")

@@ -23,7 +23,7 @@ require (
 	k8s.io/kubectl v0.21.0
 	sigs.k8s.io/cli-utils v0.25.1-0.20210521231537-8200fe56434d
 	sigs.k8s.io/kustomize/kyaml v0.10.20-0.20210506224302-fcfdf6be5152
-	sigs.k8s.io/yaml v1.2.0
+	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
 // TODO: sigs.k8s.io/cli-utils@v0.25.0 is still using old version of cli-runtime

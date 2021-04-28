@@ -15,77 +15,32 @@
 package openapi
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/GoogleContainerTools/kpt/internal/util/openapi/augments"
 	jsonpatch "github.com/evanphx/json-patch/v5"
-	"k8s.io/kubectl/pkg/cmd/util"
+	"net/http"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
 )
 
 const (
-	SchemaSourceBuiltin = "builtin"
-	SchemaSourceFile    = "file"
-	SchemaSourceCluster = "cluster"
-
 	BuiltinSchemaVersion = "v1204"
 	KubernetesAssetName  = "kubernetesapi/v1204/swagger.json"
 	KustomizeAssetName   = "kustomizationapi/swagger.json"
+
+    endpoint = "/openapi"
 )
 
-var SchemaSources = fmt.Sprintf("{%q, %q, %q}", SchemaSourceBuiltin, SchemaSourceCluster, SchemaSourceFile)
-
-// ConfigureOpenAPI sets the openAPI schema in kyaml. It can either
-// fetch the schema from a cluster, read it from file, or just the
-// schema built into kyaml.
-func ConfigureOpenAPI(factory util.Factory, k8sSchemaSource, k8sSchemaPath string) error {
-	switch k8sSchemaSource {
-	case SchemaSourceCluster:
-		openAPISchema, err := FetchOpenAPISchemaFromCluster(factory)
-		if err != nil {
-			return fmt.Errorf("error fetching schema from cluster: %v", err)
-		}
-		return ConfigureOpenAPISchema(openAPISchema)
-	case SchemaSourceFile:
-		openAPISchema, err := ReadOpenAPISchemaFromDisk(k8sSchemaPath)
-		if err != nil {
-			return fmt.Errorf("error reading file at path %s: %v",
-				k8sSchemaPath, err)
-		}
-		return ConfigureOpenAPISchema(openAPISchema)
-	case SchemaSourceBuiltin:
-		openAPISchema := kubernetesapi.OpenAPIMustAsset[BuiltinSchemaVersion](KubernetesAssetName)
-		return ConfigureOpenAPISchema(openAPISchema)
-	default:
-		return fmt.Errorf("unknown schema source %s. Must be one of %s",
-			k8sSchemaSource, SchemaSources)
-	}
-}
-
-func FetchOpenAPISchemaFromCluster(f util.Factory) ([]byte, error) {
-	restClient, err := f.RESTClient()
-	if err != nil {
-		return nil, err
-	}
-	data, err := restClient.Get().AbsPath("/openapi/v2").
-		SetHeader("Accept", "application/json").Do(context.Background()).Raw()
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-
-func ReadOpenAPISchemaFromDisk(path string) ([]byte, error) {
-	return ioutil.ReadFile(path)
+// ConfigureOpenAPI sets the openAPI schema in kyaml.
+func ConfigureOpenAPI() error {
+	openAPISchema := kubernetesapi.OpenAPIMustAsset[BuiltinSchemaVersion](KubernetesAssetName)
+	return ConfigureOpenAPISchema(openAPISchema)
 }
 
 func ConfigureOpenAPISchema(openAPISchema []byte) error {
+	fmt.Println("configuring openapi schema")
 	openapi.SuppressBuiltInSchemaUse()
 	openAPISchema, err := addExtensionsToBuiltinTypes(openAPISchema)
 	if err != nil {
@@ -100,6 +55,9 @@ func ConfigureOpenAPISchema(openAPISchema []byte) error {
 
 // GetJSONSchema returns the JSON OpenAPI schema being used in kyaml
 func GetJSONSchema() ([]byte, error) {
+	if err := ConfigureOpenAPI(); err != nil {
+		return nil, err
+	}
 	schema := openapi.Schema()
 	if schema == nil {
 		return nil, nil
@@ -119,20 +77,20 @@ func GetJSONSchema() ([]byte, error) {
 }
 
 func StartLocalServer() error {
-	http.HandleFunc("/OpenAPI", func(w http.ResponseWriter, r *http.Request){
-		//schema, err := GetJSONSchema()
-		//if err != nil {
-		//	fmt.Fprintf(w, "error getting schema: %w", err.Error())
-		//}
-		fmt.Fprintf(w, "hello!\n")
+	http.HandleFunc(endpoint, func(w http.ResponseWriter, r *http.Request){
+		schema, err := GetJSONSchema()
+		if err != nil {
+			fmt.Fprintf(w, "error getting schema: %w", err.Error())
+		}
+		fmt.Printf("endpoint hit: %s\n", endpoint)
+		fmt.Fprintf(w, string(schema))
 	})
 
 	var err error
-	go func() {
-		fmt.Printf("Starting server at port 8080\n")
-		err = http.ListenAndServe(":8080", nil)
+	go func () {
+		fmt.Println("starting server at port 8080\n")
+		err = http.ListenAndServe(":8080", nil) // set listen port
 	}()
-
 	return err
 }
 
