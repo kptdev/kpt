@@ -19,15 +19,26 @@ builds:
     goos:
       - darwin
       - linux
-      - windows
     goarch:
       - amd64
+      - arm64
     ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+dockers:
+  - image_templates:
+      - "gcr.io/kpt-dev/kpt:{{ .Tag }}"
+    dockerfile: "release/images/Dockerfile"
+  - image_templates:
+      - "gcr.io/kpt-dev/kpt-gcloud:{{ .Tag }}"
+    dockerfile: "release/images/Dockerfile-gcloud"
 archives:
-  - files:
+  - id: archived
+    files:
       - LICENSES*
       - lib.zip*
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
+  - id: bin-only
+    format: binary
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -45,3 +56,5 @@ release:
   github:
     owner: GoogleContainerTools
     name: kpt
+  draft: true
+  prerelease: true
