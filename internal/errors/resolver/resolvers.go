@@ -29,7 +29,7 @@ func init() {
 
 const (
 	genericGitExecError = `
-Error executing git command {{ printf "%q " .gitcmd }}
+Error: Failed to execute git command {{ printf "%q " .gitcmd }}
 {{- if gt (len .repo) 0 -}}
 against repo {{ printf "%q " .repo }}
 {{- end }}
@@ -37,27 +37,31 @@ against repo {{ printf "%q " .repo }}
 for reference {{ printf "%q " .ref }}
 {{- end }}
 
+{{- if or (gt (len .stdout) 0) (gt (len .stderr) 0)}}
+{{ printf "\nDetails:" }}
+{{- end }}
+
 {{- if gt (len .stdout) 0 }}
-{{ printf "\nStdOut:" }}
 {{ printf "%s" .stdout }}
 {{- end }}
 
 {{- if gt (len .stderr) 0 }}
-{{ printf "\nStdErr:" }}
 {{ printf "%s" .stderr }}
 {{- end }}
 `
 
 	unknownRefGitExecError = `
-Unknown ref {{ printf "%q" .ref }}. Please verify that the reference exists in upstream repo {{ printf "%q" .repo }}.
+Error: Unknown ref {{ printf "%q" .ref }}. Please verify that the reference exists in upstream repo {{ printf "%q" .repo }}.
+
+{{- if or (gt (len .stdout) 0) (gt (len .stderr) 0)}}
+{{ printf "\nDetails:" }}
+{{- end }}
 
 {{- if gt (len .stdout) 0 }}
-{{ printf "\nStdOut:" }}
 {{ printf "%s" .stdout }}
 {{- end }}
 
 {{- if gt (len .stderr) 0 }}
-{{ printf "\nStdErr:" }}
 {{ printf "%s" .stderr }}
 {{- end }}
 `
