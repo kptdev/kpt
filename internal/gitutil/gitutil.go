@@ -359,28 +359,42 @@ func (gur *GitUpstreamRepo) cacheRepo(ctx context.Context, uri string, requiredR
 		gitRunner.Dir = repoCacheDir
 	}
 
-	// fetch the specified refs
-	triedFallback := false
+loop:
 	for _, s := range requiredRefs {
-		if _, err := gitRunner.Run(ctx, "fetch", "origin", "--depth=1", s); err != nil {
-			if !triedFallback { // only fallback to fetch origin once
-				// fallback on fetching the origin. If the user provided a short sha,
-				// we need to fetch all objects in order to resolve it into the full
-				// sha.
-				// TODO: See if there is a way to resolve a short sha into a complete
-				// sha without fetching. Haven't found one so far...
-				if _, retryErr := gitRunner.Run(ctx, "fetch", "origin"); retryErr != nil {
-					// We are using the original error here.
-					return "", errors.E(op, errors.Git, fmt.Errorf(
-						"error running `git fetch` for origin: %w", err))
-				}
-				triedFallback = true
+		// Check if we can verify the ref. This will output a full commit sha if
+		// either the ref (short commit, tag, branch) can be resolved to a full
+		// commit sha, or if the provided ref is already a valid full commit sha (note
+		// that this will happen even if the commit doesn't exist in the local repo).
+		// We ignore the error here since an error just means the ref didn't exist,
+		// which we detect by checking the output to stdout.
+		rr, _ := gitRunner.Run(ctx, "rev-parse", "--verify", "-q", s)
+		// If the output is the same as the ref, then the ref was already a full
+		// commit sha.
+		validFullSha := s == strings.TrimSpace(rr.Stdout)
+		_, resolved := gur.ResolveRef(s)
+
+		switch {
+		case resolved || validFullSha:
+			// If the ref references a branch or a tag, or is a valid commit
+			// sha, we can fetch just a single commit.
+			if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin", "--depth=1", s); err != nil {
+				return "", errors.E(op, errors.Git, fmt.Errorf(
+					"error running `git fetch` for ref %q: %w", s, err))
 			}
-			// verify we got the commit
+		default:
+			// In other situations (like a short commit sha), we have to do
+			// a full fetch from the remote.
+			if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin"); err != nil {
+				return "", errors.E(op, errors.Git, fmt.Errorf(
+					"error running `git fetch` for origin: %w", err))
+			}
 			if _, err = gitRunner.Run(ctx, "show", s); err != nil {
 				return "", errors.E(op, errors.Git, fmt.Errorf(
 					"error verifying results from fetch: %w", err))
 			}
+			// If we did a full fetch, we already have all refs, so we can just
+			// exit the loop.
+			break loop
 		}
 	}
 
