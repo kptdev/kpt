@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-skip: true # TODO: enable once the testcase is supported
+stdErr: "following fields are mutually exclusive: 'config', 'configMap', 'configPath'. Got \"configPath, configMap\""
