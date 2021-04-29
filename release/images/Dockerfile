@@ -12,23 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.13-stretch
-ENV CGO_ENABLED=0
-ENV GO111MODULE=on
-
-ARG KPT_VERSION=unknown
-
-WORKDIR /go/src/
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
-COPY . .
-RUN go build -v -o /usr/local/bin/kpt -ldflags="-s -w -X github.com/GoogleContainerTools/kpt/run.version=$KPT_VERSION" ./
-
 FROM alpine:3.11
 RUN apk update && apk upgrade && \
     apk add --no-cache git less man diffutils bash openssh docker-cli && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
-COPY --from=0 /usr/local/bin/kpt /usr/local/bin/kpt
+# This is set up for the Dockerfile to be used by goreleaser: https://goreleaser.com/customization/docker/
+COPY kpt /usr/local/bin/kpt
 ENTRYPOINT ["kpt"]

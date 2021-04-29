@@ -23,7 +23,7 @@ Download pre-compiled binaries.
 | ------------------------
 | [Linux (x64)][linux]
 | [macOS (x64)][darwin]
-| [Windows (x64)][windows]
+| Windows (x64) (coming later)
 
 ```shell
 # For linux/mac
@@ -37,7 +37,8 @@ program from the finder with *ctrl-click open*.
 kpt version
 ```
 
-## GCloud
+<!-- gcloud and homebrew are not yet available for builds from the next branch. 
+## gcloud
 
 Install with gcloud.
 
@@ -63,7 +64,7 @@ brew install kpt
 ```shell
 kpt version
 ```
-
+-->
 ## Docker
 
 Use one of the kpt docker images.
@@ -75,18 +76,18 @@ Use one of the kpt docker images.
 | diffutils | X     | X            |
 | gcloud    |       | X            |
 
-### [gcr.io/kpt-dev/kpt]
+### [gcr.io/kpt-dev/kpt:next]
 
 ```shell
-docker run gcr.io/kpt-dev/kpt version
+docker run gcr.io/kpt-dev/kpt:next version
 ```
 
-### [gcr.io/kpt-dev/kpt-gcloud]
+### [gcr.io/kpt-dev/kpt-gcloud:next]
 
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-docker run gcr.io/kpt-dev/kpt-gcloud version
+docker run gcr.io/kpt-dev/kpt-gcloud:next version
 ```
 
 ## Source
@@ -94,7 +95,7 @@ docker run gcr.io/kpt-dev/kpt-gcloud version
 Install by compiling the source.
 
 ```shell
-GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
+GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt@next
 ```
 
 **Note:** `kpt version` will return *unknown* for binaries installed
@@ -108,6 +109,6 @@ kpt help
 [gcr.io/kpt-dev/kpt-gcloud]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 
-[linux]: https://storage.googleapis.com/kpt-dev/latest/linux_amd64/kpt
-[darwin]: https://storage.googleapis.com/kpt-dev/latest/darwin_amd64/kpt
-[windows]: https://storage.googleapis.com/kpt-dev/latest/windows_amd64/kpt.exe
+[linux]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_linux_amd64
+[darwin]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_darwin_amd64
+[windows]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_windows_amd64.exe
