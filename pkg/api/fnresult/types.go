@@ -19,13 +19,15 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// FunctionResult contains the structured result from an individual function
-type FunctionResult struct {
+// Result contains the structured result from an individual function
+type Result struct {
 	// Image is the full name of the image that generates this result
 	// Image and Exec are mutually exclusive
 	Image string `yaml:"image,omitempty"`
-	// Exec is the the absolute path to the executable file
-	Exec string `yaml:"exec,omitempty"`
+	// ExecPath is the the absolute path to the executable file
+	ExecPath string `yaml:"exec,omitempty"`
+	// Stderr is the content in function stderr
+	Stderr string `yaml:"stderr,omitempty"`
 	// ExitCode is the exit code from running the function
 	ExitCode int `yaml:"exitCode,omitempty"`
 	// Results is the list of results for the function
@@ -33,15 +35,17 @@ type FunctionResult struct {
 }
 
 const (
-	FunctionResultListKind       = "FunctionResultList"
-	FunctionResultListGroup      = "config.kubernetes.io"
-	FunctionResultListVersion    = "v1beta1"
-	FunctionResultListAPIVersion = FunctionResultListGroup + "/" + FunctionResultListVersion
+	ResultListKind       = "FunctionResultList"
+	ResultListGroup      = "config.kubernetes.io"
+	ResultListVersion    = "v1alpha1"
+	ResultListAPIVersion = ResultListGroup + "/" + ResultListVersion
 )
 
-// FunctionResultList contains aggregated results from multiple functions
-type FunctionResultList struct {
+// ResultList contains aggregated results from multiple functions
+type ResultList struct {
 	yaml.ResourceMeta `yaml:",inline"`
+	// ExitCode is the exit code of kpt command
+	ExitCode int `yaml:"exitCode,omitempty"`
 	// Items contain a list of function result
-	Items []FunctionResult `yaml:"items,omitempty"`
+	Items []Result `yaml:"items,omitempty"`
 }
