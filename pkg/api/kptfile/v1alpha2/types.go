@@ -140,8 +140,8 @@ type UpstreamLock struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty"`
 
-	// GitLock is the resolved locator for a package on Git.
-	GitLock *GitLock `yaml:"gitLock,omitempty"`
+	// Git is the resolved locator for a package on Git.
+	Git *GitLock `yaml:"git,omitempty"`
 }
 
 // GitLock is the resolved locator for a package on Git.

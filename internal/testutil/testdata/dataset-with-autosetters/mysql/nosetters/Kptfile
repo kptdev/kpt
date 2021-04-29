@@ -1,6 +1,0 @@
-apiVersion: krm.dev/v1alpha1
-kind: Kptfile
-metadata:
-  name: nosetters
-packageMetadata:
-  shortDescription: sample description

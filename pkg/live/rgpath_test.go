@@ -31,7 +31,7 @@ metadata:
   name: test1
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
@@ -43,13 +43,13 @@ inventory:
 `
 
 var kptFileMissingID = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
@@ -59,13 +59,13 @@ inventory:
   name: inventory-obj-name
 `
 var kptFileWithAnnotations = `
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: 786b898857bd7e9647c229d5f39b0be4de86c915
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /

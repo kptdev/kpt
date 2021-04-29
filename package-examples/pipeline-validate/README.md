@@ -25,24 +25,28 @@ validate and apply the package:
 
 Get the example package on to local using `kpt pkg get`
 
-  $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate
+```shell
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate
 
-    fetching package /package-examples/pipeline-validate from https://github.com/GoogleContainerTools/kpt to pipeline-validate
+fetching package /package-examples/pipeline-validate from https://github.com/GoogleContainerTools/kpt to pipeline-validate
+```
 
 ### View the package contents
 
 List the package contents in a tree structure.
 
-  $ kpt pkg tree pipeline-validate/
+```shell
+$ kpt pkg tree pipeline-validate/
 
-    PKG: pipeline-validate
-    ├── [Kptfile]  Kptfile kpt-pipeline-validate-example
-    └── resources
-        ├── [resources.yaml]  Namespace development
-        ├── [resources.yaml]  Deployment development/nginx-deployment
-        └── constraints
-            ├── [deployment-must-have-owner.yaml]  K8sRequiredLabels deployment-must-have-owner
-            └── [requiredlabels.yaml]  ConstraintTemplate k8srequiredlabels
+PKG: pipeline-validate
+├── [Kptfile]  Kptfile kpt-pipeline-validate-example
+└── resources
+    ├── [resources.yaml]  Namespace development
+    ├── [resources.yaml]  Deployment development/nginx-deployment
+    └── constraints
+        ├── [deployment-must-have-owner.yaml]  K8sRequiredLabels deployment-must-have-owner
+        └── [requiredlabels.yaml]  ConstraintTemplate k8srequiredlabels
+```
 
 ### Configure functions
 
@@ -52,59 +56,66 @@ The `set-label` function allows you to set one or more labels to every
 resource that supports labeles.  The `gatekeeper-validate` function allows 
 you to use gatekeeper for checks on the configuration.
 
-  pipeline:
-    mutators:
-      - image: gcr.io/kpt-fn/set-label:unstable
-        config:
-          apiVersion: fn.kpt.dev/v1alpha1
-          kind: SetLabelConfig
-          metadata:
-            name: label-color-blue
-          labels:
-            color: blue
-    validators:
-      - image: gcr.io/kpt-functions/gatekeeper-validate
+```yaml
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-label:unstable
+      config:
+        apiVersion: fn.kpt.dev/v1alpha1
+        kind: SetLabelConfig
+        metadata:
+          name: label-color-blue
+        labels:
+          color: blue
+  validators:
+    - image: gcr.io/kpt-functions/gatekeeper-validate
+```
 
 ### Render the declared values
 
 Render the changes in the rendering pipeline by using `kpt fn render` command:
 
-  $ kpt fn render pipeline-validate/
+```shell
+$ kpt fn render pipeline-validate/
 
-    package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
-    package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": SUCCESS
-    package "pipeline-validate": rendered successfully
-
+package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
+package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": SUCCESS
+package "pipeline-validate": rendered successfully
+```
 
 If you remove the owner label from `resources.yaml` and re-run the rendering
 you should see an error:
 
+```shell
+$ kpt fn render pipeline-validate/
 
-  $ kpt fn render pipeline-validate/
+package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
+package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": FAILED
+fn.render: pkg pipeline-validate:
+        pkg.render:
+        pipeline.run: Error: Found 1 violations:
 
-    package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
-    package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": FAILED
-    fn.render: pkg pipeline-validate:
-            pkg.render:
-            pipeline.run: Error: Found 1 violations:
+[1] Deployment objects should have an 'owner' label indicating who created them.
 
-    [1] Deployment objects should have an 'owner' label indicating who created them.
-
-    name: "nginx-deployment"
-    path: resources/resources.yaml
-
+name: "nginx-deployment"
+path: resources/resources.yaml
+```
 
 ### Apply the package
 
 Initialize the inventory object:
 
-  $ kpt live init pipeline-validate/
+```shell
+$ kpt live init pipeline-validate/
+```
 
 Apply all the contents of the package recursively to the cluster
 
-  $ kpt live apply pipeline-validate/
+```shell
+$ kpt live apply pipeline-validate/
 
-    namespace/development unchanged
-    deployment.apps/nginx-deployment created
-    2 resource(s) applied. 1 created, 1 unchanged, 0 configured, 0 failed
-    0 resource(s) pruned, 0 skipped, 0 failed
+namespace/development unchanged
+deployment.apps/nginx-deployment created
+2 resource(s) applied. 1 created, 1 unchanged, 0 configured, 0 failed
+0 resource(s) pruned, 0 skipped, 0 failed
+```

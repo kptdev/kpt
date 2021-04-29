@@ -45,6 +45,7 @@ type KptInitOptions struct {
 	Name        string // Inventory object name
 	namespace   string // Inventory object namespace
 	InventoryID string // Inventory object unique identifier label
+	Quiet       bool   // Output message during initialization
 }
 
 // NewKptInitOptions returns a pointer to an initial KptInitOptions structure.
@@ -52,6 +53,7 @@ func NewKptInitOptions(f cmdutil.Factory, ioStreams genericclioptions.IOStreams)
 	return &KptInitOptions{
 		factory:   f,
 		ioStreams: ioStreams,
+		Quiet:     false,
 	}
 }
 
@@ -72,6 +74,9 @@ func (io *KptInitOptions) Run(args []string) error {
 		return err
 	}
 	io.namespace = strings.TrimSpace(ns)
+	if !io.Quiet {
+		fmt.Fprintf(io.ioStreams.Out, "initializing Kptfile inventory info (namespace: %s)...", io.namespace)
+	}
 	// Set the init options default inventory object name, if not set by flag.
 	if io.Name == "" {
 		randomSuffix := common.RandomStr(time.Now().UTC().UnixNano())
@@ -86,7 +91,15 @@ func (io *KptInitOptions) Run(args []string) error {
 		io.InventoryID = id
 	}
 	// Finally, update these values in the Inventory section of the Kptfile.
-	return io.updateKptfile()
+	err = io.updateKptfile()
+	if !io.Quiet {
+		if err == nil {
+			fmt.Fprintln(io.ioStreams.Out, "success")
+		} else {
+			fmt.Fprintln(io.ioStreams.Out, "failed")
+		}
+	}
+	return err
 }
 
 // generateID returns the string which is a SHA1 hash of the passed namespace
@@ -183,5 +196,6 @@ func NewCmdInit(f cmdutil.Factory, ioStreams genericclioptions.IOStreams) *cobra
 	}
 	cmd.Flags().StringVar(&io.Name, "name", "", "Inventory object name")
 	cmd.Flags().BoolVar(&io.Force, "force", false, "Set inventory values even if already set in Kptfile")
+	cmd.Flags().BoolVar(&io.Quiet, "quiet", false, "If true, do not print output message for initialization")
 	return cmd
 }

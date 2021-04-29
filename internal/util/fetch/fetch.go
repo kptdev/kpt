@@ -169,6 +169,10 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 	// sure that any changes in the local worktree are cleaned out.
 	_, err = gitRunner.Run(ctx, "reset", "--hard", commit)
 	if err != nil {
+		gitutil.AmendGitExecError(err, func(e *gitutil.GitExecError) {
+			e.Repo = repoSpec.CloneSpec()
+			e.Ref = commit
+		})
 		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
 

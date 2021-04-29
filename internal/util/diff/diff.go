@@ -121,9 +121,9 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	// get the upstreamPkg at current version
-	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.GitLock.Repo,
-		kptFile.UpstreamLock.GitLock.Directory,
-		kptFile.UpstreamLock.GitLock.Commit)
+	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.Git.Repo,
+		kptFile.UpstreamLock.Git.Directory,
+		kptFile.UpstreamLock.Git.Commit)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (c *Command) Run(ctx context.Context) error {
 	var upstreamTargetPkg string
 
 	if c.Ref == "" {
-		gur, err := gitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.GitLock.Repo)
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.Git.Repo)
 		if err != nil {
 			return err
 		}
@@ -150,8 +150,8 @@ func (c *Command) Run(ctx context.Context) error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.GitLock.Repo,
-			kptFile.UpstreamLock.GitLock.Directory,
+		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.Git.Repo,
+			kptFile.UpstreamLock.Git.Directory,
 			c.Ref)
 		if err != nil {
 			return err

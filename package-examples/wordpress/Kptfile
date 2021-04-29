@@ -1,39 +1,14 @@
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: wordpress
-packageMetadata:
-  shortDescription: sample description
-openAPI:
-  definitions:
-    io.k8s.cli.setters.teamname:
-      x-k8s-cli:
-        setter:
-          name: teamname
-          value: YOURTEAM
-          required: true
-    io.k8s.cli.setters.gcloud.core.project:
-      x-k8s-cli:
-        setter:
-          name: gcloud.core.project
-          value: PROJECT_ID
-    io.k8s.cli.substitutions.image-tag:
-      x-k8s-cli:
-        substitution:
-          name: image-tag
-          pattern: ${image}:${tag}-apache
-          values:
-          - marker: ${image}
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: ${tag}
-            ref: '#/definitions/io.k8s.cli.setters.tag'
-    io.k8s.cli.setters.image:
-      x-k8s-cli:
-        setter:
-          name: image
-          value: wordpress
-    io.k8s.cli.setters.tag:
-      x-k8s-cli:
-        setter:
-          name: tag
-          value: "4.8"
+info:
+  description: This is an example wordpress package with mysql subpackage
+  emails:
+  - kpt-team@google.com
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/apply-setters:v0.1
+    configMap:
+      wp-image: wordpress
+      wp-tag: 4.8-apache

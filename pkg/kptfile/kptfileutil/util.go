@@ -224,7 +224,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	// populate the cloneFrom values so we know where the package came from
 	kpgfile.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 		Type: kptfilev1alpha2.GitOrigin,
-		GitLock: &kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.GitLock{
 			Repo:      spec.OrgRepo,
 			Directory: spec.Path,
 			Ref:       spec.Ref,
@@ -291,11 +291,11 @@ func merge(localKf, updatedKf, originalKf kptfilev1alpha2.KptFile) (kptfilev1alp
 	if localKf.UpstreamLock != nil {
 		mergedKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 			Type: localKf.UpstreamLock.Type,
-			GitLock: &kptfilev1alpha2.GitLock{
-				Commit:    localKf.UpstreamLock.GitLock.Commit,
-				Directory: localKf.UpstreamLock.GitLock.Directory,
-				Repo:      localKf.UpstreamLock.GitLock.Repo,
-				Ref:       localKf.UpstreamLock.GitLock.Ref,
+			Git: &kptfilev1alpha2.GitLock{
+				Commit:    localKf.UpstreamLock.Git.Commit,
+				Directory: localKf.UpstreamLock.Git.Directory,
+				Repo:      localKf.UpstreamLock.Git.Repo,
+				Ref:       localKf.UpstreamLock.Git.Ref,
 			},
 		}
 	}
@@ -318,11 +318,11 @@ func updateUpstreamAndUpstreamLock(localKf, updatedKf kptfilev1alpha2.KptFile) k
 	if updatedKf.UpstreamLock != nil {
 		localKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 			Type: updatedKf.UpstreamLock.Type,
-			GitLock: &kptfilev1alpha2.GitLock{
-				Commit:    updatedKf.UpstreamLock.GitLock.Commit,
-				Directory: updatedKf.UpstreamLock.GitLock.Directory,
-				Repo:      updatedKf.UpstreamLock.GitLock.Repo,
-				Ref:       updatedKf.UpstreamLock.GitLock.Ref,
+			Git: &kptfilev1alpha2.GitLock{
+				Commit:    updatedKf.UpstreamLock.Git.Commit,
+				Directory: updatedKf.UpstreamLock.Git.Directory,
+				Repo:      updatedKf.UpstreamLock.Git.Repo,
+				Ref:       updatedKf.UpstreamLock.Git.Ref,
 			},
 		}
 	}

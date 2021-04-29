@@ -15,6 +15,10 @@
       href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
     />
     <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/asciinema-player@2.6.1/resources/public/css/asciinema-player.css"
     />
@@ -71,6 +75,8 @@
             // Show navigation footer for book pages.
             hook.doneEach(showBookPageFooters);
 
+            addGitHubWidget(hook);
+
             // Process elements in the navigation sidebar.
             hook.doneEach(function () {
               const sidebar = document
@@ -83,6 +89,43 @@
           },
         ],
       };
+
+      // Matches a path like /book/02-concepts/01-packages
+      const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/;
+
+      function addGitHubWidget(hook) {
+        const issueIcon = document.createElement("span");
+        issueIcon.innerText = "bug_report";
+        issueIcon.classList.add("material-icons");
+        const createIssue = document.createElement("a");
+        createIssue.target = "_blank";
+        createIssue.title = "Create documentation issue";
+        createIssue.appendChild(issueIcon);
+
+        const editIcon = document.createElement("span");
+        editIcon.innerText = "edit";
+        editIcon.classList.add("material-icons");
+        const editPage = document.createElement("a");
+        editPage.target = "_blank";
+        editPage.title = "Edit this page";
+        editPage.appendChild(editIcon);
+
+        // Refresh widget links.
+        hook.doneEach(function () {
+          createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title}`;
+
+          let path = document.location.pathname;
+          const pageName = path.match(bookPath) ? "00.md" : "README.md";
+          path += path.endsWith("/") ? pageName : ".md";
+          editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/next/site${path}`;
+
+          const container = document.createElement("div");
+          container.classList.add("github-widget");
+          container.appendChild(createIssue);
+          container.appendChild(editPage);
+          document.getElementById("main").appendChild(container);
+        });
+      }
 
       function convertFromHugo(content) {
         const hugoHideDirectives = /{{% hide %}}.+?{{% \/hide %}}/gms;
@@ -130,8 +173,6 @@
       function processBookPageTitle(content) {
         const pathname = window.location.pathname.toLowerCase();
 
-        // Matches a path like /book/02-concepts/01-packages
-        const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/;
         const bookPathMatch = pathname.match(bookPath);
 
         if (bookPathMatch) {
@@ -239,6 +280,26 @@
 
     .sidebar-nav .book-outline ul {
       margin-left: var(--sidebar-nav-indent);
+    }
+
+    .docsify-pagination-container {
+      margin-bottom: -24px;
+    }
+
+    .github-widget {
+      display: flex;
+      justify-content: center;
+      width: fit-content;
+      margin: auto;
+    }
+
+    .github-widget .material-icons {
+      opacity: 0.3;
+      transition: all 0.2s;
+    }
+
+    .github-widget .material-icons:hover {
+      opacity: 1;
     }
 
     .pagination-item-label {

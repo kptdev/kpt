@@ -51,7 +51,6 @@ const (
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"
-	HelloWorldSet       = "helloworld-set"
 )
 
 // TestGitRepo manages a local git repository for testing

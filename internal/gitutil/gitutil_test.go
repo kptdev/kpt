@@ -36,16 +36,19 @@ func TestMain(m *testing.M) {
 
 func TestLocalGitRunner(t *testing.T) {
 	testCases := map[string]struct {
+		command        string
 		args           []string
 		expectedStdout string
 		expectedErr    *GitExecError
 	}{
 		"successful command with output to stdout": {
-			args:           []string{"branch", "--show-current"},
+			command:        "branch",
+			args:           []string{"--show-current"},
 			expectedStdout: "main",
 		},
 		"failed command with output to stderr": {
-			args: []string{"checkout", "does-not-exist"},
+			command: "checkout",
+			args:    []string{"does-not-exist"},
 			expectedErr: &GitExecError{
 				StdOut: "",
 				StdErr: "error: pathspec 'does-not-exist' did not match any file(s) known to git",
@@ -69,7 +72,7 @@ func TestLocalGitRunner(t *testing.T) {
 				t.FailNow()
 			}
 
-			rr, err := runner.Run(context.Background(), tc.args...)
+			rr, err := runner.Run(context.Background(), tc.command, tc.args...)
 			if tc.expectedErr != nil {
 				var gitExecError *GitExecError
 				if !errors.As(err, &gitExecError) {

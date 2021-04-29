@@ -25,6 +25,7 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/errors/resolver"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/spf13/cobra"
@@ -35,6 +36,14 @@ import (
 )
 
 func main() {
+	// Handle all setup in the runMain function so os.Exit doesn't interfere
+	// with defer.
+	os.Exit(runMain())
+}
+
+// runMain does the initial setup in order to run kpt. The return value from
+// this function will be the exit code when kpt terminates.
+func runMain() int {
 	var logFlags flag.FlagSet
 	var err error
 
@@ -44,9 +53,6 @@ func main() {
 	logs.InitLogs()
 	defer func() {
 		logs.FlushLogs()
-		if err != nil {
-			os.Exit(1)
-		}
 	}()
 
 	// Enable commandline flags for klog.
@@ -61,20 +67,29 @@ func main() {
 
 	err = cmd.Execute()
 	if err != nil {
-		handleErr(cmd, err)
+		return handleErr(cmd, err)
 	}
+	return 0
 }
 
-func handleErr(cmd *cobra.Command, err error) {
-	var kptErr *errors.Error
+// TODO(mortent): Reconcile the different error handlers here. This is partly
+// a result of previously having the cobra commands in several different repos.
+func handleErr(cmd *cobra.Command, err error) int {
+	msg, found := resolver.ResolveError(err)
+	if found {
+		fmt.Fprintf(cmd.ErrOrStderr(), "\n%s \n", msg)
+		return 1
+	}
 
+	var kptErr *errors.Error
 	if errors.As(err, &kptErr) {
 		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", kptErr.Error())
-		return
+		return 1
 	}
 	// fmt.Fprintf(cmd.ErrOrStderr(), "%s\n", err)
 	cmdutil.PrintErrorStacktrace(err)
 	// TODO: find a way to avoid having to provide `kpt live` as a
 	// parameter here.
 	cliutilserror.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
+	return 1
 }

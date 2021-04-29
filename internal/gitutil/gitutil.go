@@ -73,26 +73,27 @@ type RunResult struct {
 // Omit the 'git' part of the command.
 // The first return value contains the output to Stdout and Stderr when
 // running the command.
-func (g *GitLocalRunner) Run(ctx context.Context, args ...string) (RunResult, error) {
-	return g.run(ctx, false, args...)
+func (g *GitLocalRunner) Run(ctx context.Context, command string, args ...string) (RunResult, error) {
+	return g.run(ctx, false, command, args...)
 }
 
 // RunVerbose runs a git command.
 // Omit the 'git' part of the command.
 // The first return value contains the output to Stdout and Stderr when
 // running the command.
-func (g *GitLocalRunner) RunVerbose(ctx context.Context, args ...string) (RunResult, error) {
-	return g.run(ctx, true, args...)
+func (g *GitLocalRunner) RunVerbose(ctx context.Context, command string, args ...string) (RunResult, error) {
+	return g.run(ctx, true, command, args...)
 }
 
 // run runs a git command.
 // Omit the 'git' part of the command.
 // The first return value contains the output to Stdout and Stderr when
 // running the command.
-func (g *GitLocalRunner) run(ctx context.Context, verbose bool, args ...string) (RunResult, error) {
+func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, args ...string) (RunResult, error) {
 	const op errors.Op = "gitutil.run"
 
-	cmd := exec.CommandContext(ctx, g.gitPath, args...)
+	fullArgs := append([]string{command}, args...)
+	cmd := exec.CommandContext(ctx, g.gitPath, fullArgs...)
 	cmd.Dir = g.Dir
 	cmd.Env = os.Environ()
 
@@ -117,10 +118,11 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, args ...string) 
 	}
 	if err != nil {
 		return RunResult{}, errors.E(op, errors.Git, &GitExecError{
-			Args:   args,
-			Err:    err,
-			StdOut: cmdStdout.String(),
-			StdErr: cmdStderr.String(),
+			Args:    args,
+			Command: command,
+			Err:     err,
+			StdOut:  cmdStdout.String(),
+			StdErr:  cmdStderr.String(),
 		})
 	}
 	return RunResult{
@@ -130,10 +132,13 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, args ...string) 
 }
 
 type GitExecError struct {
-	Args   []string
-	Err    error
-	StdErr string
-	StdOut string
+	Args    []string
+	Err     error
+	Command string
+	Repo    string
+	Ref     string
+	StdErr  string
+	StdOut  string
 }
 
 func (e *GitExecError) Error() string {
@@ -142,6 +147,13 @@ func (e *GitExecError) Error() string {
 	b.WriteString(": ")
 	b.WriteString(e.StdErr)
 	return b.String()
+}
+
+func AmendGitExecError(err error, f func(e *GitExecError)) {
+	var gitExecErr *GitExecError
+	if errors.As(err, &gitExecErr) {
+		f(gitExecErr)
+	}
 }
 
 // NewGitUpstreamRepo returns a new GitUpstreamRepo for an upstream package.
@@ -187,6 +199,9 @@ func (gur *GitUpstreamRepo) updateRefs(ctx context.Context) error {
 
 	rr, err := gitRunner.Run(ctx, "ls-remote", "--heads", "--tags", "--refs", "origin")
 	if err != nil {
+		AmendGitExecError(err, func(e *GitExecError) {
+			e.Repo = gur.URI
+		})
 		// TODO: This should only fail if we can't connect to the repo. We should
 		// consider exposing the error message from git to the user here.
 		return errors.E(op, errors.Repo(gur.URI), err)
@@ -247,6 +262,9 @@ func (gur *GitUpstreamRepo) GetDefaultBranch(ctx context.Context) (string, error
 
 	rr, err := gitRunner.Run(ctx, "ls-remote", "--symref", "origin", "HEAD")
 	if err != nil {
+		AmendGitExecError(err, func(e *GitExecError) {
+			e.Repo = gur.URI
+		})
 		return "", errors.E(op, errors.Repo(gur.URI), err)
 	}
 	if rr.Stdout == "" {
@@ -349,38 +367,72 @@ func (gur *GitUpstreamRepo) cacheRepo(ctx context.Context, uri string, requiredR
 	repoCacheDir := filepath.Join(kptCacheDir, uriSha)
 	if _, err := os.Stat(repoCacheDir); os.IsNotExist(err) {
 		if _, err := gitRunner.Run(ctx, "init", uriSha); err != nil {
+			AmendGitExecError(err, func(e *GitExecError) {
+				e.Repo = uri
+			})
 			return "", errors.E(op, errors.Git, fmt.Errorf("error running `git init`: %w", err))
 		}
 		gitRunner.Dir = repoCacheDir
 		if _, err = gitRunner.Run(ctx, "remote", "add", "origin", uri); err != nil {
+			AmendGitExecError(err, func(e *GitExecError) {
+				e.Repo = uri
+			})
 			return "", errors.E(op, errors.Git, fmt.Errorf("error adding origin remote: %w", err))
 		}
 	} else {
 		gitRunner.Dir = repoCacheDir
 	}
 
-	// fetch the specified refs
-	triedFallback := false
-	for _, s := range requiredRefs {
-		if _, err := gitRunner.Run(ctx, "fetch", "origin", "--depth=1", s); err != nil {
-			if !triedFallback { // only fallback to fetch origin once
-				// fallback on fetching the origin. If the user provided a short sha,
-				// we need to fetch all objects in order to resolve it into the full
-				// sha.
-				// TODO: See if there is a way to resolve a short sha into a complete
-				// sha without fetching. Haven't found one so far...
-				if _, retryErr := gitRunner.Run(ctx, "fetch", "origin"); retryErr != nil {
-					// We are using the original error here.
-					return "", errors.E(op, errors.Git, fmt.Errorf(
-						"error running `git fetch` for origin: %w", err))
-				}
-				triedFallback = true
+loop:
+	for i := range requiredRefs {
+		s := requiredRefs[i]
+		// Check if we can verify the ref. This will output a full commit sha if
+		// either the ref (short commit, tag, branch) can be resolved to a full
+		// commit sha, or if the provided ref is already a valid full commit sha (note
+		// that this will happen even if the commit doesn't exist in the local repo).
+		// We ignore the error here since an error just means the ref didn't exist,
+		// which we detect by checking the output to stdout.
+		rr, _ := gitRunner.Run(ctx, "rev-parse", "--verify", "-q", s)
+		// If the output is the same as the ref, then the ref was already a full
+		// commit sha.
+		validFullSha := s == strings.TrimSpace(rr.Stdout)
+		_, resolved := gur.ResolveRef(s)
+
+		switch {
+		case resolved || validFullSha:
+			// If the ref references a branch or a tag, or is a valid commit
+			// sha, we can fetch just a single commit.
+			if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin", "--depth=1", s); err != nil {
+				AmendGitExecError(err, func(e *GitExecError) {
+					e.Repo = uri
+					e.Command = "origin"
+					e.Ref = s
+				})
+				return "", errors.E(op, errors.Git, fmt.Errorf(
+					"error running `git fetch` for ref %q: %w", s, err))
 			}
-			// verify we got the commit
+		default:
+			// In other situations (like a short commit sha), we have to do
+			// a full fetch from the remote.
+			if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin"); err != nil {
+				AmendGitExecError(err, func(e *GitExecError) {
+					e.Repo = uri
+					e.Command = "fetch"
+				})
+				return "", errors.E(op, errors.Git, fmt.Errorf(
+					"error running `git fetch` for origin: %w", err))
+			}
 			if _, err = gitRunner.Run(ctx, "show", s); err != nil {
+				AmendGitExecError(err, func(e *GitExecError) {
+					e.Repo = uri
+					e.Ref = s
+				})
 				return "", errors.E(op, errors.Git, fmt.Errorf(
 					"error verifying results from fetch: %w", err))
 			}
+			// If we did a full fetch, we already have all refs, so we can just
+			// exit the loop.
+			break loop
 		}
 	}
 

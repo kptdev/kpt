@@ -349,7 +349,7 @@ metadata:
   name: test1
 upstreamLock:
   type: git
-  gitLock:
+  git:
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
     ref: master
@@ -367,7 +367,7 @@ metadata:
   name: test1
 upstreamLock:
   type: git
-  gitLock:
+  git:
     repo: git@github.com:seans3/blueprint-helloworld
     directory: /
     ref: master

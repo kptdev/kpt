@@ -106,7 +106,7 @@ func TestCommand_Run(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -165,7 +165,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
@@ -226,7 +226,7 @@ func TestCommand_Run_destination(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -290,7 +290,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "master",
@@ -368,7 +368,7 @@ func TestCommand_Run_branch(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
@@ -451,7 +451,7 @@ func TestCommand_Run_tag(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
@@ -623,7 +623,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -676,7 +676,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",

@@ -1,33 +1,43 @@
 ---
-title: "Init"
+title: "`init`"
 linkTitle: "init"
 type: docs
 description: >
-   Initialize an empty package
+   Initialize an empty package.
 ---
 <!--mdtogo:Short
-    Initialize an empty package
+    Initialize an empty package.
 -->
 
-{{< asciinema key="pkg-init" rows="10" preload="1" >}}
+`init` initializes an existing empty directory as a `kpt` package by adding
+a Kptfile and a placeholder `README.md` file.
 
-Init initializes an existing empty directory as an empty kpt package.
+### Synopsis
+<!--mdtogo:Long-->
+```
+kpt pkg init [DIR] [flags]
+```
 
-**init is optional**: Any directory containing Kubernetes Resource
-Configuration may be treated as remote package without the existence of
-additional packaging metadata.
+#### Args
 
-* Resource Configuration may be placed anywhere under DIR as *.yaml files.
-* DIR may contain additional non-Resource Configuration files.
-* DIR must be pushed to a git repo or repo subdirectory.
+```
+DIR:
+  init fails if DIR does not already exist. Defaults to the current working directory.
+```
 
-Init will augment an existing local directory with packaging metadata to help
-with discovery.
+#### Flags
 
-Init will:
+```
+--description
+  Short description of the package. (default "sample description")
 
-* Create a Kptfile with package name and metadata if it doesn't exist
-* Create a README.md for package documentation if it doesn't exist.
+--keywords
+  A list of keywords describing the package.
+
+--site
+  Link to page with information about the package.
+```
+<!--mdtogo-->
 
 ### Examples
 
@@ -46,39 +56,14 @@ cd $TEST_HOME
 
 <!-- @pkgInit @verifyStaleExamples-->
 ```shell
-# writes Kptfile package meta if not found
-mkdir my-pkg
-kpt pkg init my-pkg --tag kpt.dev/app=cockroachdb \
+# Creates a new Kptfile with metadata in the cockroachdb directory.
+mkdir cockroachdb
+kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
     --description "my cockroachdb implementation"
 ```
-<!--mdtogo-->
 
-### Synopsis
-<!--mdtogo:Long-->
-```
-kpt pkg init [DIR] [flags]
-```
-
-#### Args
-
-```
-DIR:
-  Init fails if DIR does not already exist. Defaults to the current working directory.
-```
-
-#### Flags
-
-```
---description
-  short description of the package. (default "sample description")
-
---name
-  package name.  defaults to the directory base name.
-
---tag
-  list of tags for the package.
-
---url
-  link to page with information about the package.
+```shell
+# Creates a new Kptfile without metadata in the current directory.
+kpt pkg init
 ```
 <!--mdtogo-->

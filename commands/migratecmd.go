@@ -187,6 +187,7 @@ func (mr *MigrateRunner) updateKptfile(args []string, prevID string) error {
 	if !mr.dryRun {
 		// Set inventory ID from previous inventory object.
 		mr.initOptions.InventoryID = prevID
+		mr.initOptions.Quiet = true
 		if err := mr.initOptions.Run(args); err != nil {
 			if _, exists := err.(*cmdliveinit.InvExistsError); exists {
 				fmt.Fprint(mr.ioStreams.Out, "values already exist...")

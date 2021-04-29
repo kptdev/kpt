@@ -1,92 +1,97 @@
-wordpress
-==================================================
+# wordpress
 
-# NAME
+Here is an example to get, view, customize and apply contents of an example kpt package with a subpackage
+in its directory tree. As part of customization, we will be setting common namespace for both the packages
+and apply setters for individual packages.
 
-  wordpress
+## Steps
 
-# SYNOPSIS
-  
-  This is an example of a kpt package which has a subpackage in it. 
-  Here are the steps to get, view, set and apply the package contents
-  
-  ### Fetch a remote package
-  Get the example package on to local using `kpt pkg get`
-  
-  $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/subpackages/wordpress \
-    wordpress
-  
-      fetching package /package-examples/subpackages/wordpress from https://github.com/GoogleContainerTools/kpt to wordpress
-  
-  ### View the package contents
-  List the package contents in a tree structure.
-  
-  $ kpt cfg tree wordpress/
-  
-      wordpress
-      ├── [Kptfile]  Kptfile wordpress
-      ├── [wordpress-deployment.yaml]  Deployment wordpress
-      ├── [wordpress-deployment.yaml]  Service wordpress
-      ├── [wordpress-deployment.yaml]  PersistentVolumeClaim wp-pv-claim
-      └── Pkg: mysql
-          ├── [Kptfile]  Kptfile mysql
-          ├── [mysql-deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
-          ├── [mysql-deployment.yaml]  Deployment wordpress-mysql
-          └── [mysql-deployment.yaml]  Service wordpress-mysql
-  
-  The fetched package contains [setters]. Invoke [list-setters] command to list
-  the [setters] recursively in all the packages.
-  
-  $ kpt cfg list-setters wordpress/
-  
-      wordpress/
-               NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED  
-        gcloud.core.project   PROJECT_ID                          3       No        
-        image                 wordpress                           1       No        
-        tag                   4.8                                 1       No        
-        teamname              YOURTEAM                            3       Yes       
-      
-      wordpress/mysql/
-               NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED  
-        gcloud.core.project   PROJECT_ID                          3       No        
-        image                 mysql                               1       No        
-        tag                   5.6                                 1       No        
-        teamname              YOURTEAM                            3       Yes       
-        
-   You may notice that the [auto-setter] `gcloud.core.project` is already set if you
-   have `gcloud` configured on your local.
-  
-  ### Provide the setter values
-  Provide the values for all the [required setters]. By default, [set] 
-  command is performed only on the resource files of provided package and not its 
-  subpackages. `--recurse-subpackages(-R)` can be leveraged to run the command on 
-  subpackages recursively.
-  
-  $ kpt cfg set wordpress/ teamname myteam -R
-  
-      wordpress/
-      set 3 field(s)
-      
-      wordpress/mysql/
-      set 3 field(s)
-  
-  ### Apply the package
-  
-  Apply all the contents of the package recursively to the cluster
-  
-  $ kubectl apply -f wordpress/ -R
+1. [Fetch the package](#fetch-the-package)
+2. [View the package contents](#view-the-package-contents)
+3. [Configure namespace](#configure-namespace)
+4. [Configure setter values](#configure-setter-values)
+5. [Render the declared values](#render-the-declared-values)
+6. [Apply the package](#apply-the-package)
 
-      service/wordpress-mysql created
-      persistentvolumeclaim/mysql-pv-claim created
-      deployment.apps/wordpress-mysql created
-      service/wordpress created
-      persistentvolumeclaim/wp-pv-claim created
-      deployment.apps/wordpress created
-      
-[tree]: /reference/cfg/tree/
-[auto-setter]: https://kpt.dev#todo
-[subpackage]: https://kpt.dev#todo
-[setters]: https://kpt.dev#todo
-[set]: /reference/cfg/set/
-[required setters]: https://kpt.dev#todo
-[list-setters]: /reference/cfg/list-setters/
+### Fetch the package
+
+Get the example package on to local using `kpt pkg get`
+
+```sh
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next
+
+fetching package /package-examples/wordpress from https://github.com/GoogleContainerTools/kpt to wordpress
+```
+
+### View the package contents
+
+List the package contents in a tree structure.
+
+```sh
+$ kpt pkg tree wordpress/
+
+PKG: wordpress
+├── [Kptfile]  Kptfile wordpress
+├── [service.yaml]  Service wordpress
+├── deployment
+│   ├── [deployment.yaml]  Deployment wordpress
+│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+└── PKG: mysql
+  ├── [Kptfile]  Kptfile mysql
+  ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
+  ├── [deployment.yaml]  Deployment wordpress-mysql
+  └── [deployment.yaml]  Service wordpress-mysql
+```
+
+### Configure namespace
+
+By default, these packages will be deployed into `default` namespace. Provide a namespace by
+adding [set-namespace] function to the pipeline definition in `wordpress/Kptfile`.
+
+```yaml
+- image: gcr.io/kpt-fn/set-namespace:v0.1
+  configMap:
+    namespace: my-space
+```
+
+### Configure setter values
+
+Setters are listed under `apply-setters` function in the pipeline definition of each package.
+You may declare new desired values for the setters by editing the `Kptfile` directly. Declare
+new value `wp-tag: 4.9-aapache` in `wordpress/Kptfile` and `ms-tag: 5.7` in `wordpress/mysql/Kptfile`
+
+### Render the declared values
+
+```sh
+$ kpt fn render wordpress/
+```
+
+### Apply the package
+
+Apply all the contents of the package recursively to the cluster
+
+```sh
+$ kpt live init wordpress/
+
+namespace: default is used for inventory object
+Initialized: wordpress/inventory-template.yaml
+```
+
+```sh
+$ kubectl create ns my-space
+
+namespace/my-space created
+```
+
+```sh
+$ kpt live apply wordpress/
+
+service/wordpress-mysql created
+persistentvolumeclaim/mysql-pv-claim created
+deployment.apps/wordpress-mysql created
+service/wordpress created
+persistentvolumeclaim/wp-pv-claim created
+deployment.apps/wordpress created
+```
+
+[set-namespace]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/set-namespace
