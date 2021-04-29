@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package merge
+package merge_test
 
 import (
+	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -141,7 +142,7 @@ func TestMerge3_Nested_packages(t *testing.T) {
 			updated := test.upstream.ExpandPkg(t, testutil.EmptyReposInfo)
 			local := test.local.ExpandPkg(t, testutil.EmptyReposInfo)
 			expected := test.expected.ExpandPkg(t, testutil.EmptyReposInfo)
-			err := Merge3{
+			err := merge.Merge3{
 				OriginalPath:       original,
 				UpdatedPath:        updated,
 				DestPath:           local,
@@ -203,7 +204,7 @@ spec:
   replicas: 4`,
 		local: `apiVersion: apps/v1
 kind: Deployment
-metadata: # kpt-merge: default/nginx-deployment
+metadata: # kpt-merge: /nginx-deployment
   name: dev-nginx-deployment
   namespace: my-space
 spec:
@@ -211,7 +212,7 @@ spec:
 `,
 		expected: `apiVersion: apps/v1
 kind: Deployment
-metadata: # kpt-merge: default/nginx-deployment
+metadata: # kpt-merge: /nginx-deployment
   name: dev-nginx-deployment
   namespace: my-space
 spec:
@@ -298,7 +299,7 @@ spec:
   replicas: 3`,
 		update: `apiVersion: apps/v1
 kind: Deployment
-metadata: # kpt-merge: default/nginx-deployment
+metadata: # kpt-merge: /nginx-deployment
   name: nginx-deployment-new
 spec:
   replicas: 4`,
@@ -311,7 +312,7 @@ spec:
 `,
 		expected: `apiVersion: apps/v1
 kind: Deployment
-metadata: # kpt-merge: default/nginx-deployment
+metadata: # kpt-merge: /nginx-deployment
   name: nginx-deployment-new
 spec:
   replicas: 4
@@ -366,7 +367,7 @@ spec:
   replicas: 4`,
 		local: `apiVersion: apps/v1
 kind: Deployment
-metadata: # kpt-merge: default/nginx-deployment
+metadata: # kpt-merge: /nginx-deployment
   name: dev-nginx-deployment
   namespace: my-space
 spec:
@@ -397,7 +398,7 @@ spec:
   replicas: 4`,
 		local: `apiVersion: apps/v1
 kind: Deployment
-metadata: # kpt-merge: default/nginx-deployment
+metadata: # kpt-merge: /nginx-deployment
   name: dev-nginx-deployment
   namespace: my-space
 spec:
@@ -548,7 +549,7 @@ func TestMerge3_Merge_path(t *testing.T) {
 					t.FailNow()
 				}
 
-				err = Merge3{
+				err = merge.Merge3{
 					OriginalPath: filepath.Join(dir, "originalDir"),
 					UpdatedPath:  filepath.Join(dir, "updatedDir"),
 					DestPath:     filepath.Join(dir, "localDir"),

@@ -230,9 +230,6 @@ func resolveGroup(meta yaml.ResourceMeta) string {
 func resolveNamespace(meta yaml.ResourceMeta, metadataComment string) string {
 	nsName := nsAndNameForMerge(metadataComment)
 	if nsName == nil {
-		if meta.Namespace == "" {
-			return "default"
-		}
 		return meta.Namespace
 	}
 	return nsName[0]

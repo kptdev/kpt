@@ -19,6 +19,7 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"os"
 	"path"
 	"path/filepath"
@@ -94,6 +95,10 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	if err = c.fetchPackages(ctx, p); err != nil {
+		return errors.E(op, types.UniquePath(c.Destination), err)
+	}
+
+	if err := addmergecomment.Process(c.Destination); err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
 	return nil

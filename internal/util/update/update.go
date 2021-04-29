@@ -18,6 +18,7 @@ package update
 import (
 	"context"
 	"fmt"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -414,6 +415,11 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 	}); err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
+
+	if err := addmergecomment.Process(localPath); err != nil {
+		return errors.E(op, types.UniquePath(localPath), err)
+	}
+
 	return nil
 }
 

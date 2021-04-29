@@ -39,14 +39,10 @@ func (amc *AddMergeComment) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 		// skip adding merge comment if empty metadata
 		return object, nil
 	}
-	namespace := rm.Namespace
-	if namespace == "" {
-		namespace = "default"
-	}
 	if strings.Contains(mf.Key.YNode().LineComment, merge.MergeCommentPrefix) {
 		// skip adding merge comment if merge comment is already present
 		return object, nil
 	}
-	mf.Key.YNode().LineComment = fmt.Sprintf("%s %s/%s", merge.MergeCommentPrefix, namespace, rm.Name)
+	mf.Key.YNode().LineComment = fmt.Sprintf("%s %s/%s", merge.MergeCommentPrefix, rm.Namespace, rm.Name)
 	return object, nil
 }

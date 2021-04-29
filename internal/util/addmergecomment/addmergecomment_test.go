@@ -44,6 +44,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
+  namespace: default
 spec:
   replicas: 3
  `,
@@ -52,6 +53,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment
+  namespace: default
 spec:
   replicas: 3
  `,
@@ -69,7 +71,7 @@ spec:
 			expected: `
 apiVersion: apps/v1
 kind: Deployment
-metadata: # kpt-merge: default/nginx-deployment
+metadata: # kpt-merge: /nginx-deployment
   name: nginx-deployment
 spec:
   replicas: 3

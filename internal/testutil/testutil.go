@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -94,12 +95,34 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool 
 }
 
 func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
+	sourceDir, clean := addMergeCommentToExpected(t, sourceDir)
+	defer clean()
 	diff, err := Diff(sourceDir, destDir)
 	if !assert.NoError(t, err) {
 		return false
 	}
 	diff = diff.Difference(KptfileSet)
 	return assert.Empty(t, diff.List())
+}
+
+// addMergeCommentToExpected copies the expected path directory contents to
+// new temp directory and adds merge comment to the resources in directory
+// it also returns the cleanup function to clean the created temp directory
+func addMergeCommentToExpected(t *testing.T, path string) (string, func()) {
+	expected, err := ioutil.TempDir("", "")
+	assert.NoError(t, err)
+
+	err = copyutil.CopyDir(path, expected)
+	assert.NoError(t, err)
+
+	err = addmergecomment.Process(expected)
+	assert.NoError(t, err)
+
+	clean := func() {
+		os.RemoveAll(expected)
+	}
+
+	return expected, clean
 }
 
 // KptfileAwarePkgEqual compares two packages (including any subpackages)
