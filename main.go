@@ -26,13 +26,12 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/errors/resolver"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog"
+	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/logs"
-	cliutilserror "sigs.k8s.io/cli-utils/pkg/errors"
 )
 
 func main() {
@@ -72,24 +71,27 @@ func runMain() int {
 	return 0
 }
 
-// TODO(mortent): Reconcile the different error handlers here. This is partly
-// a result of previously having the cobra commands in several different repos.
+// handleErr takes care of printing an error message for a given error.
 func handleErr(cmd *cobra.Command, err error) int {
-	msg, found := resolver.ResolveError(err)
+	// First attempt to see if we can resolve the error into a specific
+	// error message.
+	re, found := resolver.ResolveError(err)
 	if found {
-		fmt.Fprintf(cmd.ErrOrStderr(), "\n%s \n", msg)
-		return 1
+		fmt.Fprintf(cmd.ErrOrStderr(), "\n%s \n", re.Message)
+		return re.ExitCode
 	}
 
+	// Then try to see if it is of type *errors.Error
 	var kptErr *errors.Error
 	if errors.As(err, &kptErr) {
 		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", kptErr.Error())
 		return 1
 	}
-	// fmt.Fprintf(cmd.ErrOrStderr(), "%s\n", err)
-	cmdutil.PrintErrorStacktrace(err)
-	// TODO: find a way to avoid having to provide `kpt live` as a
-	// parameter here.
-	cliutilserror.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
+
+	// Finally just let the error handler for kubectl handle it. This handles
+	// printing of several error types used in kubectl
+	// TODO: See if we can handle this in kpt and get a uniform experience
+	// across all of kpt.
+	k8scmdutil.CheckErr(err)
 	return 1
 }

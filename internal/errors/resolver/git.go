@@ -73,10 +73,10 @@ Error: Unknown ref {{ printf "%q" .ref }}. Please verify that the reference exis
 // that can produce error messages for errors of the gitutil.GitExecError type.
 type gitExecErrorResolver struct{}
 
-func (*gitExecErrorResolver) Resolve(err error) (string, bool) {
+func (*gitExecErrorResolver) Resolve(err error) (ResolvedErr, bool) {
 	var gitExecErr *gitutil.GitExecError
 	if !goerrors.As(err, &gitExecErr) {
-		return "", false
+		return ResolvedErr{}, false
 	}
 	fullCommand := fmt.Sprintf("git %s %s", gitExecErr.Command,
 		strings.Join(gitExecErr.Args, " "))
@@ -87,15 +87,20 @@ func (*gitExecErrorResolver) Resolve(err error) (string, bool) {
 		"stdout": gitExecErr.StdOut,
 		"stderr": gitExecErr.StdErr,
 	}
+	var msg string
 	switch {
 	// TODO(mortent): Checking the content of the output at this level seems a bit awkward. We might
 	// consider doing this the the gitutil package and use some kind of error code to signal
 	// the different error cases to higher levels in the stack.
 	case strings.Contains(gitExecErr.StdErr, " unknown revision or path not in the working tree"):
-		return ExecuteTemplate(unknownRefGitExecError, tmplArgs)
+		msg = ExecuteTemplate(unknownRefGitExecError, tmplArgs)
 	default:
-		return ExecuteTemplate(genericGitExecError, tmplArgs)
+		msg = ExecuteTemplate(genericGitExecError, tmplArgs)
 	}
+	return ResolvedErr{
+		Message:  msg,
+		ExitCode: 1,
+	}, true
 }
 
 // gitExecErrorResolver is an implementation of the ErrorResolver interface
