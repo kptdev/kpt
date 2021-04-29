@@ -44,16 +44,18 @@ $ vim deployment.yaml
 Often, you want to automatically mutate and/or validate resources in a package.
 `kpt fn` commands enable you to execute programs called _kpt functions_.
 
-For example, you can automatically search and replace the existing `port` value on all the resources in the package:
+For example, you can automatically search and replace all the occurrences of `app` name on resources
+in the package using [path expressions]:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-value=80 put-value=8080
+$ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-path=spec.**.app' 'put-value=my-nginx'
 ```
 
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
 performed repeatedly, there is a _declarative_ way to define a pipeline of functions as part of the
-package (in the `Kptfile`). For example, you can declare `set-label` function in the `pipeline`
-section of `Kptfile`. This function will set the `label` on all the resources in the package.
+package (in the `Kptfile`). For example, you might want organize resources in the package using a label `env`.
+To achieve that, you can declare `set-label` function in the `pipeline` section of `Kptfile`.
+This function will ensure that the label `env: dev` is added to all the resources in the package.
 
 ```shell
 pipeline:
@@ -97,13 +99,38 @@ You can preview the changes that will be made to the cluster:
 $ kpt live preview
 ```
 
-Finally, apply the resources to the cluster:
+Apply the resources to the cluster:
 
 ```shell
 $ kpt live apply --reconcile-timeout=15m
 ```
 
 This waits for the resources to be reconciled on the cluster by monitoring their status.
+
+## Fetch updates
+
+On Day n, there might be updates to the remote `nginx` package which you want to rebase your local package against.
+A typical `git rebase` might lead to merge conflicts in this scenario. `kpt pkg update` is semantic-aware
+and intelligently merges local changes with upstream updates.
+
+First, commit your local changes to `git` before update
+
+```shell
+git init; git add .; git commit -am "my-nginx"
+```
+
+```shell
+$ kpt pkg update @v0.2
+```
+
+You can observe that the changes you have made are in-tact along with the new changes from
+upstream(image version updated in `Deployment` resource) are fetched on to local.
+
+Apply the updated resources to the cluster:
+
+```shell
+$ kpt live apply --reconcile-timeout=15m
+```
 
 ## Clean up
 
