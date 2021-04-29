@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package printer
+package fnerrors
 
 import (
 	"testing"
@@ -20,16 +20,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFnFailureString(t *testing.T) {
+func TestFnExecErrorString(t *testing.T) {
 	testcases := []struct {
-		name      string
-		fnFailure FnFailure
-		truncate  bool
-		expected  string
+		name        string
+		fnExecError FnExecError
+		truncate    bool
+		expected    string
 	}{
 		{
-			name:      "no truncate - empty stderr",
-			fnFailure: FnFailure{},
+			name:        "no truncate - empty stderr",
+			fnExecError: FnExecError{},
 			expected: `Stderr:
   ""
 Exit Code: 0
@@ -37,7 +37,7 @@ Exit Code: 0
 		},
 		{
 			name: "no truncate - normal failure",
-			fnFailure: FnFailure{
+			fnExecError: FnExecError{
 				Stderr: `error message1
 error message2`,
 				ExitCode: 1,
@@ -50,7 +50,7 @@ Exit Code: 1
 		},
 		{
 			name: "no truncate - long stderr",
-			fnFailure: FnFailure{
+			fnExecError: FnExecError{
 				Stderr: `error message
 error message
 error message
@@ -69,7 +69,7 @@ Exit Code: 1
 		},
 		{
 			name: "truncate - normal failure",
-			fnFailure: FnFailure{
+			fnExecError: FnExecError{
 				Stderr: `error message
 error message
 error message
@@ -87,7 +87,7 @@ Exit Code: 1
 		},
 		{
 			name: "truncate - long stderr 1",
-			fnFailure: FnFailure{
+			fnExecError: FnExecError{
 				Stderr: `error message
 error message
 error message
@@ -107,7 +107,7 @@ Exit Code: 1
 		},
 		{
 			name: "truncate - long stderr 2",
-			fnFailure: FnFailure{
+			fnExecError: FnExecError{
 				Stderr: `error message
 error message
 error message
@@ -132,8 +132,8 @@ Exit Code: 1
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			DisableOutputTruncate = !tc.truncate
-			s := tc.fnFailure.String()
+			tc.fnExecError.DisableOutputTruncate = !tc.truncate
+			s := tc.fnExecError.String()
 			assert.EqualValues(t, tc.expected, s)
 		})
 	}

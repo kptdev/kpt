@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors/fnerrors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
@@ -34,12 +35,41 @@ const (
 	networkNameNone containerNetworkName = "none"
 	networkNameHost containerNetworkName = "host"
 	defaultTimeout  time.Duration        = 5 * time.Minute
+	dockerBin       string               = "docker"
 )
 
 // ContainerFnPermission contains the permission of container
 // function such as network access.
 type ContainerFnPermission struct {
 	AllowNetwork bool
+}
+
+// ContainerFnWrapper wraps the real function filter, prints
+// the function running progress and failures.
+type ContainerFnWrapper struct {
+	Fn *ContainerFn
+}
+
+func (fw *ContainerFnWrapper) Run(r io.Reader, w io.Writer) error {
+	pr := printer.FromContextOrDie(fw.Fn.Ctx)
+	printOpt := printer.NewOpt().Indent(printer.FnIndentation)
+	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fw.Fn.Image)
+	err := fw.Fn.Run(r, w)
+	if err != nil {
+		pr.OptPrintf(printOpt, "[FAIL] %q\n", fw.Fn.Image)
+		failureOpt := printer.NewOpt().
+			Indent(fnerrors.FnExecErrorIndentation).
+			Stderr()
+		fe, ok := err.(*fnerrors.FnExecError)
+		if !ok {
+			return err
+		}
+		// TODO: write complete details to a file
+		pr.PrintPrintable(failureOpt, fe)
+		return fmt.Errorf("function %q failed", fw.Fn.Image)
+	}
+	pr.OptPrintf(printOpt, "[PASS] %q\n", fw.Fn.Image)
+	return nil
 }
 
 // ContainerFn implements a KRMFn which run a containerized
@@ -65,7 +95,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("failed to check function existence: %w", err)
 	}
-	pr := printer.FromContextOrDie(f.Ctx)
+
 	errSink := bytes.Buffer{}
 	cmd, cancel := f.getDockerCmd()
 	defer cancel()
@@ -73,35 +103,24 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	cmd.Stdout = writer
 	cmd.Stderr = &errSink
 
-	printOpt := printer.NewOpt().WithIndentation(printer.FnIndentation)
-	pr.Printf(printOpt, "[RUNNING] %q\n", f.Image)
 	if err := cmd.Run(); err != nil {
-		pr.Printf(printOpt, "[FAIL] %q\n", f.Image)
 		var exitCode int
 		if exitError, ok := err.(*exec.ExitError); ok {
 			exitCode = exitError.ExitCode()
 		} else {
 			return fmt.Errorf("cannot get function exit code: %w", err)
 		}
-		ff := &printer.FnFailure{
-			ExitCode: exitCode,
-			Stderr:   errSink.String(),
+		return &fnerrors.FnExecError{
+			ExitCode:              exitCode,
+			Stderr:                errSink.String(),
+			DisableOutputTruncate: printer.DisableOutputTruncate,
 		}
-		failureOpt := printer.NewOpt().
-			WithIndentation(printer.FnFailureIndentation).
-			WithStderr(true)
-		pr.PrintPrintable(failureOpt, ff)
-		// TODO: write complete details to a file
-		return fmt.Errorf("function %q failed", f.Image)
 	}
-	pr.Printf(printOpt, "[PASS] %q\n", f.Image)
+
 	return nil
 }
 
 func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
-	// directly use docker executable to run the container
-	path := "docker"
-
 	network := networkNameNone
 	if f.Perm.AllowNetwork {
 		network = networkNameHost
@@ -124,20 +143,19 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		timeout = f.Timeout
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	return exec.CommandContext(ctx, path, args...), cancel
+	return exec.CommandContext(ctx, dockerBin, args...), cancel
 }
 
 // prepareImage will check local images and pull it if it doesn't
 // exist.
 func (f *ContainerFn) prepareImage() error {
 	// check image existence
-	path := "docker"
 	args := []string{"image", "ls", f.Image}
-	cmd := exec.Command(path, args...)
+	cmd := exec.Command(dockerBin, args...)
 	var output []byte
 	var err error
 	if output, err = cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to check function %q: %w", f.Image, err)
+		return fmt.Errorf("failed to check local function image %q: %w", f.Image, err)
 	}
 	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
 		// image exists locally
@@ -151,9 +169,9 @@ func (f *ContainerFn) prepareImage() error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd = exec.CommandContext(ctx, path, args...)
+	cmd = exec.CommandContext(ctx, dockerBin, args...)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("function %q doesn't exist: %w", f.Image, err)
+		return fmt.Errorf("function image %q doesn't exist: %w", f.Image, err)
 	}
 	return nil
 }

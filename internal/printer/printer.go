@@ -26,10 +26,6 @@ import (
 )
 
 const (
-	fnFailureTruncateLines = 4
-	// FnFailureIndentation is the number of spaces at the beginning of each
-	// line of function failure messages.
-	FnFailureIndentation = 2
 	// FnIndentation is the number of spaces at the beginning of each line of
 	// function running progress.
 	FnIndentation = 0
@@ -42,7 +38,8 @@ var DisableOutputTruncate bool
 // The main intention, at the moment, is to abstract away printing
 // output in the CLI so that we can evolve the kpt CLI UX.
 type Printer interface {
-	Printf(opt *Options, format string, args ...interface{})
+	Printf(format string, args ...interface{})
+	OptPrintf(opt *Options, format string, args ...interface{})
 	PrintPrintable(opt *Options, p Printable)
 }
 
@@ -55,11 +52,13 @@ type Options struct {
 	// Indetation is the number of spaces added at the beginning
 	// of each line
 	Indentation int
-	// Stderr indicates should output be printed to stderr instead
+	// OutputToStderr indicates should output be printed to stderr instead
 	// of stdout
-	Stderr bool
+	OutputToStderr bool
 	// PkgPath is the unique path to the package
 	PkgPath types.UniquePath
+	// PkgDisplayPath is the display path for the package
+	PkgDisplayPath types.DisplayPath
 }
 
 // NewOpt returns a pointer to new options
@@ -67,21 +66,27 @@ func NewOpt() *Options {
 	return &Options{}
 }
 
-// WithPkgPath sets the package path in options
-func (opt *Options) WithPkgPath(p types.UniquePath) *Options {
+// Pkg sets the package unique path in options
+func (opt *Options) Pkg(p types.UniquePath) *Options {
 	opt.PkgPath = p
 	return opt
 }
 
-// WithIndentation sets the output indentation in options
-func (opt *Options) WithIndentation(i int) *Options {
+// PkgDisplayPath sets the package display path in options
+func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
+	opt.PkgDisplayPath = p
+	return opt
+}
+
+// Indent sets the output indentation in options
+func (opt *Options) Indent(i int) *Options {
 	opt.Indentation = i
 	return opt
 }
 
-// WithPkgPath sets output to stderr in options
-func (opt *Options) WithStderr(b bool) *Options {
-	opt.Stderr = b
+// Stderr sets output to stderr in options
+func (opt *Options) Stderr() *Options {
+	opt.OutputToStderr = true
 	return opt
 }
 
@@ -116,21 +121,28 @@ const printerKey contextKey = 0
 
 // PrintPrintable prints a printable object according to opt
 func (pr *printer) PrintPrintable(opt *Options, p Printable) {
-	pr.Printf(opt, p.String())
+	pr.OptPrintf(opt, p.String()+"\n")
 }
 
-// Printf is the wrapper over fmt.Printf that displays the output according
+// Printf is the wrapper over fmt.Printf that displays the output.
+func (pr *printer) Printf(format string, args ...interface{}) {
+	fmt.Fprintf(pr.outStream, format, args...)
+}
+
+// OptPrintf is the wrapper over fmt.Printf that displays the output according
 // to the opt.
-func (pr *printer) Printf(opt *Options, format string, args ...interface{}) {
+func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
 	if opt == nil {
 		fmt.Fprintf(pr.outStream, format, args...)
 		return
 	}
 	o := pr.outStream
-	if opt.Stderr {
+	if opt.OutputToStderr {
 		o = pr.errStream
 	}
-	if !opt.PkgPath.Empty() {
+	if !opt.PkgDisplayPath.Empty() {
+		format = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath)) + format
+	} else if !opt.PkgPath.Empty() {
 		// try to print relative path of the pkg if we can else use abs path
 		relPath, err := opt.PkgPath.RelativePath()
 		if err != nil {
@@ -163,45 +175,6 @@ func indentPrintf(w io.Writer, indentation int, format string, a ...interface{})
 			fmt.Fprint(w, strings.Repeat(" ", indentation)+l+newline)
 		}
 	}
-}
-
-// FnFailure contains the information about the function failure that will
-// be outputted.
-type FnFailure struct {
-	// Stderr is the content written to function stderr
-	Stderr string `yaml:"stderr,omitempty"`
-	// ExitCode is the exit code returned from function
-	ExitCode int `yaml:"exitCode,omitempty"`
-	// TODO: add Results after structured results are supported
-}
-
-// String returns string representation of the failure.
-func (ff *FnFailure) String() string {
-	var b strings.Builder
-	b.WriteString("Stderr:\n")
-
-	lineIndent := strings.Repeat(" ", 2)
-	if DisableOutputTruncate {
-		// stderr string should have indentations
-		for _, s := range strings.Split(ff.Stderr, "\n") {
-			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
-		}
-	} else {
-		printedLines := 0
-		lines := strings.Split(ff.Stderr, "\n")
-		for i, s := range lines {
-			if i >= fnFailureTruncateLines {
-				break
-			}
-			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
-			printedLines++
-		}
-		if printedLines < len(lines) {
-			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated)\n", len(lines)-printedLines))
-		}
-	}
-	b.WriteString(fmt.Sprintf("Exit Code: %d\n", ff.ExitCode))
-	return b.String()
 }
 
 // Helper functions to set and retrieve printer instance from a context.

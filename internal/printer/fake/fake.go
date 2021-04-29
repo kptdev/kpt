@@ -24,9 +24,11 @@ import (
 // all print calls.
 type NilPrinter struct{}
 
-func (np *NilPrinter) Printf(*printer.Options, string, ...interface{}) {}
+func (np *NilPrinter) OptPrintf(*printer.Options, string, ...interface{}) {}
 
 func (np *NilPrinter) PrintPrintable(opt *printer.Options, p printer.Printable) {}
+
+func (np *NilPrinter) Printf(string, ...interface{}) {}
 
 // CtxWithNilPrinter returns a new context with the NilPrinter added.
 func CtxWithNilPrinter() context.Context {

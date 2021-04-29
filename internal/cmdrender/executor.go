@@ -39,8 +39,6 @@ type Executor struct {
 	Printer printer.Printer
 }
 
-var executedFunctionCnt = 0
-
 // Execute runs a pipeline.
 func (e *Executor) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
@@ -77,7 +75,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		return err
 	}
 
-	pr.Printf(nil, "Successfully executed %d function(s) in %d package(s).\n", executedFunctionCnt, len(hctx.pkgs))
+	pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 	// TODO: Output the complete result file path here
 	return nil
 }
@@ -101,6 +99,9 @@ type hydrationContext struct {
 	// outputFiles is a set of filepaths containing output resources. This
 	// will be compared with the inputFiles to identify files be pruned.
 	outputFiles sets.String
+
+	// executedFunctionCnt is the counter for functions that have been executed.
+	executedFunctionCnt int
 }
 
 //
@@ -237,7 +238,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
 
-	output, err = curr.runPipeline(ctx, input)
+	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
@@ -256,11 +257,11 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 }
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
-func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
 	pr := printer.FromContextOrDie(ctx)
 	// we only print package name here
-	pr.Printf(printer.NewOpt().WithPkgPath(pn.pkg.UniquePath), "\n\n")
+	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n\n")
 
 	if len(input) == 0 {
 		return nil, nil
@@ -293,9 +294,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode) ([]*yam
 	if err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
-	executedFunctionCnt += len(fnChain)
+	hctx.executedFunctionCnt += len(fnChain)
 	// print a new line after a pipeline running
-	pr.Printf(nil, "\n")
+	pr.Printf("\n")
 	return output.Nodes, nil
 }
 

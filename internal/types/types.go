@@ -55,3 +55,8 @@ func (u UniquePath) RelativePath() (string, error) {
 // This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
 // be used for display purposes and is subject to change.
 type DisplayPath string
+
+// Empty returns true if the DisplayPath is empty
+func (u DisplayPath) Empty() bool {
+	return len(u) == 0
+}
