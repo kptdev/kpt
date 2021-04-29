@@ -17,4 +17,6 @@
 exitCode: 1
 disableOutputTruncate: true
 stdErr: "Invalid type. Expected: [integer,null], given: string in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field spec.replicas"
-stdOut: "[RUNNING] \"gcr.io/kpt-fn/kubeval:v0.1\"\n[FAIL] \"gcr.io/kpt-fn/kubeval:v0.1\""
+stdOut: |
+  [RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
+  [FAIL] "gcr.io/kpt-fn/kubeval:v0.1"

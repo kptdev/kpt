@@ -14,4 +14,6 @@
 
 exitCode: 1
 stdErr: 'failed to check function existence: function "gcr.io/kpt-fn/set-label1" doesn''t exist:'
-stdOut: "[RUNNING] \"gcr.io/kpt-fn/set-namespace:unstable\"\n[PASS] \"gcr.io/kpt-fn/set-namespace:unstable\""
+stdOut: |
+  [RUNNING] "gcr.io/kpt-fn/set-namespace:unstable"
+  [PASS] "gcr.io/kpt-fn/set-namespace:unstable"
