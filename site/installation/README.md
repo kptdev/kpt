@@ -37,6 +37,7 @@ program from the finder with *ctrl-click open*.
 kpt version
 ```
 
+<!-- gcloud and homebrew are not yet available for builds from the next branch. 
 ## gcloud
 
 Install with gcloud.
@@ -63,7 +64,7 @@ brew install kpt
 ```shell
 kpt version
 ```
-
+-->
 ## Docker
 
 Use one of the kpt docker images.
@@ -94,7 +95,7 @@ docker run gcr.io/kpt-dev/kpt-gcloud:next version
 Install by compiling the source.
 
 ```shell
-GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
+GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt@next
 ```
 
 **Note:** `kpt version` will return *unknown* for binaries installed
