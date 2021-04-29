@@ -37,7 +37,7 @@ program from the finder with *ctrl-click open*.
 kpt version
 ```
 
-## GCloud
+## gcloud
 
 Install with gcloud.
 
@@ -75,18 +75,18 @@ Use one of the kpt docker images.
 | diffutils | X     | X            |
 | gcloud    |       | X            |
 
-### [gcr.io/kpt-dev/kpt]
+### [gcr.io/kpt-dev/kpt:next]
 
 ```shell
-docker run gcr.io/kpt-dev/kpt version
+docker run gcr.io/kpt-dev/kpt:next version
 ```
 
-### [gcr.io/kpt-dev/kpt-gcloud]
+### [gcr.io/kpt-dev/kpt-gcloud:next]
 
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-docker run gcr.io/kpt-dev/kpt-gcloud version
+docker run gcr.io/kpt-dev/kpt-gcloud:next version
 ```
 
 ## Source
