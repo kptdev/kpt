@@ -397,6 +397,81 @@ spec:
   replicas: 4 # {"$kpt-set":"replicas"}
  `,
 		},
+		{
+			name:    "empty string setter",
+			command: "set",
+			args:    []string{"foo", "testnew"},
+			out:     "set 1 fields\n",
+			inputOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      type: string
+      description: test
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: test
+    io.k8s.cli.setters.bar:
+      type: string
+      description: test
+      x-k8s-cli:
+        setter:
+          name: bar
+          value: ""
+    io.k8s.cli.substitutions.baz:
+      x-k8s-cli:
+        substitution:
+          name: baz
+          pattern: ${foo}${bar}-baz
+          values:
+          - marker: ${foo}
+            ref: '#/definitions/io.k8s.cli.setters.foo'
+          - marker: ${bar}
+            ref: '#/definitions/io.k8s.cli.setters.bar'
+ `,
+			input: `
+foo: "test" # {"$kpt-set":"foo"}
+baz: "test-baz" # {"$kpt-set":"baz"}
+ `,
+			expectedOpenAPI: `
+apiVersion: v1alpha1
+kind: Example
+openAPI:
+  definitions:
+    io.k8s.cli.setters.foo:
+      type: string
+      description: test
+      x-k8s-cli:
+        setter:
+          name: foo
+          value: testnew
+          isSet: true
+    io.k8s.cli.setters.bar:
+      type: string
+      description: test
+      x-k8s-cli:
+        setter:
+          name: bar
+          value: ""
+    io.k8s.cli.substitutions.baz:
+      x-k8s-cli:
+        substitution:
+          name: baz
+          pattern: ${foo}${bar}-baz
+          values:
+          - marker: ${foo}
+            ref: '#/definitions/io.k8s.cli.setters.foo'
+          - marker: ${bar}
+            ref: '#/definitions/io.k8s.cli.setters.bar'
+ `,
+			expectedResources: `
+foo: "testnew" # {"$kpt-set":"foo"}
+baz: "testnew-baz" # {"$kpt-set":"baz"}
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]
