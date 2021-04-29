@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnresult
+package v1alpha1
 
 import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
