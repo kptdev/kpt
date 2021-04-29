@@ -351,7 +351,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				if err != nil {
 					return "", err
 				}
-				return f.UpstreamLock.GitLock.Commit, nil
+				return f.UpstreamLock.Git.Commit, nil
 			},
 		},
 		"update using force-delete-replace strategy with local changes": {

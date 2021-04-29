@@ -516,7 +516,7 @@ upstream:
 {{- if .Pkg.Kptfile.UpstreamLock }}
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
     directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
     ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}

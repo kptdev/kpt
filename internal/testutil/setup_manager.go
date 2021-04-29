@@ -208,7 +208,7 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: g.GetSubDirectory,
 				Repo:      g.Repos[Upstream].RepoDirectory,
 				Ref:       ref,

@@ -72,7 +72,7 @@ metadata:
   name: cockroachdb
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: dd7adeb5492cca4c24169cecee023dbe632e5167
     directory: staging/cockroachdb
     ref: refs/heads/owners-update
@@ -95,7 +95,7 @@ upstreamLock:
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    "dd7adeb5492cca4c24169cecee023dbe632e5167",
 				Directory: "staging/cockroachdb",
 				Ref:       "refs/heads/owners-update",
@@ -267,7 +267,7 @@ upstream:
     ref: v2
 upstreamLock:
   type: git
-  gitLock:
+  git:
     repo: github.com/GoogleContainerTools/kpt
     directory: /
     ref: v2
@@ -293,7 +293,7 @@ upstream:
     ref: v2
 upstreamLock:
   type: git
-  gitLock:
+  git:
     repo: github.com/GoogleContainerTools/kpt
     directory: /
     ref: v2

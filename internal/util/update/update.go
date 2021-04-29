@@ -209,7 +209,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 
 	var origin repoClone
 	if kf.UpstreamLock != nil {
-		gLock := kf.UpstreamLock.GitLock
+		gLock := kf.UpstreamLock.Git
 		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 		if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			return errors.E(op, p.UniquePath, err)
