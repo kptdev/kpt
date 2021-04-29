@@ -1,5 +1,5 @@
-Packaging in kpt based on Git forking. Packages are published by committing them to a Git repository
-and packages are consumed by creating a new fork of the package.
+Packaging in kpt is based on Git forking. Producers publish packages by committing them to a Git
+repository. Consumers fork the package to use it.
 
 Let's revisit the Wordpress example:
 
@@ -7,7 +7,7 @@ Let's revisit the Wordpress example:
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1
 ```
 
-A package on a Git repo can be fetched by specifying a branch, tag, or a commit SHA. In this case,
+A package in a Git repo can be fetched by specifying a branch, tag, or a commit SHA. In this case,
 we are specifying tag `v0.1`.
 
 > Refer to the [command reference][get-doc] for more details.
@@ -33,7 +33,7 @@ upstream:
   updateStrategy: resource-merge
 upstreamLock:
   type: git
-  gitLock:
+  git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
     ref: package-examples/wordpress/v0.1
@@ -52,16 +52,13 @@ pipeline:
 
 The `Kptfile` contains two sections to keep track of the upstream package:
 
-1. The `upstream` section contains the user-specified reference to the upstream package. This
+1. The `upstream` section contains the user-specified Git reference to the upstream package. This
    contains three pieces of information:
-   - `repo`: The git repository where the package can be found
-   - `directory`: The directory within the git repository where this package can be found
-   - `ref`: The git reference for the package. This can be either a brach, tag, or commit SHA.
-2. The `upstreamLock` section contains the resolved upstream reference. This section is managed by
-   kpt and should not be changed manually.
-
-So essentially, the `upstream` section defines the "desired state" while the `upstreamLock` section
-defines the “current state”.
+   - `repo`: The Git repository where the package can be found
+   - `directory`: The directory within the Git repository where this package can be found
+   - `ref`: The Git reference for the package. This can be either a brach, tag, or commit SHA.
+2. The `upstreamLock` section records the upstream Git reference (exact Git SHA) that was fetched by
+   kpt. This section is managed by kpt and should not be changed manually.
 
 Now, let's look at the `Kptfile` for the `mysql` subpackage:
 

@@ -1,10 +1,14 @@
-Since a forked package contains a reference to its upstream package, kpt can fetch any update to the
-upstream package and merge it with local changes.
+An independent package records the exact commit where the local fork and the upstream package
+diverged. This enables kpt to fetch any update to the upstream package and merge it with local
+changes.
 
-The package can be updated with changes from upstream in a declarative way by updating the
-`upstream` section in the `Kptfile` then running the `update` command.
+For example, you can update to version `v0.2` of the `wordpress` package:
 
-For example, change the value of `upstream.git.ref` to `v0.2`:
+```shell
+$ kpt pkg update wordpress@v0.2
+```
+
+This is a porcelain for manually updating the `upstream` section in the `Kptfile` :
 
 ```yaml
 upstream:
@@ -12,23 +16,15 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    # Update v0.1 to v0.2
+    # Change this from v0.1 to v0.2
     ref: v0.2
   updateStrategy: resource-merge
 ```
 
-and then run:
+and then running:
 
 ```shell
 $ kpt pkg update wordpress
-```
-
-Alternatively, the user can provide the version directly to the `update` command, and kpt will take
-care of first updating the `upstream` section of the `Kptfile` and then performing the merge
-operation:
-
-```shell
-$ kpt pkg update wordpress@v0.2
 ```
 
 The `update` command updates the local `wordpress` package and the dependent `mysql` package to the

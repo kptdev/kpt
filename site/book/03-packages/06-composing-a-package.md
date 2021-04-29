@@ -1,4 +1,6 @@
-_Package composition_ is when you change the package hierarchy by adding or removing subpackages.
+A package can be _composed_ of subpackages (_HAS A_ relationship). _Package composition_ is when you
+change the package hierarchy by adding or removing subpackages.
+
 There are two different ways to add a subpackage to a package on the local filesystem:
 
 1. [Create a new package] in a subdirectory
@@ -22,13 +24,14 @@ PKG: wordpress
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
-First, let's delete the `mysql` subpackage:
+First, let's delete the `mysql` subpackage. Deleting a subpackage is done by simply deleting the
+subdirectory:
 
 ```shell
 rm -r wordpress/mysql
 ```
 
-We're going to add back the `mysql` subpackage using the two different ways:
+We're going to add back the `mysql` subpackage using the two different approaches:
 
 ### Create a new package
 
@@ -45,7 +48,7 @@ This creates a [dependent package].
 
 ```shell
 $ cd wordpress
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress/mysql@package-examples/wordpress/v0.1
+$ kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20
 ```
 
 TODO(#1829): This can be simplified.

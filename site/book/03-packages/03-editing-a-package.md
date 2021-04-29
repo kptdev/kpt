@@ -18,7 +18,7 @@ _within_ a package.
 
 ## Manual edits
 
-As mentioned earlier, you can manually edit or _author_ KRM resources using your favorite editor.
+As mentioned earlier, you can manually edit or author KRM resources using your favorite editor.
 Since every KRM resource has a known schema, you can take advantage of tooling that assist in
 authoring and validating resource configuration. For example, [Cloud Code] extensions for VS Code
 and IntelliJ provide IDE features such as auto-completion, inline documentation, linting, and snippets.

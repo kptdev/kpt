@@ -2,7 +2,7 @@ A kpt package is published as a Git subdirectory containing KRM resources. Publi
 package is just a normal Git push. This also means that any existing Git directory of KRM
 resources is a valid kpt package.
 
-As an exmaple, let's re-publish the local `wordpress` package to your own repo.
+As an example, let's re-publish the local `wordpress` package to your own repo.
 
 Start by initializing the the `wordpress` directory as a Git repo:
 
