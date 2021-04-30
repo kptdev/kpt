@@ -12,12 +12,6 @@ $ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx
 $ cd nginx
 ```
 
-Commit the local package to git:
-
-```shell
-git init; git add .; git commit -am "Pristine nginx package"
-```
-
 `kpt pkg` commands provide the functionality for working with packages on Git and on your local
 filesystem.
 
@@ -34,6 +28,12 @@ PKG: nginx
 As you can see, this package contains 3 resources in 3 files. There is a special file named
 `Kptfile` which is used by the kpt tool itself and is not deployed to the cluster. Later chapters
 will explain the `Kptfile` in detail.
+
+Initialize a local Git repo and commit the forked copy of the package:
+
+```shell
+git init; git add .; git commit -am "Pristine nginx package"
+```
 
 ## Customize the package
 
@@ -77,7 +77,7 @@ pipeline:
 
 This function will ensure that the label `env: dev` is added to all the resources in the package.
 
-This pipeline is executed using the `render` command:
+The pipeline is executed using the `render` command:
 
 ```shell
 $ kpt fn render
@@ -121,7 +121,7 @@ This waits for the resources to be reconciled on the cluster by monitoring their
 
 ## Update the package
 
-Subsequently, there might be updates to the upstream `nginx` you may be interested in. You want to merge
+At some point, there will be a new version of the upstream `nginx` package, and you want to merge
 the upstream changes with changes to your local package.
 
 First, commit your local changes:
