@@ -85,7 +85,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	// output
 	err := f.prepareImage()
 	if err != nil {
-		return fmt.Errorf("failed to check function existence: %w", err)
+		return fmt.Errorf("failed to check function image existence: %w", err)
 	}
 
 	errSink := bytes.Buffer{}
@@ -105,7 +105,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 				DisableOutputTruncate: printer.DisableOutputTruncate,
 			}
 		}
-		return fmt.Errorf("cannot get function exit code: %w", err)
+		return fmt.Errorf("unexpected function error: %w", err)
 	}
 
 	return nil
