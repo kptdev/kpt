@@ -12,7 +12,7 @@ $ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx
 $ cd nginx
 ```
 
-Commit the local package to `git`:
+Commit the local package to git:
 
 ```shell
 git init; git add .; git commit -am "nginx package"
@@ -51,7 +51,7 @@ Often, you want to automatically mutate and/or validate resources in a package.
 `kpt fn` commands enable you to execute programs called _kpt functions_.
 
 For example, you can automatically search and replace all the occurrences of `app` name on resources
-in the package using [path expressions]:
+in the package using path expressions:
 
 ```shell
 $ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-path=spec.**.app' 'put-value=my-nginx'
@@ -119,7 +119,7 @@ Subsequently, there might be updates to the remote `nginx` package which you wan
 A typical `git rebase` might lead to merge conflicts in this scenario. `kpt pkg update` is schema-aware
 and intelligently merges local changes with upstream updates.
 
-Commit your local changes to `git` before update:
+Commit your local changes to git before update:
 
 ```shell
 git add .; git commit -am "customized nginx package"
