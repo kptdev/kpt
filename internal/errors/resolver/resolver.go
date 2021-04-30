@@ -33,19 +33,19 @@ func AddErrorResolver(er ErrorResolver) {
 // ResolveError attempts to resolve the provided error into a descriptive
 // string which will be displayed to the user. If the last return value is false,
 // the error could not be resolved.
-func ResolveError(err error) (string, bool) {
+func ResolveError(err error) (ResolvedResult, bool) {
 	for _, resolver := range errorResolvers {
 		msg, found := resolver.Resolve(err)
 		if found {
 			return msg, true
 		}
 	}
-	return "", false
+	return ResolvedResult{}, false
 }
 
 // ExecuteTemplate takes the provided template string and data, and renders
 // the template. If something goes wrong, it panics.
-func ExecuteTemplate(text string, data interface{}) (string, bool) {
+func ExecuteTemplate(text string, data interface{}) string {
 	tmpl, tmplErr := template.New("kpterror").Parse(text)
 	if tmplErr != nil {
 		panic(fmt.Errorf("error creating template: %w", tmplErr))
@@ -56,11 +56,16 @@ func ExecuteTemplate(text string, data interface{}) (string, bool) {
 	if execErr != nil {
 		panic(fmt.Errorf("error executing template: %w", execErr))
 	}
-	return strings.TrimSpace(b.String()), true
+	return strings.TrimSpace(b.String())
+}
+
+type ResolvedResult struct {
+	Message  string
+	ExitCode int
 }
 
 // ErrorResolver is an interface that allows kpt to resolve an error into
 // an error message suitable for the end user.
 type ErrorResolver interface {
-	Resolve(err error) (string, bool)
+	Resolve(err error) (ResolvedResult, bool)
 }
