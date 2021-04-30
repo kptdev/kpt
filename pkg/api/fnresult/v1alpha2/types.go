@@ -32,7 +32,7 @@ type Result struct {
 	// ExitCode is the exit code from running the function
 	ExitCode int `yaml:"exitCode,omitempty"`
 	// Results is the list of results for the function
-	Results []framework.Item `yaml:"results,omitempty"`
+	Results []framework.ResultItem `yaml:"results,omitempty"`
 }
 
 const (
