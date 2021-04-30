@@ -1,7 +1,7 @@
 Packaging in kpt is based on Git forking. Producers publish packages by committing them to a Git
 repository. Consumers fork the package to use it.
 
-Let's revisit the Wordpress example:
+Let's start with a wordpress example:
 
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1
