@@ -13,7 +13,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
@@ -161,22 +160,17 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 // stored in the "rgCrd" variable.
 func (mr *MigrateRunner) applyCRD() error {
 	fmt.Fprint(mr.ioStreams.Out, "  ensuring ResourceGroup CRD exists in cluster...")
-	var err error
 	// Simply return early if this is a dry run
 	if mr.dryRun {
 		fmt.Fprintln(mr.ioStreams.Out, "success")
 		return nil
 	}
-	// Apply the ResourceGroup CRD to the cluster, swallowing an "AlreadyExists" error.
-	err = live.ApplyResourceGroupCRD(mr.cmProvider.Factory())
-	if apierrors.IsAlreadyExists(err) {
-		fmt.Fprint(mr.ioStreams.Out, "already installed...")
-		err = nil
-	}
-	if err != nil {
-		fmt.Fprintln(mr.ioStreams.Out, "failed")
-	} else {
+	// Install the ResourceGroup CRD to the cluster.
+	err := live.InstallResourceGroupCRD(mr.cmProvider.Factory())
+	if err == nil {
 		fmt.Fprintln(mr.ioStreams.Out, "success")
+	} else {
+		fmt.Fprintln(mr.ioStreams.Out, "failed")
 	}
 	return err
 }

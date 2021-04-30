@@ -9,7 +9,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
@@ -54,17 +53,12 @@ func (ir *InstallRGRunner) Run(reader io.Reader, args []string) error {
 	if len(args) > 0 {
 		return fmt.Errorf("too many arguments; install-resource-group takes no arguments")
 	}
-	fmt.Fprint(ir.ioStreams.Out, "installing ResourceGroup custom resource definition...")
-	// Apply the ResourceGroup CRD to the cluster, swallowing an "AlreadyExists" error.
-	err := live.ApplyResourceGroupCRD(ir.factory)
-	if apierrors.IsAlreadyExists(err) {
-		fmt.Fprint(ir.ioStreams.Out, "already installed...")
-		err = nil
-	}
-	if err != nil {
-		fmt.Fprintln(ir.ioStreams.Out, "failed")
-	} else {
+	fmt.Fprint(ir.ioStreams.Out, "installing inventory ResourceGroup CRD...")
+	err := live.InstallResourceGroupCRD(ir.factory)
+	if err == nil {
 		fmt.Fprintln(ir.ioStreams.Out, "success")
+	} else {
+		fmt.Fprintln(ir.ioStreams.Out, "failed")
 	}
 	return err
 }
