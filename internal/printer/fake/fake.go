@@ -18,14 +18,13 @@ import (
 	"context"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
 // NilPrinter implements the printer.Printer interface and just ignores
 // all print calls.
 type NilPrinter struct{}
 
-func (np *NilPrinter) PkgPrintf(types.UniquePath, string, ...interface{}) {}
+func (np *NilPrinter) OptPrintf(*printer.Options, string, ...interface{}) {}
 
 func (np *NilPrinter) Printf(string, ...interface{}) {}
 

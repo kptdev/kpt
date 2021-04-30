@@ -11,11 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# One of the functions in the pipeline fails resulting in
-# non-zero exit code and no changes in the resources.
-exitCode: 1
-stdErr: 'resource at path "resources.yaml" and index "0" already exists'
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/starlark:unstable"
-  [PASS] "gcr.io/kpt-fn/starlark:unstable"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+  name: custom
+spec:
+  image: nginx:1.2.3

@@ -46,8 +46,12 @@ func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types
 		Ctx:   ctx,
 	}
 
+	cfnw := &runtime.ContainerFnWrapper{
+		Fn: cfn,
+	}
+
 	return &runtimeutil.FunctionFilter{
-		Run:            cfn.Run,
+		Run:            cfnw.Run,
 		FunctionConfig: config,
 	}, nil
 }

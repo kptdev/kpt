@@ -12,10 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# One of the functions in the pipeline fails resulting in
-# non-zero exit code and no changes in the resources.
-exitCode: 1
-stdErr: 'resource at path "resources.yaml" and index "0" already exists'
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/starlark:unstable"
-  [PASS] "gcr.io/kpt-fn/starlark:unstable"
+stdOut: "Successfully executed 2 function(s) in 1 package(s)"

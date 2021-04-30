@@ -24,12 +24,49 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
+// TruncateOutput defines should output be truncated
+var TruncateOutput bool
+
 // Printer defines capabilities to display content in kpt CLI.
 // The main intention, at the moment, is to abstract away printing
 // output in the CLI so that we can evolve the kpt CLI UX.
 type Printer interface {
-	PkgPrintf(pkgPath types.UniquePath, format string, args ...interface{})
 	Printf(format string, args ...interface{})
+	OptPrintf(opt *Options, format string, args ...interface{})
+}
+
+// Options are optional options for printer
+type Options struct {
+	// OutputToStderr indicates should output be printed to stderr instead
+	// of stdout
+	OutputToStderr bool
+	// PkgPath is the unique path to the package
+	PkgPath types.UniquePath
+	// PkgDisplayPath is the display path for the package
+	PkgDisplayPath types.DisplayPath
+}
+
+// NewOpt returns a pointer to new options
+func NewOpt() *Options {
+	return &Options{}
+}
+
+// Pkg sets the package unique path in options
+func (opt *Options) Pkg(p types.UniquePath) *Options {
+	opt.PkgPath = p
+	return opt
+}
+
+// PkgDisplayPath sets the package display path in options
+func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
+	opt.PkgDisplayPath = p
+	return opt
+}
+
+// Stderr sets output to stderr in options
+func (opt *Options) Stderr() *Options {
+	opt.OutputToStderr = true
+	return opt
 }
 
 // New returns an instance of Printer.
@@ -52,20 +89,6 @@ type printer struct {
 	errStream io.Writer
 }
 
-// PkgPrintf accepts an optional pkgpath to display the message with
-// package context.
-func (pr *printer) PkgPrintf(pkgPath types.UniquePath, format string, args ...interface{}) {
-	// try to print relative path of the pkg if we can else use abs path
-	relPath, err := pkgPath.RelativePath()
-	if err != nil {
-		relPath = string(pkgPath)
-	}
-	if string(pkgPath) != "" {
-		format = fmt.Sprintf("package %q: ", relPath) + format
-	}
-	fmt.Fprintf(pr.outStream, format, args...)
-}
-
 // The key type is unexported to prevent collisions with context keys defined in
 // other packages.
 type contextKey int
@@ -75,10 +98,33 @@ type contextKey int
 // different integer values.
 const printerKey contextKey = 0
 
-// Printf is the wrapper over fmt.Printf that displays the output to
-// the configured output writer.
+// Printf is the wrapper over fmt.Printf that displays the output.
 func (pr *printer) Printf(format string, args ...interface{}) {
 	fmt.Fprintf(pr.outStream, format, args...)
+}
+
+// OptPrintf is the wrapper over fmt.Printf that displays the output according
+// to the opt.
+func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
+	if opt == nil {
+		fmt.Fprintf(pr.outStream, format, args...)
+		return
+	}
+	o := pr.outStream
+	if opt.OutputToStderr {
+		o = pr.errStream
+	}
+	if !opt.PkgDisplayPath.Empty() {
+		format = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath)) + format
+	} else if !opt.PkgPath.Empty() {
+		// try to print relative path of the pkg if we can else use abs path
+		relPath, err := opt.PkgPath.RelativePath()
+		if err != nil {
+			relPath = string(opt.PkgPath)
+		}
+		format = fmt.Sprintf("Package %q: ", relPath) + format
+	}
+	fmt.Fprintf(o, format, args...)
 }
 
 // Helper functions to set and retrieve printer instance from a context.

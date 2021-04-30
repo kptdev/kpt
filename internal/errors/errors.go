@@ -22,6 +22,7 @@ import (
 	goerrors "errors"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	kyaml_errors "github.com/go-errors/errors"
 )
 
 // Error is the type that implements error interface used in the kpt codebase.
@@ -231,4 +232,19 @@ func Is(err, target error) bool {
 // target to that error value and returns true. Otherwise, it returns false.
 func As(err error, target interface{}) bool {
 	return goerrors.As(err, target)
+}
+
+// UnwrapKioError unwraps the error returned by kio pipeline.
+// The error returned by kio pipeline is wrapped by
+// library 'github.com/go-errors/errors' and it doesn't
+// support 'Unwrap' method so 'errors.As' will not work.
+// This function will return the first error wrapped by kio
+// pipeline. If the error is not wrapped by kio pipeline, it
+// will return the original error.
+func UnwrapKioError(err error) error {
+	var kioErr *kyaml_errors.Error
+	if !goerrors.As(err, &kioErr) {
+		return err
+	}
+	return kioErr.Err
 }

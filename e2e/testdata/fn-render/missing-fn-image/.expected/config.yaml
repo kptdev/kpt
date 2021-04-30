@@ -13,5 +13,7 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "docker: Error response from daemon: manifest for gcr.io/kpt-fn/set-label1:latest not found: manifest unknown: Failed to fetch \"latest\" from request \"/v2/kpt-fn/set-label1/manifests/latest\"."
-stdOut: "running function \"gcr.io/kpt-fn/set-label1\": FAILED"
+stdErr: 'failed to check function image existence: function image "gcr.io/kpt-fn/set-label1" doesn''t exist:'
+stdOut: |
+  [RUNNING] "gcr.io/kpt-fn/set-namespace:unstable"
+  [PASS] "gcr.io/kpt-fn/set-namespace:unstable"
