@@ -15,12 +15,14 @@
 package testutil
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -103,14 +105,19 @@ func (g *TestSetupManager) Init() bool {
 			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
-		}}.Run()) {
+		}}.Run(fake.CtxWithNilPrinter())) {
 		return false
 	}
-	localGit := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
-	if !assert.NoError(g.T, localGit.Run("add", ".")) {
+	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
+	if !assert.NoError(g.T, err) {
 		return false
 	}
-	if !assert.NoError(g.T, localGit.Run("commit", "-m", "add files")) {
+	_, err = localGit.Run(context.Background(), "add", ".")
+	if !assert.NoError(g.T, err) {
+		return false
+	}
+	_, err = localGit.Run(context.Background(), "commit", "-m", "add files")
+	if !assert.NoError(g.T, err) {
 		return false
 	}
 
@@ -201,7 +208,7 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: g.GetSubDirectory,
 				Repo:      g.Repos[Upstream].RepoDirectory,
 				Ref:       ref,

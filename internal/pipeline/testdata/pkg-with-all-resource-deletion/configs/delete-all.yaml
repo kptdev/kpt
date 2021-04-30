@@ -1,7 +1,0 @@
-apiVersion: fn.kpt.dev/v1alpha1
-kind: StarlarkRun
-metadata:
-  name: delete-all
-source: |
-  # delete all resources
-  ctx.resource_list["items"] = []

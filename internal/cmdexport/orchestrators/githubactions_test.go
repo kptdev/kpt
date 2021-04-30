@@ -29,14 +29,14 @@ name: kpt
 "on":
     push:
         branches:
-          - master
+            - master
 jobs:
     Kpt:
         runs-on: ubuntu-latest
         steps:
-          - name: Run all kpt functions
-            uses: docker://gcr.io/kpt-dev/kpt:latest
-            with:
+            - name: Run all kpt functions
+              uses: docker://gcr.io/kpt-dev/kpt:latest
+              with:
                 args: fn run .
 `,
 	},
@@ -51,14 +51,14 @@ name: kpt
 "on":
     push:
         branches:
-          - master
+            - master
 jobs:
     Kpt:
         runs-on: ubuntu-latest
         steps:
-          - name: Run all kpt functions
-            uses: docker://gcr.io/kpt-dev/kpt:latest
-            with:
+            - name: Run all kpt functions
+              uses: docker://gcr.io/kpt-dev/kpt:latest
+              with:
                 args: fn run . --fn-path functions/
 `,
 	},
@@ -73,14 +73,14 @@ name: kpt
 "on":
     push:
         branches:
-          - master
+            - master
 jobs:
     Kpt:
         runs-on: ubuntu-latest
         steps:
-          - name: Run all kpt functions
-            uses: docker://gcr.io/kpt-dev/kpt:latest
-            with:
+            - name: Run all kpt functions
+              uses: docker://gcr.io/kpt-dev/kpt:latest
+              with:
                 args: fn run . --fn-path functions1/ functions2/
 `,
 	},

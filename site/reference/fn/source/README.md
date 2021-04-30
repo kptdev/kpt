@@ -26,7 +26,7 @@ cd $TEST_HOME
 <!-- @fetchPackage @verifyExamples-->
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR/
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@next DIR/
 ```
 
 {{% /hide %}}
@@ -66,6 +66,6 @@ DIR:
 - Learn about [functions concepts] like sources, sinks, and pipelines.
 - See more examples of source functions in the functions [catalog].
 
-[source function]: /concepts/functions/#source-function
-[functions concepts]: /concepts/functions/
-[catalog]: /guides/consumer/function/catalog/sources/
+[source function]: https://kpt.dev#todo
+[functions concepts]: /book/02-concepts/02-functions
+[catalog]: https://kpt.dev#todo

@@ -17,20 +17,23 @@ package update
 import (
 	"reflect"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
 
 // PkgHasUpdatedUpstream checks if the the local package has different
 // upstream information than origin.
 func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
+	const op errors.Op = "update.PkgHasUpdatedUpstream"
 	originKf, err := kptfileutil.ReadFile(origin)
 	if err != nil {
-		return false, err
+		return false, errors.E(op, types.UniquePath(local), err)
 	}
 
 	localKf, err := kptfileutil.ReadFile(local)
 	if err != nil {
-		return false, err
+		return false, errors.E(op, types.UniquePath(local), err)
 	}
 
 	// If the upstream information in local has changed from origin, it

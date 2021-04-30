@@ -63,6 +63,18 @@ func TestPkgDiff(t *testing.T) {
 			diff: toStringSet(),
 		},
 		{
+			name: "different pipelines in Kptfile is a diff",
+			pkg1: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithPipeline(pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"))).
+				WithResource(pkgbuilder.DeploymentResource),
+			pkg2: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithPipeline(pkgbuilder.NewFunction("gcr.io/kpt-dev/buzz:latest"))).
+				WithResource(pkgbuilder.DeploymentResource),
+			diff: toStringSet("Kptfile"),
+		},
+		{
 			name: "subpackages are not included",
 			pkg1: pkgbuilder.NewRootPkg().
 				WithKptfile().

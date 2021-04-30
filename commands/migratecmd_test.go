@@ -147,7 +147,7 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
 			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
-			err = migrateRunner.updateKptfile([]string{dir})
+			err = migrateRunner.updateKptfile([]string{dir}, testInventoryID)
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
@@ -164,8 +164,8 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 				if len(kf.Inventory.Name) == 0 {
 					t.Errorf("inventory name not set in Kptfile")
 				}
-				if len(kf.Inventory.InventoryID) == 0 {
-					t.Errorf("inventory id not set in Kptfile")
+				if kf.Inventory.InventoryID != testInventoryID {
+					t.Errorf("inventory id not set in Kptfile: %s", kf.Inventory.InventoryID)
 				}
 			} else if kf.Inventory != nil {
 				t.Errorf("inventory shouldn't be set during dryrun")
@@ -205,7 +205,7 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
 			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
-			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{})
+			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
@@ -308,7 +308,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
 			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
-			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{})
+			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
@@ -341,3 +341,36 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 		})
 	}
 }
+
+var kptFileWithInventory = `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: test1
+upstreamLock:
+  type: git
+  git:
+    repo: git@github.com:seans3/blueprint-helloworld
+    directory: /
+    ref: master
+inventory:
+    name: foo
+    namespace: test-namespace
+    inventoryID: ` + testInventoryID + "\n"
+
+const testInventoryID = "SSSSSSSSSS-RRRRR"
+
+var kptFile = `
+apiVersion: kpt.dev/v1alph2
+kind: Kptfile
+metadata:
+  name: test1
+upstreamLock:
+  type: git
+  git:
+    repo: git@github.com:seans3/blueprint-helloworld
+    directory: /
+    ref: master
+`
+
+var inventoryNamespace = "test-namespace"

@@ -40,6 +40,23 @@ var FnExamples = `
   kpt fn run DIR/
 `
 
+var DocShort = `Display the documentation for a function`
+var DocLong = `
+` + "`" + `kpt fn doc` + "`" + ` invokes ` + "`" + `docker run` + "`" + ` to extract the help text. It requires the
+image to set the default entrypoint which supports ` + "`" + `--help` + "`" + ` flag.
+
+  kpt fn doc --image=IMAGE
+
+--image is a required flag.
+If the function supports --help, it will print the documentation to STDOUT.
+Otherwise, it will exit with non-zero exit code and print the error message to
+STDERR.
+`
+var DocExamples = `
+  # diplay the documentation for image gcr.io/kpt-fn/set-namespace:v0.1.1
+  kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1
+`
+
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
 var ExportLong = `
   kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
@@ -94,18 +111,6 @@ var RunExamples = `
   # discover functions in DIR and run them against Resource in DIR.
   # functions may be scoped to a subset of Resources -- see ` + "`" + `kpt help fn run` + "`" + `
   kpt fn run DIR/
-`
-
-var DocShort = `Locally execuate a function to get the help text`
-var DocLong = `
-  kpt fn doc --image=IMAGE
-
-If the function supports --help, it will print the help text to STDOUT.
-Otherwise, it will exit with non-zero exit code and print the error message to
-STDERR.
-`
-var DocExamples = `
-  kpt fn doc --image gcr.io/kpt-fn/set-namespace:unstable
 `
 
 var SinkShort = `Specify a directory as an output sink package`

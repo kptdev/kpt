@@ -16,28 +16,44 @@
 //go:generate $GOBIN/mdtogo site/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference internal/docs/generated/overview --license=none --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/guides/consumer internal/guides/generated/consumer --license=none --recursive=true --strategy=guide
-//go:generate $GOBIN/mdtogo site/guides/ecosystem internal/guides/generated/ecosystem --license=none --recursive=true --strategy=guide
-//go:generate $GOBIN/mdtogo site/guides/producer internal/guides/generated/producer --license=none --recursive=true --strategy=guide
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
+	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/errors/resolver"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
+	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/util/logs"
-	"sigs.k8s.io/cli-utils/pkg/errors"
+	cliutilserror "sigs.k8s.io/cli-utils/pkg/errors"
 )
 
 func main() {
-	var logFlags flag.FlagSet
+	// Handle all setup in the runMain function so os.Exit doesn't interfere
+	// with defer.
+	os.Exit(runMain())
+}
 
-	cmd := run.GetMain()
+// runMain does the initial setup in order to run kpt. The return value from
+// this function will be the exit code when kpt terminates.
+func runMain() int {
+	var logFlags flag.FlagSet
+	var err error
+
+	ctx := context.Background()
+
+	cmd := run.GetMain(ctx)
 	logs.InitLogs()
-	defer logs.FlushLogs()
+	defer func() {
+		logs.FlushLogs()
+	}()
 
 	// Enable commandline flags for klog.
 	// logging will help in collecting debugging information from users
@@ -49,10 +65,31 @@ func main() {
 	_ = cmd.Flags().Set("logtostderr", "false")
 	_ = cmd.Flags().Set("alsologtostderr", "false")
 
-	if err := cmd.Execute(); err != nil {
-		cmdutil.PrintErrorStacktrace(err)
-		// TODO: find a way to avoid having to provide `kpt live` as a
-		// parameter here.
-		errors.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
+	err = cmd.Execute()
+	if err != nil {
+		return handleErr(cmd, err)
 	}
+	return 0
+}
+
+// TODO(mortent): Reconcile the different error handlers here. This is partly
+// a result of previously having the cobra commands in several different repos.
+func handleErr(cmd *cobra.Command, err error) int {
+	msg, found := resolver.ResolveError(err)
+	if found {
+		fmt.Fprintf(cmd.ErrOrStderr(), "\n%s \n", msg)
+		return 1
+	}
+
+	var kptErr *errors.Error
+	if errors.As(err, &kptErr) {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", kptErr.Error())
+		return 1
+	}
+	// fmt.Fprintf(cmd.ErrOrStderr(), "%s\n", err)
+	cmdutil.PrintErrorStacktrace(err)
+	// TODO: find a way to avoid having to provide `kpt live` as a
+	// parameter here.
+	cliutilserror.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
+	return 1
 }

@@ -66,6 +66,22 @@ const (
 // UpdateStrategyType defines the strategy for updating a package from upstream.
 type UpdateStrategyType string
 
+// ToUpdateStrategy takes a string representing an update strategy and will
+// return the strategy as an UpdateStrategyType. If the provided string does
+// not match any known update strategies, an error will be returned.
+func ToUpdateStrategy(strategy string) (UpdateStrategyType, error) {
+	switch strategy {
+	case string(ResourceMerge):
+		return ResourceMerge, nil
+	case string(FastForward):
+		return FastForward, nil
+	case string(ForceDeleteReplace):
+		return ForceDeleteReplace, nil
+	default:
+		return "", fmt.Errorf("unknown update strategy %q", strategy)
+	}
+}
+
 const (
 	// ResourceMerge performs a structural schema-aware comparison and
 	// merges the changes into the local package.
@@ -76,6 +92,22 @@ const (
 	// ForceDeleteReplace wipes all local changes to the package.
 	ForceDeleteReplace UpdateStrategyType = "force-delete-replace"
 )
+
+// UpdateStrategies is a slice with all the supported update strategies.
+var UpdateStrategies = []UpdateStrategyType{
+	ResourceMerge,
+	FastForward,
+	ForceDeleteReplace,
+}
+
+// UpdateStrategiesAsStrings returns a list of update strategies as strings.
+func UpdateStrategiesAsStrings() []string {
+	var strs []string
+	for _, s := range UpdateStrategies {
+		strs = append(strs, string(s))
+	}
+	return strs
+}
 
 // Upstream is a user-specified upstream locator for a package.
 type Upstream struct {
@@ -108,8 +140,8 @@ type UpstreamLock struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty"`
 
-	// GitLock is the resolved locator for a package on Git.
-	GitLock *GitLock `yaml:"gitLock,omitempty"`
+	// Git is the resolved locator for a package on Git.
+	Git *GitLock `yaml:"git,omitempty"`
 }
 
 // GitLock is the resolved locator for a package on Git.

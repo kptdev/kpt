@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -27,6 +28,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 func setupWorkspace(t *testing.T) (*testutil.TestGitRepo, *testutil.TestWorkspace, func()) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
@@ -76,8 +81,11 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, pkgPath),
-	}.Run()
-	assert.EqualError(t, err, "no Kptfile found")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "no Kptfile found")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -92,8 +100,11 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
-	assert.EqualError(t, err, "kptfile upstream doesn't have git information")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "kptfile upstream doesn't have git information")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -112,8 +123,11 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
-	assert.EqualError(t, err, "must specify repo")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify repo")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -132,8 +146,11 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
-	assert.EqualError(t, err, "must specify ref")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify ref")
 }
 
 // TestCommand_Run verifies that Command will clone the HEAD of the master branch.
@@ -156,7 +173,7 @@ func TestCommand_Run(t *testing.T) {
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -187,7 +204,7 @@ func TestCommand_Run(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -218,7 +235,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -249,7 +266,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
@@ -296,7 +313,7 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -325,7 +342,7 @@ func TestCommand_Run_branch(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
@@ -377,7 +394,7 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -406,7 +423,7 @@ func TestCommand_Run_tag(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
@@ -431,11 +448,11 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "failed to lookup master(or main) branch") {
+	if !assert.Contains(t, err.Error(), "'foo' does not appear to be a git repository") {
 		t.FailNow()
 	}
 }
@@ -455,7 +472,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -482,7 +499,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 
 	err = Command{
 		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}

@@ -17,6 +17,7 @@ package kptfileutil
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -71,7 +72,7 @@ metadata:
   name: cockroachdb
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: dd7adeb5492cca4c24169cecee023dbe632e5167
     directory: staging/cockroachdb
     ref: refs/heads/owners-update
@@ -94,7 +95,7 @@ upstreamLock:
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    "dd7adeb5492cca4c24169cecee023dbe632e5167",
 				Directory: "staging/cockroachdb",
 				Ref:       "refs/heads/owners-update",
@@ -108,7 +109,7 @@ upstreamLock:
 func TestReadFile_failRead(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: cockroachdb
@@ -132,7 +133,7 @@ upstream:
 func TestReadFile_failUnmarshal(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: cockroachdb
@@ -152,441 +153,358 @@ upstreamBadField:
 	assert.Equal(t, kptfilev1alpha2.KptFile{}, f)
 }
 
-func TestKptFile_MergeSubpackages(t *testing.T) {
+func TestUpdateKptfile(t *testing.T) {
+	writeKptfileToTemp := func(name string, content string) string {
+		dir, err := ioutil.TempDir("", name)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(content), 0600)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		return dir
+	}
+
 	testCases := map[string]struct {
-		updated  string
-		local    string
-		original string
-		expected string
+		origin         string
+		updated        string
+		local          string
+		updateUpstream bool
+		expected       string
 	}{
-		"no updates in upstream or local": {
+		"no pipeline and no upstream info": {
+			origin: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: base
+`,
 			updated: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: base
 `,
 			local: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
 `,
-			original: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
+			updateUpstream: false,
 			expected: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
 `,
 		},
 
-		"additional subpackage added in local": {
+		"upstream information is not copied from upstream unless updateUpstream is true": {
+			origin: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/GoogleContainerTools/kpt
+    directory: /
+    ref: v1
+`,
 			updated: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/GoogleContainerTools/kpt
+    directory: /
+    ref: v2
 `,
 			local: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
 `,
-			original: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
+			updateUpstream: false,
 			expected: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
 `,
 		},
 
-		"additional subpackage added in upstream": {
+		"upstream information is copied from upstream when updateUpstream is true": {
+			origin: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/GoogleContainerTools/kpt
+    directory: /
+    ref: v1
+`,
 			updated: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/GoogleContainerTools/kpt
+    directory: /
+    ref: v2
+upstreamLock:
+  type: git
+  git:
+    repo: github.com/GoogleContainerTools/kpt
+    directory: /
+    ref: v2
+    commit: abc123
 `,
 			local: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
 `,
-			original: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
+			updateUpstream: true,
 			expected: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/GoogleContainerTools/kpt
+    directory: /
+    ref: v2
+upstreamLock:
+  type: git
+  git:
+    repo: github.com/GoogleContainerTools/kpt
+    directory: /
+    ref: v2
+    commit: abc123
 `,
 		},
 
-		"subpackage removed from upstream": {
+		"pipeline in upstream replaces local": {
+			origin: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:bar
+`,
 			updated: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:bar
+      configMap:
+        source: updated
+    - image: some:image
 `,
 			local: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: my:image
+      configMap:
+        source: local
+    - image: foo:bar
 `,
-			original: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
+			updateUpstream: true,
 			expected: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:bar
+      configMap:
+        source: updated
+    - image: some:image
 `,
 		},
 
-		"subpackage removed from local": {
+		"pipeline in local remains if there are no changes in upstream": {
+			origin: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:bar
+`,
 			updated: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:bar
 `,
 			local: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: my:image
+      config:
+        apiVersion: kpt.dev/v1alpha2
+        kind: Function
+        spec:
+          foo: bar
+    - image: foo:bar
 `,
-			original: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
+			updateUpstream: true,
 			expected: `
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: my:image
+      config:
+        apiVersion: kpt.dev/v1alpha2
+        kind: Function
+        spec:
+          foo: bar
+    - image: foo:bar
 `,
 		},
 
-		"all subpackages removed from local": {
+		"pipeline remains if it is only added locally": {
+			origin: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+`,
 			updated: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
-			local: `[]`,
-			original: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
-			expected: `[]`,
-		},
-
-		"all subpackages removed from upstream": {
-			updated: `[]`,
-			local: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
-			original: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
-			expected: `[]`,
-		},
-
-		"subpackage deleted from upstream but changed in local": {
-			updated: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
 `,
 			local: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: v1.0
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: my:image
+    - image: foo:bar
 `,
-			original: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: master
-    updateStrategy: resource-merge
-`,
+			updateUpstream: true,
 			expected: `
-- localDir: bar
-  upstream:
-    git:
-      repo: k8s.io/kubernetes
-      directory: /pkg
-      ref: master
-    updateStrategy: fast-forward
-- localDir: foo
-  upstream:
-    git:
-      repo: github.com/GoogleContainerTools/kpt
-      directory: /
-      ref: v1.0
-    updateStrategy: resource-merge
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: my:image
+    - image: foo:bar
+`,
+		},
+
+		"pipeline in local is emptied if it is gone from upstream": {
+			origin: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:bar
+`,
+			updated: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+`,
+			local: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: my:image
+    - image: foo:bar
+`,
+			updateUpstream: false,
+			expected: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: foo
+pipeline: {}
 `,
 		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			var updated []kptfilev1alpha2.Subpackage
-			if !assert.NoError(t, yaml.Unmarshal([]byte(tc.updated), &updated)) {
-				t.FailNow()
+			files := map[string]string{
+				"origin":  tc.origin,
+				"updated": tc.updated,
+				"local":   tc.local,
 			}
-
-			var local []kptfilev1alpha2.Subpackage
-			if !assert.NoError(t, yaml.Unmarshal([]byte(tc.local), &local)) {
-				t.FailNow()
+			dirs := make(map[string]string)
+			for n, content := range files {
+				dir := writeKptfileToTemp(n, content)
+				dirs[n] = dir
 			}
+			defer func() {
+				for _, p := range dirs {
+					_ = os.RemoveAll(p)
+				}
+			}()
 
-			var original []kptfilev1alpha2.Subpackage
-			if !assert.NoError(t, yaml.Unmarshal([]byte(tc.original), &original)) {
-				t.FailNow()
-			}
-
-			res, err := MergeSubpackages(local, updated, original)
+			err := UpdateKptfile(dirs["local"], dirs["updated"], dirs["origin"], tc.updateUpstream)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			b, err := yaml.Marshal(res)
+			c, err := ioutil.ReadFile(filepath.Join(dirs["local"], kptfilev1alpha2.KptFileName))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			node, err := yaml.Parse(string(b))
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			actual, err := node.String()
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			if !assert.Equal(t,
-				strings.TrimSpace(tc.expected),
-				strings.TrimSpace(actual)) {
-				t.FailNow()
-			}
+			assert.Equal(t, strings.TrimSpace(tc.expected)+"\n", string(c))
 		})
 	}
+
 }

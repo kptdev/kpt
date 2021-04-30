@@ -15,10 +15,11 @@
 package get_test
 
 import (
-	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
@@ -29,6 +30,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
+
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
 func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	_, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{})
@@ -36,8 +41,11 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 
 	err := Command{
 		Destination: w.WorkspaceDirectory,
-	}.Run()
-	assert.EqualError(t, err, "must specify git repo information")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify git repo information")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
@@ -50,8 +58,11 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 			Repo: "foo",
 		},
 		Destination: w.WorkspaceDirectory,
-	}.Run()
-	assert.EqualError(t, err, "must specify ref")
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must specify ref")
 }
 
 // TestCommand_Run verifies that Command will clone the HEAD of the master branch.
@@ -73,7 +84,7 @@ func TestCommand_Run(t *testing.T) {
 		Ref:       "master",
 		Directory: "/",
 	},
-		Destination: absPath}.Run()
+		Destination: absPath}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -95,7 +106,7 @@ func TestCommand_Run(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -132,7 +143,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	err := Command{Git: &kptfilev1alpha2.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -154,7 +165,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
@@ -193,7 +204,7 @@ func TestCommand_Run_destination(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -215,7 +226,7 @@ func TestCommand_Run_destination(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -257,7 +268,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 			Directory: subdir,
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -279,7 +290,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "master",
@@ -337,7 +348,7 @@ func TestCommand_Run_branch(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -357,7 +368,7 @@ func TestCommand_Run_branch(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
@@ -420,7 +431,7 @@ func TestCommand_Run_tag(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -440,7 +451,7 @@ func TestCommand_Run_tag(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
@@ -457,6 +468,118 @@ func TestCommand_Run_tag(t *testing.T) {
 			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 		},
 	})
+}
+
+func TestCommand_Run_ref(t *testing.T) {
+	testCases := map[string]struct {
+		reposContent map[string][]testutil.Content
+		directory    string
+		ref          func(repos map[string]*testutil.TestGitRepo) string
+		expected     *pkgbuilder.RootPkg
+	}{
+		"package tag": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.SecretResource),
+							),
+						Branch: "master",
+						Tag:    "kafka/v2",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Tag: "v2",
+					},
+				},
+			},
+			directory: "kafka",
+			ref: func(_ map[string]*testutil.TestGitRepo) string {
+				return "v2"
+			},
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "kafka", "v2", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "kafka", "kafka/v2", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithResource(pkgbuilder.SecretResource),
+		},
+		"commit sha": {
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.SecretResource),
+							),
+						Branch: "master",
+						Tag:    "kafka/v2",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("kafka").
+									WithResource(pkgbuilder.DeploymentResource).
+									WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Tag: "v2",
+					},
+				},
+			},
+			directory: "kafka",
+			ref: func(repos map[string]*testutil.TestGitRepo) string {
+				return repos[testutil.Upstream].Commits[0]
+			},
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "kafka", "COMMIT-INDEX:0", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "kafka", "COMMIT-INDEX:0", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource).
+				WithResource(pkgbuilder.SecretResource),
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, tc.reposContent)
+			defer clean()
+			err := testutil.UpdateRepos(t, repos, tc.reposContent)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			ref := tc.ref(repos)
+
+			absPath := filepath.Join(w.WorkspaceDirectory, repos[testutil.Upstream].RepoName)
+			err = Command{
+				Git: &kptfilev1alpha2.Git{
+					Repo:      repos[testutil.Upstream].RepoDirectory,
+					Ref:       ref,
+					Directory: tc.directory,
+				},
+				Destination: absPath,
+			}.Run(fake.CtxWithNilPrinter())
+			assert.NoError(t, err)
+
+			expectedPath := tc.expected.ExpandPkgWithName(t, repos[testutil.Upstream].RepoName, testutil.ToReposInfo(repos))
+
+			testutil.KptfileAwarePkgEqual(t, expectedPath, absPath)
+		})
+	}
 }
 
 // TestCommand_Run_failExistingDir verifies that command will fail without changing anything if the
@@ -478,7 +601,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
 	// verify the KptFile contains the expected values
@@ -500,7 +623,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -532,8 +655,11 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 			Directory: "/",
 		},
 		Destination: absPath,
-	}.Run()
-	assert.EqualError(t, err, fmt.Sprintf("destination directory %s already exists", absPath))
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "destination directory already exists")
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
@@ -550,7 +676,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -569,6 +695,28 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	})
 }
 
+func TestCommand_Run_nonexistingParentDir(t *testing.T) {
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	})
+	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, "more", "dirs", g.RepoName)
+	err := Command{
+		Git: &kptfilev1alpha2.Git{
+			Repo:      g.RepoDirectory,
+			Ref:       "master",
+			Directory: "/",
+		},
+		Destination: absPath,
+	}.Run(fake.CtxWithNilPrinter())
+	assert.NoError(t, err)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+}
+
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	_, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
@@ -584,11 +732,11 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 			Ref:       "refs/heads/master",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "failed to lookup master(or main) branch") {
+	if !assert.Contains(t, err.Error(), "'foo' does not appear to be a git repository") {
 		t.FailNow()
 	}
 }
@@ -608,7 +756,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 			Ref:       "refs/heads/foo",
 		},
 		Destination: absPath,
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -634,7 +782,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 			Ref:       "refs/tags/foo",
 		},
 		Destination: filepath.Join(w.WorkspaceDirectory, g.RepoDirectory),
-	}.Run()
+	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -647,16 +795,15 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 }
 
 func TestCommand_Run_subpackages(t *testing.T) {
-	testCases := []struct {
-		name           string
+	testCases := map[string]struct {
 		directory      string
 		ref            string
+		updateStrategy kptfilev1alpha2.UpdateStrategyType
 		reposContent   map[string][]testutil.Content
 		expectedResult *pkgbuilder.RootPkg
 		expectedErrMsg string
 	}{
-		{
-			name:      "basic package",
+		"basic package without pipeline": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -677,8 +824,99 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 		},
-		{
-			name:      "package with subpackages",
+
+		"basic package with non-KRM files": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithFile("foo.txt", `this is a test`),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0),
+				).
+				WithFile("foo.txt", `this is a test`),
+		},
+		"basic package with pipeline": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithPipeline(
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+									),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0).
+						WithPipeline(
+							pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+						),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"basic package with no Kptfile in upstream": {
+			directory: "/",
+			ref:       "master",
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "resource-merge").
+						WithUpstreamLockRef("upstream", "/", "master", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"basic package with explicit update strategy": {
+			directory:      "/",
+			ref:            "master",
+			updateStrategy: kptfilev1alpha2.FastForward,
+			reposContent: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Branch: "master",
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			expectedResult: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef("upstream", "/", "master", "fast-forward").
+						WithUpstreamLockRef("upstream", "/", "master", 0),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"package with subpackages": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -709,8 +947,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 		},
-		{
-			name:      "package with deeply nested subpackages",
+		"package with deeply nested subpackages": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -763,8 +1000,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						),
 				),
 		},
-		{
-			name:      "package with local and remote subpackages",
+		"package with local and remote subpackages": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -867,8 +1103,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 		},
-		{
-			name:      "fetch subpackage on a different branch than master",
+		"fetch subpackage on a different branch than master": {
 			directory: "/bar",
 			ref:       "main",
 			reposContent: map[string][]testutil.Content{
@@ -906,8 +1141,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},
-		{
-			name:      "package with unfetched remote subpackage with a tag reference",
+		"package with unfetched remote subpackage with a tag reference": {
 			directory: "/",
 			ref:       "main",
 			reposContent: map[string][]testutil.Content{
@@ -969,8 +1203,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 		},
-		{
-			name:      "same unfetched remote subpackage referenced multiple times",
+		"same unfetched remote subpackage referenced multiple times": {
 			directory: "/",
 			ref:       "master",
 			reposContent: map[string][]testutil.Content{
@@ -1042,22 +1275,21 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		},
 	}
 
-	for i := range testCases {
-		test := testCases[i]
-		t.Run(test.name, func(t *testing.T) {
-			repos, w, clean := testutil.SetupReposAndWorkspace(t, test.reposContent)
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, tc.reposContent)
 			defer clean()
 			upstreamRepo := repos[testutil.Upstream]
-			err := testutil.UpdateRepos(t, repos, test.reposContent)
+			err := testutil.UpdateRepos(t, repos, tc.reposContent)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
 			var targetDir string
-			if test.directory == "/" {
+			if tc.directory == "/" {
 				targetDir = filepath.Base(upstreamRepo.RepoName)
 			} else {
-				targetDir = filepath.Base(test.directory)
+				targetDir = filepath.Base(tc.directory)
 			}
 			w.PackageDir = targetDir
 			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
@@ -1065,17 +1297,18 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			err = Command{
 				Git: &kptfilev1alpha2.Git{
 					Repo:      upstreamRepo.RepoDirectory,
-					Directory: test.directory,
-					Ref:       test.ref,
+					Directory: tc.directory,
+					Ref:       tc.ref,
 				},
-				Destination: destinationDir,
-			}.Run()
+				Destination:    destinationDir,
+				UpdateStrategy: tc.updateStrategy,
+			}.Run(fake.CtxWithNilPrinter())
 
-			if test.expectedErrMsg != "" {
+			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
 					t.FailNow()
 				}
-				assert.Contains(t, err.Error(), test.expectedErrMsg)
+				assert.Contains(t, err.Error(), tc.expectedErrMsg)
 				return
 			}
 
@@ -1099,8 +1332,65 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				t.FailNow()
 			}
 
-			expectedPath := test.expectedResult.ExpandPkgWithName(t, targetDir, testutil.ToReposInfo(repos))
+			expectedPath := tc.expectedResult.ExpandPkgWithName(t, targetDir, testutil.ToReposInfo(repos))
 			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
 		})
 	}
+}
+
+func TestCommand_Run_symlinks(t *testing.T) {
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Branch: "master",
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile().
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg").
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					),
+			},
+		},
+	})
+	defer clean()
+	upstreamRepo := repos[testutil.Upstream]
+
+	// Create a symlink in the upstream repo
+	err := os.Symlink(filepath.Join(upstreamRepo.RepoDirectory, "subpkg"),
+		filepath.Join(upstreamRepo.RepoDirectory, "subpkg-sym"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
+	err = Command{
+		Git: &kptfilev1alpha2.Git{
+			Repo:      upstreamRepo.RepoDirectory,
+			Directory: "/",
+			Ref:       "master",
+		},
+		Destination: destinationDir,
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	w.PackageDir = upstreamRepo.RepoName
+
+	expectedPkg := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+				WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithSubPackages(
+			pkgbuilder.NewSubPkg("subpkg").
+				WithKptfile().
+				WithResource(pkgbuilder.ConfigMapResource),
+		)
+	expectedPath := expectedPkg.ExpandPkgWithName(t, upstreamRepo.RepoName, testutil.ToReposInfo(repos))
+
+	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
 }

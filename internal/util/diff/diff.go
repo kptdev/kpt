@@ -16,6 +16,7 @@
 package diff
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -95,7 +96,7 @@ type Command struct {
 	PkgGetter PkgGetter
 }
 
-func (c *Command) Run() error {
+func (c *Command) Run(ctx context.Context) error {
 	c.DefaultValues()
 
 	kptFile, err := kptfileutil.ReadFile(c.Path)
@@ -120,9 +121,9 @@ func (c *Command) Run() error {
 	}
 
 	// get the upstreamPkg at current version
-	upstreamPkg, err := c.PkgGetter.GetPkg(kptFile.UpstreamLock.GitLock.Repo,
-		kptFile.UpstreamLock.GitLock.Directory,
-		kptFile.UpstreamLock.GitLock.Commit)
+	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.Git.Repo,
+		kptFile.UpstreamLock.Git.Directory,
+		kptFile.UpstreamLock.Git.Commit)
 	if err != nil {
 		return err
 	}
@@ -135,7 +136,11 @@ func (c *Command) Run() error {
 	var upstreamTargetPkg string
 
 	if c.Ref == "" {
-		c.Ref, err = gitutil.DefaultRef(kptFile.UpstreamLock.GitLock.Repo)
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.Git.Repo)
+		if err != nil {
+			return err
+		}
+		c.Ref, err = gur.GetDefaultBranch(ctx)
 		if err != nil {
 			return err
 		}
@@ -145,8 +150,8 @@ func (c *Command) Run() error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkg, err = c.PkgGetter.GetPkg(kptFile.UpstreamLock.GitLock.Repo,
-			kptFile.UpstreamLock.GitLock.Directory,
+		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, kptFile.UpstreamLock.Git.Repo,
+			kptFile.UpstreamLock.Git.Directory,
 			c.Ref)
 		if err != nil {
 			return err
@@ -283,13 +288,13 @@ func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
 
 // PkgGetter knows how to fetch a package given a git repo, path and ref.
 type PkgGetter interface {
-	GetPkg(repo, path, ref string) (dir string, err error)
+	GetPkg(ctx context.Context, repo, path, ref string) (dir string, err error)
 }
 
 // defaultPkgGetter uses fetch.Command abstraction to implement PkgGetter.
 type defaultPkgGetter struct{}
 
-func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
+func (pg defaultPkgGetter) GetPkg(ctx context.Context, repo, path, ref string) (string, error) {
 	dir, err := ioutil.TempDir("", "kpt-")
 	if err != nil {
 		return dir, err
@@ -318,6 +323,6 @@ func (pg defaultPkgGetter) GetPkg(repo, path, ref string) (string, error) {
 	cmdGet := &fetch.Command{
 		Pkg: p,
 	}
-	err = cmdGet.Run()
+	err = cmdGet.Run(ctx)
 	return dir, err
 }

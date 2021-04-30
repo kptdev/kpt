@@ -1,13 +1,10 @@
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: helloworld-tshirt
-openAPI:
-  definitions:
-    io.k8s.cli.setters.tshirt-size:
-      description: start out small
-      x-k8s-cli:
-        setter:
-          name: tshirt-size
-          value: small
-          setBy: package-default
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        tshirt-size: small
+    - image: gcr.io/kustomize-functions/example-tshirt:v0.1.0

@@ -15,20 +15,24 @@
 package cmdget_test
 
 import (
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 // TestCmd_execute tests that get is correctly invoked.
 func TestCmd_execute(t *testing.T) {
@@ -42,7 +46,7 @@ func TestCmd_execute(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
-	r := cmdget.NewRunner("kpt")
+	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	// defaults LOCAL_DEST_DIR to current working directory
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/"})
 	err := r.Command.Execute()
@@ -74,7 +78,7 @@ func TestCmd_execute(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -101,7 +105,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 		t.FailNow()
 	}
 
-	r := cmdget.NewRunner("kpt")
+	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
 	err = r.Command.Execute()
 
@@ -132,7 +136,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "main",
@@ -145,7 +149,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 
 // TestCmd_fail verifies that that command returns an error rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdget.NewRunner("kpt")
+	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "./"})
@@ -156,7 +160,7 @@ func TestCmd_fail(t *testing.T) {
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "failed to lookup master(or main) branch")
+	assert.Contains(t, err.Error(), "'/real/dir' does not appear to be a git repository")
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
@@ -189,136 +193,195 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	failRun := NoOpFailRunE{t: t}.runE
-	gitutil.DefaultRef = func(repo string) (string, error) {
-		return "master", nil
+
+	testCases := map[string]struct {
+		argsFunc    func(repo, dir string) []string
+		runE        func(*cobra.Command, []string) error
+		validations func(repo, dir string, r *cmdget.Runner, err error)
+	}{
+		"must have at least 1 arg": {
+			argsFunc: func(repo, _ string) []string {
+				return []string{}
+			},
+			runE: failRun,
+			validations: func(_, _ string, r *cmdget.Runner, err error) {
+				assert.EqualError(t, err, "requires at least 1 arg(s), only received 0")
+			},
+		},
+		"must provide unambiguous repo, dir and version": {
+			argsFunc: func(repo, _ string) []string {
+				return []string{"foo", "bar", "baz"}
+			},
+			runE: failRun,
+			validations: func(_, _ string, r *cmdget.Runner, err error) {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "ambiguous repo/dir@version specify '.git' in argument")
+			},
+		},
+		"repo arg is split up correctly into ref and repo": {
+			argsFunc: func(repo, _ string) []string {
+				return []string{"something://foo.git/@master", "./"}
+			},
+			runE: NoOpRunE,
+			validations: func(_, _ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "something://foo", r.Get.Git.Repo)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "foo"), r.Get.Destination)
+			},
+		},
+		"repo arg is split up correctly into ref, directory and repo": {
+			argsFunc: func(repo, _ string) []string {
+				return []string{fmt.Sprintf("file://%s.git/blueprints/java", repo), "."}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, _ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
+			},
+		},
+		"current working dir -- should use package name": {
+			argsFunc: func(repo, _ string) []string {
+				return []string{fmt.Sprintf("file://%s.git/blueprints/java", repo), "foo/../bar/../"}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, _ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
+			},
+		},
+		"clean relative path": {
+			argsFunc: func(repo, _ string) []string {
+				return []string{fmt.Sprintf("file://%s.git/blueprints/java", repo), "./foo/../bar/../baz"}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, _ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "baz"), r.Get.Destination)
+			},
+		},
+		"clean absolute path": {
+			argsFunc: func(repo, _ string) []string {
+				return []string{fmt.Sprintf("file://%s.git/blueprints/java", repo), "/foo/../bar/../baz"}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, _ string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, "/baz", r.Get.Destination)
+			},
+		},
+		"provide an absolute destination directory": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "my-app"), r.Get.Destination)
+			},
+		},
+		"package in a subdirectory": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git/baz", repo), filepath.Join(dir, "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "/baz", r.Get.Git.Directory)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "my-app"), r.Get.Destination)
+			},
+		},
+		"package in a subdirectory at a specific ref": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git/baz@v1", repo), filepath.Join(dir, "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "/baz", r.Get.Git.Directory)
+				assert.Equal(t, "v1", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "my-app"), r.Get.Destination)
+			},
+		},
+		"provided directory already exists": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "package")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "package"), r.Get.Destination)
+			},
+		},
+		"invalid repo": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{"/", filepath.Join(dir, "package", "my-app")}
+			},
+			runE: failRun,
+			validations: func(repo, dir string, r *cmdget.Runner, err error) {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "specify '.git'")
+			},
+		},
+		"valid strategy provided": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "package"), "--strategy=fast-forward"}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *cmdget.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "package"), r.Get.Destination)
+				assert.Equal(t, kptfilev1alpha2.FastForward, r.Get.UpdateStrategy)
+			},
+		},
+		"invalid strategy provided": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "package"), "--strategy=does-not-exist"}
+			},
+			runE: failRun,
+			validations: func(repo, dir string, r *cmdget.Runner, err error) {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "unknown update strategy \"does-not-exist\"")
+			},
+		},
 	}
 
-	r := cmdget.NewRunner("kpt")
-	r.Command.SilenceErrors = true
-	r.Command.SilenceUsage = true
-	r.Command.RunE = failRun
-	r.Command.SetArgs([]string{})
-	err := r.Command.Execute()
-	assert.EqualError(t, err, "requires at least 1 arg(s), only received 0")
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			})
+			defer clean()
 
-	r = cmdget.NewRunner("kpt")
-	r.Command.SilenceErrors = true
-	r.Command.SilenceUsage = true
-	r.Command.RunE = failRun
-	r.Command.SetArgs([]string{"foo", "bar", "baz"})
-	err = r.Command.Execute()
-	assert.EqualError(t, err, "ambiguous repo/dir@version specify '.git' in argument")
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"something://foo.git/@master", "./"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "something://foo", r.Get.Git.Repo)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "foo"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"file://foo.git/blueprints/java", "."})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "file://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
-
-	// current working dir -- should use package name
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "foo/../bar/../"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
-
-	// current working dir -- should use package name
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "./foo/../bar/../"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
-
-	// clean relative path
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "./foo/../bar/../baz"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "baz"), r.Get.Destination)
-
-	// clean absolute path
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git/blueprints/java", "/foo/../bar/../baz"})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-	assert.Equal(t, "/baz", r.Get.Destination)
-
-	d, err := ioutil.TempDir("", "kpt")
-	assert.NoError(t, err)
-	defer os.RemoveAll(d)
-	err = os.Mkdir(filepath.Join(d, "package"), 0700)
-	assert.NoError(t, err)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://github.com/foo/bar.git/baz", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
-	assert.Equal(t, "/baz", r.Get.Git.Directory)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://github.com/foo/bar/.git/baz", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
-	assert.Equal(t, "/baz", r.Get.Git.Directory)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://github.com/foo/bar.git/baz@v1", filepath.Join(d, "package", "my-app")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://github.com/foo/bar", r.Get.Git.Repo)
-	assert.Equal(t, "/baz", r.Get.Git.Directory)
-	assert.Equal(t, "v1", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "my-app"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"https://foo.git", filepath.Join(d, "package")})
-	assert.NoError(t, r.Command.Execute())
-	assert.Equal(t, "https://foo", r.Get.Git.Repo)
-	assert.Equal(t, "master", r.Get.Git.Ref)
-	assert.Equal(t, filepath.Join(d, "package", "foo"), r.Get.Destination)
-
-	r = cmdget.NewRunner("kpt")
-	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"/", filepath.Join(d, "package", "my-app")})
-	err = r.Command.Execute()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "specify '.git'")
+			r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+			r.Command.SilenceErrors = true
+			r.Command.SilenceUsage = true
+			r.Command.RunE = tc.runE
+			r.Command.SetArgs(tc.argsFunc(g.RepoDirectory, w.WorkspaceDirectory))
+			err := r.Command.Execute()
+			tc.validations(g.RepoDirectory, w.WorkspaceDirectory, r, err)
+		})
+	}
 }

@@ -1,13 +1,9 @@
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: helloworld-kustomize
-openAPI:
-  definitions:
-    io.k8s.cli.setters.message:
-      description: message to print
-      x-k8s-cli:
-        setter:
-          name: message
-          value: patch
-          setBy: package-default
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        target: foobar

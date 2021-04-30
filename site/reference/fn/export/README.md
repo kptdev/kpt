@@ -27,7 +27,7 @@ cd $TEST_HOME
 <!-- @fetchPackage @verifyExamples-->
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@v0.5.0 DIR/
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@next DIR/
 ```
 
 {{% /hide %}}
@@ -81,4 +81,4 @@ OUTPUT_FILENAME:
 - Get detailed tutorials on how to use `kpt fn export` from the
   [Export a Workflow] guide.
 
-[Export a Workflow]: /guides/consumer/function/export/
+[Export a Workflow]: https://kpt.dev#todo

@@ -1,0 +1,10 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: mysql
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/apply-setters:v0.1
+    configMap:
+      ms-image: mysql
+      ms-tag: 5.6

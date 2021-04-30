@@ -20,6 +20,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"testing"
 	"text/template"
 
@@ -302,6 +304,7 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 type Kptfile struct {
 	Upstream     *Upstream
 	UpstreamLock *UpstreamLock
+	Pipeline     *Pipeline
 }
 
 func NewKptfile() *Kptfile {
@@ -377,6 +380,33 @@ type UpstreamLock struct {
 	Ref     string
 	Index   int
 	Commit  string
+}
+
+func (k *Kptfile) WithPipeline(functions ...Function) *Kptfile {
+	k.Pipeline = &Pipeline{
+		Functions: functions,
+	}
+	return k
+}
+
+type Pipeline struct {
+	Functions []Function
+}
+
+func NewFunction(image string) Function {
+	return Function{
+		Image: image,
+	}
+}
+
+type Function struct {
+	Image      string
+	ConfigPath string
+}
+
+func (f Function) WithConfigPath(configPath string) Function {
+	f.ConfigPath = configPath
+	return f
 }
 
 // RemoteSubpackage contains information about remote subpackages that should
@@ -486,11 +516,21 @@ upstream:
 {{- if .Pkg.Kptfile.UpstreamLock }}
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
     directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
     ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
     repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
+{{- end }}
+{{- if .Pkg.Kptfile.Pipeline }}
+pipeline:
+  mutators:
+{{- range .Pkg.Kptfile.Pipeline.Functions }}
+  - image: {{ .Image }}
+{{- if .ConfigPath }}
+  - configPath: {{ .ConfigPath }}
+{{- end }}
+{{- end }}
 {{- end }}
 `
 
@@ -502,26 +542,24 @@ type ReposInfo interface {
 func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 	if pkg.Kptfile.Upstream != nil && len(pkg.Kptfile.Upstream.RepoRef) > 0 {
 		repoRef := pkg.Kptfile.Upstream.RepoRef
-		repo, found := reposInfo.ResolveRepoRef(repoRef)
-		if !found {
-			panic(fmt.Errorf("path for package %s not found", repoRef))
+		ref := pkg.Kptfile.Upstream.Ref
+		pkg.Kptfile.Upstream.Repo = resolveRepoRef(repoRef, reposInfo)
+
+		if newRef, ok := resolveCommitRef(repoRef, ref, reposInfo); ok {
+			pkg.Kptfile.Upstream.Ref = newRef
 		}
-		pkg.Kptfile.Upstream.Repo = repo
 	}
 	if pkg.Kptfile.UpstreamLock != nil && len(pkg.Kptfile.UpstreamLock.RepoRef) > 0 {
 		repoRef := pkg.Kptfile.UpstreamLock.RepoRef
-		repo, found := reposInfo.ResolveRepoRef(repoRef)
-		if !found {
-			panic(fmt.Errorf("path for package %s not found", repoRef))
-		}
-		pkg.Kptfile.UpstreamLock.Repo = repo
+		ref := pkg.Kptfile.UpstreamLock.Ref
+		pkg.Kptfile.UpstreamLock.Repo = resolveRepoRef(repoRef, reposInfo)
 
 		index := pkg.Kptfile.UpstreamLock.Index
-		commit, found := reposInfo.ResolveCommitIndex(repoRef, index)
-		if !found {
-			panic(fmt.Errorf("can't find commit for index %d in repo %s", index, repoRef))
+		pkg.Kptfile.UpstreamLock.Commit = resolveCommitIndex(repoRef, index, reposInfo)
+
+		if newRef, ok := resolveCommitRef(repoRef, ref, reposInfo); ok {
+			pkg.Kptfile.UpstreamLock.Ref = newRef
 		}
-		pkg.Kptfile.UpstreamLock.Commit = commit
 	}
 	tmpl, err := template.New("test").Parse(kptfileTemplate)
 	if err != nil {
@@ -537,6 +575,45 @@ func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 	}
 	result := buf.String()
 	return result
+}
+
+// resolveRepoRef looks up the repo path for a repo from the reposInfo
+// object based on the provided reference.
+func resolveRepoRef(repoRef string, reposInfo ReposInfo) string {
+	repo, found := reposInfo.ResolveRepoRef(repoRef)
+	if !found {
+		panic(fmt.Errorf("path for package %s not found", repoRef))
+	}
+	return repo
+}
+
+// resolveCommitIndex looks up the commit SHA for a specific commit in a repo.
+// It looks up the repo based on the provided repoRef and returns the commit for
+// the commit with the provided index.
+func resolveCommitIndex(repoRef string, index int, reposInfo ReposInfo) string {
+	commit, found := reposInfo.ResolveCommitIndex(repoRef, index)
+	if !found {
+		panic(fmt.Errorf("can't find commit for index %d in repo %s", index, repoRef))
+	}
+	return commit
+}
+
+// resolveCommitRef looks up the commit SHA for a commit with the index given
+// through a special string format as the ref. If the string value follows the
+// correct format, the commit will looked up from the repo given by the RepoRef
+// and returned with the second value being true. If the ref string does not
+// follow the correct format, the second return value will be false.
+func resolveCommitRef(repoRef, ref string, reposInfo ReposInfo) (string, bool) {
+	re := regexp.MustCompile(`^COMMIT-INDEX:([0-9]+)$`)
+	matches := re.FindStringSubmatch(ref)
+	if len(matches) != 2 {
+		return "", false
+	}
+	index, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return "", false
+	}
+	return resolveCommitIndex(repoRef, index, reposInfo), true
 }
 
 // ExpandPkg writes the provided package to disk. The name of the root package

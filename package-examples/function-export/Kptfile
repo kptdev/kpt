@@ -1,6 +1,0 @@
-apiVersion: kpt.dev/v1alpha1
-kind: Kptfile
-metadata:
-  name: function-export
-packageMetadata:
-  shortDescription: example package for kpt fn export

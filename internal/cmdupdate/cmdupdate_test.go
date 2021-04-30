@@ -15,6 +15,7 @@
 package cmdupdate_test
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,12 +25,17 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
@@ -44,7 +50,7 @@ func TestCmd_execute(t *testing.T) {
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
-	getCmd := cmdget.NewRunner("kpt")
+	getCmd := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -53,11 +59,16 @@ func TestCmd_execute(t *testing.T) {
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
 		return
 	}
-	gitRunner := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
-	if !assert.NoError(t, gitRunner.Run("add", ".")) {
+	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	_, err = gitRunner.Run(context.Background(), "add", ".")
+	if !assert.NoError(t, err) {
 		return
 	}
-	if !assert.NoError(t, gitRunner.Run("commit", "-m", "commit local package -- ds1")) {
+	_, err = gitRunner.Run(context.Background(), "commit", "-m", "commit local package -- ds1")
+	if !assert.NoError(t, err) {
 		return
 	}
 
@@ -71,7 +82,7 @@ func TestCmd_execute(t *testing.T) {
 	}
 
 	// update the cloned package
-	updateCmd := cmdupdate.NewRunner("kpt")
+	updateCmd := cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	updateCmd.Command.SetArgs([]string{g.RepoName, "--strategy", "fast-forward"})
 	if !assert.NoError(t, updateCmd.Command.Execute()) {
 		return
@@ -106,7 +117,7 @@ func TestCmd_execute(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",
@@ -130,7 +141,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	// clone the repo
-	getCmd := cmdget.NewRunner("kpt")
+	getCmd := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -151,13 +162,13 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	}
 
 	// update the cloned package
-	updateCmd := cmdupdate.NewRunner("kpt")
+	updateCmd := cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	updateCmd.Command.SetArgs([]string{g.RepoName})
 	err = updateCmd.Command.Execute()
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "must commit package")
+	assert.Contains(t, err.Error(), "package must be committed to git before attempting to update")
 
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
 		return
@@ -183,7 +194,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	failRun := NoOpFailRunE{t: t}.runE
 
 	// verify the current working directory is used if no path is specified
-	r := cmdupdate.NewRunner("kpt")
+	r := cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{})
 	err := r.Command.Execute()
@@ -192,7 +203,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 
 	// verify an error is thrown if multiple paths are specified
-	r = cmdupdate.NewRunner("kpt")
+	r = cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.SilenceErrors = true
 	r.Command.RunE = failRun
 	r.Command.SetArgs([]string{"foo", "bar"})
@@ -202,7 +213,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, kptfilev1alpha2.UpdateStrategyType(""), r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
-	r = cmdupdate.NewRunner("kpt")
+	r = cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"foo@refs/heads/foo"})
 	err = r.Command.Execute()
@@ -211,7 +222,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
-	r = cmdupdate.NewRunner("kpt")
+	r = cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
 	err = r.Command.Execute()
@@ -219,7 +230,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, kptfilev1alpha2.ForceDeleteReplace, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 
-	r = cmdupdate.NewRunner("kpt")
+	r = cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{"foo", "--strategy", "resource-merge"})
 	err = r.Command.Execute()
@@ -230,7 +241,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 
 // TestCmd_fail verifies that that command returns an error when it fails rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdupdate.NewRunner("kpt")
+	r := cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.SetArgs([]string{filepath.Join("not", "real", "dir")})
@@ -296,7 +307,7 @@ func TestCmd_path(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			defer testutil.Chdir(t, test.currentWD)()
 
-			r := cmdupdate.NewRunner("kpt")
+			r := cmdupdate.NewRunner(fake.CtxWithNilPrinter(), "kpt")
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error {
 				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.Pkg.UniquePath.String()) {
 					t.FailNow()

@@ -20,7 +20,7 @@ metadata:
   labels:
     app: hello
 spec:
-  replicas: 5 # {"$kpt-set":"replicas"}
+  replicas: 5 # kpt-set: ${replicas}
   selector:
     matchLabels:
       app: hello
@@ -31,10 +31,10 @@ spec:
     spec:
       containers:
       - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:v0.3.0 # {"$kpt-set":"image"}
+        image: gcr.io/kpt-dev/helloworld-gke:v0.3.0 # kpt-set: ${image}:${tag}
         ports:
         - name: http
-          containerPort: 80 # {"$kpt-set":"http-port"}
+          containerPort: 80 # kpt-set: ${http-port}
         env:
         - name: PORT
-          value: "80" # {"$kpt-set":"http-port"}
+          value: "80" # kpt-set: ${http-port}

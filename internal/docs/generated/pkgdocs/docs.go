@@ -45,6 +45,39 @@ var PkgExamples = `
   $ kpt pkg update helloworld@v0.5.0 --strategy=resource-merge
 `
 
+var CatShort = `Print the resources in a file/directory`
+var CatLong = `
+  kpt pkg cat [FILE | DIR]
+  
+  DIR:
+    Path to a directory with resources. Defaults to the current working directory.
+  
+  FILE:
+    Path to a resource file.
+`
+var CatExamples = `
+  # print resource from a file
+  kpt pkg cat path/to/deployment.yaml
+
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+
+  # print resources from current directory
+  kpt pkg cat
+
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+  ---
+  apiVersion: apps/v1
+  kind: Service
+  metadata:
+    name: nginx-service
+`
+
 var DiffShort = `Diff a local package against upstream`
 var DiffLong = `
   kpt pkg diff [PKG_PATH@VERSION] [flags]
@@ -210,7 +243,7 @@ var InitExamples = `
 
 var TreeShort = `Render resources using a tree structure`
 var TreeLong = `
-  kpt pkg tree [DIR | -<STDIN>] [flags]
+  kpt pkg tree [DIR | -] [flags]
 
 Args:
 

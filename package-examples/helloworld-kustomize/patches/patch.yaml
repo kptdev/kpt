@@ -22,5 +22,5 @@ spec:
       containers:
       - name: helloworld-gke
         env:
-        - name: MESSAGE
-          value: 'patch' # {"$ref":"#/definitions/io.k8s.cli.setters.message"}
+        - name: TARGET
+          value: 'changeme!' # kpt-set: ${target}

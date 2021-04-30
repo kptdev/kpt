@@ -15,6 +15,7 @@
 package parse
 
 import (
+	"context"
 	"os"
 	"path"
 	"path/filepath"
@@ -30,7 +31,7 @@ type Target struct {
 	Destination string
 }
 
-func GitParseArgs(args []string) (Target, error) {
+func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 	g := Target{}
 	if args[0] == "-" {
 		return g, nil
@@ -52,7 +53,11 @@ func GitParseArgs(args []string) (Target, error) {
 			dir = parts[1]
 		}
 		if version == "" {
-			defaultRef, err := gitutil.DefaultRef(repo)
+			gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+			if err != nil {
+				return g, err
+			}
+			defaultRef, err := gur.GetDefaultBranch(ctx)
 			if err != nil {
 				return g, err
 			}
@@ -81,7 +86,11 @@ func GitParseArgs(args []string) (Target, error) {
 		return g, err
 	}
 	if version == "" {
-		defaultRef, err := gitutil.DefaultRef(repo)
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+		if err != nil {
+			return g, err
+		}
+		defaultRef, err := gur.GetDefaultBranch(ctx)
 		if err != nil {
 			return g, err
 		}

@@ -35,15 +35,5 @@ jobs:
         working-directory: href-checker
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: Build Site
-        uses: docker/build-push-action@v2
-        with:
-          context: ./site
-          load: true
-          tags: kpt-site:latest
-      - name: Run Site
-        run: docker run -p 3000:80 -d kpt-site:latest 
       - name: Run Site Checker
-        shell: bash
-        # Find all potential entrypoints (stripping out themes directory until it's removed) and check them for Docsify 404s.
-        run: find site -name README.md -printf "%P\n" | grep -v node_modules | grep -v themes | sed "s/README.md//" | sed "s/^/http:\/\/localhost:3000\//" | xargs -n1 sh -c '! (npx href-checker/ $0 --bad-content="404 - Not found" --silent --no-off-site -c=15 | grep .) || exit 255'
+        run: make site-check

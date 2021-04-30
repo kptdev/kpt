@@ -28,7 +28,6 @@ buildall:
 
 update-deps-to-head:
 	go get sigs.k8s.io/cli-utils@master
-	go get sigs.k8s.io/kustomize/cmd/config@master
 	go get sigs.k8s.io/kustomize/kyaml@master
 
 fix:
@@ -41,14 +40,10 @@ generate:
 	go install ./mdtogo
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
-	rm -rf internal/guides/generated
-	mkdir internal/guides/generated
 	GOBIN=$(GOBIN) go generate ./...
 	which addlicense || go get github.com/google/addlicense
-	$(GOBIN)/addlicense -y 2019 -l apache internal/docs/generated
-	$(GOBIN)/addlicense -y 2019 -l apache internal/guides/generated
+	$(GOBIN)/addlicense -y 2021 -l apache internal/docs/generated
 	go fmt ./internal/docs/generated/...
-	go fmt ./internal/guides/generated/...
 
 tidy:
 	go mod tidy
@@ -71,8 +66,22 @@ test:
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
-test-docker:	
-	go test -v -cover --tags=docker ./...	
+test-docker: build
+	KPT_E2E_BIN=$(GOBIN)/kpt go test -cover --tags=docker ./...
+
+# target to run e2e tests for "kpt fn render" command
+test-fn-render: build
+	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnRender ./e2e/
+
+# target to run e2e tests for "kpt fn eval" command
+test-fn-eval: build
+	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnEval ./e2e/
+
+# target to flush kpt-fn cache
+flush-fn-cache:
+	for fn in set-namespace set-label set-annotation starlark; do \
+		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
+	done
 
 vet:
 	go vet ./...
@@ -83,18 +92,17 @@ docker:
 lintdocs:
 	(cd site && npm run lint-fix)
 
-gencatalog:
-	rm site/content/en/guides/consumer/function/catalog/*/_index.md
-	(cd site/content/en/guides/consumer/function/catalog/catalog && npm run gen-docs)
+site-generate:
+	go run ./scripts/generate_site_sidebar > site/sidebar.md
+	(cd site && find . -iname "00.md" -execdir ln -sf {} README.md \; && sed -i.bak s/00.md//g sidebar.md && rm sidebar.md.bak)
 
 site-run-server:
-	npx http-server site/ -p 3000
+	make site-generate
+	./scripts/run-site.sh
 
 site-check:
+	make site-run-server
 	./scripts/check-site.sh
-
-site-verify-guides:
-	./scripts/verifyGuides.sh
 
 site-verify-examples:
 	./scripts/verifyExamples.sh

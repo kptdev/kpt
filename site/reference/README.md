@@ -38,7 +38,7 @@ The following are examples of running each kpt command group.
 
 ```shell
 # get a package
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@v0.5.0 helloworld
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@next helloworld
 fetching package /package-examples/helloworld-set from \
   https://github.com/GoogleContainerTools/kpt to helloworld
 ```
@@ -182,15 +182,11 @@ by kpt.
 
 ### Next Steps
 
-- Learn about kpt [architecture] including major influences and a high-level
-  comparison with kustomize.
-- Read kpt [guides] for how to produce and consume packages and integrate with
-  a wider ecosystem of tools.
+- Learn about kpt concepts and usage by reading the kpt [book]
 - Consult the [FAQ] for answers to common questions.
 
 [pkg]: /reference/pkg/
 [fn]: /reference/fn/
 [live]: /reference/live/
-[architecture]: /concepts/architecture/
-[guides]: /guides/
+[book]: /book/
 [FAQ]: /faq/

@@ -106,7 +106,7 @@ process_content () {
   IFS=" " read -r -a local_files <<< "$(
     for dir_root in ${package} ${package_root}; do
       [[ -d ${DEPS_DIR}/${dir_root} ]] || continue
-
+      
       # One (set) of these is fine
       find "${DEPS_DIR}/${dir_root}" \
           -xdev -follow -maxdepth ${find_maxdepth} \
@@ -169,13 +169,22 @@ mv ${V2_LICENSE_DIR}/v2/LICENSE ${V2_LICENSE_DIR}
 
 # Loop through every vendored package
 mozilla_repos=""
-for PACKAGE in $(go list -m -json all | jq -r .Path | sort -f); do
+for PACKAGE in $(go list -mod=mod -m -json all | jq -r .Path | sort -f); do
   if [[ -e "staging/src/${PACKAGE}" ]]; then
     # echo "$PACKAGE is a staging package, skipping" > /dev/stderr
     continue
   fi
   if [[ ! -e "${DEPS_DIR}/${PACKAGE}" ]]; then
     # echo "$PACKAGE doesn't exist in vendor, skipping" > /dev/stderr
+    continue
+  fi
+  # TODO: samwronski - remove this edge case
+  # The above if statement skips dependencies which did not get checked out with
+  # `go mod vendor` however that does not catch this edge case.
+  # Kpt currently depends on 2 versions of posener. Because v2 *is* checked out
+  # the directory does exist causing the above check to pass. However this repo
+  # is not included in the vendor directory so a license will not be found.
+  if [[ "${PACKAGE}" == "github.com/posener/complete" ]]; then
     continue
   fi
 

@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -27,8 +28,9 @@ const (
 )
 
 func (kf *KptFile) Validate() error {
+	const op errors.Op = "v1alpha2.kptfile.validate"
 	if err := kf.Pipeline.validate(); err != nil {
-		return fmt.Errorf("pipeline is not valid: %w", err)
+		return errors.E(op, fmt.Errorf("pipeline is not valid: %w", err))
 	}
 	// TODO: validate other fields
 	return nil
@@ -38,6 +40,7 @@ func (kf *KptFile) Validate() error {
 // 'mutators' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
 func (p *Pipeline) validate() error {
+	const op errors.Op = "v1alpha2.pipeline.validate"
 	if p == nil {
 		return nil
 	}
@@ -48,7 +51,7 @@ func (p *Pipeline) validate() error {
 		f := fns[i]
 		err := f.validate()
 		if err != nil {
-			return fmt.Errorf("function %q is invalid: %w", f.Image, err)
+			return errors.E(op, fmt.Errorf("function %q is invalid: %w", f.Image, err))
 		}
 	}
 	return nil
@@ -96,9 +99,12 @@ func validateFunctionName(name string) error {
 	pathComponentRegexp := `(?:[a-z0-9](?:(?:[_.]|__|[-]*)[a-z0-9]+)*)`
 	domainComponentRegexp := `(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`
 	domainRegexp := fmt.Sprintf(`%s(?:\.%s)*(?:\:[0-9]+)?`, domainComponentRegexp, domainComponentRegexp)
-	nameRegexp := fmt.Sprintf(`^(?:%s\/)?%s(?:\/%s)*$`, domainRegexp,
+	nameRegexp := fmt.Sprintf(`(?:%s\/)?%s(?:\/%s)*`, domainRegexp,
 		pathComponentRegexp, pathComponentRegexp)
-	matched, err := regexp.MatchString(nameRegexp, name)
+	tagRegexp := `(?:[\w][\w.-]{0,127})`
+	r := fmt.Sprintf(`^(?:%s(?:\:%s)?)$`, nameRegexp, tagRegexp)
+
+	matched, err := regexp.MatchString(r, name)
 	if err != nil {
 		return err
 	}

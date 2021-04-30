@@ -1,0 +1,30 @@
+diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
+new file mode 100644
+index 0000000..fa83ef1
+--- /dev/null
++++ b/db/deployment_httpbin.yaml
+@@ -0,0 +1,13 @@
++apiVersion: apps/v1
++kind: Deployment
++metadata:
++  name: httpbin
++spec:
++  replicas: 4
++  template:
++    spec:
++      containers:
++        - name: httpbin
++          image: kennethreitz/httpbin
++          ports:
++            - containerPort: 9876
+diff --git a/db/resources.yaml b/db/resources.yaml
+index 685f793..ac1fd96 100644
+--- a/db/resources.yaml
++++ b/db/resources.yaml
+@@ -16,4 +16,4 @@ kind: StatefulSet
+ metadata:
+   name: db
+ spec:
+-  replicas: 3
+\ No newline at end of file
++  replicas: 3

@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ metadata:
   name: helloworld-gke
   labels:
     app: hello
-    version: '0.1.0'
+    version: "0.1.0"
 spec:
   replicas: 5
   selector:
@@ -31,11 +31,11 @@ spec:
         app: hello
     spec:
       containers:
-      - name: helloworld-gke
-        image: gcr.io/kpt-dev/helloworld-gke:0.1.0
-        ports:
-        - name: http
-          containerPort: 80
-        env:
-        - name: PORT
-          value: '80'
+        - name: helloworld-gke
+          image: gcr.io/kpt-dev/helloworld-gke:0.3.0
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: PORT
+              value: "80"
