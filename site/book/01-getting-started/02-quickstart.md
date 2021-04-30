@@ -8,7 +8,7 @@ configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.1
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.2
 $ cd nginx
 ```
 
@@ -126,7 +126,7 @@ git add .; git commit -am "customized nginx package"
 ```
 
 ```shell
-$ kpt pkg update @v0.2
+$ kpt pkg update @v0.3
 ```
 
 You can observe that the changes you have made are intact, along with the new changes from
