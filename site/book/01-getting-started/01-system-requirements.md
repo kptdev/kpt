@@ -1,4 +1,4 @@
-In order to follow along with the examples in this book, the following needs to be installed on you
+In order to follow along with the examples in this book, the following needs to be installed on your
 system:
 
 ## kpt

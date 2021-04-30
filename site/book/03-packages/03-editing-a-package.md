@@ -19,27 +19,27 @@ _within_ a package.
 ## Manual edits
 
 As mentioned earlier, you can manually edit or author KRM resources using your favorite editor.
-Since every KRM resource has a known schema, you can take advantage of tooling that assist in
+Since every KRM resource has a known schema, you can take advantage of tooling that assists in
 authoring and validating resource configuration. For example, [Cloud Code] extensions for VS Code
 and IntelliJ provide IDE features such as auto-completion, inline documentation, linting, and snippets.
 
 For example, if you have VS Code installed, try modifying the resources in the `wordpress` package:
 
 ```shell
-$ code wordress
+$ code wordpress
 ```
 
 ## Automation
 
-Often times you want to automate repetitive or complex operations. Having standardized on KRM for
+Oftentimes, you want to automate repetitive or complex operations. Having standardized on KRM for
 all resources in a package (including meta resources) allows us to easily develop automation in
-different toolchains, languages, and at levels of abstraction.
+different toolchains and languages, as well as at levels of abstraction.
 
 For example, setting a label on all the resources in the `wordpress` package can be done
 using the following function:
 
 ```shell
-cd wordpress
+$ cd wordpress
 $ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 -- env=dev
 ```
 

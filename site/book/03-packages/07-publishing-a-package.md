@@ -17,7 +17,7 @@ $ cd wordpress
 $ git add . && git commit -m "Add wordpress package"
 ```
 
-Tag and pushes the commit:
+Tag and push the commit:
 
 ```shell
 $ git tag v0.1
@@ -35,7 +35,7 @@ $ kpt pkg get <MY_REPO_URL>/@v0.1
 You may have a Git repo containing multiple packages. kpt provides a tagging
 convention to enable packages to be independently versioned.
 
-For example, let's assume the `wordpress` directory is not at the root of the repo,
+For example, let's assume the `wordpress` directory is not at the root of the repo
 but instead is in the directory `packages/wordpress`:
 
 ```shell

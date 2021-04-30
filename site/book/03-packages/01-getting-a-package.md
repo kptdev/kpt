@@ -7,7 +7,7 @@ Let's revisit the Wordpress example:
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1
 ```
 
-A package in a Git repo can be fetched by specifying a branch, tag, or a commit SHA. In this case,
+A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case,
 we are specifying tag `v0.1`.
 
 > Refer to the [command reference][get-doc] for more details.
@@ -56,7 +56,7 @@ The `Kptfile` contains two sections to keep track of the upstream package:
    contains three pieces of information:
    - `repo`: The Git repository where the package can be found
    - `directory`: The directory within the Git repository where this package can be found
-   - `ref`: The Git reference for the package. This can be either a brach, tag, or commit SHA.
+   - `ref`: The Git reference for the package. This can be either a branch, tag, or commit SHA.
 2. The `upstreamLock` section records the upstream Git reference (exact Git SHA) that was fetched by
    kpt. This section is managed by kpt and should not be changed manually.
 
@@ -88,21 +88,22 @@ This is because there are two different package types in kpt:
 In this case, the `mysql` subpackage is a _dependent package_. The upstream package for `mysql` is
 automatically inferred from the parent package. You can think of the `Kptfile` in the `mysql`
 package as implicitly inheriting the `upstream` section of its parent, with the only difference
-being that `upstream.directory` points to `/package-examples/wordpress/mysql`.
+being that `upstream.directory` in the subpackage would instead point to
+`/package-examples/wordpress/mysql`.
 
 ## Package Name and Identifier
 
 It is possible to specify a different local directory name to the `get` command. For example,
-the following fetches the packages to a directory names `mywordpress`:
+the following fetches the packages to a directory named `mywordpress`:
 
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1 mywordpress
 ```
 
-The _name_ of a package is given by its directory name. Since the Kptfile is a KRM resource and
+The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and
 follows the familiar structure of KRM resources, the name of the package is also available from the
-`metadata.name` field. This must always be the same of the directory name and kpt will update it
-automatically when forking a package. In this case, `metadata.name` is set `mywordpress`.
+`metadata.name` field. This must always be the name of the directory, and kpt will update it
+automatically when forking a package. In this case, `metadata.name` is set to `mywordpress`.
 
 The name of a package is unique within its parent package, but it may not be unique in a deeply
 nested package hierarchy (i.e. Depth > 2). The _unique identifier_ for a package is defined as the
