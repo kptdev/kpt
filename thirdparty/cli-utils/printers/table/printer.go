@@ -138,7 +138,6 @@ func (t *Printer) runPrintLoop(coll *ResourceStateCollector, stop chan struct{})
 				ticker.Stop()
 				latestState := coll.LatestState()
 				linesPrinted = baseTablePrinter.PrintTable(latestState, linesPrinted)
-				_, _ = fmt.Fprint(t.IOStreams.Out, "\n")
 				return
 			case <-ticker.C:
 				latestState := coll.LatestState()

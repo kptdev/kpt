@@ -33,14 +33,14 @@ func AddErrorResolver(er ErrorResolver) {
 // ResolveError attempts to resolve the provided error into a descriptive
 // string which will be displayed to the user. If the last return value is false,
 // the error could not be resolved.
-func ResolveError(err error) (ResolvedErr, bool) {
+func ResolveError(err error) (ResolvedResult, bool) {
 	for _, resolver := range errorResolvers {
 		msg, found := resolver.Resolve(err)
 		if found {
 			return msg, true
 		}
 	}
-	return ResolvedErr{}, false
+	return ResolvedResult{}, false
 }
 
 // ExecuteTemplate takes the provided template string and data, and renders
@@ -59,7 +59,7 @@ func ExecuteTemplate(text string, data interface{}) string {
 	return strings.TrimSpace(b.String())
 }
 
-type ResolvedErr struct {
+type ResolvedResult struct {
 	Message  string
 	ExitCode int
 }
@@ -67,5 +67,5 @@ type ResolvedErr struct {
 // ErrorResolver is an interface that allows kpt to resolve an error into
 // an error message suitable for the end user.
 type ErrorResolver interface {
-	Resolve(err error) (ResolvedErr, bool)
+	Resolve(err error) (ResolvedResult, bool)
 }

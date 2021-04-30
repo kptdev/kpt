@@ -73,10 +73,10 @@ Error: Unknown ref {{ printf "%q" .ref }}. Please verify that the reference exis
 // that can produce error messages for errors of the gitutil.GitExecError type.
 type gitExecErrorResolver struct{}
 
-func (*gitExecErrorResolver) Resolve(err error) (ResolvedErr, bool) {
+func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var gitExecErr *gitutil.GitExecError
 	if !goerrors.As(err, &gitExecErr) {
-		return ResolvedErr{}, false
+		return ResolvedResult{}, false
 	}
 	fullCommand := fmt.Sprintf("git %s %s", gitExecErr.Command,
 		strings.Join(gitExecErr.Args, " "))
@@ -97,7 +97,7 @@ func (*gitExecErrorResolver) Resolve(err error) (ResolvedErr, bool) {
 	default:
 		msg = ExecuteTemplate(genericGitExecError, tmplArgs)
 	}
-	return ResolvedErr{
+	return ResolvedResult{
 		Message:  msg,
 		ExitCode: 1,
 	}, true
@@ -107,14 +107,17 @@ func (*gitExecErrorResolver) Resolve(err error) (ResolvedErr, bool) {
 // that can produce error messages for errors of the FnExecError type.
 type fnExecErrorResolver struct{}
 
-func (*fnExecErrorResolver) Resolve(err error) (string, bool) {
+func (*fnExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	kioErr := errors.UnwrapKioError(err)
 
 	var fnErr *errors.FnExecError
 	if !goerrors.As(kioErr, &fnErr) {
-		return "", false
+		return ResolvedResult{}, false
 	}
 	// TODO: write complete details to a file
 
-	return fnErr.String(), true
+	return ResolvedResult{
+		Message: fnErr.String(),
+		ExitCode: 1,
+	}, true
 }

@@ -40,7 +40,7 @@ The package should have one and only one inventory object template.
 `
 	//nolint:lll
 	timeoutError = `
-Error: Timeout after {{printf "%.0f" .err.Timeout.Seconds}} seconds waiting for {{printf "%d" (len .err.TimedOutResources)}} out of {{printf "%d" (len .err.Identifiers)}} resources to reach condition {{ .err.Condition}}:
+Error: Timeout after {{printf "%.0f" .err.Timeout.Seconds}} seconds waiting for {{printf "%d" (len .err.TimedOutResources)}} out of {{printf "%d" (len .err.Identifiers)}} resources to reach condition {{ .err.Condition}}:{{ printf "\n" }}
 
 {{- range .err.TimedOutResources}}
 {{printf "%s/%s %s %s" .Identifier.GroupKind.Kind .Identifier.Name .Status .Message }}
@@ -54,25 +54,25 @@ Error: Timeout after {{printf "%.0f" .err.Timeout.Seconds}} seconds waiting for 
 // that can resolve error types used in the live functionality.
 type liveErrorResolver struct{}
 
-func (*liveErrorResolver) Resolve(err error) (ResolvedErr, bool) {
+func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	tmplArgs := map[string]interface{}{
 		"err": err,
 	}
 	switch err.(type) {
 	case *inventory.NoInventoryObjError:
-		return ResolvedErr{
+		return ResolvedResult{
 			Message: ExecuteTemplate(noInventoryObjError, tmplArgs),
 		}, true
 	case *inventory.MultipleInventoryObjError:
-		return ResolvedErr{
+		return ResolvedResult{
 			Message: ExecuteTemplate(multipleInventoryObjError, tmplArgs),
 		}, true
 	case *taskrunner.TimeoutError:
-		return ResolvedErr{
+		return ResolvedResult{
 			Message:  ExecuteTemplate(timeoutError, tmplArgs),
 			ExitCode: TimeoutErrorExitCode,
 		}, true
 	default:
-		return ResolvedErr{}, false
+		return ResolvedResult{}, false
 	}
 }
