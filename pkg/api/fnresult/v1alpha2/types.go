@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1alpha2
 
 import (
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -24,7 +25,7 @@ type Result struct {
 	// Image is the full name of the image that generates this result
 	// Image and Exec are mutually exclusive
 	Image string `yaml:"image,omitempty"`
-	// ExecPath is the the absolute path to the executable file
+	// ExecPath is the the absolute os-specific path to the executable file
 	ExecPath string `yaml:"exec,omitempty"`
 	// Stderr is the content in function stderr
 	Stderr string `yaml:"stderr,omitempty"`
@@ -36,8 +37,8 @@ type Result struct {
 
 const (
 	ResultListKind       = "FunctionResultList"
-	ResultListGroup      = "config.kubernetes.io"
-	ResultListVersion    = "v1alpha1"
+	ResultListGroup      = kptfilev1alpha2.KptFileGroup
+	ResultListVersion    = kptfilev1alpha2.KptFileVersion
 	ResultListAPIVersion = ResultListGroup + "/" + ResultListVersion
 )
 
