@@ -31,8 +31,8 @@ const (
 type FnExecError struct {
 	// OriginalErr is the original error returned from function runtime
 	OriginalErr error
-	// DisableOutputTruncate indicates should error message truncation be disabled
-	DisableOutputTruncate bool
+	// TruncateOutput indicates should error message be truncated
+	TruncateOutput bool
 	// Stderr is the content written to function stderr
 	Stderr string `yaml:"stderr,omitempty"`
 	// ExitCode is the exit code returned from function
@@ -47,7 +47,7 @@ func (fe *FnExecError) String() string {
 	b.WriteString(universalIndent + "Stderr:\n")
 
 	lineIndent := strings.Repeat(" ", FnExecErrorIndentation+2)
-	if fe.DisableOutputTruncate {
+	if !fe.TruncateOutput {
 		// stderr string should have indentations
 		for _, s := range strings.Split(fe.Stderr, "\n") {
 			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))

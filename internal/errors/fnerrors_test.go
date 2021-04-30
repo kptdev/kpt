@@ -132,7 +132,7 @@ error message`,
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			tc.fnExecError.DisableOutputTruncate = !tc.truncate
+			tc.fnExecError.TruncateOutput = tc.truncate
 			s := tc.fnExecError.String()
 			assert.EqualValues(t, tc.expected, s)
 		})

@@ -76,8 +76,8 @@ func GetMain(ctx context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().BoolVar(&printer.DisableOutputTruncate, "disable-output-truncate", false,
-		"Disable the truncation for output")
+	cmd.PersistentFlags().BoolVar(&printer.TruncateOutput, "truncate-output", true,
+		"Enable the truncation for output")
 	// wire the global printer
 	pr := printer.New(cmd.OutOrStdout(), cmd.ErrOrStderr())
 

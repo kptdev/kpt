@@ -53,7 +53,7 @@ type ContainerFnWrapper struct {
 
 func (fw *ContainerFnWrapper) Run(r io.Reader, w io.Writer) error {
 	pr := printer.FromContextOrDie(fw.Fn.Ctx)
-	printOpt := printer.NewOpt().Indent(printer.FnIndentation)
+	printOpt := printer.NewOpt()
 	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fw.Fn.Image)
 	err := fw.Fn.Run(r, w)
 	if err != nil {
@@ -99,10 +99,10 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 		var exitErr *exec.ExitError
 		if goerrors.As(err, &exitErr) {
 			return &errors.FnExecError{
-				OriginalErr:           exitErr,
-				ExitCode:              exitErr.ExitCode(),
-				Stderr:                errSink.String(),
-				DisableOutputTruncate: printer.DisableOutputTruncate,
+				OriginalErr:    exitErr,
+				ExitCode:       exitErr.ExitCode(),
+				Stderr:         errSink.String(),
+				TruncateOutput: printer.TruncateOutput,
 			}
 		}
 		return fmt.Errorf("unexpected function error: %w", err)

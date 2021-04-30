@@ -20,19 +20,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
-const (
-	// FnIndentation is the number of spaces at the beginning of each line of
-	// function running progress.
-	FnIndentation = 0
-)
-
-// DisableOutputTruncate defines should output be truncated
-var DisableOutputTruncate bool
+// TruncateOutput defines should output be truncated
+var TruncateOutput bool
 
 // Printer defines capabilities to display content in kpt CLI.
 // The main intention, at the moment, is to abstract away printing
@@ -44,9 +37,6 @@ type Printer interface {
 
 // Options are optional options for printer
 type Options struct {
-	// Indetation is the number of spaces added at the beginning
-	// of each line
-	Indentation int
 	// OutputToStderr indicates should output be printed to stderr instead
 	// of stdout
 	OutputToStderr bool
@@ -70,12 +60,6 @@ func (opt *Options) Pkg(p types.UniquePath) *Options {
 // PkgDisplayPath sets the package display path in options
 func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
 	opt.PkgDisplayPath = p
-	return opt
-}
-
-// Indent sets the output indentation in options
-func (opt *Options) Indent(i int) *Options {
-	opt.Indentation = i
 	return opt
 }
 
@@ -140,31 +124,7 @@ func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
 		}
 		format = fmt.Sprintf("Package %q: ", relPath) + format
 	}
-	if opt.Indentation != 0 {
-		// we need to add indentation to each line
-		indentPrintf(o, opt.Indentation, format, args...)
-		return
-	}
 	fmt.Fprintf(o, format, args...)
-}
-
-func indentPrintf(w io.Writer, indentation int, format string, a ...interface{}) {
-	s := fmt.Sprintf(format, a...)
-	lines := strings.Split(s, "\n")
-	for i, l := range lines {
-		// don't add newline for last line to respect the original input
-		// format
-		newline := "\n"
-		if i == len(lines)-1 {
-			newline = ""
-		}
-		if l == "" {
-			// don't print indentation when the line is empty
-			fmt.Fprint(w, newline)
-		} else {
-			fmt.Fprint(w, strings.Repeat(" ", indentation)+l+newline)
-		}
-	}
 }
 
 // Helper functions to set and retrieve printer instance from a context.

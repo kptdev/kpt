@@ -206,7 +206,7 @@ func (r *Runner) runFnRender() error {
 	// run function
 	kptArgs := []string{"fn", "render", pkgPath}
 	if r.testCase.Config.DisableOutputTruncate {
-		kptArgs = append(kptArgs, "--disable-output-truncate")
+		kptArgs = append(kptArgs, "--truncate-output=false")
 	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
 		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
