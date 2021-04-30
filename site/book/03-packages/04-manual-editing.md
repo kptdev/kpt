@@ -1,1 +1,0 @@
-Manually edit a package

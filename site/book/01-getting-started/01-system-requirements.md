@@ -9,7 +9,6 @@ system:
 $ kpt version
 ```
 
-TODO: Clean up installation page.
 TODO: kpt 1.0 binaries needs to be available.
 
 ## Git

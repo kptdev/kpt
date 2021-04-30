@@ -8,7 +8,7 @@ configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@next
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.1
 $ cd nginx
 ```
 
@@ -104,6 +104,3 @@ $ kpt live destroy
 
 Congrats! You should now have a rough idea of what kpt is and what you can do with it.
 Now, let's delve into the details.
-
-TODO: Add the output from running all the commands.
-TODO: Version the nginx example using a tag.
