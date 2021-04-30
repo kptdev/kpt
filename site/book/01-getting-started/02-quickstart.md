@@ -15,7 +15,7 @@ $ cd nginx
 Commit the local package to git:
 
 ```shell
-git init; git add .; git commit -am "nginx package"
+git init; git add .; git commit -am "Pristine nginx package"
 ```
 
 `kpt pkg` commands provide the functionality for working with packages on Git and on your local
@@ -55,6 +55,12 @@ in the package using path expressions:
 
 ```shell
 $ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-path=spec.**.app' 'put-value=my-nginx'
+```
+
+To see what changes were made to the local package:
+
+```shell
+$ git diff
 ```
 
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
@@ -115,22 +121,22 @@ This waits for the resources to be reconciled on the cluster by monitoring their
 
 ## Update the package
 
-Subsequently, there might be updates to the remote `nginx` package which you want to rebase your local package against.
-A typical `git rebase` might lead to merge conflicts in this scenario. `kpt pkg update` is schema-aware
-and intelligently merges local changes with upstream updates.
+Subsequently, there might be updates to the upstream `nginx` you may be interested in. You want to merge
+the upstream changes with changes to your local package.
 
-Commit your local changes to git before update:
+First, commit your local changes:
 
 ```shell
-git add .; git commit -am "customized nginx package"
+git add .; git commit -am "My customizations"
 ```
+
+Then update to version `v0.3`:
 
 ```shell
 $ kpt pkg update @v0.3
 ```
 
-You can observe that the changes you have made are intact, along with the new changes from
-upstream(image version updated in `Deployment` resource) are fetched onto the local package.
+This merges the upstream changes with your local changes using a schema-aware merge strategy.
 
 Apply the updated resources to the cluster:
 
