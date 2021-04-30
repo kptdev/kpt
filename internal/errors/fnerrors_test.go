@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnerrors
+package errors
 
 import (
 	"testing"
@@ -30,9 +30,9 @@ func TestFnExecErrorString(t *testing.T) {
 		{
 			name:        "no truncate - empty stderr",
 			fnExecError: FnExecError{},
-			expected: `Stderr:
-  ""
-Exit Code: 0
+			expected: `  Stderr:
+    ""
+  Exit Code: 0
 `,
 		},
 		{
@@ -42,10 +42,10 @@ Exit Code: 0
 error message2`,
 				ExitCode: 1,
 			},
-			expected: `Stderr:
-  "error message1"
-  "error message2"
-Exit Code: 1
+			expected: `  Stderr:
+    "error message1"
+    "error message2"
+  Exit Code: 1
 `,
 		},
 		{
@@ -58,13 +58,13 @@ error message
 error message`,
 				ExitCode: 1,
 			},
-			expected: `Stderr:
-  "error message"
-  "error message"
-  "error message"
-  "error message"
-  "error message"
-Exit Code: 1
+			expected: `  Stderr:
+    "error message"
+    "error message"
+    "error message"
+    "error message"
+    "error message"
+  Exit Code: 1
 `,
 		},
 		{
@@ -77,12 +77,12 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `Stderr:
-  "error message"
-  "error message"
-  "error message"
-  "error message"
-Exit Code: 1
+			expected: `  Stderr:
+    "error message"
+    "error message"
+    "error message"
+    "error message"
+  Exit Code: 1
 `,
 		},
 		{
@@ -96,13 +96,13 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `Stderr:
-  "error message"
-  "error message"
-  "error message"
-  "error message"
-  ...(1 line(s) truncated)
-Exit Code: 1
+			expected: `  Stderr:
+    "error message"
+    "error message"
+    "error message"
+    "error message"
+    ...(1 line(s) truncated)
+  Exit Code: 1
 `,
 		},
 		{
@@ -119,13 +119,13 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `Stderr:
-  "error message"
-  "error message"
-  "error message"
-  "error message"
-  ...(4 line(s) truncated)
-Exit Code: 1
+			expected: `  Stderr:
+    "error message"
+    "error message"
+    "error message"
+    "error message"
+    ...(4 line(s) truncated)
+  Exit Code: 1
 `,
 		},
 	}

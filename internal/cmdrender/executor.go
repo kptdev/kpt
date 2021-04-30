@@ -261,6 +261,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	const op errors.Op = "pipeline.run"
 	pr := printer.FromContextOrDie(ctx)
 	// we only print package name here
+	// TODO: the DisplayPath is a relative file path. It cannot represent the
+	// package structure. We should have function to get the relative package
+	// path here.
 	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n\n")
 
 	if len(input) == 0 {

@@ -40,11 +40,6 @@ var DisableOutputTruncate bool
 type Printer interface {
 	Printf(format string, args ...interface{})
 	OptPrintf(opt *Options, format string, args ...interface{})
-	PrintPrintable(opt *Options, p Printable)
-}
-
-type Printable interface {
-	String() string
 }
 
 // Options are optional options for printer
@@ -118,11 +113,6 @@ type contextKey int
 // arbitrary.  If this package defined other context keys, they would have
 // different integer values.
 const printerKey contextKey = 0
-
-// PrintPrintable prints a printable object according to opt
-func (pr *printer) PrintPrintable(opt *Options, p Printable) {
-	pr.OptPrintf(opt, p.String()+"\n")
-}
 
 // Printf is the wrapper over fmt.Printf that displays the output.
 func (pr *printer) Printf(format string, args ...interface{}) {

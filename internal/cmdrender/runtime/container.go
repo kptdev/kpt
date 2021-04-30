@@ -17,13 +17,14 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors/fnerrors"
+	kpt_errors "github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
@@ -57,16 +58,7 @@ func (fw *ContainerFnWrapper) Run(r io.Reader, w io.Writer) error {
 	err := fw.Fn.Run(r, w)
 	if err != nil {
 		pr.OptPrintf(printOpt, "[FAIL] %q\n", fw.Fn.Image)
-		failureOpt := printer.NewOpt().
-			Indent(fnerrors.FnExecErrorIndentation).
-			Stderr()
-		fe, ok := err.(*fnerrors.FnExecError)
-		if !ok {
-			return err
-		}
-		// TODO: write complete details to a file
-		pr.PrintPrintable(failureOpt, fe)
-		return fmt.Errorf("function %q failed", fw.Fn.Image)
+		return err
 	}
 	pr.OptPrintf(printOpt, "[PASS] %q\n", fw.Fn.Image)
 	return nil
@@ -104,17 +96,16 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	cmd.Stderr = &errSink
 
 	if err := cmd.Run(); err != nil {
-		var exitCode int
-		if exitError, ok := err.(*exec.ExitError); ok {
-			exitCode = exitError.ExitCode()
-		} else {
-			return fmt.Errorf("cannot get function exit code: %w", err)
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return &kpt_errors.FnExecError{
+				OriginalErr:           exitErr,
+				ExitCode:              exitErr.ExitCode(),
+				Stderr:                errSink.String(),
+				DisableOutputTruncate: printer.DisableOutputTruncate,
+			}
 		}
-		return &fnerrors.FnExecError{
-			ExitCode:              exitCode,
-			Stderr:                errSink.String(),
-			DisableOutputTruncate: printer.DisableOutputTruncate,
-		}
+		return fmt.Errorf("cannot get function exit code: %w", err)
 	}
 
 	return nil

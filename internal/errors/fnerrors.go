@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnerrors
+package errors
 
 import (
 	"fmt"
@@ -29,6 +29,8 @@ const (
 // FnExecError contains the information about the function failure that will
 // be outputted.
 type FnExecError struct {
+	// OriginalErr is the original error returned from function runtime
+	OriginalErr error
 	// DisableOutputTruncate indicates should error message truncation be disabled
 	DisableOutputTruncate bool
 	// Stderr is the content written to function stderr
@@ -41,9 +43,10 @@ type FnExecError struct {
 // String returns string representation of the failure.
 func (fe *FnExecError) String() string {
 	var b strings.Builder
-	b.WriteString("Stderr:\n")
+	universalIndent := strings.Repeat(" ", FnExecErrorIndentation)
+	b.WriteString(universalIndent + "Stderr:\n")
 
-	lineIndent := strings.Repeat(" ", 2)
+	lineIndent := strings.Repeat(" ", FnExecErrorIndentation+2)
 	if fe.DisableOutputTruncate {
 		// stderr string should have indentations
 		for _, s := range strings.Split(fe.Stderr, "\n") {
@@ -63,7 +66,7 @@ func (fe *FnExecError) String() string {
 			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated)\n", len(lines)-printedLines))
 		}
 	}
-	b.WriteString(fmt.Sprintf("Exit Code: %d\n", fe.ExitCode))
+	b.WriteString(fmt.Sprintf(universalIndent+"Exit Code: %d\n", fe.ExitCode))
 	return b.String()
 }
 
