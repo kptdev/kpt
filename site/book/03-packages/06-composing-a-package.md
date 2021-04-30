@@ -53,7 +53,7 @@ $ kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/appl
 
 TODO(#1829): This can be simplified.
 
-This creates a [independent package]. If you wish this to make this a dependent package, you
+This creates an [independent package]. If you wish to make this a dependent package, you
 can delete the `upstream` and `upstreamLock` sections of the `Kptfile` in `mysql` directory.
 
 [create a new package]: /book/03-packages/05-creating-a-package
