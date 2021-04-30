@@ -49,8 +49,7 @@ $ vim deployment.yaml
 
 Often, you want to automatically mutate and/or validate resources in a package.
 `kpt fn` commands enable you to execute programs called _kpt functions_.
-
-For example, you can automatically search and replace all the occurrences of `app` name on resources
+For instance, you can automatically search and replace all the occurrences of `app` name on resources
 in the package using path expressions:
 
 ```shell
@@ -65,9 +64,8 @@ $ git diff
 
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
 performed repeatedly, there is a _declarative_ way to define a pipeline of functions as part of the
-package (in the `Kptfile`). For example, you might want organize resources in the package using a label `env`.
-To achieve that, you can declare `set-label` function in the `pipeline` section of `Kptfile`.
-This function will ensure that the label `env: dev` is added to all the resources in the package.
+package (in the `Kptfile`). For example, you might want label all resources in the package.
+To achieve that, you can declare `set-label` function in the `pipeline` section of `Kptfile`:
 
 ```shell
 pipeline:
@@ -76,6 +74,8 @@ pipeline:
       configMap:
         env: dev
 ```
+
+This function will ensure that the label `env: dev` is added to all the resources in the package.
 
 This pipeline is executed using the `render` command:
 
