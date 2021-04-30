@@ -17,14 +17,14 @@ package runtime
 import (
 	"bytes"
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"io"
 	"os/exec"
 	"strings"
 	"time"
 
-	kpt_errors "github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
@@ -97,8 +97,8 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return &kpt_errors.FnExecError{
+		if goerrors.As(err, &exitErr) {
+			return &errors.FnExecError{
 				OriginalErr:           exitErr,
 				ExitCode:              exitErr.ExitCode(),
 				Stderr:                errSink.String(),
