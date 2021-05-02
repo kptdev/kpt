@@ -44,7 +44,8 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 		}
 		localSubPkgPath := filepath.Join(options.LocalPath, p)
 		updatedSubPkgPath := filepath.Join(options.UpdatedPath, p)
-
+		println(updatedSubPkgPath)
+		println(localSubPkgPath)
 		err = pkgutil.RemovePackageContent(localSubPkgPath, !isRootPkg)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localSubPkgPath), err)

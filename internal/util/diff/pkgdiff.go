@@ -16,6 +16,7 @@ package diff
 
 import (
 	"bytes"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -28,6 +29,12 @@ import (
 )
 
 func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
+	if err := addmergecomment.Process(pkg1); err != nil {
+		return sets.String{}, err
+	}
+	if err := addmergecomment.Process(pkg2); err != nil {
+		return sets.String{}, err
+	}
 	pkg1Files, err := pkgSet(pkg1)
 	if err != nil {
 		return sets.String{}, err

@@ -95,8 +95,6 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool 
 }
 
 func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
-	sourceDir, clean := addMergeCommentToExpected(t, sourceDir)
-	defer clean()
 	diff, err := Diff(sourceDir, destDir)
 	if !assert.NoError(t, err) {
 		return false
@@ -108,21 +106,26 @@ func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
 // addMergeCommentToExpected copies the expected path directory contents to
 // new temp directory and adds merge comment to the resources in directory
 // it also returns the cleanup function to clean the created temp directory
-func addMergeCommentToExpected(t *testing.T, path string) (string, func()) {
+func addMergeCommentToExpected(path string) (string, func(), error) {
 	expected, err := ioutil.TempDir("", "")
-	assert.NoError(t, err)
-
+	if err != nil {
+		return "", nil, err
+	}
 	err = copyutil.CopyDir(path, expected)
-	assert.NoError(t, err)
+	if err != nil {
+		return "", nil, err
+	}
 
 	err = addmergecomment.Process(expected)
-	assert.NoError(t, err)
+	if err != nil {
+		return "", nil, err
+	}
 
 	clean := func() {
 		os.RemoveAll(expected)
 	}
 
-	return expected, clean
+	return expected, clean, nil
 }
 
 // KptfileAwarePkgEqual compares two packages (including any subpackages)
@@ -191,8 +194,20 @@ func kptfileExists(t *testing.T, path string) bool {
 // this set is not guaranteed to contain all differing files.
 func Diff(sourceDir, destDir string) (sets.String, error) {
 	// get set of filenames in the package source
+	println(sourceDir)
+	println(destDir)
+	sourceDir, clean1, err := addMergeCommentToExpected(sourceDir)
+	defer clean1()
+	if err != nil {
+		return sets.String{}, err
+	}
+	destDir, clean2, err := addMergeCommentToExpected(destDir)
+	defer clean2()
+	if err != nil {
+		return sets.String{}, err
+	}
 	upstreamFiles := sets.String{}
-	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -254,7 +269,6 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 
 		s1 := strings.TrimSpace(strings.TrimPrefix(string(b1), trimPrefix))
 		s2 := strings.TrimSpace(strings.TrimPrefix(string(b2), trimPrefix))
-
 		if s1 != s2 {
 			fmt.Println(copyutil.PrettyFileDiff(s1, s2))
 			diff.Insert(f)

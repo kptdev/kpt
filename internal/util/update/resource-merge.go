@@ -130,6 +130,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 		if diff.Len() == 0 {
+			println("Phani really here")
 			if err := os.RemoveAll(localPath); err != nil {
 				return errors.E(op, types.UniquePath(localPath), err)
 			}
