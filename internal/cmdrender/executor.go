@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -66,6 +67,13 @@ func (e *Executor) Execute(ctx context.Context) error {
 	}
 
 	pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
+
+	// format resources before writing
+	_, err = filters.FormatFilter{UseSchema: true}.Filter(resources)
+	if err != nil {
+		return err
+	}
+
 	err = pkgWriter.Write(resources)
 	if err != nil {
 		return fmt.Errorf("failed to save resources: %w", err)
