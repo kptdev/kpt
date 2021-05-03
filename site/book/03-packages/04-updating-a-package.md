@@ -39,6 +39,12 @@ strategy is used which performs a structural comparison of the resource using Op
 
 > Refer to the [command reference][update-doc] for more details.
 
-[update-doc]: /reference/pkg/update/
-
 TODO(#1827): Handling merge conflicts
+
+Once you have successfully updated the package, commit the changes:
+
+```shell
+$ git add .; git commit -am "Updated wordpress to v0.2"
+```
+
+[update-doc]: /reference/pkg/update/

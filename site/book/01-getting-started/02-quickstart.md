@@ -32,7 +32,7 @@ will explain the `Kptfile` in detail.
 Initialize a local Git repo and commit the forked copy of the package:
 
 ```shell
-git init; git add .; git commit -am "Pristine nginx package"
+$ git init; git add .; git commit -am "Pristine nginx package"
 ```
 
 ## Customize the package
@@ -127,7 +127,7 @@ the upstream changes with changes to your local package.
 First, commit your local changes:
 
 ```shell
-git add .; git commit -am "My customizations"
+$ git add .; git commit -am "My customizations"
 ```
 
 Then update to version `v0.3`:

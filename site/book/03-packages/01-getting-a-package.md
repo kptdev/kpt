@@ -105,10 +105,9 @@ follows the familiar structure of KRM resources, the name of the package is also
 `metadata.name` field. This must always be the name of the directory, and kpt will update it
 automatically when forking a package. In this case, `metadata.name` is set to `mywordpress`.
 
-The name of a package is unique within its parent package, but it may not be unique in a deeply
-nested package hierarchy (i.e. Depth > 2). The _unique identifier_ for a package is defined as the
-relative path from the top package to the subpackage. For example, we could have two subpackages
-with the name `mysql` having the following identifiers:
+In general, the package name is not unique. The _unique identifier_ for a
+package is defined as the relative path from the top package to the subpackage. For example, we
+could have two subpackages with the name `mysql` having the following identifiers:
 
 - `wordpress/backend/mysql`
 - `wordpress/frontend/mysql`
