@@ -55,7 +55,7 @@ Error: No git executable found. kpt requires git to be installed and available i
 `
 
 	httpsAuthRequired = `
-Error: Repository {{ printf "%q" .repo }} requires authentication. Kpt does not support this for the 'https' protocol. Please use the 'git' protocol instead.
+Error: Repository {{ printf "%q" .repo }} requires authentication. kpt does not support this for the 'https' protocol. Please use the 'git' protocol instead.
 
 {{- template "ExecOutputDetails" . }}
 `
