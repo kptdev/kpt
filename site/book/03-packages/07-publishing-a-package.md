@@ -30,7 +30,7 @@ You can then fetch the published package:
 $ kpt pkg get <MY_REPO_URL>/@v0.1
 ```
 
-## Per-directory Versioning
+## Monorepo Versioning
 
 You may have a Git repo containing multiple packages. kpt provides a tagging
 convention to enable packages to be independently versioned.

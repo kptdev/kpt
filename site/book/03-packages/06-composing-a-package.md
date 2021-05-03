@@ -36,9 +36,8 @@ We're going to add back the `mysql` subpackage using the two different approache
 ### Create a new package
 
 ```shell
-$ cd wordpress
-$ mkdir mysql
-$ kpt pkg init mysql
+$ mkdir wordpress/mysql
+$ kpt pkg init wordpress/mysql
 # author resources in mysql
 ```
 
@@ -47,11 +46,9 @@ This creates a [dependent package].
 ### Get an existing package
 
 ```shell
-$ cd wordpress
-$ kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20
+$ rm -rf wordpress/mysql
+$ kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20 wordpress/mysql
 ```
-
-TODO(#1829): This can be simplified.
 
 This creates an [independent package]. If you wish to make this a dependent package, you
 can delete the `upstream` and `upstreamLock` sections of the `Kptfile` in `mysql` directory.
