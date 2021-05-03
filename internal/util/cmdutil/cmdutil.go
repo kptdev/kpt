@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	goerrors "github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -40,13 +39,12 @@ func FixDocs(old, new string, c *cobra.Command) {
 	c.Example = strings.ReplaceAll(c.Example, old, new)
 }
 
-func PrintErrorStacktrace(err error) {
+func PrintErrorStacktrace() bool {
 	e := os.Getenv(StackTraceOnErrors)
 	if StackOnError || e == trueString || e == "1" {
-		if err, ok := err.(*goerrors.Error); ok {
-			fmt.Fprintf(os.Stderr, "%s", err.Stack())
-		}
+		return true
 	}
+	return false
 }
 
 // StackOnError if true, will print a stack trace on failure.

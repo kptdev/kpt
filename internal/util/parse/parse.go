@@ -162,7 +162,7 @@ func getDest(v, repo, subdir string) (string, error) {
 		parent := filepath.Dir(v)
 		if _, err := os.Stat(parent); os.IsNotExist(err) {
 			// error -- fetch to directory where parent does not exist
-			return "", errors.Errorf("parent directory %s does not exist", parent)
+			return "", errors.Errorf("parent directory %q does not exist", parent)
 		}
 		// fetch to a specific directory -- don't default the name
 		return v, nil
@@ -180,7 +180,7 @@ func getDest(v, repo, subdir string) (string, error) {
 
 	// make sure the destination directory does not yet exist yet
 	if _, err := os.Stat(v); !os.IsNotExist(err) {
-		return "", errors.Errorf("destination directory %s already exists", v)
+		return "", errors.Errorf("destination directory %q already exists", v)
 	}
 	return v, nil
 }
