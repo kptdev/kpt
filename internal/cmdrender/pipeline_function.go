@@ -23,8 +23,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdrender/runtime"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -40,13 +40,13 @@ func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types
 		return nil, err
 	}
 
-	cfn := &runtime.ContainerFn{
+	cfn := &fnruntime.ContainerFn{
 		Path:  pkgPath,
 		Image: f.Image,
 		Ctx:   ctx,
 	}
 
-	cfnw := &runtime.ContainerFnWrapper{
+	cfnw := &fnruntime.ContainerFnWrapper{
 		Fn: cfn,
 	}
 
