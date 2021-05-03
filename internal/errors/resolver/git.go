@@ -19,14 +19,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 )
 
 //nolint:gochecknoinits
 func init() {
 	AddErrorResolver(&gitExecErrorResolver{})
-	AddErrorResolver(&fnExecErrorResolver{})
 }
 
 const (
@@ -99,25 +97,6 @@ func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	}
 	return ResolvedResult{
 		Message:  msg,
-		ExitCode: 1,
-	}, true
-}
-
-// gitExecErrorResolver is an implementation of the ErrorResolver interface
-// that can produce error messages for errors of the FnExecError type.
-type fnExecErrorResolver struct{}
-
-func (*fnExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	kioErr := errors.UnwrapKioError(err)
-
-	var fnErr *errors.FnExecError
-	if !goerrors.As(kioErr, &fnErr) {
-		return ResolvedResult{}, false
-	}
-	// TODO: write complete details to a file
-
-	return ResolvedResult{
-		Message:  fnErr.String(),
 		ExitCode: 1,
 	}, true
 }
