@@ -14,13 +14,6 @@
 
 package resolver
 
-import (
-	"bytes"
-	"fmt"
-	"strings"
-	"text/template"
-)
-
 // errorResolvers is the list of known resolvers for kpt errors.
 var errorResolvers []ErrorResolver
 
@@ -41,22 +34,6 @@ func ResolveError(err error) (ResolvedResult, bool) {
 		}
 	}
 	return ResolvedResult{}, false
-}
-
-// ExecuteTemplate takes the provided template string and data, and renders
-// the template. If something goes wrong, it panics.
-func ExecuteTemplate(text string, data interface{}) string {
-	tmpl, tmplErr := template.New("kpterror").Parse(text)
-	if tmplErr != nil {
-		panic(fmt.Errorf("error creating template: %w", tmplErr))
-	}
-
-	var b bytes.Buffer
-	execErr := tmpl.Execute(&b, data)
-	if execErr != nil {
-		panic(fmt.Errorf("error executing template: %w", execErr))
-	}
-	return strings.TrimSpace(b.String())
 }
 
 type ResolvedResult struct {

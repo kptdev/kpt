@@ -39,33 +39,37 @@ against repo {{ printf "%q " .repo }}
 for reference {{ printf "%q " .ref }}
 {{- end }}
 
-{{- if or (gt (len .stdout) 0) (gt (len .stderr) 0)}}
-{{ printf "\nDetails:" }}
-{{- end }}
-
-{{- if gt (len .stdout) 0 }}
-{{ printf "%s" .stdout }}
-{{- end }}
-
-{{- if gt (len .stderr) 0 }}
-{{ printf "%s" .stderr }}
-{{- end }}
+{{- template "ExecOutputDetails" . }}
 `
 
 	unknownRefGitExecError = `
 Error: Unknown ref {{ printf "%q" .ref }}. Please verify that the reference exists in upstream repo {{ printf "%q" .repo }}.
 
-{{- if or (gt (len .stdout) 0) (gt (len .stderr) 0)}}
-{{ printf "\nDetails:" }}
-{{- end }}
+{{- template "ExecOutputDetails" . }}
+`
 
-{{- if gt (len .stdout) 0 }}
-{{ printf "%s" .stdout }}
-{{- end }}
+	noGitBinaryError = `
+Error: No git executable found. kpt requires git to be installed and available in the path.
 
-{{- if gt (len .stderr) 0 }}
-{{ printf "%s" .stderr }}
-{{- end }}
+{{- template "ExecOutputDetails" . }}
+`
+
+	httpsAuthRequired = `
+Error: Repository {{ printf "%q" .repo }} requires authentication. kpt does not support this for the 'https' protocol. Please use the 'git' protocol instead.
+
+{{- template "ExecOutputDetails" . }}
+`
+
+	repositoryUnavailable = `
+Error: Unable to access repository {{ printf "%q" .repo }}.
+
+{{- template "ExecOutputDetails" . }}
+`
+
+	repositoryNotFound = `
+Error: Repository {{ printf "%q" .repo }} not found.
+
+{{- template "ExecOutputDetails" . }}
 `
 )
 
@@ -88,12 +92,17 @@ func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		"stderr": gitExecErr.StdErr,
 	}
 	var msg string
-	switch {
-	// TODO(mortent): Checking the content of the output at this level seems a bit awkward. We might
-	// consider doing this the the gitutil package and use some kind of error code to signal
-	// the different error cases to higher levels in the stack.
-	case strings.Contains(gitExecErr.StdErr, " unknown revision or path not in the working tree"):
+	switch gitExecErr.Type {
+	case gitutil.UnknownReference:
 		msg = ExecuteTemplate(unknownRefGitExecError, tmplArgs)
+	case gitutil.GitExecutableNotFound:
+		msg = ExecuteTemplate(noGitBinaryError, tmplArgs)
+	case gitutil.HTTPSAuthRequired:
+		msg = ExecuteTemplate(httpsAuthRequired, tmplArgs)
+	case gitutil.RepositoryUnavailable:
+		msg = ExecuteTemplate(repositoryUnavailable, tmplArgs)
+	case gitutil.RepositoryNotFound:
+		msg = ExecuteTemplate(repositoryNotFound, tmplArgs)
 	default:
 		msg = ExecuteTemplate(genericGitExecError, tmplArgs)
 	}
