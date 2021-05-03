@@ -28,6 +28,9 @@ var baseTemplate = func() *template.Template {
 }()
 
 var (
+	// detailsHelperTemplate is a helper subtemplate that is available to
+	// the top-level templates. It is useful when including information from
+	// execing other commands in the error message.
 	detailsHelperTemplate = `
 {{- define "ExecOutputDetails" }}
 {{- if or (gt (len .stdout) 0) (gt (len .stderr) 0)}}

@@ -21,17 +21,32 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 )
 
+// GitExecErrorType is used to enumerate git errors.
 type GitExecErrorType int
 
 const (
+	// Unknown is used when we can't classify an error into any of the other
+	// categories.
 	Unknown GitExecErrorType = iota
+	// GitExecutableNotFound means the git executable wasn't available.
 	GitExecutableNotFound
+	// UnknownReference means that provided reference (tag, branch) wasn't
+	// found
 	UnknownReference
+	// HTTPSAuthRequired means we try to access the repo using the https
+	// protocol, but the repo required authentication.
 	HTTPSAuthRequired
+	// RepositoryNotFound means the provided repo uri doesn't seem to point
+	// to a valid git repo.
 	RepositoryNotFound
+	// RepositoryUnavailable means we weren't able to connect to the provided
+	// uri.
 	RepositoryUnavailable
 )
 
+// GitExecError is an error type returned if kpt encounters an error while
+// executing a git command. It includes information about the command that
+// was executed and the output from git.
 type GitExecError struct {
 	Type    GitExecErrorType
 	Args    []string
@@ -51,6 +66,8 @@ func (e *GitExecError) Error() string {
 	return b.String()
 }
 
+// AmendGitExecError provides a way to amend the GitExecError returned by
+// the GitLocalRunner.run command.
 func AmendGitExecError(err error, f func(e *GitExecError)) {
 	var gitExecErr *GitExecError
 	if errors.As(err, &gitExecErr) {
@@ -58,6 +75,8 @@ func AmendGitExecError(err error, f func(e *GitExecError)) {
 	}
 }
 
+// determineErrorType looks at the output to stderr after executing a git
+// command and tries to categorize the error.
 func determineErrorType(stdErr string) GitExecErrorType {
 	switch {
 	case strings.Contains(stdErr, "unknown revision or path not in the working tree"):
