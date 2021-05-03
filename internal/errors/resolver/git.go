@@ -117,7 +117,7 @@ func (*fnExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	// TODO: write complete details to a file
 
 	return ResolvedResult{
-		Message: fnErr.String(),
+		Message:  fnErr.String(),
 		ExitCode: 1,
 	}, true
 }

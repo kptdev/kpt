@@ -77,7 +77,7 @@ func handleErr(cmd *cobra.Command, err error) int {
 	// error message.
 	re, resolved := resolver.ResolveError(err)
 	if resolved {
-		fmt.Fprintf(cmd.ErrOrStderr(), "\n%s \n", re.Message)
+		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", re.Message)
 		return re.ExitCode
 	}
 
