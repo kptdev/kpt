@@ -62,6 +62,7 @@ kpt live status my-app/
 # Monitor status for a set of resources based on manifests. Output in table format:
 kpt live status my-app/ --poll-until=forever --output=table
 ```
+<!--mdtogo-->
 
 ### Synopsis
 <!--mdtogo:Long-->
