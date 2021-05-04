@@ -4,6 +4,7 @@
 package runfn
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -30,6 +31,8 @@ import (
 // RunFns runs the set of configuration functions in a local directory against
 // the Resources in that directory
 type RunFns struct {
+	Ctx context.Context
+
 	StorageMounts []runtimeutil.StorageMount
 
 	// Path is the path to the directory containing functions
@@ -461,4 +464,23 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 	}
 
 	return nil, nil
+}
+
+// wrapFilter wraps the real filter with kpt representation layer
+// and then return a new filter.
+func (r *RunFns) wrapFilter(name string, f kio.Filter) kio.Filter {
+	fnWrapper := &fnruntime.FnWrapper{
+		FnRun: func(r io.Reader, w io.Writer) error {
+			return kio.Pipeline{
+				Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
+				Filters: []kio.Filter{f},
+				Outputs: []kio.Writer{&kio.ByteWriter{Writer: w}},
+			}.Execute()
+		},
+		Name: name,
+		Ctx:  r.Ctx,
+	}
+	return &runtimeutil.FunctionFilter{
+		Run: fnWrapper.Run,
+	}
 }

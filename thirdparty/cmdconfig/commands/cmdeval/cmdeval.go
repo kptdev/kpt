@@ -4,6 +4,7 @@
 package cmdeval
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -18,8 +19,8 @@ import (
 )
 
 // GetEvalFnRunner returns a EvalFnRunner.
-func GetEvalFnRunner(name string) *EvalFnRunner {
-	r := &EvalFnRunner{}
+func GetEvalFnRunner(ctx context.Context, name string) *EvalFnRunner {
+	r := &EvalFnRunner{Ctx: ctx}
 	c := &cobra.Command{
 		Use:     "eval [DIR | -]",
 		RunE:    r.runE,
@@ -61,8 +62,8 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 	return r
 }
 
-func EvalCommand(name string) *cobra.Command {
-	return GetEvalFnRunner(name).Command
+func EvalCommand(ctx context.Context, name string) *cobra.Command {
+	return GetEvalFnRunner(ctx, name).Command
 }
 
 // EvalFnRunner contains the run function
@@ -81,6 +82,7 @@ type EvalFnRunner struct {
 	Env                  []string
 	AsCurrentUser        bool
 	IncludeMetaResources bool
+	Ctx                  context.Context
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -275,6 +277,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	r.RunFns = runfn.RunFns{
+		Ctx:                  r.Ctx,
 		Functions:            fns,
 		Output:               output,
 		Input:                input,
