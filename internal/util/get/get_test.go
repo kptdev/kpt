@@ -1351,21 +1351,19 @@ func TestCommand_Run_symlinks(t *testing.T) {
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
 					),
+				UpdateFunc: func(path string) error {
+					// Create symlink in the upstream repo.
+					return os.Symlink(filepath.Join(path, "subpkg"),
+						filepath.Join(path, "subpkg-sym"))
+				},
 			},
 		},
 	})
 	defer clean()
 	upstreamRepo := repos[testutil.Upstream]
 
-	// Create a symlink in the upstream repo
-	err := os.Symlink(filepath.Join(upstreamRepo.RepoDirectory, "subpkg"),
-		filepath.Join(upstreamRepo.RepoDirectory, "subpkg-sym"))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
 	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
-	err = Command{
+	err := Command{
 		Git: &kptfilev1alpha2.Git{
 			Repo:      upstreamRepo.RepoDirectory,
 			Directory: "/",

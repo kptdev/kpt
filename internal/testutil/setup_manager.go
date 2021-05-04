@@ -65,6 +65,11 @@ type Content struct {
 	Pkg          *pkgbuilder.RootPkg
 	Tag          string
 	Message      string
+
+	// UpdateFunc is invoked after the repo has been updated with the new
+	// content, but before it is committed. This allows for making changes
+	// that isn't supported by the pkgbuilder (like creating symlinks).
+	UpdateFunc func(path string) error
 }
 
 // Init initializes test data
@@ -139,6 +144,7 @@ type GitDirectory interface {
 	ReplaceData(data string) error
 	Commit(message string) (string, error)
 	Tag(tagName string) error
+	CustomUpdate(updateFunc func(string) error) error
 }
 
 func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Content, repos map[string]*TestGitRepo) error {
@@ -163,6 +169,13 @@ func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Cont
 		err := gitDir.ReplaceData(pkgData)
 		if !assert.NoError(t, err) {
 			return err
+		}
+
+		if content.UpdateFunc != nil {
+			err = gitDir.CustomUpdate(content.UpdateFunc)
+			if !assert.NoError(t, err) {
+				return err
+			}
 		}
 
 		sha, err := gitDir.Commit(content.Message)
