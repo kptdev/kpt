@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -19,11 +18,11 @@ metadata:
   labels:
     app: wordpress
 spec:
-  ports:
-  - port: 3306
   selector:
     app: wordpress
     tier: mysql
+  ports:
+    - port: 3306
   clusterIP: None
 ---
 apiVersion: v1
@@ -33,11 +32,11 @@ metadata:
   labels:
     app: wordpress
 spec:
-  accessModes:
-  - ReadWriteOnce
   resources:
     requests:
       storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
@@ -50,8 +49,6 @@ spec:
     matchLabels:
       app: wordpress
       tier: mysql
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
@@ -59,21 +56,23 @@ spec:
         tier: mysql
     spec:
       containers:
-      - image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
-        name: mysql
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql-pass
-              key: password
-        ports:
-        - containerPort: 3306
-          name: mysql
-        volumeMounts:
-        - name: mysql-persistent-storage
-          mountPath: /var/lib/mysql
+        - name: mysql
+          image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-pass
+                  key: password
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
       volumes:
-      - name: mysql-persistent-storage
-        persistentVolumeClaim:
-          claimName: mysql-pv-claim
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
+  strategy:
+    type: Recreate
