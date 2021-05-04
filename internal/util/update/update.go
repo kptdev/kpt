@@ -37,6 +37,26 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
+// PkgNotGitRepoError is the error type returned if the package being updated is not inside
+// a git repository.
+type PkgNotGitRepoError struct {
+	Path types.UniquePath
+}
+
+func (p *PkgNotGitRepoError) Error() string {
+	return fmt.Sprintf("package %q is not a git repository", p.Path.String())
+}
+
+// PkgRepoDirtyError is the error type returned if the package being updated contains
+// uncommitted changes.
+type PkgRepoDirtyError struct {
+	Path types.UniquePath
+}
+
+func (p *PkgRepoDirtyError) Error() string {
+	return fmt.Sprintf("package %q contains uncommitted changes", p.Path.String())
+}
+
 type UpdateOptions struct {
 	// RelPackagePath is the relative path of a subpackage to the root. If the
 	// package is root, the value here will be ".".
@@ -91,18 +111,8 @@ func (u Command) Run(ctx context.Context) error {
 	}
 
 	// require package is checked into git before trying to update it
-	g, err := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
-	if err != nil {
-		return err
-	}
-
-	rr, err := g.Run(ctx, "status", "-s")
-	if err != nil {
+	if err := checkIfCommitted(ctx, u.Pkg); err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
-	}
-	if strings.TrimSpace(rr.Stdout) != "" {
-		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must be committed "+
-			"to git before attempting to update"))
 	}
 
 	rootKf, err := u.Pkg.Kptfile()
@@ -144,6 +154,31 @@ func (u Command) Run(ctx context.Context) error {
 		for _, subPkg := range subPkgs {
 			s.Push(subPkg)
 		}
+	}
+	return nil
+}
+
+func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
+	const op errors.Op = "update.checkIfCommitted"
+	g, err := gitutil.NewLocalGitRunner(p.UniquePath.String())
+	if err != nil {
+		return err
+	}
+
+	rr, err := g.Run(ctx, "status", "-s")
+	if err != nil {
+		var gitExecErr *gitutil.GitExecError
+		if errors.As(err, &gitExecErr) {
+			if strings.Contains(gitExecErr.StdErr, "not a git repository") {
+				return &PkgNotGitRepoError{Path: p.UniquePath}
+			}
+		}
+		return errors.E(op, p.UniquePath, err)
+	}
+	if strings.TrimSpace(rr.Stdout) != "" {
+		return errors.E(op, p.UniquePath, &PkgRepoDirtyError{
+			Path: p.UniquePath,
+		})
 	}
 	return nil
 }

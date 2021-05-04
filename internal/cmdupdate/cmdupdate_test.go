@@ -168,7 +168,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "package must be committed to git before attempting to update")
+	assert.Contains(t, err.Error(), "contains uncommitted changes")
 
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
 		return
