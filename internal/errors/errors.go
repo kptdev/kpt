@@ -248,3 +248,20 @@ func UnwrapKioError(err error) error {
 	}
 	return kioErr.Err
 }
+
+// UnwrapErrors unwraps any *Error errors in the chain and returns
+// the first error it finds that is of a different type. If no such error
+// can be found, the last return value will be false.
+//nolint
+func UnwrapErrors(err error) (error, bool) {
+	for {
+		if err == nil {
+			return nil, false
+		}
+		e, ok := err.(*Error)
+		if !ok {
+			return err, true
+		}
+		err = e.Err
+	}
+}
