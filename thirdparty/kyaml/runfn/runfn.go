@@ -16,7 +16,6 @@ import (
 	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -431,7 +430,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			Image:         spec.Container.Image,
 			UIDGID:        uidgid,
 			StorageMounts: r.StorageMounts,
-			Env:           r.Env,
+			Env:           spec.Container.Env,
 			Perm: fnruntime.ContainerFnPermission{
 				AllowNetwork: spec.Container.Network,
 				// mounts are always from CLI flags so we allow
@@ -449,11 +448,15 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 	}
 
 	if spec.Exec.Path != "" {
-		ef := &exec.Filter{Path: spec.Exec.Path}
-
-		ef.FunctionConfig = fnConfig
-		ef.ResultsFile = resultsFile
-		ef.DeferFailure = spec.DeferFailure
+		e := &fnruntime.ExecFn{
+			Path: spec.Exec.Path,
+		}
+		ef := &runtimeutil.FunctionFilter{
+			Run:            e.Run,
+			FunctionConfig: fnConfig,
+			DeferFailure:   spec.DeferFailure,
+			ResultsFile:    resultsFile,
+		}
 		return ef, nil
 	}
 
