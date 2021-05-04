@@ -30,7 +30,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
-	"k8s.io/kubectl/pkg/cmd/util"
+	cluster "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
@@ -117,7 +117,7 @@ func GetLiveCommand(_, version string) *cobra.Command {
 	return liveCmd
 }
 
-func newFactory(cmd *cobra.Command, version string) util.Factory {
+func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 	flags := cmd.PersistentFlags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
 	kubeConfigFlags.AddFlags(flags)
@@ -125,12 +125,12 @@ func newFactory(cmd *cobra.Command, version string) util.Factory {
 		Delegate:  kubeConfigFlags,
 		UserAgent: fmt.Sprintf("kpt/%s", version),
 	}
-	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(
+	matchVersionKubeConfigFlags := cluster.NewMatchVersionFlags(
 		&factory.CachingRESTClientGetter{
 			Delegate: userAgentKubeConfigFlags,
 		},
 	)
 	matchVersionKubeConfigFlags.AddFlags(cmd.PersistentFlags())
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	return util.NewFactory(matchVersionKubeConfigFlags)
+	return cluster.NewFactory(matchVersionKubeConfigFlags)
 }
