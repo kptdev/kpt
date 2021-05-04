@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
 
 // containerNetworkName is a type for network name used in container
@@ -43,6 +44,7 @@ const (
 // function such as network access.
 type ContainerFnPermission struct {
 	AllowNetwork bool
+	AllowMount   bool
 }
 
 // ContainerFnWrapper wraps the real function filter, prints
@@ -75,6 +77,15 @@ type ContainerFn struct {
 	// The default value is 5 minutes.
 	Timeout time.Duration
 	Perm    ContainerFnPermission
+	// UIDGID is the os User ID and Group ID that will be
+	// used to run the container in format userId:groupId.
+	// If it's empty, "nobody" will be used.
+	UIDGID string
+	// StorageMounts are the storage or directories to mount
+	// into the container
+	StorageMounts []runtimeutil.StorageMount
+	// Env is a slice of env string that will be exposed to container
+	Env []string
 }
 
 // Run runs the container function using docker runtime.
@@ -116,6 +127,10 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 	if f.Perm.AllowNetwork {
 		network = networkNameHost
 	}
+	uidgid := "nobody"
+	if f.UIDGID != "" {
+		uidgid = f.UIDGID
+	}
 
 	args := []string{
 		"run", "--rm", "-i",
@@ -125,8 +140,14 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		// to stderr. We don't need this once we support structured
 		// results.
 		"-e", "LOG_TO_STDERR=true",
+		"--user", uidgid,
 		"--security-opt=no-new-privileges",
 	}
+	for _, storageMount := range f.StorageMounts {
+		args = append(args, "--mount", storageMount.String())
+	}
+	args = append(args,
+		runtimeutil.NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
 	args = append(args, f.Image)
 	// setup container run timeout
 	timeout := defaultTimeout

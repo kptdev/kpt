@@ -11,15 +11,14 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -85,10 +84,15 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "nobody")
-	cf := &c
-	cf.Exec.FunctionConfig = api
-	assert.Equal(t, cf, filter)
+	c := fnruntime.ContainerFn{
+		Image:  "example.com:version",
+		UIDGID: "nobody",
+	}
+	cf := &runtimeutil.FunctionFilter{
+		Run:            c.Run,
+		FunctionConfig: api,
+	}
+	assert.Equal(t, fmt.Sprint(cf), fmt.Sprint(filter))
 }
 
 func TestRunFns_initAsCurrentUser(t *testing.T) {
@@ -115,10 +119,15 @@ kind:
 		return
 	}
 	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := container.NewContainer(runtimeutil.ContainerSpec{Image: "example.com:version"}, "1:2")
-	cf := &c
-	cf.Exec.FunctionConfig = api
-	assert.Equal(t, cf, filter)
+	c := fnruntime.ContainerFn{
+		Image:  "example.com:version",
+		UIDGID: "1:2",
+	}
+	cf := &runtimeutil.FunctionFilter{
+		Run:            c.Run,
+		FunctionConfig: api,
+	}
+	assert.Equal(t, fmt.Sprint(cf), fmt.Sprint(filter))
 }
 
 func TestRunFns_Execute__initDefault(t *testing.T) {
@@ -188,130 +197,6 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 			(&tt.instance).functionFilterProvider = nil
 			if !assert.Equal(t, tt.expected, tt.instance) {
 				t.FailNow()
-			}
-		})
-	}
-}
-
-// TestRunFns_getFilters tests how filters are found and sorted
-func TestRunFns_getFilters(t *testing.T) {
-	type f struct {
-		// string value of function
-		value string
-	}
-	var tests = []struct {
-		// function files to write
-		in []f
-		// images to be run in a specific order
-		out []string
-
-		// images to be run in a specific order -- computed from directory path
-		outFn func(string) []string
-
-		// expected Error
-		error string
-
-		// name of the test
-		name string
-	}{
-		{name: "no function spec",
-			in: []f{
-				{
-					value: `
-foo: bar
-`,
-				},
-			},
-		},
-
-		// Test
-		//
-		//
-		{name: "defer_failure",
-			in: []f{
-				{
-					value: `
-apiVersion: example.com/v1alpha1
-kind: ExampleFunction
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      deferFailure: true
-      container:
-        image: gcr.io/example.com/image:v1.0.0
-    config.kubernetes.io/local-config: "true"
-`,
-				},
-			},
-			out: []string{"gcr.io/example.com/image:v1.0.0 deferFailure: true"},
-		},
-
-		// Test
-		//
-		//
-		{name: "explicit functions",
-			in: []f{
-				{
-					value: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: c
-`,
-				},
-			},
-			out: []string{"c"},
-		},
-	}
-
-	for i := range tests {
-		tt := tests[i]
-		t.Run(tt.name, func(t *testing.T) {
-			// setup the test directory
-			d := setupTest(t)
-			defer os.RemoveAll(d)
-
-			var parsedFns []*yaml.RNode
-			var err error
-			for _, f := range tt.in {
-				parsedFns = append(parsedFns, yaml.MustParse(f.value))
-			}
-
-			// init the instance
-			r := &RunFns{
-				Functions: parsedFns,
-				Path:      d,
-			}
-			assert.NoError(t, r.init())
-
-			// get the filters which would be run
-			var results []string
-			_, fltrs, _, err := r.getNodesAndFilters()
-
-			if tt.error != "" {
-				if !assert.EqualError(t, err, tt.error) {
-					t.FailNow()
-				}
-				return
-			}
-
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			for _, f := range fltrs {
-				results = append(results, strings.TrimSpace(fmt.Sprintf("%v", f)))
-			}
-
-			// compare the actual ordering to the expected ordering
-			if tt.outFn != nil {
-				if !assert.Equal(t, tt.outFn(d), results) {
-					t.FailNow()
-				}
-			} else {
-				if !assert.Equal(t, tt.out, results) {
-					t.FailNow()
-				}
 			}
 		})
 	}
@@ -401,98 +286,6 @@ metadata:
 			}
 
 			assert.Equal(t, test.expectedImages, images)
-		})
-	}
-}
-
-func TestRunFns_network(t *testing.T) {
-	tests := []struct {
-		name          string
-		input         string
-		network       bool
-		expectNetwork bool
-		error         string
-	}{
-		{
-			name: "imperative false, declarative false",
-			input: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-        network: false
-`,
-			network:       false,
-			expectNetwork: false,
-		},
-		{
-			name: "imperative true, declarative false",
-			input: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-        network: false
-`,
-			network:       true,
-			expectNetwork: false,
-		},
-		{
-			name: "imperative true, declarative true",
-			input: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-        network: true
-`,
-			network:       true,
-			expectNetwork: true,
-		},
-		{
-			name: "imperative false, declarative true",
-			input: `
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: a
-        network: true
-`,
-			network: false,
-			error:   "network required but not enabled with --network",
-		},
-	}
-
-	for i := range tests {
-		tt := tests[i]
-		fn := yaml.MustParse(tt.input)
-		t.Run(tt.name, func(t *testing.T) {
-			// init the instance
-			r := &RunFns{
-				Functions: []*yaml.RNode{fn},
-				Network:   tt.network,
-			}
-			assert.NoError(t, r.init())
-
-			_, fltrs, _, err := r.getNodesAndFilters()
-			if tt.error != "" {
-				if !assert.EqualError(t, err, tt.error) {
-					t.FailNow()
-				}
-				return
-			}
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			fltr := fltrs[0].(*container.Filter)
-			if !assert.Equal(t, tt.expectNetwork, fltr.Network) {
-				t.FailNow()
-			}
 		})
 	}
 }
@@ -818,36 +611,6 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Contains(t, string(b), "kind: StatefulSet")
-}
-
-// TestCmd_Execute_enableLogSteps tests the execution of a filter with LogSteps enabled.
-func TestCmd_Execute_enableLogSteps(t *testing.T) {
-	dir := setupTest(t)
-	defer os.RemoveAll(dir)
-
-	fn, err := yaml.Parse(ValueReplacerYAMLData)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	logs := &bytes.Buffer{}
-	instance := RunFns{
-		Path:                   dir,
-		functionFilterProvider: getFilterProvider(t),
-		LogSteps:               true,
-		LogWriter:              logs,
-		Functions:              []*yaml.RNode{fn},
-	}
-	if !assert.NoError(t, instance.Execute()) {
-		t.FailNow()
-	}
-	b, err := ioutil.ReadFile(
-		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	assert.Contains(t, string(b), "kind: StatefulSet")
-	assert.Equal(t, "Running unknown-type function\n", logs.String())
 }
 
 func getGeneratorFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
