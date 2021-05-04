@@ -113,16 +113,16 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 	for s.Len() > 0 {
 		p := s.Pop()
 
+		pr.Printf("\n")
+		pr.OptPrintf(printer.NewOpt().PkgDisplay(p.DisplayPath), "\n")
+
 		kf, err := p.Kptfile()
 		if err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
-			if rootPkg.UniquePath != p.UniquePath {
-				pr.Printf("fetching subpackage %s from %s to %s\n",
-					kf.Upstream.Git.Directory, kf.Upstream.Git.Repo, p.UniquePath)
-			}
+			pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 			err := (&fetch.Command{
 				Pkg: p,
 			}).Run(ctx)

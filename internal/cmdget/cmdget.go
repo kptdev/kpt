@@ -17,12 +17,12 @@ package cmdget
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
@@ -93,8 +93,9 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	const op errors.Op = "cmdget.runE"
-	fmt.Fprintf(c.OutOrStdout(), "fetching package %s from %s to %s\n",
-		r.Get.Git.Directory, r.Get.Git.Repo, r.Get.Destination)
+	pr := printer.FromContextOrDie(r.ctx)
+	pr.Printf("Fetching package %q from %q into %q\n",
+		strings.TrimPrefix(r.Get.Git.Directory, "/"), r.Get.Git.Repo, r.Get.Destination)
 	if err := r.Get.Run(r.ctx); err != nil {
 		return errors.E(op, types.UniquePath(r.Get.Destination), err)
 	}

@@ -97,8 +97,8 @@ func (c Command) validate(kf *kptfilev1alpha2.KptFile) error {
 // of the Kptfile of the package.
 func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 	const op errors.Op = "fetch.cloneAndCopy"
-	p := printer.FromContextOrDie(ctx)
-	p.Printf("cloning %s@%s\n", r.OrgRepo, r.Ref)
+	pr := printer.FromContextOrDie(ctx)
+
 	err := ClonerUsingGitExec(ctx, r)
 	if err != nil {
 		return errors.E(op, errors.Git, types.UniquePath(dest), err)
@@ -106,7 +106,7 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 	defer os.RemoveAll(r.Dir)
 
 	sourcePath := filepath.Join(r.Dir, r.Path)
-	p.Printf("copying %q to %s\n", r.Path, dest)
+	pr.Printf("Adding package %q\n", strings.TrimPrefix(r.Path, "/"))
 	if err := pkgutil.CopyPackageWithSubpackages(sourcePath, dest); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
