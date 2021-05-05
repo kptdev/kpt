@@ -22,6 +22,8 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"io/ioutil"
+	"log"
 	"strings"
 	"testing"
 
@@ -38,6 +40,8 @@ func TestCommand_Diff(t *testing.T) {
 		fetchRef     string
 		diffRef      string
 		diffType     DiffType
+		diffTool     string
+		diffOpts     string
 		expDiff      string
 	}{
 
@@ -63,6 +67,8 @@ func TestCommand_Diff(t *testing.T) {
 			fetchRef: "v2",
 			diffRef:  "master",
 			diffType: DiffTypeRemote,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
 			expDiff: `
 39c39
 <             - containerPort: 80
@@ -101,6 +107,8 @@ func TestCommand_Diff(t *testing.T) {
 			fetchRef: "v2",
 			diffRef:  "master",
 			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
 			expDiff: `
 39c39
 <             - containerPort: 80
@@ -140,6 +148,8 @@ func TestCommand_Diff(t *testing.T) {
 			fetchRef: "v2",
 			diffRef:  "master",
 			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
 			expDiff: `
 39c39
 <             - containerPort: 8081
@@ -233,8 +243,8 @@ func TestCommand_Diff(t *testing.T) {
 				Path:         g.LocalWorkspace.FullPackagePath(),
 				Ref:          tc.diffRef,
 				DiffType:     tc.diffType,
-				DiffTool:     "diff",
-				DiffToolOpts: "-r -i -w",
+				DiffTool:     tc.diffTool,
+				DiffToolOpts: tc.diffOpts,
 				Output:       diffOutput,
 			}).Run(fake.CtxWithNilPrinter())
 			assert.NoError(t, err)
@@ -246,11 +256,118 @@ func TestCommand_Diff(t *testing.T) {
 }
 
 // Test case: no packages supplied to diff
-// Test case: one package supplied to diff
-// Test case: package supplied to diff directory does not exist
-// Test case: Package supplied to diff is not a kpt package/empty dir
+// Test case: one package supplied to diffs
 // Test case: Upstream package does not exist
 // Test case: 3-way diff not supported with diffutils
+
+func TestCommand_InvalidRef(t *testing.T) {
+	reposChanges := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Data:   testutil.Dataset2,
+				Branch: "master",
+				Tag:    "v2",
+			},
+			{
+				Data: testutil.Dataset3,
+			},
+		},
+	}
+
+	g := &testutil.TestSetupManager{
+		T:            t,
+		ReposChanges: reposChanges,
+		GetRef:       "v2",
+	}
+	defer g.Clean()
+
+	if !g.Init() {
+		return
+	}
+
+	diffOutput := &bytes.Buffer{}
+	err := (&Command{
+		Path:         g.LocalWorkspace.FullPackagePath(),
+		Ref:          "hurdygurdy", //ref should not exist in upstream
+		DiffType:     DiffTypeCombined,
+		DiffTool:     "diff",
+		DiffToolOpts: "-r -i -w",
+		Output:       diffOutput,
+	}).Run(fake.CtxWithNilPrinter())
+	assert.Error(t, err)
+}
+
+// Validate that all three directories are staged and provided to diff command
+func TestCommand_Diff3Parameters(t *testing.T) {
+	reposChanges := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Data:   testutil.Dataset2,
+				Branch: "master",
+				Tag:    "v2",
+			},
+			{
+				Data: testutil.Dataset3,
+			},
+		},
+	}
+
+	g := &testutil.TestSetupManager{
+		T:            t,
+		ReposChanges: reposChanges,
+		GetRef:       "v2",
+	}
+	defer g.Clean()
+
+	if !g.Init() {
+		return
+	}
+
+	diffOutput := &bytes.Buffer{}
+	err := (&Command{
+		Path:         g.LocalWorkspace.FullPackagePath(),
+		Ref:          "master",
+		DiffType:     DiffType3Way,
+		DiffTool:     "echo", // this is a proxy for 3 way diffing to validate we pass proper values
+		DiffToolOpts: "",
+		Output:       diffOutput,
+	}).Run(fake.CtxWithNilPrinter())
+	assert.NoError(t, err)
+
+	// Expect 3 value to be printed (1 per source)
+	assert.Equal(t, 3, len(strings.Split(diffOutput.String(), " ")))
+}
+
+// Tests against directories in different states
+func TestCommand_NotAKptDirectory(t *testing.T) {
+	// Initial test setup
+	dir, err := ioutil.TempDir("", "example")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	testCases := map[string]struct {
+		directory string
+	}{
+		"Directory Is Not Kpt Package": {directory: dir},
+		"Directory Does Not Exist":     {directory: "/not/a/directory"},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			diffOutput := &bytes.Buffer{}
+			cmdErr := (&Command{
+				Path:         tc.directory,
+				Ref:          "master",
+				DiffType:     DiffTypeCombined,
+				DiffTool:     "diff",
+				DiffToolOpts: "-r -i -w",
+				Output:       diffOutput,
+			}).Run(fake.CtxWithNilPrinter())
+			assert.Error(t, cmdErr)
+		})
+	}
+}
 
 // filterDiffMetadata removes information from the diff output that is test-run
 // specific for ex. removing directory name being used.
