@@ -301,8 +301,6 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 // runMutators runs a set of mutators functions on given input resources.
 func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
-	const op errors.Op = "pipeline.runMutators"
-
 	if len(input) == 0 {
 		return input, nil
 	}
@@ -318,7 +316,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 
 	mutators, err := fnChain(ctx, pn.pkg.UniquePath, pl.Mutators)
 	if err != nil {
-		return nil, errors.E(op, pn.pkg.UniquePath, err)
+		return nil, err
 	}
 
 	output := &kio.PackageBuffer{}
@@ -332,7 +330,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	}
 	err = mutation.Execute()
 	if err != nil {
-		return nil, errors.E(op, pn.pkg.UniquePath, err)
+		return nil, err
 	}
 	hctx.executedFunctionCnt += len(mutators)
 	return output.Nodes, nil
