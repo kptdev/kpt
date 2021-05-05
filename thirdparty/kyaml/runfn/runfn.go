@@ -447,7 +447,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			DeferFailure:   spec.DeferFailure,
 			ResultsFile:    resultsFile,
 		}
-		return cf, nil
+		return r.wrapFilter(c.Image, cf), nil
 	}
 
 	if spec.Exec.Path != "" {
@@ -460,7 +460,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			DeferFailure:   spec.DeferFailure,
 			ResultsFile:    resultsFile,
 		}
-		return ef, nil
+		return r.wrapFilter(e.Path, ef), nil
 	}
 
 	return nil, nil
@@ -469,6 +469,10 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 // wrapFilter wraps the real filter with kpt representation layer
 // and then return a new filter.
 func (r *RunFns) wrapFilter(name string, f kio.Filter) kio.Filter {
+	if r.Output != nil {
+		// don't print anything when the output destination is stdout
+		return f
+	}
 	fnWrapper := &fnruntime.FnWrapper{
 		FnRun: func(r io.Reader, w io.Writer) error {
 			return kio.Pipeline{
