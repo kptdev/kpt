@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
-	"log"
 	"strings"
 	"testing"
 
@@ -343,7 +342,7 @@ func TestCommand_NotAKptDirectory(t *testing.T) {
 	// Initial test setup
 	dir, err := ioutil.TempDir("", "example")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 
 	testCases := map[string]struct {
