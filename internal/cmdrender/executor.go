@@ -364,8 +364,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		}
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
-		copy := cloneResources(input)
-		if _, err = validator.Filter(copy); err != nil {
+		if _, err = validator.Filter(cloneResources(input)); err != nil {
 			return err
 		}
 		hctx.executedFunctionCnt++
