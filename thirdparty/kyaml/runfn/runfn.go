@@ -422,6 +422,8 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 	}
+	var fltr *runtimeutil.FunctionFilter
+	var name string
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
@@ -441,50 +443,30 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 				AllowMount: true,
 			},
 		}
-		cf := &runtimeutil.FunctionFilter{
+		fltr = &runtimeutil.FunctionFilter{
 			Run:            c.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 			ResultsFile:    resultsFile,
 		}
-		return r.wrapFilter(c.Image, cf), nil
+		name = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
 		e := &fnruntime.ExecFn{
 			Path: spec.Exec.Path,
 		}
-		ef := &runtimeutil.FunctionFilter{
+		fltr = &runtimeutil.FunctionFilter{
 			Run:            e.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 			ResultsFile:    resultsFile,
 		}
-		return r.wrapFilter(e.Path, ef), nil
+		name = spec.Exec.Path
 	}
-
-	return nil, nil
-}
-
-// wrapFilter wraps the real filter with kpt representation layer
-// and then return a new filter.
-func (r *RunFns) wrapFilter(name string, f kio.Filter) kio.Filter {
-	if r.Output != nil {
-		// don't print anything when the output destination is stdout
-		return f
+	// if we write back to file system
+	if r.Output == nil {
+		return fnruntime.NewFunctionRunner(r.Ctx, fltr, name)
 	}
-	fnWrapper := &fnruntime.FnWrapper{
-		FnRun: func(r io.Reader, w io.Writer) error {
-			return kio.Pipeline{
-				Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
-				Filters: []kio.Filter{f},
-				Outputs: []kio.Writer{&kio.ByteWriter{Writer: w}},
-			}.Execute()
-		},
-		Name: name,
-		Ctx:  r.Ctx,
-	}
-	return &runtimeutil.FunctionFilter{
-		Run: fnWrapper.Run,
-	}
+	return fltr, nil
 }
