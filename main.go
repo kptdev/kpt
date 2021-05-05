@@ -15,7 +15,7 @@
 //go:generate $GOBIN/mdtogo site/reference/live internal/docs/generated/livedocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/reference internal/docs/generated/overview --license=none --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/README.md internal/docs/generated/overview --license=none --strategy=cmdDocs
 package main
 
 import (

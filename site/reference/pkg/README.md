@@ -14,3 +14,6 @@ description: >
 The `pkg` command group contains subcommands for fetching and updating `kpt` package
 from git repositories.
 <!--mdtogo-->
+
+<!--mdtogo:Examples-->
+<!--mdtogo-->
