@@ -14,7 +14,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -24,7 +23,9 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
@@ -61,14 +62,13 @@ type RunFns struct {
 	// ResultsDir is where to write each functions results
 	ResultsDir string
 
+	fnResults *fnresult.ResultList
+
 	// LogSteps enables logging the function that is running.
 	LogSteps bool
 
 	// LogWriter can be set to write the logs to LogWriter rather than stderr if LogSteps is enabled.
 	LogWriter io.Writer
-
-	// resultsCount is used to generate the results filename for each container
-	resultsCount uint32
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -220,8 +220,18 @@ func (r RunFns) runFunctions(
 		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
 	err = pipeline.Execute()
+	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
 	if err != nil {
+		if resultErr == nil && resultsFile != "" {
+			// TODO(droot): print message with the results file location
+			printFnResultStatus(r.Ctx, resultsFile)
+		}
 		return err
+	}
+	if resultErr == nil && resultsFile != "" {
+		// TODO(droot): suppress this printing if resources are being
+		// written to STDOUT. Check with Donny, how ?
+		printFnResultStatus(r.Ctx, resultsFile)
 	}
 
 	// check for deferred function errors
@@ -239,6 +249,11 @@ func (r RunFns) runFunctions(
 		return fmt.Errorf(strings.Join(errs, "\n---\n"))
 	}
 	return nil
+}
+
+func printFnResultStatus(ctx context.Context, resultsFile string) {
+	pr := printer.FromContextOrDie(ctx)
+	pr.Printf("Results saved successfully at %q.\n", resultsFile)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -343,6 +358,8 @@ func (r *RunFns) init() error {
 		r.uniquePath = types.UniquePath(absPath)
 	}
 
+	r.fnResults = fnresult.NewResultList()
+
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
 		r.functionFilterProvider = r.defaultFnFilterProvider
@@ -409,12 +426,6 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		return nil, fmt.Errorf("either image name or executable path need to be provided")
 	}
 
-	var resultsFile string
-	if r.ResultsDir != "" {
-		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
-			"results-%v.yaml", r.resultsCount))
-		atomic.AddUint32(&r.resultsCount, 1)
-	}
 	var err error
 	if r.FnConfigPath != "" {
 		fnConfig, err = r.getFunctionConfig()
@@ -447,7 +458,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			Run:            c.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
-			ResultsFile:    resultsFile,
+			// ResultsFile:    resultsFile,
 		}
 		name = spec.Container.Image
 	}
@@ -460,12 +471,11 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			Run:            e.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
-			ResultsFile:    resultsFile,
+			// ResultsFile:    resultsFile,
 		}
 		name = spec.Exec.Path
 	}
 	// if output is not nil we will write the resources to stdout
 	disableOutput := (r.Output != nil)
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, disableOutput)
-
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, disableOutput, r.fnResults)
 }

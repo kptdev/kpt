@@ -99,11 +99,16 @@ func (r *Runner) runFnEval() error {
 	}
 	defer os.RemoveAll(tmpDir)
 	pkgPath := filepath.Join(tmpDir, r.pkgName)
-	// create result dir
-	resultsPath := filepath.Join(tmpDir, "results")
-	err = os.Mkdir(resultsPath, 0755)
-	if err != nil {
-		return fmt.Errorf("failed to create results dir %s: %w", resultsPath, err)
+
+	var resultsDir string
+
+	if r.IsFnResultExpected() {
+		// create result dir
+		resultsDir = filepath.Join(tmpDir, "results")
+		err = os.Mkdir(resultsDir, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
+		}
 	}
 
 	// copy package to temp directory
@@ -119,7 +124,11 @@ func (r *Runner) runFnEval() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "eval", pkgPath, "--results-dir", resultsPath}
+	kptArgs := []string{"fn", "eval", pkgPath}
+
+	if resultsDir != "" {
+		kptArgs = append(kptArgs, "--results-dir", resultsDir)
+	}
 	if r.testCase.Config.EvalConfig.Network {
 		kptArgs = append(kptArgs, "--network")
 	}
@@ -148,11 +157,11 @@ func (r *Runner) runFnEval() error {
 		}
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
-			return r.updateExpected(pkgPath, resultsPath, filepath.Join(r.testCase.Path, expectedDir))
+			return r.updateExpected(pkgPath, resultsDir, filepath.Join(r.testCase.Path, expectedDir))
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsPath)
+		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -164,6 +173,15 @@ func (r *Runner) runFnEval() error {
 	}
 
 	return nil
+}
+
+// IsFnResultExpected determines if function results are expected for this testcase.
+func (r *Runner) IsFnResultExpected() bool {
+	_, err := ioutil.ReadFile(filepath.Join(r.testCase.Path, expectedDir, expectedResultsFile))
+	if err == nil {
+		return true
+	}
+	return false
 }
 
 func (r *Runner) runFnRender() error {
@@ -187,6 +205,17 @@ func (r *Runner) runFnRender() error {
 		return fmt.Errorf("failed to create original dir %s: %w", origPkgPath, err)
 	}
 
+	var resultsDir string
+
+	if r.IsFnResultExpected() {
+		// create result dir
+		resultsDir = filepath.Join(tmpDir, "results")
+		err = os.Mkdir(resultsDir, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
+		}
+	}
+
 	// copy package to temp directory
 	err = copyDir(r.testCase.Path, pkgPath)
 	if err != nil {
@@ -205,6 +234,11 @@ func (r *Runner) runFnRender() error {
 
 	// run function
 	kptArgs := []string{"fn", "render", pkgPath}
+
+	if resultsDir != "" {
+		kptArgs = append(kptArgs, "--results-dir", resultsDir)
+	}
+
 	if r.testCase.Config.DisableOutputTruncate {
 		kptArgs = append(kptArgs, "--truncate-output=false")
 	}
@@ -212,18 +246,14 @@ func (r *Runner) runFnRender() error {
 		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
-			// TODO: `fn render` doesn't support result file now
-			// use empty string to skip update results
-			return r.updateExpected(pkgPath, "", filepath.Join(r.testCase.Path, expectedDir))
+			return r.updateExpected(pkgPath, resultsDir, filepath.Join(r.testCase.Path, expectedDir))
 		}
 
 		if fnErr != nil {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// compare results
-		// TODO: `fn render` doesn't support result file now
-		// use empty string for results dir
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, "")
+		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
