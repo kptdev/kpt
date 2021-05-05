@@ -88,64 +88,64 @@ func TestNewPkg(t *testing.T) {
 
 func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 	var tests = []struct {
-		name        string
-		workingDir  string
-		parentPath  string
-		subPkgPath  string
-		rootPkgPath string
-		displayPath string
+		name                 string
+		workingDir           string
+		parentPath           string
+		subPkgPath           string
+		rootPkgParentDirPath string
+		displayPath          string
 	}{
 		{
 			name:        "test1",
-			workingDir:  "foo",
+			workingDir:  "rootPkg",
 			parentPath:  ".",
-			subPkgPath:  "./bar",
-			displayPath: "foo/bar",
+			subPkgPath:  "./subPkg",
+			displayPath: "rootPkg/subPkg",
 		},
 		{
 			name:        "test2",
-			workingDir:  "foo",
+			workingDir:  "rootPkg",
 			parentPath:  ".",
-			subPkgPath:  "./bar/baz",
-			displayPath: "foo/bar/baz",
+			subPkgPath:  "./subPkg/nestedPkg",
+			displayPath: "rootPkg/subPkg/nestedPkg",
 		},
 		{
 			name:        "test3",
-			workingDir:  "foo/bar",
+			workingDir:  "rootPkg/subPkg",
 			parentPath:  "../",
-			subPkgPath:  "../bar",
-			displayPath: "foo/bar",
+			subPkgPath:  "../subPkg",
+			displayPath: "rootPkg/subPkg",
 		},
 		{
 			name:        "test4",
-			workingDir:  "foo/bar/baz",
+			workingDir:  "rootPkg/subPkg/nestedPkg",
 			parentPath:  "../../",
-			subPkgPath:  "../../bar/baz",
-			displayPath: "foo/bar/baz",
+			subPkgPath:  "../../subPkg/nestedPkg",
+			displayPath: "rootPkg/subPkg/nestedPkg",
 		},
 		{
-			name:        "test5",
-			workingDir:  "foo",
-			rootPkgPath: ".",
-			parentPath:  "./bar",
-			subPkgPath:  "./bar/baz",
-			displayPath: "foo/bar/baz",
+			name:                 "test5",
+			workingDir:           "rootPkg",
+			rootPkgParentDirPath: "../",
+			parentPath:           "./subPkg",
+			subPkgPath:           "./subPkg/nestedPkg",
+			displayPath:          "rootPkg/subPkg/nestedPkg",
 		},
 		{
-			name:        "test6",
-			workingDir:  "foo/bar",
-			rootPkgPath: "../",
-			parentPath:  "../bar",
-			subPkgPath:  "../bar/baz",
-			displayPath: "foo/bar/baz",
+			name:                 "test6",
+			workingDir:           "rootPkg/subPkg",
+			rootPkgParentDirPath: "../../",
+			parentPath:           "../subPkg",
+			subPkgPath:           "../subPkg/nestedPkg",
+			displayPath:          "rootPkg/subPkg/nestedPkg",
 		},
 		{
-			name:        "test7",
-			workingDir:  "foo/bar/baz",
-			rootPkgPath: "../../",
-			parentPath:  "../../bar",
-			subPkgPath:  "../../bar/baz",
-			displayPath: "foo/bar/baz",
+			name:                 "test7",
+			workingDir:           "rootPkg/subPkg/nestedPkg",
+			rootPkgParentDirPath: "../../../",
+			parentPath:           "../../subPkg",
+			subPkgPath:           "../../subPkg/nestedPkg",
+			displayPath:          "rootPkg/subPkg/nestedPkg",
 		},
 	}
 	for i := range tests {
@@ -154,16 +154,16 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 			dir, err := ioutil.TempDir("", "")
 			defer os.RemoveAll(dir)
 			assert.NoError(t, err)
-			err = os.MkdirAll(filepath.Join(dir, "foo", "bar", "baz"), 0700)
+			err = os.MkdirAll(filepath.Join(dir, "rootPkgParentDir", "rootPkg", "subPkg", "nestedPkg"), 0700)
 			assert.NoError(t, err)
-			err = os.Chdir(filepath.Join(dir, test.workingDir))
+			err = os.Chdir(filepath.Join(dir, "rootPkgParentDir", test.workingDir))
 			assert.NoError(t, err)
 			parent, err := New(test.parentPath)
 			assert.NoError(t, err)
-			if test.rootPkgPath != "" {
-				rootPkg, err := New(test.rootPkgPath)
+			if test.rootPkgParentDirPath != "" {
+				rootPkg, err := New(test.rootPkgParentDirPath)
 				assert.NoError(t, err)
-				parent.RootPkgUniquePath = rootPkg.UniquePath
+				parent.rootPkgParentDirPath = string(rootPkg.UniquePath)
 			}
 			subPkg, err := New(test.subPkgPath)
 			assert.NoError(t, err)

@@ -50,8 +50,9 @@ func (u UniquePath) RelativePath() (string, error) {
 	return rPath, nil
 }
 
-// DisplayPath represents Slash-separated path to the package directory on the filesytem relative
-// to current working directory.
+// DisplayPath represents Slash-separated path to the package directory on the filesystem relative
+// to parent directory of root package on which the command is invoked.
+// root package is defined as the package on which the command is invoked by user
 // This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
 // be used for display purposes and is subject to change.
 type DisplayPath string
