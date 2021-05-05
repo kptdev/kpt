@@ -31,41 +31,44 @@ import (
 )
 
 func TestNewPkg(t *testing.T) {
+	// this test creates a folders with structure
+	// foo
+	// └── bar
+	//     └── baz
 	var tests = []struct {
 		name        string
-		inputPath   string
 		workingDir  string
-		uniquePath  string
+		inputPath   string
 		displayPath string
 	}{
 		{
-			name:        "test1",
+			name:        "invoked from working directory foo on path .",
+			workingDir:  "foo",
 			inputPath:   ".",
-			workingDir:  "foo",
 			displayPath: "foo",
 		},
 		{
-			name:        "test2",
+			name:        "invoked from working directory foo/bar on path ../",
+			workingDir:  "foo/bar",
 			inputPath:   "../",
-			workingDir:  "foo/bar",
 			displayPath: "foo",
 		},
 		{
-			name:        "test3",
-			inputPath:   "./bar/baz",
+			name:        "invoked from working directory foo on nested package baz",
 			workingDir:  "foo",
+			inputPath:   "./bar/baz",
 			displayPath: "baz",
 		},
 		{
-			name:        "test4",
-			inputPath:   "../../foo/bar/baz",
+			name:        "invoked from working directory foo/bar on nested package baz",
 			workingDir:  "foo/bar",
+			inputPath:   "../../foo/bar/baz",
 			displayPath: "baz",
 		},
 		{
-			name:        "test5",
-			inputPath:   "../../",
+			name:        "invoked from working directory baz on ancestor package foo",
 			workingDir:  "foo/bar/baz",
+			inputPath:   "../../",
 			displayPath: "foo",
 		},
 	}
@@ -85,63 +88,68 @@ func TestNewPkg(t *testing.T) {
 }
 
 func TestAdjustDisplayPathForSubpkg(t *testing.T) {
+	// this test creates a folders with structure
+	// rootPkgParentDir
+	// └── rootPkg
+	//     └── subPkg
+	//         └── nestedPkg
 	var tests = []struct {
 		name                 string
 		workingDir           string
-		parentPath           string
+		pkgPath              string
 		subPkgPath           string
 		rootPkgParentDirPath string
 		displayPath          string
 	}{
 		{
-			name:        "test1",
+			name:        "display path of subPkg should include rootPkg",
 			workingDir:  "rootPkg",
-			parentPath:  ".",
+			pkgPath:     ".",
 			subPkgPath:  "./subPkg",
 			displayPath: "rootPkg/subPkg",
 		},
 		{
-			name:        "test2",
+			name:        "display path of nestedPkg should include rootPkg/subPkg",
 			workingDir:  "rootPkg",
-			parentPath:  ".",
+			pkgPath:     ".",
 			subPkgPath:  "./subPkg/nestedPkg",
 			displayPath: "rootPkg/subPkg/nestedPkg",
 		},
 		{
-			name:        "test3",
+			name:        "display path of subPkg should include rootPkg independent of workingDir",
 			workingDir:  "rootPkg/subPkg",
-			parentPath:  "../",
+			pkgPath:     "../",
 			subPkgPath:  "../subPkg",
 			displayPath: "rootPkg/subPkg",
 		},
 		{
-			name:        "test4",
+			name:        "display path of nestedPkg should include rootPkg independent of workingDir 1",
 			workingDir:  "rootPkg/subPkg/nestedPkg",
-			parentPath:  "../../",
+			pkgPath:     "../../",
 			subPkgPath:  "../../subPkg/nestedPkg",
 			displayPath: "rootPkg/subPkg/nestedPkg",
 		},
 		{
-			name:                 "test5",
+			name:                 "display path of nestedPkg should include rootPkg independent of workingDir 2",
 			workingDir:           "rootPkg",
 			rootPkgParentDirPath: "../",
-			parentPath:           "./subPkg",
+			pkgPath:              "./subPkg",
 			subPkgPath:           "./subPkg/nestedPkg",
 			displayPath:          "rootPkg/subPkg/nestedPkg",
 		},
 		{
-			name:                 "test6",
+			name:                 "display path of nestedPkg should include rootPkg independent of workingDir 3",
 			workingDir:           "rootPkg/subPkg",
 			rootPkgParentDirPath: "../../",
-			parentPath:           "../subPkg",
+			pkgPath:              "../subPkg",
 			subPkgPath:           "../subPkg/nestedPkg",
 			displayPath:          "rootPkg/subPkg/nestedPkg",
 		},
 		{
-			name:                 "test7",
+			name:                 "display path of nestedPkg should include rootPkg independent of workingDir 4",
 			workingDir:           "rootPkg/subPkg/nestedPkg",
 			rootPkgParentDirPath: "../../../",
-			parentPath:           "../../subPkg",
+			pkgPath:              "../../subPkg",
 			subPkgPath:           "../../subPkg/nestedPkg",
 			displayPath:          "rootPkg/subPkg/nestedPkg",
 		},
@@ -155,7 +163,7 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 			err = os.MkdirAll(filepath.Join(dir, "rootPkgParentDir", "rootPkg", "subPkg", "nestedPkg"), 0700)
 			assert.NoError(t, err)
 			workingDir := filepath.Join(dir, "rootPkgParentDir", test.workingDir)
-			parent, err := New(filepath.Join(workingDir, test.parentPath))
+			parent, err := New(filepath.Join(workingDir, test.pkgPath))
 			assert.NoError(t, err)
 			if test.rootPkgParentDirPath != "" {
 				rootPkg, err := New(filepath.Join(workingDir, test.rootPkgParentDirPath))
