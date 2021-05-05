@@ -50,8 +50,12 @@ func (k *KptfileError) Unwrap() error {
 
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
-	UniquePath  types.UniquePath
-	DisplayPath types.DisplayPath
+	UniquePath        types.UniquePath
+	DisplayPath       types.DisplayPath
+
+	// RootPkgUniquePath is the unique path of the root package on which the command is invoked
+	// this must be passed on to the subpackages
+	RootPkgUniquePath types.UniquePath
 
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
@@ -65,26 +69,20 @@ func New(path string) (*Pkg, error) {
 	if err != nil {
 		return nil, err
 	}
-	var relPath string
 	var absPath string
 	if filepath.IsAbs(path) {
-		// If the provided path is absolute, we find the relative path by
-		// comparing it to the current working directory.
-		relPath, err = filepath.Rel(cwd, path)
-		if err != nil {
-			return nil, err
-		}
 		absPath = filepath.Clean(path)
 	} else {
 		// If the provided path is relative, we find the absolute path by
-		// combining the current working directory with the relative path.
-		relPath = filepath.Clean(path)
+		// combining the current working directory with the path.
 		absPath = filepath.Join(cwd, path)
 	}
-	return &Pkg{
-		UniquePath:  types.UniquePath(absPath),
-		DisplayPath: types.DisplayPath(relPath),
-	}, nil
+	pkg := &Pkg{
+		UniquePath: types.UniquePath(absPath),
+		// by default, DisplayPath should be the package name which is same as directory name
+		DisplayPath: types.DisplayPath(filepath.Base(absPath)),
+	}
+	return pkg, nil
 }
 
 // Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
@@ -176,8 +174,12 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 	for _, subPkgPath := range packagePaths {
 		subPkg, err := New(filepath.Join(p.UniquePath.String(), subPkgPath))
 		if err != nil {
-			return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", subPkgPath, err)
+			return subPkgs, fmt.Errorf("failed to read subpkg at path %q: %w", subPkgPath, err)
 		}
+		if err := p.adjustDisplayPathForSubpkg(subPkg); err != nil {
+			return subPkgs, fmt.Errorf("failed to resolve display path for %q: %w", subPkgPath, err)
+		}
+
 		subPkgs = append(subPkgs, subPkg)
 	}
 
@@ -185,6 +187,26 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 		return subPkgs[i].DisplayPath < subPkgs[j].DisplayPath
 	})
 	return subPkgs, nil
+}
+
+// adjustDisplayPathForSubpkg adjusts the display path of subPkg relative to the RootPkgUniquePath
+// subPkg also inherits the RootPkgUniquePath value from parent package p
+func (p *Pkg) adjustDisplayPathForSubpkg(subPkg *Pkg) error {
+	if string(p.RootPkgUniquePath) == "" {
+		// this means p is the root package on which command is originally invoked
+		subPkg.RootPkgUniquePath = p.UniquePath
+	} else {
+		// inherit the RootPkgUniquePath from the parent package
+		subPkg.RootPkgUniquePath = p.RootPkgUniquePath
+	}
+	// display path of subPkg should be relative to parent dir of rootPkg
+	// e.g. if mysql(subPkg) is direct subpackage of wordpress(p), DisplayPath of "mysql" should be "wordpress/mysql"
+	dp, err := filepath.Rel(filepath.Dir(string(subPkg.RootPkgUniquePath)), string(subPkg.UniquePath))
+	if err != nil {
+		return err
+	}
+	subPkg.DisplayPath = types.DisplayPath(dp)
+	return nil
 }
 
 // SubpackageMatcher is type for specifying the types of subpackages which

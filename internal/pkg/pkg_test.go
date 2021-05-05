@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -33,31 +34,142 @@ func TestNewPkg(t *testing.T) {
 	var tests = []struct {
 		name        string
 		inputPath   string
+		workingDir  string
 		uniquePath  string
 		displayPath string
 	}{
 		{
 			name:        "test1",
 			inputPath:   ".",
-			displayPath: ".",
+			workingDir:  "foo",
+			displayPath: "foo",
 		},
 		{
 			name:        "test2",
 			inputPath:   "../",
-			displayPath: "..",
+			workingDir:  "foo/bar",
+			displayPath: "foo",
 		},
 		{
 			name:        "test3",
-			inputPath:   "./foo/bar/",
-			displayPath: "foo/bar",
+			inputPath:   "./bar/baz",
+			workingDir:  "foo",
+			displayPath: "baz",
+		},
+		{
+			name:        "test4",
+			inputPath:   "../../foo/bar/baz",
+			workingDir:  "foo/bar",
+			displayPath: "baz",
+		},
+		{
+			name:        "test5",
+			inputPath:   "../../",
+			workingDir:  "foo/bar/baz",
+			displayPath: "foo",
 		},
 	}
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", "")
+			defer os.RemoveAll(dir)
+			assert.NoError(t, err)
+			err = os.MkdirAll(filepath.Join(dir, "foo", "bar", "baz"), 0700)
+			assert.NoError(t, err)
+			err = os.Chdir(filepath.Join(dir, test.workingDir))
+			assert.NoError(t, err)
 			p, err := New(test.inputPath)
 			assert.NoError(t, err)
 			assert.Equal(t, test.displayPath, string(p.DisplayPath))
+		})
+	}
+}
+
+func TestAdjustDisplayPathForSubpkg(t *testing.T) {
+	var tests = []struct {
+		name        string
+		workingDir  string
+		parentPath  string
+		subPkgPath  string
+		rootPkgPath string
+		displayPath string
+	}{
+		{
+			name:        "test1",
+			workingDir:  "foo",
+			parentPath:  ".",
+			subPkgPath:  "./bar",
+			displayPath: "foo/bar",
+		},
+		{
+			name:        "test2",
+			workingDir:  "foo",
+			parentPath:  ".",
+			subPkgPath:  "./bar/baz",
+			displayPath: "foo/bar/baz",
+		},
+		{
+			name:        "test3",
+			workingDir:  "foo/bar",
+			parentPath:  "../",
+			subPkgPath:  "../bar",
+			displayPath: "foo/bar",
+		},
+		{
+			name:        "test4",
+			workingDir:  "foo/bar/baz",
+			parentPath:  "../../",
+			subPkgPath:  "../../bar/baz",
+			displayPath: "foo/bar/baz",
+		},
+		{
+			name:        "test5",
+			workingDir:  "foo",
+			rootPkgPath: ".",
+			parentPath:  "./bar",
+			subPkgPath:  "./bar/baz",
+			displayPath: "foo/bar/baz",
+		},
+		{
+			name:        "test6",
+			workingDir:  "foo/bar",
+			rootPkgPath: "../",
+			parentPath:  "../bar",
+			subPkgPath:  "../bar/baz",
+			displayPath: "foo/bar/baz",
+		},
+		{
+			name:        "test7",
+			workingDir:  "foo/bar/baz",
+			rootPkgPath: "../../",
+			parentPath:  "../../bar",
+			subPkgPath:  "../../bar/baz",
+			displayPath: "foo/bar/baz",
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", "")
+			defer os.RemoveAll(dir)
+			assert.NoError(t, err)
+			err = os.MkdirAll(filepath.Join(dir, "foo", "bar", "baz"), 0700)
+			assert.NoError(t, err)
+			err = os.Chdir(filepath.Join(dir, test.workingDir))
+			assert.NoError(t, err)
+			parent, err := New(test.parentPath)
+			assert.NoError(t, err)
+			if test.rootPkgPath != "" {
+				rootPkg, err := New(test.rootPkgPath)
+				assert.NoError(t, err)
+				parent.RootPkgUniquePath = rootPkg.UniquePath
+			}
+			subPkg, err := New(test.subPkgPath)
+			assert.NoError(t, err)
+			err = parent.adjustDisplayPathForSubpkg(subPkg)
+			assert.NoError(t, err)
+			assert.Equal(t, test.displayPath, string(subPkg.DisplayPath))
 		})
 	}
 }
