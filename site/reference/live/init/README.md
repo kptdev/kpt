@@ -1,99 +1,62 @@
 ---
-title: "Init"
+title: "`init`"
 linkTitle: "init"
 type: docs
 description: >
-   Initialize a package with a object to track previously applied resources
+   Initialize a package with the information needed for inventory tracking.
 ---
 <!--mdtogo:Short
-    Initialize a package with a object to track previously applied resources
+    Initialize a package with the information needed for inventory tracking.
 -->
 
-{{< asciinema key="live-init" rows="10" preload="1" >}}
-
-The init command initializes a package with a template resource which will
-be used to track previously applied resources so that they can be pruned
-when they are deleted.
-
-The template resource is required by other live commands
-such as apply, preview and destroy.
-
-### Examples
-
-{{% hide %}}
-
-<!-- @makeWorkplace @verifyExamples-->
-```
-# Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-```
-
-<!-- @fetchPackage @verifyExamples-->
-```shell
-export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
-```
-
-<!-- @createKindCluster @verifyExamples-->
-```
-kind delete cluster && kind create cluster
-```
-
-<!-- @installResourceGroup @verifyExamples-->
-```
-kpt live install-resource-group
-```
-
-{{% /hide %}}
-
-<!--mdtogo:Examples-->
-
-<!-- @liveInit @verifyExamples-->
-```shell
-# initialize a package
-kpt live init my-dir/
-```
-
-{{% hide %}}
-
-<!-- @removeInventoryTemplate @verifyExamples-->
-```shell
-rm -r my-dir
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
-```
-
-{{% /hide %}}
-
-<!-- @liveInit @verifyExamples-->
-```shell
-# initialize a package with a specific name for the group of resources
-kpt live init --namespace=test my-dir/
-```
-<!--mdtogo-->
+`init` initializes the package with the name, namespace and id of the resource
+that will keep track of the package inventory.
 
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live init DIRECTORY [flags]
+kpt live init [DIR] [flags]
 ```
 
 #### Args
-
 ```
 DIR:
-  Path to a package directory.  The directory must contain exactly
-  one ConfigMap with the grouping object annotation.
+  Path to a package directory. The directory must contain a Kptfile.
 ```
 
 #### Flags
-
 ```
---inventory-id:
-  Identifier for group of applied resources. Must be composed of valid label characters.
+--name:
+  The name for the ResourceGroup resource that contains the inventory
+  for the package. Defaults to the name of the package.
+
 --namespace:
-  namespace for the inventory object. If not provided, kpt will check if all the resources
-  in the package belong in the same namespace. If they are, that namespace will be used. If
-  they are not, the namespace in the user's context will be chosen.
+  The namespace for the ResourceGroup resource that contains the inventory
+  for the package. If not provided, kpt will check if all the resources
+  in the package belong in the same namespace. If they do, that namespace will 
+  be used. If they do not, the namespace in the user's context will be chosen.
+
+--inventory-id:
+  Inventory identifier for the package. This is used to detect overlap between 
+  packages that might use the same name and namespace for the inventory object.
+  Defaults to an auto-generated value.
+
+--force:
+  Forces the inventory values to be updated, even if they are already set.
+  Defaults to false.
+```
+<!--mdtogo-->
+
+### Examples
+<!--mdtogo:Examples-->
+
+```shell
+# initialize a package in the current directory.
+kpt live init
+```
+
+```shell
+# initialize a package with a specific name for the group of resources.
+kpt live init --namespace=test my-dir
 ```
 <!--mdtogo-->
