@@ -398,7 +398,7 @@ func TestDirectSubpackages(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, nil)
-
+			defer os.RemoveAll(pkgPath)
 			p, err := New(pkgPath)
 			if !assert.NoError(t, err) {
 				t.FailNow()
