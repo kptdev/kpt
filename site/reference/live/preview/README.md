@@ -15,16 +15,17 @@ description: >
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live preview [DIR|-] [flags]
+kpt live preview [PKG_PATH|-] [flags]
 ```
 
 #### Args
 
 ```
-DIRECTORY:
-  Path to a directory containing KRM resources and a Kptfile with inventory
-  information. The path can be relative or absolute. If using '-' instead of
-  the path to a directory, kpt will read resources from stdin.
+PKG_PATH|-:
+  Path to the local package for which a preview of the operations of apply
+  or destroy should be displayed. It must contain a Kptfile with inventory
+  information. Defaults to the current working directory.
+  Using '-' as the package path will cause kpt to read resources from stdin.
 ```
 
 #### Flags
@@ -32,21 +33,6 @@ DIRECTORY:
 ```
 --destroy:
   If true, preview deletion of all resources.
-
---output:
-  Determines the output format for the status information. Must be one of the following:
-  
-    * events: The output will be a list of the status events as they become available.
-    * json: The output will be a list of the status events as they become available,
-      each formatted as a json object.
-    * table: The output will be presented as a table that will be updated inline
-      as the status of resources become available.
-
-  The default value is ‘events’.
-
---server-side:
-  Perform the apply operation server-side rather than client-side.
-  Default value is false (client-side).
 
 --field-manager:
   Identifier for the **owner** of the fields being applied. Only usable
@@ -72,6 +58,21 @@ DIRECTORY:
       to other packages are adopted into the current package.
       
   The default value is `strict`.
+
+--output:
+  Determines the output format for the status information. Must be one of the following:
+  
+    * events: The output will be a list of the status events as they become available.
+    * json: The output will be a list of the status events as they become available,
+      each formatted as a json object.
+    * table: The output will be presented as a table that will be updated inline
+      as the status of resources become available.
+
+  The default value is ‘events’.
+
+--server-side:
+  Perform the apply operation server-side rather than client-side.
+  Default value is false (client-side).
 ```
 <!--mdtogo-->
 

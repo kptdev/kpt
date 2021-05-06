@@ -14,31 +14,21 @@ description: >
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live destroy [DIR|-]
+kpt live destroy [PKG_PATH|-]
 ```
 
 #### Args
 
 ```
-DIR|-:
-  Path to a directory containing KRM resources and a Kptfile with inventory
-  information. The path can be relative or absolute. Providing '-' instead
-  of the path to a directory cause kpt to read from stdin.
+PKG_PATH|-:
+  Path to the local package which should be deleted from the cluster. It must
+  contain a Kptfile with inventory information. Defaults to the current working
+  directory.
+  Using '-' as the package path will cause kpt to read resources from stdin.
 ```
 
 #### Flags
 ```
---output:
-  Determines the output format for the status information. Must be one of the following:
-  
-    * events: The output will be a list of the status events as they become available.
-    * json: The output will be a list of the status events as they become available,
-      each formatted as a json object.
-    * table: The output will be presented as a table that will be updated inline
-      as the status of resources become available.
-
-  The default value is ‘events’.
-
 --inventory-policy:
   Determines how to handle overlaps between the package being currently applied
   and existing resources in the cluster. The available options are:
@@ -50,6 +40,17 @@ DIR|-:
       to other packages are adopted into the current package.
       
   The default value is `strict`.
+
+--output:
+  Determines the output format for the status information. Must be one of the following:
+  
+    * events: The output will be a list of the status events as they become available.
+    * json: The output will be a list of the status events as they become available,
+      each formatted as a json object.
+    * table: The output will be presented as a table that will be updated inline
+      as the status of resources become available.
+
+  The default value is ‘events’.
 ```
 <!--mdtogo-->
 

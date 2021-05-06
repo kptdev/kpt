@@ -11,6 +11,6 @@ description: >
 -->
 
 <!--mdtogo:Long-->
-`live` contains apply functionality for deploying local configuration
+`live` contains functionality for deploying local configuration
 packages to a cluster.
 <!--mdtogo-->

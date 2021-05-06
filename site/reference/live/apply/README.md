@@ -15,53 +15,20 @@ cluster resources match the local package configuration.
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live apply [DIR|-] [flags]
+kpt live apply [PKG_PATH|-] [flags]
 ```
 
 #### Args
 ```
-DIR|-:
-  Path to a directory containing KRM resources and a Kptfile with inventory
-  information. The path can be relative or absolute. Providing '-' instead
-  of the path to a directory cause kpt to read from stdin.
+PKG_PATH|-:
+  Path to the local package which should be applied to the cluster. It must 
+  contain a Kptfile with inventory information. Defaults to the current working
+  directory.
+  Using '-' as the package path will cause kpt to read resources from stdin.
 ```
 
 #### Flags
 ```
---poll-period:
-  The frequency with which the cluster will be polled to determine
-  the status of the applied resources. The default value is 2 seconds.
-
---reconcile-timeout:
-  The threshold for how long to wait for all resources to reconcile before
-  giving up. If this flag is not set, kpt live apply will not wait for
-  resources to reconcile.
-
---prune-timeout:
-  The threshold for how long to wait for all pruned resources to be
-  deleted before giving up. If this flag is not set, kpt live apply will not
-  wait. In most cases, it would also make sense to set the
-  --prune-propagation-policy to Foreground when this flag is set.
-
---prune-propagation-policy:
-  The propagation policy that should be used when pruning resources. The
-  default value here is 'Background'. The other options are 'Foreground' and 'Orphan'.
-
---output:
-  Determines the output format for the status information. Must be one of the following:
-  
-    * events: The output will be a list of the status events as they become available.
-    * json: The output will be a list of the status events as they become available,
-      each formatted as a json object.
-    * table: The output will be presented as a table that will be updated inline
-      as the status of resources become available.
-
-  The default value is ‘events’.
-
---server-side:
-  Perform the apply operation server-side rather than client-side.
-  Default value is false (client-side).
-
 --field-manager:
   Identifier for the **owner** of the fields being applied. Only usable
   when --server-side flag is specified. Default value is kubectl.
@@ -86,6 +53,40 @@ DIR|-:
       to other packages are adopted into the current package.
       
   The default value is `strict`.
+  
+--output:
+  Determines the output format for the status information. Must be one of the following:
+  
+    * events: The output will be a list of the status events as they become available.
+    * json: The output will be a list of the status events as they become available,
+      each formatted as a json object.
+    * table: The output will be presented as a table that will be updated inline
+      as the status of resources become available.
+
+  The default value is ‘events’.
+  
+--poll-period:
+  The frequency with which the cluster will be polled to determine
+  the status of the applied resources. The default value is 2 seconds.
+
+--prune-propagation-policy:
+  The propagation policy that should be used when pruning resources. The
+  default value here is 'Background'. The other options are 'Foreground' and 'Orphan'.
+
+--prune-timeout:
+  The threshold for how long to wait for all pruned resources to be
+  deleted before giving up. If this flag is not set, kpt live apply will not
+  wait. In most cases, it would also make sense to set the
+  --prune-propagation-policy to Foreground when this flag is set.
+
+--reconcile-timeout:
+  The threshold for how long to wait for all resources to reconcile before
+  giving up. If this flag is not set, kpt live apply will not wait for
+  resources to reconcile.
+
+--server-side:
+  Perform the apply operation server-side rather than client-side.
+  Default value is false (client-side).
 ```
 <!--mdtogo-->
 

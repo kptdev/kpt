@@ -15,15 +15,16 @@ local package config.
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live diff [DIR|-]
+kpt live diff [PKG_PATH|-]
 ```
 
 #### Args
 ```
-DIR|-:
-  Path to a directory containing KRM resources and a Kptfile with inventory
-  information. The path can be relative or absolute. Providing '-' instead
-  of the path to a directory cause kpt to read from stdin.
+PKG_PATH|-:
+  Path to the local package which should be diffed against the cluster. It must
+  contain a Kptfile with inventory information. Defaults to the current working
+  directory.
+  Using '-' as the package path will cause kpt to read resources from stdin.
 ```
 
 #### Environment Variables
