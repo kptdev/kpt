@@ -17,7 +17,6 @@ package run
 import (
 	"bytes"
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -28,13 +27,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	kptopenapi "github.com/GoogleContainerTools/kpt/internal/util/openapi"
 	"github.com/spf13/cobra"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
 
@@ -84,17 +78,6 @@ func GetMain(ctx context.Context) *cobra.Command {
 	// create context with associated printer
 	ctx = printer.WithContext(ctx, pr)
 
-	f := newFactory(cmd)
-
-	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		err := kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
 	cmd.Flags().BoolVar(&installComp, "install-completion", false,
 		"Install shell completion")
 	// this command will be invoked by the shell-completion code
@@ -134,16 +117,11 @@ func GetMain(ctx context.Context) *cobra.Command {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(kptcommands.GetKptCommands(ctx, "kpt", f)...)
+	cmd.AddCommand(kptcommands.GetKptCommands(ctx, "kpt", version)...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
 		"Print a stack-trace on failure")
-
-	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaSource, "k8s-schema-source",
-		kptopenapi.SchemaSourceBuiltin, fmt.Sprintf("Source for the kubernetes openAPI schema. Must be one of %s.", kptopenapi.SchemaSources))
-	cmd.PersistentFlags().StringVar(&cmdutil.K8sSchemaPath, "k8s-schema-path",
-		"./openapi.json", "Path to the kubernetes openAPI schema file")
 
 	if _, err := exec.LookPath("git"); err != nil {
 		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")
@@ -199,24 +177,6 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 			os.Exit(1)
 		}
 	}
-}
-
-func newFactory(cmd *cobra.Command) util.Factory {
-	flags := cmd.PersistentFlags()
-	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
-	kubeConfigFlags.AddFlags(flags)
-	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
-		Delegate:  kubeConfigFlags,
-		UserAgent: fmt.Sprintf("kpt/%s", version),
-	}
-	matchVersionKubeConfigFlags := util.NewMatchVersionFlags(
-		&factory.CachingRESTClientGetter{
-			Delegate: userAgentKubeConfigFlags,
-		},
-	)
-	matchVersionKubeConfigFlags.AddFlags(cmd.PersistentFlags())
-	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	return util.NewFactory(matchVersionKubeConfigFlags)
 }
 
 var version = "unknown"
