@@ -80,7 +80,9 @@ func TestNewPkg(t *testing.T) {
 			assert.NoError(t, err)
 			err = os.MkdirAll(filepath.Join(dir, "foo", "bar", "baz"), 0700)
 			assert.NoError(t, err)
-			p, err := New(filepath.Join(dir, test.workingDir, test.inputPath))
+			revert := Chdir(t, filepath.Join(dir, test.workingDir))
+			defer revert()
+			p, err := New(test.inputPath)
 			assert.NoError(t, err)
 			assert.Equal(t, test.displayPath, string(p.DisplayPath))
 		})
@@ -162,15 +164,16 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 			assert.NoError(t, err)
 			err = os.MkdirAll(filepath.Join(dir, "rootPkgParentDir", "rootPkg", "subPkg", "nestedPkg"), 0700)
 			assert.NoError(t, err)
-			workingDir := filepath.Join(dir, "rootPkgParentDir", test.workingDir)
-			parent, err := New(filepath.Join(workingDir, test.pkgPath))
+			revert := Chdir(t, filepath.Join(dir, "rootPkgParentDir", test.workingDir))
+			defer revert()
+			parent, err := New(test.pkgPath)
 			assert.NoError(t, err)
 			if test.rootPkgParentDirPath != "" {
-				rootPkg, err := New(filepath.Join(workingDir, test.rootPkgParentDirPath))
+				rootPkg, err := New(test.rootPkgParentDirPath)
 				assert.NoError(t, err)
 				parent.rootPkgParentDirPath = string(rootPkg.UniquePath)
 			}
-			subPkg, err := New(filepath.Join(workingDir, test.subPkgPath))
+			subPkg, err := New(test.subPkgPath)
 			assert.NoError(t, err)
 			err = parent.adjustDisplayPathForSubpkg(subPkg)
 			assert.NoError(t, err)
@@ -760,4 +763,22 @@ func TestFunctionConfigFilePaths(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Chdir(t *testing.T, path string) func() {
+	cwd, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	revertFunc := func() {
+		if err := os.Chdir(cwd); err != nil {
+			panic(err)
+		}
+	}
+	err = os.Chdir(path)
+	if !assert.NoError(t, err) {
+		defer revertFunc()
+		t.FailNow()
+	}
+	return revertFunc
 }
