@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package pipeline provides struct definitions for Pipeline and utility
-// methods to read and write a pipeline resource.
-package cmdrender
+package fnruntime
 
 import (
 	"context"
@@ -27,34 +25,34 @@ import (
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/fn/runtime/runtimeutil"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// newFunctionRunner returns a kio.Filter given a specification of a function
+// NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
-func newFunctionRunner(ctx context.Context, hctx *hydrationContext, f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
+func NewFunctionRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath, fnResults *fnresult.ResultList) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 
-	cfn := &fnruntime.ContainerFn{
+	cfn := &ContainerFn{
 		Path:  pkgPath,
 		Image: f.Image,
 		Ctx:   ctx,
 	}
 
-	return &functionRunner{
+	return &FunctionRunner{
 		ctx:             ctx,
 		containerRunner: cfn,
-		fnResults:       hctx.fnResults,
+		fnResults:       fnResults,
 		filter: &runtimeutil.FunctionFilter{
 			Run:            cfn.Run,
 			FunctionConfig: config,
@@ -62,15 +60,15 @@ func newFunctionRunner(ctx context.Context, hctx *hydrationContext, f *kptfilev1
 	}, nil
 }
 
-// functionRunner wraps FunctionFilter and implements kio.Filter interface.
-type functionRunner struct {
+// FunctionRunner wraps FunctionFilter and implements kio.Filter interface.
+type FunctionRunner struct {
 	ctx             context.Context
-	fnResults       *v1alpha2.ResultList
-	containerRunner *fnruntime.ContainerFn
+	fnResults       *fnresult.ResultList
+	containerRunner *ContainerFn
 	filter          *runtimeutil.FunctionFilter
 }
 
-func (fr *functionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.containerRunner.Ctx)
 	printOpt := printer.NewOpt()
 	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fr.containerRunner.Image)
@@ -88,7 +86,7 @@ func (fr *functionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	return output, nil
 }
 
-func (fr *functionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	var results []framework.ResultItem
 
 	output, err = fr.filter.Filter(input)

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -402,7 +403,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := newFunctionRunner(ctx, hctx, &fn, pn.pkg.UniquePath)
+		validator, err := fnruntime.NewFunctionRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults)
 		if err != nil {
 			return err
 		}
@@ -456,7 +457,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFunctionRunner(ctx, hctx, &fn, pkgPath)
+		r, err := fnruntime.NewFunctionRunner(ctx, &fn, pkgPath, hctx.fnResults)
 		if err != nil {
 			return nil, err
 		}
