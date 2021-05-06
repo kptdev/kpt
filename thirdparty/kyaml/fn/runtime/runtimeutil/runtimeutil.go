@@ -254,3 +254,7 @@ func (c *FunctionFilter) doResults(r *kio.ByteReader) error {
 	}
 	return nil
 }
+
+func (c *FunctionFilter) Result() *yaml.RNode {
+	return c.results
+}

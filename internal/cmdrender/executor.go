@@ -17,6 +17,7 @@ package cmdrender
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -26,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	fnresultv1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -36,13 +38,25 @@ import (
 
 // Executor hydrates a given pkg.
 type Executor struct {
-	PkgPath string
+	PkgPath        string
+	ResultsDirPath string
+
 	Printer printer.Printer
 }
 
 // Execute runs a pipeline.
 func (e *Executor) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
+
+	if e.ResultsDirPath != "" {
+		// TODO(droot): ensure the specified directory exists
+		if _, err := os.Stat(e.ResultsDirPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return fmt.Errorf("results-dir %q must exist", e.ResultsDirPath)
+			}
+			return fmt.Errorf("results-dir %q check failed: %w", e.ResultsDirPath, err)
+		}
+	}
 
 	pr := printer.FromContextOrDie(ctx)
 
@@ -53,12 +67,23 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root: root,
-		pkgs: map[types.UniquePath]*pkgNode{},
+		root:      root,
+		pkgs:      map[types.UniquePath]*pkgNode{},
+		fnResults: &fnresultv1alpha2.ResultList{},
 	}
 
 	resources, err := hydrate(ctx, root, hctx)
 	if err != nil {
+		if e.ResultsDirPath == "" {
+			return nil
+		}
+
+		resultFile, resultErr := e.saveResults(hctx)
+		if resultErr != nil {
+			return fmt.Errorf("failed to save function results: %w", resultErr)
+		}
+
+		pr.Printf("Results saved successfully at %q.\n", resultFile)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -84,8 +109,39 @@ func (e *Executor) Execute(ctx context.Context) error {
 	}
 
 	pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
-	// TODO: Output the complete result file path here
+
+	if e.ResultsDirPath == "" {
+		return nil
+	}
+
+	resultFile, err := e.saveResults(hctx)
+	if err != nil {
+		return fmt.Errorf("failed to save function results: %w", err)
+	}
+
+	pr.Printf("Results saved successfully at %q.\n", resultFile)
+
 	return nil
+}
+
+// saveResults saves results gathered from running the pipeline at specified dir.
+func (e *Executor) saveResults(hctx *hydrationContext) (string, error) {
+	if e.ResultsDirPath == "" {
+		return "", nil
+	}
+	filePath := filepath.Join(e.ResultsDirPath, "results.yaml")
+
+	content, err := yaml.Marshal(hctx.fnResults)
+	if err != nil {
+		return "", err
+	}
+
+	err = ioutil.WriteFile(filePath, content, 0744)
+	if err != nil {
+		return "", err
+	}
+
+	return filePath, nil
 }
 
 // hydrationContext contains bits to track state of a package hydration.
@@ -110,6 +166,10 @@ type hydrationContext struct {
 
 	// executedFunctionCnt is the counter for functions that have been executed.
 	executedFunctionCnt int
+
+	// fnResults stores function results gathered
+	// during pipeline execution.
+	fnResults *fnresultv1alpha2.ResultList
 }
 
 //
@@ -314,7 +374,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return input, nil
 	}
 
-	mutators, err := fnChain(ctx, pn.pkg.UniquePath, pl.Mutators)
+	mutators, err := fnChain(ctx, pn.pkg.UniquePath, pl.Mutators, hctx.fnResults)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +416,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := newFnRunner(ctx, &fn, pn.pkg.UniquePath)
+		validator, err := newFnRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults)
 		if err != nil {
 			return err
 		}
@@ -406,11 +466,11 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
+func fnChain(ctx context.Context, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function, fnResults *fnresultv1alpha2.ResultList) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFnRunner(ctx, &fn, pkgPath)
+		r, err := newFnRunner(ctx, &fn, pkgPath, fnResults)
 		if err != nil {
 			return nil, err
 		}

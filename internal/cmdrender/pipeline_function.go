@@ -18,6 +18,7 @@ package cmdrender
 
 import (
 	"context"
+	goerrors "errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,15 +28,18 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
+func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath, fnResults *v1alpha2.ResultList) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -47,14 +51,57 @@ func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types
 		Ctx:   ctx,
 	}
 
-	cfnw := &fnruntime.ContainerFnWrapper{
-		Fn: cfn,
-	}
-
-	return &runtimeutil.FunctionFilter{
-		Run:            cfnw.Run,
-		FunctionConfig: config,
+	return &FunctionRunner{
+		ctx:             ctx,
+		containerRunner: cfn,
+		resultList:      fnResults,
+		filter: &runtimeutil.FunctionFilter{
+			Run:            cfn.Run,
+			FunctionConfig: config,
+		},
 	}, nil
+}
+
+// FunctionRunner wraps FunctionFilter and implements a kio.Filter interface.
+type FunctionRunner struct {
+	ctx             context.Context
+	resultList      *v1alpha2.ResultList
+	containerRunner *fnruntime.ContainerFn
+	filter          *runtimeutil.FunctionFilter
+}
+
+func (fnr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	pr := printer.FromContextOrDie(fnr.containerRunner.Ctx)
+	printOpt := printer.NewOpt()
+	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fnr.containerRunner.Image)
+	output, err = fnr.filter.Filter(input)
+	if err != nil {
+		pr.OptPrintf(printOpt, "[FAIL] %q\n", fnr.containerRunner.Image)
+		var fnErr *errors.FnExecError
+		if goerrors.As(err, &fnErr) {
+			var results []framework.ResultItem
+			_ = toResultItems(fnr.filter.Result(), &results)
+			fnResult := v1alpha2.Result{
+				Image:    fnr.containerRunner.Image,
+				ExitCode: fnErr.ExitCode,
+				Stderr:   fnErr.Stderr,
+				Results:  results,
+			}
+			fnr.resultList.Items = append(fnr.resultList.Items, fnResult)
+		}
+		return output, err
+	}
+	// capture the result from running the function
+	pr.OptPrintf(printOpt, "[PASS] %q\n", fnr.containerRunner.Image)
+	return output, nil
+}
+
+func toResultItems(yml *yaml.RNode, results *[]framework.ResultItem) error {
+	err := yaml.Unmarshal([]byte(yml.MustString()), results)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
