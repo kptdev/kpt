@@ -17,10 +17,10 @@ package cmdrender
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
@@ -37,7 +37,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		PreRunE: r.preRunE,
 	}
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
-		"path to the directory to save function results")
+		"path to a directory to save function results")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -56,18 +56,24 @@ type Runner struct {
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	const op errors.Op = "fn.preRunE"
-
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		r.pkgPath = wd
 	} else {
 		// resolve and validate the provided path
 		r.pkgPath = args[0]
+	}
+	if r.resultsDirPath != "" {
+		if _, err := os.Stat(r.resultsDirPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return fmt.Errorf("results-dir %q must exist", r.resultsDirPath)
+			}
+			return fmt.Errorf("results-dir %q check failed: %w", r.resultsDirPath, err)
+		}
 	}
 	return nil
 }

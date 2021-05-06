@@ -39,7 +39,7 @@ import (
 
 // newFnRunner returns a fnRunner from the image and configs of
 // this function.
-func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath, fnResults *v1alpha2.ResultList) (kio.Filter, error) {
+func newFnRunner(ctx context.Context, hctx *hydrationContext, f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types
 	return &FunctionRunner{
 		ctx:             ctx,
 		containerRunner: cfn,
-		resultList:      fnResults,
+		fnResults:       hctx.fnResults,
 		filter: &runtimeutil.FunctionFilter{
 			Run:            cfn.Run,
 			FunctionConfig: config,
@@ -65,7 +65,7 @@ func newFnRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types
 // FunctionRunner wraps FunctionFilter and implements a kio.Filter interface.
 type FunctionRunner struct {
 	ctx             context.Context
-	resultList      *v1alpha2.ResultList
+	fnResults       *v1alpha2.ResultList
 	containerRunner *fnruntime.ContainerFn
 	filter          *runtimeutil.FunctionFilter
 }
@@ -87,7 +87,7 @@ func (fnr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, er
 				Stderr:   fnErr.Stderr,
 				Results:  results,
 			}
-			fnr.resultList.Items = append(fnr.resultList.Items, fnResult)
+			fnr.fnResults.Items = append(fnr.fnResults.Items, fnResult)
 		}
 		return output, err
 	}

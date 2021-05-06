@@ -48,16 +48,6 @@ type Executor struct {
 func (e *Executor) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
 
-	if e.ResultsDirPath != "" {
-		// TODO(droot): ensure the specified directory exists
-		if _, err := os.Stat(e.ResultsDirPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				return fmt.Errorf("results-dir %q must exist", e.ResultsDirPath)
-			}
-			return fmt.Errorf("results-dir %q check failed: %w", e.ResultsDirPath, err)
-		}
-	}
-
 	pr := printer.FromContextOrDie(ctx)
 
 	root, err := newPkgNode(e.PkgPath, nil)
@@ -74,16 +64,14 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	resources, err := hydrate(ctx, root, hctx)
 	if err != nil {
-		if e.ResultsDirPath == "" {
-			return nil
+		resultsFile, resultsErr := e.saveResults(hctx)
+		if resultsErr != nil {
+			return fmt.Errorf("failed to save function results: %w", err)
 		}
 
-		resultFile, resultErr := e.saveResults(hctx)
-		if resultErr != nil {
-			return fmt.Errorf("failed to save function results: %w", resultErr)
+		if resultsFile != "" {
+			pr.Printf("Results saved successfully at %q.\n", resultsFile)
 		}
-
-		pr.Printf("Results saved successfully at %q.\n", resultFile)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -110,16 +98,14 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 
-	if e.ResultsDirPath == "" {
-		return nil
-	}
-
-	resultFile, err := e.saveResults(hctx)
+	resultsFile, err := e.saveResults(hctx)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
 
-	pr.Printf("Results saved successfully at %q.\n", resultFile)
+	if resultsFile != "" {
+		pr.Printf("Results saved successfully at %q.\n", resultsFile)
+	}
 
 	return nil
 }
@@ -374,7 +360,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return input, nil
 	}
 
-	mutators, err := fnChain(ctx, pn.pkg.UniquePath, pl.Mutators, hctx.fnResults)
+	mutators, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
 	if err != nil {
 		return nil, err
 	}
@@ -416,7 +402,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := newFnRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults)
+		validator, err := newFnRunner(ctx, hctx, &fn, pn.pkg.UniquePath)
 		if err != nil {
 			return err
 		}
@@ -466,11 +452,11 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function, fnResults *fnresultv1alpha2.ResultList) ([]kio.Filter, error) {
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFnRunner(ctx, &fn, pkgPath, fnResults)
+		r, err := newFnRunner(ctx, hctx, &fn, pkgPath)
 		if err != nil {
 			return nil, err
 		}
