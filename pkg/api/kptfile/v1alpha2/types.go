@@ -123,7 +123,7 @@ type Upstream struct {
 
 // Git is the user-specified locator for a package on Git.
 type Git struct {
-	// Repo is the git repository the package.
+	// Repo is the git repository of the package.
 	// e.g. 'https://github.com/kubernetes/examples.git'
 	Repo string `yaml:"repo,omitempty"`
 
@@ -284,7 +284,7 @@ type Function struct {
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.
-// All of the the parameters are required if any are set.
+// All of the parameters are required if any are set.
 type Inventory struct {
 	// Namespace for the inventory resource.
 	Namespace string `yaml:"namespace,omitempty"`
