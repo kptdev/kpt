@@ -95,7 +95,8 @@ func (m Merge3) Merge() error {
 	})
 
 	kyamlMerge := filters.Merge3{
-		MergeOnPath: m.MergeOnPath,
+		// TODO fix this.
+                // MergeOnPath: m.MergeOnPath,
 	}
 
 	return kio.Pipeline{
