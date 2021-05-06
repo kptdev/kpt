@@ -319,7 +319,6 @@ type defaultPkgGetter struct{}
 // repo is the git repository the package was cloned from.  e.g. https://
 // path is the sub directory of the git repository that the package was cloned from
 // ref is the git ref the package was cloned from
-// refDesc is a human readable name of the reference
 func (pg defaultPkgGetter) GetPkg(ctx context.Context, stagingDir, targetDir, repo, path, ref string) (string, error) {
 	dir, err := stageDirectory(stagingDir, targetDir)
 	if err != nil {
