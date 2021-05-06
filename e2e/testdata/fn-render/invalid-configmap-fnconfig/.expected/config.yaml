@@ -13,4 +13,5 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "line 14: cannot unmarshal !!seq into string"
+stdErr:
+  - "line 14: cannot unmarshal !!seq into string"

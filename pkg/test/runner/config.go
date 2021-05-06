@@ -56,8 +56,8 @@ type TestCaseConfig struct {
 	ExitCode int `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
 
 	// StdErr is the expected standard error output and should be checked
-	// when a nonzero exit code is expected. Default: ""
-	StdErr string `json:"stdErr,omitempty" yaml:"stdErr,omitempty"`
+	// when a nonzero exit code is expected. Default: empty list
+	StdErr []string `json:"stdErr,omitempty" yaml:"stdErr,omitempty"`
 
 	// StdOut is the expected standard output from running the command.
 	// Default: ""
@@ -182,7 +182,7 @@ func ScanTestCases(path string) (*TestCases, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to scan test cases in %s", path)
+		return nil, fmt.Errorf("failed to scan test cases in %s: %v", path, err)
 	}
 	return &cases, nil
 }

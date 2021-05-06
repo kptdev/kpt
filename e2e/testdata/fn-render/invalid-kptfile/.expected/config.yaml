@@ -13,4 +13,5 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "unable to parse \"Kptfile\": yaml: line 3: could not find expected ':'"
+stdErr:
+  - "unable to parse \"Kptfile\": yaml: line 3: could not find expected ':'"
