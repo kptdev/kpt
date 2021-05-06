@@ -81,6 +81,9 @@ func (fr *functionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	}
 	// capture the result from running the function
 	pr.OptPrintf(printOpt, "[PASS] %q\n", fr.containerRunner.Image)
+
+	// TODO(droot): print functionResults
+
 	return output, nil
 }
 
