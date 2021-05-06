@@ -464,9 +464,8 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 		name = spec.Exec.Path
 	}
-	// if we write back to file system, we need to print progress
-	if r.Output == nil {
-		return fnruntime.NewFunctionRunner(r.Ctx, fltr, name)
-	}
-	return fltr, nil
+	// if output is not nil we will write the resources to stdout
+	disableOutput := (r.Output != nil)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, disableOutput)
+
 }

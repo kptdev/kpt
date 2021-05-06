@@ -46,41 +46,47 @@ func NewContainerRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPat
 		Run:            cfn.Run,
 		FunctionConfig: config,
 	}
-	return NewFunctionRunner(ctx, fltr, f.Image)
+	return NewFunctionRunner(ctx, fltr, f.Image, false)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
-func NewFunctionRunner(ctx context.Context, fltr *runtimeutil.FunctionFilter, name string) (kio.Filter, error) {
+func NewFunctionRunner(ctx context.Context, fltr *runtimeutil.FunctionFilter, name string, disableOutput bool) (kio.Filter, error) {
 	return &FunctionRunner{
-		ctx:    ctx,
-		name:   name,
-		filter: fltr,
+		ctx:           ctx,
+		name:          name,
+		filter:        fltr,
+		disableOutput: disableOutput,
 	}, nil
 }
 
 // FunctionRunner wraps FunctionFilter and implements kio.Filter interface.
 type FunctionRunner struct {
-	ctx    context.Context
-	name   string
-	filter *runtimeutil.FunctionFilter
+	ctx           context.Context
+	name          string
+	disableOutput bool
+	filter        *runtimeutil.FunctionFilter
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	pr := printer.FromContextOrDie(fr.ctx)
-	printOpt := printer.NewOpt()
-	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fr.name)
-	output, err = fr.filter.Filter(input)
-	if err != nil {
-		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
-		return nil, err
+	if fr.disableOutput {
+		output, err = fr.filter.Filter(input)
+	} else {
+		pr := printer.FromContextOrDie(fr.ctx)
+		printOpt := printer.NewOpt()
+		pr.OptPrintf(printOpt, "[RUNNING] %q\n", fr.name)
+		output, err = fr.filter.Filter(input)
+		if err != nil {
+			pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
+			return nil, err
+		}
+		// capture the result from running the function
+		pr.OptPrintf(printOpt, "[PASS] %q\n", fr.name)
 	}
-	// capture the result from running the function
-	pr.OptPrintf(printOpt, "[PASS] %q\n", fr.name)
 
 	// TODO(droot): print functionResults
 
-	return output, nil
+	return
 }
 
 func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
