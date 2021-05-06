@@ -4,6 +4,7 @@
 package runfn
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -30,6 +31,8 @@ import (
 // RunFns runs the set of configuration functions in a local directory against
 // the Resources in that directory
 type RunFns struct {
+	Ctx context.Context
+
 	StorageMounts []runtimeutil.StorageMount
 
 	// Path is the path to the directory containing functions
@@ -419,6 +422,8 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 	}
+	var fltr *runtimeutil.FunctionFilter
+	var name string
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
@@ -438,27 +443,29 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 				AllowMount: true,
 			},
 		}
-		cf := &runtimeutil.FunctionFilter{
+		fltr = &runtimeutil.FunctionFilter{
 			Run:            c.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 			ResultsFile:    resultsFile,
 		}
-		return cf, nil
+		name = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
 		e := &fnruntime.ExecFn{
 			Path: spec.Exec.Path,
 		}
-		ef := &runtimeutil.FunctionFilter{
+		fltr = &runtimeutil.FunctionFilter{
 			Run:            e.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 			ResultsFile:    resultsFile,
 		}
-		return ef, nil
+		name = spec.Exec.Path
 	}
+	// if output is not nil we will write the resources to stdout
+	disableOutput := (r.Output != nil)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, disableOutput)
 
-	return nil, nil
 }

@@ -4,6 +4,7 @@
 package cmdeval
 
 import (
+	"context"
 	"io"
 	"os"
 	"strings"
@@ -183,6 +184,7 @@ apiVersion: v1
 				ResultsDir:            "foo/",
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -219,6 +221,7 @@ apiVersion: v1
 				LogSteps:              true,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -239,6 +242,7 @@ apiVersion: v1
 				Path:                  "dir",
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -260,6 +264,7 @@ apiVersion: v1
 				AsCurrentUser:         true,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -287,7 +292,7 @@ apiVersion: v1
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			r := GetEvalFnRunner("kpt")
+			r := GetEvalFnRunner(context.TODO(), "kpt")
 			// Don't run the actual command
 			r.Command.Run = nil
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error { return nil }

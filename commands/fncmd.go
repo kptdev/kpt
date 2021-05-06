@@ -46,7 +46,7 @@ func GetFnCommand(ctx context.Context, name string) *cobra.Command {
 		},
 	}
 
-	eval := cmdeval.EvalCommand(name)
+	eval := cmdeval.EvalCommand(ctx, name)
 	eval.Short = fndocs.RunShort
 	eval.Long = fndocs.RunShort + "\n" + fndocs.RunLong
 	eval.Example = fndocs.RunExamples
