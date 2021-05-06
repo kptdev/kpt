@@ -23,6 +23,7 @@ import (
 //nolint:gochecknoinits
 func init() {
 	AddErrorResolver(&fnExecErrorResolver{})
+	AddErrorResolver(&alreadyHandledErrorResolver{})
 }
 
 // gitExecErrorResolver is an implementation of the ErrorResolver interface
@@ -42,4 +43,10 @@ func (*fnExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		Message:  fnErr.String(),
 		ExitCode: 1,
 	}, true
+}
+
+type alreadyHandledErrorResolver struct{}
+
+func (*alreadyHandledErrorResolver) Resolve(err error) (ResolvedResult, bool) {
+	return ResolvedResult{ExitCode: 1}, true
 }

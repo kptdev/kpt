@@ -73,3 +73,8 @@ func (fe *FnExecError) String() string {
 func (fe *FnExecError) Error() string {
 	return fe.String()
 }
+
+// AlreadyHandledErr is an error that is already handled by
+// a kpt command and nothing needs to be done by the global
+// error handler except to return a non-zero exit code.
+var AlreadyHandledErr error = fmt.Errorf("")

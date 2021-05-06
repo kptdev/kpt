@@ -77,7 +77,8 @@ func (fr *functionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	output, err = fr.do(input)
 	if err != nil {
 		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.containerRunner.Image)
-		return output, err
+		pr.OptPrintf(printOpt, "%s\n", err)
+		return output, errors.AlreadyHandledErr
 	}
 	// capture the result from running the function
 	pr.OptPrintf(printOpt, "[PASS] %q\n", fr.containerRunner.Image)
