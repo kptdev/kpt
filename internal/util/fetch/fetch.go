@@ -106,7 +106,7 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 	defer os.RemoveAll(r.Dir)
 
 	sourcePath := filepath.Join(r.Dir, r.Path)
-	pr.Printf("Adding package %q\n", strings.TrimPrefix(r.Path, "/"))
+	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
 	if err := pkgutil.CopyPackageWithSubpackages(sourcePath, dest); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}

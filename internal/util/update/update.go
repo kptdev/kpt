@@ -85,6 +85,7 @@ type Command struct {
 // Run runs the Command.
 func (u Command) Run(ctx context.Context) error {
 	const op errors.Op = "update.Run"
+	pr := printer.FromContextOrDie(ctx)
 
 	if u.Pkg == nil {
 		return errors.E(op, errors.MissingParam, "pkg must be provided")
@@ -125,6 +126,8 @@ func (u Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 
+	packageCount := 0
+
 	// Use stack to keep track of paths with a Kptfile that might contain
 	// information about remote subpackages.
 	s := stack.NewPkgStack()
@@ -132,10 +135,7 @@ func (u Command) Run(ctx context.Context) error {
 
 	for s.Len() > 0 {
 		p := s.Pop()
-
-		pr := printer.FromContextOrDie(ctx)
-		pr.Printf("\n")
-		pr.OptPrintf(printer.NewOpt().PkgDisplay(p.DisplayPath), "\n")
+		packageCount += 1
 
 		if err := u.updateRootPackage(ctx, p); err != nil {
 			return errors.E(op, p.UniquePath, err)
@@ -146,9 +146,17 @@ func (u Command) Run(ctx context.Context) error {
 			return errors.E(op, p.UniquePath, err)
 		}
 		for _, subPkg := range subPkgs {
-			s.Push(subPkg)
+			subKf, err := subPkg.Kptfile()
+			if err != nil {
+				return errors.E(op, p.UniquePath, err)
+			}
+
+			if subKf.Upstream != nil && subKf.Upstream.Git != nil {
+				s.Push(subPkg)
+			}
 		}
 	}
+	pr.Printf("\nUpdated %d package(s).\n", packageCount)
 	return nil
 }
 
@@ -196,14 +204,11 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	}
 
 	pr := printer.FromContextOrDie(ctx)
-
-	if kf.Upstream == nil || kf.Upstream.Git == nil {
-		return nil
-	}
+	pr.PrintPackage(p, !(p == u.Pkg))
 
 	g := kf.Upstream.Git
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
-	pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+	pr.Printf("Fetching upstream from %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 	if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
@@ -213,7 +218,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	if kf.UpstreamLock != nil {
 		gLock := kf.UpstreamLock.Git
 		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
-		pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+		pr.Printf("Fetching origin from %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 		if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
@@ -299,7 +304,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// Check if subpackage has been added both in upstream and in local. We
 	// can't make a sane merge here, so we treat it as an error.
 	case !originExists && localExists && updatedExists:
-		pr.Printf("Package %q added in both local and upstream\n", packageName(localPath))
+		pr.Printf("Package %q added in both local and upstream.\n", packageName(localPath))
 		return errors.E(op, types.UniquePath(localPath),
 			fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath))
 
@@ -307,7 +312,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// contains any unfetched subpackages, those will be handled when we traverse
 	// the package hierarchy and that package is the root.
 	case !originExists && !localExists && updatedExists:
-		pr.Printf("Adding package %q from upstream\n", packageName(localPath))
+		pr.Printf("Adding package %q from upstream.\n", packageName(localPath))
 		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
@@ -324,7 +329,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// In this case we assume the user knows what they are doing, so
 	// we don't re-add the updated package from upstream.
 	case originExists && !localExists && updatedExists:
-		pr.Printf("Ignoring package %q in upstream since it is deleted from local\n", packageName(localPath))
+		pr.Printf("Ignoring package %q in upstream since it is deleted from local.\n", packageName(localPath))
 
 	// Package deleted from upstream
 	case originExists && localExists && !updatedExists:
@@ -334,12 +339,12 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 		if diff.Len() == 0 {
-			pr.Printf("Deleting package %q from local since it is removed in upstream\n", packageName(localPath))
+			pr.Printf("Deleting package %q from local since it is removed in upstream.\n", packageName(localPath))
 			if err := os.RemoveAll(localPath); err != nil {
 				return errors.E(op, types.UniquePath(localPath), err)
 			}
 		} else {
-			pr.Printf("Package %q deleted from upstream, but keeping local since it has changes\n", packageName(localPath))
+			pr.Printf("Package %q deleted from upstream, but keeping local since it has changes.\n", packageName(localPath))
 		}
 	default:
 		if err := u.mergePackage(ctx, localPath, updatedPath, originPath, subPkgPath, isRootPkg); err != nil {
@@ -399,7 +404,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 		return errors.E(op, types.UniquePath(localPath),
 			fmt.Errorf("unrecognized update strategy %s", u.Strategy))
 	}
-	pr.Printf("Updating package %q with strategy %q\n", packageName(localPath), pkgKf.Upstream.UpdateStrategy)
+	pr.Printf("Updating package %q with strategy %q.\n", packageName(localPath), pkgKf.Upstream.UpdateStrategy)
 	if err := updater().Update(UpdateOptions{
 		RelPackagePath: relPath,
 		LocalPath:      localPath,

@@ -105,6 +105,7 @@ func (c Command) Run(ctx context.Context) error {
 func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 	const op errors.Op = "get.fetchPackages"
 	pr := printer.FromContextOrDie(ctx)
+	packageCount := 0
 	// Create a stack to keep track of all Kptfiles that needs to be checked
 	// for remote subpackages.
 	s := stack.NewPkgStack()
@@ -112,9 +113,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 
 	for s.Len() > 0 {
 		p := s.Pop()
-
-		pr.Printf("\n")
-		pr.OptPrintf(printer.NewOpt().PkgDisplay(p.DisplayPath), "\n")
+		packageCount += 1
 
 		kf, err := p.Kptfile()
 		if err != nil {
@@ -122,7 +121,8 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 		}
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
-			pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+			pr.PrintPackage(p, !(p == rootPkg))
+			pr.Printf("Fetching %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 			err := (&fetch.Command{
 				Pkg: p,
 			}).Run(ctx)
@@ -139,6 +139,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 			s.Push(subPkg)
 		}
 	}
+	pr.Printf("\nFetched %d package(s).\n", packageCount)
 	return nil
 }
 

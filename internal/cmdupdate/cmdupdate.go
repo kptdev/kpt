@@ -25,7 +25,6 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
@@ -112,9 +111,6 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	const op errors.Op = "cmdupdate.runE"
-	pr := printer.FromContextOrDie(r.ctx)
-	pr.Printf("Updating package in %q\n",
-		r.Update.Pkg.UniquePath.String())
 	if err := r.Update.Run(r.ctx); err != nil {
 		return errors.E(op, r.Update.Pkg.UniquePath, err)
 	}
