@@ -48,7 +48,9 @@ func (*fnExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 type alreadyHandledErrorResolver struct{}
 
 func (*alreadyHandledErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	if goerrors.Is(err, errors.ErrAlreadyHandled) {
+	kioErr := errors.UnwrapKioError(err)
+
+	if goerrors.Is(kioErr, errors.ErrAlreadyHandled) {
 		// error is already handled but need to return non-zero exit code.
 		return ResolvedResult{ExitCode: 1}, true
 	}
