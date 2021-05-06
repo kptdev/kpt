@@ -185,8 +185,8 @@ by kpt.
 - Learn about kpt concepts and usage by reading the kpt [book]
 - Consult the [FAQ] for answers to common questions.
 
-[pkg]: /reference/pkg/
-[fn]: /reference/fn/
-[live]: /reference/live/
+[pkg]: /reference/cli/pkg/
+[fn]: /reference/cli/fn/
+[live]: /reference/cli/live/
 [book]: /book/
 [FAQ]: /faq/

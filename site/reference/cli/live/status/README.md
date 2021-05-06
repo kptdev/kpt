@@ -109,4 +109,4 @@ DIR | STDIN:
 ```
 <!--mdtogo-->
 
-[Inventory Template]: /reference/live/apply/#prune
+[Inventory Template]: /reference/cli/live/apply/#prune

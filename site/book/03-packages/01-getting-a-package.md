@@ -112,4 +112,4 @@ could have two subpackages with the name `mysql` having the following identifier
 - `wordpress/backend/mysql`
 - `wordpress/frontend/mysql`
 
-[get-doc]: /reference/pkg/get/
+[get-doc]: /reference/cli/pkg/get/

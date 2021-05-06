@@ -38,4 +38,4 @@ info:
 ```
 
 [author resources]: /book/03-packages/03-editing-a-package
-[init-doc]: /reference/pkg/init/
+[init-doc]: /reference/cli/pkg/init/

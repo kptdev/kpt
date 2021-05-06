@@ -32,4 +32,4 @@ $ kpt fn eval --image gcr.io/kpt-fn/search-replace:unstable wordpress -- 'by-pat
 
 TODO(#1821): search-replace doesn't work.
 
-[tree-doc]: /reference/pkg/tree/
+[tree-doc]: /reference/cli/pkg/tree/

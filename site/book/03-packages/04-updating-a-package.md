@@ -47,4 +47,4 @@ Once you have successfully updated the package, commit the changes:
 $ git add .; git commit -am "Updated wordpress to v0.2"
 ```
 
-[update-doc]: /reference/pkg/update/
+[update-doc]: /reference/cli/pkg/update/
