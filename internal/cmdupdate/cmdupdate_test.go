@@ -51,7 +51,6 @@ func TestCmd_execute(t *testing.T) {
 
 	// clone the repo
 	getCmd := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
-	getCmd.Command.PostRunE = nil
 	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
@@ -143,7 +142,6 @@ func TestCmd_failUnCommitted(t *testing.T) {
 
 	// clone the repo
 	getCmd := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
-	getCmd.Command.PostRunE = nil
 	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {

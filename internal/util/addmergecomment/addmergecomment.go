@@ -13,15 +13,21 @@ import (
 // to all resources in the package
 type AddMergeComment struct{}
 
-// Process invokes AddMergeComment kyaml filter on the resources in input package path
-func Process(path string) error {
-	inout := &kio.LocalPackageReadWriter{PackagePath: path}
-	amc := &AddMergeComment{}
-	return kio.Pipeline{
-		Inputs:  []kio.Reader{inout},
-		Filters: []kio.Filter{kio.FilterAll(amc)},
-		Outputs: []kio.Writer{inout},
-	}.Execute()
+// Process invokes AddMergeComment kyaml filter on the resources in input packages paths
+func Process(paths ...string) error {
+	for _, path := range paths {
+		inout := &kio.LocalPackageReadWriter{PackagePath: path}
+		amc := &AddMergeComment{}
+		err := kio.Pipeline{
+			Inputs:  []kio.Reader{inout},
+			Filters: []kio.Filter{kio.FilterAll(amc)},
+			Outputs: []kio.Writer{inout},
+		}.Execute()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Filter implements kyaml.Filter

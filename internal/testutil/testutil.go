@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -29,6 +28,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -194,8 +194,6 @@ func kptfileExists(t *testing.T, path string) bool {
 // this set is not guaranteed to contain all differing files.
 func Diff(sourceDir, destDir string) (sets.String, error) {
 	// get set of filenames in the package source
-	println(sourceDir)
-	println(destDir)
 	sourceDir, clean1, err := addMergeCommentToExpected(sourceDir)
 	defer clean1()
 	if err != nil {

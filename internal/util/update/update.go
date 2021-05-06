@@ -18,7 +18,6 @@ package update
 import (
 	"context"
 	"fmt"
-	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -29,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"

@@ -15,7 +15,6 @@
 package merge_test
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
