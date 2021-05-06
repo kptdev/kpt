@@ -282,7 +282,7 @@ func TestCommand_InvalidRef(t *testing.T) {
 	diffOutput := &bytes.Buffer{}
 	err := (&Command{
 		Path:         g.LocalWorkspace.FullPackagePath(),
-		Ref:          "hurdygurdy", //ref should not exist in upstream
+		Ref:          "hurdygurdy", // ref should not exist in upstream
 		DiffType:     DiffTypeCombined,
 		DiffTool:     "diff",
 		DiffToolOpts: "-r -i -w",
