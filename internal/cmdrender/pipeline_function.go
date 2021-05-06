@@ -37,9 +37,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// newFnRunner returns a fnRunner from the image and configs of
-// this function.
-func newFnRunner(ctx context.Context, hctx *hydrationContext, f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
+// newFunctionRunner returns a kio.Filter given a specification of a function
+// and it's config.
+func newFunctionRunner(ctx context.Context, hctx *hydrationContext, f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func newFnRunner(ctx context.Context, hctx *hydrationContext, f *kptfilev1alpha2
 		Ctx:   ctx,
 	}
 
-	return &FunctionRunner{
+	return &functionRunner{
 		ctx:             ctx,
 		containerRunner: cfn,
 		fnResults:       hctx.fnResults,
@@ -62,37 +62,48 @@ func newFnRunner(ctx context.Context, hctx *hydrationContext, f *kptfilev1alpha2
 	}, nil
 }
 
-// FunctionRunner wraps FunctionFilter and implements a kio.Filter interface.
-type FunctionRunner struct {
+// functionRunner wraps FunctionFilter and implements kio.Filter interface.
+type functionRunner struct {
 	ctx             context.Context
 	fnResults       *v1alpha2.ResultList
 	containerRunner *fnruntime.ContainerFn
 	filter          *runtimeutil.FunctionFilter
 }
 
-func (fnr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	pr := printer.FromContextOrDie(fnr.containerRunner.Ctx)
+func (fr *functionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	pr := printer.FromContextOrDie(fr.containerRunner.Ctx)
 	printOpt := printer.NewOpt()
-	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fnr.containerRunner.Image)
-	output, err = fnr.filter.Filter(input)
+	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fr.containerRunner.Image)
+	output, err = fr.do(input)
 	if err != nil {
-		pr.OptPrintf(printOpt, "[FAIL] %q\n", fnr.containerRunner.Image)
-		var fnErr *errors.FnExecError
-		if goerrors.As(err, &fnErr) {
-			var results []framework.ResultItem
-			_ = toResultItems(fnr.filter.Result(), &results)
-			fnResult := v1alpha2.Result{
-				Image:    fnr.containerRunner.Image,
-				ExitCode: fnErr.ExitCode,
-				Stderr:   fnErr.Stderr,
-				Results:  results,
-			}
-			fnr.fnResults.Items = append(fnr.fnResults.Items, fnResult)
-		}
+		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.containerRunner.Image)
 		return output, err
 	}
 	// capture the result from running the function
-	pr.OptPrintf(printOpt, "[PASS] %q\n", fnr.containerRunner.Image)
+	pr.OptPrintf(printOpt, "[PASS] %q\n", fr.containerRunner.Image)
+	return output, nil
+}
+
+func (fr *functionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	var results []framework.ResultItem
+
+	output, err = fr.filter.Filter(input)
+
+	_ = toResultItems(fr.filter.Result(), &results)
+	fnResult := v1alpha2.Result{
+		Image:   fr.containerRunner.Image,
+		Results: results,
+	}
+	fr.fnResults.Items = append(fr.fnResults.Items, fnResult)
+	if err != nil {
+		var fnErr *errors.FnExecError
+		if goerrors.As(err, &fnErr) {
+			fnResult.ExitCode = fnErr.ExitCode
+			fnResult.Stderr = fnErr.Stderr
+		}
+		return output, err
+	}
+	fnResult.ExitCode = 0
 	return output, nil
 }
 

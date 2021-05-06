@@ -402,7 +402,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := newFnRunner(ctx, hctx, &fn, pn.pkg.UniquePath)
+		validator, err := newFunctionRunner(ctx, hctx, &fn, pn.pkg.UniquePath)
 		if err != nil {
 			return err
 		}
@@ -456,7 +456,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFnRunner(ctx, hctx, &fn, pkgPath)
+		r, err := newFunctionRunner(ctx, hctx, &fn, pkgPath)
 		if err != nil {
 			return nil, err
 		}
