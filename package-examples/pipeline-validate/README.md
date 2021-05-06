@@ -51,9 +51,9 @@ PKG: pipeline-validate
 ### Configure functions
 
 The package contains a function pipeline in the `Kptfile` which has
-one `set-label` and `gatekeeper-validate` functions.  
+one `set-label` and `enforce-gatekeeper` functions.
 The `set-label` function allows you to set one or more labels to every
-resource that supports labeles.  The `gatekeeper-validate` function allows 
+resource that supports labeles.  The `enforce-gatekeeper` function allows
 you to use gatekeeper for checks on the configuration.
 
 ```yaml
@@ -68,7 +68,7 @@ pipeline:
         labels:
           color: blue
   validators:
-    - image: gcr.io/kpt-functions/gatekeeper-validate
+    - image: gcr.io/kpt-fn/enforce-gatekeeper:unstable
 ```
 
 ### Render the declared values
@@ -79,7 +79,7 @@ Render the changes in the rendering pipeline by using `kpt fn render` command:
 $ kpt fn render pipeline-validate/
 
 package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
-package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": SUCCESS
+package "pipeline-validate": running function "gcr.io/kpt-fn/enforce-gatekeeper:unstable": SUCCESS
 package "pipeline-validate": rendered successfully
 ```
 
@@ -90,7 +90,7 @@ you should see an error:
 $ kpt fn render pipeline-validate/
 
 package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
-package "pipeline-validate": running function "gcr.io/kpt-functions/gatekeeper-validate": FAILED
+package "pipeline-validate": running function "gcr.io/kpt-fn/enforce-gatekeeper:unstable": FAILED
 fn.render: pkg pipeline-validate:
         pkg.render:
         pipeline.run: Error: Found 1 violations:
