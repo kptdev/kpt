@@ -254,11 +254,6 @@ func TestCommand_Diff(t *testing.T) {
 	}
 }
 
-// Test case: no packages supplied to diff
-// Test case: one package supplied to diffs
-// Test case: Upstream package does not exist
-// Test case: 3-way diff not supported with diffutils
-
 func TestCommand_InvalidRef(t *testing.T) {
 	reposChanges := map[string][]testutil.Content{
 		testutil.Upstream: {
