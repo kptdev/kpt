@@ -163,7 +163,6 @@ will print arbitrary fields by providing the `--field` flag.
 
 ### Filter Command
 
-<!-- @filterExamples @verifyGuides-->
 ```sh
 kpt cfg grep "spec.replicas>3" examples | kpt cfg tree --replicas
 ```
