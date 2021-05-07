@@ -23,6 +23,7 @@ spec:
     tier: mysql
   ports:
     - port: 3306
+      protocol: TCP
   clusterIP: None
 ---
 apiVersion: v1
@@ -61,6 +62,7 @@ spec:
           ports:
             - name: mysql
               containerPort: 3306
+              protocol: TCP
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
