@@ -57,8 +57,6 @@ strategy is used which performs a structural comparison of the resource using Op
 
 > Refer to the [command reference][update-doc] for more details.
 
-TODO(#1827): Handling merge conflicts
-
 ## Commit the updated resources
 
 Once you have successfully updated the package, commit the changes:
