@@ -20,7 +20,7 @@ Download pre-compiled binaries.
 chmod +x kpt
 ```
 
-**Note:** to run on **MacOS** the first time, it may be necessary to open the
+**Note:** to run on **macOS** the first time, it may be necessary to open the
 program from the finder with *ctrl-click open*.
 
 ```sh
