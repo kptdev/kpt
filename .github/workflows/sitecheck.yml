@@ -42,6 +42,6 @@ jobs:
           cp -r . ../built-site/kpt
       - name: Crawl site
         run: |
-          python -m SimpleHTTPServer 1313 & sleep 5s
+          python3 -m http.server 1313 & sleep 5s
           $HOME/.pub-cache/bin/linkcheck localhost:1313/kpt
         working-directory: ./built-site
