@@ -1,6 +1,6 @@
 # The kpt Book
 
-Welcome to the _The kpt Book_, a step-by-step introduction to _kpt_.
+Welcome to the _The kpt Book_, a step-by-step introduction to kpt.
 
 This book is organized as follows:
 

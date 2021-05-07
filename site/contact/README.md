@@ -8,7 +8,7 @@ menu:
     weight: 7
 ---
 
-Do you have questions, comments, suggestions for improving KPT?
+Do you have questions, comments, suggestions for improving kpt?
 
 We'd love to hear from you!
 

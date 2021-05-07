@@ -15,11 +15,8 @@ we are specifying tag `v0.1`.
 The `Kptfile` contains metadata about the origin of the forked package. Take a look at the content
 of the `Kptfile` on your local filesystem:
 
-```shell
-$ cat wordpress/Kptfile
-```
-
 ```yaml
+# wordpress/Kptfile
 apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
@@ -62,11 +59,8 @@ The `Kptfile` contains two sections to keep track of the upstream package:
 
 Now, let's look at the `Kptfile` for the `mysql` subpackage:
 
-```shell
-$ cat wordpress/mysql/Kptfile
-```
-
 ```yaml
+# wordpress/mysql/Kptfile
 apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:

@@ -3,8 +3,9 @@ title: "Apply"
 linkTitle: "apply"
 type: docs
 description: >
-   Apply a package to the cluster (create, update, delete)
+  Apply a package to the cluster (create, update, delete)
 ---
+
 <!--mdtogo:Short
     Apply a package to the cluster (create, update, delete)
 -->
@@ -22,18 +23,18 @@ it consistent with other kpt commands.
 
 #### `kubectl apply` vs `kpt live apply`
 
-|                     | `kubectl apply`            | `kpt live apply`          |
-|---------------------|----------------------------|---------------------------|
-|Usage                | kubectl apply -f /dir      | kpt live apply /dir       |
-|Applied resource set | Not tracked                | Tracked                   |
-|Prune                | Imperative and error prone | Declarative and reliable  |
-|Status               | Not supported              | Supported                 |
+|                      | `kubectl apply`            | `kpt live apply`         |
+| -------------------- | -------------------------- | ------------------------ |
+| Usage                | kubectl apply -f /dir      | kpt live apply /dir      |
+| Applied resource set | Not tracked                | Tracked                  |
+| Prune                | Imperative and error prone | Declarative and reliable |
+| Status               | Not supported              | Supported                |
 
 ##### Applied resource set
 
 This refers to the set of resources in the directory applied to cluster as a
-group.  `kpt live apply` tracks the state of your applied resource set and
-related configuration. This helps `kpt` to reliably reconcile the real world
+group. `kpt live apply` tracks the state of your applied resource set and
+related configuration. This helps kpt to reliably reconcile the real world
 resources with your configuration changes.
 
 ### Client-Side Apply versus Server-Side Apply
@@ -111,32 +112,32 @@ before continuing to delete the remaining resources.
 
 The following resources will be applied first in this order:
 
-* Namespace
-* ResourceQuota
-* StorageClass
-* CustomResourceDefinition
-* MutatingWebhookConfiguration
-* ServiceAccount
-* PodSecurityPolicy
-* Role
-* ClusterRole
-* RoleBinding
-* ClusterRoleBinding
-* ConfigMap
-* Secret
-* Service
-* LimitRange
-* PriorityClass
-* Deployment
-* StatefulSet
-* CronJob
-* PodDisruptionBudget
+- Namespace
+- ResourceQuota
+- StorageClass
+- CustomResourceDefinition
+- MutatingWebhookConfiguration
+- ServiceAccount
+- PodSecurityPolicy
+- Role
+- ClusterRole
+- RoleBinding
+- ClusterRoleBinding
+- ConfigMap
+- Secret
+- Service
+- LimitRange
+- PriorityClass
+- Deployment
+- StatefulSet
+- CronJob
+- PodDisruptionBudget
 
 Following this, any resources that are not mentioned will be applied.
 
 The following resources will be applied last in the following order:
 
-* ValidatingWebhookConfiguration
+- ValidatingWebhookConfiguration
 
 ### Status (reconcile-timeout=\<DURATION\>)
 
@@ -203,16 +204,16 @@ spec:
 status:
   observedGeneration: 12
   conditions:
-  - lastTransitionTime: "2020-03-25T21:20:38Z"
-    lastUpdateTime: "2020-03-25T21:20:38Z"
-    message: Resource is reconciling
-    reason: Reconciling
-    status: "True"
-    type: Reconciling
-  - lastTransitionTime: "2020-03-25T21:20:27Z"
-    lastUpdateTime: "2020-03-25T21:20:39Z"
-    status: "False"
-    type: Stalled
+    - lastTransitionTime: "2020-03-25T21:20:38Z"
+      lastUpdateTime: "2020-03-25T21:20:38Z"
+      message: Resource is reconciling
+      reason: Reconciling
+      status: "True"
+      type: Reconciling
+    - lastTransitionTime: "2020-03-25T21:20:27Z"
+      lastUpdateTime: "2020-03-25T21:20:39Z"
+      status: "False"
+      type: Stalled
 ```
 
 The status for this resource state will be InProgress. So if the
@@ -224,6 +225,7 @@ the `Reconciling` condition is `False` before pruning and exiting.
 {{% hide %}}
 
 <!-- @makeWorkplace @verifyExamples-->
+
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
@@ -231,22 +233,26 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
+
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
 ```
 
 <!-- @createKindCluster @verifyExamples-->
+
 ```
 kind delete cluster && kind create cluster
 ```
 
 <!-- @installResourceGroup @verifyExamples-->
+
 ```
 kpt live install-resource-group
 ```
 
 <!-- @initCluster @verifyExamples-->
+
 ```
 kpt live init my-dir
 ```
@@ -255,26 +261,32 @@ kpt live init my-dir
 
 <!--mdtogo:Examples-->
 <!-- @liveApply @verifyExamples-->
+
 ```shell
 # apply resources and prune
 kpt live apply my-dir/
 ```
 
 <!-- @liveApply @verifyExamples-->
+
 ```shell
 # apply resources and wait for all the resources to be reconciled before pruning
 kpt live apply --reconcile-timeout=15m my-dir/
 ```
 
 <!-- @liveApply @verifyExamples-->
+
 ```shell
 # apply resources and specify how often to poll the cluster for resource status
 kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir/
 ```
+
 <!--mdtogo-->
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```
 kpt live apply DIR [flags]
 ```
@@ -330,8 +342,9 @@ DIR:
   Default value is false (error and failure when field managers conflict).
   Available in v0.36.0 and above. If not available, the user will see: "error: unknown flag".
 ```
+
 <!--mdtogo-->
 
-[Kubernetes design principles]: https://www.google.com/url?q=https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md%23typical-status-properties&sa=D&ust=1585160635349000&usg=AFQjCNE3ncANdus3xckLj3fkeupwFUoABw
+[kubernetes design principles]: https://www.google.com/url?q=https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md%23typical-status-properties&sa=D&ust=1585160635349000&usg=AFQjCNE3ncANdus3xckLj3fkeupwFUoABw
 [proposal]: https://github.com/kubernetes/community/pull/4521
-[kubectl server-side apply]: <https://kubernetes.io/docs/reference/using-api/server-side-apply/>
+[kubectl server-side apply]: https://kubernetes.io/docs/reference/using-api/server-side-apply/

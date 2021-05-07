@@ -18,10 +18,10 @@ _within_ a package.
 
 ## Initialize the local repo
 
-Before we make any changes to package, we should first initialize and commit the pristine package:
+Before you make any changes to package, you should first initialize and commit the pristine package:
 
 ```shell
-$ git init; git add .; git commit -am "Pristine wordpress package"
+$ git init; git add .; git commit -m "Pristine wordpress package"
 ```
 
 ## Manual edits
@@ -51,21 +51,6 @@ $ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 wordpress -- env=dev
 ```
 
 [Chapter 4] discusses different ways of running functions in detail.
-
-## Commit your changes
-
-Regardless of how you edited the package, you can see the changes compared to the
-pristine copy:
-
-```shell
-$ git diff
-```
-
-If you're happy with the changes, commit them:
-
-```shell
-$ git add .; git commit -am "My customizations"
-```
 
 [cloud code]: https://cloud.google.com/code
 [chapter 4]: /book/04-using-functions/

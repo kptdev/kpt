@@ -2,6 +2,24 @@ An independent package records the exact commit where the local fork and the ups
 diverged. This enables kpt to fetch any update to the upstream package and merge it with local
 changes.
 
+## Commit your local changes
+
+Before you update the package, you want to commit your local changes.
+
+First, to see the changes you've made to the fork of the upstream package:
+
+```shell
+$ git diff
+```
+
+If you're happy with the changes, commit them:
+
+```shell
+$ git add .; git commit -m "My changes"
+```
+
+## Update the package
+
 For example, you can update to version `v0.2` of the `wordpress` package:
 
 ```shell
@@ -41,10 +59,12 @@ strategy is used which performs a structural comparison of the resource using Op
 
 TODO(#1827): Handling merge conflicts
 
+## Commit the updated resources
+
 Once you have successfully updated the package, commit the changes:
 
 ```shell
-$ git add .; git commit -am "Updated wordpress to v0.2"
+$ git add .; git commit -m "Updated wordpress to v0.2"
 ```
 
 [update-doc]: /reference/pkg/update/

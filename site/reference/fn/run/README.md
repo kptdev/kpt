@@ -3,7 +3,7 @@ title: "Run"
 linkTitle: "run"
 type: docs
 description: >
-   Locally execute one or more functions in containers
+  Locally execute one or more functions in containers
 ---
 
 <!--mdtogo:Short
@@ -44,6 +44,7 @@ DIR:
 {{% hide %}}
 
 <!-- @makeWorkplace @verifyExamples-->
+
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
@@ -51,6 +52,7 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyStaleExamples-->
+
 ```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/mutators/set-label/simple@b7f2350 DIR/
 ```
@@ -76,6 +78,7 @@ kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
 ```
 
 <!-- @fnRun @verifyStaleExamples-->
+
 ```shell
 # discover functions in DIR and run them against Resource in DIR.
 # functions may be scoped to a subset of Resources -- see `kpt help fn run`
@@ -102,7 +105,7 @@ kpt fn run example-configs/ --results-dir results/ --image gcr.io/kpt-functions/
 
 ## Network Access
 
-By default, container functions cannot access network. `kpt` may enable network
+By default, container functions cannot access network. kpt may enable network
 access using the `--network` flag, and specifying that a network is required in
 the functionConfig.
 
@@ -118,7 +121,7 @@ metadata:
       container:
         image: gcr.io/kpt-functions/kubeval
         network: true
-    config.kubernetes.io/local-config: 'true'
+    config.kubernetes.io/local-config: "true"
 ```
 
 ```shell
@@ -129,7 +132,7 @@ kpt fn source fixtures/*invalid.yaml |
 
 ## Mounting Directories
 
-By default, container functions cannot access the local file system. `kpt` may
+By default, container functions cannot access the local file system. kpt may
 enable functions to mount volumes using the `--mount` flag passing the same
 arguments as for `docker run`.
 
@@ -152,7 +155,7 @@ kpt fn source helloWorld |
   kpt fn sink .
 ```
 
-`kpt` accepts the same options to `--mount` specified on the [Docker Volumes]
+kpt accepts the same options to `--mount` specified on the [Docker Volumes]
 page.
 
 Depending on the container image, the configuration function may not have
@@ -161,7 +164,7 @@ the container in case of permissions issues.
 
 ## Environment Variables
 
-`kpt` will not export any local environment variables by default when launching a
+kpt will not export any local environment variables by default when launching a
 Docker container. You can explicitly specify the environment variables that you
 want to export by either declarative or imperative ways. The value can be in
 `key=value` format or only the key of an already exported environment variable.
@@ -193,9 +196,9 @@ kpt fn run --image whatever --env KUBECONFIG -e foo=bar
 If both declarative and imperative ways are used, the imperative values will be
 merged with declarative values.
 
-* Different keys will be both added to the env list.
-* Same key but different values: declarative value will be replaced by
- imperative value.
+- Different keys will be both added to the env list.
+- Same key but different values: declarative value will be replaced by
+  imperative value.
 
 ## Deferring Failure
 
@@ -341,8 +344,8 @@ take arbitrary command line flags as arguments. Passing arguments such as
 `--use-kube=false` imperatively results in parsing issues. See more details in
 the following:
 
-* [Issue 823]
-* [Issue 824]
+- [Issue 823]
+- [Issue 824]
 
 When passing flags as arguments, it's recommended to run functions
 declaratively.
@@ -355,7 +358,7 @@ arguemnts passed in a `spec` field instead. It's recommended to run such
 functions declaratively by passing a `ConfigMap` with a `spec` field. See more
 details in the following:
 
-* [Issue 757]
+- [Issue 757]
 
 ## Declarative Run Specifics
 
@@ -363,14 +366,14 @@ details in the following:
 
 Functions execution follows a deterministic order and is based on the following set of rules:
 
-* If the functions are specified in the same file
-(multi-object YAML file separated by `---`), they will
-be executed sequentially in the order that they are specified.
-* If the functions are specified in multiple files,
-the functions deeper in the file system tree are executed first.
-* If the functions are specified in multiple files but are at same file
-system tree depth, the function in the file
-with shorter lexical file path is executed first.
+- If the functions are specified in the same file
+  (multi-object YAML file separated by `---`), they will
+  be executed sequentially in the order that they are specified.
+- If the functions are specified in multiple files,
+  the functions deeper in the file system tree are executed first.
+- If the functions are specified in multiple files but are at same file
+  system tree depth, the function in the file
+  with shorter lexical file path is executed first.
 
 **Example:** Directory structure with multiple functions and corresponding ordering
 
@@ -421,9 +424,9 @@ key-value pairs in the `data` field, kpt is able to run it both imperatively
 and declaratively. kpt is only able to run the second function declaratively
 because:
 
-* it expects arguments in the `spec` field
-* it takes complex arguments with nested values
-* it takes flags as arguments
+- it expects arguments in the `spec` field
+- it takes complex arguments with nested values
+- it takes flags as arguments
 
 ### Don't use Imperative and Declarative in One Command
 
@@ -433,15 +436,15 @@ declarative functions will be **ignored**.
 
 ## Next Steps
 
-* Get a quickstart on writing functions from the [function producer docs].
-* Find out how to structure a pipeline of functions from the
+- Get a quickstart on writing functions from the [function producer docs].
+- Find out how to structure a pipeline of functions from the
   [functions concepts] page.
 
-[Running Functions]: /book/04-using-functions/01-running-functions-imperatively
+[running functions]: /book/04-using-functions/01-running-functions-imperatively
 [typescript result]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/kpt-functions/src/types.ts
-[Docker Volumes]: https://docs.docker.com/storage/volumes/
-[Issue 823]: https://github.com/GoogleContainerTools/kpt/issues/823/
-[Issue 824]: https://github.com/GoogleContainerTools/kpt/issues/824/
-[Issue 757]: https://github.com/GoogleContainerTools/kpt/issues/757/
+[docker volumes]: https://docs.docker.com/storage/volumes/
+[issue 823]: https://github.com/GoogleContainerTools/kpt/issues/823/
+[issue 824]: https://github.com/GoogleContainerTools/kpt/issues/824/
+[issue 757]: https://github.com/GoogleContainerTools/kpt/issues/757/
 [function producer docs]: /book/05-developing-functions/
 [functions concepts]: /book/02-concepts/02-functions
