@@ -43,7 +43,6 @@
         - [apply](reference/live/apply/)
         - [destroy](reference/live/destroy/)
         - [diff](reference/live/diff/)
-        - [fetch-k8s-schema](reference/live/fetch-k8s-schema/)
         - [init](reference/live/init/)
         - [preview](reference/live/preview/)
         - [status](reference/live/status/)
