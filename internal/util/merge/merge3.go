@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -218,11 +219,8 @@ func (rm *ResourceMergeMatcher) IsSameResource(node1, node2 *yaml.RNode) bool {
 
 // resolveGroup resolves the group of a resource from ResourceMeta
 func resolveGroup(meta yaml.ResourceMeta) string {
-	apiVersion := strings.Split(meta.APIVersion, "/")
-	if len(apiVersion) < 2 {
-		return ""
-	}
-	return apiVersion[0]
+	group, _ := resid.ParseGroupVersion(meta.APIVersion)
+	return group
 }
 
 // resolveNamespace resolves the namespace which should be used for merging resources
