@@ -79,7 +79,7 @@ directly, and merged when regenerated.
 
 #### **Q: I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with `kpt`?**
 
-A: Yes. `kpt`'s architecture facilitates the developing programs which may
+A: Yes. `kpt`'s architecture facilitates developing programs which may
 generate or modify configuration. See the [Functions User Guide] for how to
 compose multiple programs together.
 
