@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -88,7 +87,6 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 // original version of the package.
 func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string, isRootPkg bool) error {
 	const op errors.Op = "update.updatePackage"
-	// add merge comments before comparing so that there are no unwanted diffs
 	localExists, err := pkgutil.Exists(localPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
@@ -126,10 +124,6 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 		// we don't re-add the updated package from upstream.
 	// Package deleted from upstream
 	case originalExists && localExists && !updatedExists:
-		// make sure that merge comments are added before comparing to avoid unwanted diffs
-		if err := addmergecomment.Process(localPath, originalPath); err != nil {
-			return err
-		}
 		// Check the diff. If there are local changes, we keep the subpackage.
 		diff, err := copyutil.Diff(originalPath, localPath)
 		if err != nil {
@@ -141,10 +135,6 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 			}
 		}
 	default:
-		// make sure that merge comments are added before comparing to avoid unwanted diffs
-		if err := addmergecomment.Process(localPath, originalPath, updatedPath); err != nil {
-			return err
-		}
 		if err := u.mergePackage(localPath, updatedPath, originalPath, subPkgPath, isRootPkg); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
