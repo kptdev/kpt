@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -69,9 +70,8 @@ func (e *Executor) Execute(ctx context.Context) error {
 			return fmt.Errorf("failed to save function results: %w", err)
 		}
 
-		if resultsFile != "" {
-			pr.Printf("Results saved successfully at %q.\n", resultsFile)
-		}
+		printerutil.PrintFnResultsStatus(ctx, resultsFile)
+
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -103,9 +103,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
 
-	if resultsFile != "" {
-		pr.Printf("Results saved successfully at %q.\n", resultsFile)
-	}
+	printerutil.PrintFnResultsStatus(ctx, resultsFile)
 
 	return nil
 }

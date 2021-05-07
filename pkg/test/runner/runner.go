@@ -178,10 +178,7 @@ func (r *Runner) runFnEval() error {
 // IsFnResultExpected determines if function results are expected for this testcase.
 func (r *Runner) IsFnResultExpected() bool {
 	_, err := ioutil.ReadFile(filepath.Join(r.testCase.Path, expectedDir, expectedResultsFile))
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 func (r *Runner) runFnRender() error {

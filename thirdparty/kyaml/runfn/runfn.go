@@ -23,8 +23,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
@@ -222,16 +222,13 @@ func (r RunFns) runFunctions(
 	err = pipeline.Execute()
 	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
 	if err != nil {
-		if resultErr == nil && resultsFile != "" {
-			// TODO(droot): print message with the results file location
-			printFnResultStatus(r.Ctx, resultsFile)
+		if resultErr == nil {
+			r.printFnResultsStatus(resultsFile)
 		}
 		return err
 	}
-	if resultErr == nil && resultsFile != "" {
-		// TODO(droot): suppress this printing if resources are being
-		// written to STDOUT. Check with Donny, how ?
-		printFnResultStatus(r.Ctx, resultsFile)
+	if resultErr == nil {
+		r.printFnResultsStatus(resultsFile)
 	}
 
 	// check for deferred function errors
@@ -251,9 +248,11 @@ func (r RunFns) runFunctions(
 	return nil
 }
 
-func printFnResultStatus(ctx context.Context, resultsFile string) {
-	pr := printer.FromContextOrDie(ctx)
-	pr.Printf("Results saved successfully at %q.\n", resultsFile)
+func (r RunFns) printFnResultsStatus(resultsFile string) {
+	if r.isOutputDisabled() {
+		return
+	}
+	printerutil.PrintFnResultsStatus(r.Ctx, resultsFile)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -475,7 +474,10 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 		name = spec.Exec.Path
 	}
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, r.isOutputDisabled(), r.fnResults)
+}
+
+func (r RunFns) isOutputDisabled() bool {
 	// if output is not nil we will write the resources to stdout
-	disableOutput := (r.Output != nil)
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, disableOutput, r.fnResults)
+	return r.Output != nil
 }
