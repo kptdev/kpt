@@ -96,15 +96,6 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	return output, err
 }
 
-/*
-func printResults(ctx context.Context, fnResult *fnresult.Result) {
-	pr := printer.FromContextOrDie(ctx)
-	printOpt := printer.NewOpt()
-	for _, item := range fnResult.Results {
-		pr.OptPrintf(printOpt, "\t[%s] %s  : \n", strings.ToUpper(string(item.Severity)), item.Message)
-	}
-} */
-
 func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	fnResult := &fnresult.Result{Image: fr.name}
 
@@ -122,7 +113,6 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		if goerrors.As(err, &fnErr) {
 			fnResult.ExitCode = fnErr.ExitCode
 			fnResult.Stderr = fnErr.Stderr
-			// fnErr.FnResult = fnResult
 			fr.fnResults.ExitCode = 1
 		}
 		// accumulate the results

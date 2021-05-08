@@ -457,7 +457,6 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			Run:            c.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
-			// ResultsFile:    resultsFile,
 		}
 		name = spec.Container.Image
 	}
@@ -470,7 +469,6 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			Run:            e.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
-			// ResultsFile:    resultsFile,
 		}
 		name = spec.Exec.Path
 	}

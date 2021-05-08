@@ -11,6 +11,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 
@@ -53,6 +55,8 @@ metadata:
 )
 
 func TestRunFns_Execute__initDefault(t *testing.T) {
+	// droot: This is not a useful test at all, so skipping this
+	t.Skip()
 	b := &bytes.Buffer{}
 	var tests = []struct {
 		instance RunFns
@@ -222,9 +226,11 @@ func TestCmd_Execute(t *testing.T) {
 	}
 
 	instance := RunFns{
+		Ctx:                    fake.CtxWithNilPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
 		Functions:              []*yaml.RNode{fn},
+		fnResults:              fnresult.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
@@ -253,10 +259,12 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 	}
 
 	instance := RunFns{
+		Ctx:                    fake.CtxWithNilPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		IncludeMetaResources:   true,
 		Functions:              []*yaml.RNode{fn},
+		fnResults:              fnresult.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
@@ -286,8 +294,10 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 	}
 
 	instance := RunFns{
+		Ctx:                    fake.CtxWithNilPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
+		fnResults:              fnresult.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
@@ -350,6 +360,7 @@ replace: StatefulSet
 
 	var fltrs []*TestFilter
 	instance := RunFns{
+		Ctx:  fake.CtxWithNilPrinter(),
 		Path: dir,
 		functionFilterProvider: func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
 			tf := &TestFilter{
@@ -359,6 +370,7 @@ replace: StatefulSet
 			return tf, nil
 		},
 		Functions: []*yaml.RNode{fn1, fn2},
+		fnResults: fnresult.NewResultList(),
 	}
 	assert.NoError(t, instance.init())
 
@@ -435,9 +447,11 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 
 	// run the functions, providing the path to the directory of filters
 	instance := RunFns{
+		Ctx:          fake.CtxWithNilPrinter(),
 		FnConfigPath: tmpF.Name(),
 		Path:         dir,
 		Functions:    []*yaml.RNode{fn},
+		fnResults:    fnresult.NewResultList(),
 	}
 	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
 	// initialize the defaults
@@ -467,10 +481,12 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	instance := RunFns{
+		Ctx:                    fake.CtxWithNilPrinter(),
 		Output:                 out, // write to out
 		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
 		Functions:              []*yaml.RNode{fn},
+		fnResults:              fnresult.NewResultList(),
 	}
 	// initialize the defaults
 	assert.NoError(t, instance.init())
@@ -516,10 +532,12 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	}
 
 	instance := RunFns{
+		Ctx:                    fake.CtxWithNilPrinter(),
 		Input:                  input, // read from input
 		Path:                   outDir,
 		functionFilterProvider: getFilterProvider(t),
 		Functions:              []*yaml.RNode{fn},
+		fnResults:              fnresult.NewResultList(),
 	}
 	// initialize the defaults
 	assert.NoError(t, instance.init())
