@@ -1,5 +1,5 @@
 ---
-title: "Fn"
+title: "`fn`"
 linkTitle: "fn"
 type: docs
 weight: 4
