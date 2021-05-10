@@ -1,8 +1,8 @@
-# Example kptfile
+# `Kptfile`
 
 ```yaml
 # API version of the Kptfile.
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 
 # Always "kptfile."
 kind: Kptfile
@@ -11,18 +11,8 @@ kind: Kptfile
 metadata:
     # Name of this resource.
     name: resource-name
-
     # Namespace of this resource.
     namespace: resource-namespace
-
-    # Labels used to optionally describe the resource.
-    labels:
-        app: hello
-
-    # Annotations used to optionally describe the resource.
-    annotations:
-        config.kubernetes.io/local-config: "true"
-
 
 # The upstream locator for a package.
 upstream:
@@ -42,21 +32,29 @@ upstream:
     # Supports "resource-merge," "fast-forward" and "force-delete-replace."
     updateStrategy: resource-merge
 
-# The resolved locator for the last fetch of the package.
-upstreamLock:
-    # The type of origin for a package. Only supports "git."
-    type: git
-
-    # The locator for a package on Git.
-    git:
-        # The repository of the package that was fetched.
-        repo: myrepo
-        # The sub directory in the git repository that was fetched.
-        directory: /mydir/mysubdir
-        # The git branch, tag, or a commit SHA-1 that was fetched.
-        ref: my-branch
-        # SHA-1 for the last fetch of the package.
-        commit: de3c08
+# Declares the pipeline of functions used to mutate or validate resources..
+pipeline:
+    # A list of of KRM functions that mutate resources.
+    mutators:
+          # Specifies the function container image.
+          # Can be fully qualified or infer the host path from
+          # kpt's configuration (defaults to gcr.io/kpt-fn)
+        - image: imagerepo.io/functions/my-mutator:latest
+          # An inline KRM resource used as the function config.
+          # Cannot be specified alongside config or configMap.
+          configPath: configPath.yaml
+        
+    # A list of KRM functions that validate resources.
+	# Validators are not permitted to mutate resources.
+    validators:
+          # Specifies the function container image.
+          # Can be fully qualified or infer the host path from
+          # kpt's configuration (defaults to gcr.io/kpt-fn)
+          # The following resolves to gcr.io/kpt-fn/validate-resources:
+        - image: validate-resources
+          # An inline KRM resource used as the function config.
+          # Cannot be specified alongside config or configMap.
+          configPath: configPath.yaml
 
 # Optional information about the package not passed to kpt.
 info:
@@ -89,35 +87,6 @@ info:
     # The path to documentation about the package
     man: manual.txt
 
-# Declares the pipeline of functions used to mutate or validate resources..
-pipeline:
-    # A list of of KRM functions that mutate resources.
-    mutators:
-          # Specifies the function container image.
-          # Can be fully qualified or infer the host path from
-          # kpt's configuration (defaults to gcr.io/kpt-fn)
-        - image: imagerepo.io/functions/my-mutator:latest
-          # An inline KRM resource used as the function config.
-          # Cannot be specified alongside config or configMap.
-          configPath: configPath.yaml
-          #   config:
-          #   configMap:
-        
-    # A list of KRM functions that validate resources.
-	# Validators are not permitted to mutate resources.
-    validators:
-          # Specifies the function container image.
-          # Can be fully qualified or infer the host path from
-          # kpt's configuration (defaults to gcr.io/kpt-fn)
-          # The following resolves to gcr.io/kpt-fn/validate-resources:
-        - image: validate-resources
-          # An inline KRM resource used as the function config.
-          # Cannot be specified alongside config or configMap.
-          configPath: configPath.yaml
-          #   config:
-          #   configMap:
-        
-
 # Parameters for the inventory object applied to a cluster.
 # All of the parameters are required if any are set.
 inventory:
@@ -130,11 +99,18 @@ inventory:
     # Unique label to identify inventory resource in cluster.
     inventoryID: SSSSSSSSSS-RRRRR
 
-    # Labels for the resource applied to the cluster.
-    labels:
-        random-label: random-value
+# The resolved locator for the last fetch of the package.
+upstreamLock:
+    # The type of origin for a package. Only supports "git."
+    type: git
 
-    # Annotations of the resource applied to the cluster.
-    annotations:
-        random-key: random-value
-```
+    # The locator for a package on Git.
+    git:
+        # The repository of the package that was fetched.
+        repo: myrepo
+        # The sub directory in the git repository that was fetched.
+        directory: /mydir/mysubdir
+        # The git branch, tag, or a commit SHA-1 that was fetched.
+        ref: my-branch
+        # SHA-1 for the last fetch of the package.
+        commit: de3c08
