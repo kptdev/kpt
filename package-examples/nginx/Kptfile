@@ -2,6 +2,10 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: nginx
+info:
+  emails:
+    - kpt-team@google.com
+  description: This is an example nginx package.
 pipeline:
   validators:
-  - image: gcr.io/kpt-fn/kubeval:v0.1
+    - image: gcr.io/kpt-fn/kubeval:v0.1
