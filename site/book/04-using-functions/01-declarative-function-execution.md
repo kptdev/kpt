@@ -7,7 +7,7 @@ should be performed on current resources and any resource that may be added in t
 - Always enforce a constraint policy on resources in the package
 - Generate resources using a human-authored custom resource
 
-In kpt, this is achieved by declaring a pipleline of functions in the `Kptfile` and executing
+In kpt, this is achieved by declaring a pipeline of functions in the `Kptfile` and executing
 all the pipelines in the package hierarchy in a depth-first order using the `fn render` command.
 
 In our wordpress example, the top-level `wordpress` package declares this pipeline:
@@ -90,7 +90,7 @@ When you invoke the `render` command, kpt performs the following steps:
    - Resources read from configuration files in the `wordpress` package AND
    - Output of the pipeline from the `mysql` package (Step 2).
 
-     Note that it is possible for a mutator in `wordpress` to modify resources in the `mysql` subpackage.
+     Note that it is possible for a mutator in the parent package (i.e `wordpress`) to modify resources in the subpackages (i.e. `mysql`).
 
 4. Similarly, execute all the validators declared in the `wordpress` package. The output of the last
    validator is the output of the pipeline in the `wordpress` package.

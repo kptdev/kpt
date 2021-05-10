@@ -4,7 +4,7 @@ Get started by [installing](/installation/) kpt.
 
 <h2><span class="material-icons-outlined">school</span> Learn</h2>
 
-Read [The Kpt Book](/book/).
+Read [The kpt Book](/book/).
 
 <h2><span class="material-icons-outlined">help_outline</span> Ask</h2>
 

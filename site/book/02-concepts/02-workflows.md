@@ -21,10 +21,10 @@ you render the package which produces the final resources that can be directly a
 cluster. Render is a required step as it ensures certain preconditions and postconditions hold
 true about the state of the package.
 
-This workflow is an iterative process. There is usually a tight Edit-Render loop in order to
+This workflow is an iterative process. There is usually a tight Edit/Render loop in order to
 produce the desired outcome.
 
-Now, some time later, you may want to update to a newer version of the upstream package:
+Some time later, you may want to update to a newer version of the upstream package:
 
 ![img](/static/images/lifecycle/flow2.svg)
 
