@@ -289,6 +289,8 @@ func TestCommand_InvalidRef(t *testing.T) {
 		Output:       diffOutput,
 	}).Run(fake.CtxWithNilPrinter())
 	assert.Error(t, err)
+
+	assert.Contains(t, err.Error(), "unknown revision or path not in the working tree.")
 }
 
 // Validate that all three directories are staged and provided to diff command
@@ -359,6 +361,8 @@ func TestCommand_NotAKptDirectory(t *testing.T) {
 				Output:       diffOutput,
 			}).Run(fake.CtxWithNilPrinter())
 			assert.Error(t, cmdErr)
+
+			assert.Contains(t, cmdErr.Error(), "no such file or directory")
 		})
 	}
 }
