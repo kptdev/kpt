@@ -270,8 +270,8 @@ func TestStagingDirectoryNames(t *testing.T) {
 		{"source", "refs/tags/version", "source-version"},
 	}
 
-	for _, tt := range tests {
-		tt := tt // Account for scopelint checks
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.expected, func(t *testing.T) {
 			result := NameStagingDirectory(tt.source, tt.branch)
 			if result != tt.expected {
