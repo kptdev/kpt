@@ -27,11 +27,11 @@ func init() {
 var (
 	//nolint:lll
 	pkgNotGitRepo = `
-Package {{ printf "%q" .repo }} is not within a git repository. Please initialize a repository using 'git init' and then commit the changes using 'git commit -a -m "<commit message>"'.
+Package {{ printf "%q" .repo }} is not within a git repository. Please initialize a repository using 'git init' and then commit the changes using 'git commit -m "<commit message>"'.
 `
 
 	pkgRepoDirty = `
-Package {{ printf "%q" .repo }} contains uncommitted changes. Please commit the changes using 'git commit -a -m "<commit message>"'.
+Package {{ printf "%q" .repo }} contains uncommitted changes. Please commit the changes using 'git commit -m "<commit message>"'.
 `
 )
 
