@@ -70,7 +70,7 @@ func (fe *FnExecError) String() string {
 			printedLines++
 		}
 		if printedLines < len(lines) {
-			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated, use '--truncate-output=false' to disable) \n", len(lines)-printedLines))
+			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated, use '--truncate-output=false' to disable)\n", len(lines)-printedLines))
 		}
 	}
 	b.WriteString(fmt.Sprintf(universalIndent+"Exit Code: %d\n", fe.ExitCode))
