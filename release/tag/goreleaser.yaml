@@ -35,6 +35,10 @@ dockers:
       - "gcr.io/kpt-dev/kpt-gcloud:{{ .Tag }}"
       - "gcr.io/kpt-dev/kpt-gcloud:next"
     dockerfile: "release/images/Dockerfile-gcloud"
+blobs:
+  - provider: gs
+    bucket: goreleaser-bucket
+    folder: "bin/{{ .Version }}/{{ .Os }}_{{ .Arch }/kpt"
 archives:
   - id: archived
     files:
