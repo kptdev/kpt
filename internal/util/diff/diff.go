@@ -51,11 +51,11 @@ const (
 // A collection of user-readable "source" definitions for diffed packages.
 const (
 	// localPackageSource represents the local package
-	localPackageSource string = "local"
+	LocalPackageSource string = "local"
 	// remotePackageSource represents the remote version of the package
-	remotePackageSource string = "remote"
+	RemotePackageSource string = "remote"
 	// targetRemotePackageSource represents the targeted remote version of a package
-	targetRemotePackageSource string = "target"
+	TargetRemotePackageSource string = "target"
 )
 
 const (
@@ -136,7 +136,7 @@ func (c *Command) Run(ctx context.Context) error {
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	localPkgName := NameStagingDirectory(localPackageSource,
+	localPkgName := NameStagingDirectory(LocalPackageSource,
 		kptFile.Upstream.Git.Ref)
 	currPkg, err := stageDirectory(stagingDirectory, localPkgName)
 	if err != nil {
@@ -149,7 +149,7 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	// get the upstreamPkg at current version
-	upstreamPkgName := NameStagingDirectory(remotePackageSource,
+	upstreamPkgName := NameStagingDirectory(RemotePackageSource,
 		kptFile.Upstream.Git.Ref)
 	upstreamPkg, err := c.PkgGetter.GetPkg(ctx,
 		stagingDirectory,
@@ -178,7 +178,7 @@ func (c *Command) Run(ctx context.Context) error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkgName := NameStagingDirectory(targetRemotePackageSource,
+		upstreamTargetPkgName := NameStagingDirectory(TargetRemotePackageSource,
 			c.Ref)
 		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, stagingDirectory,
 			upstreamTargetPkgName,

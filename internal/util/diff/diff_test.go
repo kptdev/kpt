@@ -28,6 +28,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/diff"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/stretchr/testify/assert"
 )
@@ -331,7 +332,12 @@ func TestCommand_Diff3Parameters(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Expect 3 value to be printed (1 per source)
-	assert.Equal(t, 3, len(strings.Split(diffOutput.String(), " ")))
+	results := strings.Split(diffOutput.String(), " ")
+	assert.Equal(t, 3, len(results))
+	// Validate diff argument ordering
+	assert.Contains(t, results[0], diff.LocalPackageSource)
+	assert.Contains(t, results[1], diff.RemotePackageSource)
+	assert.Contains(t, results[2], diff.TargetRemotePackageSource)
 }
 
 // Tests against directories in different states
