@@ -113,7 +113,6 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 
 	for s.Len() > 0 {
 		p := s.Pop()
-		packageCount += 1
 
 		kf, err := p.Kptfile()
 		if err != nil {
@@ -121,6 +120,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 		}
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
+			packageCount += 1
 			pr.PrintPackage(p, !(p == rootPkg))
 			pr.Printf("Fetching %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 			err := (&fetch.Command{

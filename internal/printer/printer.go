@@ -104,7 +104,7 @@ func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
 		fmt.Fprint(pr.outStream, "\n")
 	}
-	fmt.Fprintf(pr.outStream, "Package %q:\n\n", p.DisplayPath)
+	fmt.Fprintf(pr.outStream, "Package %q:\n", p.DisplayPath)
 }
 
 // Printf is the wrapper over fmt.Printf that displays the output.
