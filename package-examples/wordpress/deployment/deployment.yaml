@@ -34,6 +34,7 @@ spec:
           ports:
             - name: wordpress
               containerPort: 80
+              protocol: TCP
           env:
             - name: WORDPRESS_DB_HOST
               value: wordpress-mysql

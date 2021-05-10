@@ -5,15 +5,12 @@ package runfn
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 
@@ -54,81 +51,6 @@ metadata:
     foo: bar
 `
 )
-
-func currentUser() (*user.User, error) {
-	return &user.User{
-		Uid: "1",
-		Gid: "2",
-	}, nil
-}
-
-func TestRunFns_init(t *testing.T) {
-	instance := RunFns{}
-	assert.NoError(t, instance.init())
-	if !assert.Equal(t, instance.Input, os.Stdin) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, instance.Output, os.Stdout) {
-		t.FailNow()
-	}
-
-	api, err := yaml.Parse(`apiVersion: apps/v1
-kind: 
-`)
-	spec := runtimeutil.FunctionSpec{
-		Container: runtimeutil.ContainerSpec{
-			Image: "example.com:version",
-		},
-	}
-	if !assert.NoError(t, err) {
-		return
-	}
-	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := fnruntime.ContainerFn{
-		Image:  "example.com:version",
-		UIDGID: "nobody",
-	}
-	cf := &runtimeutil.FunctionFilter{
-		Run:            c.Run,
-		FunctionConfig: api,
-	}
-	assert.Equal(t, fmt.Sprint(cf), fmt.Sprint(filter))
-}
-
-func TestRunFns_initAsCurrentUser(t *testing.T) {
-	instance := RunFns{
-		AsCurrentUser: true,
-	}
-	assert.NoError(t, instance.init())
-	if !assert.Equal(t, instance.Input, os.Stdin) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, instance.Output, os.Stdout) {
-		t.FailNow()
-	}
-
-	api, err := yaml.Parse(`apiVersion: apps/v1
-kind: 
-`)
-	spec := runtimeutil.FunctionSpec{
-		Container: runtimeutil.ContainerSpec{
-			Image: "example.com:version",
-		},
-	}
-	if !assert.NoError(t, err) {
-		return
-	}
-	filter, _ := instance.functionFilterProvider(spec, api, currentUser)
-	c := fnruntime.ContainerFn{
-		Image:  "example.com:version",
-		UIDGID: "1:2",
-	}
-	cf := &runtimeutil.FunctionFilter{
-		Run:            c.Run,
-		FunctionConfig: api,
-	}
-	assert.Equal(t, fmt.Sprint(cf), fmt.Sprint(filter))
-}
 
 func TestRunFns_Execute__initDefault(t *testing.T) {
 	b := &bytes.Buffer{}

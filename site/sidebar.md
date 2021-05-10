@@ -44,7 +44,6 @@
             - [apply](reference/cli/live/apply/)
             - [destroy](reference/cli/live/destroy/)
             - [diff](reference/cli/live/diff/)
-            - [fetch-k8s-schema](reference/cli/live/fetch-k8s-schema/)
             - [init](reference/cli/live/init/)
             - [preview](reference/cli/live/preview/)
             - [status](reference/cli/live/status/)

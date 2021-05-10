@@ -13,4 +13,4 @@ pipeline:
         labels:
           color: blue
   validators:
-    - image: gcr.io/kpt-functions/gatekeeper-validate
+    - image: gcr.io/kpt-fn/enforce-gatekeeper:unstable

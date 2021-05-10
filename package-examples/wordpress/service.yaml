@@ -24,3 +24,4 @@ spec:
     tier: frontend
   ports:
     - port: 80
+      protocol: TCP

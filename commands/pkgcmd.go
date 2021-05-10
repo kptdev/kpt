@@ -32,7 +32,6 @@ func GetPkgCommand(ctx context.Context, name string) *cobra.Command {
 		Use:     "pkg",
 		Short:   pkgdocs.PkgShort,
 		Long:    pkgdocs.PkgLong,
-		Example: pkgdocs.PkgExamples,
 		Aliases: []string{"package"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")

@@ -47,25 +47,6 @@ type ContainerFnPermission struct {
 	AllowMount   bool
 }
 
-// ContainerFnWrapper wraps the real function filter, prints
-// the function running progress and failures.
-type ContainerFnWrapper struct {
-	Fn *ContainerFn
-}
-
-func (fw *ContainerFnWrapper) Run(r io.Reader, w io.Writer) error {
-	pr := printer.FromContextOrDie(fw.Fn.Ctx)
-	printOpt := printer.NewOpt()
-	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fw.Fn.Image)
-	err := fw.Fn.Run(r, w)
-	if err != nil {
-		pr.OptPrintf(printOpt, "[FAIL] %q\n", fw.Fn.Image)
-		return err
-	}
-	pr.OptPrintf(printOpt, "[PASS] %q\n", fw.Fn.Image)
-	return nil
-}
-
 // ContainerFn implements a KRMFn which run a containerized
 // KRM function
 type ContainerFn struct {
