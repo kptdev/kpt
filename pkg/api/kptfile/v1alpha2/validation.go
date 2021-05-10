@@ -30,7 +30,7 @@ const (
 func (kf *KptFile) Validate() error {
 	const op errors.Op = "v1alpha2.kptfile.validate"
 	if err := kf.Pipeline.validate(); err != nil {
-		return errors.E(op, fmt.Errorf("pipeline is not valid: %w", err))
+		return errors.E(op, fmt.Errorf("failed to validate pipeline: %w", err))
 	}
 	// TODO: validate other fields
 	return nil
@@ -74,6 +74,10 @@ func (f *Function) validate() error {
 		configFields = append(configFields, "configMap")
 	}
 	if !IsNodeZero(&f.Config) {
+		config := yaml.NewRNode(&f.Config)
+		if _, err := config.GetMeta(); err != nil {
+			return fmt.Errorf("inline functionConfig requires fields `apiVersion` and `kind`")
+		}
 		configFields = append(configFields, "config")
 	}
 	if len(configFields) > 1 {
