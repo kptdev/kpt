@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -364,11 +363,6 @@ func (pg defaultPkgGetter) GetPkg(ctx context.Context, stagingDir, targetDir, re
 	return dir, err
 }
 
-// shortSha returns a shortened version of a commit SHA
-func shortSha(sha string) string {
-	return sha[0:int(math.Min(float64(len(sha)), 7))]
-}
-
 // stageDirectory creates a subdirectory of the provided path for temporary operations
 // path is the parent staged directory and should already exist
 // subpath is the subdirectory that should be created inside path
@@ -379,13 +373,13 @@ func stageDirectory(path, subpath string) (string, error) {
 }
 
 // NameStagingDirectory assigns a name that matches the package source information
-func NameStagingDirectory(source, branch string) string {
+func NameStagingDirectory(source, ref string) string {
 	// Using tags may result in references like /refs/tags/version
 	// To avoid creating additional directory's use only the last name after a /
-	splitBranch := strings.Split(branch, "/")
-	reducedBranch := splitBranch[len(splitBranch)-1]
+	splitRef := strings.Split(ref, "/")
+	reducedRef := splitRef[len(splitRef)-1]
 
 	return fmt.Sprintf("%s-%s",
 		source,
-		reducedBranch)
+		reducedRef)
 }
