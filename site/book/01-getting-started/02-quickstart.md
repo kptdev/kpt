@@ -32,7 +32,7 @@ will explain the `Kptfile` in detail.
 Initialize a local Git repo and commit the forked copy of the package:
 
 ```shell
-$ git init; git add .; git commit -am "Pristine nginx package"
+$ git init; git add .; git commit -m "Pristine nginx package"
 ```
 
 ## Customize the package
@@ -86,10 +86,10 @@ $ kpt fn render
 In this case, the author of the `nginx` package has already declared a function (`kubeval`) that
 validates the resources using their OpenAPI schema.
 
-In general, regardless of how you choose to customize the package — whether by manually editing
-it or running imperative functions — you need to _render_ the package before applying it the
-cluster. This ensures all the functions declared in the package are executed, and the package is ready
-to be applied to the cluster.
+In general, regardless of how you choose to customize the package — whether by manually editing it
+or running imperative functions — you need to _render_ the package before applying it the cluster.
+This ensures all the functions declared in the package are executed, and the package is ready to be
+applied to the cluster.
 
 ## Apply the Package
 
@@ -127,7 +127,7 @@ the upstream changes with changes to your local package.
 First, commit your local changes:
 
 ```shell
-$ git add .; git commit -am "My customizations"
+$ git add .; git commit -m "My customizations"
 ```
 
 Then update to version `v0.3`:

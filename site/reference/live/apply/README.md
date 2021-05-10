@@ -5,6 +5,7 @@ type: docs
 description: >
    Apply a package to the cluster (create, update, prune).
 ---
+
 <!--mdtogo:Short
     Apply a package to the cluster (create, update, prune).
 -->
@@ -13,7 +14,9 @@ description: >
 cluster resources match the local package configuration.
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```
 kpt live apply [PKG_PATH|-] [flags]
 ```

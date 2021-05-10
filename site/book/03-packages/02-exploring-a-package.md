@@ -30,6 +30,4 @@ For example, to search for resources that have a field with path `spec.selector.
 $ kpt fn eval --image gcr.io/kpt-fn/search-replace:unstable wordpress -- 'by-path=spec.selector.tier'
 ```
 
-TODO(#1821): search-replace doesn't work.
-
 [tree-doc]: /reference/pkg/tree/
