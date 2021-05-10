@@ -10,27 +10,27 @@ description: >
   Frequently asked questions
 ---
 
-#### **Q: What's with the name?**
+#### **What's with the name?**
 
-A: kpt was inspired by `apt`, but with a Kubernetes focus. We wanted to
+kpt was inspired by `apt`, but with a Kubernetes focus. We wanted to
 uphold the tradition of naming tools to start with `k`, and also be short
 enough that you don't have to alias it. It is pronounced "kept".
 
-#### **Q: What does kpt provide that git clone doesn't?**
+#### **What does kpt provide that git clone doesn't?**
 
-A: kpt enables out-of-the-box workflows that `git clone` does not such as:
+kpt enables out-of-the-box workflows that `git clone` does not. Such as:
 cloning and versioning git subdirectories, updating from upstream by
 performing structured merges on resources, programmatically editing
 configuration (rather than with an editor), etc.
 
-#### **Q: How is kpt different from other solutions?**
+#### **How is kpt different from other solutions?**
 
-A: Rather than expressing configuration as code, kpt represents configuration packages as data, in
+Rather than expressing configuration as code, kpt represents configuration packages as data, in
 particular as YAML or JSON objects adhering to [The Kubernetes Resource Model]
 
-#### **Q: Why resource configuration as the artifact rather than templates or configuration DSLs?**
+#### **Why resource configuration as the artifact rather than templates or configuration DSLs?**
 
-A: As explained in [Declarative application management in Kubernetes],
+As explained in [Declarative application management in Kubernetes],
 using resource configuration provides a number of desirable properties:
 
 1. it clearly **represents the intended state** of the infrastructure -- no for
@@ -62,21 +62,21 @@ using resource configuration provides a number of desirable properties:
 7. it **supports display in UI and tools** which use either OpenAPI or the
    YAML/JSON directly.
 
-#### **Q: I really like DSL / templating solution X. Can I use it with kpt?**
+#### **I really like DSL / templating solution X. Can I use it with kpt?**
 
-A: Yes. kpt supports plugging in solutions which generate or manipulate configuration, e.g. from
+Yes. kpt supports plugging in solutions which generate or manipulate configuration, e.g. from
 DSLs and templates. This may be performed using the [Functions Catalog]. The generated output may be
 modified directly, and merged when regenerated.
 
-#### **Q: I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with kpt?**
+#### **I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with kpt?**
 
-A: Yes. kpt's architecture facilitates the developing programs which may
+Yes. kpt's architecture facilitates the developing programs which may
 generate or modify configuration. See the [Using Functions] for how to
 compose multiple programs together.
 
-#### **Q: I still have questions. How do I contact you?**
+#### **I still have questions. How do I contact you?**
 
-A: [Please reach out!][contact]
+[Please reach out!][contact]
 
 [the kubernetes resource model]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]: https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
