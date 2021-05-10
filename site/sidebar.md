@@ -47,6 +47,6 @@
         - [init](reference/live/init/)
         - [preview](reference/live/preview/)
         - [status](reference/live/status/)
-- [Functions Catalog](https://catalog.kpt.dev/ ':crossorgin')
+- [Functions Catalog](https://catalog.kpt.dev/ ':crossorgin :target=_self')
 - [FAQ](faq/)
 - [Contact](contact/)
