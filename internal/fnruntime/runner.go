@@ -54,7 +54,11 @@ func NewContainerRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPat
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
-func NewFunctionRunner(ctx context.Context, fltr *runtimeutil.FunctionFilter, disableOutput bool, fnResult *fnresult.Result, fnResults *fnresult.ResultList) (kio.Filter, error) {
+func NewFunctionRunner(ctx context.Context,
+	fltr *runtimeutil.FunctionFilter,
+	disableOutput bool,
+	fnResult *fnresult.Result,
+	fnResults *fnresult.ResultList) (kio.Filter, error) {
 	name := fnResult.Image
 	if name == "" {
 		name = fnResult.ExecPath
