@@ -31,13 +31,20 @@ const (
 type FnExecError struct {
 	// OriginalErr is the original error returned from function runtime
 	OriginalErr error
+
 	// TruncateOutput indicates should error message be truncated
 	TruncateOutput bool
+
 	// Stderr is the content written to function stderr
 	Stderr string `yaml:"stderr,omitempty"`
+
 	// ExitCode is the exit code returned from function
 	ExitCode int `yaml:"exitCode,omitempty"`
-	// TODO: add Results after structured results are supported
+
+	// TODO: This introduces import cycle between errors and fnresult package.
+	// Will require moving fnErrors outside errors package.
+	// FnResult is the structured result returned from the function
+	// FnResult *fnresult.Result
 }
 
 // String returns string representation of the failure.
@@ -63,7 +70,7 @@ func (fe *FnExecError) String() string {
 			printedLines++
 		}
 		if printedLines < len(lines) {
-			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated)\n", len(lines)-printedLines))
+			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated, use '--truncate-output=false' to disable)\n", len(lines)-printedLines))
 		}
 	}
 	b.WriteString(fmt.Sprintf(universalIndent+"Exit Code: %d\n", fe.ExitCode))
