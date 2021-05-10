@@ -92,7 +92,7 @@ steps:
 
   # FYI: If cross-platform build issues happen, then stop caching the modules in the volume.
   # build windows
-  - name: 'mirror.gcr.io/library/golang'
+  - name: gcr.io/cloud-builders/go
     env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-ldflags', '-X main.version=${BRANCH_NAME}', '-o', '/workspace/bin/${BRANCH_NAME}/windows_amd64/kpt.exe', '.']
     dir: 'kpt'
@@ -102,7 +102,7 @@ steps:
     waitFor: ['git-reset']
 
   # build linux
-  - name: 'mirror.gcr.io/library/golang'
+  - name: gcr.io/cloud-builders/go
     env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-ldflags', '-X main.version=${BRANCH_NAME}', '-o', '/workspace/bin/${BRANCH_NAME}/linux_amd64/kpt', '.']
     dir: 'kpt'
@@ -112,7 +112,7 @@ steps:
     waitFor: ['git-reset']
 
   # build darwin
-  - name: 'mirror.gcr.io/library/golang'
+  - name: gcr.io/cloud-builders/go
     env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
     args: ['go', 'build', '-ldflags', '-X main.version=${BRANCH_NAME}', '-o', '/workspace/bin/${BRANCH_NAME}/darwin_amd64/kpt', '.']
     dir: 'kpt'
