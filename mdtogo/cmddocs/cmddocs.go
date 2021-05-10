@@ -41,6 +41,8 @@ func ParseCmdDocs(files []string) []doc {
 }
 
 var (
+	hugoHideDirectives = regexp.MustCompile("(?ms){{% hide %}}.+?{{% /hide %}}")
+	mdTag              = regexp.MustCompile(`<!--.+-->`)
 	// Capture content between opening and closing tags like <!--mdtogo:(Variable)(Short)>(Content)<!--mdtogo-->
 	mdtogoTag = regexp.MustCompile(`<!--mdtogo:(\S*)(Short|Long|Examples)-->([\s\S]*?)<!--mdtogo-->`)
 	// Capture content within a tag like <!--mdtogo:(Variable)(Short) (Content)-->
@@ -100,6 +102,7 @@ func cleanName(name string) string {
 func cleanUpContent(text string) string {
 	var lines []string
 
+	text = hugoHideDirectives.ReplaceAllString(text, "")
 	scanner := bufio.NewScanner(bytes.NewBufferString(strings.Trim(text, "\n")))
 
 	indent := false
@@ -119,6 +122,10 @@ func cleanUpContent(text string) string {
 		if strings.HasPrefix(line, "####") {
 			line = strings.TrimPrefix(line, "####")
 			line = fmt.Sprintf("%s:", strings.TrimSpace(line))
+		}
+
+		if mdTag.MatchString(line) {
+			continue
 		}
 
 		lines = append(lines, line)

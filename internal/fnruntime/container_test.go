@@ -14,14 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runtime_test
+package fnruntime_test
 
 import (
 	"bytes"
 	"context"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdrender/runtime"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/stretchr/testify/assert"
 )
@@ -50,7 +50,7 @@ func TestContainerFn(t *testing.T) {
 		ctx := context.Background()
 		t.Run(tt.name, func(t *testing.T) {
 			outBuff, errBuff := &bytes.Buffer{}, &bytes.Buffer{}
-			instance := runtime.ContainerFn{
+			instance := fnruntime.ContainerFn{
 				Ctx:   printer.WithContext(ctx, printer.New(outBuff, errBuff)),
 				Image: tt.image,
 			}

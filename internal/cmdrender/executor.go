@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -286,28 +287,95 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 		return input, nil
 	}
 
-	fnChain, err := fnChain(ctx, pl, pn.pkg.UniquePath)
+	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
 
+	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
+		return nil, errors.E(op, pn.pkg.UniquePath, err)
+	}
+	// print a new line after a pipeline running
+	pr.Printf("\n")
+	return mutatedResources, nil
+}
+
+// runMutators runs a set of mutators functions on given input resources.
+func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+	if len(input) == 0 {
+		return input, nil
+	}
+
+	pl, err := pn.pkg.Pipeline()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pl.Mutators) == 0 {
+		return input, nil
+	}
+
+	mutators, err := fnChain(ctx, pn.pkg.UniquePath, pl.Mutators)
+	if err != nil {
+		return nil, err
+	}
+
 	output := &kio.PackageBuffer{}
 	// create a kio pipeline from kyaml library to execute the function chains
-	kioPipeline := kio.Pipeline{
+	mutation := kio.Pipeline{
 		Inputs: []kio.Reader{
 			&kio.PackageBuffer{Nodes: input},
 		},
-		Filters: fnChain,
+		Filters: mutators,
 		Outputs: []kio.Writer{output},
 	}
-	err = kioPipeline.Execute()
+	err = mutation.Execute()
 	if err != nil {
-		return nil, errors.E(op, pn.pkg.UniquePath, err)
+		return nil, err
 	}
-	hctx.executedFunctionCnt += len(fnChain)
-	// print a new line after a pipeline running
-	pr.Printf("\n")
+	hctx.executedFunctionCnt += len(mutators)
 	return output.Nodes, nil
+}
+
+// runValidators runs a set of validator functions on input resources.
+// We bail out on first validation failure today, but the logic can be
+// improved to report multiple failures. Reporting multiple failures
+// will require changes to the way we print errors
+func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) error {
+	if len(input) == 0 {
+		return nil
+	}
+
+	pl, err := pn.pkg.Pipeline()
+	if err != nil {
+		return err
+	}
+
+	if len(pl.Validators) == 0 {
+		return nil
+	}
+
+	for i := range pl.Validators {
+		fn := pl.Validators[i]
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath)
+		if err != nil {
+			return err
+		}
+		// validators are run on a copy of mutated resources to ensure
+		// resources are not mutated.
+		if _, err = validator.Filter(cloneResources(input)); err != nil {
+			return err
+		}
+		hctx.executedFunctionCnt++
+	}
+	return nil
+}
+
+func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
+	for _, resource := range input {
+		output = append(output, resource.Copy())
+	}
+	return
 }
 
 // path (location) of a KRM resources is tracked in a special key in
@@ -338,17 +406,12 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 	return resources, nil
 }
 
-// fnChain returns a slice of function runners from the
-// functions and configs defined in pipeline.
-func fnChain(ctx context.Context, pl *kptfilev1alpha2.Pipeline, pkgPath types.UniquePath) ([]kio.Filter, error) {
-	fns := []kptfilev1alpha2.Function{}
-	fns = append(fns, pl.Mutators...)
-	// TODO: Validators cannot modify resources.
-	fns = append(fns, pl.Validators...)
+// fnChain returns a slice of function runners given a list of functions defined in pipeline.
+func fnChain(ctx context.Context, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFnRunner(ctx, &fn, pkgPath)
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath)
 		if err != nil {
 			return nil, err
 		}

@@ -2,11 +2,13 @@ apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: mysql
+info:
+  emails:
+    - kpt-team@google.com
+  description: This is an example mysql package.
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/apply-setters:v0.1
-    configMap:
-      ms-image: mysql
-      ms-tag: 5.6
-  validators:
-  - image: gcr.io/kpt-fn/kubeval:v0.1
+    - image: gcr.io/kpt-fn/apply-setters:v0.1
+      configMap:
+        ms-image: mysql
+        ms-tag: 5.6

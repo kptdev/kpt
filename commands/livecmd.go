@@ -15,11 +15,13 @@
 package commands
 
 import (
+	"flag"
+	"fmt"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdfetchk8sschema"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/destroy"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/diff"
@@ -28,12 +30,13 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
-	"k8s.io/kubectl/pkg/cmd/util"
+	cluster "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
+	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
-func GetLiveCommand(name string, f util.Factory) *cobra.Command {
+func GetLiveCommand(_, version string) *cobra.Command {
 	liveCmd := &cobra.Command{
 		Use:   "live",
 		Short: livedocs.LiveShort,
@@ -56,6 +59,8 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 		ErrOut: os.Stderr,
 	}
 
+	f := newFactory(liveCmd, version)
+
 	// The provider handles both ConfigMap and ResourceGroup inventory objects.
 	// If a package has both inventory objects, then an error is thrown.
 	klog.V(2).Infoln("provider supports ResourceGroup and ConfigMap inventory")
@@ -73,7 +78,6 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
-	applyCmd.Example = livedocs.ApplyExamples
 
 	previewCmd := preview.GetPreviewRunner(p, l, ioStreams).Command
 	previewCmd.Short = livedocs.PreviewShort
@@ -95,10 +99,8 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	statusCmd.Long = livedocs.StatusLong
 	statusCmd.Example = livedocs.StatusExamples
 
-	fetchOpenAPICmd := cmdfetchk8sschema.NewCommand(name, f, ioStreams)
-
 	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd,
-		fetchOpenAPICmd, statusCmd)
+		statusCmd)
 
 	// Add the migrate command to change from ConfigMap to ResourceGroup inventory
 	// object. Also add the install-resource-group command.
@@ -112,4 +114,22 @@ func GetLiveCommand(name string, f util.Factory) *cobra.Command {
 	liveCmd.AddCommand(migrateCmd, installRGCmd)
 
 	return liveCmd
+}
+
+func newFactory(cmd *cobra.Command, version string) cluster.Factory {
+	flags := cmd.PersistentFlags()
+	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
+	kubeConfigFlags.AddFlags(flags)
+	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
+		Delegate:  kubeConfigFlags,
+		UserAgent: fmt.Sprintf("kpt/%s", version),
+	}
+	matchVersionKubeConfigFlags := cluster.NewMatchVersionFlags(
+		&factory.CachingRESTClientGetter{
+			Delegate: userAgentKubeConfigFlags,
+		},
+	)
+	matchVersionKubeConfigFlags.AddFlags(cmd.PersistentFlags())
+	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+	return cluster.NewFactory(matchVersionKubeConfigFlags)
 }

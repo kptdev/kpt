@@ -15,7 +15,7 @@
 //go:generate $GOBIN/mdtogo site/reference/live internal/docs/generated/livedocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/reference internal/docs/generated/overview --license=none --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/README.md internal/docs/generated/overview --license=none --strategy=cmdDocs
 package main
 
 import (
@@ -26,6 +26,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/errors/resolver"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -75,8 +76,7 @@ func runMain() int {
 func handleErr(cmd *cobra.Command, err error) int {
 	// First attempt to see if we can resolve the error into a specific
 	// error message.
-	re, resolved := resolver.ResolveError(err)
-	if resolved {
+	if re, resolved := resolver.ResolveError(err); resolved {
 		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", re.Message)
 		return re.ExitCode
 	}
@@ -84,6 +84,11 @@ func handleErr(cmd *cobra.Command, err error) int {
 	// Then try to see if it is of type *errors.Error
 	var kptErr *errors.Error
 	if errors.As(err, &kptErr) {
+		unwrapped, ok := errors.UnwrapErrors(kptErr)
+		if ok && !cmdutil.PrintErrorStacktrace() {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Error: %s \n", unwrapped.Error())
+			return 1
+		}
 		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", kptErr.Error())
 		return 1
 	}

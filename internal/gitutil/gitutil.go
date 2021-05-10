@@ -41,8 +41,10 @@ func NewLocalGitRunner(pkg string) (*GitLocalRunner, error) {
 	const op errors.Op = "gitutil.NewLocalGitRunner"
 	p, err := exec.LookPath("git")
 	if err != nil {
-		return nil, errors.E(op, errors.Git,
-			fmt.Errorf("no 'git' program on path: %w", err))
+		return nil, errors.E(op, errors.Git, &GitExecError{
+			Type: GitExecutableNotFound,
+			Err:  err,
+		})
 	}
 
 	return &GitLocalRunner{
@@ -95,7 +97,9 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, 
 	fullArgs := append([]string{command}, args...)
 	cmd := exec.CommandContext(ctx, g.gitPath, fullArgs...)
 	cmd.Dir = g.Dir
-	cmd.Env = os.Environ()
+	// Disable git prompting the user for credentials.
+	cmd.Env = append(os.Environ(),
+		"GIT_TERMINAL_PROMPT=0")
 
 	cmdStdout := &bytes.Buffer{}
 	cmdStderr := &bytes.Buffer{}
@@ -118,6 +122,7 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, 
 	}
 	if err != nil {
 		return RunResult{}, errors.E(op, errors.Git, &GitExecError{
+			Type:    determineErrorType(cmdStderr.String()),
 			Args:    args,
 			Command: command,
 			Err:     err,
@@ -129,31 +134,6 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, 
 		Stdout: cmdStdout.String(),
 		Stderr: cmdStderr.String(),
 	}, nil
-}
-
-type GitExecError struct {
-	Args    []string
-	Err     error
-	Command string
-	Repo    string
-	Ref     string
-	StdErr  string
-	StdOut  string
-}
-
-func (e *GitExecError) Error() string {
-	b := new(strings.Builder)
-	b.WriteString(e.Err.Error())
-	b.WriteString(": ")
-	b.WriteString(e.StdErr)
-	return b.String()
-}
-
-func AmendGitExecError(err error, f func(e *GitExecError)) {
-	var gitExecErr *GitExecError
-	if errors.As(err, &gitExecErr) {
-		f(gitExecErr)
-	}
 }
 
 // NewGitUpstreamRepo returns a new GitUpstreamRepo for an upstream package.

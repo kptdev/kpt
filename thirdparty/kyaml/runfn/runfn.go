@@ -4,6 +4,7 @@
 package runfn
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -16,14 +17,12 @@ import (
 	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -32,6 +31,8 @@ import (
 // RunFns runs the set of configuration functions in a local directory against
 // the Resources in that directory
 type RunFns struct {
+	Ctx context.Context
+
 	StorageMounts []runtimeutil.StorageMount
 
 	// Path is the path to the directory containing functions
@@ -218,26 +219,7 @@ func (r RunFns) runFunctions(
 		Outputs:               outputs,
 		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
-	if r.LogSteps {
-		err = pipeline.ExecuteWithCallback(func(op kio.Filter) {
-			var identifier string
-
-			switch filter := op.(type) {
-			case *container.Filter:
-				identifier = filter.Image
-			case *exec.Filter:
-				identifier = filter.Path
-			case *starlark.Filter:
-				identifier = filter.String()
-			default:
-				identifier = "unknown-type function"
-			}
-
-			_, _ = fmt.Fprintf(r.LogWriter, "Running %s\n", identifier)
-		})
-	} else {
-		err = pipeline.Execute()
-	}
+	err = pipeline.Execute()
 	if err != nil {
 		return err
 	}
@@ -440,36 +422,50 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 	}
+	var fltr *runtimeutil.FunctionFilter
+	var name string
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
 		if err != nil {
 			return nil, err
 		}
-		c := container.NewContainer(
-			runtimeutil.ContainerSpec{
-				Image:         spec.Container.Image,
-				Network:       spec.Container.Network,
-				StorageMounts: r.StorageMounts,
-				Env:           spec.Container.Env,
+		c := &fnruntime.ContainerFn{
+			Path:          r.uniquePath,
+			Image:         spec.Container.Image,
+			UIDGID:        uidgid,
+			StorageMounts: r.StorageMounts,
+			Env:           spec.Container.Env,
+			Perm: fnruntime.ContainerFnPermission{
+				AllowNetwork: spec.Container.Network,
+				// mounts are always from CLI flags so we allow
+				// them by default for eval
+				AllowMount: true,
 			},
-			uidgid,
-		)
-		cf := &c
-		cf.Exec.FunctionConfig = fnConfig
-		cf.Exec.ResultsFile = resultsFile
-		cf.Exec.DeferFailure = spec.DeferFailure
-		return cf, nil
+		}
+		fltr = &runtimeutil.FunctionFilter{
+			Run:            c.Run,
+			FunctionConfig: fnConfig,
+			DeferFailure:   spec.DeferFailure,
+			ResultsFile:    resultsFile,
+		}
+		name = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
-		ef := &exec.Filter{Path: spec.Exec.Path}
-
-		ef.FunctionConfig = fnConfig
-		ef.ResultsFile = resultsFile
-		ef.DeferFailure = spec.DeferFailure
-		return ef, nil
+		e := &fnruntime.ExecFn{
+			Path: spec.Exec.Path,
+		}
+		fltr = &runtimeutil.FunctionFilter{
+			Run:            e.Run,
+			FunctionConfig: fnConfig,
+			DeferFailure:   spec.DeferFailure,
+			ResultsFile:    resultsFile,
+		}
+		name = spec.Exec.Path
 	}
+	// if output is not nil we will write the resources to stdout
+	disableOutput := (r.Output != nil)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, disableOutput)
 
-	return nil, nil
 }

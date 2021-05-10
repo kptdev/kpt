@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 )
 
@@ -31,6 +32,7 @@ var TruncateOutput bool
 // The main intention, at the moment, is to abstract away printing
 // output in the CLI so that we can evolve the kpt CLI UX.
 type Printer interface {
+	PrintPackage(pkg *pkg.Pkg, leadingNewline bool)
 	Printf(format string, args ...interface{})
 	OptPrintf(opt *Options, format string, args ...interface{})
 }
@@ -97,6 +99,13 @@ type contextKey int
 // arbitrary.  If this package defined other context keys, they would have
 // different integer values.
 const printerKey contextKey = 0
+
+func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
+	if leadingNewline {
+		fmt.Fprint(pr.outStream, "\n")
+	}
+	fmt.Fprintf(pr.outStream, "Package %q:\n", p.DisplayPath)
+}
 
 // Printf is the wrapper over fmt.Printf that displays the output.
 func (pr *printer) Printf(format string, args ...interface{}) {

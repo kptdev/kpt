@@ -15,4 +15,7 @@
 testType: eval
 exitCode: 1
 image: gcr.io/kpt-fn/set-namespace:v0.1
-stdErr: "failed to configure function: input namespace cannot be emptyerror: exit status 1"
+stdErr: "failed to configure function: input namespace cannot be empty"
+stdOut: |
+  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1"
+  [FAIL] "gcr.io/kpt-fn/set-namespace:v0.1"

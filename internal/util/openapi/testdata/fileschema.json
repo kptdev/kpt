@@ -1,8 +1,0 @@
-{
-  "definitions": {
-    "io.k8s.fileSchema": {
-      "additionalProperties": false,
-      "type": "object"
-    }
-  }
-}

@@ -815,6 +815,125 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 	}
 }
 
+func TestCommand_Run_manualChange(t *testing.T) {
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.DeploymentResource),
+					Branch: masterBranch,
+					Tag:    "v1",
+				},
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.ConfigMapResource),
+					Tag: "v2",
+				},
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.SecretResource),
+					Tag: "v3",
+				},
+			},
+		},
+		GetRef: "v1",
+		LocalChanges: []testutil.Content{
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "v3", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "v1", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource),
+			},
+		},
+	}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+
+	err := Command{
+		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	expLocal := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstreamRef(testutil.Upstream, "/", "v3", "resource-merge").
+				WithUpstreamLockRef(testutil.Upstream, "/", "v3", 2),
+		).
+		WithResource(pkgbuilder.SecretResource)
+	expectedPath := expLocal.ExpandPkgWithName(t,
+		g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
+
+	testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
+}
+
+func TestCommand_Run_symlinks(t *testing.T) {
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Branch: masterBranch,
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.DeploymentResource),
+				},
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.SecretResource).
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile().
+								WithResource(pkgbuilder.ConfigMapResource),
+						),
+					UpdateFunc: func(path string) error {
+						// Create symlink in the upstream repo.
+						return os.Symlink(filepath.Join(path, "subpkg"),
+							filepath.Join(path, "subpkg-sym"))
+					},
+				},
+			},
+		},
+		GetRef: masterBranch,
+	}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+	upstreamRepo := g.Repos[testutil.Upstream]
+
+	err := Command{
+		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	expectedPkg := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+				WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+		).
+		WithResource(pkgbuilder.SecretResource).
+		WithSubPackages(
+			pkgbuilder.NewSubPkg("subpkg").
+				WithKptfile().
+				WithResource(pkgbuilder.ConfigMapResource),
+		)
+	expectedPath := expectedPkg.ExpandPkgWithName(t, upstreamRepo.RepoName, testutil.ToReposInfo(g.Repos))
+
+	testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
+}
+
 func TestCommand_Run_badStrategy(t *testing.T) {
 	strategy := kptfilev1alpha2.UpdateStrategyType("foo")
 

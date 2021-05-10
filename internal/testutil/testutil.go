@@ -319,6 +319,12 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 	return replaceData(g.RepoDirectory, data)
 }
 
+// CustomUpdate executes the provided update function and passes in the
+// path to the directory of the repository.
+func (g *TestGitRepo) CustomUpdate(f func(string) error) error {
+	return f(g.RepoDirectory)
+}
+
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
 func (g *TestGitRepo) SetupTestGitRepo(name string, data []Content, repos map[string]*TestGitRepo) error {
 	defaultBranch := "main"
@@ -773,6 +779,12 @@ func (w *TestWorkspace) CheckoutBranch(branch string, create bool) error {
 // ReplaceData replaces the data with a new source
 func (w *TestWorkspace) ReplaceData(data string) error {
 	return replaceData(filepath.Join(w.WorkspaceDirectory, w.PackageDir), data)
+}
+
+// CustomUpdate executes the provided update function and passes in the
+// path to the directory of the repository.
+func (w *TestWorkspace) CustomUpdate(f func(string) error) error {
+	return f(w.WorkspaceDirectory)
 }
 
 // Commit performs a git commit
