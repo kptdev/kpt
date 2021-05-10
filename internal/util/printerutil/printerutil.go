@@ -20,8 +20,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 )
 
-// PrintFnResultsStatus displays information about the function results file.
-func PrintFnResultsStatus(ctx context.Context, resultsFile string) {
+// PrintFnResultInfo displays information about the function results file.
+func PrintFnResultInfo(ctx context.Context, resultsFile string) {
 	pr := printer.FromContextOrDie(ctx)
 	if resultsFile != "" {
 		pr.Printf("For complete results, see %s\n", resultsFile)

@@ -37,7 +37,6 @@ func (*fnExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	if !goerrors.As(kioErr, &fnErr) {
 		return ResolvedResult{}, false
 	}
-	// TODO: write complete details to a file
 
 	return ResolvedResult{
 		Message:  fnErr.String(),

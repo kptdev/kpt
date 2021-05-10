@@ -252,7 +252,7 @@ func (r RunFns) printFnResultsStatus(resultsFile string) {
 	if r.isOutputDisabled() {
 		return
 	}
-	printerutil.PrintFnResultsStatus(r.Ctx, resultsFile)
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -433,7 +433,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 	}
 	var fltr *runtimeutil.FunctionFilter
-	var name string
+	var fnResult *fnresult.Result
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
@@ -458,7 +458,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		name = spec.Container.Image
+		fnResult = &fnresult.Result{Image: spec.Container.Image}
 	}
 
 	if spec.Exec.Path != "" {
@@ -470,9 +470,9 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		name = spec.Exec.Path
+		fnResult = &fnresult.Result{ExecPath: spec.Exec.Path}
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, r.isOutputDisabled(), r.fnResults)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
 }
 
 func (r RunFns) isOutputDisabled() bool {

@@ -48,17 +48,23 @@ func NewContainerRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPat
 		Run:            cfn.Run,
 		FunctionConfig: config,
 	}
-	return NewFunctionRunner(ctx, fltr, f.Image, false, fnResults)
+	fnResult := &fnresult.Result{Image: f.Image}
+	return NewFunctionRunner(ctx, fltr, false, fnResult, fnResults)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
-func NewFunctionRunner(ctx context.Context, fltr *runtimeutil.FunctionFilter, name string, disableOutput bool, fnResults *fnresult.ResultList) (kio.Filter, error) {
+func NewFunctionRunner(ctx context.Context, fltr *runtimeutil.FunctionFilter, disableOutput bool, fnResult *fnresult.Result, fnResults *fnresult.ResultList) (kio.Filter, error) {
+	name := fnResult.Image
+	if name == "" {
+		name = fnResult.ExecPath
+	}
 	return &FunctionRunner{
 		ctx:           ctx,
 		name:          name,
 		filter:        fltr,
 		disableOutput: disableOutput,
+		fnResult:      fnResult,
 		fnResults:     fnResults,
 	}, nil
 }
@@ -69,6 +75,7 @@ type FunctionRunner struct {
 	name          string
 	disableOutput bool
 	filter        *runtimeutil.FunctionFilter
+	fnResult      *fnresult.Result
 	fnResults     *fnresult.ResultList
 }
 
@@ -97,7 +104,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 }
 
 func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	fnResult := &fnresult.Result{Image: fr.name}
+	fnResult := fr.fnResult
 
 	output, err = fr.filter.Filter(input)
 
@@ -128,9 +135,11 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	if yml.IsNilOrEmpty() {
 		return nil
 	}
-	// TODO(droot): checking for legacy structured result format
-	// can be made more robust. Want to revisit if structure change
-	// is offering any benefit ?
+	// Note: TS SDK and Go SDK implements two different formats for the
+	// result. Go SDK wraps result items while TS SDK doesn't. So examine
+	// if items are wrapped or not to support both the formats for now.
+	// Refer to https://github.com/GoogleContainerTools/kpt/pull/1923#discussion_r628604165
+	// for some more details.
 	if yml.YNode().Kind == yaml.MappingNode {
 		// check if legacy structured result wraps ResultItems
 		itemsNode, err := yml.Pipe(yaml.Lookup("items"))
