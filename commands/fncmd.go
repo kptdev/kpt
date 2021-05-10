@@ -45,22 +45,13 @@ func GetFnCommand(ctx context.Context, name string) *cobra.Command {
 		},
 	}
 
-	eval := cmdeval.EvalCommand(ctx, name)
-	eval.Short = fndocs.RunShort
-	eval.Long = fndocs.RunShort + "\n" + fndocs.RunLong
-	eval.Example = fndocs.RunExamples
-
-	render := cmdrender.NewCommand(ctx, name)
-
-	doc := cmdfndoc.NewCommand(name)
-	doc.Short = fndocs.DocShort
-	doc.Long = fndocs.DocShort + "\n" + fndocs.DocLong
-	doc.Example = fndocs.DocExamples
-
-	source := cmdsource.NewCommand(name)
-
-	sink := cmdsink.NewCommand(name)
-
-	functions.AddCommand(eval, render, doc, source, sink, cmdexport.ExportCommand())
+	functions.AddCommand(
+		cmdeval.EvalCommand(ctx, name),
+		cmdrender.NewCommand(ctx, name),
+		cmdfndoc.NewCommand(name),
+		cmdsource.NewCommand(name),
+		cmdsink.NewCommand(name),
+		cmdexport.ExportCommand(),
+	)
 	return functions
 }

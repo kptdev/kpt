@@ -9,22 +9,40 @@ description: >
    Render a package.
 -->
 
-`render` executes the pipeline of functions, defined in the package Kptfile [kptfile reference] and writes the output back to the package directory.
+`render` validates the meta resources (i.e. `Kptfile` and `functionConfig`), executes
+the pipelines of functions on package resources and formats the output and writes to
+the local filesystem in-place.
 
-If a package contains sub packages, the sub packages are rendered before the parent package. For example, if a package A contains sub package B, then the pipeline in B is executed first and then the pipeline in A is executed on the KRM resources in A and resources produced by rendering of B.
+`render` executes the pipelines in the package hierarchy in a depth-first order. For example, if a package A contains subpackage B, then the pipeline in B is executed on resources in B and then the pipeline in A is executed on resources in A and the output of the pipeline from package B. The output of the pipeline from A is then formatted and
+written to the local filesystem in-place.
 
-Note that the Kptfile and the function config files referred in the pipeline are excluded from the inputs to the functions.
+Meta resources (i.e. `Kptfile` and `functionConfig`) are excluded from the inputs to the functions.
 
+If any of the functions in the pipeline fails, then the entire pipeline is aborted and the
+local filesystem is left intact.
+
+Refer to the [Declarative Functions Execution] for more details.
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt fn render [DIR]
+kpt fn render [PKG_PATH] [flags]
 ```
 
 #### Args
+
 ```
-DIR:
-  Path to a package directory. Defaults to current directory if unspecified.
+PKG_PATH:
+  Local package path to render. Directory must exist and contain a Kptfile
+  to be updated. Defaults to the current working directory.
+```
+
+#### Flags
+
+```
+--results-dir:
+  Path to a directory to write structured results. Directory must exist.
+  Structured results emitted by the functions are aggregated and saved
+  to `results.yaml` file in the specified directory.
 ```
 <!--mdtogo-->
 
@@ -34,14 +52,19 @@ DIR:
 
 ```shell
 # Render the package in current directory
-kpt fn render
+$ kpt fn render
 ```
 
 ```shell
-# Render the package in `my-package-dir` directory
-kpt fn render my-package-dir
+# Render the package in current directory and save results in my-results-dir
+$ kpt fn --results-dir my-results-dir render
 ```
 
-[kptfile reference]: https://kpt.dev/reference/kptfile#pipeline
+```shell
+# Render my-package-dir
+$ kpt fn render my-package-dir
+```
 
 <!--mdtogo-->
+
+[Declarative Functions Execution]: /book/04-using-functions/01-declarative-function-execution

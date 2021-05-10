@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
@@ -23,6 +24,9 @@ func GetEvalFnRunner(ctx context.Context, name string) *EvalFnRunner {
 	r := &EvalFnRunner{Ctx: ctx}
 	c := &cobra.Command{
 		Use:     "eval [DIR | -]",
+		Short:   docs.RunShort,
+		Long:    docs.RunLong,
+		Example: docs.RunExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
