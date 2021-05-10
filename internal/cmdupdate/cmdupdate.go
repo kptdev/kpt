@@ -111,13 +111,6 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	const op errors.Op = "cmdupdate.runE"
-	if len(r.Update.Ref) > 0 {
-		fmt.Fprintf(c.ErrOrStderr(), "updating package %s to %s\n",
-			r.Update.Pkg.UniquePath, r.Update.Ref)
-	} else {
-		fmt.Fprintf(c.ErrOrStderr(), "updating package %s\n",
-			r.Update.Pkg.UniquePath)
-	}
 	if err := r.Update.Run(r.ctx); err != nil {
 		return errors.E(op, r.Update.Pkg.UniquePath, err)
 	}
