@@ -18,12 +18,12 @@ cluster resources match the local package configuration.
 <!--mdtogo:Long-->
 
 ```
-kpt live apply [PKG_PATH|-] [flags]
+kpt live apply [PKG_PATH | -] [flags]
 ```
 
 #### Args
 ```
-PKG_PATH|-:
+PKG_PATH | -:
   Path to the local package which should be applied to the cluster. It must 
   contain a Kptfile with inventory information. Defaults to the current working
   directory.
