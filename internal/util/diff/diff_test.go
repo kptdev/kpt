@@ -399,9 +399,7 @@ func TestStagingDirectoryNames(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.expected, func(t *testing.T) {
 			result := NameStagingDirectory(tt.source, tt.branch)
-			if result != tt.expected {
-				t.Errorf("got %s, want %s", result, tt.expected)
-			}
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
