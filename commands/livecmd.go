@@ -78,7 +78,6 @@ func GetLiveCommand(_, version string) *cobra.Command {
 	_ = applyCmd.Flags().MarkHidden("no-prune")
 	applyCmd.Short = livedocs.ApplyShort
 	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
-	applyCmd.Example = livedocs.ApplyExamples
 
 	previewCmd := preview.GetPreviewRunner(p, l, ioStreams).Command
 	previewCmd.Short = livedocs.PreviewShort

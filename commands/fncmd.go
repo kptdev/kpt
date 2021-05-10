@@ -32,7 +32,6 @@ func GetFnCommand(ctx context.Context, name string) *cobra.Command {
 		Use:     "fn",
 		Short:   fndocs.FnShort,
 		Long:    fndocs.FnLong,
-		Example: fndocs.FnExamples,
 		Aliases: []string{"functions"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
