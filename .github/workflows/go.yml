@@ -52,12 +52,12 @@ jobs:
         name: kpt-darwin
         path: kpt-darwin
         retention-days: 1
-    - name: "Upload Windows Binary"
-      uses: actions/upload-artifact@v2
-      with:
-        name: kpt-windows.exe
-        path: kpt-windows.exe
-        retention-days: 1
+    # - name: "Upload Windows Binary"
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: kpt-windows.exe
+    #     path: kpt-windows.exe
+    #     retention-days: 1
   
   validate-binaries:
     name: "Validate Binaries"
@@ -72,14 +72,16 @@ jobs:
             binary: kpt-linux
           - os: macos-latest
             binary: kpt-darwin
-          - os: windows-latest
-            binary: kpt-windows.exe
+          # Uncomment to enable Windows testing
+          # - os: windows-latest
+          #   binary: kpt-windows.exe
     steps:
       - name: Download Binary
         uses: actions/download-artifact@v2
         with:
           name: ${{ matrix.binary }}
           path: "kpt"
+      # For linux builds allow execution of kpt
       - name: Update permissions
         if: matrix.os != 'windows-latest'
         run: chmod +x ./kpt/*
