@@ -15,10 +15,12 @@
 package commands
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdapply"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
@@ -36,7 +38,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
-func GetLiveCommand(_, version string) *cobra.Command {
+func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	liveCmd := &cobra.Command{
 		Use:   "live",
 		Short: livedocs.LiveShort,
@@ -64,8 +66,11 @@ func GetLiveCommand(_, version string) *cobra.Command {
 	// The provider handles both ConfigMap and ResourceGroup inventory objects.
 	// If a package has both inventory objects, then an error is thrown.
 	klog.V(2).Infoln("provider supports ResourceGroup and ConfigMap inventory")
-	p := live.NewDualDelegatingProvider(f)
-	l := live.NewDualDelegatingManifestReader(f)
+	dp := live.NewDualDelegatingProvider(f)
+	dl := live.NewDualDelegatingManifestReader(f)
+
+	rgp := live.NewResourceGroupProvider(f)
+	rgl := live.NewResourceGroupManifestLoader(f)
 
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
@@ -74,12 +79,9 @@ func GetLiveCommand(_, version string) *cobra.Command {
 	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
 	initCmd.Example = livedocs.InitExamples
 
-	applyCmd := GetApplyRunner(p, l, ioStreams).Command()
-	_ = applyCmd.Flags().MarkHidden("no-prune")
-	applyCmd.Short = livedocs.ApplyShort
-	applyCmd.Long = livedocs.ApplyShort + "\n" + livedocs.ApplyLong
+	applyCmd := cmdapply.NewCommand(ctx, rgp, rgl, ioStreams)
 
-	previewCmd := preview.GetPreviewRunner(p, l, ioStreams).Command
+	previewCmd := preview.GetPreviewRunner(dp, dl, ioStreams).Command
 	previewCmd.Short = livedocs.PreviewShort
 	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
 	previewCmd.Example = livedocs.PreviewExamples
@@ -89,12 +91,12 @@ func GetLiveCommand(_, version string) *cobra.Command {
 	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
 	diffCmd.Example = livedocs.DiffExamples
 
-	destroyCmd := destroy.GetDestroyRunner(p, l, ioStreams).Command
+	destroyCmd := destroy.GetDestroyRunner(dp, dl, ioStreams).Command
 	destroyCmd.Short = livedocs.DestroyShort
 	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
 	destroyCmd.Example = livedocs.DestroyExamples
 
-	statusCmd := status.GetStatusRunner(p, l).Command
+	statusCmd := status.GetStatusRunner(dp, dl).Command
 	statusCmd.Short = livedocs.StatusShort
 	statusCmd.Long = livedocs.StatusLong
 	statusCmd.Example = livedocs.StatusExamples
