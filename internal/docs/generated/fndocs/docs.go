@@ -69,6 +69,7 @@ Flags:
     Path to a directory to write structured results. Directory must exist.
     Structured results emitted by the functions are aggregated and saved
     to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
+    If not specified, no result files are written to the local filesystem.
 `
 var RenderExamples = `
   # Render the package in current directory
