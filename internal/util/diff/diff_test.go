@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/stretchr/testify/assert"
 )
@@ -152,6 +153,53 @@ func TestCommand_Diff(t *testing.T) {
 >       targetPort: 80
 `,
 		},
+		"omit nested packages": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource),
+						Branch: "master",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("5", "spec", "replicas")).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.SecretResource).
+							WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("2", "spec", "replicas")),
+					),
+			},
+			fetchRef: "main",
+			diffRef:  "main",
+			diffType: DiffTypeCombined,
+			expDiff: `
+7c7
+<   replicas: 5
+---
+>   replicas: 3
+			`,
+		},
 
 		//nolint:gocritic
 		// TODO(mortent): Diff functionality must be updated to handle nested packages.
@@ -198,12 +246,12 @@ func TestCommand_Diff(t *testing.T) {
 		//			fetchRef: "main",
 		//			diffRef: "main",
 		//			diffType: DiffTypeCombined,
-		//			expDiff: `
-		//7c7
-		//<   replicas: 3
-		//---
-		//>   replicas: 5
-		//`,
+		// 			expDiff: `
+		// 7c7
+		// <   replicas: 3
+		// ---
+		// >   replicas: 5
+		// `,
 		//		},
 	}
 
@@ -252,6 +300,10 @@ func filterDiffMetadata(r io.Reader) string {
 		text := scanner.Text()
 		// filter out the diff command that contains directory names
 		if strings.HasPrefix(text, "diff ") {
+			continue
+		}
+		// Filter out subpackage difference containing directory name
+		if strings.HasPrefix(text, "Only in /tmp/") {
 			continue
 		}
 		b.WriteString(text)
