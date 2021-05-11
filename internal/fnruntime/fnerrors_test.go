@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package errors
+package fnruntime
 
 import (
 	"testing"
@@ -20,16 +20,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFnExecErrorString(t *testing.T) {
+func TestExecErrorString(t *testing.T) {
 	testcases := []struct {
 		name        string
-		fnExecError FnExecError
+		fnExecError ExecError
 		truncate    bool
 		expected    string
 	}{
 		{
 			name:        "no truncate - empty stderr",
-			fnExecError: FnExecError{},
+			fnExecError: ExecError{},
 			expected: `  Stderr:
     ""
   Exit Code: 0
@@ -37,7 +37,7 @@ func TestFnExecErrorString(t *testing.T) {
 		},
 		{
 			name: "no truncate - normal failure",
-			fnExecError: FnExecError{
+			fnExecError: ExecError{
 				Stderr: `error message1
 error message2`,
 				ExitCode: 1,
@@ -50,7 +50,7 @@ error message2`,
 		},
 		{
 			name: "no truncate - long stderr",
-			fnExecError: FnExecError{
+			fnExecError: ExecError{
 				Stderr: `error message
 error message
 error message
@@ -69,7 +69,7 @@ error message`,
 		},
 		{
 			name: "truncate - normal failure",
-			fnExecError: FnExecError{
+			fnExecError: ExecError{
 				Stderr: `error message
 error message
 error message
@@ -87,7 +87,7 @@ error message`,
 		},
 		{
 			name: "truncate - long stderr 1",
-			fnExecError: FnExecError{
+			fnExecError: ExecError{
 				Stderr: `error message
 error message
 error message
@@ -107,7 +107,7 @@ error message`,
 		},
 		{
 			name: "truncate - long stderr 2",
-			fnExecError: FnExecError{
+			fnExecError: ExecError{
 				Stderr: `error message
 error message
 error message

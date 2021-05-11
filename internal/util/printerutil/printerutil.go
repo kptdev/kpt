@@ -21,9 +21,12 @@ import (
 )
 
 // PrintFnResultInfo displays information about the function results file.
-func PrintFnResultInfo(ctx context.Context, resultsFile string) {
+func PrintFnResultInfo(ctx context.Context, resultsFile string, withNewLine bool) {
 	pr := printer.FromContextOrDie(ctx)
 	if resultsFile != "" {
+		if withNewLine {
+			pr.Printf("\n")
+		}
 		pr.Printf("For complete results, see %s\n", resultsFile)
 	}
 }

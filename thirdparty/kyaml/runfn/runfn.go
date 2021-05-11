@@ -231,7 +231,7 @@ func (r RunFns) printFnResultsStatus(resultsFile string) {
 	if r.isOutputDisabled() {
 		return
 	}
-	printerutil.PrintFnResultInfo(r.Ctx, resultsFile)
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -407,7 +407,11 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 	}
 	var fltr *runtimeutil.FunctionFilter
-	var fnResult *fnresult.Result
+	fnResult := &fnresult.Result{
+		// TODO(droot): This is required for making structured results subpackage aware.
+		// Enable this once test harness supports filepath based assertions.
+		// Pkg: string(r.uniquePath),
+	}
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
@@ -432,7 +436,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		fnResult = &fnresult.Result{Image: spec.Container.Image}
+		fnResult.Image = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
@@ -444,7 +448,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		fnResult = &fnresult.Result{ExecPath: spec.Exec.Path}
+		fnResult.ExecPath = spec.Exec.Path
 	}
 	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
 }

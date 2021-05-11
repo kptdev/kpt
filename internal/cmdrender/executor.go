@@ -104,7 +104,7 @@ func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.Result
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
 
-	printerutil.PrintFnResultInfo(ctx, resultsFile)
+	printerutil.PrintFnResultInfo(ctx, resultsFile, false)
 	return nil
 }
 
