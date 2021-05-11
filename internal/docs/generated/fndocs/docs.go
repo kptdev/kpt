@@ -6,9 +6,6 @@ var FnLong = `
 The ` + "`" + `fn` + "`" + ` command group contains subcommands for transforming and validating ` + "`" + `kpt` + "`" + ` packages
 using containerized functions.
 `
-var FnExamples = `
-
-`
 
 var DocShort = `Display the documentation for a function`
 var DocLong = `

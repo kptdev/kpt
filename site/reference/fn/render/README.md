@@ -9,28 +9,35 @@ description: >
    Render a package.
 -->
 
-`render` validates the meta resources (i.e. `Kptfile` and `functionConfig`), executes
-the pipelines of functions on package resources and formats the output and writes to
-the local filesystem in-place.
+`render` executes the pipelines of functions on resources in the package and
+writes the output to the local filesystem in-place.
 
-`render` executes the pipelines in the package hierarchy in a depth-first order. For example, if a package A contains subpackage B, then the pipeline in B is executed on resources in B and then the pipeline in A is executed on resources in A and the output of the pipeline from package B. The output of the pipeline from A is then formatted and
-written to the local filesystem in-place.
+`render` executes the pipelines in the package hierarchy in a depth-first order.
+For example, if a package A contains subpackage B, then the pipeline in B is executed
+on resources in B and then the pipeline in A is executed on resources in A and
+the output of the pipeline from package B. The output of the pipeline from A is
+then written to the local filesystem in-place.
 
-Meta resources (i.e. `Kptfile` and `functionConfig`) are excluded from the inputs to the functions.
+`render` formats the resources before writing them to the local filesystem.
 
-If any of the functions in the pipeline fails, then the entire pipeline is aborted and the
-local filesystem is left intact.
+Meta resources (i.e. `Kptfile` and `functionConfig`) are excluded from the inputs
+to the functions.
+
+If any of the functions in the pipeline fails, then the entire pipeline is aborted and
+the local filesystem is left intact.
 
 Refer to the [Declarative Functions Execution] for more details.
+
 ### Synopsis
+
 <!--mdtogo:Long-->
-```
+```shell
 kpt fn render [PKG_PATH] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH:
   Local package path to render. Directory must exist and contain a Kptfile
   to be updated. Defaults to the current working directory.
@@ -38,7 +45,7 @@ PKG_PATH:
 
 #### Flags
 
-```
+```shell
 --results-dir:
   Path to a directory to write structured results. Directory must exist.
   Structured results emitted by the functions are aggregated and saved
