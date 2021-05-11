@@ -8,7 +8,7 @@
         - [init](reference/pkg/init/)
         - [update](reference/pkg/update/)
     - [fn](reference/fn/)
-        - [export](reference/fn/export/)
+        - [render](reference/fn/render/)
         - [run](reference/fn/run/)
         - [sink](reference/fn/sink/)
         - [source](reference/fn/source/)

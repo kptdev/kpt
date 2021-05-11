@@ -207,6 +207,7 @@ Flags:
     Link to page with information about the package.
 `
 var InitExamples = `
+
   # Creates a new Kptfile with metadata in the cockroachdb directory.
   mkdir cockroachdb
   kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
