@@ -17,5 +17,7 @@
 exitCode: 1
 stdErr: "[ERROR] Invalid type. Expected: [integer,null], given: string in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field spec.replicas"
 stdOut: |
+  [RUNNING] "gcr.io/kpt-fn/enforce-gatekeeper:unstable"
+  [PASS] "gcr.io/kpt-fn/enforce-gatekeeper:unstable"
   [RUNNING] "gcr.io/kpt-fn/kubeval:unstable"
   [FAIL] "gcr.io/kpt-fn/kubeval:unstable"
