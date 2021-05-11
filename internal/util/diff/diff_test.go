@@ -203,56 +203,56 @@ func TestCommand_Diff(t *testing.T) {
 
 		//nolint:gocritic
 		// TODO(mortent): Diff functionality must be updated to handle nested packages.
-		//		"nested packages": {
-		//			reposChanges: map[string][]testutil.Content{
-		//				testutil.Upstream: {
-		//					{
-		//						Pkg: pkgbuilder.NewRootPkg().
-		//							WithResource(pkgbuilder.DeploymentResource),
-		//						Branch: "main",
-		//					},
-		//					{
-		//						Pkg: pkgbuilder.NewRootPkg().
-		//							WithResource(pkgbuilder.DeploymentResource,
-		//								pkgbuilder.SetFieldPath("5", "spec", "replicas")),
-		//					},
-		//				},
-		//				"foo": {
-		//					{
-		//						Pkg: pkgbuilder.NewRootPkg().
-		//							WithResource(pkgbuilder.SecretResource),
-		//						Branch: "master",
-		//					},
-		//				},
-		//			},
-		//			updatedLocal: testutil.Content{
-		//				Pkg: pkgbuilder.NewRootPkg().
-		//					WithKptfile(
-		//						pkgbuilder.NewKptfile().
-		//							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
-		//							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
-		//					).
-		//					WithResource(pkgbuilder.DeploymentResource).
-		//					WithSubPackages(
-		//						pkgbuilder.NewSubPkg("foo").
-		//							WithKptfile(
-		//								pkgbuilder.NewKptfile().
-		//									WithUpstreamRef("foo", "/", "master", "resource-merge").
-		//									WithUpstreamLockRef("foo", "/", "master", 0),
-		//							).
-		//							WithResource(pkgbuilder.SecretResource),
-		//					),
-		//			},
-		//			fetchRef: "main",
-		//			diffRef: "main",
-		//			diffType: DiffTypeCombined,
-		// 			expDiff: `
-		// 7c7
-		// <   replicas: 3
-		// ---
-		// >   replicas: 5
-		// `,
-		//		},
+		"nested packages": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource,
+								pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource),
+						Branch: "master",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.SecretResource),
+					),
+			},
+			fetchRef: "main",
+			diffRef:  "main",
+			diffType: DiffTypeCombined,
+			expDiff: `
+7c7
+<   replicas: 3
+---
+>   replicas: 5
+		`,
+		},
 	}
 
 	for tn, tc := range testCases {
