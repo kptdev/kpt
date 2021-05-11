@@ -1,0 +1,24 @@
+diff --git a/db/resources.yaml b/db/resources.yaml
+index e405a52..64ec0ee 100644
+--- a/db/resources.yaml
++++ b/db/resources.yaml
+@@ -15,5 +15,6 @@ apiVersion: apps/v1
+ kind: StatefulSet
+ metadata:
+   name: db
++  namespace: staging
+ spec:
+-    replicas: 3
++  replicas: 3
+diff --git a/resources.yaml b/resources.yaml
+index 615314f..9874c15 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,5 +15,6 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  namespace: staging
+ spec:
+-    replicas: 3
++  replicas: 3
