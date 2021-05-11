@@ -50,12 +50,19 @@ func (u UniquePath) RelativePath() (string, error) {
 	return rPath, nil
 }
 
-// DisplayPath represents Slash-separated path to the package directory on the filesystem relative
+// DisplayPath represents os-agnostic Slash-separated path to the package directory on the filesystem relative
 // to parent directory of root package on which the command is invoked.
 // root package is defined as the package on which the command is invoked by user
 // This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
 // be used for display purposes and is subject to change.
 type DisplayPath string
+
+// NewDisplayPath returns the os-agnostic Slash-separated path for display purposes
+func NewDisplayPath(path string) DisplayPath {
+	// replace backslash with forward slash for path to be consistent on windows
+	path = strings.ReplaceAll(path, `\`, `/`)
+	return DisplayPath(path)
+}
 
 // Empty returns true if the DisplayPath is empty
 func (u DisplayPath) Empty() bool {

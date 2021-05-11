@@ -89,7 +89,7 @@ func New(path string) (*Pkg, error) {
 	pkg := &Pkg{
 		UniquePath: types.UniquePath(absPath),
 		// by default, DisplayPath should be the package name which is same as directory name
-		DisplayPath: types.DisplayPath(filepath.Base(absPath)),
+		DisplayPath: types.NewDisplayPath(filepath.Base(absPath)),
 	}
 	return pkg, nil
 }
@@ -214,7 +214,7 @@ func (p *Pkg) adjustDisplayPathForSubpkg(subPkg *Pkg) error {
 	if err != nil {
 		return err
 	}
-	subPkg.DisplayPath = types.DisplayPath(dp)
+	subPkg.DisplayPath = types.NewDisplayPath(dp)
 	return nil
 }
 
