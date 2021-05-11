@@ -22,8 +22,8 @@ spec:
     app: wordpress
     tier: mysql
   ports:
-    - port: 3306
-      protocol: TCP
+    - protocol: TCP
+      port: 3306
   clusterIP: None
 ---
 apiVersion: v1
@@ -61,8 +61,8 @@ spec:
           image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
           ports:
             - name: mysql
-              containerPort: 3306
               protocol: TCP
+              containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
