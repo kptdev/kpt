@@ -213,28 +213,6 @@ apiVersion: v1
 			err:  "must have keys and values separated by",
 		},
 		{
-			name: "log steps",
-			args: []string{"eval", "dir", "--log-steps", "--image", "foo:bar"},
-			path: "dir",
-			expectedStruct: &runfn.RunFns{
-				Path:                  "dir",
-				LogSteps:              true,
-				Env:                   []string{},
-				ContinueOnEmptyResult: true,
-				Ctx:                   context.TODO(),
-			},
-			expected: `
-metadata:
-  name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
-data: {}
-kind: ConfigMap
-apiVersion: v1
-`,
-		},
-		{
 			name: "envs",
 			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: "dir",
