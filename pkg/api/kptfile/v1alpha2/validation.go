@@ -73,7 +73,7 @@ func (f *Function) validate() error {
 	if !IsNodeZero(&f.Config) {
 		config := yaml.NewRNode(&f.Config)
 		if _, err := config.GetMeta(); err != nil {
-			return fmt.Errorf("inline functionConfig requires fields `apiVersion` and `kind`")
+			return fmt.Errorf("functionConfig must be a valid KRM resource with `apiVersion` and `kind` fields")
 		}
 		configFields = append(configFields, "config")
 	}
