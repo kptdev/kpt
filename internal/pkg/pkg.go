@@ -86,10 +86,14 @@ func New(path string) (*Pkg, error) {
 		// combining the current working directory with the path.
 		absPath = filepath.Join(cwd, path)
 	}
+	dp, err := types.NewDisplayPath(filepath.Base(absPath))
+	if err != nil {
+		return nil, err
+	}
 	pkg := &Pkg{
 		UniquePath: types.UniquePath(absPath),
 		// by default, DisplayPath should be the package name which is same as directory name
-		DisplayPath: types.NewDisplayPath(filepath.Base(absPath)),
+		DisplayPath: dp,
 	}
 	return pkg, nil
 }
@@ -214,8 +218,8 @@ func (p *Pkg) adjustDisplayPathForSubpkg(subPkg *Pkg) error {
 	if err != nil {
 		return err
 	}
-	subPkg.DisplayPath = types.NewDisplayPath(dp)
-	return nil
+	subPkg.DisplayPath, err = types.NewDisplayPath(dp)
+	return err
 }
 
 // SubpackageMatcher is type for specifying the types of subpackages which

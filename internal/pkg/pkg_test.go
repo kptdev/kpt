@@ -182,6 +182,27 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 	}
 }
 
+func TestNewDisplayPath(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	defer os.RemoveAll(dir)
+	assert.NoError(t, err)
+	relPath, err := filepath.Rel(dir, filepath.Join(dir, "wordpress", "mysql"))
+	assert.NoError(t, err)
+	dp, err := types.NewDisplayPath(relPath)
+	assert.NoError(t, err)
+	assert.Equal(t, `wordpress/mysql`, string(dp))
+}
+
+func TestNewDisplayPath_Error(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	defer os.RemoveAll(dir)
+	assert.NoError(t, err)
+	dp, err := types.NewDisplayPath(dir)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "input path must be a relative path")
+	assert.True(t, dp.Empty())
+}
+
 func TestFilterMetaResources(t *testing.T) {
 	tests := map[string]struct {
 		resources []string

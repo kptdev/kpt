@@ -16,6 +16,7 @@
 package types
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,10 +59,13 @@ func (u UniquePath) RelativePath() (string, error) {
 type DisplayPath string
 
 // NewDisplayPath returns the os-agnostic Slash-separated path for display purposes
-func NewDisplayPath(path string) DisplayPath {
-	// replace backslash with forward slash for path to be consistent on windows
+// the input path must be a relative path, returns error if input path is absolute
+func NewDisplayPath(path string) (DisplayPath, error) {
+	if filepath.IsAbs(path) {
+		return "", fmt.Errorf("input path must be a relative path, found absolute path %q", path)
+	}
 	path = filepath.ToSlash(path)
-	return DisplayPath(path)
+	return DisplayPath(path), nil
 }
 
 // Empty returns true if the DisplayPath is empty
