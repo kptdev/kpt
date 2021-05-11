@@ -9,9 +9,15 @@ Migrate a package and the inventory object to use the ResourceGroup CRD.
     Migrate a package and the inventory object to use the ResourceGroup CRD.
 -->
 
-`migrate` moves the inventory list in the cluster from a ConfigMap resource to a 
-ResourceGroup CR and moves the inventory information on the local filesystem from
-the inventory template into the Kptfile.
+`migrate` moves the inventory list, which contains the Group, Kind, Name and 
+Namespace for every resource in the cluster that belongs to a package, into a 
+`ResourceGroup` CR and moves the inventory information into the `Kptfile`.
+
+Previous versions of `kpt` uses `ConfigMap` resources for storing the inventory
+list and relies on an inventory template being among the applied resources. The
+inventory template is just a regular `ConfigMap` manifest with a special
+annotation that includes the information needed to look up any existing
+inventory lists.
 
 ### Synopsis
 <!--mdtogo:Long-->
