@@ -60,7 +60,7 @@ type DisplayPath string
 // NewDisplayPath returns the os-agnostic Slash-separated path for display purposes
 func NewDisplayPath(path string) DisplayPath {
 	// replace backslash with forward slash for path to be consistent on windows
-	path = strings.ReplaceAll(path, `\`, `/`)
+	path = filepath.ToSlash(path)
 	return DisplayPath(path)
 }
 
