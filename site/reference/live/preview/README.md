@@ -9,8 +9,27 @@ description: >
     Preview the changes apply would make to the cluster
 -->
 
-`preview` shows the operations that will be done when running `apply` or 
-`destroy` against a cluster.
+`preview` validates the resources in the package against the cluster and shows
+which resources will be applied and pruned.
+
+If the `preview` command is used without specifying the `server-side` flag,
+validation and dry-run will primarily happen client-side. `kpt` will display the 
+operations that will be performed against the apiserver for each resource when
+running `apply`. The operations are:
+ * `created`: The resource doesn't currently exist in the cluster and will be created.
+ * `configured`: The resource exists in the cluster and will be updated or remain unchanged.
+ * `failed`: The resource can't be applied.
+
+Note that client-side dry-run doesn't check if a resource has changed, so
+a resource might show up as being `configured` when running `preview`, but be
+`unchanged` when running `apply`.
+
+When running the `preview` command with the `server-side` flag, the resources
+will be passed to the apiserver, so the resources will go through defaulting,
+validation, and any admission controllers. This can detect problems that wouldn't
+be found doing it client-side. The output will not include information about
+whether the resource would be created or updated, only whether it could be
+successfully applied.
 
 ### Synopsis
 <!--mdtogo:Long-->
