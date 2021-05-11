@@ -182,6 +182,36 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 	}
 }
 
+func TestNewDisplayPath(t *testing.T) {
+	var tests = []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "windows path",
+			input:    `foo\bar\baz`,
+			expected: "foo/bar/baz",
+		},
+		{
+			name:     "unix path",
+			input:    `foo/bar/baz`,
+			expected: "foo/bar/baz",
+		},
+		{
+			name:     "no separators",
+			input:    "foo",
+			expected: "foo",
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, string(types.NewDisplayPath(test.input)))
+		})
+	}
+}
+
 func TestFilterMetaResources(t *testing.T) {
 	tests := map[string]struct {
 		resources []string
