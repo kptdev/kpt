@@ -44,6 +44,7 @@ func GetExportRunner() *ExportRunner {
 		Args:    cobra.ExactArgs(1),
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
+		Hidden:  true,
 	}
 
 	c.Flags().StringVarP(
