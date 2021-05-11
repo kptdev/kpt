@@ -64,12 +64,6 @@ type RunFns struct {
 
 	fnResults *fnresult.ResultList
 
-	// LogSteps enables logging the function that is running.
-	LogSteps bool
-
-	// LogWriter can be set to write the logs to LogWriter rather than stderr if LogSteps is enabled.
-	LogWriter io.Writer
-
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
 	functionFilterProvider func(
@@ -230,21 +224,6 @@ func (r RunFns) runFunctions(
 	if resultErr == nil {
 		r.printFnResultsStatus(resultsFile)
 	}
-
-	// check for deferred function errors
-	var errs []string
-	for i := range fltrs {
-		cf, ok := fltrs[i].(runtimeutil.DeferFailureFunction)
-		if !ok {
-			continue
-		}
-		if cf.GetExit() != nil {
-			errs = append(errs, cf.GetExit().Error())
-		}
-	}
-	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n---\n"))
-	}
 	return nil
 }
 
@@ -362,11 +341,6 @@ func (r *RunFns) init() error {
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
 		r.functionFilterProvider = r.defaultFnFilterProvider
-	}
-
-	// if LogSteps is enabled and LogWriter is not specified, use stderr
-	if r.LogSteps && r.LogWriter == nil {
-		r.LogWriter = os.Stderr
 	}
 
 	// fn config path should be absolute
