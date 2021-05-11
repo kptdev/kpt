@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: 'Error: failed to validate pipeline: v1alpha2.pipeline.validate: function "gcr.io/kpt-fn/set-label:unstable" is invalid: inline functionConfig requires fields `apiVersion` and `kind`'
+stdErr: 'Error: invalid pipeline: function "gcr.io/kpt-fn/set-label:unstable": inline functionConfig requires fields `apiVersion` and `kind`'

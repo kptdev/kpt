@@ -77,7 +77,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	// output
 	err := f.prepareImage()
 	if err != nil {
-		return fmt.Errorf("failed to prepare image: %w", err)
+		return err
 	}
 
 	errSink := bytes.Buffer{}
