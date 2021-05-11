@@ -90,12 +90,8 @@ func diffSet(path string) sets.String {
 // may have been changed after the destDir was copied, it is often better to explicitly
 // use a set of golden files as the sourceDir rather than the original TestGitRepo
 // that was copied.
-func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool {
-	return AssertPkgEqual(t, sourceDir, destDir)
-}
-
-func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
-	diff, err := Diff(sourceDir, destDir)
+func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string, addMergeCommentsToSource bool) bool {
+	diff, err := Diff(sourceDir, destDir, addMergeCommentsToSource)
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -131,8 +127,8 @@ func addMergeCommentToExpected(path string) (string, func(), error) {
 // KptfileAwarePkgEqual compares two packages (including any subpackages)
 // and has special handling of Kptfiles to handle fields that contain
 // values which cannot easily be specified in the golden package.
-func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
-	diff, err := Diff(pkg1, pkg2)
+func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string, addMergeCommentsToSource bool) bool {
+	diff, err := Diff(pkg1, pkg2, addMergeCommentsToSource)
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -192,20 +188,22 @@ func kptfileExists(t *testing.T, path string) bool {
 //
 // Diff is guaranteed to return a non-empty set if any files differ, but
 // this set is not guaranteed to contain all differing files.
-func Diff(sourceDir, destDir string) (sets.String, error) {
+func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String, error) {
 	// get set of filenames in the package source
-	sourceDir, clean1, err := addMergeCommentToExpected(sourceDir)
-	defer clean1()
-	if err != nil {
-		return sets.String{}, err
+	var newSourceDir string
+	if addMergeCommentsToSource {
+		dir, clean1, err := addMergeCommentToExpected(sourceDir)
+		defer clean1()
+		if err != nil {
+			return sets.String{}, err
+		}
+		newSourceDir = dir
 	}
-	destDir, clean2, err := addMergeCommentToExpected(destDir)
-	defer clean2()
-	if err != nil {
-		return sets.String{}, err
+	if newSourceDir != "" {
+		sourceDir = newSourceDir
 	}
 	upstreamFiles := sets.String{}
-	err = filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

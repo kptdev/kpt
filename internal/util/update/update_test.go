@@ -83,7 +83,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			}
 
 			// Expect the local package to have Dataset2
-			if !g.AssertLocalDataEquals(testutil.Dataset2) {
+			if !g.AssertLocalDataEquals(testutil.Dataset2, true) {
 				return
 			}
 			commit, err := upstreamRepo.GetCommit()
@@ -135,7 +135,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 			}
 
 			// Expect the local package to have Dataset2
-			if !g.AssertLocalDataEquals(filepath.Join(testutil.Dataset2, "java")) {
+			if !g.AssertLocalDataEquals(filepath.Join(testutil.Dataset2, "java"), true) {
 				return
 			}
 			commit, err := upstreamRepo.GetCommit()
@@ -196,7 +196,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 				}
 			}
 
-			if !g.AssertLocalDataEquals(testutil.Dataset1) {
+			if !g.AssertLocalDataEquals(testutil.Dataset1, true) {
 				return
 			}
 			commit, err := upstreamRepo.GetCommit()
@@ -250,7 +250,7 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			}
 			assert.Contains(t, err.Error(), "package must be committed to git before attempting to update")
 
-			if !g.AssertLocalDataEquals(testutil.Dataset3) {
+			if !g.AssertLocalDataEquals(testutil.Dataset3, false) {
 				return
 			}
 		})
@@ -480,7 +480,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 					g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
 			}
 
-			if !g.AssertLocalDataEquals(expectedPath) {
+			if !g.AssertLocalDataEquals(expectedPath, true) {
 				t.FailNow()
 			}
 			if !g.AssertKptfile(g.Repos[testutil.Upstream].RepoName, expectedCommit, masterBranch,
@@ -533,7 +533,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			}
 
 			// Expect the local package to have Dataset2
-			if !g.AssertLocalDataEquals(testutil.Dataset2) {
+			if !g.AssertLocalDataEquals(testutil.Dataset2, true) {
 				return
 			}
 
@@ -593,7 +593,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			}
 
 			// Expect the local package to have Dataset2
-			if !g.AssertLocalDataEquals(testutil.Dataset2) {
+			if !g.AssertLocalDataEquals(testutil.Dataset2, true) {
 				return
 			}
 
@@ -650,7 +650,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			}
 
 			// Expect the local package to have Dataset5
-			if !g.AssertLocalDataEquals(testutil.Dataset5) {
+			if !g.AssertLocalDataEquals(testutil.Dataset5, true) {
 				t.FailNow()
 			}
 
@@ -808,7 +808,7 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 			}
 			assert.Contains(t, err.Error(), "unknown revision or path not in the working tree")
 
-			if !g.AssertLocalDataEquals(testutil.Dataset1) {
+			if !g.AssertLocalDataEquals(testutil.Dataset1, true) {
 				return
 			}
 		})
@@ -873,7 +873,7 @@ func TestCommand_Run_manualChange(t *testing.T) {
 	expectedPath := expLocal.ExpandPkgWithName(t,
 		g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
 
-	testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
+	testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
 }
 
 func TestCommand_Run_symlinks(t *testing.T) {
@@ -931,7 +931,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 		)
 	expectedPath := expectedPkg.ExpandPkgWithName(t, upstreamRepo.RepoName, testutil.ToReposInfo(g.Repos))
 
-	testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
+	testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
 }
 
 func TestCommand_Run_badStrategy(t *testing.T) {
@@ -1783,7 +1783,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					t.FailNow()
 				}
 
-				testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
+				testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
 			})
 		}
 	}
@@ -3305,7 +3305,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 
 			expectedPath := tc.expectedLocal.ExpandPkgWithName(t,
 				g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
-			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath())
+			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
 		})
 	}
 }
@@ -3423,7 +3423,7 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 			}
 
 			expectedPath := tc.expectedLocal.ExpandPkgWithName(t, testPackageName, testutil.ToReposInfo(repos))
-			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
+			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
 		})
 	}
 }
@@ -3507,7 +3507,7 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			err = ReplaceNonKRMFiles(updated, original, local)
 			assert.NoError(t, err)
 			tg := testutil.TestGitRepo{}
-			tg.AssertEqual(t, local, filepath.Join(expectedLocal))
+			tg.AssertEqual(t, local, filepath.Join(expectedLocal), false)
 		})
 	}
 }

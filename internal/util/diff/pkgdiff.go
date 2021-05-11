@@ -24,20 +24,28 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
-	if err := addmergecomment.Process(pkg1, pkg2); err != nil {
+	pkg1mc, clean1, err := addMergeCommentToExpected(pkg1)
+	if err != nil {
 		return sets.String{}, err
 	}
-	pkg1Files, err := pkgSet(pkg1)
+	defer clean1()
+	pkg2mc, clean2, err := addMergeCommentToExpected(pkg2)
+	if err != nil {
+		return sets.String{}, err
+	}
+	defer clean2()
+	pkg1Files, err := pkgSet(pkg1mc)
 	if err != nil {
 		return sets.String{}, err
 	}
 
-	pkg2Files, err := pkgSet(pkg2)
+	pkg2Files, err := pkgSet(pkg2mc)
 	if err != nil {
 		return sets.String{}, err
 	}
@@ -123,4 +131,29 @@ func pkgSet(pkgPath string) (sets.String, error) {
 		return sets.String{}, err
 	}
 	return pkgFiles, nil
+}
+
+// addMergeCommentToExpected copies the expected path directory contents to
+// new temp directory and adds merge comment to the resources in directory
+// it also returns the cleanup function to clean the created temp directory
+func addMergeCommentToExpected(path string) (string, func(), error) {
+	expected, err := ioutil.TempDir("", "")
+	if err != nil {
+		return "", nil, err
+	}
+	err = copyutil.CopyDir(path, expected)
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = addmergecomment.Process(expected)
+	if err != nil {
+		return "", nil, err
+	}
+
+	clean := func() {
+		os.RemoveAll(expected)
+	}
+
+	return expected, clean, nil
 }

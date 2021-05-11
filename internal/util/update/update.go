@@ -363,6 +363,12 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, originPath, relPath string, isRootPkg bool) error {
 	const op errors.Op = "update.mergePackage"
 	pr := printer.FromContextOrDie(ctx)
+	// at this point, the localPath, updatedPath and originPath exists and are about to be merged
+	// make sure that the merge comments are added to all of them so that they are merged accurately
+	if err := addmergecomment.Process(localPath, updatedPath, originPath); err != nil {
+		return errors.E(op, types.UniquePath(localPath),
+			fmt.Errorf("failed to add merge comments %q", err.Error()))
+	}
 	updatedUnfetched, err := pkg.IsPackageUnfetched(updatedPath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) || !isRootPkg {

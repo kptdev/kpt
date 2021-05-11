@@ -177,7 +177,7 @@ func TestCommand_Run(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, false)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -239,7 +239,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, false)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -317,7 +317,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), w.FullPackagePath())
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), w.FullPackagePath(), false)
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, w.FullPackagePath(), kptfilev1alpha2.KptFile{
@@ -398,7 +398,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), w.FullPackagePath())
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), w.FullPackagePath(), false)
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, w.FullPackagePath(), kptfilev1alpha2.KptFile{
