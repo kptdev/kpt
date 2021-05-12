@@ -303,7 +303,7 @@ func (u Command) updatePackage(subPkgPath, localPath, updatedPath, originPath st
 	// contains any unfetched subpackages, those will be handled when we traverse
 	// the package hierarchy and that package is the root.
 	case !originExists && !localExists && updatedExists:
-		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg); err != nil {
+		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, false); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 
