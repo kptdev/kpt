@@ -311,7 +311,7 @@ func (pg defaultPkgGetter) GetPkg(ctx context.Context, repo, path, ref string) (
 		Type: kptfilev1alpha2.GitOrigin,
 		Git: &kptfilev1alpha2.Git{
 			Repo:      repo,
-			Directory: "/",
+			Directory: path,
 			Ref:       ref,
 		},
 	}
