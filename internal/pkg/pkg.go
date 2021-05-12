@@ -34,6 +34,20 @@ import (
 const CurDir = "."
 const ParentDir = ".."
 
+// KptfileError records errors regarding reading or parsing of a Kptfile.
+type KptfileError struct {
+	Path types.UniquePath
+	Err  error
+}
+
+func (k *KptfileError) Error() string {
+	return fmt.Sprintf("error reading Kptfile at %q: %s", k.Path.String(), k.Err.Error())
+}
+
+func (k *KptfileError) Unwrap() error {
+	return k.Err
+}
+
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
 	UniquePath  types.UniquePath
@@ -93,20 +107,24 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
 func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
-	const op errors.Op = "pkg.readKptfile"
-
 	kf := &kptfilev1alpha2.KptFile{}
 
 	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
 	if err != nil {
-		return kf, errors.E(op, fmt.Errorf("package must have a %q: %w", kptfilev1alpha2.KptFileName, err))
+		return kf, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
 	}
 	defer f.Close()
 
 	d := yaml.NewDecoder(f)
 	d.KnownFields(true)
 	if err = d.Decode(kf); err != nil {
-		return kf, errors.E(op, fmt.Errorf("unable to parse %q: %w", kptfilev1alpha2.KptFileName, err))
+		return kf, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
 	}
 	return kf, nil
 }
