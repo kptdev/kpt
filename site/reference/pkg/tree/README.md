@@ -4,13 +4,13 @@ linkTitle: "tree"
 weight: 4
 type: docs
 description: >
-   Display resources in a tree structure.
+   Display resources, files and packages in a tree structure.
 ---
 <!--mdtogo:Short
-    Display resources in a tree structure.
+    Display resources, files and packages in a tree structure.
 -->
 
-`tree` displays the contents of a directory in a tree structure.
+`tree` displays resources, files and packages in a tree structure.
 
 ### Synopsis
 <!--mdtogo:Long-->
