@@ -3,12 +3,14 @@ kind: Kptfile
 metadata:
   name: wordpress
 info:
-  description: This is an example wordpress package with mysql subpackage
   emails:
-  - kpt-team@google.com
+    - kpt-team@google.com
+  description: This is an example wordpress package with mysql subpackage.
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/apply-setters:v0.1
-    configMap:
-      wp-image: wordpress
-      wp-tag: 4.8-apache
+    - image: gcr.io/kpt-fn/apply-setters:v0.1
+      configMap:
+        wp-image: wordpress
+        wp-tag: 4.8-apache
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1

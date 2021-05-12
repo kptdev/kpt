@@ -1,0 +1,57 @@
+apiVersion: kpt.dev/v1alpha2
+kind: FunctionResultList
+metadata:
+    name: fnresults
+exitCode: 1
+items:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
+      stderr: |
+        [ERROR] selector is required in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field selector
+        [ERROR] template is required in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field template
+        [ERROR] Invalid type. Expected: [integer,null], given: string in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field spec.replicas
+        [ERROR] Failed to parse raw kubeval output:
+        Unexpected token E in JSON at position 0
+
+        ERR  - stdin: Failed initializing schema file:///tmp/master-standalone-strict/custom-custom-v1.json: open /tmp/master-standalone-strict/custom-custom-v1.json: no such file or directory
+         in object 'custom.io/v1/Custom//custom' in file resources.yaml
+      exitCode: 1
+      results:
+        - message: selector is required
+          severity: error
+          resourceRef:
+            apiVersion: apps/v1
+            kind: Deployment
+          field:
+            path: selector
+          file:
+            path: resources.yaml
+        - message: template is required
+          severity: error
+          resourceRef:
+            apiVersion: apps/v1
+            kind: Deployment
+          field:
+            path: template
+          file:
+            path: resources.yaml
+        - message: 'Invalid type. Expected: [integer,null], given: string'
+          severity: error
+          resourceRef:
+            apiVersion: apps/v1
+            kind: Deployment
+          field:
+            path: spec.replicas
+          file:
+            path: resources.yaml
+        - message: |
+            Failed to parse raw kubeval output:
+            Unexpected token E in JSON at position 0
+
+            ERR  - stdin: Failed initializing schema file:///tmp/master-standalone-strict/custom-custom-v1.json: open /tmp/master-standalone-strict/custom-custom-v1.json: no such file or directory
+          severity: error
+          resourceRef:
+            apiVersion: custom.io/v1
+            kind: Custom
+          file:
+            path: resources.yaml
+            index: 1

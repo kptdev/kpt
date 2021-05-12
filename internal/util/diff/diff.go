@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -242,6 +243,10 @@ type defaultPkgDiffer struct {
 }
 
 func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
+	// add merge comments before comparing so that there are no unwanted diffs
+	if err := addmergecomment.Process(pkgs...); err != nil {
+		return err
+	}
 	for _, pkg := range pkgs {
 		if err := d.prepareForDiff(pkg); err != nil {
 			return err

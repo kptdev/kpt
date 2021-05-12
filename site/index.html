@@ -15,7 +15,7 @@
       href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
     />
     <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
       rel="stylesheet"
     />
     <link
@@ -35,7 +35,6 @@
           placeholder: "Search",
           paths: "auto",
         },
-        externalLinkTarget: "_self",
         loadSidebar: "sidebar.md",
         alias: {
           "/*.*/sidebar.md": "/sidebar.md",
@@ -97,7 +96,7 @@
       function addGitHubWidget(hook) {
         const issueIcon = document.createElement("span");
         issueIcon.innerText = "bug_report";
-        issueIcon.classList.add("material-icons");
+        issueIcon.classList.add("material-icons-outlined");
         const createIssue = document.createElement("a");
         createIssue.target = "_blank";
         createIssue.title = "Create documentation issue";
@@ -105,7 +104,7 @@
 
         const editIcon = document.createElement("span");
         editIcon.innerText = "edit";
-        editIcon.classList.add("material-icons");
+        editIcon.classList.add("material-icons-outlined");
         const editPage = document.createElement("a");
         editPage.target = "_blank";
         editPage.title = "Edit this page";
@@ -294,12 +293,12 @@
       margin: auto;
     }
 
-    .github-widget .material-icons {
+    .github-widget .material-icons-outlined {
       opacity: 0.3;
       transition: all 0.2s;
     }
 
-    .github-widget .material-icons:hover {
+    .github-widget .material-icons-outlined:hover {
       opacity: 1;
     }
 

@@ -18,11 +18,10 @@ For example, when consuming an upstream package, the initial workflow can look l
 First, you get a package from upstream. Then, you explore the content of the package to understand
 it better. Then you typically want to customize the package for you specific needs. Finally,
 you render the package which produces the final resources that can be directly applied to the
-cluster. Render is a required step even if you may not have declared a function in the package
-yourself since the upstream package hierarchy may contain a function declaration. In addition,
-rendering ensures that the `Kptfile` is valid.
+cluster. Render is a required step as it ensures certain preconditions and postconditions hold
+true about the state of the package.
 
-This workflow is an iterative process. There is usually a tight Edit<->Render loop in order to
+This workflow is an iterative process. There is usually a tight Edit/Render loop in order to
 produce the desired outcome.
 
 Some time later, you may want to update to a newer version of the upstream package:

@@ -183,7 +183,7 @@ func TestUpdate_Replace(t *testing.T) {
 				t.FailNow()
 			}
 
-			testutil.KptfileAwarePkgEqual(t, local, expected)
+			testutil.KptfileAwarePkgEqual(t, local, expected, false)
 		})
 	}
 }

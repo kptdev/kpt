@@ -44,7 +44,8 @@ where:
 
 - `input items`: The input list of KRM resources to operate on.
 - `output items`: The output list obtained from adding, removing, or modifying items in the input.
-- `functionConfig`: An optional meta resource used to parameterize this invocation of the function.
+- `functionConfig`: An optional meta resource containing the arguments to this invocation of the
+  function.
 - `results`: An optional meta resource emitted by the function for observability and debugging
   purposes.
 
