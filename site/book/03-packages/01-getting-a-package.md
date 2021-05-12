@@ -10,7 +10,7 @@ $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/w
 A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case,
 we are specifying tag `v0.1`.
 
-> Refer to the [command reference][get-doc] for more details.
+?> Refer to the [command reference][get-doc] for usage.
 
 The `Kptfile` contains metadata about the origin of the forked package. Take a look at the content
 of the `Kptfile` on your local filesystem:

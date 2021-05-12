@@ -1,6 +1,6 @@
 In many real-world scenarios, it's not sufficient to only have packages of static, fully-rendered
 resource configuration. You want the package to declare both static data as well as operations that
-should be performed on current resources and any resource that may be added in the future as you edit the package. For example:
+should be performed on current resources and any resource that may be added in the future as you edit the package. Example use cases:
 
 - Set the namespace on all namespace-scoped resources
 - Always perform schema validation on resources in the package
@@ -37,7 +37,7 @@ This declares two functions:
 - `kubeval` is an example validator function which you've seen before. It validates the resources
   against their OpenAPI schema.
 
-> Refer to the [Functions Catalog][func-cat] for details on how to use a particular function.
+?> Refer to the [Functions Catalog][func-cat] for details on how to use a particular function.
 
 There are two differences between mutators and validators:
 
@@ -106,7 +106,7 @@ The end result is that:
 If any of the functions in the pipeline fails for whatever reason, then the entire pipeline
 is aborted and the local filesystem is left intact.
 
-## Specifying FunctionConfig
+## Specifying `functionConfig`
 
 In [Chapter 2], we saw this conceptual representation of a function invocation:
 
@@ -150,7 +150,7 @@ data:
 Many functions take a `functionConfig` of kind `ConfigMap` since they only need simple key/value
 pairs as argument. For convenience, there is a way to inline the key/value pairs in the `Kptfile`.
 
-This is equivalent to the previous example.
+The following is equivalent to what we showed before:
 
 ```yaml
 # wordpress/mysql/Kptfile
@@ -165,15 +165,6 @@ pipeline:
         ms-image: mysql
         ms-tag: 5.6
 ```
-
-## Structured Results
-
-When you run the `fn render` command, there are two ways kpt provides observability:
-
-1. Non-structured CLI output (stdout and stderr) meant for human consumption.
-2. Structured results meant for consumption by tooling.
-
-TODO: Expand this once structured results is implemented.
 
 [func-cat]: http://catalog.kpt.dev
 [chapter 2]: /book/02-concepts/03-functions

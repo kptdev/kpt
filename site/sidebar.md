@@ -20,6 +20,7 @@
 	- [4 Using Functions](book/04-using-functions/)
 		- [4.1 Declarative Function Execution](book/04-using-functions/01-declarative-function-execution.md)
 		- [4.2 Imperative Function Execution](book/04-using-functions/02-imperative-function-execution.md)
+		- [4.3 Function Results](book/04-using-functions/03-function-results.md)
 	- [5 Developing Functions](book/05-developing-functions/)
 		- [5.1 Developing Custom Function Images](book/05-developing-functions/01-developing-custom-function-images.md)
 		- [5.2 Function Specification](book/05-developing-functions/02-function-specification.md)

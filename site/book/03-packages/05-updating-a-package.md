@@ -55,7 +55,7 @@ upstream version `v0.2` by doing a 3-way merge between:
 Several different strategies are available to handle the merge. By default, the `resource-merge`
 strategy is used which performs a structural comparison of the resource using OpenAPI schema.
 
-> Refer to the [command reference][update-doc] for more details.
+?> Refer to the [command reference][update-doc] for usage.
 
 ## Commit the updated resources
 
