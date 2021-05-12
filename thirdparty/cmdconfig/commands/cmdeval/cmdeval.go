@@ -27,7 +27,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		Use:     "eval [DIR | -] [flags]",
 		Short:   docs.EvalShort,
 		Long:    docs.EvalShort + "\n" + docs.EvalLong,
-		Example: docs.EvalLong,
+		Example: docs.EvalExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
