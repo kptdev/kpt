@@ -417,12 +417,6 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 			fmt.Errorf("unrecognized update strategy %s", u.Strategy))
 	}
 	pr.Printf("Updating package %q with strategy %q.\n", packageName(localPath), pkgKf.Upstream.UpdateStrategy)
-	// at this point, the localPath, updatedPath and originPath exists and are about to be merged
-	// make sure that the merge comments are added to all of them so that they are merged accurately
-	if err := addmergecomment.Process(localPath, updatedPath, originPath); err != nil {
-		return errors.E(op, types.UniquePath(localPath),
-			fmt.Errorf("failed to add merge comments %q", err.Error()))
-	}
 	if err := updater().Update(UpdateOptions{
 		RelPackagePath: relPath,
 		LocalPath:      localPath,

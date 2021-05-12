@@ -2,9 +2,12 @@ package addmergecomment
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
+	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -51,4 +54,29 @@ func (amc *AddMergeComment) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 	}
 	mf.Key.YNode().LineComment = fmt.Sprintf("%s %s/%s", merge.MergeCommentPrefix, rm.Namespace, rm.Name)
 	return object, nil
+}
+
+// ProcessWithCleanup copies the input directory contents to
+// new temp directory and adds merge comment to the resources in directory
+// it also returns the cleanup function to clean the created temp directory
+func ProcessWithCleanup(path string) (string, func(), error) {
+	expected, err := ioutil.TempDir("", "")
+	if err != nil {
+		return "", nil, err
+	}
+	err = copyutil.CopyDir(path, expected)
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = Process(expected)
+	if err != nil {
+		return "", nil, err
+	}
+
+	clean := func() {
+		os.RemoveAll(expected)
+	}
+
+	return expected, clean, nil
 }

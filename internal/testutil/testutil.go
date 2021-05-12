@@ -99,31 +99,6 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string, addMe
 	return assert.Empty(t, diff.List())
 }
 
-// addMergeCommentToExpected copies the expected path directory contents to
-// new temp directory and adds merge comment to the resources in directory
-// it also returns the cleanup function to clean the created temp directory
-func addMergeCommentToExpected(path string) (string, func(), error) {
-	expected, err := ioutil.TempDir("", "")
-	if err != nil {
-		return "", nil, err
-	}
-	err = copyutil.CopyDir(path, expected)
-	if err != nil {
-		return "", nil, err
-	}
-
-	err = addmergecomment.Process(expected)
-	if err != nil {
-		return "", nil, err
-	}
-
-	clean := func() {
-		os.RemoveAll(expected)
-	}
-
-	return expected, clean, nil
-}
-
 // KptfileAwarePkgEqual compares two packages (including any subpackages)
 // and has special handling of Kptfiles to handle fields that contain
 // values which cannot easily be specified in the golden package.
@@ -192,8 +167,8 @@ func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String
 	// get set of filenames in the package source
 	var newSourceDir string
 	if addMergeCommentsToSource {
-		dir, clean1, err := addMergeCommentToExpected(sourceDir)
-		defer clean1()
+		dir, clean, err := addmergecomment.ProcessWithCleanup(sourceDir)
+		defer clean()
 		if err != nil {
 			return sets.String{}, err
 		}
