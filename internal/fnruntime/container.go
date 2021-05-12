@@ -77,7 +77,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	// output
 	err := f.prepareImage()
 	if err != nil {
-		return fmt.Errorf("failed to check function image existence: %w", err)
+		return err
 	}
 
 	errSink := bytes.Buffer{}
@@ -164,7 +164,7 @@ func (f *ContainerFn) prepareImage() error {
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("function image %q doesn't exist: %w", f.Image, err)
+		return fmt.Errorf("function image %q doesn't exist", f.Image)
 	}
 	return nil
 }
