@@ -113,7 +113,7 @@ func TestCopyPackage(t *testing.T) {
 		includeSubpackages bool
 		expected           []string
 	}{
-		"subpackacges without root kptfile": {
+		"subpackages without root kptfile": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithFile("abc.yaml", "42").
 				WithFile("test.txt", "Hello, World!").
