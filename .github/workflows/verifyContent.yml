@@ -19,7 +19,7 @@ on:
     paths:
       - "site/**"
       - "commands/**"
-      - "internals/**"
+      - "internal/**"
 jobs:
   build:
     runs-on: ubuntu-latest
