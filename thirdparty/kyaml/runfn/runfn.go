@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
@@ -205,6 +206,10 @@ func (r RunFns) runFunctions(
 		// the output is nil (reading from Input)
 		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
+
+	// add format filter at the end to consistently format output resources
+	fmtfltr := filters.FormatFilter{UseSchema: true}
+	fltrs = append(fltrs, fmtfltr)
 
 	var err error
 	pipeline := kio.Pipeline{
