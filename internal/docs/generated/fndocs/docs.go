@@ -23,6 +23,91 @@ var DocExamples = `
   kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1
 `
 
+var EvalShort = `Execute function on resources`
+var EvalLong = `
+  kpt fn eval [DIR|-] [flags]
+
+Args:
+
+  DIR|-:
+    Path to the local directory containing resources. Defaults to the current
+    working directory. Using '-' as the directory path will cause ` + "`" + `eval` + "`" + ` to
+    read resources from ` + "`" + `stdin` + "`" + ` and write the output to ` + "`" + `stdout` + "`" + `.
+
+Flags:
+
+  --image:
+    Container image of the function to execute e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `
+  
+  --exec-path:
+    Path to the local executable binary to execute as a function.
+    
+  --fn-config:
+    Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
+  
+  --include-meta-resources:
+    If enabled, meta resources (i.e. ` + "`" + `Kptfile` + "`" + ` and ` + "`" + `functionConfig` + "`" + `) are included
+    in the input to the function. By default it is disabled.
+  
+  --network:
+    If enabled, container functions are allowed to access network.
+    By default is it disabled.
+  
+  --mount:
+    List of storage options to enable reading from the local filesytem. By default,
+    container functions can not access the local filesystem. It accepts the same options
+    as specified on the [Docker Volumes] for ` + "`" + `docker run` + "`" + `. All volumes are mounted
+    readonly by default. Specify ` + "`" + `rw=true` + "`" + ` to mount volumes in read-write mode.
+  
+  --env:
+    List of local environment variables to be exported to the container function.
+    By default, none of local environment variables are made available to the
+    container running the function. The value can be in ` + "`" + `key=value` + "`" + ` format or only
+    the key of an already exported environment variable.
+  
+  --as-current-user:
+    Use the ` + "`" + `uid` + "`" + ` and ` + "`" + `gid` + "`" + ` of the kpt process for container function execution.
+  
+  --results-dir:
+    Path to a directory to write structured results. Directory must exist.
+    Structured results emitted by the functions are aggregated and saved
+    to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
+    If not specified, no result files are written to the local filesystem.
+    
+  --dry-run:
+    If enabled, the resources are not written to local filesystem, instead they
+    are written to stdout. By defaults it is disabled.
+    
+`
+var EvalExamples = `
+  # execute container my-fn on the resources in DIR directory and
+  # write output back to DIR
+  $ kpt fn --image gcr.io/example.com/my-fn eval DIR
+
+  # execute container my-fn on the resources in DIR directory with
+  # ` + "`" + `functionConfig` + "`" + ` my-fn-config
+  $ kpt fn --image gcr.io/example.com/my-fn --fn-config my-fn-config eval DIR
+
+  # execute container my-fn with an input ConfigMap containing ` + "`" + `data: {foo: bar}` + "`" + `
+  $ kpt fn --image gcr.io/example.com/my-fn:v1.0.0 eval DIR -- foo=bar
+
+  # execute executable my-fn on the resources in DIR directory and
+  # write output back to DIR
+  $ kpt fn --exec-path ./my-fn eval DIR
+
+  # execute container my-fn on the resources in DIR directory,
+  # save structured results in /tmp/my-results dir and write output back to DIR
+  $ kpt fn --image gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir eval DIR
+
+  # execute container my-fn on the resources in DIR directory with network access enabled,
+  # and write output back to DIR
+  $ kpt fn --image gcr.io/example.com/my-fn --network eval DIR
+
+  # execute container my-fn on the resource in DIR and export KUBECONFIG
+  # and foo environment variable
+  $ kpt fn --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar eval DIR
+`
+
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
 var ExportLong = `
   kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
@@ -80,33 +165,6 @@ var RenderExamples = `
 
   # Render my-package-dir
   $ kpt fn render my-package-dir
-`
-
-var RunShort = `Locally execute one or more functions in containers`
-var RunLong = `
-  kpt fn run DIR [flags]
-
-If the container exits with non-zero status code, run will fail and print the
-container ` + "`" + `STDERR` + "`" + `.
-
-  DIR:
-    Path to a package directory.  Defaults to stdin if unspecified.
-`
-var RunExamples = `
-  # read the Resources from DIR, provide them to a container my-fun as input,
-  # write my-fn output back to DIR
-  kpt fn run DIR/ --image gcr.io/example.com/my-fn
-
-  # provide the my-fn with an input ConfigMap containing ` + "`" + `data: {foo: bar}` + "`" + `
-  kpt fn run DIR/ --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
-
-  # run the functions in FUNCTIONS_DIR against the Resources in DIR
-  kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
-
-
-  # discover functions in DIR and run them against Resource in DIR.
-  # functions may be scoped to a subset of Resources -- see ` + "`" + `kpt help fn run` + "`" + `
-  kpt fn run DIR/
 `
 
 var SinkShort = `Specify a directory as an output sink package`
