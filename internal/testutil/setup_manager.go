@@ -234,7 +234,7 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 		g.T, filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir), expectedKptfile)
 }
 
-func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {
+func (g *TestSetupManager) AssertLocalDataEquals(path string, addMergeCommentToSource bool) bool {
 	var sourceDir string
 	if filepath.IsAbs(path) {
 		sourceDir = path
@@ -242,7 +242,7 @@ func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {
 		sourceDir = filepath.Join(g.Repos[Upstream].DatasetDirectory, path)
 	}
 	destDir := filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir)
-	return g.Repos[Upstream].AssertEqual(g.T, sourceDir, destDir)
+	return g.Repos[Upstream].AssertEqual(g.T, sourceDir, destDir, addMergeCommentToSource)
 }
 
 func (g *TestSetupManager) Clean() {

@@ -52,7 +52,9 @@ func TestCmd_execute(t *testing.T) {
 	err := r.Command.Execute()
 
 	assert.NoError(t, err)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest)
+
+	// verify the cloned contents matches the repository with merge comment added
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true)
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
@@ -110,7 +112,9 @@ func TestCmdMainBranch_execute(t *testing.T) {
 	err = r.Command.Execute()
 
 	assert.NoError(t, err)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest)
+
+	// verify the cloned contents matches the repository with merge comment added
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true)
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)

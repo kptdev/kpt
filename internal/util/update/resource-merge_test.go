@@ -247,7 +247,7 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 				t.FailNow()
 			}
 
-			testutil.KptfileAwarePkgEqual(t, local, expected)
+			testutil.KptfileAwarePkgEqual(t, local, expected, false)
 		})
 	}
 }
