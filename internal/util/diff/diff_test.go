@@ -153,7 +153,7 @@ func TestCommand_Diff(t *testing.T) {
 >       targetPort: 80
 `,
 		},
-		"omit nested packages": {
+		"nested packages updated in local": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
 					{
@@ -203,7 +203,7 @@ func TestCommand_Diff(t *testing.T) {
 
 		//nolint:gocritic
 		// TODO(mortent): Diff functionality must be updated to handle nested packages.
-		"nested packages": {
+		"nested package updated in upstream": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
 					{
@@ -300,10 +300,6 @@ func filterDiffMetadata(r io.Reader) string {
 		text := scanner.Text()
 		// filter out the diff command that contains directory names
 		if strings.HasPrefix(text, "diff ") {
-			continue
-		}
-		// Filter out subpackage difference containing directory name
-		if strings.HasPrefix(text, "Only in /tmp/") {
 			continue
 		}
 		b.WriteString(text)
