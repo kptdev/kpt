@@ -15,6 +15,7 @@
 package pkgutil_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -89,6 +90,125 @@ func TestWalkPackage(t *testing.T) {
 				}
 
 				relPath, err := filepath.Rel(pkgPath, s)
+				if err != nil {
+					return err
+				}
+				visited = append(visited, relPath)
+				return nil
+			}); !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			sort.Strings(visited)
+
+			assert.Equal(t, tc.expected, visited)
+		})
+	}
+}
+
+func TestCopyPackage(t *testing.T) {
+	testCases := map[string]struct {
+		pkg                *pkgbuilder.RootPkg
+		copyRootKptfile    bool
+		includeSubpackages bool
+		expected           []string
+	}{
+		"subpackacges without root kptfile": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:    false,
+			includeSubpackages: true,
+			expected: []string{
+				".",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"ignores .git folder": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithFile("abc.yaml", "42").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg(".git").
+						WithFile("INDEX", "ABC123"),
+				),
+			includeSubpackages: false,
+			expected: []string{
+				".",
+				"abc.yaml",
+			},
+		},
+		"ignore subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:    true,
+			includeSubpackages: false,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"test.txt",
+			},
+		},
+		"include subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:    true,
+			includeSubpackages: true,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
+			dest, err := ioutil.TempDir("", "kpt-")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.includeSubpackages)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			var visited []string
+			if err = filepath.Walk(dest, func(s string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				relPath, err := filepath.Rel(dest, s)
 				if err != nil {
 					return err
 				}
