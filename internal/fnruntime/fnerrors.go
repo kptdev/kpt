@@ -49,30 +49,15 @@ type ExecError struct {
 // String returns string representation of the failure.
 func (fe *ExecError) String() string {
 	var b strings.Builder
-	universalIndent := strings.Repeat(" ", FnExecErrorIndentation)
-	b.WriteString(universalIndent + "Stderr:\n")
 
-	lineIndent := strings.Repeat(" ", FnExecErrorIndentation+2)
-	if !fe.TruncateOutput {
-		// stderr string should have indentations
-		for _, s := range strings.Split(fe.Stderr, "\n") {
-			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
-		}
-	} else {
-		printedLines := 0
-		lines := strings.Split(fe.Stderr, "\n")
-		for i, s := range lines {
-			if i >= FnExecErrorTruncateLines {
-				break
-			}
-			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
-			printedLines++
-		}
-		if printedLines < len(lines) {
-			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated, use '--truncate-output=false' to disable)\n", len(lines)-printedLines))
-		}
+	errLines := &multiLineFormatter{
+		Title:          "Stderr",
+		Lines:          strings.Split(fe.Stderr, "\n"),
+		UseQuote:       true,
+		TruncateOutput: fe.TruncateOutput,
 	}
-	b.WriteString(fmt.Sprintf(universalIndent+"Exit Code: %d\n", fe.ExitCode))
+	b.WriteString(errLines.String())
+	b.WriteString(fmt.Sprintf("  Exit Code: %d\n", fe.ExitCode))
 	return b.String()
 }
 

@@ -176,19 +176,18 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 // format on kpt CLI.
 func printFnResult(ctx context.Context, fnResult *fnresult.Result) {
 	pr := printer.FromContextOrDie(ctx)
-	printOpt := printer.NewOpt()
 	if len(fnResult.Results) > 0 {
 		// function returned structured results
-		pr.OptPrintf(printOpt, "  Results:\n")
 		var lines []string
 		for _, item := range fnResult.Results {
 			lines = append(lines, resultToString(item))
 		}
 		ri := &multiLineFormatter{
+			Title:          "Results",
 			Lines:          lines,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.OptPrintf(printOpt, "%s", ri.String())
+		pr.Printf("%s", ri.String())
 	}
 }
 
@@ -198,8 +197,8 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
 	printOpt := printer.NewOpt()
 	if len(fnErr.Stderr) > 0 {
-		pr.OptPrintf(printOpt.Stderr(), "  Stderr:\n")
 		errLines := &multiLineFormatter{
+			Title:          "Stderr",
 			Lines:          strings.Split(fnErr.Stderr, "\n"),
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
@@ -212,6 +211,9 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 // multiLineFormatter knows how to format multiple lines in pretty format
 // that can be displayed to an end user.
 type multiLineFormatter struct {
+	// Title under which lines need to be printed
+	Title string
+
 	// Lines to be printed on the CLI.
 	Lines []string
 
@@ -234,6 +236,8 @@ func (ri *multiLineFormatter) String() string {
 	}
 
 	var b strings.Builder
+
+	b.WriteString(fmt.Sprintf("  %s:\n", ri.Title))
 	lineIndent := strings.Repeat(" ", FnExecErrorIndentation+2)
 	if !ri.TruncateOutput {
 		// stderr string should have indentations
