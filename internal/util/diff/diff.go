@@ -28,9 +28,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
@@ -115,7 +115,7 @@ func (c *Command) Run(ctx context.Context) error {
 		}
 	}()
 
-	err = copyutil.CopyDir(c.Path, currPkg)
+	err = pkgutil.CopyPackage(c.Path, currPkg, true, false)
 	if err != nil {
 		return errors.Errorf("failed to stage current package: %v", err)
 	}
