@@ -3,7 +3,7 @@ kind: Kptfile
 metadata:
   name: app
 pipeline:
-  mutators:
-  - image: gcr.io/kpt-fn/kubeval:v0.1
+  validators:
+  - image: gcr.io/kpt-fn/kubeval:unstable
     configMap:
       strict: "true"

@@ -4,11 +4,13 @@
 package cmdeval
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
@@ -18,16 +20,17 @@ import (
 )
 
 // GetEvalFnRunner returns a EvalFnRunner.
-func GetEvalFnRunner(name string) *EvalFnRunner {
-	r := &EvalFnRunner{}
+func GetEvalFnRunner(ctx context.Context, name string) *EvalFnRunner {
+	r := &EvalFnRunner{Ctx: ctx}
 	c := &cobra.Command{
 		Use:     "eval [DIR | -]",
+		Short:   docs.RunShort,
+		Long:    docs.RunLong,
+		Example: docs.RunExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
 
-	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
-		"also print resources from subpackages.")
 	r.Command = c
 	r.Command.Flags().BoolVar(
 		&r.DryRun, "dry-run", false, "print results to stdout")
@@ -36,23 +39,17 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 		"run this image as a function")
 	r.Command.Flags().StringVar(
 		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
-
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
-
 	r.Command.Flags().BoolVar(
 		&r.IncludeMetaResources, "include-meta-resources", false, "include package meta resources in function input")
-
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
-
 	r.Command.Flags().BoolVar(
 		&r.Network, "network", false, "enable network access for functions that declare it")
 	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
-	r.Command.Flags().BoolVar(
-		&r.LogSteps, "log-steps", false, "log steps to stderr")
 	r.Command.Flags().StringArrayVarP(
 		&r.Env, "env", "e", []string{},
 		"a list of environment variables to be used by functions")
@@ -61,13 +58,12 @@ func GetEvalFnRunner(name string) *EvalFnRunner {
 	return r
 }
 
-func EvalCommand(name string) *cobra.Command {
-	return GetEvalFnRunner(name).Command
+func EvalCommand(ctx context.Context, name string) *cobra.Command {
+	return GetEvalFnRunner(ctx, name).Command
 }
 
 // EvalFnRunner contains the run function
 type EvalFnRunner struct {
-	IncludeSubpackages   bool
 	Command              *cobra.Command
 	DryRun               bool
 	Image                string
@@ -77,10 +73,10 @@ type EvalFnRunner struct {
 	ResultsDir           string
 	Network              bool
 	Mounts               []string
-	LogSteps             bool
 	Env                  []string
 	AsCurrentUser        bool
 	IncludeMetaResources bool
+	Ctx                  context.Context
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -275,6 +271,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	r.RunFns = runfn.RunFns{
+		Ctx:                  r.Ctx,
 		Functions:            fns,
 		Output:               output,
 		Input:                input,
@@ -282,7 +279,6 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Network:              r.Network,
 		StorageMounts:        storageMounts,
 		ResultsDir:           r.ResultsDir,
-		LogSteps:             r.LogSteps,
 		Env:                  r.Env,
 		AsCurrentUser:        r.AsCurrentUser,
 		FnConfigPath:         r.FnConfigPath,

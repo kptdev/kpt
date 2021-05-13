@@ -14,6 +14,7 @@ not be capitalized, for example `get`, `update`, `fn`.
 The documentation for each command should be focused and concise. Any fundamental
 concepts or concerns cutting across many command should be covered in the kpt book
 and the reference docs should provide deep links to the relevant content.
+Args, flags, and env vars should be listed in alphabetical order.
 
 ### Synopsis
 <!--mdtogo:Long-->

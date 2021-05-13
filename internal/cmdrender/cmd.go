@@ -17,10 +17,11 @@ package cmdrender
 
 import (
 	"context"
+	"fmt"
 	"os"
 
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
@@ -29,13 +30,15 @@ import (
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
 	c := &cobra.Command{
-		Use:     "render [DIR]",
-		Short:   "render",
-		Long:    "render",
-		Example: "render",
+		Use:     "render [PKG_PATH] [flags]",
+		Short:   docs.RenderShort,
+		Long:    docs.RenderShort + "\n" + docs.RenderLong,
+		Example: docs.RenderExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
+		"path to a directory to save function results")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -47,24 +50,31 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function pipeline run command
 type Runner struct {
-	pkgPath string
-	Command *cobra.Command
-	ctx     context.Context
+	pkgPath        string
+	resultsDirPath string
+	Command        *cobra.Command
+	ctx            context.Context
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
-	const op errors.Op = "fn.preRunE"
-
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()
 		if err != nil {
-			return errors.E(op, err)
+			return err
 		}
 		r.pkgPath = wd
 	} else {
 		// resolve and validate the provided path
 		r.pkgPath = args[0]
+	}
+	if r.resultsDirPath != "" {
+		if _, err := os.Stat(r.resultsDirPath); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return fmt.Errorf("results-dir %q must exist", r.resultsDirPath)
+			}
+			return fmt.Errorf("results-dir %q check failed: %w", r.resultsDirPath, err)
+		}
 	}
 	return nil
 }
@@ -75,7 +85,8 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 	executor := Executor{
-		PkgPath: r.pkgPath,
+		PkgPath:        r.pkgPath,
+		ResultsDirPath: r.resultsDirPath,
 	}
 	if err = executor.Execute(r.ctx); err != nil {
 		return err

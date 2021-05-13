@@ -4,6 +4,7 @@
 package cmdeval
 
 import (
+	"context"
 	"io"
 	"os"
 	"strings"
@@ -183,6 +184,7 @@ apiVersion: v1
 				ResultsDir:            "foo/",
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -211,27 +213,6 @@ apiVersion: v1
 			err:  "must have keys and values separated by",
 		},
 		{
-			name: "log steps",
-			args: []string{"eval", "dir", "--log-steps", "--image", "foo:bar"},
-			path: "dir",
-			expectedStruct: &runfn.RunFns{
-				Path:                  "dir",
-				LogSteps:              true,
-				Env:                   []string{},
-				ContinueOnEmptyResult: true,
-			},
-			expected: `
-metadata:
-  name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
-data: {}
-kind: ConfigMap
-apiVersion: v1
-`,
-		},
-		{
 			name: "envs",
 			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: "dir",
@@ -239,6 +220,7 @@ apiVersion: v1
 				Path:                  "dir",
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -260,6 +242,7 @@ apiVersion: v1
 				AsCurrentUser:         true,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -287,7 +270,7 @@ apiVersion: v1
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			r := GetEvalFnRunner("kpt")
+			r := GetEvalFnRunner(context.TODO(), "kpt")
 			// Don't run the actual command
 			r.Command.Run = nil
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error { return nil }

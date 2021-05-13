@@ -1,106 +1,91 @@
 ---
-title: "Preview"
+title: "`preview`"
 linkTitle: "preview"
 type: docs
 description: >
-   Preview prints the changes apply would make to the cluster
+   Preview the changes apply would make to the cluster
 ---
 <!--mdtogo:Short
-    Preview prints the changes apply would make to the cluster
+    Preview the changes apply would make to the cluster
 -->
 
-{{< asciinema key="live-preview" rows="10" preload="1" >}}
-
-The preview command will run through the same steps as apply, but
-it will only print what would happen when running apply against the current
-live cluster state. With the `--server-side` flag, the dry-run will
-be performed on resources sent to the server (but not actually applied),
-instead of less thorough dry-run calculations on the client.
-
-### Examples
-
-{{% hide %}}
-
-<!-- @makeWorkplace @verifyExamples-->
-```
-# Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-```
-
-<!-- @fetchPackage @verifyExamples-->
-```shell
-export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@next my-dir
-```
-
-<!-- @createKindCluster @verifyExamples-->
-```
-kind delete cluster && kind create cluster
-```
-
-<!-- @installResourceGroup @verifyExamples-->
-```
-kpt live install-resource-group
-```
-
-<!-- @initCluster @verifyExamples-->
-```
-kpt live init my-dir
-```
-
-{{% /hide %}}
-
-<!--mdtogo:Examples-->
-<!-- @livePreview @verifyExamples-->
-```shell
-# preview apply for a package
-kpt live preview my-dir/
-```
-
-<!-- @livePreview @verifyExamples-->
-```shell
-# preview destroy for a package
-kpt live preview --destroy my-dir/
-```
-<!--mdtogo-->
+`preview` shows the operations that will be done when running `apply` or 
+`destroy` against a cluster.
 
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live preview DIRECTORY [flags]
+kpt live preview [PKG_PATH|-] [flags]
 ```
 
 #### Args
 
 ```
-DIRECTORY:
-  One directory that contain k8s manifests. The directory
-  must contain exactly one ConfigMap with the grouping object annotation.
+PKG_PATH|-:
+  Path to the local package for which a preview of the operations of apply
+  or destroy should be displayed. It must contain a Kptfile with inventory
+  information. Defaults to the current working directory.
+  Using '-' as the package path will cause kpt to read resources from stdin.
 ```
 
 #### Flags
 
 ```
 --destroy:
-  If true, dry-run deletion of all resources.
-
---server-side:
-  Boolean which performs the dry-run by sending the resource to the server.
-  Default value is false (client-side dry-run). Available
-  in version v0.36.0 and above. If not available, the user will see:
-  "error: unknown flag".
+  If true, preview deletion of all resources.
 
 --field-manager:
-  String that can be set if --server-side flag is also set, which defines
-  the resources field owner during dry-run. Available
-  in version v0.36.0 and above. If not available, the user will see:
-  "error: unknown flag".
+  Identifier for the **owner** of the fields being applied. Only usable
+  when --server-side flag is specified. Default value is kubectl.
 
 --force-conflicts:
-  Boolean that can be set if --server-side flag is also set, which overrides
-  field ownership conflicts during dry-run. Available
-  in version v0.36.0 and above. If not available, the user will see:
-  "error: unknown flag".
+  Force overwrite of field conflicts during apply due to different field
+  managers. Only usable when --server-side flag is specified.
+  Default value is false (error and failure when field managers conflict).
+
+--install-resource-group:
+  Install the ResourceGroup CRD into the cluster if it isn't already
+  available. Default is false.
+
+--inventory-policy:
+  Determines how to handle overlaps between the package being currently applied
+  and existing resources in the cluster. The available options are:
+  
+    * strict: If any of the resources already exist in the cluster, but doesn't
+      belong to the current package, it is considered an error.
+    * adopt: If a resource already exist in the cluster, but belongs to a 
+      different package, it is considered an error. Resources that doesn't belong
+      to other packages are adopted into the current package.
+      
+  The default value is `strict`.
+
+--output:
+  Determines the output format for the status information. Must be one of the following:
+  
+    * events: The output will be a list of the status events as they become available.
+    * json: The output will be a list of the status events as they become available,
+      each formatted as a json object.
+    * table: The output will be presented as a table that will be updated inline
+      as the status of resources become available.
+
+  The default value is ‘events’.
+
+--server-side:
+  Perform the apply operation server-side rather than client-side.
+  Default value is false (client-side).
+```
+<!--mdtogo-->
+
+### Examples
+
+<!--mdtogo:Examples-->
+```shell
+# preview apply for the package in the current directory. 
+kpt live preview
+```
+
+```shell
+# preview destroy for a package in the my-dir directory.
+kpt live preview --destroy my-dir
 ```
 <!--mdtogo-->

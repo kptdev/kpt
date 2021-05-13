@@ -33,7 +33,7 @@ rm -r wordpress/mysql
 
 We're going to add back the `mysql` subpackage using the two different approaches:
 
-### Create a new package
+## Create a new package
 
 ```shell
 $ mkdir wordpress/mysql
@@ -43,7 +43,7 @@ $ kpt pkg init wordpress/mysql
 
 This creates a [dependent package].
 
-### Get an existing package
+## Get an existing package
 
 ```shell
 $ rm -rf wordpress/mysql

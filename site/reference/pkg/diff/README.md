@@ -63,12 +63,12 @@ VERSION:
   # Show changes using 'meld' commandline tool.
   kpt pkg diff @master --diff-tool meld
 
---diff-opts:
+--diff-tool-opts:
   Commandline options to use with the command line diffing tool.
   Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
   
   # Show changes using the diff command with recursive options.
-  kpt pkg diff @master --diff-tool meld --diff-opts "-r"
+  kpt pkg diff @master --diff-tool meld --diff-tool-opts "-r"
 ```
 
 #### Environment Variables

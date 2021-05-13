@@ -3,17 +3,20 @@ title: "`init`"
 linkTitle: "init"
 type: docs
 description: >
-   Initialize an empty package.
+  Initialize an empty package.
 ---
+
 <!--mdtogo:Short
     Initialize an empty package.
 -->
 
-`init` initializes an existing empty directory as a `kpt` package by adding
+`init` initializes an existing empty directory as a kpt package by adding
 a Kptfile and a placeholder `README.md` file.
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```
 kpt pkg init [DIR] [flags]
 ```
@@ -37,6 +40,7 @@ DIR:
 --site
   Link to page with information about the package.
 ```
+
 <!--mdtogo-->
 
 ### Examples
@@ -44,6 +48,7 @@ DIR:
 {{% hide %}}
 
 <!-- @makeWorkplace @verifyExamples-->
+
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
@@ -55,6 +60,7 @@ cd $TEST_HOME
 <!--mdtogo:Examples-->
 
 <!-- @pkgInit @verifyStaleExamples-->
+
 ```shell
 # Creates a new Kptfile with metadata in the cockroachdb directory.
 mkdir cockroachdb
@@ -66,4 +72,5 @@ kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
 # Creates a new Kptfile without metadata in the current directory.
 kpt pkg init
 ```
+
 <!--mdtogo-->

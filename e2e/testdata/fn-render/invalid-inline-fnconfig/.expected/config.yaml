@@ -13,7 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "missing Resource metadata"
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:unstable"
-  [PASS] "gcr.io/kpt-fn/set-namespace:unstable"
+stdErr: 'Error: invalid pipeline: function "gcr.io/kpt-fn/set-label:unstable": functionConfig must be a valid KRM resource with `apiVersion` and `kind` fields'

@@ -41,7 +41,6 @@ func GetMain(ctx context.Context) *cobra.Command {
 		Use:          "kpt",
 		Short:        overview.ReferenceShort,
 		Long:         overview.ReferenceLong,
-		Example:      overview.ReferenceExamples,
 		SilenceUsage: true,
 		// We handle all errors in main after return from cobra so we can
 		// adjust the error message coming from libraries

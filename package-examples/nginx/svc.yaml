@@ -22,4 +22,5 @@ spec:
   selector:
     app: nginx
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 80

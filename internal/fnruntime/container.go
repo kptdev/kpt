@@ -47,25 +47,6 @@ type ContainerFnPermission struct {
 	AllowMount   bool
 }
 
-// ContainerFnWrapper wraps the real function filter, prints
-// the function running progress and failures.
-type ContainerFnWrapper struct {
-	Fn *ContainerFn
-}
-
-func (fw *ContainerFnWrapper) Run(r io.Reader, w io.Writer) error {
-	pr := printer.FromContextOrDie(fw.Fn.Ctx)
-	printOpt := printer.NewOpt()
-	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fw.Fn.Image)
-	err := fw.Fn.Run(r, w)
-	if err != nil {
-		pr.OptPrintf(printOpt, "[FAIL] %q\n", fw.Fn.Image)
-		return err
-	}
-	pr.OptPrintf(printOpt, "[PASS] %q\n", fw.Fn.Image)
-	return nil
-}
-
 // ContainerFn implements a KRMFn which run a containerized
 // KRM function
 type ContainerFn struct {
@@ -96,7 +77,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	// output
 	err := f.prepareImage()
 	if err != nil {
-		return fmt.Errorf("failed to check function image existence: %w", err)
+		return err
 	}
 
 	errSink := bytes.Buffer{}
@@ -183,7 +164,7 @@ func (f *ContainerFn) prepareImage() error {
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("function image %q doesn't exist: %w", f.Image, err)
+		return fmt.Errorf("function image %q doesn't exist", f.Image)
 	}
 	return nil
 }

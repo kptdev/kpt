@@ -4,4 +4,3 @@
 > and applying Kubernetes resources.
 
 [Learn More](?id=overview)
-[GitHub](https://github.com/GoogleContainerTools/kpt)

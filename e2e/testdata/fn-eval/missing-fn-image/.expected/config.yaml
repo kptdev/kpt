@@ -17,4 +17,7 @@ exitCode: 1
 image: gcr.io/kpt-fn/dne # non-existing image
 args:
   namespace: staging
-stdErr: 'failed to check function image existence: function image "gcr.io/kpt-fn/dne" doesn''t exist'
+stdErr: "error: function image \"gcr.io/kpt-fn/dne\" doesn't exist"
+stdOut: |
+  [RUNNING] "gcr.io/kpt-fn/dne"
+  [FAIL] "gcr.io/kpt-fn/dne"

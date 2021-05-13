@@ -101,7 +101,7 @@ error message`,
     "error message"
     "error message"
     "error message"
-    ...(1 line(s) truncated)
+    ...(1 line(s) truncated, use '--truncate-output=false' to disable)
   Exit Code: 1
 `,
 		},
@@ -124,7 +124,7 @@ error message`,
     "error message"
     "error message"
     "error message"
-    ...(4 line(s) truncated)
+    ...(4 line(s) truncated, use '--truncate-output=false' to disable)
   Exit Code: 1
 `,
 		},

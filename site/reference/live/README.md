@@ -1,23 +1,16 @@
 ---
-title: "Live"
+title: "`live`"
 linkTitle: "live"
 weight: 3
 type: docs
 description: >
-   Reconcile configuration files with the live state
+   Deploy local packages to a cluster.
 ---
 <!--mdtogo:Short
-    Reconcile configuration files with the live state
+    Deploy local packages to a cluster.
 -->
 
-{{< asciinema key="live" rows="10" preload="1" >}}
-
 <!--mdtogo:Long-->
-| Reads From              | Writes To                |
-|-------------------------|--------------------------|
-| local files             | cluster                  |
-| cluster                 | stdout                   |
-
-Live contains the next-generation versions of apply related commands for
-deploying local configuration packages to a cluster.
+The `live` command group contains subcommands for deploying local
+`kpt` packages to a cluster.
 <!--mdtogo-->

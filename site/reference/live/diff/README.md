@@ -1,53 +1,59 @@
 ---
-title: "Diff"
+title: "`diff`"
 linkTitle: "diff"
 type: docs
 description: >
-   Diff the local package config against the live cluster resources
+   Display the diff between the local package and the live cluster resources.
 ---
 <!--mdtogo:Short
-    Diff the local package config against the live cluster resources
+    Display the diff between the local package and the live cluster resources.
 -->
 
-The diff command compares the live cluster state of each pacakge
-resource against the local package config.
-
-### Examples
-<!--mdtogo:Examples-->
-```shell
-# diff the config in "my-dir" against the live cluster resources
-kpt live diff my-dir/
-
-# specify the local diff program to use
-export KUBECTL_EXTERNAL_DIFF=meld; kpt live diff my-dir/
-```
-<!--mdtogo-->
+`diff` compares the live cluster state of each package resource against the 
+local package config.
 
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live diff DIR
-
-Output is always YAML.
-
-KUBECTL_EXTERNAL_DIFF environment variable can be used to select your own diff command. By default, the "diff" command
-available in your path will be run with "-u" (unicode) and "-N" (treat new files as empty) options.
+kpt live diff [PKG_PATH|-]
 ```
 
 #### Args
-
 ```
-DIR:
-  Path to a package directory.  The directory must contain exactly one ConfigMap with the inventory annotation.
+PKG_PATH|-:
+  Path to the local package which should be diffed against the cluster. It must
+  contain a Kptfile with inventory information. Defaults to the current working
+  directory.
+  Using '-' as the package path will cause kpt to read resources from stdin.
 ```
 
-#### Exit Status
-
+#### Environment Variables
 ```
-The following exit values shall be returned:
+KUBECTL_EXTERNAL_DIFF:
+  Commandline diffing tool ('diff; by default) that will be used to show
+  changes.
+  
+  # Use meld to show changes
+  KPT_EXTERNAL_DIFF=meld kpt live diff
+```
 
-0 No differences were found. 1 Differences were found. >1 kpt live or diff failed with an error.
+#### Exit statuses
+```
+The following exit values are returned:
 
-Note: KUBECTL_EXTERNAL_DIFF, if used, is expected to follow that convention.
+  * 0: No differences were found.
+  * 1: Differences were found.
+  * >1 kpt live or diff failed with an error.
+```
+<!--mdtogo-->
+
+### Examples
+<!--mdtogo:Examples-->
+```shell
+# diff the config in the current directory against the live cluster resources.
+kpt live diff
+
+# specify the local diff program to use.
+export KUBECTL_EXTERNAL_DIFF=meld; kpt live diff my-dir
 ```
 <!--mdtogo-->
