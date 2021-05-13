@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: 'Error: unable to parse "Kptfile"'
+stdErr: "can't be read.\n\nDetails:\nyaml: unmarshal errors:\n  line 10: cannot unmarshal !!map into string"
