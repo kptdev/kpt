@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package errors
+package fnruntime
 
 import (
 	"fmt"
 	"strings"
+
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 )
 
 const (
@@ -26,9 +28,8 @@ const (
 	FnExecErrorIndentation = 2
 )
 
-// FnExecError contains the information about the function failure that will
-// be outputted.
-type FnExecError struct {
+// ExecError implements an error type that stores information about function failure.
+type ExecError struct {
 	// OriginalErr is the original error returned from function runtime
 	OriginalErr error
 
@@ -41,42 +42,25 @@ type FnExecError struct {
 	// ExitCode is the exit code returned from function
 	ExitCode int `yaml:"exitCode,omitempty"`
 
-	// TODO: This introduces import cycle between errors and fnresult package.
-	// Will require moving fnErrors outside errors package.
 	// FnResult is the structured result returned from the function
-	// FnResult *fnresult.Result
+	FnResult *fnresult.Result
 }
 
 // String returns string representation of the failure.
-func (fe *FnExecError) String() string {
+func (fe *ExecError) String() string {
 	var b strings.Builder
-	universalIndent := strings.Repeat(" ", FnExecErrorIndentation)
-	b.WriteString(universalIndent + "Stderr:\n")
 
-	lineIndent := strings.Repeat(" ", FnExecErrorIndentation+2)
-	if !fe.TruncateOutput {
-		// stderr string should have indentations
-		for _, s := range strings.Split(fe.Stderr, "\n") {
-			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
-		}
-	} else {
-		printedLines := 0
-		lines := strings.Split(fe.Stderr, "\n")
-		for i, s := range lines {
-			if i >= FnExecErrorTruncateLines {
-				break
-			}
-			b.WriteString(fmt.Sprintf(lineIndent+"%q\n", s))
-			printedLines++
-		}
-		if printedLines < len(lines) {
-			b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated, use '--truncate-output=false' to disable)\n", len(lines)-printedLines))
-		}
+	errLines := &multiLineFormatter{
+		Title:          "Stderr",
+		Lines:          strings.Split(fe.Stderr, "\n"),
+		UseQuote:       true,
+		TruncateOutput: fe.TruncateOutput,
 	}
-	b.WriteString(fmt.Sprintf(universalIndent+"Exit Code: %d\n", fe.ExitCode))
+	b.WriteString(errLines.String())
+	b.WriteString(fmt.Sprintf("  Exit Code: %d\n", fe.ExitCode))
 	return b.String()
 }
 
-func (fe *FnExecError) Error() string {
+func (fe *ExecError) Error() string {
 	return fe.String()
 }

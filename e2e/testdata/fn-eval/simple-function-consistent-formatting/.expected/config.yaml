@@ -12,5 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-exitCode: 1
-stdErr: "can't be read.\n\nDetails:\nyaml: line 10: mapping values are not allowed in this context"
+testType: eval
+image: gcr.io/kpt-fn/set-namespace:v0.1
+args:
+  namespace: staging

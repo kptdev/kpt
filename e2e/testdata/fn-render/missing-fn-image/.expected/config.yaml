@@ -13,7 +13,7 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: 'failed to check function image existence: function image "gcr.io/kpt-fn/set-label1" doesn''t exist:'
+stdErr: "Error: function image \"gcr.io/kpt-fn/set-label1\" doesn't exist"
 stdOut: |
   [RUNNING] "gcr.io/kpt-fn/set-namespace:unstable"
   [PASS] "gcr.io/kpt-fn/set-namespace:unstable"

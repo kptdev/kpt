@@ -22,26 +22,7 @@ import (
 
 //nolint:gochecknoinits
 func init() {
-	AddErrorResolver(&fnExecErrorResolver{})
 	AddErrorResolver(&alreadyHandledErrorResolver{})
-}
-
-// gitExecErrorResolver is an implementation of the ErrorResolver interface
-// that can produce error messages for errors of the FnExecError type.
-type fnExecErrorResolver struct{}
-
-func (*fnExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	kioErr := errors.UnwrapKioError(err)
-
-	var fnErr *errors.FnExecError
-	if !goerrors.As(kioErr, &fnErr) {
-		return ResolvedResult{}, false
-	}
-
-	return ResolvedResult{
-		Message:  fnErr.String(),
-		ExitCode: 1,
-	}, true
 }
 
 type alreadyHandledErrorResolver struct{}

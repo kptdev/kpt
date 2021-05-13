@@ -15,13 +15,13 @@ description: >
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live preview [PKG_PATH|-] [flags]
+kpt live preview [PKG_PATH | -] [flags]
 ```
 
 #### Args
 
 ```
-PKG_PATH|-:
+PKG_PATH | -:
   Path to the local package for which a preview of the operations of apply
   or destroy should be displayed. It must contain a Kptfile with inventory
   information. Defaults to the current working directory.
