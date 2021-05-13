@@ -93,10 +93,12 @@ Here is what's happening:
 1. The `source` command is used to read the resources in the package hierarchy (`wordpress` and
    `mysql` packages). The output of the `source` command follows the Function
    Specification standard, which are going to look at in chapter 5.
-2. The output of the `source` function is piped into the `set-namespace` function. `eval` function is instructed to read inputs items from the `stdin` using `-`. This is the convention used in all
-   commands in kpt that can read from `stdin`. `set-namespace` function mutates the input items
-   and emits the output items.
-3. The output of the `set-namespace` function is piped into `set-label` function which adds the given labels to all resources.
+2. The output of the `source` function is piped into the `set-namespace` function. `eval` function
+   is instructed to read inputs items from the `stdin` using `-`. This is the convention used in all
+   commands in kpt that can read from `stdin`. `set-namespace` function mutates the input items and
+   emits the output items.
+3. The output of the `set-namespace` function is piped into `set-label` function which adds the
+   given labels to all resources.
 4. The `sink` command writes the output of `set-label` to the filesystem in-place.
 
 This is a low-level and less abstracted approach to executing functions. For example, you can write
