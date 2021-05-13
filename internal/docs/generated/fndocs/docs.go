@@ -111,31 +111,50 @@ var RunExamples = `
 
 var SinkShort = `Specify a directory as an output sink package`
 var SinkLong = `
-  kpt fn sink [DIR]
-  
+  kpt fn sink [DIR] [flags]
+
+Args:
+
   DIR:
-    Path to a package directory.  Defaults to stdout if unspecified.
+    Path to a package directory. Defaults to stdout if unspecified.
 `
 var SinkExamples = `
   # run a function using explicit sources and sinks
   kpt fn source DIR/ |
-    kpt fn run --image gcr.io/example.com/my-fn |
+    kpt fn eval --image gcr.io/example.com/my-fn |
     kpt fn sink DIR/
 `
 
 var SourceShort = `Specify a directory as an input source package`
 var SourceLong = `
-  kpt fn source [DIR...]
-  
+  kpt fn source [DIR] [flags]
+
+Args:
+
   DIR:
-    Path to a package directory.  Defaults to stdin if unspecified.
+    Path to a package directory. Defaults to stdin if unspecified.
+
+Flags:
+
+  --function-config:
+    Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function. This ` + "`" + `functionConfig` + "`" + `
+    will be used in ` + "`" + `functionConfig` + "`" + ` field in the output resource.
+  
+  --wrap-kind:
+    A string which will be used as the ` + "`" + `kind` + "`" + ` of output resource. By default it's
+    'ResourceList'.
+  
+  --wrap-version:
+    A string which will be used as the ` + "`" + `apiVersion` + "`" + ` of output resource. By default it's
+    'config.kubernetes.io/v1alpha1'.
 `
 var SourceExamples = `
+
   # print to stdout configuration from DIR/ formatted as an input source
   kpt fn source DIR/
 
   # run a function using explicit sources and sinks
   kpt fn source DIR/ |
-    kpt fn run --image gcr.io/example.com/my-fn |
+    kpt fn eval --image gcr.io/example.com/my-fn |
     kpt fn sink DIR/
 `
