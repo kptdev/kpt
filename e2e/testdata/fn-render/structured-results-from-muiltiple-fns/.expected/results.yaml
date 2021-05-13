@@ -34,10 +34,6 @@ items:
             path: resources.yaml
             index: 4
     - image: gcr.io/kpt-fn/kubeval:unstable
-      stderr: |
-        [ERROR] selector is required in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field selector
-        [ERROR] template is required in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field template
-        [ERROR] Invalid type. Expected: [integer,null], given: string in object 'apps/v1/Deployment//nginx-deployment' in file resources.yaml in field spec.replicas
       exitCode: 1
       results:
         - message: selector is required
