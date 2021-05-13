@@ -205,6 +205,8 @@ func TestCommand_Diff(t *testing.T) {
 			fetchRef: "main",
 			diffRef:  "main",
 			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
 			expDiff: `
 7c7
 <   replicas: 5
@@ -258,6 +260,8 @@ func TestCommand_Diff(t *testing.T) {
 			fetchRef: "main",
 			diffRef:  "main",
 			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
 			expDiff: `
 7c7
 <   replicas: 3
@@ -294,7 +298,9 @@ func TestCommand_Diff(t *testing.T) {
 				DiffToolOpts: tc.diffOpts,
 				Output:       diffOutput,
 			}).Run(fake.CtxWithNilPrinter())
-			assert.NoError(t, err)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
 			filteredOutput := filterDiffMetadata(diffOutput)
 			assert.Equal(t, strings.TrimSpace(tc.expDiff)+"\n", filteredOutput)
