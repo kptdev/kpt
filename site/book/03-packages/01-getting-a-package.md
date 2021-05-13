@@ -4,11 +4,11 @@ repository. Consumers fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case,
-we are specifying tag `v0.1`.
+we are specifying tag `v0.3`.
 
 ?> Refer to the [get command reference][get-doc] for usage.
 
@@ -26,14 +26,14 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: v0.1
+    ref: v0.3
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: package-examples/wordpress/v0.1
+    ref: package-examples/wordpress/v0.3
     commit: e0e0b3642969c2d14fe1d38d9698a73f18aa848f
 info:
   emails:
@@ -91,7 +91,7 @@ It is possible to specify a different local directory name to the `get` command.
 the following fetches the packages to a directory named `mywordpress`:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1 mywordpress
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and
