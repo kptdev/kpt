@@ -4,7 +4,7 @@ Regardless of how you have edited the package, you want to _render_ the package:
 $ kpt fn render wordpress
 ```
 
-> Refer to the [command reference][render-doc] for more details.
+?> Refer to the [render command reference][render-doc] for usage.
 
 `render` is a critical step in the package lifecycle. At a high level,
 it perform the following steps:

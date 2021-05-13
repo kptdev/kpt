@@ -385,7 +385,12 @@ func TestCommand_Diff3Parameters(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Expect 3 value to be printed (1 per source)
-	assert.Equal(t, 3, len(strings.Split(diffOutput.String(), " ")))
+	results := strings.Split(diffOutput.String(), " ")
+	assert.Equal(t, 3, len(results))
+	// Validate diff argument ordering
+	assert.Contains(t, results[0], LocalPackageSource)
+	assert.Contains(t, results[1], RemotePackageSource)
+	assert.Contains(t, results[2], TargetRemotePackageSource)
 }
 
 // Tests against directories in different states
@@ -437,4 +442,23 @@ func filterDiffMetadata(r io.Reader) string {
 		b.WriteString("\n")
 	}
 	return b.String()
+}
+
+func TestStagingDirectoryNames(t *testing.T) {
+	var tests = []struct {
+		source   string
+		branch   string
+		expected string
+	}{
+		{"source", "branch", "source-branch"},
+		{"source", "refs/tags/version", "source-version"},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.expected, func(t *testing.T) {
+			result := NameStagingDirectory(tt.source, tt.branch)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
 }
