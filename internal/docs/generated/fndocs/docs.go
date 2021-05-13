@@ -25,7 +25,7 @@ var DocExamples = `
 
 var EvalShort = `Execute function on resources`
 var EvalLong = `
-  kpt fn eval [DIR|-] [flags] [-- key-values]
+  kpt fn eval [DIR|-] [flags] [-- fn-args]
 
 Args:
 
@@ -34,13 +34,16 @@ Args:
     working directory. Using '-' as the directory path will cause ` + "`" + `eval` + "`" + ` to
     read resources from ` + "`" + `stdin` + "`" + ` and write the output to ` + "`" + `stdout` + "`" + `.
 
+  fn-args:
+    function arguments to be provided as input to the function. These must be
+    provided in the ` + "`" + `key=value` + "`" + ` format and come after the separator ` + "`" + `--` + "`" + `.
+
 Flags:
 
   --as-current-user:
     Use the ` + "`" + `uid` + "`" + ` and ` + "`" + `gid` + "`" + ` of the kpt process for container function execution.
-    Container functions are executed as ` + "`" + `nobody` + "`" + ` user which has very limited
-    privileges. You may want to use this flag to run higher privilege operations
-    such as mounting the local filesystem.
+    By default, container function is executed as ` + "`" + `nobody` + "`" + ` user. You may want to use
+    this flag to run higher privilege operations such as mounting the local filesystem.
   
   --dry-run:
     If enabled, the resources are not written to local filesystem, instead they
@@ -54,7 +57,9 @@ Flags:
   
   --exec-path:
     Path to the local executable binary to execute as a function. ` + "`" + `eval` + "`" + ` executes
-    only one function, so do not use ` + "`" + `--image` + "`" + ` flag with this flag.
+    only one function, so do not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful
+    for testing function locally during development. It enables faster dev iterations
+    by avoiding the function to be published as container image.
     
   --fn-config:
     Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
