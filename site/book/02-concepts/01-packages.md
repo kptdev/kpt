@@ -11,7 +11,7 @@ _subpackage_.
 Let's take a look at an example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 $ kpt pkg tree wordpress/
 PKG: wordpress
 ├── [Kptfile]  Kptfile wordpress

@@ -34,7 +34,7 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    # Change this from v0.1 to v0.2
+    # Change this from v0.3 to v0.4
     ref: v0.2
   updateStrategy: resource-merge
 ```
