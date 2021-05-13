@@ -188,33 +188,44 @@ var RenderExamples = `
   $ kpt fn render my-package-dir
 `
 
-var SinkShort = `Specify a directory as an output sink package`
+var SinkShort = `Write resources to a local directory`
 var SinkLong = `
-  kpt fn sink [DIR]
+  kpt fn sink DIR [flags]
   
   DIR:
-    Path to a package directory.  Defaults to stdout if unspecified.
+    Path to a local directory to resources to. Directory must exist.
 `
 var SinkExamples = `
-  # run a function using explicit sources and sinks
-  kpt fn source DIR/ |
+  # read resources from DIR directory, execute my-fn on them and write the
+  # output to DIR directory.
+  $ kpt fn source DIR |
     kpt fn run --image gcr.io/example.com/my-fn |
-    kpt fn sink DIR/
+    kpt fn sink DIR
 `
 
-var SourceShort = `Specify a directory as an input source package`
+var SourceShort = `Source resources from a local directory`
 var SourceLong = `
-  kpt fn source [DIR...]
-  
+  kpt fn source [DIR] [flags]
+
+Args:
+
   DIR:
-    Path to a package directory.  Defaults to stdin if unspecified.
+    Path to the local directory containing resources. Defaults to the current
+    working directory.
+
+Flags:
+
+  --fn-config:
+    Path to the file containing ` + "`" + `functionConfig` + "`" + `.
+  
 `
 var SourceExamples = `
-  # print to stdout configuration from DIR/ formatted as an input source
-  kpt fn source DIR/
+  # read resources from DIR directory and write the output on stdout.
+  $ kpt fn source DIR
 
-  # run a function using explicit sources and sinks
-  kpt fn source DIR/ |
+  # read resources from DIR directory, execute my-fn on them and write the
+  # output to DIR directory.
+  $ kpt fn source DIR |
     kpt fn run --image gcr.io/example.com/my-fn |
-    kpt fn sink DIR/
+    kpt fn sink DIR
 `

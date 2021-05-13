@@ -1,51 +1,45 @@
 ---
-title: "Sink"
+title: "`sink`"
 linkTitle: "sink"
 type: docs
 description: >
-   Specify a directory as an output sink package
+   Write resources to a local directory
 ---
 
 <!--mdtogo:Short
-    Specify a directory as an output sink package
+   Write resources to a local directory
 -->
 
-Implements a [sink function] by reading STDIN and writing configuration.
-
-Sink will not prune / delete files for delete resources because it only knows
-about files for which it sees input resources.
-
-### Examples
-
-<!--mdtogo:Examples-->
-
-```shell
-# run a function using explicit sources and sinks
-kpt fn source DIR/ |
-  kpt fn run --image gcr.io/example.com/my-fn |
-  kpt fn sink DIR/
-```
-
-<!--mdtogo-->
+`sink` reads resources from `stdin` and writes them to a local directory.
+It is useful for chaining functions using Unix pipe. For more details, refer to
+[Chaining functions].
 
 ### Synopsis
 
 <!--mdtogo:Long-->
 
 ```shell
-kpt fn sink [DIR]
+kpt fn sink DIR [flags]
 
 DIR:
-  Path to a package directory.  Defaults to stdout if unspecified.
+  Path to a local directory to resources to. Directory must exist.
 ```
 
 <!--mdtogo-->
 
-### Next Steps
+### Examples
 
-- Learn about [functions concepts] like sources, sinks, and pipelines.
-- See more examples of sink functions in the functions [catalog].
+<!--mdtogo:Examples-->
 
-[sink function]: https://kpt.dev#todo
-[functions concepts]: /book/02-concepts/02-functions
-[catalog]: https://kpt.dev#todo
+```shell
+# read resources from DIR directory, execute my-fn on them and write the
+# output to DIR directory.
+$ kpt fn source DIR |
+  kpt fn run --image gcr.io/example.com/my-fn |
+  kpt fn sink DIR
+```
+
+<!--mdtogo-->
+
+[Chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
+[Function Specification]: /book/05-developing-functions/02-function-specification

@@ -14,9 +14,9 @@ import (
 func GetSinkRunner(name string) *SinkRunner {
 	r := &SinkRunner{}
 	c := &cobra.Command{
-		Use:     "sink [DIR]",
+		Use:     "sink DIR [flags]",
 		Short:   fndocs.SinkShort,
-		Long:    fndocs.SinkLong,
+		Long:    fndocs.SinkShort + "\n" + fndocs.SinkLong,
 		Example: fndocs.SinkExamples,
 		RunE:    r.runE,
 		Args:    cobra.MinimumNArgs(1),
