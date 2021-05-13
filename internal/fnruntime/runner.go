@@ -229,7 +229,9 @@ type multiLineFormatter struct {
 
 // String returns multiline string.
 func (ri *multiLineFormatter) String() string {
-	ri.MaxLines = FnExecErrorTruncateLines
+	if ri.MaxLines == 0 {
+		ri.MaxLines = FnExecErrorTruncateLines
+	}
 	strInterpolator := "%s"
 	if ri.UseQuote {
 		strInterpolator = "%q"
