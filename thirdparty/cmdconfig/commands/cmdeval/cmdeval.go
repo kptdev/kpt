@@ -24,7 +24,7 @@ import (
 func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r := &EvalFnRunner{Ctx: ctx}
 	c := &cobra.Command{
-		Use:     "eval [DIR | -] [flags]",
+		Use:     "eval [DIR | -] [flags] [--fn-args]",
 		Short:   docs.EvalShort,
 		Long:    docs.EvalShort + "\n" + docs.EvalLong,
 		Example: docs.EvalExamples,
