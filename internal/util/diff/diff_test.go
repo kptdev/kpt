@@ -165,7 +165,45 @@ func TestCommand_Diff(t *testing.T) {
 >       targetPort: 80
 `,
 		},
-		"nested packages updated in local": {
+		"nested local packages updated in local": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("5", "spec", "replicas")).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.SecretResource).
+							WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("2", "spec", "replicas")),
+					),
+			},
+			fetchRef: "main",
+			diffRef:  "main",
+			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
+			expDiff: `
+7c7
+<   replicas: 5
+---
+>   replicas: 3
+			`,
+		},
+		"nested remote packages updated in local": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
 					{
@@ -217,7 +255,7 @@ func TestCommand_Diff(t *testing.T) {
 
 		//nolint:gocritic
 		// TODO(mortent): Diff functionality must be updated to handle nested packages.
-		"nested package updated in upstream": {
+		"nested remote package updated in upstream": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
 					{
