@@ -90,6 +90,8 @@ func New(path string) (*Pkg, error) {
 	}
 	pkg := &Pkg{
 		UniquePath: types.UniquePath(absPath),
+		// by default, rootPkgParentDirPath should be the absolute path to the parent directory of package being instantiated
+		rootPkgParentDirPath: filepath.Dir(absPath),
 		// by default, DisplayPath should be the package name which is same as directory name
 		DisplayPath: types.DisplayPath(filepath.Base(absPath)),
 	}
@@ -190,7 +192,6 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 		if err := p.adjustDisplayPathForSubpkg(subPkg); err != nil {
 			return subPkgs, fmt.Errorf("failed to resolve display path for %q: %w", subPkgPath, err)
 		}
-
 		subPkgs = append(subPkgs, subPkg)
 	}
 
@@ -203,13 +204,8 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 // adjustDisplayPathForSubpkg adjusts the display path of subPkg relative to the RootPkgUniquePath
 // subPkg also inherits the RootPkgUniquePath value from parent package p
 func (p *Pkg) adjustDisplayPathForSubpkg(subPkg *Pkg) error {
-	if p.rootPkgParentDirPath == "" {
-		// this means p is the root package on which command is originally invoked
-		subPkg.rootPkgParentDirPath = filepath.Dir(string(p.UniquePath))
-	} else {
-		// inherit the RootPkgUniquePath from the parent package
-		subPkg.rootPkgParentDirPath = p.rootPkgParentDirPath
-	}
+	// inherit the rootPkgParentDirPath from the parent package
+	subPkg.rootPkgParentDirPath = p.rootPkgParentDirPath
 	// display path of subPkg should be relative to parent dir of rootPkg
 	// e.g. if mysql(subPkg) is direct subpackage of wordpress(p), DisplayPath of "mysql" should be "wordpress/mysql"
 	dp, err := filepath.Rel(subPkg.rootPkgParentDirPath, string(subPkg.UniquePath))
