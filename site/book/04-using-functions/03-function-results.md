@@ -50,11 +50,11 @@ rerun:
 
 ```shell
 $ kpt fn render wordpress --results-dir /tmp
-Package "mysql":
+Package "wordpress/mysql":
 
 [PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
 
-Package ".":
+Package "wordpress":
 
 [PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
 [FAIL] "gcr.io/kpt-fn/kubeval:v0.1"
