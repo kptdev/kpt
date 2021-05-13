@@ -10,9 +10,8 @@ description: >
     Execute function on resources
 -->
 
-`eval` executes function on resources in a directory and writes the output to
-the local filesystem in-place. Functions are packaged as container images or
-binary executables.
+`eval` executes a function on resources in a directory. Functions are packaged
+as container images or binary executables.
 
 If the function fails (i.e. exits with non-zero status code), `eval` will
 abort and the local filesystem is left intact.
@@ -24,7 +23,7 @@ Refer to the [Imperative Function Execution] for detailed overview.
 <!--mdtogo:Long-->
 
 ```shell
-kpt fn eval [DIR|-] [flags]
+kpt fn eval [DIR|-] [flags] [-- fn-args]
 ```
 
 #### Args
@@ -39,22 +38,36 @@ DIR|-:
 #### Flags
 
 ```shell
---image:
-  Container image of the function to execute e.g. `gcr.io/kpt-fn/set-namespace:v0.1`
+--as-current-user:
+  Use the `uid` and `gid` of the kpt process for container function execution.
+  Container functions are executed as `nobody` user which has very limited
+  privileges. You may want to use this flag to run higher privilege operations
+  such as mounting the local filesystem.
+
+--dry-run:
+  If enabled, the resources are not written to local filesystem, instead they
+  are written to stdout. By defaults it is disabled.
+  
+--env, e:
+  List of local environment variables to be exported to the container function.
+  By default, none of local environment variables are made available to the
+  container running the function. The value can be in `key=value` format or only
+  the key of an already exported environment variable.
 
 --exec-path:
-  Path to the local executable binary to execute as a function.
+  Path to the local executable binary to execute as a function. `eval` executes
+  only one function, so do not use `--image` flag with this flag.
   
 --fn-config:
   Path to the file containing `functionConfig` for the function.
 
+--image:
+  Container image of the function to execute e.g. `gcr.io/kpt-fn/set-namespace:v0.1`.
+  `eval` executes only one function, so do not use `--exec-path` flag with this flag.
+
 --include-meta-resources:
   If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
   in the input to the function. By default it is disabled.
-
---network:
-  If enabled, container functions are allowed to access network.
-  By default is it disabled.
 
 --mount:
   List of storage options to enable reading from the local filesytem. By default,
@@ -62,26 +75,17 @@ DIR|-:
   as specified on the [Docker Volumes] for `docker run`. All volumes are mounted
   readonly by default. Specify `rw=true` to mount volumes in read-write mode.
 
---env:
-  List of local environment variables to be exported to the container function.
-  By default, none of local environment variables are made available to the
-  container running the function. The value can be in `key=value` format or only
-  the key of an already exported environment variable.
-
---as-current-user:
-  Use the `uid` and `gid` of the kpt process for container function execution.
+--network:
+  If enabled, container functions are allowed to access network.
+  By default it is disabled.
 
 --results-dir:
   Path to a directory to write structured results. Directory must exist.
   Structured results emitted by the functions are aggregated and saved
   to `results.yaml` file in the specified directory.
   If not specified, no result files are written to the local filesystem.
-  
---dry-run:
-  If enabled, the resources are not written to local filesystem, instead they
-  are written to stdout. By defaults it is disabled.
-  
 ```
+
 <!--mdtogo-->
 
 ## Examples
@@ -126,6 +130,22 @@ $ kpt fn --image gcr.io/example.com/my-fn --network eval DIR
 # execute container my-fn on the resource in DIR and export KUBECONFIG
 # and foo environment variable
 $ kpt fn --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar eval DIR
+```
+
+```shell
+# execute kubeval function by mounting schema from a local directory on wordpress package
+$ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 \
+  --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir \
+  --as-current-user wordpress -- additional_schema_locations=/schema-dir
+```
+
+```shell
+# chaining functions using the unix pipe to set namespace and set labels on
+# wordpress package
+$ kpt fn source wordpress \
+  | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
+  | kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 - -- label_name=color label_value=orange \
+  | kpt fn sink wordpress
 ```
 <!--mdtogo-->
 
