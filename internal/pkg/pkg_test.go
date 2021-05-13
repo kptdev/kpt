@@ -424,6 +424,16 @@ func TestSubpackages(t *testing.T) {
 						"local-sub1",
 					},
 				},
+				{
+					matcher:   []SubpackageMatcher{None},
+					recursive: []bool{false},
+					expected:  []string{},
+				},
+				{
+					matcher:   []SubpackageMatcher{None},
+					recursive: []bool{true},
+					expected:  []string{},
+				},
 			},
 		},
 		"no subpackages": {
