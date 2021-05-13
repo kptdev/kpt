@@ -10,7 +10,7 @@
         - [update](reference/pkg/update/)
     - [fn](reference/fn/)
         - [render](reference/fn/render/)
-        - [run](reference/fn/run/)
+        - [eval](reference/fn/eval/)
         - [sink](reference/fn/sink/)
         - [source](reference/fn/source/)
     - [live](reference/live/)
