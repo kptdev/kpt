@@ -63,7 +63,6 @@ type Pkg struct {
 	// rootPkgParentDirPath is the absolute path to the parent directory of root package
 	// root package is defined as the package on which the command is invoked by user
 	// this must be same for all the nested subpackages in root package
-	// UniquePath = filepath.Join(rootPkgParentDirPath, DisplayPath)
 	rootPkgParentDirPath string
 
 	// A package can contain zero or one Kptfile meta resource.
@@ -86,14 +85,13 @@ func New(path string) (*Pkg, error) {
 		// combining the current working directory with the path.
 		absPath = filepath.Join(cwd, path)
 	}
-	dp, err := types.NewDisplayPath(filepath.Base(absPath))
 	if err != nil {
 		return nil, err
 	}
 	pkg := &Pkg{
 		UniquePath: types.UniquePath(absPath),
 		// by default, DisplayPath should be the package name which is same as directory name
-		DisplayPath: dp,
+		DisplayPath: types.DisplayPath(filepath.Base(absPath)),
 	}
 	return pkg, nil
 }
@@ -218,8 +216,9 @@ func (p *Pkg) adjustDisplayPathForSubpkg(subPkg *Pkg) error {
 	if err != nil {
 		return err
 	}
-	subPkg.DisplayPath, err = types.NewDisplayPath(dp)
-	return err
+	// make sure that the DisplayPath is always Slash-separated os-agnostic
+	subPkg.DisplayPath = types.DisplayPath(filepath.ToSlash(dp))
+	return nil
 }
 
 // SubpackageMatcher is type for specifying the types of subpackages which

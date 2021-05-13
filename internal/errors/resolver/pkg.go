@@ -53,13 +53,13 @@ func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 		if errors.Is(kptfileError, os.ErrNotExist) {
 			return ResolvedResult{
-				Message: ExecuteTemplate(noKptfileMsg, tmplArgs),
+				Message:  ExecuteTemplate(noKptfileMsg, tmplArgs),
 				ExitCode: 1,
 			}, true
 		}
 
 		return ResolvedResult{
-			Message: ExecuteTemplate(kptfileReadErrMsg, tmplArgs),
+			Message:  ExecuteTemplate(kptfileReadErrMsg, tmplArgs),
 			ExitCode: 1,
 		}, true
 	}
