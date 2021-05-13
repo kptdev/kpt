@@ -354,7 +354,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// the package hierarchy and that package is the root.
 	case !originExists && !localExists && updatedExists:
 		pr.Printf("Adding package %q from upstream.\n", packageName(localPath))
-		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, false); err != nil {
+		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 

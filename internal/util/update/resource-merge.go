@@ -109,7 +109,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 			fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath))
 	// Package added in upstream
 	case !originalExists && !localExists && updatedExists:
-		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, false); err != nil {
+		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 	// Package added locally
