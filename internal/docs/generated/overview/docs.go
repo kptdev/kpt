@@ -3,7 +3,7 @@ package overview
 
 var ReferenceShort = `Overview of kpt commands`
 var ReferenceLong = `
-Usage: kpt \<group> \<command> \<positional args> [PKG_PATH] [flags]
+  kpt <group> <command> <positional args> [PKG_PATH] [flags]
 
 kpt functionality is divided into the following command groups, each of
 which operates on a particular set of entities, with a consistent command
