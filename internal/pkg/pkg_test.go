@@ -443,7 +443,7 @@ func TestSubpackages(t *testing.T) {
 				WithKptfile(),
 			cases: []variants{
 				{
-					matcher:   []SubpackageMatcher{All, Local, Remote},
+					matcher:   []SubpackageMatcher{All, Local, Remote, None},
 					recursive: []bool{true, false},
 					expected:  []string{},
 				},
@@ -454,7 +454,7 @@ func TestSubpackages(t *testing.T) {
 			pkg: pkgbuilder.NewRootPkg(),
 			cases: []variants{
 				{
-					matcher:   []SubpackageMatcher{All, Local, Remote},
+					matcher:   []SubpackageMatcher{All, Local, Remote, None},
 					recursive: []bool{true, false},
 					expected:  []string{},
 				},
