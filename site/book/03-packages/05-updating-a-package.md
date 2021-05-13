@@ -20,10 +20,10 @@ $ git add .; git commit -m "My changes"
 
 ## Update the package
 
-For example, you can update to version `v0.2` of the `wordpress` package:
+For example, you can update to version `v0.4` of the `wordpress` package:
 
 ```shell
-$ kpt pkg update wordpress@v0.2
+$ kpt pkg update wordpress@v0.4
 ```
 
 This is a porcelain for manually updating the `upstream` section in the `Kptfile` :
@@ -35,7 +35,7 @@ upstream:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
     # Change this from v0.3 to v0.4
-    ref: v0.2
+    ref: v0.4
   updateStrategy: resource-merge
 ```
 
@@ -46,7 +46,7 @@ $ kpt pkg update wordpress
 ```
 
 The `update` command updates the local `wordpress` package and the dependent `mysql` package to the
-upstream version `v0.2` by doing a 3-way merge between:
+upstream version `v0.4` by doing a 3-way merge between:
 
 1. Original upstream commit
 2. New upstream commit
@@ -62,7 +62,7 @@ strategy is used which performs a structural comparison of the resource using Op
 Once you have successfully updated the package, commit the changes:
 
 ```shell
-$ git add .; git commit -m "Updated wordpress to v0.2"
+$ git add .; git commit -m "Updated wordpress to v0.4"
 ```
 
 [update-doc]: /reference/pkg/update/
