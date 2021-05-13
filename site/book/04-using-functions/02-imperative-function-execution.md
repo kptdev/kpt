@@ -7,7 +7,7 @@ For example, to set the namespace of all resources in the wordpress package hier
 $ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 wordpress -- namespace=mywordpress
 ```
 
-?> Refer to the [command reference][eval-doc] for usage.
+?> Refer to the [eval command reference][eval-doc] for usage.
 
 This changes the resources in the `wordpress` package and the `mysql` subpackage.
 
@@ -32,7 +32,7 @@ When you have one of these use cases:
 
 - Perform a one-time operation
 - Execute a function from a CI/CD system on packages authored by other teams
-- Develop shell scripts and chain functions with Unix pipeline (`|`)
+- Develop shell scripts and chain functions with the Unix pipe (`|`)
 - Mutate meta resources such as the `Kptfile` (Not allowed by `render`)
 - Execute the function with privilege (Not allowed by `render`)
 
@@ -73,39 +73,6 @@ $ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress 
 ```
 
 Note that the arguments must come after the separator `--`.
-
-## Shell Scripting
-
-As an alternative to declaring a pipeline in the `Kptfile`, you can create a pipeline of functions
-using the Unix pipeline.
-
-For example:
-
-```shell
-$ kpt fn source wordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 - -- label_name=color label_value=orange \
-  | kpt fn sink wordpress
-```
-
-Here is what's happening:
-
-1. The `source` command is used to read the resources in the package hierarchy (`wordpress` and
-   `mysql` packages). The output of the `source` command follows the Function
-   Specification standard, which are going to look at in chapter 5.
-2. The output of the `source` function is piped into the `set-namespace` function. `eval` function
-   is instructed to read inputs items from the `stdin` using `-`. This is the convention used in all
-   commands in kpt that can read from `stdin`. `set-namespace` function mutates the input items and
-   emits the output items.
-3. The output of the `set-namespace` function is piped into `set-label` function which adds the
-   given labels to all resources.
-4. The `sink` command writes the output of `set-label` to the filesystem in-place.
-
-This is a low-level and less abstracted approach to executing functions. For example, you can write
-the output of the pipeline to a different directory instead of mutating the directory in-place. You
-can also pipe to other programs (e.g. `sed`, `yq`) that are not functions. Be mindful that the cost
-of this low-level flexibility is not having benefits provided by functions: scalability,
-reusability, and encapsulation.
 
 ## Privileged Execution
 
@@ -163,6 +130,8 @@ There are use cases for having _meta functions_ that can operated on meta resour
 - Add a function to the `validators` list in the `Kptfile`
 - Set the `info.license` field in the `Kptfile` to `Apache-2.0`
 
+This is enabled using the `--include-meta-resources` flag.
+
 For example, the following will set the labels on all resources in wordpress package, including
 the `Kptfile`:
 
@@ -170,5 +139,42 @@ the `Kptfile`:
 $ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 --include-meta-resources wordpress -- label_name=color label_value=orange
 ```
 
+## Chaining functions using the Unix pipe
+
+As an alternative to declaring a pipeline in the `Kptfile`, you can chain functions using the Unix
+pipe.
+
+For example:
+
+```shell
+$ kpt fn source wordpress \
+  | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
+  | kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 - -- label_name=color label_value=orange \
+  | kpt fn sink wordpress
+```
+
+?> Refer to the command reference for usage of [source][source-doc] and [sink][sink-doc] commands.
+
+Here is what's happening:
+
+1. The `source` command is used to read the resources in the package hierarchy (`wordpress` and
+   `mysql` packages). The output of the `source` command follows the Function
+   Specification standard, which are going to look at in chapter 5.
+2. The output of the `source` function is piped into the `set-namespace` function. `eval` function
+   is instructed to read inputs items from the `stdin` using `-`. This is the convention used in all
+   commands in kpt that can read from `stdin`. `set-namespace` function mutates the input items and
+   emits the output items.
+3. The output of the `set-namespace` function is piped into `set-label` function which adds the
+   given labels to all resources.
+4. The `sink` command writes the output of `set-label` to the filesystem in-place.
+
+This is a low-level and less abstracted approach to executing functions. For example, you can write
+the output of the pipeline to a different directory instead of mutating the directory in-place. You
+can also pipe to other programs (e.g. `sed`, `yq`) that are not functions. Be mindful that the cost
+of this low-level flexibility is not having benefits provided by functions: scalability,
+reusability, and encapsulation.
+
 [eval-doc]: /reference/fn/eval/
+[source-doc]: /reference/fn/source/
+[sink-doc]: /reference/fn/sink/
 [docker volumes]: https://docs.docker.com/storage/volumes/

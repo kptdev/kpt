@@ -26,7 +26,7 @@ Successfully executed 3 function(s) in 2 package(s).
 For complete results, see /tmp/results.yaml
 ```
 
-The results is provided as resource of kind `FunctionResultList`:
+The results are provided as resource of kind `FunctionResultList`:
 
 ```yaml
 # /tmp/results.yaml

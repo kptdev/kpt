@@ -21,7 +21,7 @@ PKG: wordpress
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
-?> Refer to the [command reference][tree-doc] for usage.
+?> Refer to the [tree command reference][tree-doc] for usage.
 
 In addition, you can use a kpt function such as `search-replace` to run a query on the package.
 For example, to search for resources that have a field with path `spec.selector.tier`:

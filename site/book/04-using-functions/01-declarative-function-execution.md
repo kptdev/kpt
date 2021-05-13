@@ -76,6 +76,8 @@ Package "wordpress":
 Successfully executed 3 function(s) in 2 package(s).
 ```
 
+?> Refer to the [render command reference][render-doc] for usage.
+
 When you invoke the `render` command, kpt performs the following steps:
 
 1. Sequentially executes the list of mutators declared in the `mysql` package. The input to the
@@ -168,3 +170,4 @@ pipeline:
 
 [func-cat]: http://catalog.kpt.dev
 [chapter 2]: /book/02-concepts/03-functions
+[render-doc]: /reference/fn/render/
