@@ -53,6 +53,35 @@ var ExportExamples = `
   kpt fn export DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
 `
 
+var RenderShort = `Render a package.`
+var RenderLong = `
+  kpt fn render [PKG_PATH] [flags]
+
+Args:
+
+  PKG_PATH:
+    Local package path to render. Directory must exist and contain a Kptfile
+    to be updated. Defaults to the current working directory.
+
+Flags:
+
+  --results-dir:
+    Path to a directory to write structured results. Directory must exist.
+    Structured results emitted by the functions are aggregated and saved
+    to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
+    If not specified, no result files are written to the local filesystem.
+`
+var RenderExamples = `
+  # Render the package in current directory
+  $ kpt fn render
+
+  # Render the package in current directory and save results in my-results-dir
+  $ kpt fn --results-dir my-results-dir render
+
+  # Render my-package-dir
+  $ kpt fn render my-package-dir
+`
+
 var RunShort = `Locally execute one or more functions in containers`
 var RunLong = `
   kpt fn run DIR [flags]
@@ -73,6 +102,7 @@ var RunExamples = `
 
   # run the functions in FUNCTIONS_DIR against the Resources in DIR
   kpt fn run DIR/ --fn-path FUNCTIONS_DIR/
+
 
   # discover functions in DIR and run them against Resource in DIR.
   # functions may be scoped to a subset of Resources -- see ` + "`" + `kpt help fn run` + "`" + `

@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -94,6 +95,10 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	if err = c.fetchPackages(ctx, p); err != nil {
+		return errors.E(op, types.UniquePath(c.Destination), err)
+	}
+
+	if err := addmergecomment.Process(c.Destination); err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
 	return nil

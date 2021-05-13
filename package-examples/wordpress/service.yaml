@@ -23,5 +23,5 @@ spec:
     app: wordpress
     tier: frontend
   ports:
-    - port: 80
-      protocol: TCP
+    - protocol: TCP
+      port: 80

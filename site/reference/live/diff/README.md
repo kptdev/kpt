@@ -15,12 +15,12 @@ local package config.
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live diff [PKG_PATH|-]
+kpt live diff [PKG_PATH | -]
 ```
 
 #### Args
 ```
-PKG_PATH|-:
+PKG_PATH | -:
   Path to the local package which should be diffed against the cluster. It must
   contain a Kptfile with inventory information. Defaults to the current working
   directory.

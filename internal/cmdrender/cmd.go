@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
@@ -29,10 +30,10 @@ import (
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
 	c := &cobra.Command{
-		Use:     "render [DIR]",
-		Short:   "render",
-		Long:    "render",
-		Example: "render",
+		Use:     "render [PKG_PATH] [flags]",
+		Short:   docs.RenderShort,
+		Long:    docs.RenderShort + "\n" + docs.RenderLong,
+		Example: docs.RenderExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}

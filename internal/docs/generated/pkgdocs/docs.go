@@ -107,21 +107,6 @@ Environment Variables:
 var DiffExamples = `
   # Show changes in current package relative to upstream source package.
   kpt pkg diff
-
-  # Show changes in current package relative to upstream source package
-  # using meld tool with auto compare option.
-  kpt pkg diff --diff-tool meld --diff-tool-opts "-a"
-
-  # Show changes in upstream source package between current version and
-  # target version.
-  kpt pkg diff @v0.4.0 --diff-type remote
-
-  # Show changes in current package relative to target version.
-  kpt pkg diff @v0.4.0 --diff-type combined
-
-  # Show 3way changes between the local package, upstream package at original
-  # version and upstream package at target version using meld.
-  kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
 `
 
 var GetShort = `Fetch a package from a git repo.`
@@ -207,6 +192,7 @@ Flags:
     Link to page with information about the package.
 `
 var InitExamples = `
+
   # Creates a new Kptfile with metadata in the cockroachdb directory.
   mkdir cockroachdb
   kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \

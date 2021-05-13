@@ -24,6 +24,7 @@ import (
 var baseTemplate = func() *template.Template {
 	tmpl := template.New("base")
 	tmpl = template.Must(tmpl.Parse(detailsHelperTemplate))
+	tmpl = template.Must(tmpl.Parse(nestedErrTemplate))
 	return tmpl
 }()
 
@@ -43,6 +44,21 @@ var (
 
 {{- if gt (len .stderr) 0 }}
 {{ printf "%s" .stderr }}
+{{- end }}
+{{ end }}
+`
+
+	// nestedErrTemplate is a helper subtemplate for printing details from
+	// a nested error.
+	nestedErrTemplate = `
+{{- define "NestedErrDetails" }}
+{{- if .err  }}
+{{- if .err.Err }}
+{{- if gt (len .err.Err.Error) 0 }}
+{{ printf "\nDetails:" }}
+{{ printf "%s" .err.Err.Error }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{ end }}
 `

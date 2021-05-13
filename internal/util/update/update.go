@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
@@ -36,6 +37,26 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
+
+// PkgNotGitRepoError is the error type returned if the package being updated is not inside
+// a git repository.
+type PkgNotGitRepoError struct {
+	Path types.UniquePath
+}
+
+func (p *PkgNotGitRepoError) Error() string {
+	return fmt.Sprintf("package %q is not a git repository", p.Path.String())
+}
+
+// PkgRepoDirtyError is the error type returned if the package being updated contains
+// uncommitted changes.
+type PkgRepoDirtyError struct {
+	Path types.UniquePath
+}
+
+func (p *PkgRepoDirtyError) Error() string {
+	return fmt.Sprintf("package %q contains uncommitted changes", p.Path.String())
+}
 
 type UpdateOptions struct {
 	// RelPackagePath is the relative path of a subpackage to the root. If the
@@ -92,18 +113,8 @@ func (u Command) Run(ctx context.Context) error {
 	}
 
 	// require package is checked into git before trying to update it
-	g, err := gitutil.NewLocalGitRunner(u.Pkg.UniquePath.String())
-	if err != nil {
-		return err
-	}
-
-	rr, err := g.Run(ctx, "status", "-s")
-	if err != nil {
+	if err := checkIfCommitted(ctx, u.Pkg); err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
-	}
-	if strings.TrimSpace(rr.Stdout) != "" {
-		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must be committed "+
-			"to git before attempting to update"))
 	}
 
 	rootKf, err := u.Pkg.Kptfile()
@@ -157,6 +168,36 @@ func (u Command) Run(ctx context.Context) error {
 		}
 	}
 	pr.Printf("\nUpdated %d package(s).\n", packageCount)
+
+	// finally, make sure that the merge comments are added to all resources in the updated package
+	if err := addmergecomment.Process(string(u.Pkg.UniquePath)); err != nil {
+		return errors.E(op, u.Pkg.UniquePath, err)
+	}
+	return nil
+}
+
+func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
+	const op errors.Op = "update.checkIfCommitted"
+	g, err := gitutil.NewLocalGitRunner(p.UniquePath.String())
+	if err != nil {
+		return err
+	}
+
+	rr, err := g.Run(ctx, "status", "-s")
+	if err != nil {
+		var gitExecErr *gitutil.GitExecError
+		if errors.As(err, &gitExecErr) {
+			if strings.Contains(gitExecErr.StdErr, "not a git repository") {
+				return &PkgNotGitRepoError{Path: p.UniquePath}
+			}
+		}
+		return errors.E(op, p.UniquePath, err)
+	}
+	if strings.TrimSpace(rr.Stdout) != "" {
+		return errors.E(op, p.UniquePath, &PkgRepoDirtyError{
+			Path: p.UniquePath,
+		})
+	}
 	return nil
 }
 
@@ -357,6 +398,12 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, originPath, relPath string, isRootPkg bool) error {
 	const op errors.Op = "update.mergePackage"
 	pr := printer.FromContextOrDie(ctx)
+	// at this point, the localPath, updatedPath and originPath exists and are about to be merged
+	// make sure that the merge comments are added to all of them so that they are merged accurately
+	if err := addmergecomment.Process(localPath, updatedPath, originPath); err != nil {
+		return errors.E(op, types.UniquePath(localPath),
+			fmt.Errorf("failed to add merge comments %q", err.Error()))
+	}
 	updatedUnfetched, err := pkg.IsPackageUnfetched(updatedPath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) || !isRootPkg {
@@ -414,6 +461,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 	}); err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
+
 	return nil
 }
 

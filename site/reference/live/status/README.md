@@ -14,13 +14,13 @@ Display the status for the resources in the cluster
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live status [PKG_PATH|-] [flags]
+kpt live status [PKG_PATH | -] [flags]
 ```
 
 #### Args
 
 ```
-PKG_PATH|-:
+PKG_PATH | -:
   Path to the local package for which the status of the package in the cluster
   should be displayed. It must contain a Kptfile with inventory information.
   Defaults to the current working directory.

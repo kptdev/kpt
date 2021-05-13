@@ -14,13 +14,13 @@ description: >
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live destroy [PKG_PATH|-]
+kpt live destroy [PKG_PATH | -]
 ```
 
 #### Args
 
 ```
-PKG_PATH|-:
+PKG_PATH | -:
   Path to the local package which should be deleted from the cluster. It must
   contain a Kptfile with inventory information. Defaults to the current working
   directory.

@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
-	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -322,80 +321,6 @@ func (f *TestFilter) Filter(input []*yaml.RNode) ([]*yaml.RNode, error) {
 
 func (f *TestFilter) GetExit() error {
 	return f.Exit
-}
-
-func TestCmd_Execute_deferFailure(t *testing.T) {
-	dir := setupTest(t)
-	defer os.RemoveAll(dir)
-
-	fn1, err := yaml.Parse(`apiVersion: v1
-kind: ValueReplacer
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: 1
-    config.kubernetes.io/local-config: "true"
-stringMatch: Deployment
-replace: StatefulSet
-`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fn2, err := yaml.Parse(`apiVersion: v1
-kind: ValueReplacer
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: 2
-    config.kubernetes.io/local-config: "true"
-stringMatch: Deployment
-replace: StatefulSet
-`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var fltrs []*TestFilter
-	instance := RunFns{
-		Ctx:  fake.CtxWithNilPrinter(),
-		Path: dir,
-		functionFilterProvider: func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
-			tf := &TestFilter{
-				Exit: errors.Errorf("message: %s", f.Container.Image),
-			}
-			fltrs = append(fltrs, tf)
-			return tf, nil
-		},
-		Functions: []*yaml.RNode{fn1, fn2},
-		fnResults: fnresult.NewResultList(),
-	}
-	assert.NoError(t, instance.init())
-
-	err = instance.Execute()
-
-	// make sure all filters were run
-	if !assert.Equal(t, 2, len(fltrs)) {
-		t.FailNow()
-	}
-	for i := range fltrs {
-		if !assert.True(t, fltrs[i].invoked) {
-			t.FailNow()
-		}
-	}
-
-	if !assert.EqualError(t, err, "message: 1\n---\nmessage: 2") {
-		t.FailNow()
-	}
-	b, err := ioutil.ReadFile(
-		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	// files weren't changed because there was an error
-	assert.Contains(t, string(b), "kind: Deployment")
 }
 
 func getFnConfigPathFilterProvider(t *testing.T, r *RunFns) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {

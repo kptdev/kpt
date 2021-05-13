@@ -88,7 +88,7 @@ func TestCommand_Run(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -147,7 +147,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -208,7 +208,7 @@ func TestCommand_Run_destination(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -272,7 +272,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -352,7 +352,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
@@ -435,7 +435,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
@@ -577,7 +577,7 @@ func TestCommand_Run_ref(t *testing.T) {
 
 			expectedPath := tc.expected.ExpandPkgWithName(t, repos[testutil.Upstream].RepoName, testutil.ToReposInfo(repos))
 
-			testutil.KptfileAwarePkgEqual(t, expectedPath, absPath)
+			testutil.KptfileAwarePkgEqual(t, expectedPath, absPath, true)
 		})
 	}
 }
@@ -609,7 +609,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -662,7 +662,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	assert.Contains(t, err.Error(), "destination directory already exists")
 
 	// verify files are unchanged
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -714,7 +714,7 @@ func TestCommand_Run_nonexistingParentDir(t *testing.T) {
 		Destination: absPath,
 	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
@@ -1333,7 +1333,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			}
 
 			expectedPath := tc.expectedResult.ExpandPkgWithName(t, targetDir, testutil.ToReposInfo(repos))
-			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
+			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
 		})
 	}
 }
@@ -1390,5 +1390,5 @@ func TestCommand_Run_symlinks(t *testing.T) {
 		)
 	expectedPath := expectedPkg.ExpandPkgWithName(t, upstreamRepo.RepoName, testutil.ToReposInfo(repos))
 
-	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
+	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
 }

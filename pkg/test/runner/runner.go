@@ -340,16 +340,10 @@ func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpP
 // check stdout and stderr against expected
 func (r *Runner) compareOutput(stdout string, stderr string) error {
 	expectedStderr := r.testCase.Config.StdErr
-	if expectedStderr == "" && stderr != "" {
-		return fmt.Errorf("unexpected stderr %s", stderr)
-	}
 	if !strings.Contains(stderr, expectedStderr) {
 		return fmt.Errorf("wanted stderr %s, got %s", expectedStderr, stderr)
 	}
 	expectedStdout := r.testCase.Config.StdOut
-	if expectedStdout == "" && stdout != "" {
-		return fmt.Errorf("unexpected stdout %s", stdout)
-	}
 	if !strings.Contains(stdout, expectedStdout) {
 		return fmt.Errorf("wanted stdout %s, got %s", expectedStdout, stdout)
 	}

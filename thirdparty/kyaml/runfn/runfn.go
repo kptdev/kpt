@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
@@ -63,12 +64,6 @@ type RunFns struct {
 	ResultsDir string
 
 	fnResults *fnresult.ResultList
-
-	// LogSteps enables logging the function that is running.
-	LogSteps bool
-
-	// LogWriter can be set to write the logs to LogWriter rather than stderr if LogSteps is enabled.
-	LogWriter io.Writer
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -212,6 +207,10 @@ func (r RunFns) runFunctions(
 		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
 
+	// add format filter at the end to consistently format output resources
+	fmtfltr := filters.FormatFilter{UseSchema: true}
+	fltrs = append(fltrs, fmtfltr)
+
 	var err error
 	pipeline := kio.Pipeline{
 		Inputs:                []kio.Reader{input},
@@ -230,21 +229,6 @@ func (r RunFns) runFunctions(
 	if resultErr == nil {
 		r.printFnResultsStatus(resultsFile)
 	}
-
-	// check for deferred function errors
-	var errs []string
-	for i := range fltrs {
-		cf, ok := fltrs[i].(runtimeutil.DeferFailureFunction)
-		if !ok {
-			continue
-		}
-		if cf.GetExit() != nil {
-			errs = append(errs, cf.GetExit().Error())
-		}
-	}
-	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n---\n"))
-	}
 	return nil
 }
 
@@ -252,7 +236,7 @@ func (r RunFns) printFnResultsStatus(resultsFile string) {
 	if r.isOutputDisabled() {
 		return
 	}
-	printerutil.PrintFnResultInfo(r.Ctx, resultsFile)
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -364,11 +348,6 @@ func (r *RunFns) init() error {
 		r.functionFilterProvider = r.defaultFnFilterProvider
 	}
 
-	// if LogSteps is enabled and LogWriter is not specified, use stderr
-	if r.LogSteps && r.LogWriter == nil {
-		r.LogWriter = os.Stderr
-	}
-
 	// fn config path should be absolute
 	if r.FnConfigPath != "" && !filepath.IsAbs(r.FnConfigPath) {
 		// if the FnConfigPath is relative, we should use the
@@ -433,7 +412,11 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 	}
 	var fltr *runtimeutil.FunctionFilter
-	var fnResult *fnresult.Result
+	fnResult := &fnresult.Result{
+		// TODO(droot): This is required for making structured results subpackage aware.
+		// Enable this once test harness supports filepath based assertions.
+		// Pkg: string(r.uniquePath),
+	}
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
@@ -458,7 +441,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		fnResult = &fnresult.Result{Image: spec.Container.Image}
+		fnResult.Image = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
@@ -470,7 +453,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		fnResult = &fnresult.Result{ExecPath: spec.Exec.Path}
+		fnResult.ExecPath = spec.Exec.Path
 	}
 	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
 }

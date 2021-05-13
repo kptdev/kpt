@@ -121,28 +121,4 @@ cd hello-world
 kpt pkg diff
 ```
 
-```shell
-# Show changes in current package relative to upstream source package
-# using meld tool with auto compare option.
-kpt pkg diff --diff-tool meld --diff-tool-opts "-a"
-```
-
-<!-- @pkgDiff @verifyExamples-->
-```shell
-# Show changes in upstream source package between current version and
-# target version.
-kpt pkg diff @v0.4.0 --diff-type remote
-```
-
-<!-- @pkgDiff @verifyExamples-->
-```shell
-# Show changes in current package relative to target version.
-kpt pkg diff @v0.4.0 --diff-type combined
-```
-
-```shell
-# Show 3way changes between the local package, upstream package at original
-# version and upstream package at target version using meld.
-kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
-```
 <!--mdtogo-->
