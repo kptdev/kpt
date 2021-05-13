@@ -37,7 +37,7 @@ This declares two functions:
 - `kubeval` is an example validator function which you've seen before. It validates the resources
   against their OpenAPI schema.
 
-?> Refer to the [Functions Catalog][func-cat] for details on how to use a particular function.
+?> Refer to the [Functions Catalog](https://catalog.kpt.dev ':crossorigin :target=_self') for details on how to use a particular function.
 
 There are two differences between mutators and validators:
 
@@ -168,6 +168,5 @@ pipeline:
         ms-tag: 5.6
 ```
 
-[func-cat]: http://catalog.kpt.dev
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/fn/render/
