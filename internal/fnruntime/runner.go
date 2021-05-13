@@ -282,21 +282,10 @@ func resultToString(result framework.ResultItem) string {
 	}
 	s.WriteString(fmt.Sprintf("[%s] %s", strings.ToUpper(severity), result.Message))
 
-	if result.ResourceRef.Kind != "" {
+	resourceID := resourceRefToString(result.ResourceRef)
+	if resourceID != "" {
 		// if an object is involved
-		s.WriteString(" in object ")
-		if result.ResourceRef.APIVersion != "" {
-			s.WriteString(fmt.Sprintf("%s/", result.ResourceRef.APIVersion))
-		}
-		if result.ResourceRef.Kind != "" {
-			s.WriteString(fmt.Sprintf("%s/", result.ResourceRef.Kind))
-		}
-		if result.ResourceRef.Namespace != "" {
-			s.WriteString(fmt.Sprintf("%s/", result.ResourceRef.Namespace))
-		}
-		if result.ResourceRef.Name != "" {
-			s.WriteString(result.ResourceRef.Name)
-		}
+		s.WriteString(fmt.Sprintf(" in object %q", resourceID))
 	}
 
 	if result.File.Path != "" {
@@ -307,6 +296,23 @@ func resultToString(result framework.ResultItem) string {
 		s.WriteString(fmt.Sprintf(" in field %q", result.Field.Path))
 	}
 
+	return s.String()
+}
+
+func resourceRefToString(ref yaml.ResourceMeta) string {
+	s := strings.Builder{}
+	if ref.APIVersion != "" {
+		s.WriteString(fmt.Sprintf("%s/", ref.APIVersion))
+	}
+	if ref.Kind != "" {
+		s.WriteString(fmt.Sprintf("%s/", ref.Kind))
+	}
+	if ref.Namespace != "" {
+		s.WriteString(fmt.Sprintf("%s/", ref.Namespace))
+	}
+	if ref.Name != "" {
+		s.WriteString(ref.Name)
+	}
 	return s.String()
 }
 
