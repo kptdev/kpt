@@ -31,7 +31,6 @@
 		- [6.2 Lifecycle of Applied Resources](book/06-apply/02-lifecycle-of-applied-resources.md)
 - [Reference](reference/)
     - [pkg](reference/pkg/)
-        - [cat](reference/pkg/cat/)
         - [diff](reference/pkg/diff/)
         - [get](reference/pkg/get/)
         - [init](reference/pkg/init/)
