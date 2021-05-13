@@ -61,5 +61,5 @@ release:
   github:
     owner: GoogleContainerTools
     name: kpt
-  draft: true
+  draft: false
   prerelease: true
