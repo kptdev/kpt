@@ -108,10 +108,10 @@ func TestWalkPackage(t *testing.T) {
 
 func TestCopyPackage(t *testing.T) {
 	testCases := map[string]struct {
-		pkg                *pkgbuilder.RootPkg
-		copyRootKptfile    bool
-		includeSubpackages bool
-		expected           []string
+		pkg               *pkgbuilder.RootPkg
+		copyRootKptfile   bool
+		subpackageMatcher pkg.SubpackageMatcher
+		expected          []string
 	}{
 		"subpackages without root kptfile": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -122,8 +122,8 @@ func TestCopyPackage(t *testing.T) {
 						WithKptfile().
 						WithFile("def.yaml", "123"),
 				),
-			copyRootKptfile:    false,
-			includeSubpackages: true,
+			copyRootKptfile:   false,
+			subpackageMatcher: pkg.Local,
 			expected: []string{
 				".",
 				"abc.yaml",
@@ -140,7 +140,7 @@ func TestCopyPackage(t *testing.T) {
 					pkgbuilder.NewSubPkg(".git").
 						WithFile("INDEX", "ABC123"),
 				),
-			includeSubpackages: false,
+			subpackageMatcher: pkg.None,
 			expected: []string{
 				".",
 				"abc.yaml",
@@ -156,8 +156,8 @@ func TestCopyPackage(t *testing.T) {
 						WithKptfile().
 						WithFile("def.yaml", "123"),
 				),
-			copyRootKptfile:    true,
-			includeSubpackages: false,
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.None,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -165,7 +165,7 @@ func TestCopyPackage(t *testing.T) {
 				"test.txt",
 			},
 		},
-		"include subpackages": {
+		"include all subpackages": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithFile("abc.yaml", "42").
@@ -174,9 +174,40 @@ func TestCopyPackage(t *testing.T) {
 					pkgbuilder.NewSubPkg("foo").
 						WithKptfile().
 						WithFile("def.yaml", "123"),
+					pkgbuilder.NewSubPkg("bar").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123"),
 				),
-			copyRootKptfile:    true,
-			includeSubpackages: true,
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.All,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"bar",
+				"bar/Kptfile",
+				"bar/def.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include only local subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+					pkgbuilder.NewSubPkg("bar").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Local,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -184,6 +215,31 @@ func TestCopyPackage(t *testing.T) {
 				"foo",
 				"foo/Kptfile",
 				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include only remote subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+					pkgbuilder.NewSubPkg("bar").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Remote,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"bar",
+				"bar/Kptfile",
+				"bar/def.yaml",
 				"test.txt",
 			},
 		},
@@ -197,7 +253,7 @@ func TestCopyPackage(t *testing.T) {
 				t.FailNow()
 			}
 
-			err = pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.includeSubpackages)
+			err = pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
