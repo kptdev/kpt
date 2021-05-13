@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -35,14 +36,15 @@ import (
 
 func TestCommand_Diff(t *testing.T) {
 	testCases := map[string]struct {
-		reposChanges map[string][]testutil.Content
-		updatedLocal testutil.Content
-		fetchRef     string
-		diffRef      string
-		diffType     DiffType
-		diffTool     string
-		diffOpts     string
-		expDiff      string
+		reposChanges              map[string][]testutil.Content
+		updatedLocal              testutil.Content
+		fetchRef                  string
+		diffRef                   string
+		diffType                  DiffType
+		diffTool                  string
+		diffOpts                  string
+		expDiff                   string
+		hasLocalSubpackageChanges bool
 	}{
 
 		// 1. add data to the upstream master branch
@@ -201,7 +203,9 @@ func TestCommand_Diff(t *testing.T) {
 <   replicas: 5
 ---
 >   replicas: 3
+locally changed: foo
 			`,
+			hasLocalSubpackageChanges: true,
 		},
 		"nested remote packages updated in local": {
 			reposChanges: map[string][]testutil.Content{
@@ -341,6 +345,9 @@ func TestCommand_Diff(t *testing.T) {
 			}
 
 			filteredOutput := filterDiffMetadata(diffOutput)
+			if tc.hasLocalSubpackageChanges {
+				filteredOutput = regexp.MustCompile("Only in /tmp.+:").ReplaceAllString(filteredOutput, "locally changed:")
+			}
 			assert.Equal(t, strings.TrimSpace(tc.expDiff)+"\n", filteredOutput)
 		})
 	}
