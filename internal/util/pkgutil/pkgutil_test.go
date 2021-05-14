@@ -243,6 +243,117 @@ func TestCopyPackage(t *testing.T) {
 				"test.txt",
 			},
 		},
+		"include local subpackage with remote child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Local,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include local subpackage with local child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Local,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include remote subpackage with local child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Remote,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
+				"test.txt",
+			},
+		},
+		"include remote subpackage with remote child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Remote,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
+				"test.txt",
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
