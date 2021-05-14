@@ -136,7 +136,7 @@ For example, the following will set the labels on all resources in wordpress pac
 the `Kptfile`:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 --include-meta-resources wordpress -- app=wordpress env=prod
+$ kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 --include-meta-resources wordpress -- app=wordpress env=prod
 ```
 
 ## Chaining functions using the Unix pipe
@@ -149,7 +149,7 @@ For example:
 ```shell
 $ kpt fn source wordpress \
   | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 - -- app=wordpress env=prod \
+  | kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 - -- app=wordpress env=prod \
   | kpt fn sink wordpress
 ```
 
@@ -164,9 +164,9 @@ Here is what's happening:
    is instructed to read inputs items from the `stdin` using `-`. This is the convention used in all
    commands in kpt that can read from `stdin`. `set-namespace` function mutates the input items and
    emits the output items.
-3. The output of the `set-namespace` function is piped into `set-label` function which adds the
+3. The output of the `set-namespace` function is piped into `set-labels` function which adds the
    given labels to all resources.
-4. The `sink` command writes the output of `set-label` to the filesystem in-place.
+4. The `sink` command writes the output of `set-labels` to the filesystem in-place.
 
 This is a low-level and less abstracted approach to executing functions. For example, you can write
 the output of the pipeline to a different directory instead of mutating the directory in-place. You
