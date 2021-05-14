@@ -41,10 +41,9 @@ info:
   description: This is an example wordpress package with mysql subpackage
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
+    - image: gcr.io/kpt-fn/set-label:v0.1
       configMap:
-        wp-image: wordpress
-        wp-tag: 4.8-apache
+        app: wordpress
 ```
 
 The `Kptfile` contains two sections to keep track of the upstream package:
@@ -67,10 +66,9 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
+    - image: gcr.io/kpt-fn/set-label:v0.1
       configMap:
-        ms-image: mysql
-        ms-tag: 5.6
+        tier: mysql
 ```
 
 As you can see, this `Kptfile` doesn't have the `upstream` and `upstreamLock` sections.

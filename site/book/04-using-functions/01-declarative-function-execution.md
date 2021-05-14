@@ -20,21 +20,17 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
+    - image: gcr.io/kpt-fn/set-label:v0.1
       configMap:
-        wp-image: wordpress
-        wp-tag: 4.8-apache
+        app: wordpress
   validators:
     - image: gcr.io/kpt-fn/kubeval:v0.1
 ```
 
 This declares two functions:
 
-- `apply-setters` is an example mutator function which provides a form of parameterization. You
-  don't need to understand the nitty-gritty of how this function works except that it mutates
-  resources that have been parameterized with a given key (e.g. `wp-tag`) by applying the
-  corresponding value (e.g. `4.8-apache`).
-- `kubeval` is an example validator function which you've seen before. It validates the resources
+- `set-label` is an example mutator function which adds a set of labels to resources.
+- `kubeval` is an example validator function which validates the resources
   against their OpenAPI schema.
 
 ?> Refer to the [Functions Catalog][func-cat] for details on how to use a particular function.
@@ -54,10 +50,9 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
+    - image: gcr.io/kpt-fn/set-label:v0.1
       configMap:
-        ms-image: mysql
-        ms-tag: 5.6
+        tier: mysql
 ```
 
 Now, let's render the package hierarchy:
@@ -66,11 +61,11 @@ Now, let's render the package hierarchy:
 $ kpt fn render wordpress
 Package "wordpress/mysql":
 
-[PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 
 Package "wordpress":
 
-[PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 [PASS] "gcr.io/kpt-fn/kubeval:v0.1"
 
 Successfully executed 3 function(s) in 2 package(s).
@@ -92,8 +87,6 @@ When you invoke the `render` command, kpt performs the following steps:
    - Resources read from configuration files in the `wordpress` package AND
    - Output of the pipeline from the `mysql` package (Step 2).
 
-     Note that it is possible for a mutator in the parent package (i.e `wordpress`) to modify resources in the subpackages (i.e. `mysql`).
-
 4. Similarly, execute all the validators declared in the `wordpress` package. The output of the last
    validator is the output of the pipeline in the `wordpress` package.
 5. Write the output of step 4 by modifying the local filesystem in-place. This can change both
@@ -101,8 +94,8 @@ When you invoke the `render` command, kpt performs the following steps:
 
 The end result is that:
 
-1. Resources in the `mysql` package parameterized with `ms-image` and `ms-tag` are modified.
-2. Resources in the `wordpress` package parameterized with `wp-image` and `wp-tag` are modified.
+1. Resources in the `mysql` package are labelled with `app: wordpress` and `tier: mysql`.
+2. Resources in the `wordpress` package are labelled with `app: wordpress`.
 3. All resources in `mysql` and `wordpress` are validated against their OpenAPI spec.
 
 If any of the functions in the pipeline fails for whatever reason, then the entire pipeline
@@ -132,19 +125,18 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
-      configPath: setters.yaml
+    - image: gcr.io/kpt-fn/set-label:v0.1
+      configPath: labels.yaml
 ```
 
 ```yaml
-# wordpress/mysql/setters.yaml
+# wordpress/mysql/labels.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: setterValues
+  name: labels
 data:
-  ms-image: mysql
-  ms-tag: 5.6
+  tier: mysql
 ```
 
 ### `configMap`
@@ -162,10 +154,9 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
+    - image: gcr.io/kpt-fn/set-label:v0.1
       configMap:
-        ms-image: mysql
-        ms-tag: 5.6
+        tier: mysql
 ```
 
 [func-cat]: http://catalog.kpt.dev
