@@ -15,11 +15,11 @@ For example:
 $ kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
-[PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 
 Package "wordpress":
 
-[PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 [PASS] "gcr.io/kpt-fn/kubeval:v0.1"
 
 Successfully executed 3 function(s) in 2 package(s).
@@ -36,9 +36,9 @@ metadata:
   name: fnresults
 exitCode: 0
 items:
-  - image: gcr.io/kpt-fn/apply-setters:v0.1
+  - image: gcr.io/kpt-fn/set-label:v0.1
     exitCode: 0
-  - image: gcr.io/kpt-fn/apply-setters:v0.1
+  - image: gcr.io/kpt-fn/set-label:v0.1
     exitCode: 0
   - image: gcr.io/kpt-fn/kubeval:v0.1
     exitCode: 0
@@ -52,11 +52,11 @@ rerun:
 $ kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
-[PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 
 Package "wordpress":
 
-[PASS] "gcr.io/kpt-fn/apply-setters:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 [FAIL] "gcr.io/kpt-fn/kubeval:v0.1"
   Results:
     [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/" in file "service.yaml" in field "spec.ports.0.port"
@@ -75,9 +75,9 @@ metadata:
   name: fnresults
 exitCode: 1
 items:
-  - image: gcr.io/kpt-fn/apply-setters:v0.1
+  - image: gcr.io/kpt-fn/set-label:v0.1
     exitCode: 0
-  - image: gcr.io/kpt-fn/apply-setters:v0.1
+  - image: gcr.io/kpt-fn/set-label:v0.1
     exitCode: 0
   - image: gcr.io/kpt-fn/kubeval:v0.1
     exitCode: 1
