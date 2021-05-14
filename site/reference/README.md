@@ -19,7 +19,7 @@ description: >
 All kpt commands follow this general synopsis:
 
 ```
-kpt <group> <command> [flags] <positional args> [PKG_PATH]
+kpt <group> <command> <positional args> [PKG_PATH] [flags]
 ```
 
 kpt functionality is divided into three command groups:

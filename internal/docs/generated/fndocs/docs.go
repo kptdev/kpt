@@ -91,30 +91,30 @@ Flags:
 var EvalExamples = `
   # execute container my-fn on the resources in DIR directory and
   # write output back to DIR
-  $ kpt fn --image gcr.io/example.com/my-fn eval DIR
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn
 
   # execute container my-fn on the resources in DIR directory with
   # ` + "`" + `functionConfig` + "`" + ` my-fn-config
-  $ kpt fn --image gcr.io/example.com/my-fn --fn-config my-fn-config eval DIR
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --fn-config my-fn-config
 
   # execute container my-fn with an input ConfigMap containing ` + "`" + `data: {foo: bar}` + "`" + `
-  $ kpt fn --image gcr.io/example.com/my-fn:v1.0.0 eval DIR -- foo=bar
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 
   # execute executable my-fn on the resources in DIR directory and
   # write output back to DIR
-  $ kpt fn --exec-path ./my-fn eval DIR
+  $ kpt fn eval DIR --exec-path ./my-fn
 
   # execute container my-fn on the resources in DIR directory,
   # save structured results in /tmp/my-results dir and write output back to DIR
-  $ kpt fn --image gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir eval DIR
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir
 
   # execute container my-fn on the resources in DIR directory with network access enabled,
   # and write output back to DIR
-  $ kpt fn --image gcr.io/example.com/my-fn --network eval DIR
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --network 
 
   # execute container my-fn on the resource in DIR and export KUBECONFIG
   # and foo environment variable
-  $ kpt fn --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar eval DIR
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 
   # execute kubeval function by mounting schema from a local directory on wordpress package
   $ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 \
@@ -182,7 +182,7 @@ var RenderExamples = `
   $ kpt fn render
 
   # Render the package in current directory and save results in my-results-dir
-  $ kpt fn --results-dir my-results-dir render
+  $ kpt fn render --results-dir my-results-dir 
 
   # Render my-package-dir
   $ kpt fn render my-package-dir
