@@ -108,7 +108,7 @@ page.
 For example, `kubeval` function can consume a JSON schema file:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- additional_schema_locations=/schema-dir
+$ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
 ```
 
 Note the `--as-current-user` flag may be required to run the function as your uid instead of the
