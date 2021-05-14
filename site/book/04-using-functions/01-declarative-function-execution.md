@@ -95,8 +95,8 @@ When you invoke the `render` command, kpt performs the following steps:
 The end result is that:
 
 1. Resources in the `mysql` package are labelled with `tier: mysql`.
-2. All resources in `mysql` and `wordpress` packages are labelled with `app: wordpress`.
-3. All resources in `mysql` and `wordpress` packages are validated against their OpenAPI spec.
+2. Resources in `mysql` and `wordpress` packages are labelled with `app: wordpress`.
+3. Resources in `mysql` and `wordpress` packages are validated against their OpenAPI spec.
 
 If any of the functions in the pipeline fails for whatever reason, then the entire pipeline
 is aborted and the local filesystem is left intact.
