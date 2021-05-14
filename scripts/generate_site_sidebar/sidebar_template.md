@@ -21,6 +21,6 @@
         - [migrate](reference/live/migrate/)
         - [preview](reference/live/preview/)
         - [status](reference/live/status/)
-- [Functions Catalog](https://catalog.kpt.dev/ ':crossorgin :target=_self')
+- [Functions Catalog](https://catalog.kpt.dev/ ':target=_self')
 - [FAQ](faq/)
 - [Contact](contact/)
