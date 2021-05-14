@@ -3,11 +3,11 @@ package overview
 
 var ReferenceShort = `Overview of kpt commands`
 var ReferenceLong = `
+All kpt commands follow this general synopsis:
+
   kpt <group> <command> <positional args> [PKG_PATH] [flags]
 
-kpt functionality is divided into the following command groups, each of
-which operates on a particular set of entities, with a consistent command
-syntax and pattern of inputs and outputs.
+kpt functionality is divided into three command groups:
 
 | Group   | Description                                                             |
 | --------| ------------------------------------------------------------------------|

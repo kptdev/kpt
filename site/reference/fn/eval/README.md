@@ -101,30 +101,30 @@ fn-args:
 ```shell
 # execute container my-fn on the resources in DIR directory and
 # write output back to DIR
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn  
+$ kpt fn eval DIR --image gcr.io/example.com/my-fn
 ```
 
 ```shell
 # execute container my-fn on the resources in DIR directory with
 # `functionConfig` my-fn-config
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --fn-config my-fn-config  
+$ kpt fn eval DIR --image gcr.io/example.com/my-fn --fn-config my-fn-config
 ```
 
 ```shell
 # execute container my-fn with an input ConfigMap containing `data: {foo: bar}`
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn:v1.0.0   -- foo=bar
+$ kpt fn eval DIR --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 ```
 
 ```shell
 # execute executable my-fn on the resources in DIR directory and
 # write output back to DIR
-$ kpt fn eval DIR --exec-path ./my-fn  
+$ kpt fn eval DIR --exec-path ./my-fn
 ```
 
 ```shell
 # execute container my-fn on the resources in DIR directory,
 # save structured results in /tmp/my-results dir and write output back to DIR
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir  
+$ kpt fn eval DIR --image gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir
 ```
 
 ```shell
@@ -136,7 +136,7 @@ $ kpt fn eval DIR --image gcr.io/example.com/my-fn --network
 ```shell
 # execute container my-fn on the resource in DIR and export KUBECONFIG
 # and foo environment variable
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar  
+$ kpt fn eval DIR --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 ```
 
 ```shell
