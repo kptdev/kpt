@@ -265,6 +265,9 @@ func TestCopyPackage(t *testing.T) {
 				"abc.yaml",
 				"foo",
 				"foo/Kptfile",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
 				"foo/def.yaml",
 				"test.txt",
 			},
@@ -279,6 +282,7 @@ func TestCopyPackage(t *testing.T) {
 						WithKptfile().
 						WithFile("def.yaml", "123").WithSubPackages(
 						pkgbuilder.NewSubPkg("bar").
+							WithKptfile().
 							WithFile("def.yaml", "123"),
 					),
 				),
@@ -307,6 +311,7 @@ func TestCopyPackage(t *testing.T) {
 						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
 						WithFile("def.yaml", "123").WithSubPackages(
 						pkgbuilder.NewSubPkg("bar").
+							WithKptfile().
 							WithFile("def.yaml", "123"),
 					),
 				),
@@ -387,7 +392,7 @@ func TestCopyPackage(t *testing.T) {
 
 			sort.Strings(visited)
 
-			assert.Equal(t, tc.expected, visited)
+			assert.ElementsMatch(t, tc.expected, visited)
 		})
 	}
 }
