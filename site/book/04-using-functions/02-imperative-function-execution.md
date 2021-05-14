@@ -136,7 +136,7 @@ For example, the following will set the labels on all resources in wordpress pac
 the `Kptfile`:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 --include-meta-resources wordpress -- label_name=color label_value=orange
+$ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 --include-meta-resources wordpress -- app=wordpress env=prod
 ```
 
 ## Chaining functions using the Unix pipe
@@ -149,7 +149,7 @@ For example:
 ```shell
 $ kpt fn source wordpress \
   | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 - -- label_name=color label_value=orange \
+  | kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 - -- app=wordpress env=prod \
   | kpt fn sink wordpress
 ```
 
