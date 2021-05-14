@@ -29,9 +29,8 @@ pipeline:
 
 This declares two functions:
 
-- `set-label` is an example mutator function which adds a set of labels to resources.
-- `kubeval` is an example validator function which validates the resources
-  against their OpenAPI schema.
+- `set-label` is a mutator function which adds a set of labels to resources.
+- `kubeval` is a validator function which validates the resources against their OpenAPI schema.
 
 ?> Refer to the [Functions Catalog][func-cat] for details on how to use a particular function.
 
