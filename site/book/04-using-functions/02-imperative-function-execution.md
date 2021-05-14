@@ -69,7 +69,7 @@ pairs as argument. For convenience, there is a way to provide the key/value pair
 arguments. The following is equivalent to what we showed previously:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress wordpress
+$ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 wordpress -- namespace=mywordpress
 ```
 
 Note that the arguments must come after the separator `--`.
