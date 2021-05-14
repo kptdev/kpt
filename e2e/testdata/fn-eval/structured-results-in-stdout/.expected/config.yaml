@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This test case tests the structured output of the `eval` command.
+
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 testType: eval
 image: gcr.io/kpt-fn/enforce-gatekeeper:v0.1
+# Non-error messages should be printed to stdout
 stdOut: "[WARNING]"
