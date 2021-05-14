@@ -228,6 +228,8 @@ const (
 	Local SubpackageMatcher = "LOCAL"
 	// remote means only remote subpackages will be returned.
 	Remote SubpackageMatcher = "REMOTE"
+	// None means that no subpackages will be returned.
+	None SubpackageMatcher = "NONE"
 )
 
 // Subpackages returns a slice of paths to any subpackages of the provided path.

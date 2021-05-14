@@ -544,6 +544,16 @@ func TestSubpackages(t *testing.T) {
 						"local-sub1",
 					},
 				},
+				{
+					matcher:   []SubpackageMatcher{None},
+					recursive: []bool{false},
+					expected:  []string{},
+				},
+				{
+					matcher:   []SubpackageMatcher{None},
+					recursive: []bool{true},
+					expected:  []string{},
+				},
 			},
 		},
 		"no subpackages": {
@@ -553,7 +563,7 @@ func TestSubpackages(t *testing.T) {
 				WithKptfile(),
 			cases: []variants{
 				{
-					matcher:   []SubpackageMatcher{All, Local, Remote},
+					matcher:   []SubpackageMatcher{All, Local, Remote, None},
 					recursive: []bool{true, false},
 					expected:  []string{},
 				},
@@ -564,7 +574,7 @@ func TestSubpackages(t *testing.T) {
 			pkg: pkgbuilder.NewRootPkg(),
 			cases: []variants{
 				{
-					matcher:   []SubpackageMatcher{All, Local, Remote},
+					matcher:   []SubpackageMatcher{All, Local, Remote, None},
 					recursive: []bool{true, false},
 					expected:  []string{},
 				},

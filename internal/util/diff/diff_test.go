@@ -23,25 +23,28 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCommand_Diff(t *testing.T) {
 	testCases := map[string]struct {
-		reposChanges map[string][]testutil.Content
-		updatedLocal testutil.Content
-		fetchRef     string
-		diffRef      string
-		diffType     DiffType
-		diffTool     string
-		diffOpts     string
-		expDiff      string
+		reposChanges              map[string][]testutil.Content
+		updatedLocal              testutil.Content
+		fetchRef                  string
+		diffRef                   string
+		diffType                  DiffType
+		diffTool                  string
+		diffOpts                  string
+		expDiff                   string
+		hasLocalSubpackageChanges bool
 	}{
 
 		// 1. add data to the upstream master branch
@@ -164,59 +167,150 @@ func TestCommand_Diff(t *testing.T) {
 >       targetPort: 80
 `,
 		},
+		"nested local packages updated in local": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("5", "spec", "replicas")).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.SecretResource).
+							WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("2", "spec", "replicas")),
+					),
+			},
+			fetchRef: "main",
+			diffRef:  "main",
+			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
+			expDiff: `
+7c7
+<   replicas: 5
+---
+>   replicas: 3
+locally changed: foo
+			`,
+			hasLocalSubpackageChanges: true,
+		},
+		"nested remote packages updated in local": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource),
+						Branch: "master",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("5", "spec", "replicas")).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.SecretResource).
+							WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("2", "spec", "replicas")),
+					),
+			},
+			fetchRef: "main",
+			diffRef:  "main",
+			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
+			expDiff: `
+7c7
+<   replicas: 5
+---
+>   replicas: 3
+			`,
+		},
 
 		//nolint:gocritic
 		// TODO(mortent): Diff functionality must be updated to handle nested packages.
-		//		"nested packages": {
-		//			reposChanges: map[string][]testutil.Content{
-		//				testutil.Upstream: {
-		//					{
-		//						Pkg: pkgbuilder.NewRootPkg().
-		//							WithResource(pkgbuilder.DeploymentResource),
-		//						Branch: "main",
-		//					},
-		//					{
-		//						Pkg: pkgbuilder.NewRootPkg().
-		//							WithResource(pkgbuilder.DeploymentResource,
-		//								pkgbuilder.SetFieldPath("5", "spec", "replicas")),
-		//					},
-		//				},
-		//				"foo": {
-		//					{
-		//						Pkg: pkgbuilder.NewRootPkg().
-		//							WithResource(pkgbuilder.SecretResource),
-		//						Branch: "master",
-		//					},
-		//				},
-		//			},
-		//			updatedLocal: testutil.Content{
-		//				Pkg: pkgbuilder.NewRootPkg().
-		//					WithKptfile(
-		//						pkgbuilder.NewKptfile().
-		//							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
-		//							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
-		//					).
-		//					WithResource(pkgbuilder.DeploymentResource).
-		//					WithSubPackages(
-		//						pkgbuilder.NewSubPkg("foo").
-		//							WithKptfile(
-		//								pkgbuilder.NewKptfile().
-		//									WithUpstreamRef("foo", "/", "master", "resource-merge").
-		//									WithUpstreamLockRef("foo", "/", "master", 0),
-		//							).
-		//							WithResource(pkgbuilder.SecretResource),
-		//					),
-		//			},
-		//			fetchRef: "main",
-		//			diffRef: "main",
-		//			diffType: DiffTypeCombined,
-		//			expDiff: `
-		//7c7
-		//<   replicas: 3
-		//---
-		//>   replicas: 5
-		//`,
-		//		},
+		"nested remote package updated in upstream": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "main",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource,
+								pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource),
+						Branch: "master",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "main", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "main", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("foo").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.SecretResource),
+					),
+			},
+			fetchRef: "main",
+			diffRef:  "main",
+			diffType: DiffTypeCombined,
+			diffTool: "diff",
+			diffOpts: "-r -i -w",
+			expDiff: `
+7c7
+<   replicas: 3
+---
+>   replicas: 5
+		`,
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -246,9 +340,14 @@ func TestCommand_Diff(t *testing.T) {
 				DiffToolOpts: tc.diffOpts,
 				Output:       diffOutput,
 			}).Run(fake.CtxWithNilPrinter())
-			assert.NoError(t, err)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
 			filteredOutput := filterDiffMetadata(diffOutput)
+			if tc.hasLocalSubpackageChanges {
+				filteredOutput = regexp.MustCompile("Only in /tmp.+:").ReplaceAllString(filteredOutput, "locally changed:")
+			}
 			assert.Equal(t, strings.TrimSpace(tc.expDiff)+"\n", filteredOutput)
 		})
 	}
