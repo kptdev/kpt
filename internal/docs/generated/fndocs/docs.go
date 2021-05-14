@@ -193,13 +193,13 @@ var SinkLong = `
   kpt fn sink DIR [flags]
   
   DIR:
-    Path to a local directory to resources to. Directory must exist.
+    Path to a local directory to write resources to. Directory must exist.
 `
 var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn run --image gcr.io/example.com/my-fn |
+    kpt fn eval --image gcr.io/example.com/my-fn |
     kpt fn sink DIR
 `
 
@@ -226,6 +226,6 @@ var SourceExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn run --image gcr.io/example.com/my-fn |
+    kpt fn eval --image gcr.io/example.com/my-fn |
     kpt fn sink DIR
 `
