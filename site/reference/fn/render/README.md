@@ -65,7 +65,7 @@ $ kpt fn render
 
 ```shell
 # Render the package in current directory and save results in my-results-dir
-$ kpt fn --results-dir my-results-dir render
+$ kpt fn render --results-dir my-results-dir 
 ```
 
 ```shell
