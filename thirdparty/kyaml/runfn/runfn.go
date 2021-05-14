@@ -242,8 +242,8 @@ func (r RunFns) printFnResultsStatus(resultsFile string) {
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
 // file (declarative). If they have same key, the imperative value will be respected.
 func (r RunFns) mergeContainerEnv(envs []string) []string {
-	imperative := runtimeutil.NewContainerEnvFromStringSlice(r.Env)
-	declarative := runtimeutil.NewContainerEnvFromStringSlice(envs)
+	imperative := fnruntime.NewContainerEnvFromStringSlice(r.Env)
+	declarative := fnruntime.NewContainerEnvFromStringSlice(envs)
 	for key, value := range imperative.EnvVars {
 		declarative.AddKeyValue(key, value)
 	}
