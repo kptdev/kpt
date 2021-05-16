@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
@@ -21,6 +20,6 @@ source: |
   def isStatefulSet(r):
     return r["apiVersion"] == "apps/v1" and
     r["kind"] == "StatefulSet"
-  
+
   # filter out statefulsets
   ctx.resource_list["items"] = [r for r in ctx.resource_list["items"] if not isStatefulSet(r)]

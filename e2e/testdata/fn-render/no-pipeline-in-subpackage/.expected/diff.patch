@@ -1,13 +1,8 @@
 diff --git a/db/resources.yaml b/db/resources.yaml
-index 10cd18b..a9dd224 100644
+index 7a494c9..a9dd224 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -11,17 +11,29 @@
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
--
- apiVersion: apps/v1
+@@ -15,12 +15,25 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment

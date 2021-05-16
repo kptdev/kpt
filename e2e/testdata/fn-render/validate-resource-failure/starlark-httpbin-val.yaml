@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
   name: httpbin-val
-source: |
+source: |-
   def contains_httpbin_resource(resource_list):
     for r in resource_list["items"]:
       if r["metadata"]["name"] == "httpbin" and r["kind"] == "Deployment":
