@@ -134,7 +134,7 @@ function processAsciinemaTags(content) {
   );
 }
 
-function localPlugins(hook, vm) {
+function localPlugins(hook, _vm) {
   // Process Markdown directives appropriately.
   hook.beforeEach(function (content) {
     content = processAsciinemaTags(content);
