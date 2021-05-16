@@ -3,6 +3,7 @@
     "public": "site",
     "ignore": [
       "firebase.json",
+      "Dockerfile",
       "**/.*",
       "**/node_modules/**"
     ],
