@@ -5,7 +5,8 @@
       "firebase.json",
       "Dockerfile",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*.test.*",
     ],
     "rewrites": [
       {
