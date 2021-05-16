@@ -6,7 +6,7 @@
       "Dockerfile",
       "**/.*",
       "**/node_modules/**",
-      "**/*.test.*",
+      "**/*.test.*"
     ],
     "rewrites": [
       {
