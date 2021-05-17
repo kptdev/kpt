@@ -41,22 +41,16 @@ func (p *Pipeline) validate() error {
 	if p == nil {
 		return nil
 	}
-	fns := []Function{}
-	fns = append(fns, p.Mutators...)
-	fns = append(fns, p.Validators...)
-	for i := range fns {
-		f := fns[i]
-		// fnIdx is the index of this function in corresponding function
-		// type
-		fnIdx := i
-		// fnType is the type of this function
-		fnType := "mutators"
-		if i >= len(p.Mutators) {
-			// this function is a validator
-			fnIdx = i - len(p.Mutators)
-			fnType = "validators"
+	for i := range p.Mutators {
+		f := p.Mutators[i]
+		err := f.validate("mutators", i)
+		if err != nil {
+			return fmt.Errorf("function %q: %w", f.Image, err)
 		}
-		err := f.validate(fnType, fnIdx)
+	}
+	for i := range p.Validators {
+		f := p.Validators[i]
+		err := f.validate("validators", i)
 		if err != nil {
 			return fmt.Errorf("function %q: %w", f.Image, err)
 		}
@@ -101,7 +95,7 @@ func (f *Function) validate(fnType string, idx int) error {
 	if len(configFields) > 1 {
 		return &ValidateError{
 			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: fmt.Sprintf("following fields are mutually exclusive: 'config', 'configMap', 'configPath'. Got %q",
+			Reason: fmt.Sprintf("only one of 'config', 'configMap', 'configPath' can be specified. Got %q",
 				strings.Join(configFields, ", ")),
 		}
 	}

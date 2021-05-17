@@ -163,7 +163,7 @@ func (f *ContainerFn) prepareImage() error {
 	var output []byte
 	var err error
 	if output, err = cmd.CombinedOutput(); err != nil {
-		return &DockerImageError{
+		return &ContainerImageError{
 			Image:  f.Image,
 			Output: string(output),
 		}
@@ -182,7 +182,7 @@ func (f *ContainerFn) prepareImage() error {
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return &DockerImageError{
+		return &ContainerImageError{
 			Image:  f.Image,
 			Output: string(output),
 		}
@@ -190,14 +190,13 @@ func (f *ContainerFn) prepareImage() error {
 	return nil
 }
 
-// DockerImageError is an error type which will be returned when
+// ContainerImageError is an error type which will be returned when
 // the container run time cannot verify docker image.
-type DockerImageError struct {
+type ContainerImageError struct {
 	Image  string
 	Output string
 }
 
-func (e *DockerImageError) Error() string {
-	return fmt.Sprintf(`Function image %q doesn't exist.
-Please verify the correctness and existence of the image name.`, e.Image)
+func (e *ContainerImageError) Error() string {
+	return fmt.Sprintf("Function image %q doesn't exist.", e.Image)
 }

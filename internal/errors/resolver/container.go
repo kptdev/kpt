@@ -17,25 +17,25 @@ package resolver
 import (
 	"errors"
 
-	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 )
 
 //nolint:gochecknoinits
 func init() {
-	AddErrorResolver(&kptfileValidateErrorResolver{})
+	AddErrorResolver(&containerImageErrorResolver{})
 }
 
-// kptfileValidateErrorResolver is an implementation of the ErrorResolver interface
-// to resolve Kptfile validation error.
-type kptfileValidateErrorResolver struct{}
+// containerImageErrorResolver is an implementation of the ErrorResolver interface
+// to resolve container image errors.
+type containerImageErrorResolver struct{}
 
-func (*kptfileValidateErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	var validateError *kptfile.ValidateError
-	if !errors.As(err, &validateError) {
+func (*containerImageErrorResolver) Resolve(err error) (ResolvedResult, bool) {
+	var containerImageError *fnruntime.ContainerImageError
+	if !errors.As(err, &containerImageError) {
 		return ResolvedResult{}, false
 	}
 	return ResolvedResult{
-		Message:  validateError.Error(),
+		Message:  containerImageError.Error(),
 		ExitCode: 1,
 	}, true
 }
