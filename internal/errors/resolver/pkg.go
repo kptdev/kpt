@@ -19,6 +19,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
 //nolint:gochecknoinits
@@ -44,6 +45,7 @@ type pkgErrorResolver struct{}
 
 func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var kptfileError *pkg.KptfileError
+	var validateError *kptfile.ValidateError
 	if errors.As(err, &kptfileError) {
 		path := kptfileError.Path
 		tmplArgs := map[string]interface{}{
@@ -60,6 +62,12 @@ func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 		return ResolvedResult{
 			Message:  ExecuteTemplate(kptfileReadErrMsg, tmplArgs),
+			ExitCode: 1,
+		}, true
+	}
+	if errors.As(err, &validateError) {
+		return ResolvedResult{
+			Message:  validateError.Error(),
 			ExitCode: 1,
 		}, true
 	}

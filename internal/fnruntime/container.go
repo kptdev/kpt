@@ -163,7 +163,10 @@ func (f *ContainerFn) prepareImage() error {
 	var output []byte
 	var err error
 	if output, err = cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to check local function image %q: %w", f.Image, err)
+		return &ContainerImageError{
+			Image:  f.Image,
+			Output: string(output),
+		}
 	}
 	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
 		// image exists locally
@@ -178,8 +181,22 @@ func (f *ContainerFn) prepareImage() error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
-	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("function image %q doesn't exist", f.Image)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return &ContainerImageError{
+			Image:  f.Image,
+			Output: string(output),
+		}
 	}
 	return nil
+}
+
+// ContainerImageError is an error type which will be returned when
+// the container run time cannot verify docker image.
+type ContainerImageError struct {
+	Image  string
+	Output string
+}
+
+func (e *ContainerImageError) Error() string {
+	return fmt.Sprintf("Function image %q doesn't exist.", e.Image)
 }

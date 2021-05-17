@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: 'Error: invalid pipeline: function "gcr.io/kpt-fn/set-labels:unstable": functionConfig must be a valid KRM resource with `apiVersion` and `kind` fields'
+stdErr: "functionConfig must be a valid KRM resource with `apiVersion` and `kind` fields"
