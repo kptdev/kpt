@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdapply"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
+	"github.com/GoogleContainerTools/kpt/internal/cmdmigrate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
@@ -69,17 +70,17 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	dp := live.NewDualDelegatingProvider(f)
 	dl := live.NewDualDelegatingManifestReader(f)
 
-	rgp := live.NewResourceGroupProvider(f)
-	rgl := live.NewResourceGroupManifestLoader(f)
+	rgProvider := live.NewResourceGroupProvider(f)
+	rgLoader := live.NewResourceGroupManifestLoader(f)
+
+	cmProvider := provider.NewProvider(f)
+	cmLoader := manifestreader.NewManifestLoader(f)
 
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
-	initCmd := cmdliveinit.NewCmdInit(f, ioStreams)
-	initCmd.Short = livedocs.InitShort
-	initCmd.Long = livedocs.InitShort + "\n" + livedocs.InitLong
-	initCmd.Example = livedocs.InitExamples
+	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
 
-	applyCmd := cmdapply.NewCommand(ctx, rgp, rgl, ioStreams)
+	applyCmd := cmdapply.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
 
 	previewCmd := preview.GetPreviewRunner(dp, dl, ioStreams).Command
 	previewCmd.Short = livedocs.PreviewShort
@@ -107,11 +108,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	// Add the migrate command to change from ConfigMap to ResourceGroup inventory
 	// object. Also add the install-resource-group command.
 	klog.V(2).Infoln("adding kpt live migrate command")
-	cmProvider := provider.NewProvider(f)
-	rgProvider := live.NewResourceGroupProvider(f)
-	cmLoader := manifestreader.NewManifestLoader(f)
-	rgLoader := live.NewResourceGroupManifestLoader(f)
-	migrateCmd := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
+	migrateCmd := cmdmigrate.NewCommand(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
 	liveCmd.AddCommand(migrateCmd, installRGCmd)
 

@@ -1,7 +1,7 @@
 // Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
-package commands
+package cmdmigrate
 
 import (
 	"io/ioutil"
@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
@@ -140,14 +141,15 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
 
+			ctx := fake.CtxWithNilPrinter()
 			// Create MigrateRunner and call "updateKptfile"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
-			err = migrateRunner.updateKptfile([]string{dir}, testInventoryID)
+			err = migrateRunner.updateKptfile(ctx, []string{dir}, testInventoryID)
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
@@ -199,12 +201,13 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
+			ctx := fake.CtxWithNilPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
@@ -302,12 +305,13 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
+			ctx := fake.CtxWithNilPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewFakeResourceGroupProvider(tf, tc.objs)
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := GetMigrateRunner(cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
 			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
