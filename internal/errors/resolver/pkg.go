@@ -64,7 +64,8 @@ func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 			Message:  ExecuteTemplate(kptfileReadErrMsg, tmplArgs),
 			ExitCode: 1,
 		}, true
-	} else if errors.As(err, &validateError) {
+	}
+	if errors.As(err, &validateError) {
 		return ResolvedResult{
 			Message:  validateError.Error(),
 			ExitCode: 1,
