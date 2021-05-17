@@ -97,9 +97,9 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 				return err
 			}
 			out = strings.TrimPrefix(out, ".")
-			out = filepath.Base(d) + out
+			out = "\"" + filepath.Base(d) + "\":" + out
 		}
-		out = PkgPrefix + "\"" + out + "\":"
+		out = PkgPrefix + out 
 	}
 
 	_, err = io.WriteString(p.Writer, out)

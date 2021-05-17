@@ -305,7 +305,7 @@ openAPI:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`Package "%s":
+	if !assert.Equal(t, fmt.Sprintf(`Package %s
 ├── [Kptfile]  Kptfile mainpkg
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
