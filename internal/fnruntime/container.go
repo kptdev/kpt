@@ -20,6 +20,7 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -33,6 +34,8 @@ import (
 type containerNetworkName string
 
 const (
+	PreferLocalCacheEnv = "KPT_FN_PREFER_LOCAL_CACHE"
+
 	networkNameNone containerNetworkName = "none"
 	networkNameHost containerNetworkName = "host"
 	defaultTimeout  time.Duration        = 5 * time.Minute
@@ -158,6 +161,7 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 // exist.
 func (f *ContainerFn) prepareImage() error {
 	// check image existence
+	foundImageInLocalCache := false
 	args := []string{"image", "ls", f.Image}
 	cmd := exec.Command(dockerBin, args...)
 	var output []byte
@@ -170,8 +174,21 @@ func (f *ContainerFn) prepareImage() error {
 	}
 	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
 		// image exists locally
+		foundImageInLocalCache = true
+	}
+
+	// If env var PreferLocalCacheEnv is set to "true", we scan the local images
+	// first. If there is a match, we just return. This can be useful for local
+	// development.
+	if strings.ToLower(os.Getenv(PreferLocalCacheEnv)) == "true" && foundImageInLocalCache {
 		return nil
 	}
+
+	// If env var PreferLocalCacheEnv is not set, we will try to pull the image
+	// regardless if the tag has been seen in the local cache. Because we want
+	// to ensure we have the latest release for "moving tags" like v1 and v1.2.
+	// The performance cost is very minimal, since `docker pull` checks the SHA
+	// first and only pull the missing layer(s).
 	args = []string{"image", "pull", f.Image}
 	// setup timeout
 	timeout := defaultTimeout
@@ -181,7 +198,8 @@ func (f *ContainerFn) prepareImage() error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
-	if output, err := cmd.CombinedOutput(); err != nil {
+	output, err = cmd.CombinedOutput()
+	if !foundImageInLocalCache && err != nil {
 		return &ContainerImageError{
 			Image:  f.Image,
 			Output: string(output),
