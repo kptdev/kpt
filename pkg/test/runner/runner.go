@@ -124,34 +124,41 @@ func (r *Runner) runFnEval() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "eval", pkgPath}
-
-	if resultsDir != "" {
-		kptArgs = append(kptArgs, "--results-dir", resultsDir)
-	}
-	if r.testCase.Config.EvalConfig.Network {
-		kptArgs = append(kptArgs, "--network")
-	}
-	if r.testCase.Config.EvalConfig.Image != "" {
-		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
-	} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
-		kptArgs = append(kptArgs, "--exec-path", string(r.testCase.Config.EvalConfig.execUniquePath))
-	}
-	if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
-		kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
-	}
-	if r.testCase.Config.EvalConfig.IncludeMetaResources {
-		kptArgs = append(kptArgs, "--include-meta-resources")
-	}
-	// args must be appended last
-	if len(r.testCase.Config.EvalConfig.Args) > 0 {
-		kptArgs = append(kptArgs, "--")
-		for k, v := range r.testCase.Config.EvalConfig.Args {
-			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
-		}
-	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
+		var cmd *exec.Cmd
+
+		if r.testCase.Config.Script != "" {
+			cmd = getCommand(pkgPath, "bash", []string{"-c", r.testCase.Config.Script})
+		} else {
+			kptArgs := []string{"fn", "eval", pkgPath}
+
+			if resultsDir != "" {
+				kptArgs = append(kptArgs, "--results-dir", resultsDir)
+			}
+			if r.testCase.Config.EvalConfig.Network {
+				kptArgs = append(kptArgs, "--network")
+			}
+			if r.testCase.Config.EvalConfig.Image != "" {
+				kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
+			} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
+				kptArgs = append(kptArgs, "--exec-path", string(r.testCase.Config.EvalConfig.execUniquePath))
+			}
+			if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
+				kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
+			}
+			if r.testCase.Config.EvalConfig.IncludeMetaResources {
+				kptArgs = append(kptArgs, "--include-meta-resources")
+			}
+			// args must be appended last
+			if len(r.testCase.Config.EvalConfig.Args) > 0 {
+				kptArgs = append(kptArgs, "--")
+				for k, v := range r.testCase.Config.EvalConfig.Args {
+					kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
+				}
+			}
+			cmd = getCommand("", r.kptBin, kptArgs)
+		}
+		stdout, stderr, fnErr := runCommand(cmd)
 		if fnErr != nil {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
@@ -230,17 +237,24 @@ func (r *Runner) runFnRender() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "render", pkgPath}
-
-	if resultsDir != "" {
-		kptArgs = append(kptArgs, "--results-dir", resultsDir)
-	}
-
-	if r.testCase.Config.DisableOutputTruncate {
-		kptArgs = append(kptArgs, "--truncate-output=false")
-	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
+		var cmd *exec.Cmd
+
+		if r.testCase.Config.Script != "" {
+			cmd = getCommand(pkgPath, "bash", []string{"-c", r.testCase.Config.Script})
+		} else {
+			kptArgs := []string{"fn", "render", pkgPath}
+
+			if resultsDir != "" {
+				kptArgs = append(kptArgs, "--results-dir", resultsDir)
+			}
+
+			if r.testCase.Config.DisableOutputTruncate {
+				kptArgs = append(kptArgs, "--truncate-output=false")
+			}
+			cmd = getCommand("", r.kptBin, kptArgs)
+		}
+		stdout, stderr, fnErr := runCommand(cmd)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			return r.updateExpected(pkgPath, resultsDir, filepath.Join(r.testCase.Path, expectedDir))
