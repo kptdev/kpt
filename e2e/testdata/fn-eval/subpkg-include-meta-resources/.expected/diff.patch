@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index cdf6fa7..7246298 100644
+index 9c11c4f..f5353ca 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,7 +2,8 @@ apiVersion: kpt.dev/v1alpha2
@@ -10,11 +10,11 @@ index cdf6fa7..7246298 100644
  pipeline:
    mutators:
 -    - configPath: labelconfig.yaml
--      image: gcr.io/kpt-fn/set-label:v0.1
-+    - image: gcr.io/kpt-fn/set-label:v0.1
+-      image: gcr.io/kpt-fn/set-labels:v0.1
++    - image: gcr.io/kpt-fn/set-labels:v0.1
 +      configPath: labelconfig.yaml
 diff --git a/db/Kptfile b/db/Kptfile
-index 7d7cf73..64ade60 100644
+index 94fe38b..462c556 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
 @@ -2,7 +2,8 @@ apiVersion: kpt.dev/v1alpha2
@@ -25,8 +25,8 @@ index 7d7cf73..64ade60 100644
  pipeline:
    mutators:
 -    - configPath: labelconfig.yaml
--      image: gcr.io/kpt-fn/set-label:unstable
-+    - image: gcr.io/kpt-fn/set-label:unstable
+-      image: gcr.io/kpt-fn/set-labels:unstable
++    - image: gcr.io/kpt-fn/set-labels:unstable
 +      configPath: labelconfig.yaml
 diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
 index ad6b09d..b7b0335 100644

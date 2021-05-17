@@ -7,5 +7,5 @@ pipeline:
   - image: gcr.io/kpt-fn/set-namespace:unstable
     configMap:
       namespace: staging
-  - image: gcr.io/kpt-fn/set-label:unstable
+  - image: gcr.io/kpt-fn/set-labels:unstable
     configPath: labelconfig1.yaml

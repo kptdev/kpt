@@ -123,7 +123,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		args = append(args, "--mount", storageMount.String())
 	}
 	args = append(args,
-		newContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
+		NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
 	args = append(args, f.Image)
 	// setup container run timeout
 	timeout := defaultTimeout
@@ -134,11 +134,11 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 	return exec.CommandContext(ctx, dockerBin, args...), cancel
 }
 
-// newContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing
+// NewContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing
 // input envStr. envStr example: ["foo=bar", "baz"]
 // using this instead of runtimeutil.NewContainerEnvFromStringSlice() to avoid
 // default envs LOG_TO_STDERR
-func newContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
+func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 	ce := &runtimeutil.ContainerEnv{
 		EnvVars: make(map[string]string),
 	}
