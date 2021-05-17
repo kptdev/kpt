@@ -10,34 +10,18 @@ from git repositories.
 var CatShort = `Print the resources in a file/directory`
 var CatLong = `
   kpt pkg cat [FILE | DIR]
-  
-  DIR:
-    Path to a directory with resources. Defaults to the current working directory.
-  
-  FILE:
-    Path to a resource file.
+
+Args:
+  FILE | DIR:
+    Path to a directory either a directory containing files with KRM resources, or
+    a file with KRM resource(s). Defaults to the current directory.
 `
 var CatExamples = `
-  # print resource from a file
+  # Print resource from a file.
   kpt pkg cat path/to/deployment.yaml
 
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: nginx-deployment
-
-  # print resources from current directory
+  # Print resources from current directory.
   kpt pkg cat
-
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: nginx-deployment
-  ---
-  apiVersion: apps/v1
-  kind: Service
-  metadata:
-    name: nginx-service
 `
 
 var DiffShort = `Show differences between a local package and upstream.`
@@ -202,21 +186,12 @@ var InitExamples = `
   kpt pkg init
 `
 
-var TreeShort = `Render resources using a tree structure`
+var TreeShort = `Display resources, files and packages in a tree structure.`
 var TreeLong = `
   kpt pkg tree [DIR | -]
-
-Args:
-
-  DIR:
-    Path to a package directory. Defaults to the current working directory.
-
-Flags:
-
-  
 `
 var TreeExamples = `
-  # print Resources using directory structure
+  # Show resources in the current directory.
   kpt pkg tree
 `
 

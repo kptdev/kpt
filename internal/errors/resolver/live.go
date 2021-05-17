@@ -15,6 +15,8 @@
 package resolver
 
 import (
+	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 )
@@ -25,7 +27,7 @@ func init() {
 }
 
 const (
-	noInventoryObjError = `
+	noInventoryObjErrorMsg = `
 Error: Package uninitialized. Please run "kpt live init" command.
 
 The package needs to be initialized to generate the template
@@ -33,18 +35,31 @@ which will store state for resource sets. This state is
 necessary to perform functionality such as deleting an entire
 package or automatically deleting omitted resources (pruning).
 `
-	multipleInventoryObjError = `
+	multipleInventoryObjErrorMsg = `
 Error: Package has multiple inventory object templates.
 
 The package should have one and only one inventory object template.
 `
 	//nolint:lll
-	timeoutError = `
+	timeoutErrorMsg = `
 Error: Timeout after {{printf "%.0f" .err.Timeout.Seconds}} seconds waiting for {{printf "%d" (len .err.TimedOutResources)}} out of {{printf "%d" (len .err.Identifiers)}} resources to reach condition {{ .err.Condition}}:{{ printf "\n" }}
 
 {{- range .err.TimedOutResources}}
 {{printf "%s/%s %s %s" .Identifier.GroupKind.Kind .Identifier.Name .Status .Message }}
 {{- end}}
+`
+
+	resourceGroupCRDInstallErrorMsg = `
+Error: Unable to install the ResourceGroup CRD.
+
+{{- if gt (len .cause) 0 }}
+{{ printf "\nDetails:" }}
+{{ printf "%s" .cause }}
+{{- end }}
+`
+	//nolint:lll
+	noResourceGroupCRDMsg = `
+Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command.
 `
 
 	TimeoutErrorExitCode = 3
@@ -58,21 +73,44 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	tmplArgs := map[string]interface{}{
 		"err": err,
 	}
-	switch err.(type) {
-	case *inventory.NoInventoryObjError:
+
+	var noInventoryObjError *inventory.NoInventoryObjError
+	if errors.As(err, &noInventoryObjError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(noInventoryObjError, tmplArgs),
+			Message: ExecuteTemplate(noInventoryObjErrorMsg, tmplArgs),
 		}, true
-	case *inventory.MultipleInventoryObjError:
+	}
+
+	var multipleInventoryObjError *inventory.MultipleInventoryObjError
+	if errors.As(err, &multipleInventoryObjError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(multipleInventoryObjError, tmplArgs),
+			Message: ExecuteTemplate(multipleInventoryObjErrorMsg, tmplArgs),
 		}, true
-	case *taskrunner.TimeoutError:
+	}
+
+	var timeoutError *taskrunner.TimeoutError
+	if errors.As(err, &timeoutError) {
 		return ResolvedResult{
-			Message:  ExecuteTemplate(timeoutError, tmplArgs),
+			Message:  ExecuteTemplate(timeoutErrorMsg, tmplArgs),
 			ExitCode: TimeoutErrorExitCode,
 		}, true
-	default:
-		return ResolvedResult{}, false
 	}
+
+	var resourceGroupCRDInstallError *cmdutil.ResourceGroupCRDInstallError
+	if errors.As(err, &resourceGroupCRDInstallError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(resourceGroupCRDInstallErrorMsg, map[string]interface{}{
+				"cause": resourceGroupCRDInstallError.Err.Error(),
+			}),
+		}, true
+	}
+
+	var noResourceGroupCRDError *cmdutil.NoResourceGroupCRDError
+	if errors.As(err, &noResourceGroupCRDError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(noResourceGroupCRDMsg, tmplArgs),
+		}, true
+	}
+
+	return ResolvedResult{}, false
 }

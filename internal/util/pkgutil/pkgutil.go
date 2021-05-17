@@ -63,10 +63,15 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 	})
 }
 
-// CopyPackage copies the content of a single package from src to dst. It
-// will not copy resources belonging to any subpackages.
-func CopyPackage(src, dst string, copyRootKptfile bool) error {
-	return WalkPackage(src, func(path string, info os.FileInfo, err error) error {
+// CopyPackage copies the content of a single package from src to dst. If includeSubpackages
+// is true, it will copy resources belonging to any subpackages.
+func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
+	subpackagesToCopy, err := pkg.Subpackages(src, matcher, true)
+	if err != nil {
+		return err
+	}
+
+	err = WalkPackage(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -75,6 +80,15 @@ func CopyPackage(src, dst string, copyRootKptfile bool) error {
 		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
 		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
 		copyTo := strings.TrimPrefix(path, src)
+		if copyTo == "/Kptfile" {
+			_, err := os.Stat(filepath.Join(dst, copyTo))
+			if err == nil {
+				return nil
+			}
+			if !os.IsNotExist(err) {
+				return err
+			}
+		}
 
 		// make directories that don't exist
 		if info.IsDir() {
@@ -97,48 +111,59 @@ func CopyPackage(src, dst string, copyRootKptfile bool) error {
 
 		return nil
 	})
-}
 
-func CopyPackageWithSubpackages(src, dst string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// don't copy the .git dir
-		if path != src {
-			rel := strings.TrimPrefix(path, src)
-			if copyutil.IsDotGitFolder(rel) {
-				return nil
-			}
-		}
+	if err != nil {
+		return err
+	}
 
-		copyTo := strings.TrimPrefix(path, src)
-		if info.IsDir() {
-			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
-		}
-
-		if copyTo == "/Kptfile" {
-			_, err := os.Stat(filepath.Join(dst, copyTo))
-			if err == nil {
-				return nil
-			}
-			if !os.IsNotExist(err) {
+	for _, subpackage := range subpackagesToCopy {
+		subpackageSrc := filepath.Join(src, subpackage)
+		// subpackageDest := filepath.Join(dst, strings.TrimPrefix(subpackage, src))
+		err = filepath.Walk(subpackageSrc, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
 				return err
 			}
-		}
+			// don't copy the .git dir
+			if path != src {
+				rel := strings.TrimPrefix(path, subpackageSrc)
+				if copyutil.IsDotGitFolder(rel) {
+					return nil
+				}
+			}
 
-		// copy file by reading and writing it
-		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+			copyTo := strings.TrimPrefix(path, src)
+			if info.IsDir() {
+				return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+			}
+
+			if copyTo == "/Kptfile" {
+				_, err := os.Stat(filepath.Join(dst, copyTo))
+				if err == nil {
+					return nil
+				}
+				if !os.IsNotExist(err) {
+					return err
+				}
+			}
+
+			// copy file by reading and writing it
+			b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
-		if err != nil {
-			return err
-		}
+	}
 
-		return nil
-	})
+	return nil
 }
 
 func RemovePackageContent(path string, removeRootKptfile bool) error {

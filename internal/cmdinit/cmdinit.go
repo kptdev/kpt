@@ -75,14 +75,14 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	r.Name = filepath.Base(string(p.UniquePath))
+	r.Name = string(p.DisplayPath)
 
-	dp := string(p.DisplayPath)
-	if _, err = os.Stat(dp); os.IsNotExist(err) {
+	up := string(p.UniquePath)
+	if _, err = os.Stat(string(p.UniquePath)); os.IsNotExist(err) {
 		return errors.Errorf("%s does not exist", err)
 	}
 
-	if _, err = os.Stat(filepath.Join(dp, kptfilev1alpha2.KptFileName)); os.IsNotExist(err) {
+	if _, err = os.Stat(filepath.Join(up, kptfilev1alpha2.KptFileName)); os.IsNotExist(err) {
 		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], "Kptfile"))
 		k := kptfilev1alpha2.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
@@ -104,7 +104,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		k.APIVersion = kptfilev1alpha2.TypeMeta.APIVersion
 
 		err = func() error {
-			f, err := os.Create(filepath.Join(dp, kptfilev1alpha2.KptFileName))
+			f, err := os.Create(filepath.Join(up, kptfilev1alpha2.KptFileName))
 			if err != nil {
 				return err
 			}
@@ -119,7 +119,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	if _, err = os.Stat(filepath.Join(dp, man.ManFilename)); os.IsNotExist(err) {
+	if _, err = os.Stat(filepath.Join(up, man.ManFilename)); os.IsNotExist(err) {
 		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], man.ManFilename))
 		buff := &bytes.Buffer{}
 		t, err := template.New("man").Parse(manTemplate)
@@ -135,7 +135,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		// Replace single quotes with backticks.
 		content := strings.ReplaceAll(buff.String(), "'", "`")
 
-		err = ioutil.WriteFile(filepath.Join(dp, man.ManFilename), []byte(content), 0600)
+		err = ioutil.WriteFile(filepath.Join(up, man.ManFilename), []byte(content), 0600)
 		if err != nil {
 			return err
 		}

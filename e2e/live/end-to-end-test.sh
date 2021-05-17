@@ -117,12 +117,24 @@ shift $((OPTIND-1))
 
 function downloadPreviousKpt {
   set -e
-  echo "Downloading latest kpt binary..."
-  curl -LJO https://github.com/GoogleContainerTools/kpt/releases/download/v0.37.1/kpt_linux_amd64-0.37.1.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
-  tar -xvf kpt_linux_amd64-0.37.1.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
-  mv kpt $BIN_DIR/latestkpt
+  echo "Downloading previous kpt binary..."
+  uname="$(uname -s)"
+  if [[ "$uname" == "Linux" ]]
+  then
+    echo "Running on Linux"
+    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v0.39.2/kpt_linux_amd64-0.39.2.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+  elif [[ "$uname" == "Darwin" ]]
+  then
+    echo "Running on Darwin"
+    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v0.39.2/kpt_darwin_amd64-0.39.2.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+  else
+    echo "ERROR: Unknown OS $uname"
+    exit 1
+  fi
+  tar -xvf kpt.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+  mv kpt $BIN_DIR/previouskpt
   echo "Downloading latest kpt binary...SUCCESS"
-  rm kpt_linux_amd64-0.37.1.tar.gz LICENSES.txt lib.zip
+  rm kpt.tar.gz LICENSES.txt lib.zip
   set +e
 }
 
@@ -423,8 +435,7 @@ printResult
 echo "[ResourceGroup] Testing basic apply without ResourceGroup inventory CRD"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
-assertContains "inventory ResourceGroup CRD is missing"
-assertContains "run 'kpt live install-resource-group' to remedy"
+assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
 printResult
 
 # Test: Apply forcing ResourceGroup CRD installation succeeds
@@ -660,128 +671,6 @@ assertContains "2 resource(s) applied. 1 created, 0 unchanged, 0 configured, 1 f
 assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
 printResult
 
-
-###########################################################
-#  Tests that ConfigMap as inventory object still works
-###########################################################
-
-createTestSuite
-waitForDefaultServiceAccount
-
-# Test: Basic kpt live preview
-# Preview run for "test-case-1a" directory
-echo "[ConfigMap] Testing initial preview"
-echo "kpt live preview e2e/live/testdata/test-case-1a"
-# Prerequisite: set up the ConfigMap inventory file
-cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1a/inventory-template.yaml
-${BIN_DIR}/kpt live preview e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
-assertContains "namespace/test-namespace created (preview)"
-assertContains "pod/pod-a created (preview)"
-assertContains "pod/pod-b created (preview)"
-assertContains "pod/pod-c created (preview)"
-assertContains "4 resource(s) applied. 4 created, 0 unchanged, 0 configured, 0 failed"
-assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
-printResult
-
-# Test: Basic kpt live apply
-# Apply run for "test-case-1a" directory
-echo "[ConfigMap] Testing basic apply"
-echo "kpt live apply e2e/live/testdata/test-case-1a"
-# Prerequisite: set up the ConfigMap inventory file
-cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1a/inventory-template.yaml
-${BIN_DIR}/kpt live apply e2e/live/testdata/test-case-1a > $OUTPUT_DIR/status
-assertContains "namespace/test-namespace"
-assertContains "pod/pod-a created"
-assertContains "pod/pod-b created"
-assertContains "pod/pod-c created"
-assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
-assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
-wait 2
-# Validate resources in the cluster
-# ConfigMap inventory with four inventory items.
-assertCMInventory "test-namespace" "4"
-printResult
-
-# Test: kpt live preview of apply/prune
-# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
-echo "[ConfigMap] Testing basic preview"
-echo "kpt live preview e2e/live/testdata/test-case-1b"
-# Prerequisite: set up the ConfigMap inventory file
-cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
-${BIN_DIR}/kpt live preview e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
-assertContains "namespace/test-namespace configured (preview)"
-assertContains "pod/pod-b configured (preview)"
-assertContains "pod/pod-c configured (preview)"
-assertContains "pod/pod-d created (preview)"
-assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured, 0 failed (preview)"
-assertContains "pod/pod-a pruned (preview)"
-assertContains "1 resource(s) pruned, 0 skipped, 0 failed (preview)"
-wait 2
-# Validate resources in the cluster
-# ConfigMap inventory with four inventory items.
-assertCMInventory "test-namespace" "4"
-assertPodExists "pod-a" "test-namespace"
-assertPodExists "pod-b" "test-namespace"
-assertPodExists "pod-c" "test-namespace"
-printResult
-
-# Test: Basic kpt live apply/prune
-# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
-echo "[ConfigMap] Testing basic prune"
-echo "kpt live apply e2e/live/testdata/test-case-1b"
-${BIN_DIR}/kpt live apply e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
-assertContains "namespace/test-namespace unchanged"
-assertContains "pod/pod-b unchanged"
-assertContains "pod/pod-c unchanged"
-assertContains "pod/pod-d created"
-assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured, 0 failed"
-assertContains "pod/pod-a pruned"
-assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
-wait 2
-# Validate resources in the cluster
-# ConfigMap inventory with four inventory items.
-assertCMInventory "test-namespace" "4"
-assertPodExists "pod-b" "test-namespace"
-assertPodExists "pod-c" "test-namespace"
-assertPodExists "pod-d" "test-namespace"
-assertPodNotExists "pod-a" "test-namespace"
-printResult
-
-# Basic kpt live preview --destroy
-echo "[ConfigMap] Testing basic preview destroy"
-echo "kpt live preview --destroy e2e/live/testdata/test-case-1b"
-# Prerequisite: set up the ConfigMap inventory file
-cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
-${BIN_DIR}/kpt live preview --destroy e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
-assertContains "pod/pod-d deleted (preview)"
-assertContains "pod/pod-c deleted (preview)"
-assertContains "pod/pod-b deleted (preview)"
-assertContains "namespace/test-namespace deleted (preview)"
-assertContains "4 resource(s) deleted, 0 skipped (preview)"
-# Validate resources NOT DESTROYED in the cluster
-assertPodExists "pod-b" "test-namespace"
-assertPodExists "pod-c" "test-namespace"
-assertPodExists "pod-d" "test-namespace"
-printResult
-
-# Test: Basic kpt live destroy
-# "test-case-1b" directory is "test-case-1a" directory with "pod-a" removed and "pod-d" added.
-echo "[ConfigMap] Testing basic destroy"
-echo "kpt live destroy e2e/live/testdata/test-case-1b"
-# Prerequisite: set up the ConfigMap inventory file
-cp -f e2e/live/testdata/template-test-namespace.yaml e2e/live/testdata/test-case-1b/inventory-template.yaml
-${BIN_DIR}/kpt live destroy e2e/live/testdata/test-case-1b > $OUTPUT_DIR/status
-assertContains "pod/pod-d deleted"
-assertContains "pod/pod-c deleted"
-assertContains "pod/pod-b deleted"
-assertContains "namespace/test-namespace deleted"
-assertContains "4 resource(s) deleted, 0 skipped"
-# Validate resources NOT in the cluster
-assertPodNotExists "pod-b" "test-namespace"
-assertPodNotExists "pod-c" "test-namespace"
-assertPodNotExists "pod-d" "test-namespace"
-printResult
-
 ###########################################################
 #  Test Migrate from ConfigMap inventory to ResourceGroup
 ###########################################################
@@ -798,7 +687,7 @@ echo "kpt live apply e2e/live/testdata/migrate-case-1a"
 # the apply uses the ConfigMap inventory-template.yaml during the apply.
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
 cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
-${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/previouskpt live apply e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
