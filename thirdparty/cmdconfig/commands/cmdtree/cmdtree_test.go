@@ -305,12 +305,12 @@ openAPI:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`PKG: %s
+	if !assert.Equal(t, fmt.Sprintf(`Package "%s":
 ├── [Kptfile]  Kptfile mainpkg
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
-└── PKG: subpkg
+└── Package "subpkg":
     ├── [Kptfile]  Kptfile subpkg
     └── [f2.yaml]  Deployment bar
 `, d), b.String()) {
@@ -389,10 +389,10 @@ metadata:
 		return
 	}
 
-	if !assert.Equal(t, `PKG: Mainpkg
+	if !assert.Equal(t, `Package "Mainpkg":
 ├── [Kptfile]  Kptfile Mainpkg
 ├── [f1.yaml]  Deployment foo
-└── PKG: Subpkg
+└── Package "Subpkg":
     ├── [Kptfile]  Kptfile Subpkg
     └── [f2.yaml]  Deployment bar
 `, b.String()) {

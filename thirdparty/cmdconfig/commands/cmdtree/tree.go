@@ -24,7 +24,7 @@ const (
 	// Resources packages.
 	TreeStructurePackage TreeStructure = "directory"
 
-	PkgPrefix = "PKG: "
+	PkgPrefix = "Package "
 )
 
 var GraphStructures = []string{string(TreeStructurePackage)}
@@ -99,7 +99,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 			out = strings.TrimPrefix(out, ".")
 			out = filepath.Base(d) + out
 		}
-		out = PkgPrefix + out
+		out = PkgPrefix + "\"" + out + "\":"
 	}
 
 	_, err = io.WriteString(p.Writer, out)
@@ -114,7 +114,7 @@ func branchName(root, dirRelPath string) string {
 	if !os.IsNotExist(err) {
 		// add Pkg: prefix indicating that it is a separate package as it has
 		// Kptfile
-		return PkgPrefix + name
+		return PkgPrefix + "\"" + name + "\":"
 	}
 	return name
 }
