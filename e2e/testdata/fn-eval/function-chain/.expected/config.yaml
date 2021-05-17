@@ -13,7 +13,7 @@
 # limitations under the License.
 
 script: |
-  kpt fn source |\
-  kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=staging |\
-  kpt fn eval - --image gcr.io/kpt-fn/set-label:v0.1 -- foo=bar |\
-  kpt fn sink .
+  $KPT_E2E_BIN fn source |\
+  $KPT_E2E_BIN fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=staging |\
+  $KPT_E2E_BIN fn eval - --image gcr.io/kpt-fn/set-label:v0.1 -- foo=bar |\
+  $KPT_E2E_BIN fn sink .
