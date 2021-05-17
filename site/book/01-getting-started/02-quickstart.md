@@ -65,12 +65,12 @@ $ git diff
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
 performed repeatedly, there is a _declarative_ way to define a pipeline of functions as part of the
 package (in the `Kptfile`). For example, you might want label all resources in the package.
-To achieve that, you can declare `set-label` function in the `pipeline` section of `Kptfile`:
+To achieve that, you can declare `set-labels` function in the `pipeline` section of `Kptfile`:
 
 ```shell
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         env: dev
 ```

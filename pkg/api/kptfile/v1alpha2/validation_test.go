@@ -52,7 +52,7 @@ metadata:
 							ConfigPath: "./patch.yaml",
 						},
 						{
-							Image: "gcr.io/kpt-functions/set-annotation",
+							Image: "gcr.io/kpt-fn/set-annotations:v0.1",
 							ConfigMap: map[string]string{
 								"environment": "dev",
 							},

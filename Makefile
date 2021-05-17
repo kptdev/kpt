@@ -78,7 +78,7 @@ test-fn-eval: build
 
 # target to flush kpt-fn cache
 flush-fn-cache:
-	for fn in set-namespace set-label set-annotation starlark; do \
+	for fn in set-namespace set-labels set-annotations starlark; do \
 		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
 	done
 

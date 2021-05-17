@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index cdf6fa7..7246298 100644
+index 9c11c4f..f5353ca 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,7 +2,8 @@ apiVersion: kpt.dev/v1alpha2
@@ -10,8 +10,8 @@ index cdf6fa7..7246298 100644
  pipeline:
    mutators:
 -    - configPath: labelconfig.yaml
--      image: gcr.io/kpt-fn/set-label:v0.1
-+    - image: gcr.io/kpt-fn/set-label:v0.1
+-      image: gcr.io/kpt-fn/set-labels:v0.1
++    - image: gcr.io/kpt-fn/set-labels:v0.1
 +      configPath: labelconfig.yaml
 diff --git a/labelconfig.yaml b/labelconfig.yaml
 index bb5d15c..f3a8b49 100644

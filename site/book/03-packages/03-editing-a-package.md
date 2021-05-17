@@ -47,7 +47,7 @@ For example, setting a label on all the resources in the `wordpress` package can
 using the following function:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-label:v0.1 wordpress -- env=dev
+$ kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 wordpress -- env=dev
 ```
 
 [Chapter 4] discusses different ways of running functions in detail.

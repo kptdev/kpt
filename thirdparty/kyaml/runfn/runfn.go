@@ -109,13 +109,19 @@ func (r RunFns) Execute() error {
 // true if the file should be skipped during reading. Skipped files will not be included
 // in all steps following.
 func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
+	if r.IncludeMetaResources {
+		return func(relPath string) bool {
+			return false
+		}, nil
+	}
+
 	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
 	}
 
 	return func(relPath string) bool {
-		if len(fnConfigPaths) == 0 || r.IncludeMetaResources {
+		if len(fnConfigPaths) == 0 {
 			return false
 		}
 		// relPath is cleaned so we can directly use it here
@@ -242,8 +248,8 @@ func (r RunFns) printFnResultsStatus(resultsFile string) {
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
 // file (declarative). If they have same key, the imperative value will be respected.
 func (r RunFns) mergeContainerEnv(envs []string) []string {
-	imperative := runtimeutil.NewContainerEnvFromStringSlice(r.Env)
-	declarative := runtimeutil.NewContainerEnvFromStringSlice(envs)
+	imperative := fnruntime.NewContainerEnvFromStringSlice(r.Env)
+	declarative := fnruntime.NewContainerEnvFromStringSlice(envs)
 	for key, value := range imperative.EnvVars {
 		declarative.AddKeyValue(key, value)
 	}
