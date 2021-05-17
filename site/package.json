@@ -2,8 +2,8 @@
   "main": "none.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint-check": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json content",
-    "lint-fix": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json --fix content"
+    "lint-check": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules . ../scripts",
+    "lint-fix": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules --fix . ../scripts"
   },
   "dependencies": {},
   "devDependencies": {

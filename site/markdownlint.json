@@ -6,5 +6,7 @@
   "MD025": false,
   "MD031": false,
   "MD040": false,
+  "MD041": false,
+  "MD044": { "names": ["kpt"] },
   "MD046": false
 }
