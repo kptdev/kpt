@@ -19,7 +19,7 @@ Next, let's quickly view the content of the package:
 
 ```shell
 $ kpt pkg tree
-PKG: nginx
+Package nginx:
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
 └── [svc.yaml]  Service my-nginx-svc
