@@ -4,7 +4,7 @@ This is referred to as imperative function execution.
 For example, to set the namespace of all resources in the wordpress package hierarchy:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 wordpress -- namespace=mywordpress
+$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
 ```
 
 ?> Refer to the [eval command reference][eval-doc] for usage.
@@ -59,7 +59,7 @@ EOF
 ```
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 --fn-config /tmp/fn-config.yaml wordpress
+$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 --fn-config /tmp/fn-config.yaml
 ```
 
 ### CLI arguments
@@ -69,7 +69,7 @@ pairs as argument. For convenience, there is a way to provide the key/value pair
 arguments. The following is equivalent to what we showed previously:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 wordpress -- namespace=mywordpress
+$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
 ```
 
 Note that the arguments must come after the separator `--`.
@@ -96,7 +96,7 @@ the `--network` flag.
 For example, `kubeval` function can download a JSON schema file:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 --network wordpress -- schema_location="https://kubernetesjsonschema.dev"
+$ kpt fn eval wordpress --image gcr.io/kpt-fn/kubeval:v0.1 --network -- schema_location="https://kubernetesjsonschema.dev"
 ```
 
 ### Mounting Directories
@@ -137,7 +137,7 @@ For instance, the following will set the labels on all resources in the `wordpre
 the `Kptfile`:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 --include-meta-resources wordpress -- app=wordpress env=prod
+$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-labels:v0.1 --include-meta-resources -- app=wordpress env=prod
 ```
 
 ## Chaining functions using the Unix pipe
