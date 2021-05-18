@@ -27,6 +27,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -37,7 +39,9 @@ import (
 
 // Executor hydrates a given pkg.
 type Executor struct {
-	PkgPath string
+	PkgPath        string
+	ResultsDirPath string
+
 	Printer printer.Printer
 }
 
@@ -54,12 +58,16 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root: root,
-		pkgs: map[types.UniquePath]*pkgNode{},
+		root:      root,
+		pkgs:      map[types.UniquePath]*pkgNode{},
+		fnResults: fnresult.NewResultList(),
 	}
 
 	resources, err := hydrate(ctx, root, hctx)
 	if err != nil {
+		// Note(droot): ignore the error in function result saving
+		// to avoid masking the hydration error.
+		_ = e.saveFnResults(ctx, hctx.fnResults)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -85,7 +93,18 @@ func (e *Executor) Execute(ctx context.Context) error {
 	}
 
 	pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
-	// TODO: Output the complete result file path here
+
+	return e.saveFnResults(ctx, hctx.fnResults)
+}
+
+func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
+
+	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults)
+	if err != nil {
+		return fmt.Errorf("failed to save function results: %w", err)
+	}
+
+	printerutil.PrintFnResultInfo(ctx, resultsFile, false)
 	return nil
 }
 
@@ -111,6 +130,10 @@ type hydrationContext struct {
 
 	// executedFunctionCnt is the counter for functions that have been executed.
 	executedFunctionCnt int
+
+	// fnResults stores function results gathered
+	// during pipeline execution.
+	fnResults *fnresult.ResultList
 }
 
 //
@@ -272,7 +295,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
 	// package structure. We should have function to get the relative package
 	// path here.
-	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n\n")
+	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
 
 	if len(input) == 0 {
 		return nil, nil
@@ -315,7 +338,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return input, nil
 	}
 
-	mutators, err := fnChain(ctx, pn.pkg.UniquePath, pl.Mutators)
+	mutators, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +380,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath)
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults)
 		if err != nil {
 			return err
 		}
@@ -407,11 +430,11 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath)
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults)
 		if err != nil {
 			return nil, err
 		}

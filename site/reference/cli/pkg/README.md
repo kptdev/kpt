@@ -6,6 +6,7 @@ type: docs
 description: >
    Get, update, and describe packages with resources
 ---
+
 <!--mdtogo:Short
     Get, update, and describe packages with resources
 -->
@@ -13,4 +14,5 @@ description: >
 <!--mdtogo:Long-->
 The `pkg` command group contains subcommands for fetching, updating and describing `kpt` packages
 from git repositories.
+
 <!--mdtogo-->

@@ -67,6 +67,7 @@ test:
 test-docker: build
 	KPT_E2E_BIN=$(GOBIN)/kpt go test -cover --tags=docker ./...
 
+# KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
 test-fn-render: build
 	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnRender ./e2e/
@@ -77,7 +78,7 @@ test-fn-eval: build
 
 # target to flush kpt-fn cache
 flush-fn-cache:
-	for fn in set-namespace set-label set-annotation starlark; do \
+	for fn in set-namespace set-labels set-annotations starlark; do \
 		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
 	done
 

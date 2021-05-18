@@ -8,7 +8,7 @@ configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.2
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.4
 $ cd nginx
 ```
 
@@ -32,7 +32,7 @@ will explain the `Kptfile` in detail.
 Initialize a local Git repo and commit the forked copy of the package:
 
 ```shell
-$ git init; git add .; git commit -am "Pristine nginx package"
+$ git init; git add .; git commit -m "Pristine nginx package"
 ```
 
 ## Customize the package
@@ -65,12 +65,12 @@ $ git diff
 `eval` command can be used for one-time _imperative_ operations. For operations that need to be
 performed repeatedly, there is a _declarative_ way to define a pipeline of functions as part of the
 package (in the `Kptfile`). For example, you might want label all resources in the package.
-To achieve that, you can declare `set-label` function in the `pipeline` section of `Kptfile`:
+To achieve that, you can declare `set-labels` function in the `pipeline` section of `Kptfile`:
 
 ```shell
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         env: dev
 ```
@@ -86,10 +86,10 @@ $ kpt fn render
 In this case, the author of the `nginx` package has already declared a function (`kubeval`) that
 validates the resources using their OpenAPI schema.
 
-In general, regardless of how you choose to customize the package — whether by manually editing
-it or running imperative functions — you need to _render_ the package before applying it the
-cluster. This ensures all the functions declared in the package are executed, and the package is ready
-to be applied to the cluster.
+In general, regardless of how you choose to customize the package — whether by manually editing it
+or running imperative functions — you need to _render_ the package before applying it the cluster.
+This ensures all the functions declared in the package are executed, and the package is ready to be
+applied to the cluster.
 
 ## Apply the Package
 
@@ -127,13 +127,13 @@ the upstream changes with changes to your local package.
 First, commit your local changes:
 
 ```shell
-$ git add .; git commit -am "My customizations"
+$ git add .; git commit -m "My customizations"
 ```
 
-Then update to version `v0.3`:
+Then update to version `v0.5`:
 
 ```shell
-$ kpt pkg update @v0.3
+$ kpt pkg update @v0.5
 ```
 
 This merges the upstream changes with your local changes using a schema-aware merge strategy.

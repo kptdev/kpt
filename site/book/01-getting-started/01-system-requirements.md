@@ -9,8 +9,6 @@ system:
 $ kpt version
 ```
 
-TODO: kpt 1.0 binaries needs to be available.
-
 ## Git
 
 kpt requires that you have [Git] installed and configured.

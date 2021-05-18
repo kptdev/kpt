@@ -21,7 +21,7 @@ PKG: wordpress
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
-> Refer to the [command reference][tree-doc] for more details.
+?> Refer to the [tree command reference][tree-doc] for usage.
 
 In addition, you can use a kpt function such as `search-replace` to run a query on the package.
 For example, to search for resources that have a field with path `spec.selector.tier`:
@@ -29,7 +29,5 @@ For example, to search for resources that have a field with path `spec.selector.
 ```shell
 $ kpt fn eval --image gcr.io/kpt-fn/search-replace:unstable wordpress -- 'by-path=spec.selector.tier'
 ```
-
-TODO(#1821): search-replace doesn't work.
 
 [tree-doc]: /reference/cli/pkg/tree/

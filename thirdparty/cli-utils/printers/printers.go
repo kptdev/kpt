@@ -41,3 +41,12 @@ func SupportedPrinters() []string {
 func DefaultPrinter() string {
 	return EventsPrinter
 }
+
+func ValidatePrinterType(printerType string) bool {
+	for _, p := range SupportedPrinters() {
+		if printerType == p {
+			return true
+		}
+	}
+	return false
+}

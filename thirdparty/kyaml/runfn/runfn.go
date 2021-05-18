@@ -14,17 +14,19 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
@@ -61,14 +63,7 @@ type RunFns struct {
 	// ResultsDir is where to write each functions results
 	ResultsDir string
 
-	// LogSteps enables logging the function that is running.
-	LogSteps bool
-
-	// LogWriter can be set to write the logs to LogWriter rather than stderr if LogSteps is enabled.
-	LogWriter io.Writer
-
-	// resultsCount is used to generate the results filename for each container
-	resultsCount uint32
+	fnResults *fnresult.ResultList
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -114,13 +109,19 @@ func (r RunFns) Execute() error {
 // true if the file should be skipped during reading. Skipped files will not be included
 // in all steps following.
 func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
+	if r.IncludeMetaResources {
+		return func(relPath string) bool {
+			return false
+		}, nil
+	}
+
 	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
 	}
 
 	return func(relPath string) bool {
-		if len(fnConfigPaths) == 0 || r.IncludeMetaResources {
+		if len(fnConfigPaths) == 0 {
 			return false
 		}
 		// relPath is cleaned so we can directly use it here
@@ -212,6 +213,10 @@ func (r RunFns) runFunctions(
 		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
 	}
 
+	// add format filter at the end to consistently format output resources
+	fmtfltr := filters.FormatFilter{UseSchema: true}
+	fltrs = append(fltrs, fmtfltr)
+
 	var err error
 	pipeline := kio.Pipeline{
 		Inputs:                []kio.Reader{input},
@@ -220,32 +225,31 @@ func (r RunFns) runFunctions(
 		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
 	err = pipeline.Execute()
+	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
 	if err != nil {
+		if resultErr == nil {
+			r.printFnResultsStatus(resultsFile)
+		}
 		return err
 	}
-
-	// check for deferred function errors
-	var errs []string
-	for i := range fltrs {
-		cf, ok := fltrs[i].(runtimeutil.DeferFailureFunction)
-		if !ok {
-			continue
-		}
-		if cf.GetExit() != nil {
-			errs = append(errs, cf.GetExit().Error())
-		}
-	}
-	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n---\n"))
+	if resultErr == nil {
+		r.printFnResultsStatus(resultsFile)
 	}
 	return nil
+}
+
+func (r RunFns) printFnResultsStatus(resultsFile string) {
+	if r.isOutputDisabled() {
+		return
+	}
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
 // file (declarative). If they have same key, the imperative value will be respected.
 func (r RunFns) mergeContainerEnv(envs []string) []string {
-	imperative := runtimeutil.NewContainerEnvFromStringSlice(r.Env)
-	declarative := runtimeutil.NewContainerEnvFromStringSlice(envs)
+	imperative := fnruntime.NewContainerEnvFromStringSlice(r.Env)
+	declarative := fnruntime.NewContainerEnvFromStringSlice(envs)
 	for key, value := range imperative.EnvVars {
 		declarative.AddKeyValue(key, value)
 	}
@@ -343,14 +347,11 @@ func (r *RunFns) init() error {
 		r.uniquePath = types.UniquePath(absPath)
 	}
 
+	r.fnResults = fnresult.NewResultList()
+
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
 		r.functionFilterProvider = r.defaultFnFilterProvider
-	}
-
-	// if LogSteps is enabled and LogWriter is not specified, use stderr
-	if r.LogSteps && r.LogWriter == nil {
-		r.LogWriter = os.Stderr
 	}
 
 	// fn config path should be absolute
@@ -409,12 +410,6 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		return nil, fmt.Errorf("either image name or executable path need to be provided")
 	}
 
-	var resultsFile string
-	if r.ResultsDir != "" {
-		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
-			"results-%v.yaml", r.resultsCount))
-		atomic.AddUint32(&r.resultsCount, 1)
-	}
 	var err error
 	if r.FnConfigPath != "" {
 		fnConfig, err = r.getFunctionConfig()
@@ -423,7 +418,11 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 	}
 	var fltr *runtimeutil.FunctionFilter
-	var name string
+	fnResult := &fnresult.Result{
+		// TODO(droot): This is required for making structured results subpackage aware.
+		// Enable this once test harness supports filepath based assertions.
+		// Pkg: string(r.uniquePath),
+	}
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
@@ -447,9 +446,8 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			Run:            c.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
-			ResultsFile:    resultsFile,
 		}
-		name = spec.Container.Image
+		fnResult.Image = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
@@ -460,12 +458,13 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			Run:            e.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
-			ResultsFile:    resultsFile,
 		}
-		name = spec.Exec.Path
+		fnResult.ExecPath = spec.Exec.Path
 	}
-	// if output is not nil we will write the resources to stdout
-	disableOutput := (r.Output != nil)
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, name, disableOutput)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
+}
 
+func (r RunFns) isOutputDisabled() bool {
+	// if output is not nil we will write the resources to stdout
+	return r.Output != nil
 }

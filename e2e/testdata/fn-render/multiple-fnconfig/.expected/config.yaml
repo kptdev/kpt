@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "following fields are mutually exclusive: 'config', 'configMap', 'configPath'. Got \"configPath, configMap\""
+stdErr: 'only one of ''config'', ''configMap'', ''configPath'' can be specified. Got "configPath, configMap"'

@@ -3,7 +3,7 @@
 This example package demonstrates how you can modify the config and ensure 
 that modifications are compliant with the policies. This package uses:
 
-1. a `mutator` function called `set-label` to customize (or modify) the config
+1. a `mutator` function called `set-labels` to customize (or modify) the config
 2. a `validator` function `gatekeeper` to ensure changes are inline with the policy 
 
 Putting a validation function into your package allows you to give package
@@ -51,15 +51,15 @@ PKG: pipeline-validate
 ### Configure functions
 
 The package contains a function pipeline in the `Kptfile` which has
-one `set-label` and `enforce-gatekeeper` functions.
-The `set-label` function allows you to set one or more labels to every
+one `set-labels` and `enforce-gatekeeper` functions.
+The `set-labels` function allows you to set one or more labels to every
 resource that supports labeles.  The `enforce-gatekeeper` function allows
 you to use gatekeeper for checks on the configuration.
 
 ```yaml
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:unstable
+    - image: gcr.io/kpt-fn/set-labels:unstable
       config:
         apiVersion: fn.kpt.dev/v1alpha1
         kind: SetLabelConfig
@@ -78,7 +78,7 @@ Render the changes in the rendering pipeline by using `kpt fn render` command:
 ```shell
 $ kpt fn render pipeline-validate/
 
-package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
+package "pipeline-validate": running function "gcr.io/kpt-fn/set-labels:unstable": SUCCESS
 package "pipeline-validate": running function "gcr.io/kpt-fn/enforce-gatekeeper:unstable": SUCCESS
 package "pipeline-validate": rendered successfully
 ```
@@ -89,7 +89,7 @@ you should see an error:
 ```shell
 $ kpt fn render pipeline-validate/
 
-package "pipeline-validate": running function "gcr.io/kpt-fn/set-label:unstable": SUCCESS
+package "pipeline-validate": running function "gcr.io/kpt-fn/set-labels:unstable": SUCCESS
 package "pipeline-validate": running function "gcr.io/kpt-fn/enforce-gatekeeper:unstable": FAILED
 fn.render: pkg pipeline-validate:
         pkg.render:

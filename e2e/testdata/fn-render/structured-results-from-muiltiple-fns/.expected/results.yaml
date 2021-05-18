@@ -1,0 +1,65 @@
+apiVersion: kpt.dev/v1alpha2
+kind: FunctionResultList
+metadata:
+    name: fnresults
+exitCode: 1
+items:
+    - image: gcr.io/kpt-fn/enforce-gatekeeper:unstable
+      exitCode: 0
+      results:
+        - message: |-
+            The following banned keys are being used in the ConfigMap: {"private_key"}
+            violatedConstraint: no-secrets-in-configmap
+          severity: warning
+          resourceRef:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+                name: some-secret
+                namespace: default
+          file:
+            path: resources.yaml
+            index: 4
+        - message: |-
+            The following banned keys are being used in the ConfigMap: {"less_sensitive_key"}
+            violatedConstraint: no-sensitive-data-in-configmap
+          severity: info
+          resourceRef:
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+                name: some-secret
+                namespace: default
+          file:
+            path: resources.yaml
+            index: 4
+    - image: gcr.io/kpt-fn/kubeval:unstable
+      exitCode: 1
+      results:
+        - message: selector is required
+          severity: error
+          resourceRef:
+            apiVersion: apps/v1
+            kind: Deployment
+          field:
+            path: selector
+          file:
+            path: resources.yaml
+        - message: template is required
+          severity: error
+          resourceRef:
+            apiVersion: apps/v1
+            kind: Deployment
+          field:
+            path: template
+          file:
+            path: resources.yaml
+        - message: 'Invalid type. Expected: [integer,null], given: string'
+          severity: error
+          resourceRef:
+            apiVersion: apps/v1
+            kind: Deployment
+          field:
+            path: spec.replicas
+          file:
+            path: resources.yaml

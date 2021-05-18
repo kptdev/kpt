@@ -1,19 +1,5 @@
----
-title: "Installation"
-linkTitle: "Installation"
-weight: 20
-type: docs
-menu:
-  main:
-    weight: 1
----
-
 Users can get kpt in a variety of ways:
-1. Download [Binaries](#Binaries) 
-1. Install with [GCloud](#GCloud)
-1. Install with [Homebrew](#Homebrew) on MacOS
-1. Use [Docker](#Docker)
-1. Build from [Source](#Source)
+
 
 ## Binaries
 
@@ -27,14 +13,14 @@ Download pre-compiled binaries.
 
 ```shell
 # For linux/mac
-chmod +x kpt
+$ chmod +x kpt
 ```
 
 **Note:** to run on **MacOS** the first time, it may be necessary to open the
 program from the finder with *ctrl-click open*.
 
 ```shell
-kpt version
+$ kpt version
 ```
 
 <!-- gcloud and homebrew are not yet available for builds from the next branch. 
@@ -43,11 +29,11 @@ kpt version
 Install with gcloud.
 
 ```shell
-gcloud components install kpt
+$ gcloud components install kpt
 ```
 
 ```shell
-kpt version
+$ kpt version
 ```
 
 The version of kpt installed using `gcloud` may not be the latest released version.
@@ -57,12 +43,12 @@ The version of kpt installed using `gcloud` may not be the latest released versi
 Install the latest release with Homebrew on MacOS
 
 ```shell
-brew tap GoogleContainerTools/kpt https://github.com/GoogleContainerTools/kpt.git
-brew install kpt
+$ brew tap GoogleContainerTools/kpt https://github.com/GoogleContainerTools/kpt.git
+$ brew install kpt
 ```
 
 ```shell
-kpt version
+$ kpt version
 ```
 -->
 ## Docker
@@ -76,18 +62,18 @@ Use one of the kpt docker images.
 | diffutils | X     | X            |
 | gcloud    |       | X            |
 
-### [gcr.io/kpt-dev/kpt:next]
+### `kpt`
 
 ```shell
-docker run gcr.io/kpt-dev/kpt:next version
+$ docker run gcr.io/kpt-dev/kpt:next version
 ```
 
-### [gcr.io/kpt-dev/kpt-gcloud:next]
+### `kpt-gcloud`
 
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-docker run gcr.io/kpt-dev/kpt-gcloud:next version
+$ docker run gcr.io/kpt-dev/kpt-gcloud:next version
 ```
 
 ## Source
@@ -95,7 +81,7 @@ docker run gcr.io/kpt-dev/kpt-gcloud:next version
 Install by compiling the source.
 
 ```shell
-GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt@next
+$ GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt@next
 ```
 
 **Note:** `kpt version` will return *unknown* for binaries installed
@@ -108,7 +94,5 @@ kpt help
 [gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
 [gcr.io/kpt-dev/kpt-gcloud]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
-
-[linux]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_linux_amd64
-[darwin]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_darwin_amd64
-[windows]: https://github.com/GoogleContainerTools/kpt/releases/latest/download/kpt_windows_amd64.exe
+[linux]: https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-alpha.3/kpt_linux_amd64
+[darwin]: https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-alpha.3/kpt_darwin_amd64

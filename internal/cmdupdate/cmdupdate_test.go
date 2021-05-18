@@ -56,7 +56,7 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
 	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
@@ -87,7 +87,7 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, updateCmd.Command.Execute()) {
 		return
 	}
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest, true) {
 		return
 	}
 
@@ -147,7 +147,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
 
@@ -168,9 +168,9 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "package must be committed to git before attempting to update")
+	assert.Contains(t, err.Error(), "contains uncommitted changes")
 
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
 }

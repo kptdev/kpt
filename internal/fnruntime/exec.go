@@ -23,7 +23,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 )
 
@@ -59,7 +58,7 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError
 		if goerrors.As(err, &exitErr) {
-			return &errors.FnExecError{
+			return &ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
 				Stderr:         errSink.String(),

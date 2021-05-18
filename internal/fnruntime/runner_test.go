@@ -107,3 +107,59 @@ data: {foo: bar}
 		})
 	}
 }
+
+func TestMultilineFormatter(t *testing.T) {
+
+	type testcase struct {
+		ml       *multiLineFormatter
+		expected string
+	}
+
+	testcases := map[string]testcase{
+		"multiline should format lines and truncate": {
+			ml: &multiLineFormatter{
+				Title: "Results",
+				Lines: []string{
+					"line-1",
+					"line-2",
+					"line-3",
+					"line-4",
+					"line-5",
+				},
+				MaxLines:       3,
+				TruncateOutput: true,
+			},
+			expected: `  Results:
+    line-1
+    line-2
+    line-3
+    ...(2 line(s) truncated, use '--truncate-output=false' to disable)
+`,
+		},
+		"multiline should format without truncate": {
+			ml: &multiLineFormatter{
+				Title: "Results",
+				Lines: []string{
+					"line-1",
+					"line-2",
+					"line-3",
+					"line-4",
+					"line-5",
+				},
+			},
+			expected: `  Results:
+    line-1
+    line-2
+    line-3
+    line-4
+    line-5
+`,
+		},
+	}
+	for name, c := range testcases {
+		c := c
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, c.expected, c.ml.String())
+		})
+	}
+}
