@@ -23,8 +23,8 @@ const (
 	// TreeStructurePackage configures TreeWriter to generate the tree structure off of the
 	// Resources packages.
 	TreeStructurePackage TreeStructure = "directory"
-
-	PkgPrefix = "Package "
+	//%q holds the package or directory name
+	PkgNameFormat = "Package %q:"
 )
 
 var GraphStructures = []string{string(TreeStructurePackage)}
@@ -51,7 +51,6 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 
 	// create the new tree
 	tree := treeprint.New()
-	tree.SetValue(p.Root)
 
 	// add each package to the tree
 	treeIndex := map[string]treeprint.Tree{}
@@ -87,21 +86,30 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		}
 	}
 
-	out := tree.String()
 	_, err := os.Stat(filepath.Join(p.Root, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
 		if p.Root == "." {
-			// replace . with the current working dir name
+			// get the path to current working directory
 			d, err := os.Getwd()
 			if err != nil {
 				return err
 			}
-			out = strings.TrimPrefix(out, ".")
-			out = "\"" + filepath.Base(d) + "\":" + out
+			p.Root = d
 		}
-		out = PkgPrefix + out 
+		_, err := os.Stat(filepath.Join(p.Root, kptfilev1alpha2.KptFileName))
+		if !os.IsNotExist(err) {
+			// if Kptfile exists in the root directory, it is a kpt package
+			// print only package name and not entire path
+			tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
+		} else {
+			// else it is just a directory, so print only directory name
+			tree.SetValue(filepath.Base(p.Root))
+		}
+	} else {
+		tree.SetValue(fmt.Sprintf("%q:", filepath.Base(p.Root)))
 	}
 
+	out := tree.String()
 	_, err = io.WriteString(p.Writer, out)
 	return err
 }
@@ -112,9 +120,9 @@ func branchName(root, dirRelPath string) string {
 	name := filepath.Base(dirRelPath)
 	_, err := os.Stat(filepath.Join(root, dirRelPath, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
-		// add Pkg: prefix indicating that it is a separate package as it has
+		// add Package prefix indicating that it is a separate package as it has
 		// Kptfile
-		return PkgPrefix + "\"" + name + "\":"
+		return fmt.Sprintf(PkgNameFormat, name)
 	}
 	return name
 }

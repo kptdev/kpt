@@ -83,7 +83,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `.
+	if !assert.Equal(t, `".":
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
@@ -158,12 +158,12 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%s
+	if !assert.Equal(t, fmt.Sprintf(`%q:
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
 └── [f2.yaml]  Deployment bar
-`, d), b.String()) {
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }
@@ -207,9 +207,9 @@ resources:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%s
+	if !assert.Equal(t, fmt.Sprintf(`%q:
 └── [f2.yaml]  Deployment bar
-`, d), b.String()) {
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }
@@ -305,7 +305,7 @@ openAPI:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`Package %s
+	if !assert.Equal(t, fmt.Sprintf(`Package %q:
 ├── [Kptfile]  Kptfile mainpkg
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
@@ -313,7 +313,7 @@ openAPI:
 └── Package "subpkg":
     ├── [Kptfile]  Kptfile subpkg
     └── [f2.yaml]  Deployment bar
-`, d), b.String()) {
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }
@@ -497,7 +497,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `.
+	if !assert.Equal(t, `".":
 ├── [f1.yaml]  Deployment default/foo
 ├── [f1.yaml]  Service default/foo
 ├── [f1.yaml]  Deployment default/foo3
