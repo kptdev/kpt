@@ -34,7 +34,7 @@ import (
 type containerNetworkName string
 
 const (
-	PreferLocalCacheEnv = "KPT_FN_PREFER_LOCAL_CACHE"
+	ImagePullPolicyEnv = "KPT_FN_IMAGE_PULL_POLICY"
 
 	networkNameNone containerNetworkName = "none"
 	networkNameHost containerNetworkName = "host"
@@ -162,29 +162,24 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 func (f *ContainerFn) prepareImage() error {
 	// check image existence
 	foundImageInLocalCache := false
-	args := []string{"image", "ls", f.Image}
+	args := []string{"image", "inspect", f.Image}
 	cmd := exec.Command(dockerBin, args...)
 	var output []byte
 	var err error
-	if output, err = cmd.CombinedOutput(); err != nil {
-		return &ContainerImageError{
-			Image:  f.Image,
-			Output: string(output),
-		}
-	}
-	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
+	if _, err = cmd.CombinedOutput(); err == nil {
 		// image exists locally
 		foundImageInLocalCache = true
 	}
 
-	// If env var PreferLocalCacheEnv is set to "true", we scan the local images
-	// first. If there is a match, we just return. This can be useful for local
-	// development.
-	if strings.ToLower(os.Getenv(PreferLocalCacheEnv)) == "true" && foundImageInLocalCache {
+	// If env var ImagePullPolicyEnv is set to "ifnotpresent", we scan the local
+	// images first. If there is a match, we just return. This can be useful for
+	// local development to prevent the remote image to accidentally override
+	// the local image when they use the same name and tag.
+	if strings.ToLower(os.Getenv(ImagePullPolicyEnv)) == "ifnotpresent" && foundImageInLocalCache {
 		return nil
 	}
 
-	// If env var PreferLocalCacheEnv is not set, we will try to pull the image
+	// If env var ImagePullPolicyEnv is not set, we will try to pull the image
 	// regardless if the tag has been seen in the local cache. Because we want
 	// to ensure we have the latest release for "moving tags" like v1 and v1.2.
 	// The performance cost is very minimal, since `docker pull` checks the SHA
