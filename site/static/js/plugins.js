@@ -134,6 +134,20 @@ function processAsciinemaTags(content) {
   );
 }
 
+// Workaround for https://github.com/docsifyjs/docsify/pull/1468
+function defaultLinkTargets() {
+  const externalPageLinks = Array.from(
+    document.getElementsByTagName("a")
+  ).filter(
+    (a) =>
+      window.Docsify.util.isExternal(a.href) &&
+      !window.$docsify.crossOriginLinks.includes(a.href)
+  );
+  externalPageLinks.forEach(
+    (a) => (a.target = window.$docsify.externalLinkTarget)
+  );
+}
+
 function localPlugins(hook, _vm) {
   // Process Markdown directives appropriately.
   hook.beforeEach(function (content) {
@@ -150,6 +164,9 @@ function localPlugins(hook, _vm) {
 
   // Show navigation footer for book pages.
   hook.doneEach(showBookPageFooters);
+
+  // Reset all external links to their appropriate targets.
+  hook.doneEach(defaultLinkTargets);
 
   addGitHubWidget(hook);
 

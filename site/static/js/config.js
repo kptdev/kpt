@@ -11,7 +11,7 @@ window.$docsify = {
     "/*.*/sidebar.md": "/sidebar.md",
   },
   coverpage: "coverpage.md",
-  crossOriginLinks: ["https://catalog.kpt.dev"],
+  crossOriginLinks:["https://catalog.kpt.dev/"],
   auto2top: true,
   repo: "true",
   pagination: {

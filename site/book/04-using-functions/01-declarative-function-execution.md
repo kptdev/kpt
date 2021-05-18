@@ -32,7 +32,7 @@ This declares two functions:
 - `set-label` is a mutator function which adds a set of labels to resources.
 - `kubeval` is a validator function which validates the resources against their OpenAPI schema.
 
-?> Refer to the [Functions Catalog](https://catalog.kpt.dev ':target=_self') for details on how to use a particular function.
+?> Refer to the [Functions Catalog](https://catalog.kpt.dev/ ':target=_self') for details on how to use a particular function.
 
 There are two differences between mutators and validators:
 
