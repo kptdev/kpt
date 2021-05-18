@@ -52,6 +52,9 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
+	setupScript         string = "setup.sh"
+	teardownScript      string = "teardown.sh"
+	execScript          string = "exec.sh"
 	CommandFnEval       string = "eval"
 	CommandFnRender     string = "render"
 )
@@ -91,6 +94,40 @@ func (r *Runner) Run() error {
 	}
 }
 
+// runSetupScript runs the setup script if the test has it
+func (r *Runner) runSetupScript(pkgPath string) error {
+	p, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, setupScript))
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return nil
+	}
+	cmd := getCommand(pkgPath, "bash", []string{p})
+	r.t.Logf("running setup script: %q", cmd.String())
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to run setup script %q.\nOutput: %q\n: %w", p, string(output), err)
+	}
+	return nil
+}
+
+// runTearDownScript runs the teardown script if the test has it
+func (r *Runner) runTearDownScript(pkgPath string) error {
+	p, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, teardownScript))
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return nil
+	}
+	cmd := getCommand(pkgPath, "bash", []string{p})
+	r.t.Logf("running teardown script: %q", cmd.String())
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to run teardown script %q.\nOutput: %q\n: %w", p, string(output), err)
+	}
+	return nil
+}
+
 func (r *Runner) runFnEval() error {
 	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
@@ -125,10 +162,19 @@ func (r *Runner) runFnEval() error {
 
 	// run function
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		var cmd *exec.Cmd
+		err = r.runSetupScript(pkgPath)
+		if err != nil {
+			return err
+		}
 
-		if r.testCase.Config.Script != "" {
-			cmd = getCommand(pkgPath, "bash", []string{"-c", r.testCase.Config.Script})
+		var cmd *exec.Cmd
+		execScriptPath, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, execScript))
+		if err != nil {
+			return err
+		}
+
+		if _, err := os.Stat(execScriptPath); err == nil {
+			cmd = getCommand(pkgPath, "bash", []string{execScriptPath})
 		} else {
 			kptArgs := []string{"fn", "eval", pkgPath}
 
@@ -158,6 +204,7 @@ func (r *Runner) runFnEval() error {
 			}
 			cmd = getCommand("", r.kptBin, kptArgs)
 		}
+		r.t.Logf("running command %q", cmd.String())
 		stdout, stderr, fnErr := runCommand(cmd)
 		if fnErr != nil {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
@@ -176,6 +223,11 @@ func (r *Runner) runFnEval() error {
 		// is expected
 		if fnErr != nil {
 			break
+		}
+
+		err = r.runTearDownScript(pkgPath)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -238,10 +290,20 @@ func (r *Runner) runFnRender() error {
 
 	// run function
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
+		err = r.runSetupScript(pkgPath)
+		if err != nil {
+			return err
+		}
+
 		var cmd *exec.Cmd
 
-		if r.testCase.Config.Script != "" {
-			cmd = getCommand(pkgPath, "bash", []string{"-c", r.testCase.Config.Script})
+		execScriptPath, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, execScript))
+		if err != nil {
+			return err
+		}
+
+		if _, err := os.Stat(execScriptPath); err == nil {
+			cmd = getCommand(pkgPath, "bash", []string{execScriptPath})
 		} else {
 			kptArgs := []string{"fn", "render", pkgPath}
 
@@ -254,6 +316,7 @@ func (r *Runner) runFnRender() error {
 			}
 			cmd = getCommand("", r.kptBin, kptArgs)
 		}
+		r.t.Logf("running command %q", cmd.String())
 		stdout, stderr, fnErr := runCommand(cmd)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
@@ -272,6 +335,11 @@ func (r *Runner) runFnRender() error {
 		// is expected
 		if fnErr != nil {
 			break
+		}
+
+		err = r.runTearDownScript(pkgPath)
+		if err != nil {
+			return err
 		}
 	}
 	return nil

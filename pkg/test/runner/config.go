@@ -76,11 +76,6 @@ type TestCaseConfig struct {
 	//    after test.
 	Debug bool `json:"debug,omitempty" yaml:"debug,omitempty"`
 
-	// Scripts is a BASH script which will be run instead of the default
-	// kpt commands. All the metrics applied to kpt commands are also applied to
-	// this script. The PWD for this script will be set to the copied package.
-	Script string `json:"script,omitempty" yaml:"script,omitempty"`
-
 	// TestType is the type of the test case. Possible value: ['render', 'eval']
 	// Default: 'eval'
 	TestType string `json:"testType,omitempty" yaml:"testType,omitempty"`
