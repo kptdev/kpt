@@ -137,7 +137,7 @@ For instance, the following will set the labels on all resources in the `wordpre
 the `Kptfile`:
 
 ```shell
-$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-label:v0.1 --include-meta-resources -- app=wordpress env=prod
+$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-labels:v0.1 --include-meta-resources -- app=wordpress env=prod
 ```
 
 ## Chaining functions using the Unix pipe
