@@ -35,8 +35,12 @@ pipeline:
     # An inline KRM resource used as the function config.
     # Cannot be specified alongside config or configPath.
     configMap:
-    wp-image: wordpress
-    wp-tag: 4.8-apache
+      wp-image: wordpress
+      wp-tag: 4.8-apache
+    - image: gcr.io/kpt-fn/set-label:v0.1
+    # An path to a KRM resource used as the function config.
+    # Cannot be specified alongside config or configMap.
+    configPath: labels.yaml
   # A list of KRM functions that validate resources.
   # Validators are not permitted to mutate resources.
   validators:
