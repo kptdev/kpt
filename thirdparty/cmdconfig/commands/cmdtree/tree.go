@@ -23,7 +23,7 @@ const (
 	// TreeStructurePackage configures TreeWriter to generate the tree structure off of the
 	// Resources packages.
 	TreeStructurePackage TreeStructure = "directory"
-	// %q holds the package or directory name
+	// %q holds the package name
 	PkgNameFormat = "Package %q:"
 )
 
