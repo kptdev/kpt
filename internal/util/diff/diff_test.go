@@ -346,7 +346,7 @@ locally changed: foo
 
 			filteredOutput := filterDiffMetadata(diffOutput)
 			if tc.hasLocalSubpackageChanges {
-				filteredOutput = regexp.MustCompile("Only in /tmp.+:").ReplaceAllString(filteredOutput, "locally changed:")
+				filteredOutput = regexp.MustCompile("Only in /(tmp|var).+:").ReplaceAllString(filteredOutput, "locally changed:")
 			}
 			assert.Equal(t, strings.TrimSpace(tc.expDiff)+"\n", filteredOutput)
 		})
