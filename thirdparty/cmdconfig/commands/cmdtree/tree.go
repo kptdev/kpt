@@ -86,26 +86,21 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		}
 	}
 
+	if p.Root == "." {
+		// get the path to current working directory
+		d, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		p.Root = d
+	}
 	_, err := os.Stat(filepath.Join(p.Root, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
-		if p.Root == "." {
-			// get the path to current working directory
-			d, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			p.Root = d
-		}
-		_, err := os.Stat(filepath.Join(p.Root, kptfilev1alpha2.KptFileName))
-		if !os.IsNotExist(err) {
-			// if Kptfile exists in the root directory, it is a kpt package
-			// print only package name and not entire path
-			tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
-		} else {
-			// else it is just a directory, so print only directory name
-			tree.SetValue(filepath.Base(p.Root))
-		}
+		// if Kptfile exists in the root directory, it is a kpt package
+		// print only package name and not entire path
+		tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
 	} else {
+		// else it is just a directory, so print only directory name
 		tree.SetValue(fmt.Sprintf("%q:", filepath.Base(p.Root)))
 	}
 
@@ -124,7 +119,7 @@ func branchName(root, dirRelPath string) string {
 		// Kptfile
 		return fmt.Sprintf(PkgNameFormat, name)
 	}
-	return name
+	return fmt.Sprintf("%q:", name)
 }
 
 // Write writes the ascii tree to p.Writer
