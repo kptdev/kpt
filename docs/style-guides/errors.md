@@ -15,86 +15,14 @@ In the table below, origin and scope of rules are denoted with a prefix
 - **K** is inherited from [Kubernetes conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#validation); rules with prefix
 - **R** are specific to Kpt.
 
-<table>
-  <tr>
-   <td>
-<strong>Rule</strong>
-   </td>
-   <td><strong>Description</strong>
-   </td>
-   <td><strong>Examples</strong>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>K1</strong>
-   </td>
-   <td>Where possible, tell users what they CAN instead of what they CANNOT do.
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>K2</strong>
-   </td>
-   <td>When asserting a requirement in the positive, use "must". Words like "should" imply that the assertion is optional, and must be avoided.
-   </td>
-   <td><em>"must be greater than 0"</em>
-<p>
-<em>"must match regex '[a-z]+'"</em>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>K3</strong>
-   </td>
-   <td>When asserting a formatting requirement in the negative, use "must not". Words like "should not" imply that the assertion is optional, and must be avoided.
-   </td>
-   <td><em>"must not contain '..'"</em>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>K5</strong>
-   </td>
-   <td>When referencing a user-provided string value, indicate the literal in quotes.
-<p>
-<strong>N</strong> Use quotes (%q format specifier in Go) around user-provided values. This includes file paths.
-   </td>
-   <td><em>"must not contain '..'"</em>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>K6</strong>
-   </td>
-   <td>When referencing a field name, indicate the name in back-quotes.
-<p>
-<strong>N</strong> Where unclear from the message, reference the full field path.
-   </td>
-   <td><em>"must be greater than <code>`spec.request.size`</code>"</em>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>K7</strong>
-   </td>
-   <td>When specifying inequalities, use words rather than symbols. Do not use words like "larger than", "bigger than", "more than", "higher than", etc.
-   </td>
-   <td><em>"must be less than 256"</em>
-<p>
-<em>"must be greater than or equal to 0". </em>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>K8</strong>
-   </td>
-   <td>When specifying numeric ranges, use inclusive ranges when possible.
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td><strong>R1</strong>
-   </td>
-   <td>If wrapping a runtime error, such as the result of a failed API Server call, use <code>%w formatting verb in fmt.Errorf()(err)</code> to include the root cause error. Refer to Go lang error enhancements in Go 1.13 (https://blog.golang.org/go1.13-errors)<code>.</code>
-   </td>
-   <td>
-   </td>
-  </tr>
-</table>
+<!-- prettier-ignore -->
+|  Rule  | Description  | Examples  |
+| --- | --- | --- |
+| K1  | Where possible, tell users what they CAN instead of what they CANNOT do.  |   |
+| K2  | When asserting a requirement in the positive, use "must". Words like "should" imply that the assertion is optional, and must be avoided.  | "must be greater than 0"  "must match regex '[a-z]+'"  |
+| K3  | When asserting a formatting requirement in the negative, use "must not". Words like "should not" imply that the assertion is optional, and must be avoided.  | "must not contain '..'"  |
+| K5  | When referencing a user-provided string value, indicate the literal in quotes.  N Use quotes (%q format specifier in Go) around user-provided values. This includes file paths.  | "must not contain '..'"  |
+| K6  | When referencing a field name, indicate the name in back-quotes.  N Where unclear from the message, reference the full field path.  | "must be greater than `spec.request.size`"  |
+| K7  | When specifying inequalities, use words rather than symbols. Do not use words like "larger than", "bigger than", "more than", "higher than", etc.  | "must be less than 256"  "must be greater than or equal to 0".   |
+| K8  | When specifying numeric ranges, use inclusive ranges when possible.  |   |
+| R1  | If wrapping a runtime error, such as the result of a failed API Server call, use %w formatting verb in fmt.Errorf()(err) to include the root cause error. Refer to Go lang error enhancements in Go 1.13 (https://blog.golang.org/go1.13-errors).  |   |

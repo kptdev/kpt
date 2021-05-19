@@ -109,7 +109,4 @@ $ kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- value=foo
 
 [sigs.k8s.io/kustomize/kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/fn/framework#pkg-index
 [sigs.k8s.io/kustomize/kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/yaml
-[sigs.k8s.io/kustomize/kyaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/
-[rnode link]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/#RNode
-[pipe link]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml/yaml/#RNode.Pipe
 [catalog functions]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go
