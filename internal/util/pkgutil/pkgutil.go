@@ -19,14 +19,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sort"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
 // WalkPackage walks the package defined at src and provides a callback for
