@@ -35,10 +35,11 @@ type Runner struct {
 }
 
 func getKptBin() (string, error) {
-	if p := os.Getenv(kptBinEnv); p != "" {
-		return p, nil
+	p, err := exec.Command("which", "kpt").CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("cannot find command 'kpt' in $PATH: %w", err)
 	}
-	return "", fmt.Errorf("must specify env '%s' for kpt binary path", kptBinEnv)
+	return strings.TrimSpace(string(p)), nil
 }
 
 const (
@@ -46,7 +47,6 @@ const (
 	// expected diff and results if they already exist. If will not change
 	// config.yaml.
 	updateExpectedEnv string = "KPT_E2E_UPDATE_EXPECTED"
-	kptBinEnv         string = "KPT_E2E_BIN"
 
 	expectedDir         string = ".expected"
 	expectedResultsFile string = "results.yaml"
