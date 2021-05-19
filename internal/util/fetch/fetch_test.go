@@ -15,7 +15,6 @@
 package fetch_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -428,51 +427,66 @@ func TestCommand_Run_tag(t *testing.T) {
 }
 
 func TestCommand_Run_subdir_at_tag(t *testing.T) {
-	g := &testutil.TestSetupManager{
-		T: t,
-		ReposChanges: map[string][]testutil.Content{
-			testutil.Upstream: {
-				{
-					Pkg: pkgbuilder.NewRootPkg().
-						WithSubPackages(pkgbuilder.NewSubPkg("java").
-							WithResource("deployment").
-							WithSubPackages(pkgbuilder.NewSubPkg("expected").WithFile("expected.txt", "My kptfile and I should be the only objects"))),
-					Branch: "master",
-					Tag:    "java/v2"},
-			},
-		},
-		LocalChanges: []testutil.Content{
-			{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile(pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, "/java/expected", "v2", "resource-merge"))},
-		},
-	}
+	dir := "/java/expected"
+	tag := "java/v2"
+	g, rw, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Pkg: pkgbuilder.NewRootPkg().
+			WithSubPackages(pkgbuilder.NewSubPkg("java").
+				WithResource("deployment").
+				WithSubPackages(pkgbuilder.NewSubPkg("expected").WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+		Branch: "main",
+		Tag:    tag,
+	})
 
-	defer g.Clean()
-	if !g.Init() {
-		return
-	}
+	defer clean()
 
-	actualPkg := pkgtesting.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath())
-	err := Command{
+	err := createKptfile(rw, &kptfilev1alpha2.Git{
+		Repo:      g.RepoDirectory,
+		Directory: dir,
+		Ref:       "java/v2",
+	}, kptfilev1alpha2.ResourceMerge)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	commit, err := g.GetCommit()
+	assert.NoError(t, err)
+
+	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+	err = Command{
 		Pkg: actualPkg,
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	files, err := ioutil.ReadDir(actualPkg.UniquePath.String())
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	fileNames := make([]string, 0)
-	for _, f := range files {
-		fileNames = append(fileNames, f.Name())
-	}
+	g.AssertEqual(t, rw.WorkspaceDirectory, actualPkg.UniquePath.String(), false)
 
-	assert.Equal(t, 2, len(files))
-	assert.Contains(t, fileNames, "expected.txt", "Kptfile")
+	g.AssertKptfile(t, rw.FullPackagePath(), kptfilev1alpha2.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
+				Kind:       kptfilev1alpha2.KptFileName},
+		},
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: "git",
+			Git: &kptfilev1alpha2.Git{
+				Directory: dir,
+				Repo:      g.RepoDirectory,
+				Ref:       tag,
+			},
+			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+		},
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
+			Type: "git",
+			Git: &kptfilev1alpha2.GitLock{
+				Directory: dir,
+				Repo:      g.RepoDirectory,
+				Ref:       tag,
+				Commit:    commit,
+			},
+		},
+	})
+
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
