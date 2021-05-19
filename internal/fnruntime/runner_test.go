@@ -163,3 +163,76 @@ func TestMultilineFormatter(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckResourcePaths(t *testing.T) {
+	type input struct {
+		nodes             []*yaml.RNode
+		expectedErr       string
+	}
+
+	resourceInPackage, err := yaml.Parse(`
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-stateful-set
+  annotations:
+    config.kubernetes.io/path: my-stateful-set.yaml
+spec:
+  replicas: 3
+`)
+	assert.NoError(t, err)
+
+	resourceOutsidePackage, err := yaml.Parse(`
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-stateful-set
+  annotations:
+    config.kubernetes.io/path: ../my-stateful-set.yaml
+spec:
+  replicas: 3
+`)
+	assert.NoError(t, err)
+
+	resourceOutsidePackageLongPath, err := yaml.Parse(`
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-stateful-set
+  annotations:
+    config.kubernetes.io/path: a/b/../../../my-stateful-set.yaml
+spec:
+  replicas: 3
+`)
+	assert.NoError(t, err)
+
+
+	testcases := map[string]input {
+		"no error": {
+			nodes: []*yaml.RNode{resourceInPackage},
+		},
+		"with ../ prefix": {
+			nodes: []*yaml.RNode{resourceInPackage, resourceOutsidePackage},
+			expectedErr: "cannot modify resources outside of package: resource has path ../my-stateful-set.yaml",
+		},
+		"with nested ../ in path": {
+			nodes: []*yaml.RNode{resourceInPackage, resourceOutsidePackageLongPath},
+			expectedErr: "cannot modify resources outside of package: resource has path a/b/../../../my-stateful-set.yaml",
+		},
+	}
+
+	for name, c := range testcases {
+		c := c
+		t.Run(name, func(t *testing.T) {
+			err := checkResourcePaths(c.nodes)
+			if c.expectedErr == "" {
+				assert.NoError(t, err)
+			} else {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				assert.Equal(t, c.expectedErr, err.Error())
+			}
+		})
+	}
+}

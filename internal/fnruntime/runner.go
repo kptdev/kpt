@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -31,6 +32,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -120,6 +122,9 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	fnResult := fr.fnResult
 
 	output, err = fr.filter.Filter(input)
+	if err := checkResourcePaths(output); err != nil {
+		return output, err
+	}
 
 	// parse the results irrespective of the success/failure of fn exec
 	resultErr := parseStructuredResult(fr.filter.Results, fnResult)
@@ -206,6 +211,23 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 		pr.OptPrintf(printOpt.Stderr(), "%s", errLines.String())
 	}
 	pr.OptPrintf(printOpt.Stderr(), "  Exit code: %d\n\n", fnErr.ExitCode)
+}
+
+// path (location) of a KRM resources is tracked in a special key in
+// metadata.annotation field. checkResourcePaths ensures that those paths
+// only point to files within the package, throwing an error if there is a path
+// to a file outside the package
+func checkResourcePaths(resources []*yaml.RNode) error {
+	for _, r := range resources {
+		currPath, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		if strings.HasPrefix(path.Clean(currPath), "../") {
+			return fmt.Errorf("cannot modify resources outside of package: resource has path %s", currPath)
+		}
+	}
+	return nil
 }
 
 // multiLineFormatter knows how to format multiple lines in pretty format

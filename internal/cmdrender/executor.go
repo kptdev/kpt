@@ -425,9 +425,6 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 				return resources, err
 			}
 		}
-		if strings.HasPrefix(path.Clean(currPath), "../") {
-			return resources, fmt.Errorf("cannot modify resources outside of package at path %s", currPath)
-		}
 	}
 	return resources, nil
 }
