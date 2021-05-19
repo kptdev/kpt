@@ -15,6 +15,7 @@
 package fetch_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -461,7 +462,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 		t.FailNow()
 	}
 
-	files, err := os.ReadDir(actualPkg.UniquePath.String())
+	files, err := ioutil.ReadDir(actualPkg.UniquePath.String())
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
