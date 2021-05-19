@@ -20,13 +20,13 @@ is useful for chaining functions using Unix pipe. For more details, refer to
 
 <!--mdtogo:Long-->
 
-```shell
+```
 kpt fn source [DIR] [flags]
 ```
 
 #### Args
 
-```shell
+```
 DIR:
   Path to the local directory containing resources. Defaults to the current
   working directory.
@@ -34,7 +34,7 @@ DIR:
 
 #### Flags
 
-```shell
+```
 --fn-config:
   Path to the file containing `functionConfig`.
 
@@ -45,12 +45,12 @@ DIR:
 
 <!--mdtogo:Examples-->
 
-```shell
+```
 # read resources from DIR directory and write the output on stdout.
 $ kpt fn source DIR
 ```
 
-```shell
+```
 # read resources from DIR directory, execute my-fn on them and write the
 # output to DIR directory.
 $ kpt fn source DIR |

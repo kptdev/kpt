@@ -37,8 +37,8 @@ Args:
   
     1. Multi object YAML where resources are separated by ` + "`" + `---` + "`" + `.
   
-    2. [Function Specification] wire format where resources are wrapped in an object
-       of kind ResourceList. Refer to [Function Specification] format for more details.
+    2. ` + "`" + `Function Specification` + "`" + ` wire format where resources are wrapped in an object
+       of kind ResourceList.
    
     If the output is written to ` + "`" + `stdout` + "`" + `, resources are written in multi object YAML
     format where resources are separated by ` + "`" + `---` + "`" + `.

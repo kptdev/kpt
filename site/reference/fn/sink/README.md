@@ -15,8 +15,8 @@ Resources must be in one of the following input formats:
 
   1. Multi object YAML where resources are separated by `---`.
 
-  2. [Function Specification] wire format where resources are wrapped in an object
-     of kind ResourceList. Refer to [Function Specification] format for more details.
+  2. `Function Specification` wire format where resources are wrapped in an object
+     of kind ResourceList.
 
 `sink` is useful for chaining functions using Unix pipe. For more details,
 refer to [Chaining functions].
@@ -25,7 +25,7 @@ refer to [Chaining functions].
 
 <!--mdtogo:Long-->
 
-```shell
+```
 kpt fn sink DIR [flags]
 
 DIR:
@@ -38,7 +38,7 @@ DIR:
 
 <!--mdtogo:Examples-->
 
-```shell
+```
 # read resources from DIR directory, execute my-fn on them and write the
 # output to DIR directory.
 $ kpt fn source DIR |

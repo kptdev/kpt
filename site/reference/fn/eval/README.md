@@ -22,13 +22,13 @@ Refer to the [Imperative Function Execution] for detailed overview.
 
 <!--mdtogo:Long-->
 
-```shell
+```
 kpt fn eval [DIR|-] [flags] [-- fn-args]
 ```
 
 #### Args
 
-```shell
+```
 DIR|-:
   Path to the local directory containing resources. Defaults to the current
   working directory. Using '-' as the directory path will cause `eval` to
@@ -37,14 +37,14 @@ DIR|-:
 
   1. Multi object YAML where resources are separated by `---`.
 
-  2. [Function Specification] wire format where resources are wrapped in an object
-     of kind ResourceList. Refer to [Function Specification] format for more details.
+  2. `Function Specification` wire format where resources are wrapped in an object
+     of kind ResourceList.
  
   If the output is written to `stdout`, resources are written in multi object YAML
   format where resources are separated by `---`.
 ```
 
-```shell
+```
 fn-args:
   function arguments to be provided as input to the function. These must be
   provided in the `key=value` format and come after the separator `--`.
@@ -52,7 +52,7 @@ fn-args:
 
 #### Flags
 
-```shell
+```
 --as-current-user:
   Use the `uid` and `gid` of the kpt process for container function execution.
   By default, container function is executed as `nobody` user. You may want to use
@@ -107,55 +107,55 @@ fn-args:
 ## Examples
 <!--mdtogo:Examples-->
 
-```shell
+```
 # execute container my-fn on the resources in DIR directory and
 # write output back to DIR
 $ kpt fn eval DIR --image gcr.io/example.com/my-fn
 ```
 
-```shell
+```
 # execute container my-fn on the resources in DIR directory with
 # `functionConfig` my-fn-config
 $ kpt fn eval DIR --image gcr.io/example.com/my-fn --fn-config my-fn-config
 ```
 
-```shell
+```
 # execute container my-fn with an input ConfigMap containing `data: {foo: bar}`
 $ kpt fn eval DIR --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 ```
 
-```shell
+```
 # execute executable my-fn on the resources in DIR directory and
 # write output back to DIR
 $ kpt fn eval DIR --exec-path ./my-fn
 ```
 
-```shell
+```
 # execute container my-fn on the resources in DIR directory,
 # save structured results in /tmp/my-results dir and write output back to DIR
 $ kpt fn eval DIR --image gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir
 ```
 
-```shell
+```
 # execute container my-fn on the resources in DIR directory with network access enabled,
 # and write output back to DIR
 $ kpt fn eval DIR --image gcr.io/example.com/my-fn --network 
 ```
 
-```shell
+```
 # execute container my-fn on the resource in DIR and export KUBECONFIG
 # and foo environment variable
 $ kpt fn eval DIR --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 ```
 
-```shell
+```
 # execute kubeval function by mounting schema from a local directory on wordpress package
 $ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 \
   --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir \
   --as-current-user wordpress -- additional_schema_locations=/schema-dir
 ```
 
-```shell
+```
 # chaining functions using the unix pipe to set namespace and set labels on
 # wordpress package
 $ kpt fn source wordpress \
