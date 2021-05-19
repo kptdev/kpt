@@ -203,7 +203,7 @@ kind: Deployment
 metadata:
   name: foo
 spec:
-  replicas: 3 # {"$kpt-set":"replicas"}
+  replicas: 5 # {"$kpt-set":"replicas"}
 ```
 
 {{% hide %}}
