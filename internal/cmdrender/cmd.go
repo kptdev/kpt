@@ -23,10 +23,8 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
 // NewRunner returns a command runner
@@ -96,20 +94,5 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 }
 
 func (r *Runner) postRun(_ *cobra.Command, _ []string) {
-	inout := &kio.LocalPackageReadWriter{
-		PackagePath:    r.pkgPath,
-		MatchFilesGlob: append(kio.DefaultMatch, v1alpha2.KptFileName),
-	}
-	f := &filters.FormatFilter{
-		UseSchema: true,
-	}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{inout},
-		Filters: []kio.Filter{f},
-		Outputs: []kio.Writer{inout},
-	}.Execute()
-	if err != nil {
-		// do not throw error if formatting fails
-		return
-	}
+	pkgutil.FormatPackage(r.pkgPath)
 }

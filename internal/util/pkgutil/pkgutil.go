@@ -19,6 +19,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sort"
 	"strings"
 
@@ -271,6 +273,26 @@ func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPat
 	}
 	sort.Slice(paths, RootPkgFirstSorter(paths))
 	return paths, nil
+}
+
+// FormatPackage formats resources and meta-resources in the package and all its subpackages
+func FormatPackage(pkgPath string) {
+	inout := &kio.LocalPackageReadWriter{
+		PackagePath:    pkgPath,
+		MatchFilesGlob: append(kio.DefaultMatch, kptfilev1alpha2.KptFileName),
+	}
+	f := &filters.FormatFilter{
+		UseSchema: true,
+	}
+	err := kio.Pipeline{
+		Inputs:  []kio.Reader{inout},
+		Filters: []kio.Filter{f},
+		Outputs: []kio.Writer{inout},
+	}.Execute()
+	if err != nil {
+		// do not throw error if formatting fails
+		return
+	}
 }
 
 // Exists returns true if a file or directory exists on the provided path,

@@ -12,14 +12,12 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -306,20 +304,5 @@ func (r *EvalFnRunner) postRun(_ *cobra.Command, args []string) {
 	if len(args) > 0 {
 		path = args[0]
 	}
-	inout := &kio.LocalPackageReadWriter{
-		PackagePath:    path,
-		MatchFilesGlob: append(kio.DefaultMatch, v1alpha2.KptFileName),
-	}
-	f := &filters.FormatFilter{
-		UseSchema: true,
-	}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{inout},
-		Filters: []kio.Filter{f},
-		Outputs: []kio.Writer{inout},
-	}.Execute()
-	if err != nil {
-		// do not throw error if formatting fails
-		return
-	}
+	pkgutil.FormatPackage(path)
 }
