@@ -11,8 +11,15 @@ description: >
 -->
 
 `sink` reads resources from `stdin` and writes them to a local directory.
-It is useful for chaining functions using Unix pipe. For more details, refer to
-[Chaining functions].
+Resources must be in one of the following input formats:
+
+  1. Multi object YAML where resources are separated by `---`.
+
+  2. [Function Specification] wire format where resources are wrapped in an object
+     of kind ResourceList. Refer to [Function Specification] format for more details.
+
+`sink` is useful for chaining functions using Unix pipe. For more details,
+refer to [Chaining functions].
 
 ### Synopsis
 

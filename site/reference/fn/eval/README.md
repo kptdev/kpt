@@ -32,7 +32,16 @@ kpt fn eval [DIR|-] [flags] [-- fn-args]
 DIR|-:
   Path to the local directory containing resources. Defaults to the current
   working directory. Using '-' as the directory path will cause `eval` to
-  read resources from `stdin` and write the output to `stdout`.
+  read resources from `stdin` and write the output to `stdout`. When resources are
+  read from `stdin`, they must be in one of the following input formats:
+
+  1. Multi object YAML where resources are separated by `---`.
+
+  2. [Function Specification] wire format where resources are wrapped in an object
+     of kind ResourceList. Refer to [Function Specification] format for more details.
+ 
+  If the output is written to `stdout`, resources are written in multi object YAML
+  format where resources are separated by `---`.
 ```
 
 ```shell
@@ -158,3 +167,4 @@ $ kpt fn source wordpress \
 
 [docker volumes]: https://docs.docker.com/storage/volumes/
 [Imperative Function Execution]: /book/04-using-functions/02-imperative-function-execution
+[Function Specification]: /book/05-developing-functions/02-function-specification
