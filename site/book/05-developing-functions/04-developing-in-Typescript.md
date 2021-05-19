@@ -1,28 +1,30 @@
-kpt project provides an opinionated Typescript SDK for implementing functions. It provides
-the following features:
+kpt project provides an opinionated Typescript SDK for implementing functions.
+It provides the following features:
 
-- **General-purpose language:** Similar to Go, Typescript is a general-purpose programming language
-  that provides:
+- **General-purpose language:** Similar to Go, Typescript is a general-purpose
+  programming language that provides:
   - Proper abstractions and language features
   - A extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
   - Robust community support and detailed documentation
-- **Idomatic:** The TS SDK provides a different level of abstraction compared to the Go library we
-  saw previously. Instead of exposing the low-level YAML AST, resources are marshalled into native
-  Typescript objects. As a result, you get a more idiomatic and high-level abstraction. Ideally, you
-  should work with native data structure/object in each language and not think about YAML which
-  is just a file format. Even though resources in configuration files are round-tripped to
-  Typescript objects, the kpt orchestrator ensures that YAML-specific constructs such as comments
-  are preserved. The obvious limitation of this high-level abstraction is that you cannot develop
-  functions for manipulating YAML-specific constructs like comments.
-- **Type-safety:** Kubernetes configuration is typed, and its schema is
-  defined using the OpenAPI spec. Typescript has a sophisticated type system
-  that accommodates the complexity of Kubernetes resources. The TS SDK enables
+- **Idomatic:** The TS SDK provides a different level of abstraction compared to
+  the Go library we saw previously. Instead of exposing the low-level YAML AST,
+  resources are marshalled into native Typescript objects. As a result, you get
+  a more idiomatic and high-level abstraction. Ideally, you should work with
+  native data structure/object in each language and not think about YAML which
+  is just a file format. Even though resources in configuration files are
+  round-tripped to Typescript objects, the kpt orchestrator ensures that
+  YAML-specific constructs such as comments are preserved. The obvious
+  limitation of this high-level abstraction is that you cannot develop functions
+  for manipulating YAML-specific constructs like comments.
+- **Type-safety:** Kubernetes configuration is typed, and its schema is defined
+  using the OpenAPI spec. Typescript has a sophisticated type system that
+  accommodates the complexity of Kubernetes resources. The TS SDK enables
   generating Typescript classes for core and CRD types.
-- **Batteries-included:** The TS SDK provides a simple, powerful API for querying and manipulating
-  resources inspired by [document-oriented databases]. It provides the scaffolding required to
-  develop, build, test, and publish functions, allowing you to focus on implementing your
-  business-logic.
+- **Batteries-included:** The TS SDK provides a simple, powerful API for
+  querying and manipulating resources inspired by [document-oriented databases].
+  It provides the scaffolding required to develop, build, test, and publish
+  functions, allowing you to focus on implementing your business-logic.
 
 ## Quickstart
 
@@ -58,17 +60,16 @@ Currently supported platforms: amd64 Linux/Mac
    $ npm install
    ```
 
-1. Run the following in a separate terminal to continuously build your
-   function as you make changes:
+1. Run the following in a separate terminal to continuously build your function
+   as you make changes:
 
    ```shell
    $ npm run watch
    ```
 
 1. Explore the [`label_namespace`][label-namespace] transformer function. This
-   function takes a given `label_name` and `label_value` to add the
-   appropriate label to `Namespace` objects using the SDK's `addLabel`
-   function.
+   function takes a given `label_name` and `label_value` to add the appropriate
+   label to `Namespace` objects using the SDK's `addLabel` function.
 
    ```typescript
    import { addLabel, Configs } from "kpt-functions";
@@ -96,8 +97,8 @@ Currently supported platforms: amd64 Linux/Mac
      | kpt fn sink $CONFIGS
    ```
 
-   As the name suggests, this function added the given label to all
-   `Namespace` objects in the `example-configs` directory:
+   As the name suggests, this function added the given label to all `Namespace`
+   objects in the `example-configs` directory:
 
    ```shell
    $ git diff $CONFIGS
@@ -107,8 +108,8 @@ Currently supported platforms: amd64 Linux/Mac
    operations and rerun the function on `example-configs` to see the changes.
 
 1. Explore validation functions like [validate-rolebinding]. Instead of
-   transforming configuration, this function searches RoleBindings and returns
-   a results field containing details about invalid subject names.
+   transforming configuration, this function searches RoleBindings and returns a
+   results field containing details about invalid subject names.
 
    ```typescript
    import { Configs, kubernetesObjectResult } from "kpt-functions";
@@ -145,8 +146,8 @@ Currently supported platforms: amd64 Linux/Mac
    $ git diff $CONFIGS
    ```
 
-1. Explore generator functions like [expand-team-cr]. This function generates
-   a per-environment Namespace and RoleBinding object for each custom resource
+1. Explore generator functions like [expand-team-cr]. This function generates a
+   per-environment Namespace and RoleBinding object for each custom resource
    (CR) of type Team.
 
    ```typescript
@@ -220,16 +221,21 @@ Currently supported platforms: amd64 Linux/Mac
 ## Next Steps
 
 - Read the complete [Typescript SDK Developer Guide].
-- Take a look at these [example functions] to better understand
-  how to use the TS SDK.
+- Take a look at these [example functions] to better understand how to use the
+  TS SDK.
 
 [download-kpt]: /book/01-getting-started/01-system-requirements
 [download-node]: https://nodejs.org/en/download/
 [install-node]: https://github.com/nodejs/help/wiki/Installation/
 [ts sdk api]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
-[label-namespace]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
-[validate-rolebinding]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts
-[expand-team-cr]: https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
-[example functions]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
-[document-oriented databases]: https://en.wikipedia.org/wiki/Document-oriented_database
+[label-namespace]:
+  https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
+[validate-rolebinding]:
+  https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts
+[expand-team-cr]:
+  https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
+[example functions]:
+  https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
+[document-oriented databases]:
+  https://en.wikipedia.org/wiki/Document-oriented_database
 [typescript sdk developer guide]: /sdk/ts-guide

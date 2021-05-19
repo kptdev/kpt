@@ -56,17 +56,19 @@ Contributions are required to follow these style guides:
 
 ## Contribution to the Functions Catalog
 
-Refer to the [documentation in the kpt-functions-catalog](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md) repo.
+Refer to the
+[documentation in the kpt-functions-catalog](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
+repo.
 
 ## Contributing to Documentation
 
-If you are updating the documentation, please do it in separate PRs from
-code changes and the commit message should start with `Docs:`.
+If you are updating the documentation, please do it in separate PRs from code
+changes and the commit message should start with `Docs:`.
 
 ### Run the docs locally
 
-Make docs changes and test them by running the site in a docker container
-with `make site-run-server`.
+Make docs changes and test them by running the site in a docker container with
+`make site-run-server`.
 
 It's usually a good idea to test locally for the following:
 
@@ -94,7 +96,8 @@ This includes:
 [error message style guide]: docs/style-guides/errors.md
 [documentation style guide]: docs/style-guides/docs.md
 [github help]: https://help.github.com/articles/about-pull-requests/
-[google's open source community guidelines]: https://opensource.google.com/conduct/
+[google's open source community guidelines]:
+  https://opensource.google.com/conduct/
 [code of conduct]: CODE_OF_CONDUCT.md
 [docsify]: https://docsify.js.org/
 [site/]: site/

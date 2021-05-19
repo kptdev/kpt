@@ -1,16 +1,17 @@
-You can use the `kyaml` library to development functions in Go. It provides the following
-features:
+You can use the `kyaml` library to development functions in Go. It provides the
+following features:
 
-- **General-purpose language:** Compared to Domain Specific Languages (DSL), Go is a general-purpose
-  programming language that provides:
+- **General-purpose language:** Compared to Domain Specific Languages (DSL), Go
+  is a general-purpose programming language that provides:
   - Proper abstractions and language features
   - A extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
   - Robust community support and detailed documentation
-- **YAML-centric**: As opposed to other frameworks discussed in this chapter, the `kyaml`
-  library exposes the YAML Abstract Syntax Tree (AST) to the user. This enables you to
-  control every aspect of the YAML file including manipulating comments, but comes at the cost
-  of complexity compared to representing resources as idiomatic data structures.
+- **YAML-centric**: As opposed to other frameworks discussed in this chapter,
+  the `kyaml` library exposes the YAML Abstract Syntax Tree (AST) to the user.
+  This enables you to control every aspect of the YAML file including
+  manipulating comments, but comes at the cost of complexity compared to
+  representing resources as idiomatic data structures.
 
 ## Quickstart
 
@@ -23,7 +24,8 @@ $ go get sigs.k8s.io/kustomize/kyaml@v0.10.6
 
 ### Create the `main.go`
 
-This is a simple function that adds the annotation `myannotation` with the provided value:
+This is a simple function that adds the annotation `myannotation` with the
+provided value:
 
 ```go
 // main.go
@@ -105,8 +107,12 @@ $ kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- value=foo
 | [sigs.k8s.io/kustomize/kyaml/fn/framework] | Functions Framework   |
 | [sigs.k8s.io/kustomize/kyaml/yaml]         | Modify YAML resources |
 
-- Take a look at [catalog functions] to better understand how to use the develop functions in Go
+- Take a look at [catalog functions] to better understand how to use the develop
+  functions in Go
 
-[sigs.k8s.io/kustomize/kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/fn/framework#pkg-index
-[sigs.k8s.io/kustomize/kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/yaml
-[catalog functions]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go
+[sigs.k8s.io/kustomize/kyaml/fn/framework]:
+  https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/fn/framework#pkg-index
+[sigs.k8s.io/kustomize/kyaml/yaml]:
+  https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/yaml
+[catalog functions]:
+  https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go

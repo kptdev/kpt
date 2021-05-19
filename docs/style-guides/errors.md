@@ -1,18 +1,29 @@
 # kpt Error Messages Style Guide
 
-Validation error messages and documentation are an important part of the UX in kpt. In fact, validation error messages are most likely the first thing users experience. The general philosophy here is to have **precise**, **actionable**, and **consistent** error messages. This document is based on the similar style guide for Config Sync (go/nomos-style).
+Validation error messages and documentation are an important part of the UX in
+kpt. In fact, validation error messages are most likely the first thing users
+experience. The general philosophy here is to have **precise**, **actionable**,
+and **consistent** error messages. This document is based on the similar style
+guide for Config Sync (go/nomos-style).
 
 ## Errors vs. Documentation
 
-In most cases, the error message should provide enough information to resolve the issue. Prefer short descriptions that explain what caused the specific error and what to do to fix it. More extensive explanations and general rules (if they take more than a sentence to describe) are for documentation (which is automatically linked in error messages).
+In most cases, the error message should provide enough information to resolve
+the issue. Prefer short descriptions that explain what caused the specific error
+and what to do to fix it. More extensive explanations and general rules (if they
+take more than a sentence to describe) are for documentation (which is
+automatically linked in error messages).
 
-Generally, documentation should expand on what the error message says and help the reader understand how to prevent future mistakes.
+Generally, documentation should expand on what the error message says and help
+the reader understand how to prevent future mistakes.
 
 ## Error Message Rules
 
 In the table below, origin and scope of rules are denoted with a prefix
 
-- **K** is inherited from [Kubernetes conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#validation); rules with prefix
+- **K** is inherited from
+  [Kubernetes conventions](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#validation);
+  rules with prefix
 - **R** are specific to Kpt.
 
 <!-- prettier-ignore -->
