@@ -7,6 +7,9 @@ configuration using the underlying Git version control system.
 
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
+{{% /hide %}}
+
+<!-- @pkgGet @verifyExamples-->
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.4
 $ cd nginx
