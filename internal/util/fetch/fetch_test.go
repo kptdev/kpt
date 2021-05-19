@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -431,6 +432,54 @@ func TestCommand_Run_tag(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestCommand_Run_subdir_at_tag(t *testing.T) {
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithSubPackages(pkgbuilder.NewSubPkg("java").
+							WithResource("deployment").
+							WithSubPackages(pkgbuilder.NewSubPkg("expected").WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+					Branch: "master",
+					Tag:    "java/v2"},
+			},
+		},
+		LocalChanges: []testutil.Content{
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/java/expected", "v2", "resource-merge"))},
+		},
+	}
+
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+
+	actualPkg := createPackage(t, g.LocalWorkspace.FullPackagePath())
+	err := Command{
+		Pkg: actualPkg,
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	files, err := os.ReadDir(actualPkg.UniquePath.String())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	fileNames := make([]string, 0)
+	for _, f := range files {
+		fileNames = append(fileNames, f.Name())
+	}
+
+	assert.Equal(t, 2, len(files))
+	assert.Contains(t, fileNames, "expected.txt", "Kptfile")
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
