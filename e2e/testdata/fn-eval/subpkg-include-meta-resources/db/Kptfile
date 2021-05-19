@@ -4,5 +4,5 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - configPath: labelconfig.yaml
-      image: gcr.io/kpt-fn/set-labels:unstable
+    - image: gcr.io/kpt-fn/set-label:unstable
+      configPath: labelconfig.yaml

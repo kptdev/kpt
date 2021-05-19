@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: search-replace-fn-config
 data:
   by-path: spec.replicas
-  by-value: 3
-  put-value: 4
+  by-value: "3"
+  put-value: "4"

@@ -23,6 +23,7 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/spf13/cobra"
 )
 
@@ -36,6 +37,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		Example: docs.RenderExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
+		PostRun: r.postRun,
 	}
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
@@ -88,8 +90,9 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		PkgPath:        r.pkgPath,
 		ResultsDirPath: r.resultsDirPath,
 	}
-	if err = executor.Execute(r.ctx); err != nil {
-		return err
-	}
-	return nil
+	return executor.Execute(r.ctx)
+}
+
+func (r *Runner) postRun(_ *cobra.Command, _ []string) {
+	pkgutil.FormatPackage(r.pkgPath)
 }

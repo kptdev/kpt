@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,7 +52,7 @@ kind: K8sConfigMapKeysRulesV1
 metadata:
   name: no-secrets-in-configmap
 spec:
-  enforcementAction: warn  # create warning instead of errors
+  enforcementAction: warn # create warning instead of errors
   match:
     kinds:
       - apiGroups:
@@ -69,7 +68,7 @@ kind: K8sConfigMapKeysRulesV1
 metadata:
   name: no-sensitive-data-in-configmap
 spec:
-  enforcementAction: dryrun  # create info instead of errors
+  enforcementAction: dryrun # create info instead of errors
   match:
     kinds:
       - apiGroups:
@@ -86,5 +85,5 @@ metadata:
   name: some-secret
   namespace: default
 data:
-  private_key: sensitive data goes here
   less_sensitive_key: less sensitive data goes here
+  private_key: sensitive data goes here

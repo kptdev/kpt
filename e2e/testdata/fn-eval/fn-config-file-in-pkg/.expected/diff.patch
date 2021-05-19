@@ -1,19 +1,14 @@
 diff --git a/config.yaml b/config.yaml
-index 3812e69..ea4fad1 100644
+index bb0bf5d..ea4fad1 100644
 --- a/config.yaml
 +++ b/config.yaml
-@@ -12,8 +12,9 @@
- # See the License for the specific language governing permissions and
- # limitations under the License.
- apiVersion: v1
--data:
--  namespace: staging
+@@ -15,5 +15,6 @@ apiVersion: v1
  kind: ConfigMap
  metadata:
    name: config
 +  namespace: staging
-+data:
-+  namespace: staging
+ data:
+   namespace: staging
 diff --git a/resources.yaml b/resources.yaml
 index 7a494c9..254b9cd 100644
 --- a/resources.yaml

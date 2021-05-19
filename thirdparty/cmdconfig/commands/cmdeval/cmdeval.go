@@ -12,6 +12,7 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
@@ -30,6 +31,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		Example: docs.EvalExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
+		PostRun: r.postRun,
 	}
 
 	r.Command = c
@@ -292,4 +294,15 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 
 	// don't consider args for the function
 	return nil
+}
+
+func (r *EvalFnRunner) postRun(_ *cobra.Command, args []string) {
+	if len(args) > 0 && args[0] == "-" {
+		return
+	}
+	path := "."
+	if len(args) > 0 {
+		path = args[0]
+	}
+	pkgutil.FormatPackage(path)
 }
