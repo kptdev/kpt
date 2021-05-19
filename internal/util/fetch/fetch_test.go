@@ -19,7 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	pkgtesting "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
@@ -58,14 +58,6 @@ func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1alpha2.Git, 
 	return kptfileutil.WriteFile(workspace.FullPackagePath(), kf)
 }
 
-func createPackage(t *testing.T, pkgPath string) *pkg.Pkg {
-	p, err := pkg.New(pkgPath)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	return p
-}
-
 // TestCommand_Run_failEmptyRepo verifies that Command fail if no Kptfile
 func TestCommand_Run_failNoKptfile(t *testing.T) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
@@ -81,7 +73,7 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, pkgPath),
+		Pkg: pkgtesting.CreatePkgOrFail(t, pkgPath),
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -100,7 +92,7 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -123,7 +115,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -146,7 +138,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -173,7 +165,7 @@ func TestCommand_Run(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
@@ -235,7 +227,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
@@ -313,7 +305,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
@@ -394,7 +386,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
 
@@ -461,7 +453,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 		return
 	}
 
-	actualPkg := createPackage(t, g.LocalWorkspace.FullPackagePath())
+	actualPkg := pkgtesting.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath())
 	err := Command{
 		Pkg: actualPkg,
 	}.Run(fake.CtxWithNilPrinter())
@@ -496,7 +488,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -520,7 +512,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -547,7 +539,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithNilPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
