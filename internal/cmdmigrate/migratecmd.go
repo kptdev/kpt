@@ -1,10 +1,12 @@
 // Copyright 2020 Google LLC.
 // SPDX-License-Identifier: Apache-2.0
 
-package commands
+package cmdmigrate
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
@@ -28,31 +29,33 @@ import (
 
 // MigrateRunner encapsulates fields for the kpt migrate command.
 type MigrateRunner struct {
+	ctx       context.Context
 	Command   *cobra.Command
 	ioStreams genericclioptions.IOStreams
 
-	dir         string
-	dryRun      bool
-	initOptions *cmdliveinit.KptInitOptions
-	cmProvider  provider.Provider
-	rgProvider  provider.Provider
-	cmLoader    manifestreader.ManifestLoader
-	rgLoader    manifestreader.ManifestLoader
+	dir        string
+	dryRun     bool
+	name       string
+	force      bool
+	cmProvider provider.Provider
+	rgProvider provider.Provider
+	cmLoader   manifestreader.ManifestLoader
+	rgLoader   manifestreader.ManifestLoader
 }
 
-// NewMigrateRunner returns a pointer to an initial MigrateRunner structure.
-func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider,
+// NewRunner returns a pointer to an initial MigrateRunner structure.
+func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
 	cmLoader manifestreader.ManifestLoader, rgLoader manifestreader.ManifestLoader,
 	ioStreams genericclioptions.IOStreams) *MigrateRunner {
 	r := &MigrateRunner{
-		ioStreams:   ioStreams,
-		dryRun:      false,
-		initOptions: cmdliveinit.NewKptInitOptions(cmProvider.Factory(), ioStreams),
-		cmProvider:  cmProvider,
-		rgProvider:  rgProvider,
-		cmLoader:    cmLoader,
-		rgLoader:    rgLoader,
-		dir:         "",
+		ctx:        ctx,
+		ioStreams:  ioStreams,
+		dryRun:     false,
+		cmProvider: cmProvider,
+		rgProvider: rgProvider,
+		cmLoader:   cmLoader,
+		rgLoader:   rgLoader,
+		dir:        "",
 	}
 	cmd := &cobra.Command{
 		Use:                   "migrate [DIR | -]",
@@ -73,21 +76,19 @@ func GetMigrateRunner(cmProvider provider.Provider, rgProvider provider.Provider
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&r.initOptions.Name, "name", "", "Inventory object name")
-	cmd.Flags().BoolVar(&r.initOptions.Force, "force", false, "Set inventory values even if already set in Kptfile")
+	cmd.Flags().StringVar(&r.name, "name", "", "Inventory object name")
+	cmd.Flags().BoolVar(&r.force, "force", false, "Set inventory values even if already set in Kptfile")
 	cmd.Flags().BoolVar(&r.dryRun, "dry-run", false, "Do not actually migrate, but show steps")
 
 	r.Command = cmd
 	return r
 }
 
-// NewCmdMigrate returns the cobra command for the migrate command.
-func NewCmdMigrate(f cmdutil.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
-	configMapProvider := provider.NewProvider(f)
-	resourceGroupProvider := live.NewResourceGroupProvider(f)
-	cmLoader := manifestreader.NewManifestLoader(f)
-	rgLoader := live.NewResourceGroupManifestLoader(f)
-	return GetMigrateRunner(configMapProvider, resourceGroupProvider, cmLoader, rgLoader, ioStreams).Command
+// NewCommand returns the cobra command for the migrate command.
+func NewCommand(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
+	cmLoader manifestreader.ManifestLoader, rgLoader manifestreader.ManifestLoader,
+	ioStreams genericclioptions.IOStreams) *cobra.Command {
+	return NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
 }
 
 // Run executes the migration from the ConfigMap based inventory to the ResourceGroup
@@ -135,7 +136,7 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	cmInventoryID := cmInvObj.ID()
 	klog.V(4).Infof("previous inventoryID: %s", cmInventoryID)
 	// Update the Kptfile with the resource group values (e.g. namespace, name, id).
-	if err := mr.updateKptfile(args, cmInventoryID); err != nil {
+	if err := mr.updateKptfile(mr.ctx, args, cmInventoryID); err != nil {
 		return err
 	}
 	cmObjs, err := mr.retrieveInvObjs(cmInvObj)
@@ -176,14 +177,20 @@ func (mr *MigrateRunner) applyCRD() error {
 }
 
 // updateKptfile installs the "inventory" fields in the Kptfile.
-func (mr *MigrateRunner) updateKptfile(args []string, prevID string) error {
+func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevID string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  updating Kptfile inventory values...")
 	if !mr.dryRun {
-		// Set inventory ID from previous inventory object.
-		mr.initOptions.InventoryID = prevID
-		mr.initOptions.Quiet = true
-		if err := mr.initOptions.Run(args); err != nil {
-			if _, exists := err.(*cmdliveinit.InvExistsError); exists {
+		err := (&cmdliveinit.ConfigureInventoryInfo{
+			Path:        args[0],
+			Factory:     mr.rgProvider.Factory(),
+			Quiet:       true,
+			InventoryID: prevID,
+			Force:       mr.force,
+		}).Run(ctx)
+
+		if err != nil {
+			var invExistsError *cmdliveinit.InvExistsError
+			if errors.As(err, &invExistsError) {
 				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
 			} else {
 				return err

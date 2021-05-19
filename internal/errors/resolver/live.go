@@ -15,6 +15,7 @@
 package resolver
 
 import (
+	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
@@ -60,6 +61,11 @@ Error: Unable to install the ResourceGroup CRD.
 	//nolint:lll
 	noResourceGroupCRDMsg = `
 Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command.
+`
+
+	//nolint:lll
+	invInfoAlreadyExistsMsg = `
+Error: Inventory information has already been added to the package Kptfile. Changing it after a package has been applied to the cluster can lead to undesired results. Use the --force flag to suppress this error.
 `
 
 	TimeoutErrorExitCode = 3
@@ -109,6 +115,14 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	if errors.As(err, &noResourceGroupCRDError) {
 		return ResolvedResult{
 			Message: ExecuteTemplate(noResourceGroupCRDMsg, tmplArgs),
+		}, true
+	}
+
+	var invExistsError *cmdliveinit.InvExistsError
+	if errors.As(err, &invExistsError) {
+		return ResolvedResult{
+			Message:  ExecuteTemplate(invInfoAlreadyExistsMsg, tmplArgs),
+			ExitCode: 1,
 		}, true
 	}
 

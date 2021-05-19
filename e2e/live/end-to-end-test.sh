@@ -503,7 +503,7 @@ echo "Testing init Kptfile/ResourceGroup already initialized"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...failed"
-assertContains "error: ResourceGroup configuration has already been created."
+assertContains "Error: Inventory information has already been added to the package Kptfile."
 printResult
 
 echo "Testing init force Kptfile/ResourceGroup"

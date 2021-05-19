@@ -4,12 +4,15 @@
 package cmdliveinit
 
 import (
+	"context"
 	"crypto/sha1"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/spf13/cobra"
@@ -27,17 +30,41 @@ const defaultInventoryName = "inventory"
 type InvExistsError struct{}
 
 func (i *InvExistsError) Error() string {
-	return InvExistsErrorMsg
+	return "inventory information already set for package"
 }
 
-var InvExistsErrorMsg = `ResourceGroup configuration has already been created. Changing
-them after a package has been applied to the cluster can lead to
-undesired results. Use the --force flag to suppress this error.
-`
+func NewRunner(ctx context.Context, factory cmdutil.Factory,
+	ioStreams genericclioptions.IOStreams) *Runner {
+	r := &Runner{
+		ctx:       ctx,
+		factory:   factory,
+		ioStreams: ioStreams,
+	}
 
-// KptInitOptions encapsulates fields for kpt init command. This init command
-// fills in inventory values in the Kptfile.
-type KptInitOptions struct {
+	cmd := &cobra.Command{
+		Use:                   "init [PKG_PATH]",
+		DisableFlagsInUseLine: true,
+		Short:                 i18n.T("Initialize inventory parameters into Kptfile"),
+		RunE:                  r.runE,
+	}
+	r.Command = cmd
+
+	cmd.Flags().StringVar(&r.Name, "name", "", "Inventory object name")
+	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile")
+	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
+	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package")
+	return r
+}
+
+func NewCommand(ctx context.Context, f cmdutil.Factory,
+	ioStreams genericclioptions.IOStreams) *cobra.Command {
+	return NewRunner(ctx, f, ioStreams).Command
+}
+
+type Runner struct {
+	ctx     context.Context
+	Command *cobra.Command
+
 	factory     cmdutil.Factory
 	ioStreams   genericclioptions.IOStreams
 	dir         string // Directory with Kptfile
@@ -48,58 +75,115 @@ type KptInitOptions struct {
 	Quiet       bool   // Output message during initialization
 }
 
-// NewKptInitOptions returns a pointer to an initial KptInitOptions structure.
-func NewKptInitOptions(f cmdutil.Factory, ioStreams genericclioptions.IOStreams) *KptInitOptions {
-	return &KptInitOptions{
-		factory:   f,
-		ioStreams: ioStreams,
-		Quiet:     false,
+func (r *Runner) runE(_ *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		// default to the current working directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		args = append(args, cwd)
 	}
-}
 
-// Complete fills in fields for KptInitOptions based on the passed "args".
-func (io *KptInitOptions) Run(args []string) error {
-	// Set the init options directory.
-	if len(args) != 1 {
-		return fmt.Errorf("need one 'directory' arg; have %d", len(args))
-	}
 	dir, err := config.NormalizeDir(args[0])
 	if err != nil {
 		return err
 	}
-	io.dir = dir
-	// Set the init options inventory object namespace.
-	ns, err := config.FindNamespace(io.factory.ToRawKubeConfigLoader(), io.dir)
+	r.dir = dir
+
+	return (&ConfigureInventoryInfo{
+		Path:        dir,
+		Factory:     r.factory,
+		Quiet:       r.Quiet,
+		Name:        r.Name,
+		InventoryID: r.InventoryID,
+		Force:       r.Force,
+	}).Run(r.ctx)
+}
+
+// ConfigureInventoryInfo contains the functionality for adding and updating
+// the inventory information in the Kptfile.
+type ConfigureInventoryInfo struct {
+	Path    string
+	Factory cmdutil.Factory
+	Quiet   bool
+
+	Name        string
+	InventoryID string
+
+	Force bool
+}
+
+// Run updates the inventory info in the package given by the Path.
+func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
+	pr := printer.FromContextOrDie(ctx)
+
+	var name, namespace, inventoryID string
+
+	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Path)
 	if err != nil {
 		return err
 	}
-	io.namespace = strings.TrimSpace(ns)
-	if !io.Quiet {
-		fmt.Fprintf(io.ioStreams.Out, "initializing Kptfile inventory info (namespace: %s)...", io.namespace)
+	namespace = strings.TrimSpace(ns)
+	if !c.Quiet {
+		pr.Printf("initializing Kptfile inventory info (namespace: %s)...", namespace)
 	}
-	// Set the init options default inventory object name, if not set by flag.
-	if io.Name == "" {
+
+	// Autogenerate the name if it is not provided through the flag.
+	if c.Name == "" {
 		randomSuffix := common.RandomStr(time.Now().UTC().UnixNano())
-		io.Name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
+		name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
+	} else {
+		name = c.Name
 	}
-	// Set the init options inventory id label, if not already set.
-	if io.InventoryID == "" {
-		id, err := generateID(io.Name, io.namespace, time.Now())
+	// Generate the inventory id if one is not specified through a flag.
+	if c.InventoryID == "" {
+		id, err := generateID(namespace, name, time.Now())
 		if err != nil {
 			return err
 		}
-		io.InventoryID = id
+		inventoryID = id
+	} else {
+		inventoryID = c.InventoryID
 	}
 	// Finally, update these values in the Inventory section of the Kptfile.
-	err = io.updateKptfile()
-	if !io.Quiet {
+	err = updateKptfile(c.Path, &kptfilev1alpha2.Inventory{
+		Namespace:   namespace,
+		Name:        name,
+		InventoryID: inventoryID,
+	}, c.Force)
+	if !c.Quiet {
 		if err == nil {
-			fmt.Fprintln(io.ioStreams.Out, "success")
+			pr.Printf("success")
 		} else {
-			fmt.Fprintln(io.ioStreams.Out, "failed")
+			pr.Printf("failed")
 		}
 	}
 	return err
+}
+
+// Run fills in the inventory object values into the Kptfile.
+func updateKptfile(path string, inv *kptfilev1alpha2.Inventory, force bool) error {
+	// Read the Kptfile io io.dir
+	kf, err := kptfileutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	// Validate the inventory values don't already exist
+	isEmpty := kptfileInventoryEmpty(kf.Inventory)
+	if !isEmpty && !force {
+		return &InvExistsError{}
+	}
+	// Check the new inventory values are valid.
+	if err := inv.Validate(); err != nil {
+		return err
+	}
+	// Finally, set the inventory parameters in the Kptfile and write it.
+	kf.Inventory = inv
+	if err := kptfileutil.WriteFile(path, kf); err != nil {
+		return err
+	}
+	return nil
 }
 
 // generateID returns the string which is a SHA1 hash of the passed namespace
@@ -128,74 +212,8 @@ func generateHash(namespace string, name string) (string, error) {
 	return fmt.Sprintf("%x", (h.Sum(nil))), nil
 }
 
-// Run fills in the inventory object values into the Kptfile.
-func (io *KptInitOptions) updateKptfile() error {
-	// Read the Kptfile io io.dir
-	kf, err := kptfileutil.ReadFile(io.dir)
-	if err != nil {
-		return err
-	}
-	// Validate the inventory values don't already exist
-	isEmpty := kptfileInventoryEmpty(kf.Inventory)
-	if !isEmpty && !io.Force {
-		return &InvExistsError{}
-	}
-	// Check the new inventory values are valid.
-	if err := io.validate(); err != nil {
-		return err
-	}
-	// Finally, set the inventory parameters in the Kptfile and write it.
-	kf.Inventory = &kptfilev1alpha2.Inventory{
-		Namespace:   io.namespace,
-		Name:        io.Name,
-		InventoryID: io.InventoryID,
-	}
-	if err := kptfileutil.WriteFile(io.dir, kf); err != nil {
-		return err
-	}
-	return nil
-}
-
-// validate ensures the inventory object parameters are valid.
-func (io *KptInitOptions) validate() error {
-	// name is required
-	if len(io.Name) == 0 {
-		return fmt.Errorf("inventory name is missing")
-	}
-	// namespace is required
-	if len(io.namespace) == 0 {
-		return fmt.Errorf("inventory namespace is missing")
-	}
-	// inventoryID is required
-	if len(io.InventoryID) == 0 {
-		return fmt.Errorf("inventoryID is missing")
-	}
-	return nil
-}
-
 // kptfileInventoryEmpty returns true if the Inventory structure
 // in the Kptfile is empty; false otherwise.
 func kptfileInventoryEmpty(inv *kptfilev1alpha2.Inventory) bool {
 	return inv == nil
-}
-
-// NewCmdInit returns the cobra command for the init command.
-func NewCmdInit(f cmdutil.Factory, ioStreams genericclioptions.IOStreams) *cobra.Command {
-	io := NewKptInitOptions(f, ioStreams)
-	cmd := &cobra.Command{
-		Use:                   "init [PKG_PATH]",
-		DisableFlagsInUseLine: true,
-		Short:                 i18n.T("Initialize inventory parameters into Kptfile"),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				// default to current working directory
-				args = append(args, ".")
-			}
-			return io.Run(args)
-		},
-	}
-	cmd.Flags().StringVar(&io.Name, "name", "", "Inventory object name")
-	cmd.Flags().BoolVar(&io.Force, "force", false, "Set inventory values even if already set in Kptfile")
-	cmd.Flags().BoolVar(&io.Quiet, "quiet", false, "If true, do not print output message for initialization")
-	return cmd
 }
