@@ -32,7 +32,16 @@ Args:
   DIR|-:
     Path to the local directory containing resources. Defaults to the current
     working directory. Using '-' as the directory path will cause ` + "`" + `eval` + "`" + ` to
-    read resources from ` + "`" + `stdin` + "`" + ` and write the output to ` + "`" + `stdout` + "`" + `.
+    read resources from ` + "`" + `stdin` + "`" + ` and write the output to ` + "`" + `stdout` + "`" + `. When resources are
+    read from ` + "`" + `stdin` + "`" + `, they must be in one of the following input formats:
+  
+    1. Multi object YAML where resources are separated by ` + "`" + `---` + "`" + `.
+  
+    2. ` + "`" + `Function Specification` + "`" + ` wire format where resources are wrapped in an object
+       of kind ResourceList.
+   
+    If the output is written to ` + "`" + `stdout` + "`" + `, resources are written in multi object YAML
+    format where resources are separated by ` + "`" + `---` + "`" + `.
 
   fn-args:
     function arguments to be provided as input to the function. These must be
@@ -188,33 +197,44 @@ var RenderExamples = `
   $ kpt fn render my-package-dir
 `
 
-var SinkShort = `Specify a directory as an output sink package`
+var SinkShort = `Write resources to a local directory`
 var SinkLong = `
-  kpt fn sink [DIR]
+  kpt fn sink DIR [flags]
   
   DIR:
-    Path to a package directory.  Defaults to stdout if unspecified.
+    Path to a local directory to write resources to. Directory must exist.
 `
 var SinkExamples = `
-  # run a function using explicit sources and sinks
-  kpt fn source DIR/ |
-    kpt fn run --image gcr.io/example.com/my-fn |
-    kpt fn sink DIR/
+  # read resources from DIR directory, execute my-fn on them and write the
+  # output to DIR directory.
+  $ kpt fn source DIR |
+    kpt fn eval --image gcr.io/example.com/my-fn - |
+    kpt fn sink DIR
 `
 
-var SourceShort = `Specify a directory as an input source package`
+var SourceShort = `Source resources from a local directory`
 var SourceLong = `
-  kpt fn source [DIR...]
-  
+  kpt fn source [DIR] [flags]
+
+Args:
+
   DIR:
-    Path to a package directory.  Defaults to stdin if unspecified.
+    Path to the local directory containing resources. Defaults to the current
+    working directory.
+
+Flags:
+
+  --fn-config:
+    Path to the file containing ` + "`" + `functionConfig` + "`" + `.
+  
 `
 var SourceExamples = `
-  # print to stdout configuration from DIR/ formatted as an input source
-  kpt fn source DIR/
+  # read resources from DIR directory and write the output on stdout.
+  $ kpt fn source DIR
 
-  # run a function using explicit sources and sinks
-  kpt fn source DIR/ |
-    kpt fn run --image gcr.io/example.com/my-fn |
-    kpt fn sink DIR/
+  # read resources from DIR directory, execute my-fn on them and write the
+  # output to DIR directory.
+  $ kpt fn source DIR |
+    kpt fn eval --image gcr.io/example.com/my-fn - |
+    kpt fn sink DIR
 `

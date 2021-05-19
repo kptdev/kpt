@@ -15,23 +15,22 @@ import (
 
 // GetSourceRunner returns a command for Source.
 func GetSourceRunner(name string) *SourceRunner {
-	r := &SourceRunner{}
+	r := &SourceRunner{
+		WrapKind:       kio.ResourceListKind,
+		WrapAPIVersion: kio.ResourceListAPIVersion,
+	}
 	c := &cobra.Command{
-		Use:     "source [DIR]",
+		Use:     "source [DIR] [flags]",
 		Short:   fndocs.SourceShort,
-		Long:    fndocs.SourceLong,
+		Long:    fndocs.SourceShort + "\n" + fndocs.SourceLong,
 		Example: fndocs.SourceExamples,
 		Args:    cobra.MaximumNArgs(1),
 		RunE:    r.runE,
 	}
-	c.Flags().StringVar(&r.WrapKind, "wrap-kind", kio.ResourceListKind,
-		"output using this format.")
-	c.Flags().StringVar(&r.WrapAPIVersion, "wrap-version", kio.ResourceListAPIVersion,
-		"output using this format.")
-	c.Flags().StringVar(&r.FunctionConfig, "function-config", "",
-		"path to function config.")
+	c.Flags().StringVar(&r.FunctionConfig, "fn-config", "",
+		"path to function config file.")
 	r.Command = c
-	_ = c.MarkFlagFilename("function-config", "yaml", "json", "yml")
+	_ = c.MarkFlagFilename("fn-config", "yaml", "json", "yml")
 	return r
 }
 
