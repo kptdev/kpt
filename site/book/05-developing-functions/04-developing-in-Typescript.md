@@ -4,7 +4,7 @@ It provides the following features:
 - **General-purpose language:** Similar to Go, Typescript is a general-purpose
   programming language that provides:
   - Proper abstractions and language features
-  - A extensive ecosystem of tooling (e.g. IDE support)
+  - An extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
   - Robust community support and detailed documentation
 - **Idomatic:** The TS SDK provides a different level of abstraction compared to
