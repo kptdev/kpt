@@ -23,12 +23,32 @@
   height: 72px;
 }
 
+body {
+  line-height: unset;
+  font-family: unset;
+  font-size: unset;
+}
+h1 {
+  line-height: unset;
+}
+
+.dropdown-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
 .sidebar {
   color: rgba(255, 255, 255, 0.75);
+  font-size: 16px;
 }
 
 .sidebar-toggle {
   bottom: 0;
+}
+
+.sidebar > h1 {
+  font-size: var(--sidebar-name-font-size);
 }
 
 .sidebar > h1 img {
