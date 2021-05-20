@@ -162,7 +162,7 @@ runtime.
    using the exec runtime.
 
    ```shell
-   $ kpt fn eval DIR --exec-path ./my_func_run-macos -- a=b
+   $ kpt fn eval DIR --exec-path ./my_func_run-macos
    ```
 
 ## Build and push container images
@@ -179,7 +179,7 @@ $ npm run kpt:docker-build
 You can now run the function container, e.g.:
 
 ```shell
-$ docker run gcr.io/kpt-functions-demo/my-func:dev --help
+$ kpt fn eval DIR --image gcr.io/kpt-functions-demo/my-func:dev
 ```
 
 To push the image to your container registry of choice:
