@@ -528,6 +528,96 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 	}
 }
 
+func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
+	dir := "/java/expected"
+	tag := "java/v2"
+	expectedName := "expected"
+	repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithSubPackages(pkgbuilder.NewSubPkg("java").
+						WithResource("deployment").
+						WithSubPackages(pkgbuilder.NewSubPkg("not_expected").
+							WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+				Branch: "main",
+				Tag:    tag,
+			},
+		},
+	})
+
+	defer clean()
+
+	g := repos[testutil.Upstream]
+	err := createKptfile(rw, &kptfilev1alpha2.Git{
+		Repo:      g.RepoDirectory,
+		Directory: dir,
+		Ref:       tag,
+	}, kptfilev1alpha2.ResourceMerge)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = setKptfileName(rw, expectedName)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+	err = Command{
+		Pkg: actualPkg,
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "no such file or directory")
+}
+
+func TestCommand_Run_no_subdir_at_invalid_tag(t *testing.T) {
+	dir := "/java/expected"
+	nonexistentTag := "notjava/v2"
+	expectedName := "expected"
+	repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithSubPackages(pkgbuilder.NewSubPkg("java").
+						WithResource("deployment").
+						WithSubPackages(pkgbuilder.NewSubPkg("expected").
+							WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+				Branch: "main",
+				Tag:    "java/v2",
+			},
+		},
+	})
+
+	defer clean()
+
+	g := repos[testutil.Upstream]
+	err := createKptfile(rw, &kptfilev1alpha2.Git{
+		Repo:      g.RepoDirectory,
+		Directory: dir,
+		Ref:       nonexistentTag,
+	}, kptfilev1alpha2.ResourceMerge)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = setKptfileName(rw, expectedName)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+	err = Command{
+		Pkg: actualPkg,
+	}.Run(fake.CtxWithNilPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "unknown revision")
+}
+
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	_, w, clean := setupWorkspace(t)
 	defer clean()
