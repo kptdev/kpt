@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "Error: cannot modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml"
+stdErr: "Error: function must not modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml"

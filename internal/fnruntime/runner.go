@@ -122,8 +122,8 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	fnResult := fr.fnResult
 
 	output, err = fr.filter.Filter(input)
-	if err := checkResourcePaths(output); err != nil {
-		return output, err
+	if pathErr := checkResourcePaths(output); pathErr != nil {
+		return output, pathErr
 	}
 
 	// parse the results irrespective of the success/failure of fn exec
@@ -214,18 +214,28 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 }
 
 // path (location) of a KRM resources is tracked in a special key in
-// metadata.annotation field. checkResourcePaths ensures that those paths
-// only point to files within the package, throwing an error if there is a path
-// to a file outside the package
-func checkResourcePaths(resources []*yaml.RNode) error {
-	for _, r := range resources {
-		currPath, _, err := kioutil.GetFileAnnotations(r)
+// metadata.annotation field. checkResourcePaths throws an error if there is a path
+// to a file outside the package, or if the same index/path is on multiple resources
+func checkResourcePaths(nodes []*yaml.RNode) error {
+	// map has structure path -> index -> bool
+	// to keep track of paths and indexes found
+	pathIndexes := make(map[string]map[string]bool)
+	for _, node := range nodes {
+		currPath, index, err := kioutil.GetFileAnnotations(node)
 		if err != nil {
 			return err
 		}
-		if strings.HasPrefix(path.Clean(currPath), "../") {
-			return fmt.Errorf("cannot modify resources outside of package: resource has path %s", currPath)
+		fp := path.Clean(currPath)
+		if strings.HasPrefix(fp, "../") {
+			return fmt.Errorf("function must not modify resources outside of package: resource has path %s", currPath)
 		}
+		if pathIndexes[fp] == nil {
+			pathIndexes[fp] = make(map[string]bool)
+		}
+		if _, ok := pathIndexes[fp][index]; ok {
+			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
+		}
+		pathIndexes[fp][index] = true
 	}
 	return nil
 }
