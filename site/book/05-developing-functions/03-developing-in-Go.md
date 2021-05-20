@@ -1,16 +1,16 @@
-You can use the `kyaml` library to development functions in Go. It provides the
+You can use the `kyaml` library to develop functions in Go. Doing so provides the
 following features:
 
 - **General-purpose language:** Compared to Domain Specific Languages (DSL), Go
   is a general-purpose programming language that provides:
   - Proper abstractions and language features
-  - A extensive ecosystem of tooling (e.g. IDE support)
+  - An extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
   - Robust community support and detailed documentation
 - **YAML-centric**: As opposed to other frameworks discussed in this chapter,
   the `kyaml` library exposes the YAML Abstract Syntax Tree (AST) to the user.
   This enables you to control every aspect of the YAML file including
-  manipulating comments, but comes at the cost of complexity compared to
+  manipulating comments; however, it comes at the cost of complexity compared to
   representing resources as idiomatic data structures.
 
 ## Quickstart
@@ -113,7 +113,7 @@ $ kpt fn eval wordpress --image gcr.io/project/fn-name:tag -- value=foo
 | [sigs.k8s.io/kustomize/kyaml/yaml]         | Modify YAML resources |
 
 - Take a look at the source code for [functions in the catalog] to better
-  understand how to use the develop functions in Go
+  understand how to develop functions in Go
 
 [sigs.k8s.io/kustomize/kyaml/fn/framework]:
   https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/fn/framework#pkg-index
