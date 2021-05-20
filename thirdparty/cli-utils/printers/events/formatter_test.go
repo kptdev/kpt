@@ -22,14 +22,14 @@ import (
 
 func TestFormatter_FormatApplyEvent(t *testing.T) {
 	testCases := map[string]struct {
-		previewStrategy common.DryRunStrategy
+		dryRunStrategy  common.DryRunStrategy
 		event           event.ApplyEvent
 		applyStats      *list.ApplyStats
 		statusCollector list.Collector
 		expected        string
 	}{
 		"resource created without no dryrun": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.ApplyEvent{
 				Operation:  event.Created,
 				Type:       event.ApplyEventResourceUpdate,
@@ -38,35 +38,35 @@ func TestFormatter_FormatApplyEvent(t *testing.T) {
 			expected: "deployment.apps/my-dep created",
 		},
 		"resource updated with client dryrun": {
-			previewStrategy: common.DryRunClient,
+			dryRunStrategy: common.DryRunClient,
 			event: event.ApplyEvent{
 				Operation:  event.Configured,
 				Type:       event.ApplyEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
 			},
-			expected: "deployment.apps/my-dep configured (preview)",
+			expected: "deployment.apps/my-dep configured (dry-run)",
 		},
 		"resource updated with server dryrun": {
-			previewStrategy: common.DryRunServer,
+			dryRunStrategy: common.DryRunServer,
 			event: event.ApplyEvent{
 				Operation:  event.Configured,
 				Type:       event.ApplyEventResourceUpdate,
 				Identifier: createIdentifier("batch", "CronJob", "foo", "my-cron"),
 			},
-			expected: "cronjob.batch/my-cron configured (preview-server)",
+			expected: "cronjob.batch/my-cron configured (dry-run-server)",
 		},
 		"apply event with error should display the error": {
-			previewStrategy: common.DryRunServer,
+			dryRunStrategy: common.DryRunServer,
 			event: event.ApplyEvent{
 				Operation:  event.Failed,
 				Type:       event.ApplyEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
 				Error:      fmt.Errorf("this is a test error"),
 			},
-			expected: "deployment.apps/my-dep failed: this is a test error (preview-server)",
+			expected: "deployment.apps/my-dep failed: this is a test error (dry-run-server)",
 		},
 		"completed event": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.ApplyEvent{
 				Type: event.ApplyEventCompleted,
 			},
@@ -100,7 +100,7 @@ deployment.apps/my-dep is Current: Resource is Current
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-			formatter := NewFormatter(ioStreams, tc.previewStrategy)
+			formatter := NewFormatter(ioStreams, tc.dryRunStrategy)
 			err := formatter.FormatApplyEvent(tc.event, tc.applyStats, tc.statusCollector)
 			assert.NoError(t, err)
 
@@ -111,13 +111,13 @@ deployment.apps/my-dep is Current: Resource is Current
 
 func TestFormatter_FormatStatusEvent(t *testing.T) {
 	testCases := map[string]struct {
-		previewStrategy common.DryRunStrategy
+		dryRunStrategy  common.DryRunStrategy
 		event           event.StatusEvent
 		statusCollector list.Collector
 		expected        string
 	}{
 		"resource update with Current status": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.StatusEvent{
 				Type: event.StatusEventResourceUpdate,
 				Resource: &pollevent.ResourceStatus{
@@ -140,7 +140,7 @@ func TestFormatter_FormatStatusEvent(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-			formatter := NewFormatter(ioStreams, tc.previewStrategy)
+			formatter := NewFormatter(ioStreams, tc.dryRunStrategy)
 			err := formatter.FormatStatusEvent(tc.event, tc.statusCollector)
 			assert.NoError(t, err)
 
@@ -151,13 +151,13 @@ func TestFormatter_FormatStatusEvent(t *testing.T) {
 
 func TestFormatter_FormatPruneEvent(t *testing.T) {
 	testCases := map[string]struct {
-		previewStrategy common.DryRunStrategy
-		event           event.PruneEvent
-		pruneStats      *list.PruneStats
-		expected        string
+		dryRunStrategy common.DryRunStrategy
+		event          event.PruneEvent
+		pruneStats     *list.PruneStats
+		expected       string
 	}{
 		"resource pruned without no dryrun": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.PruneEvent{
 				Operation:  event.Pruned,
 				Type:       event.PruneEventResourceUpdate,
@@ -166,16 +166,16 @@ func TestFormatter_FormatPruneEvent(t *testing.T) {
 			expected: "deployment.apps/my-dep pruned",
 		},
 		"resource skipped with client dryrun": {
-			previewStrategy: common.DryRunClient,
+			dryRunStrategy: common.DryRunClient,
 			event: event.PruneEvent{
 				Operation:  event.PruneSkipped,
 				Type:       event.PruneEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
 			},
-			expected: "deployment.apps/my-dep prune skipped (preview)",
+			expected: "deployment.apps/my-dep prune skipped (dry-run)",
 		},
 		"resource with prune error": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.PruneEvent{
 				Type:       event.PruneEventFailed,
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
@@ -184,7 +184,7 @@ func TestFormatter_FormatPruneEvent(t *testing.T) {
 			expected: "deployment.apps/my-dep prune failed: this is a test",
 		},
 		"prune event with completed status": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.PruneEvent{
 				Type: event.PruneEventCompleted,
 			},
@@ -199,7 +199,7 @@ func TestFormatter_FormatPruneEvent(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-			formatter := NewFormatter(ioStreams, tc.previewStrategy)
+			formatter := NewFormatter(ioStreams, tc.dryRunStrategy)
 			err := formatter.FormatPruneEvent(tc.event, tc.pruneStats)
 			assert.NoError(t, err)
 
@@ -210,14 +210,14 @@ func TestFormatter_FormatPruneEvent(t *testing.T) {
 
 func TestFormatter_FormatDeleteEvent(t *testing.T) {
 	testCases := map[string]struct {
-		previewStrategy common.DryRunStrategy
+		dryRunStrategy  common.DryRunStrategy
 		event           event.DeleteEvent
 		deleteStats     *list.DeleteStats
 		statusCollector list.Collector
 		expected        string
 	}{
 		"resource deleted without no dryrun": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.DeleteEvent{
 				Operation: event.Deleted,
 				Type:      event.DeleteEventResourceUpdate,
@@ -226,26 +226,26 @@ func TestFormatter_FormatDeleteEvent(t *testing.T) {
 			expected: "deployment.apps/my-dep deleted",
 		},
 		"resource skipped with client dryrun": {
-			previewStrategy: common.DryRunClient,
+			dryRunStrategy: common.DryRunClient,
 			event: event.DeleteEvent{
 				Operation: event.DeleteSkipped,
 				Type:      event.DeleteEventResourceUpdate,
 				Object:    createObject("apps", "Deployment", "", "my-dep"),
 			},
-			expected: "deployment.apps/my-dep delete skipped (preview)",
+			expected: "deployment.apps/my-dep delete skipped (dry-run)",
 		},
 		"resource with delete error": {
-			previewStrategy: common.DryRunServer,
+			dryRunStrategy: common.DryRunServer,
 			event: event.DeleteEvent{
 				Type:       event.DeleteEventFailed,
 				Object:     createObject("apps", "Deployment", "", "my-dep"),
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
 				Error:      fmt.Errorf("this is a test"),
 			},
-			expected: "deployment.apps/my-dep deletion failed: this is a test (preview-server)",
+			expected: "deployment.apps/my-dep deletion failed: this is a test (dry-run-server)",
 		},
 		"delete event with completed status": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.DeleteEvent{
 				Type: event.DeleteEventCompleted,
 			},
@@ -260,7 +260,7 @@ func TestFormatter_FormatDeleteEvent(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-			formatter := NewFormatter(ioStreams, tc.previewStrategy)
+			formatter := NewFormatter(ioStreams, tc.dryRunStrategy)
 			err := formatter.FormatDeleteEvent(tc.event, tc.deleteStats)
 			assert.NoError(t, err)
 

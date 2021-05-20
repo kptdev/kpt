@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
+	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 )
 
@@ -96,7 +97,7 @@ func TestCmd(t *testing.T) {
 
 			runner := NewRunner(fake.CtxWithNilPrinter(), rgProvider, rgLoader, ioStreams)
 			runner.Command.SetArgs(tc.args)
-			runner.destroyRunner = func(_ *Runner, inv inventory.InventoryInfo) error {
+			runner.destroyRunner = func(_ *Runner, inv inventory.InventoryInfo, _ common.DryRunStrategy) error {
 				tc.destroyCallbackFunc(t, inv)
 				return nil
 			}

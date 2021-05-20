@@ -16,16 +16,16 @@ import (
 )
 
 func NewFormatter(ioStreams genericclioptions.IOStreams,
-	previewStrategy common.DryRunStrategy) list.Formatter {
+	dryRunStrategy common.DryRunStrategy) list.Formatter {
 	return &formatter{
-		ioStreams:       ioStreams,
-		previewStrategy: previewStrategy,
+		ioStreams:      ioStreams,
+		dryRunStrategy: dryRunStrategy,
 	}
 }
 
 type formatter struct {
-	previewStrategy common.DryRunStrategy
-	ioStreams       genericclioptions.IOStreams
+	dryRunStrategy common.DryRunStrategy
+	ioStreams      genericclioptions.IOStreams
 }
 
 func (jf *formatter) FormatApplyEvent(ae event.ApplyEvent, as *list.ApplyStats, c list.Collector) error {

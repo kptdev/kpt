@@ -27,8 +27,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/diff"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/preview"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -79,19 +77,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
 	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
-
 	applyCmd := cmdapply.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
-
-	previewCmd := preview.GetPreviewRunner(dp, dl, ioStreams).Command
-	previewCmd.Short = livedocs.PreviewShort
-	previewCmd.Long = livedocs.PreviewShort + "\n" + livedocs.PreviewLong
-	previewCmd.Example = livedocs.PreviewExamples
-
-	diffCmd := diff.NewCmdDiff(f, ioStreams)
-	diffCmd.Short = livedocs.DiffShort
-	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
-	diffCmd.Example = livedocs.DiffExamples
-
 	destroyCmd := cmddestroy.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
 
 	statusCmd := status.GetStatusRunner(dp, dl).Command
@@ -99,8 +85,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	statusCmd.Long = livedocs.StatusLong
 	statusCmd.Example = livedocs.StatusExamples
 
-	liveCmd.AddCommand(initCmd, applyCmd, previewCmd, diffCmd, destroyCmd,
-		statusCmd)
+	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd)
 
 	// Add the migrate command to change from ConfigMap to ResourceGroup inventory
 	// object. Also add the install-resource-group command.

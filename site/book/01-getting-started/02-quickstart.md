@@ -105,10 +105,10 @@ This adds some metadata to the `Kptfile` required to keep track of changes made 
 cluster. For example, if a resource is deleted from the package in the future, it will be pruned
 from the cluster.
 
-You can preview the changes that will be made to the cluster:
+You can validate the resources and verify that the expected changes will be made to the cluster:
 
 ```shell
-$ kpt live preview
+$ kpt live apply --dry-run
 ```
 
 Apply the resources to the cluster:
