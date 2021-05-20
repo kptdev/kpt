@@ -10,7 +10,6 @@ window.$docsify = {
   alias: {
     "/*.*/sidebar.md": "/sidebar.md",
   },
-  coverpage: "coverpage.md",
   crossOriginLinks: [
     "https://catalog.kpt.dev/",
     "https://googlecontainertools.github.io/kpt/",
