@@ -18,7 +18,6 @@ package fnruntime
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -168,79 +167,7 @@ func TestMultilineFormatter(t *testing.T) {
 	}
 }
 
-func TestCheckResourcePaths(t *testing.T) {
-	type input struct {
-		nodes       []*yaml.RNode
-		expectedErr string
-	}
-
-	resourceInPackage, err := yaml.Parse(`
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: my-stateful-set
-  annotations:
-    config.kubernetes.io/path: my-stateful-set.yaml
-spec:
-  replicas: 3
-`)
-	assert.NoError(t, err)
-
-	resourceOutsidePackage, err := yaml.Parse(`
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: my-stateful-set
-  annotations:
-    config.kubernetes.io/path: ../my-stateful-set.yaml
-spec:
-  replicas: 3
-`)
-	assert.NoError(t, err)
-
-	resourceOutsidePackageLongPath, err := yaml.Parse(`
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: my-stateful-set
-  annotations:
-    config.kubernetes.io/path: a/b/../../../my-stateful-set.yaml
-spec:
-  replicas: 3
-`)
-	assert.NoError(t, err)
-
-	testcases := map[string]input{
-		"no error": {
-			nodes: []*yaml.RNode{resourceInPackage},
-		},
-		"with ../ prefix": {
-			nodes:       []*yaml.RNode{resourceInPackage, resourceOutsidePackage},
-			expectedErr: "cannot modify resources outside of package: resource has path ../my-stateful-set.yaml",
-		},
-		"with nested ../ in path": {
-			nodes:       []*yaml.RNode{resourceInPackage, resourceOutsidePackageLongPath},
-			expectedErr: "cannot modify resources outside of package: resource has path a/b/../../../my-stateful-set.yaml",
-		},
-	}
-
-	for name, c := range testcases {
-		c := c
-		t.Run(name, func(t *testing.T) {
-			err := checkResourcePaths(c.nodes)
-			if c.expectedErr == "" {
-				assert.NoError(t, err)
-			} else {
-				if !assert.Error(t, err) {
-					t.FailNow()
-				}
-				assert.Equal(t, c.expectedErr, err.Error())
-			}
-		})
-	}
-}
-
-func TestDetectPathConflicts(t *testing.T) {
+func TestEnforcePathInvariants(t *testing.T) {
 	tests := map[string]struct {
 		input       string // input
 		expectedErr string // expected result
@@ -452,6 +379,46 @@ metadata:
     config.kubernetes.io/index: '3'
 `,
 		},
+
+		"no error": {
+			input: `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-stateful-set
+  annotations:
+    config.kubernetes.io/path: my-stateful-set.yaml
+spec:
+  replicas: 3
+`,
+		},
+		"with ../ prefix": {
+			input: `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-stateful-set
+  annotations:
+    config.kubernetes.io/path: ../my-stateful-set.yaml
+spec:
+  replicas: 3
+
+`,
+			expectedErr: "function must not modify resources outside of package: resource has path ../my-stateful-set.yaml",
+		},
+		"with nested ../ in path": {
+			input: `
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-stateful-set
+  annotations:
+    config.kubernetes.io/path: a/b/../../../my-stateful-set.yaml
+spec:
+  replicas: 3
+`,
+			expectedErr: "function must not modify resources outside of package: resource has path a/b/../../../my-stateful-set.yaml",
+		},
 	}
 	for _, tc := range tests {
 		out := &bytes.Buffer{}
@@ -463,10 +430,9 @@ metadata:
 		}
 		n, err := r.Read()
 		if err != nil {
-			fmt.Println("1")
 			t.FailNow()
 		}
-		err = checkResourcePaths(n)
+		err = enforcePathInvariants(n)
 		if err != nil && tc.expectedErr == "" {
 			t.Errorf("unexpected error %s", err.Error())
 			t.FailNow()

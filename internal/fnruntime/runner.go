@@ -122,7 +122,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	fnResult := fr.fnResult
 
 	output, err = fr.filter.Filter(input)
-	if pathErr := checkResourcePaths(output); pathErr != nil {
+	if pathErr := enforcePathInvariants(output); pathErr != nil {
 		return output, pathErr
 	}
 
@@ -214,9 +214,9 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 }
 
 // path (location) of a KRM resources is tracked in a special key in
-// metadata.annotation field. checkResourcePaths throws an error if there is a path
+// metadata.annotation field. enforcePathInvariants throws an error if there is a path
 // to a file outside the package, or if the same index/path is on multiple resources
-func checkResourcePaths(nodes []*yaml.RNode) error {
+func enforcePathInvariants(nodes []*yaml.RNode) error {
 	// map has structure path -> index -> bool
 	// to keep track of paths and indexes found
 	pathIndexes := make(map[string]map[string]bool)
