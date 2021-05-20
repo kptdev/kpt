@@ -155,14 +155,14 @@ runtime.
    `dist/my_fn_run.js`.
 
    ```shell
-   $ npx pkg dist/my_fn_run.js
+   $ npx pkg dist/my_func_run.js
    ```
 
 1. Pass the path to the appropriate executable for your OS when running kpt
    using the exec runtime.
 
    ```shell
-   $ kpt fn run DIR/ --enable-exec --exec-path /path/to/my_fn_run-macos -- a=b
+   $ kpt fn eval DIR --exec-path ./my_func_run-macos -- a=b
    ```
 
 ## Build and push container images
