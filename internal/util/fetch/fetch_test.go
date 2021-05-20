@@ -531,7 +531,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
 	dir := "/java/expected"
 	tag := "java/v2"
-	expectedName := "expected"
+	expectedName := "expected_dir_is_not_here"
 	repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
 		testutil.Upstream: {
 			{
@@ -576,14 +576,14 @@ func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
 func TestCommand_Run_no_subdir_at_invalid_tag(t *testing.T) {
 	dir := "/java/expected"
 	nonexistentTag := "notjava/v2"
-	expectedName := "expected"
+	expectedName := "expected_dir_is_here"
 	repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
 		testutil.Upstream: {
 			{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithSubPackages(pkgbuilder.NewSubPkg("java").
 						WithResource("deployment").
-						WithSubPackages(pkgbuilder.NewSubPkg("expected").
+						WithSubPackages(pkgbuilder.NewSubPkg(expectedName).
 							WithFile("expected.txt", "My kptfile and I should be the only objects"))),
 				Branch: "main",
 				Tag:    "java/v2",
