@@ -10,25 +10,37 @@ a _subpackage_.
 
 Let's take a look at the wordpress package as an example:
 
-```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+touch output.txt
+
+function expectedOutput() {
+  if [ "$(echo "$@")" == "$(cat output.txt)" ]; then echo 0; else echo 1; fi
+}
 ```
 
-View the package hierarchy using the `tree` command:
+{{% /hide %}}
 
+<!-- @pkgGet @pkgTree @verifyGuides-->
 ```shell
-$ kpt pkg tree wordpress/
-Package "wordpress"
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+kpt pkg tree wordpress/ > output.txt
+expectedOutput "Package \"wordpress\":
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
-├── deployment
+├── \"deployment\":
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql"
+└── Package \"mysql\":
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [deployment.yaml]  Service wordpress-mysql"
 ```
 
 This _package hierarchy_ contains two packages:

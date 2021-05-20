@@ -8,14 +8,26 @@ package of configuration using the underlying Git version control system.
 
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
-```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.4
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+touch output.txt
+
+function expectedOutput() {
+  if [ "$(echo "$@")" == "$(cat output.txt)" ]; then echo 0; else echo 1; fi
+}
 ```
 
-Subsequent commands are run from the `nginx` directory:
+{{% /hide %}}
 
+<!-- @pkgGet @verifyGuides-->
 ```shell
-$ cd nginx
+kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.4
+cd nginx
 ```
 
 `kpt pkg` commands provide the functionality for working with packages on Git
@@ -23,12 +35,13 @@ and on your local filesystem.
 
 Next, let's quickly view the content of the package:
 
+<!-- @pkgTree @verifyGuides-->
 ```shell
-$ kpt pkg tree
-Package "nginx"
+kpt pkg tree > output.txt
+expectedOutput "Package \"nginx\":
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
-└── [svc.yaml]  Service my-nginx-svc
+└── [svc.yaml]  Service my-nginx-svc"
 ```
 
 As you can see, this package contains 3 resources in 3 files. There is a special

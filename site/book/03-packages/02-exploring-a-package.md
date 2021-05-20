@@ -7,19 +7,37 @@ shell commands, or editor to explore the package.
 kpt also provides the `tree` command which is handy for quickly viewing package
 hierarchy and the constituent packages, files, and resources:
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyGuides-->
+```
+# Set up workspace for the test.
+TEST_HOME=$(mktemp -d)
+cd $TEST_HOME
+touch output.txt
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+
+function expectedOutput() {
+  if [ "$(echo "$@")" == "$(cat output.txt)" ]; then echo 0; else echo 1; fi
+}
+```
+
+{{% /hide %}}
+
+<!-- @pkgGet @pkgTree @verifyGuides-->
 ```shell
 $ kpt pkg tree wordpress/
 Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
-├── deployment
+├── \"deployment\":
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
 └── Package "mysql"
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [deployment.yaml]  Service wordpress-mysql"
 ```
 
 ?> Refer to the [tree command reference][tree-doc] for usage.
