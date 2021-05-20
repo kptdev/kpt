@@ -34,7 +34,7 @@ The SDK uses the k8s server to generate the Typescript classes. If your
 function uses a Custom Resource Definition, make sure you apply it to the
 cluster used for type generation:
 
-```sh
+```shell
 $ kubectl apply -f /path/to/my/crd.yaml
 ```
 
@@ -42,7 +42,7 @@ $ kubectl apply -f /path/to/my/crd.yaml
 
 To initialize a new NPM package, first create a package directory:
 
-```sh
+```shell
 $ mkdir my-package
 $ cd my-package
 ```
@@ -51,7 +51,7 @@ $ cd my-package
 
 Run the interactive initializer:
 
-```sh
+```shell
 $ npm init kpt-functions
 ```
 
