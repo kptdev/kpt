@@ -439,30 +439,51 @@ func TestCommand_Run_tag(t *testing.T) {
 
 func TestCommand_Run_subdir_at_tag(t *testing.T) {
 	testCases := map[string]struct {
-		dir string
+		dir         string
+		tag         string
+		upstreamPkg *pkgbuilder.RootPkg
 	}{
 		"reads subdirectory": {
 			dir: "/java/expected",
+			tag: "java/v2",
+			upstreamPkg: pkgbuilder.NewRootPkg().
+				WithSubPackages(pkgbuilder.NewSubPkg("java").
+					WithResource("deployment").
+					WithSubPackages(pkgbuilder.NewSubPkg("expected").
+						WithFile("expected.txt", "My kptfile and I should be the only objects"))),
 		},
 		"reads subdirectory with no leading slash": {
 			dir: "java/expected",
+			tag: "java/v2",
+			upstreamPkg: pkgbuilder.NewRootPkg().
+				WithSubPackages(pkgbuilder.NewSubPkg("java").
+					WithResource("deployment").
+					WithSubPackages(pkgbuilder.NewSubPkg("expected").
+						WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+		},
+		"reads specific subdirectory": {
+			dir: "/java/not_expected/java/expected",
+			tag: "java/expected/v2",
+			upstreamPkg: pkgbuilder.NewRootPkg().
+				WithSubPackages(pkgbuilder.NewSubPkg("java").
+					WithResource("deployment").
+					WithSubPackages(pkgbuilder.NewSubPkg("not_expected").
+						WithFile("not_actually_expected.txt", "I should not be present").
+						WithSubPackages(pkgbuilder.NewSubPkg("java").
+							WithSubPackages(pkgbuilder.NewSubPkg("expected").
+								WithFile("expected.txt", "My kptfile and I should be the only objects"))))),
 		},
 	}
 	for tn, tc := range testCases {
 
 		t.Run(tn, func(t *testing.T) {
-			tag := "java/v2"
 			expectedName := "expected"
 			repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
 				testutil.Upstream: {
 					{
-						Pkg: pkgbuilder.NewRootPkg().
-							WithSubPackages(pkgbuilder.NewSubPkg("java").
-								WithResource("deployment").
-								WithSubPackages(pkgbuilder.NewSubPkg(expectedName).
-									WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+						Pkg:    tc.upstreamPkg,
 						Branch: "main",
-						Tag:    tag,
+						Tag:    tc.tag,
 					},
 				},
 			})
@@ -473,7 +494,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 			err := createKptfile(rw, &kptfilev1alpha2.Git{
 				Repo:      g.RepoDirectory,
 				Directory: tc.dir,
-				Ref:       "java/v2",
+				Ref:       tc.tag,
 			}, kptfilev1alpha2.ResourceMerge)
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -498,8 +519,8 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 			expectedPkg := pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstreamRef(testutil.Upstream, tc.dir, tag, "resource-merge").
-						WithUpstreamLockRef(testutil.Upstream, tc.dir, tag, 0),
+						WithUpstreamRef(testutil.Upstream, tc.dir, tc.tag, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, tc.dir, tc.tag, 0),
 				).WithFile("expected.txt", "My kptfile and I should be the only objects")
 			expectedPath := expectedPkg.ExpandPkgWithName(t, expectedName, testutil.ToReposInfo(repos))
 			testutil.KptfileAwarePkgEqual(t, actualPkg.UniquePath.String(), expectedPath, false)
