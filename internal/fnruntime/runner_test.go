@@ -22,13 +22,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -170,8 +170,8 @@ func TestMultilineFormatter(t *testing.T) {
 
 func TestCheckResourcePaths(t *testing.T) {
 	type input struct {
-		nodes             []*yaml.RNode
-		expectedErr       string
+		nodes       []*yaml.RNode
+		expectedErr string
 	}
 
 	resourceInPackage, err := yaml.Parse(`
@@ -210,17 +210,16 @@ spec:
 `)
 	assert.NoError(t, err)
 
-
-	testcases := map[string]input {
+	testcases := map[string]input{
 		"no error": {
 			nodes: []*yaml.RNode{resourceInPackage},
 		},
 		"with ../ prefix": {
-			nodes: []*yaml.RNode{resourceInPackage, resourceOutsidePackage},
+			nodes:       []*yaml.RNode{resourceInPackage, resourceOutsidePackage},
 			expectedErr: "cannot modify resources outside of package: resource has path ../my-stateful-set.yaml",
 		},
 		"with nested ../ in path": {
-			nodes: []*yaml.RNode{resourceInPackage, resourceOutsidePackageLongPath},
+			nodes:       []*yaml.RNode{resourceInPackage, resourceOutsidePackageLongPath},
 			expectedErr: "cannot modify resources outside of package: resource has path a/b/../../../my-stateful-set.yaml",
 		},
 	}
