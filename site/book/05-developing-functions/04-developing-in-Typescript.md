@@ -7,7 +7,7 @@ It provides the following features:
   - An extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
   - Robust community support and detailed documentation
-- **Idomatic:** The TS SDK provides a different level of abstraction compared to
+- **Idiomatic:** The TS SDK provides a different level of abstraction compared to
   the Go library we saw previously. Instead of exposing the low-level YAML AST,
   resources are marshalled into native Typescript objects. As a result, you get
   a more idiomatic and high-level abstraction. Ideally, you should work with
