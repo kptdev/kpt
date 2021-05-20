@@ -1,75 +1,42 @@
 diff --git a/Kptfile b/Kptfile
-index 74670e7..9d4cd4a 100644
+index 74670e7..154c558 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,30 +2,25 @@ apiVersion: kpt.dev/v1alpha2
+@@ -2,16 +2,7 @@ apiVersion: kpt.dev/v1alpha2
  kind: Kptfile
  metadata:
    name: nginx
-+  namespace: staging
- info:
-   description: describe this package
+-info:
+-  description: describe this package
 -  site: https://github.com/GoogleContainerTools/kpt
-   emails:
-     - foo@gmail.com
+-  emails:
+-    - foo@gmail.com
 -  license: license text
-   keywords:
-     - tag1
-     - tag2
-+  license: license text
-   man: nginx man text
--upstream:
--  type: git
--  git:
--    repo: https://github.com/GoogleContainerTools/kpt
--    directory: package-examples/nginx
--    ref: v0.2
--  updateStrategy: resource-merge
--upstreamLock:
--  type: git
--  git:
--    repo: https://github.com/GoogleContainerTools/kpt
--    directory: package-examples/nginx
--    ref: package-examples/nginx/v0.2
--    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
+-  keywords:
+-    - tag1
+-    - tag2
+-  man: nginx man text
++  namespace: staging
+ upstream:
+   type: git
+   git:
+@@ -26,6 +17,16 @@ upstreamLock:
+     directory: package-examples/nginx
+     ref: package-examples/nginx/v0.2
+     commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
++info:
 +  site: https://github.com/GoogleContainerTools/kpt
-+inventory:
-+  name: inventory-00933591
-+  namespace: some-space
-+  labels:
-+    foo: bar
-+  annotations:
-+    abc: def
-+  inventoryID: 92c234b7e9267815b0c3e17c9e4d7139a16c104f-1620493522822890000
++  emails:
++    - foo@gmail.com
++  license: license text
++  description: describe this package
++  keywords:
++    - tag1
++    - tag2
++  man: nginx man text
  pipeline:
    mutators:
      - image: gcr.io/kpt-fn/set-namespace:v0.1
-@@ -39,11 +34,17 @@ pipeline:
-       configPath: ./fn-config.yaml
-     - image: gcr.io/kpt-fn/starlark:v0.1
-       configPath: path/to/foo-star.yaml
--inventory:
--  namespace: some-space
--  name: inventory-00933591
--  inventoryID: 92c234b7e9267815b0c3e17c9e4d7139a16c104f-1620493522822890000
--  labels:
--    foo: bar
--  annotations:
--    abc: def
-+upstream:
-+  type: git
-+  updateStrategy: resource-merge
-+  git:
-+    directory: package-examples/nginx
-+    ref: v0.2
-+    repo: https://github.com/GoogleContainerTools/kpt
-+upstreamLock:
-+  type: git
-+  git:
-+    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
-+    directory: package-examples/nginx
-+    ref: package-examples/nginx/v0.2
-+    repo: https://github.com/GoogleContainerTools/kpt
 diff --git a/resources.yaml b/resources.yaml
 index c0f48b0..9e31a48 100644
 --- a/resources.yaml
