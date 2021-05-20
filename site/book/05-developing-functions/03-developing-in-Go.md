@@ -68,13 +68,18 @@ Build the go binary:
 $ go build -o my-fn .
 ```
 
-Test it by running imperatively as an executable function:
+Test it by running imperatively:
 
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 # run the my-fn function against the configuration in wordpress
 $ kpt fn eval wordpress --exec-path ./my-fn -- value=foo
 ```
+
+During iterative development, `--exec-path` flag can be used to execute the
+function binary directly instead of requiring the function to be containerized
+first. Once you have a function binary that works, you can then proceed to
+creating the container image.
 
 ### Publish the function
 
@@ -95,7 +100,7 @@ $ docker push gcr.io/project/fn-name:tag
 Run the function imperatively as a container function:
 
 ```shell
-$ kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- value=foo
+$ kpt fn eval wordpress --image gcr.io/project/fn-name:tag -- value=foo
 ```
 
 ## Next Steps
@@ -107,12 +112,12 @@ $ kpt fn run PACKAGE_DIR/ --image gcr.io/project/fn-name:tag -- value=foo
 | [sigs.k8s.io/kustomize/kyaml/fn/framework] | Functions Framework   |
 | [sigs.k8s.io/kustomize/kyaml/yaml]         | Modify YAML resources |
 
-- Take a look at [catalog functions] to better understand how to use the develop
-  functions in Go
+- Take a look at the source code for [functions in the catalog] to better
+  understand how to use the develop functions in Go
 
 [sigs.k8s.io/kustomize/kyaml/fn/framework]:
   https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/fn/framework#pkg-index
 [sigs.k8s.io/kustomize/kyaml/yaml]:
   https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/yaml
-[catalog functions]:
+[functions in the catalog]:
   https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go

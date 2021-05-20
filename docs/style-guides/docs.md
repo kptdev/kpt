@@ -16,7 +16,7 @@
 3. Links to other kpt doc pages should be absolute:
    - Correct: `[pkg]: /reference/pkg/get/`
    - Incorrect: `[pkg]: ../../../reference/pkg/get`
-4. Flags must appear before positional args:
+4. Flags must appear after positional args:
 
    - Correct:
 

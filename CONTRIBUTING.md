@@ -63,7 +63,7 @@ repo.
 ## Contributing to Documentation
 
 If you are updating the documentation, please do it in separate PRs from code
-changes and the commit message should start with `Docs:`.
+changes and PR description should start with `Docs:`.
 
 ### Run the docs locally
 
