@@ -1,6 +1,3 @@
-?> kpt is a Git-native, schema-aware, extensible client-side tool for packaging, customizing, validating,
-and applying Kubernetes resources.
-
 <h2 id="overview"><span class="material-icons-outlined">download</span> Install</h2>
 
 Get started by [installing](/installation/) kpt.
