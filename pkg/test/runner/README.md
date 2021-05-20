@@ -6,39 +6,7 @@ can also be used to test kpt KRM functions.
 After importing this package, you can use `runner.ScanTestCases` to
 recursively scan the test cases in a given directory. For each test
 case, call `runner.NewRunner` to create a test runner and then call
-`Run` to run the test. For example:
-
-```go
-import (
-	"testing"
-
-	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
-)
-
-func TestE2E(t *testing.T) {
-    path := "foo/bar/e2e"
-	cases, err := runner.ScanTestCases(path)
-	if err != nil {
-		t.Fatalf("failed to scan test cases: %s", err)
-	}
-	for _, c := range *cases {
-		c := c // capture range variable
-		t.Run(c.Path, func(t *testing.T) {
-			t.Parallel()
-			r, err := runner.NewRunner(t, c, c.Config.TestType)
-			if err != nil {
-				t.Fatalf("failed to create test runner: %s", err)
-			}
-			err = r.Run()
-			if err != nil {
-				t.Fatalf("failed when running test: %s", err)
-			}
-		})
-	}
-}
-```
-
-For a real use case please see `e2e/fn_test.go`
+`Run` to run the test. For example please see `e2e/fn_test.go`
 
 All test cases should be **independent** and should be able to run in
 fully parallel. They should be **self-contained** so the runner doesn't
@@ -82,8 +50,9 @@ in `.expected`:
 - `results.yaml`: The expected result file after running the command.
   Default: "".
 - `setup.sh`: A **bash** script which will be run before the command if it exists.
-- `exec.sh`: A **bash** script which will be run if it exists and replace the
-  builtin command in the runner. All configurations that used to control command
+- `exec.sh`: A **bash** script which will be run if it exists and will replace the
+  command (`kpt fn eval` or `kpt fn render`) that will be run according to
+  `testType` in configurations. All configurations that used to control command
   behavior, like `disableOutputTruncate` and `args`, will be ignored.
 - `teardown.sh`: A **bash** script which will be run after the command and
   result comparison if it exists.
