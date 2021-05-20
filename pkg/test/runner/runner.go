@@ -382,11 +382,9 @@ func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpP
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	if exitCode != 0 {
-		err := r.compareOutput(stdout, stderr)
-		if err != nil {
-			return err
-		}
+	err = r.compareOutput(stdout, stderr)
+	if err != nil {
+		return err
 	}
 
 	// compare results
