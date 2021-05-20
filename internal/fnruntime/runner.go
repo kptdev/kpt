@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -31,6 +32,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -120,6 +122,9 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	fnResult := fr.fnResult
 
 	output, err = fr.filter.Filter(input)
+	if pathErr := enforcePathInvariants(output); pathErr != nil {
+		return output, pathErr
+	}
 
 	// parse the results irrespective of the success/failure of fn exec
 	resultErr := parseStructuredResult(fr.filter.Results, fnResult)
@@ -206,6 +211,33 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 		pr.OptPrintf(printOpt.Stderr(), "%s", errLines.String())
 	}
 	pr.OptPrintf(printOpt.Stderr(), "  Exit code: %d\n\n", fnErr.ExitCode)
+}
+
+// path (location) of a KRM resources is tracked in a special key in
+// metadata.annotation field. enforcePathInvariants throws an error if there is a path
+// to a file outside the package, or if the same index/path is on multiple resources
+func enforcePathInvariants(nodes []*yaml.RNode) error {
+	// map has structure path -> index -> bool
+	// to keep track of paths and indexes found
+	pathIndexes := make(map[string]map[string]bool)
+	for _, node := range nodes {
+		currPath, index, err := kioutil.GetFileAnnotations(node)
+		if err != nil {
+			return err
+		}
+		fp := path.Clean(currPath)
+		if strings.HasPrefix(fp, "../") {
+			return fmt.Errorf("function must not modify resources outside of package: resource has path %s", currPath)
+		}
+		if pathIndexes[fp] == nil {
+			pathIndexes[fp] = make(map[string]bool)
+		}
+		if _, ok := pathIndexes[fp][index]; ok {
+			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
+		}
+		pathIndexes[fp][index] = true
+	}
+	return nil
 }
 
 // multiLineFormatter knows how to format multiple lines in pretty format

@@ -1,8 +1,8 @@
-diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
+diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 new file mode 100644
 index 0000000..fa83ef1
 --- /dev/null
-+++ b/db/deployment_httpbin.yaml
++++ b/deployment_httpbin.yaml
 @@ -0,0 +1,13 @@
 +apiVersion: apps/v1
 +kind: Deployment
