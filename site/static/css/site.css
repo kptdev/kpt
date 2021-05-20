@@ -32,10 +32,8 @@ h1 {
   line-height: unset;
 }
 
-.dropdown-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+.dropdown-toggle {
+  background: var(--theme-color);
 }
 
 .sidebar {
