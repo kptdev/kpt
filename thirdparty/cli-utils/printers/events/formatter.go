@@ -19,9 +19,9 @@ import (
 )
 
 func NewFormatter(ioStreams genericclioptions.IOStreams,
-	previewStrategy common.DryRunStrategy) list.Formatter {
+	dryRunStrategy common.DryRunStrategy) list.Formatter {
 	return &formatter{
-		print: getPrintFunc(ioStreams.Out, previewStrategy),
+		print: getPrintFunc(ioStreams.Out, dryRunStrategy),
 	}
 }
 
@@ -130,12 +130,12 @@ func resourceIDToString(gk schema.GroupKind, name string) string {
 
 type printFunc func(format string, a ...interface{})
 
-func getPrintFunc(w io.Writer, previewStrategy common.DryRunStrategy) printFunc {
+func getPrintFunc(w io.Writer, dryRunStrategy common.DryRunStrategy) printFunc {
 	return func(format string, a ...interface{}) {
-		if previewStrategy.ClientDryRun() {
-			format += " (preview)"
-		} else if previewStrategy.ServerDryRun() {
-			format += " (preview-server)"
+		if dryRunStrategy.ClientDryRun() {
+			format += " (dry-run)"
+		} else if dryRunStrategy.ServerDryRun() {
+			format += " (dry-run-server)"
 		}
 		fmt.Fprintf(w, format+"\n", a...)
 	}

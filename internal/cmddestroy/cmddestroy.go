@@ -58,6 +58,8 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 	c.Flags().StringVar(&r.inventoryPolicyString, flagutils.InventoryPolicyFlag, flagutils.InventoryPolicyStrict,
 		"It determines the behavior when the resources don't belong to current inventory. Available options "+
 			fmt.Sprintf("%q and %q.", flagutils.InventoryPolicyStrict, flagutils.InventoryPolicyAdopt))
+	c.Flags().BoolVar(&r.dryRun, "dry-run", false,
+		"dry-run apply for the resources in the package.")
 	return r
 }
 
@@ -80,12 +82,13 @@ type Runner struct {
 
 	output                string
 	inventoryPolicyString string
+	dryRun                bool
 
 	inventoryPolicy inventory.InventoryPolicy
 
 	// TODO(mortent): This is needed for now since we don't have a good way to
 	// stub out the Destroyer with an interface for testing purposes.
-	destroyRunner func(r *Runner, inv inventory.InventoryInfo) error
+	destroyRunner func(r *Runner, inv inventory.InventoryInfo, strategy common.DryRunStrategy) error
 }
 
 // preRunE validates the inventoryPolicy and the output type.
@@ -130,18 +133,25 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return err
 	}
 
+	dryRunStrategy := common.DryRunNone
+	if r.dryRun {
+		dryRunStrategy = common.DryRunClient
+	}
+	// TODO: This is terrible. Fix it.
+	r.Destroyer.DryRunStrategy = dryRunStrategy
+
 	// TODO(mortent): Figure out if we can do this differently.
 	if r.PreProcess != nil {
-		r.inventoryPolicy, err = r.PreProcess(inv, r.Destroyer.DryRunStrategy)
+		r.inventoryPolicy, err = r.PreProcess(inv, dryRunStrategy)
 		if err != nil {
 			return err
 		}
 	}
 
-	return r.destroyRunner(r, inv)
+	return r.destroyRunner(r, inv, dryRunStrategy)
 }
 
-func runDestroy(r *Runner, inv inventory.InventoryInfo) error {
+func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.DryRunStrategy) error {
 	// Run the destroyer. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
 	err := r.Destroyer.Initialize()
@@ -156,5 +166,5 @@ func runDestroy(r *Runner, inv inventory.InventoryInfo) error {
 	// The printer will print updates from the channel. It will block
 	// until the channel is closed.
 	printer := printers.GetPrinter(r.output, r.ioStreams)
-	return printer.Print(ch, r.Destroyer.DryRunStrategy)
+	return printer.Print(ch, dryRunStrategy)
 }

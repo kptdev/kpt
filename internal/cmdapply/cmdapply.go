@@ -71,6 +71,8 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 			fmt.Sprintf("%q and %q.", flagutils.InventoryPolicyStrict, flagutils.InventoryPolicyAdopt))
 	c.Flags().BoolVar(&r.installCRD, "install-resource-group", false,
 		"If true, install the inventory ResourceGroup CRD before applying.")
+	c.Flags().BoolVar(&r.dryRun, "dry-run", false,
+		"dry-run apply for the resources in the package.")
 	return r
 }
 
@@ -97,6 +99,7 @@ type Runner struct {
 	prunePropagationPolicyString string
 	pruneTimeout                 time.Duration
 	inventoryPolicyString        string
+	dryRun                       bool
 
 	inventoryPolicy inventory.InventoryPolicy
 	prunePropPolicy v1.DeletionPropagation
@@ -159,9 +162,18 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return err
 	}
 
+	dryRunStrategy := common.DryRunNone
+	if r.dryRun {
+		if r.serverSideOptions.ServerSideApply {
+			dryRunStrategy = common.DryRunServer
+		} else {
+			dryRunStrategy = common.DryRunClient
+		}
+	}
+
 	// TODO(mortent): Figure out if we can do this differently.
 	if r.PreProcess != nil {
-		r.inventoryPolicy, err = r.PreProcess(inv, common.DryRunNone)
+		r.inventoryPolicy, err = r.PreProcess(inv, dryRunStrategy)
 		if err != nil {
 			return err
 		}
@@ -179,7 +191,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		// If we are not waiting for status, tell the applier to not
 		// emit the events.
 		EmitStatusEvents:       r.reconcileTimeout != time.Duration(0) || r.pruneTimeout != time.Duration(0),
-		DryRunStrategy:         common.DryRunNone,
+		DryRunStrategy:         dryRunStrategy,
 		PrunePropagationPolicy: r.prunePropPolicy,
 		PruneTimeout:           r.pruneTimeout,
 		InventoryPolicy:        r.inventoryPolicy,
@@ -188,5 +200,5 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	// The printer will print updates from the channel. It will block
 	// until the channel is closed.
 	printer := printers.GetPrinter(r.output, r.ioStreams)
-	return printer.Print(ch, common.DryRunNone)
+	return printer.Print(ch, dryRunStrategy)
 }
