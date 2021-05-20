@@ -71,7 +71,7 @@ func (f *Function) validate(fnType string, idx int) error {
 
 	var configFields []string
 	if f.ConfigPath != "" {
-		if err := validatePath(f.ConfigPath); err != nil {
+		if err := validateFnConfigPath(f.ConfigPath); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
 				Value:  f.ConfigPath,
@@ -147,13 +147,21 @@ func IsNodeZero(n *yaml.Node) bool {
 		n.Line == 0 && n.Column == 0
 }
 
-// validatePath validates input path and return an error if it's invalid
-func validatePath(p string) error {
+// validateFnConfigPath validates given function config path and return an error if it's invalid
+func validateFnConfigPath(p string) error {
+	p = path.Clean(p)
 	if path.IsAbs(p) {
-		return fmt.Errorf("path is not relative")
+		return fmt.Errorf("path must be relative")
 	}
 	if strings.TrimSpace(p) == "" {
-		return fmt.Errorf("path cannot have only white spaces")
+		return fmt.Errorf("path must not be empty")
+	}
+	if strings.HasPrefix(p, "..") {
+		// fn config must not live outside the package directory
+		// Allowing outside path opens up an attack vector that allows
+		// reading any YAML file on package consumer's machine.
+		return fmt.Errorf("path must not be outside the package directory")
+
 	}
 	if p != sourceAllSubPkgs && strings.Contains(p, "*") {
 		return fmt.Errorf("path contains asterisk, asterisk is only allowed in './*'")
