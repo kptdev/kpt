@@ -9,7 +9,6 @@ Download pre-compiled binaries.
 | ------------------------
 | [Linux (x64)][linux]
 | [macOS (x64)][darwin]
-| Windows (x64) (coming later)
 
 ```shell
 # For linux/mac
