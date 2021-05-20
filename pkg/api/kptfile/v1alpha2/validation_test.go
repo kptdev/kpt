@@ -260,7 +260,7 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"../a/../b",
-			true,
+			false,
 		},
 		{
 			"a//b",
@@ -276,7 +276,7 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"./*",
-			true,
+			false,
 		},
 		{
 			"a/b\\c",
@@ -305,9 +305,9 @@ func TestValidatePath(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		ret := validatePath(c.Path)
+		ret := validateFnConfigPath(c.Path)
 		if (ret == nil) != c.Valid {
-			t.Fatalf("returned value for path %s should be %t, got %t",
+			t.Fatalf("returned value for path %q should be %t, got %t",
 				c.Path, c.Valid, (ret == nil))
 		}
 	}

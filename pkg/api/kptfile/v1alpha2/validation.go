@@ -149,12 +149,12 @@ func IsNodeZero(n *yaml.Node) bool {
 
 // validateFnConfigPath validates given function config path and return an error if it's invalid
 func validateFnConfigPath(p string) error {
+	if strings.TrimSpace(p) == "" {
+		return fmt.Errorf("path must not be empty")
+	}
 	p = path.Clean(p)
 	if path.IsAbs(p) {
 		return fmt.Errorf("path must be relative")
-	}
-	if strings.TrimSpace(p) == "" {
-		return fmt.Errorf("path must not be empty")
 	}
 	if strings.HasPrefix(p, "..") {
 		// fn config must not live outside the package directory
