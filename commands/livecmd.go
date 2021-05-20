@@ -21,12 +21,12 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdapply"
+	"github.com/GoogleContainerTools/kpt/internal/cmddestroy"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdmigrate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/destroy"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/diff"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/preview"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status"
@@ -92,10 +92,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	diffCmd.Long = livedocs.DiffShort + "\n" + livedocs.DiffLong
 	diffCmd.Example = livedocs.DiffExamples
 
-	destroyCmd := destroy.GetDestroyRunner(dp, dl, ioStreams).Command
-	destroyCmd.Short = livedocs.DestroyShort
-	destroyCmd.Long = livedocs.DestroyShort + "\n" + livedocs.DestroyLong
-	destroyCmd.Example = livedocs.DestroyExamples
+	destroyCmd := cmddestroy.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
 
 	statusCmd := status.GetStatusRunner(dp, dl).Command
 	statusCmd.Short = livedocs.StatusShort
