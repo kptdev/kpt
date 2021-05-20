@@ -438,59 +438,73 @@ func TestCommand_Run_tag(t *testing.T) {
 }
 
 func TestCommand_Run_subdir_at_tag(t *testing.T) {
-	dir := "/java/expected"
-	tag := "java/v2"
-	expectedName := "expected"
-	repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
-		testutil.Upstream: {
-			{
-				Pkg: pkgbuilder.NewRootPkg().
-					WithSubPackages(pkgbuilder.NewSubPkg("java").
-						WithResource("deployment").
-						WithSubPackages(pkgbuilder.NewSubPkg(expectedName).
-							WithFile("expected.txt", "My kptfile and I should be the only objects"))),
-				Branch: "main",
-				Tag:    tag,
-			},
+	testCases := map[string]struct {
+		dir string
+	}{
+		"reads subdirectory": {
+			dir: "/java/expected",
 		},
-	})
-
-	defer clean()
-
-	g := repos[testutil.Upstream]
-	err := createKptfile(rw, &kptfilev1alpha2.Git{
-		Repo:      g.RepoDirectory,
-		Directory: dir,
-		Ref:       "java/v2",
-	}, kptfilev1alpha2.ResourceMerge)
-	if !assert.NoError(t, err) {
-		t.FailNow()
+		"reads subdirectory with no leading slash": {
+			dir: "java/expected",
+		},
 	}
+	for tn, tc := range testCases {
 
-	err = setKptfileName(rw, expectedName)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+		t.Run(tn, func(t *testing.T) {
+			tag := "java/v2"
+			expectedName := "expected"
+			repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithSubPackages(pkgbuilder.NewSubPkg("java").
+								WithResource("deployment").
+								WithSubPackages(pkgbuilder.NewSubPkg(expectedName).
+									WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+						Branch: "main",
+						Tag:    tag,
+					},
+				},
+			})
 
-	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
-	err = Command{
-		Pkg: actualPkg,
-	}.Run(fake.CtxWithNilPrinter())
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+			defer clean()
 
-	if !g.AssertEqual(t, rw.WorkspaceDirectory, actualPkg.UniquePath.String(), false) {
-		t.FailNow()
+			g := repos[testutil.Upstream]
+			err := createKptfile(rw, &kptfilev1alpha2.Git{
+				Repo:      g.RepoDirectory,
+				Directory: tc.dir,
+				Ref:       "java/v2",
+			}, kptfilev1alpha2.ResourceMerge)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = setKptfileName(rw, expectedName)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+			err = Command{
+				Pkg: actualPkg,
+			}.Run(fake.CtxWithNilPrinter())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if !g.AssertEqual(t, rw.WorkspaceDirectory, actualPkg.UniquePath.String(), false) {
+				t.FailNow()
+			}
+			expectedPkg := pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, tc.dir, tag, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, tc.dir, tag, 0),
+				).WithFile("expected.txt", "My kptfile and I should be the only objects")
+			expectedPath := expectedPkg.ExpandPkgWithName(t, expectedName, testutil.ToReposInfo(repos))
+			testutil.KptfileAwarePkgEqual(t, actualPkg.UniquePath.String(), expectedPath, false)
+		})
 	}
-	expectedPkg := pkgbuilder.NewRootPkg().
-		WithKptfile(
-			pkgbuilder.NewKptfile().
-				WithUpstreamRef(testutil.Upstream, dir, tag, "resource-merge").
-				WithUpstreamLockRef(testutil.Upstream, dir, tag, 0),
-		).WithFile("expected.txt", "My kptfile and I should be the only objects")
-	expectedPath := expectedPkg.ExpandPkgWithName(t, expectedName, testutil.ToReposInfo(repos))
-	testutil.KptfileAwarePkgEqual(t, actualPkg.UniquePath.String(), expectedPath, false)
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
