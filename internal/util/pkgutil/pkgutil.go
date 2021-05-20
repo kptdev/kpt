@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -293,6 +294,43 @@ func FormatPackage(pkgPath string) {
 		// do not throw error if formatting fails
 		return
 	}
+	err = RoundTripKptfilesInPkg(pkgPath)
+	if err != nil {
+		// do not throw error if formatting fails
+		return
+	}
+}
+
+// RoundTripKptfilesInPkg reads and writes all Kptfiles in the package including
+// subpackages. This is used to format Kptfiles in the order of go structures
+// TODO: phanimarupaka remove this method after addressing https://github.com/GoogleContainerTools/kpt/issues/2052
+func RoundTripKptfilesInPkg(pkgPath string) error {
+	paths, err := pkg.Subpackages(pkgPath, pkg.All, true)
+	if err != nil {
+		return err
+	}
+
+	var pkgsPaths []string
+	for _, path := range paths {
+		// join pkgPath as the paths are relative to pkgPath
+		pkgsPaths = append(pkgsPaths, filepath.Join(pkgPath, path))
+	}
+	// include root package as well
+	pkgsPaths = append(pkgsPaths, pkgPath)
+
+	for _, pkgPath := range pkgsPaths {
+		kf, err := kptfileutil.ReadFile(pkgPath)
+		if err != nil {
+			// do not throw error if formatting fails
+			return err
+		}
+		err = kptfileutil.WriteFile(pkgPath, kf)
+		if err != nil {
+			// do not throw error if formatting fails
+			return err
+		}
+	}
+	return nil
 }
 
 // Exists returns true if a file or directory exists on the provided path,

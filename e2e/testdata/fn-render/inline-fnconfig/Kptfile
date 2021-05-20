@@ -8,7 +8,7 @@ pipeline:
       configMap:
         namespace: staging
     - image: gcr.io/kpt-fn/set-label:unstable
-      config: # inline config
+      config:
         apiVersion: v1
         kind: ConfigMap
         data:
