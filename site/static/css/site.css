@@ -23,6 +23,14 @@
   height: 72px;
 }
 
+.cover-main blockquote {
+  border-left: unset;
+}
+
+.cover.show {
+  display: flex !important;
+}
+
 body {
   line-height: unset;
   font-family: unset;
