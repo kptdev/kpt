@@ -25,7 +25,7 @@ kpt pkg tree wordpress/ > output.txt
 expectedOutput "Package \"wordpress\":
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
-├── deployment:
+├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
 └── Package "mysql"
@@ -42,14 +42,14 @@ $ kpt pkg tree wordpress/
 Package "wordpress":
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
-├── deployment:
+├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
 └── Package "mysql":
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql"
+    └── [deployment.yaml]  Service wordpress-mysql
 ```
 
 ?> Refer to the [tree command reference][tree-doc] for usage.
