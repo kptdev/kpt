@@ -126,7 +126,7 @@ metadata:
 			valid: false,
 		},
 		{
-			name: "pipeline: configpath contains valied .. references",
+			name: "pipeline: cleaned configpath does not contain ..",
 			kptfile: KptFile{
 				Pipeline: &Pipeline{
 					Mutators: []Function{
@@ -140,7 +140,7 @@ metadata:
 			valid: true,
 		},
 		{
-			name: "pipeline: configpath contains valid .. references",
+			name: "pipeline: cleaned configpath contains ..",
 			kptfile: KptFile{
 				Pipeline: &Pipeline{
 					Mutators: []Function{

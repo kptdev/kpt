@@ -23,10 +23,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const (
-	sourceAllSubPkgs string = "./*"
-)
-
 func (kf *KptFile) Validate() error {
 	if err := kf.Pipeline.validate(); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)

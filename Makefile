@@ -16,10 +16,12 @@
 
 GOBIN := $(shell go env GOPATH)/bin
 
-# T refers to e2e test case matcher
-# For example, to invoke e2e tests related to fnconfig, run:
+# T refers to an e2e test case matcher. This enables running e2e tests
+# selectively.  For example,
+# To invoke e2e tests related to fnconfig, run:
 # make test-fn-render T=fnconfig
 # make test-fn-eval T=fnconfig
+# By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
 build:
