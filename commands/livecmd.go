@@ -62,12 +62,6 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 
 	f := newFactory(liveCmd, version)
 
-	// The provider handles both ConfigMap and ResourceGroup inventory objects.
-	// If a package has both inventory objects, then an error is thrown.
-	klog.V(2).Infoln("provider supports ResourceGroup and ConfigMap inventory")
-	dp := live.NewDualDelegatingProvider(f)
-	dl := live.NewDualDelegatingManifestReader(f)
-
 	rgProvider := live.NewResourceGroupProvider(f)
 	rgLoader := live.NewResourceGroupManifestLoader(f)
 
@@ -79,11 +73,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
 	applyCmd := cmdapply.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
 	destroyCmd := cmddestroy.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
-
-	statusCmd := status.GetStatusRunner(dp, dl).Command
-	statusCmd.Short = livedocs.StatusShort
-	statusCmd.Long = livedocs.StatusLong
-	statusCmd.Example = livedocs.StatusExamples
+	statusCmd := status.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
 
 	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd)
 
