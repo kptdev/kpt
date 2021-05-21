@@ -1,4 +1,3 @@
-#! /bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-kpt fn source |\
-kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=staging |\
-kpt fn eval - --image gcr.io/kpt-fn/set-label:v0.1 -- foo=bar |\
-kpt fn sink .
+exitCode: 1
+stdErr: "FOO=BAR EXPORT_ENV=export_env_value"
