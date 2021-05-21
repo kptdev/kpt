@@ -13,7 +13,7 @@ window.$docsify = {
   coverpage: "coverpage.md",
   crossOriginLinks: [
     "https://catalog.kpt.dev/",
-    "https://googlecontainertools.github.io/kpt/",
+    "https://googlecontainertools.github.io/kpt/installation/",
   ],
   auto2top: true,
   repo: "true",
