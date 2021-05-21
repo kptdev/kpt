@@ -47,11 +47,11 @@ async function addVersionDropdown() {
   const sidebar = document.getElementsByClassName("sidebar").item(0);
   const versionDropdown = `
   <div class="dropdown">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Version: 1.0.0-alpha.3
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">v1.0.0-alpha.3
                 <span class="caret"></span></button>
                 <ol class="dropdown-menu">
-                <li><a href="/">1.0.0-alpha.3</a></li>
-                <li><a href="https://googlecontainertools.github.io/kpt/" target="_self">0.39</a></li>
+                <li><a href="/">v1.0.0-alpha.3</a></li>
+                <li><a href="https://googlecontainertools.github.io/kpt/" target="_self">v0.39</a></li>
                 </ol>
               </div>
                 `;
