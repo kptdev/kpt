@@ -157,7 +157,7 @@ func validateFnConfigPath(p string) error {
 		// fn config must not live outside the package directory
 		// Allowing outside path opens up an attack vector that allows
 		// reading any YAML file on package consumer's machine.
-		return fmt.Errorf("path must not be outside the package directory")
+		return fmt.Errorf("path must not be outside the package")
 	}
 	return nil
 }

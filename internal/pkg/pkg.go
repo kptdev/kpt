@@ -417,7 +417,7 @@ func (p *Pkg) ValidatePipeline() error {
 			return &kptfilev1alpha2.ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "mutators", i),
 				Value:  fn.ConfigPath,
-				Reason: "functionConfig must exist in current package",
+				Reason: "functionConfig must exist in the current package",
 			}
 		}
 	}
@@ -426,7 +426,7 @@ func (p *Pkg) ValidatePipeline() error {
 			return &kptfilev1alpha2.ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "validators", i),
 				Value:  fn.ConfigPath,
-				Reason: "functionConfig must exist in current package",
+				Reason: "functionConfig must exist in the current package",
 			}
 		}
 	}

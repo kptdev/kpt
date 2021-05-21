@@ -17,4 +17,4 @@ stdErr: |
   Kptfile is invalid:
   Field: `pipeline.mutators[1].configPath`
   Value: "some/../../home/.kube/config"
-  Reason: path must not be outside the package directory
+  Reason: path must not be outside the package
