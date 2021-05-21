@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -67,7 +69,6 @@ type Runner struct {
 
 	factory     cmdutil.Factory
 	ioStreams   genericclioptions.IOStreams
-	dir         string // Directory with Kptfile
 	Force       bool   // Set inventory values even if already set in Kptfile
 	Name        string // Inventory object name
 	namespace   string // Inventory object namespace
@@ -76,35 +77,44 @@ type Runner struct {
 }
 
 func (r *Runner) runE(_ *cobra.Command, args []string) error {
+	const op errors.Op = "cmdliveinit.runE"
 	if len(args) == 0 {
 		// default to the current working directory
 		cwd, err := os.Getwd()
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		args = append(args, cwd)
 	}
 
 	dir, err := config.NormalizeDir(args[0])
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
-	r.dir = dir
 
-	return (&ConfigureInventoryInfo{
-		Path:        dir,
+	p, err := pkg.New(dir)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	err = (&ConfigureInventoryInfo{
+		Pkg:         p,
 		Factory:     r.factory,
 		Quiet:       r.Quiet,
 		Name:        r.Name,
 		InventoryID: r.InventoryID,
 		Force:       r.Force,
 	}).Run(r.ctx)
+	if err != nil {
+		return errors.E(op, p.UniquePath, err)
+	}
+	return nil
 }
 
 // ConfigureInventoryInfo contains the functionality for adding and updating
 // the inventory information in the Kptfile.
 type ConfigureInventoryInfo struct {
-	Path    string
+	Pkg     *pkg.Pkg
 	Factory cmdutil.Factory
 	Quiet   bool
 
@@ -116,13 +126,14 @@ type ConfigureInventoryInfo struct {
 
 // Run updates the inventory info in the package given by the Path.
 func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
+	const op errors.Op = "cmdliveinit.Run"
 	pr := printer.FromContextOrDie(ctx)
 
 	var name, namespace, inventoryID string
 
-	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Path)
+	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
 	if err != nil {
-		return err
+		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 	namespace = strings.TrimSpace(ns)
 	if !c.Quiet {
@@ -140,48 +151,52 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	if c.InventoryID == "" {
 		id, err := generateID(namespace, name, time.Now())
 		if err != nil {
-			return err
+			return errors.E(op, c.Pkg.UniquePath, err)
 		}
 		inventoryID = id
 	} else {
 		inventoryID = c.InventoryID
 	}
 	// Finally, update these values in the Inventory section of the Kptfile.
-	err = updateKptfile(c.Path, &kptfilev1alpha2.Inventory{
+	err = updateKptfile(c.Pkg, &kptfilev1alpha2.Inventory{
 		Namespace:   namespace,
 		Name:        name,
 		InventoryID: inventoryID,
 	}, c.Force)
 	if !c.Quiet {
 		if err == nil {
-			pr.Printf("success")
+			pr.Printf("success\n")
 		} else {
-			pr.Printf("failed")
+			pr.Printf("failed\n")
 		}
 	}
-	return err
+	if err != nil {
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+	return nil
 }
 
 // Run fills in the inventory object values into the Kptfile.
-func updateKptfile(path string, inv *kptfilev1alpha2.Inventory, force bool) error {
+func updateKptfile(p *pkg.Pkg, inv *kptfilev1alpha2.Inventory, force bool) error {
+	const op errors.Op = "cmdliveinit.updateKptfile"
 	// Read the Kptfile io io.dir
-	kf, err := kptfileutil.ReadFile(path)
+	kf, err := p.Kptfile()
 	if err != nil {
-		return err
+		return errors.E(op, p.UniquePath, err)
 	}
 	// Validate the inventory values don't already exist
 	isEmpty := kptfileInventoryEmpty(kf.Inventory)
 	if !isEmpty && !force {
-		return &InvExistsError{}
+		return errors.E(op, p.UniquePath, &InvExistsError{})
 	}
 	// Check the new inventory values are valid.
 	if err := inv.Validate(); err != nil {
-		return err
+		return errors.E(op, p.UniquePath, err)
 	}
 	// Finally, set the inventory parameters in the Kptfile and write it.
 	kf.Inventory = inv
-	if err := kptfileutil.WriteFile(path, kf); err != nil {
-		return err
+	if err := kptfileutil.WriteFile(p.UniquePath.String(), *kf); err != nil {
+		return errors.E(op, p.UniquePath, err)
 	}
 	return nil
 }
@@ -190,9 +205,10 @@ func updateKptfile(path string, inv *kptfilev1alpha2.Inventory, force bool) erro
 // and name, with the unix timestamp string concatenated. Returns an error
 // if either the namespace or name are empty.
 func generateID(namespace string, name string, t time.Time) (string, error) {
+	const op errors.Op = "cmdliveinit.generateID"
 	hashStr, err := generateHash(namespace, name)
 	if err != nil {
-		return "", err
+		return "", errors.E(op, err)
 	}
 	timeStr := strconv.FormatInt(t.UTC().UnixNano(), 10)
 	return fmt.Sprintf("%s-%s", hashStr, timeStr), nil
@@ -201,13 +217,15 @@ func generateID(namespace string, name string, t time.Time) (string, error) {
 // generateHash returns the SHA1 hash of the concatenated "namespace:name" string,
 // or an error if either namespace or name is empty.
 func generateHash(namespace string, name string) (string, error) {
+	const op errors.Op = "cmdliveinit.generateHash"
 	if len(namespace) == 0 || len(name) == 0 {
-		return "", fmt.Errorf("can not generate hash with empty namespace or name")
+		return "", errors.E(op,
+			fmt.Errorf("can not generate hash with empty namespace or name"))
 	}
 	str := fmt.Sprintf("%s:%s", namespace, name)
 	h := sha1.New()
 	if _, err := h.Write([]byte(str)); err != nil {
-		return "", err
+		return "", errors.E(op, err)
 	}
 	return fmt.Sprintf("%x", (h.Sum(nil))), nil
 }
