@@ -9,7 +9,7 @@ description: >
    Render a package.
 -->
 
-`render` executes the pipelines of functions on resources in the package and
+`render` executes the pipeline of functions on resources in the package and
 writes the output to the local filesystem in-place.
 
 `render` executes the pipelines in the package hierarchy in a depth-first order.
