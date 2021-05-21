@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 kpt fn eval \
 --image gcr.io/kpt-fn/kubeval:v0.1 \
 -- \
