@@ -5,10 +5,19 @@ function setupWorkspace() {
   cd $TEST_HOME
 }
 
-function createOutputFile(){
+function createOutputFile() {
   touch output.txt
 }
 
 function expectedOutput() {
-  if [ "$(echo "$@")" == "$(cat output.txt)" ]; then echo 0; else echo 1; fi
+  if [ "$(echo "$@")" != "$(cat output.txt)" ]
+  then 
+    echo "Expected:"
+    echo $(echo "$@")
+    echo "Received:"
+    echo $(cat output.txt)
+    exit 1
+  else
+    echo "Success"
+  fi
 }
