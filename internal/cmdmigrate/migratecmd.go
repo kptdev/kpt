@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -180,8 +181,12 @@ func (mr *MigrateRunner) applyCRD() error {
 func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevID string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  updating Kptfile inventory values...")
 	if !mr.dryRun {
-		err := (&cmdliveinit.ConfigureInventoryInfo{
-			Path:        args[0],
+		p, err := pkg.New(args[0])
+		if err != nil {
+			return err
+		}
+		err = (&cmdliveinit.ConfigureInventoryInfo{
+			Pkg:         p,
 			Factory:     mr.rgProvider.Factory(),
 			Quiet:       true,
 			InventoryID: prevID,

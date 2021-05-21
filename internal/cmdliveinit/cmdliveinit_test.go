@@ -105,6 +105,28 @@ func TestCmd_generateID(t *testing.T) {
 	}
 }
 
+func TestCmd_Run_NoKptfile(t *testing.T) {
+	// Set up fake test factory
+	tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	w, clean := testutil.SetupWorkspace(t)
+	defer clean()
+
+	revert := testutil.Chdir(t, w.WorkspaceDirectory)
+	defer revert()
+
+	runner := NewRunner(fake.CtxWithNilPrinter(), tf, ioStreams)
+	runner.Command.SetArgs([]string{})
+	err := runner.Command.Execute()
+
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "error reading Kptfile at")
+}
+
 func TestCmd_Run(t *testing.T) {
 	testCases := map[string]struct {
 		kptfile           string
