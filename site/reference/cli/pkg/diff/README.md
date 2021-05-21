@@ -107,8 +107,7 @@ KPT_CACHE_DIR:
 
 ```
 # Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
+setupWorkspace
 ```
 
 <!-- @fetchPackage @verifyExamples-->

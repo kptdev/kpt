@@ -9,31 +9,43 @@ hierarchy and the constituent packages, files, and resources:
 
 {{% hide %}}
 
-<!-- @makeWorkplace @verifyGuides-->
+<!-- @makeWorkplace @verifyBook-->
 ```
 # Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-touch output.txt
-kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+setupWorkspace
 
-function expectedOutput() {
-  if [ "$(echo "$@")" == "$(cat output.txt)" ]; then echo 0; else echo 1; fi
-}
+# Create output file.
+createOutputFile
+```
+
+<!-- @pkgGet @pkgTree @verifyBook-->
+```shell
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+kpt pkg tree wordpress/ > output.txt
+expectedOutput "Package \"wordpress\":
+├── [Kptfile]  Kptfile wordpress
+├── [service.yaml]  Service wordpress
+├── deployment:
+│   ├── [deployment.yaml]  Deployment wordpress
+│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+└── Package "mysql"
+    ├── [Kptfile]  Kptfile mysql
+    ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
+    ├── [deployment.yaml]  Deployment wordpress-mysql
+    └── [deployment.yaml]  Service wordpress-mysql"
 ```
 
 {{% /hide %}}
 
-<!-- @pkgGet @pkgTree @verifyGuides-->
 ```shell
 $ kpt pkg tree wordpress/
-Package "wordpress"
+Package "wordpress":
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
-├── \"deployment\":
+├── deployment:
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql"
+└── Package "mysql":
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql

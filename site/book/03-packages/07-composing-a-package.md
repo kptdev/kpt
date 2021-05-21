@@ -11,12 +11,25 @@ filesystem:
 Let's revisit the `wordpress` package and see how it was composed in the first
 place. Currently, it has the following package hierarchy:
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyBook-->
+```
+# Set up workspace for the test.
+setupWorkspace
+
+# Create output file.
+createOutputFile
+```
+
+<!-- @pkgGet @pkgTree @verifyBook-->
 ```shell
-$ kpt pkg tree wordpress/
-Package "wordpress"
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+kpt pkg tree wordpress/ > output.txt
+expectedOutput "Package \"wordpress\":
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
-├── \"deployment\":
+├── deployment:
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
 └── Package "mysql"
@@ -26,8 +39,25 @@ Package "wordpress"
     └── [deployment.yaml]  Service wordpress-mysql"
 ```
 
-First, let's delete the `mysql` subpackage. Deleting a subpackage is done by
-simply deleting the subdirectory:
+{{% /hide %}}
+
+```shell
+$ kpt pkg tree wordpress/
+Package "wordpress":
+├── [Kptfile]  Kptfile wordpress
+├── [service.yaml]  Service wordpress
+├── deployment:
+│   ├── [deployment.yaml]  Deployment wordpress
+│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+└── Package "mysql":
+    ├── [Kptfile]  Kptfile mysql
+    ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
+    ├── [deployment.yaml]  Deployment wordpress-mysql
+    └── [deployment.yaml]  Service wordpress-mysql
+```
+
+First, let's delete the `mysql` subpackage. Deleting a subpackage is done by simply deleting the
+subdirectory:
 
 ```shell
 $ rm -r wordpress/mysql

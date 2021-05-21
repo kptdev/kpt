@@ -13,3 +13,13 @@ This book is organized as follows:
 - Chapter 6 covers how to apply a package to a Kubernetes cluster.
 
 Let's get started!
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyBook-->
+```
+# Runs the script which contains all verify functions.
+source ./scripts/setupVerify.sh
+```
+
+{{% /hide %}}

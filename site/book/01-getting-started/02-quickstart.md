@@ -10,32 +10,36 @@ First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 {{% hide %}}
 
-<!-- @makeWorkplace @verifyGuides-->
+<!-- @makeWorkplace @verifyBook-->
 ```
 # Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-touch output.txt
+setupWorkspace
 
-function expectedOutput() {
-  if [ "$(echo "$@")" == "$(cat output.txt)" ]; then echo 0; else echo 1; fi
-}
+# Create output file.
+createOutputFile
 ```
 
-{{% /hide %}}
-
-<!-- @pkgGet @verifyGuides-->
+<!-- @pkgGet @verifyBook-->
 ```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.4
 cd nginx
 ```
 
-`kpt pkg` commands provide the functionality for working with packages on Git
-and on your local filesystem.
+{{% /hide %}}
+
+```shell
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.4
+$ cd nginx
+```
+
+`kpt pkg` commands provide the functionality for working with packages on Git and on your local
+filesystem.
 
 Next, let's quickly view the content of the package:
 
-<!-- @pkgTree @verifyGuides-->
+{{% hide %}}
+
+<!-- @pkgTree @verifyBook-->
 ```shell
 kpt pkg tree > output.txt
 expectedOutput "Package \"nginx\":
@@ -44,9 +48,19 @@ expectedOutput "Package \"nginx\":
 └── [svc.yaml]  Service my-nginx-svc"
 ```
 
-As you can see, this package contains 3 resources in 3 files. There is a special
-file named `Kptfile` which is used by the kpt tool itself and is not deployed to
-the cluster. Later chapters will explain the `Kptfile` in detail.
+{{% /hide %}}
+
+```shell
+$ kpt pkg tree
+Package "nginx":
+├── [Kptfile]  Kptfile nginx
+├── [deployment.yaml]  Deployment my-nginx
+└── [svc.yaml]  Service my-nginx-svc
+```
+
+As you can see, this package contains 3 resources in 3 files. There is a special file named
+`Kptfile` which is used by the kpt tool itself and is not deployed to the cluster. Later chapters
+will explain the `Kptfile` in detail.
 
 Initialize a local Git repo and commit the forked copy of the package:
 
