@@ -45,6 +45,7 @@
 }
 
 body {
+  background-color: unset;
   line-height: unset;
   font-family: unset;
   font-size: unset;
@@ -63,10 +64,6 @@ h1 {
 }
 
 .sidebar-toggle {
-  bottom: 0;
-}
-
-.sidebar-toggle-button {
   bottom: 0;
 }
 
