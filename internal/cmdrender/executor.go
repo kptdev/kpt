@@ -310,6 +310,11 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 		return input, nil
 	}
 
+	// perform runtime validation for pipeline
+	if err := pn.pkg.ValidatePipeline(); err != nil {
+		return nil, err
+	}
+
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)

@@ -385,6 +385,54 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	return resources, err
 }
 
+// Validates the package pipeline.
+func (p *Pkg) ValidatePipeline() error {
+	pl, err := p.Pipeline()
+	if err != nil {
+		return err
+	}
+
+	if pl.IsEmpty() {
+		return nil
+	}
+
+	// read all resources including function pipeline.
+	resources, err := p.LocalResources(true)
+	if err != nil {
+		return err
+	}
+
+	resourcesByPath := sets.String{}
+
+	for _, r := range resources {
+		rPath, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return fmt.Errorf("resource missing path annotation err: %w", err)
+		}
+		resourcesByPath.Insert(filepath.Clean(rPath))
+	}
+
+	for i, fn := range pl.Mutators {
+		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
+			return &kptfilev1alpha2.ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "mutators", i),
+				Value:  fn.ConfigPath,
+				Reason: "functionConfig must exist in current package",
+			}
+		}
+	}
+	for i, fn := range pl.Validators {
+		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
+			return &kptfilev1alpha2.ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "validators", i),
+				Value:  fn.ConfigPath,
+				Reason: "functionConfig must exist in current package",
+			}
+		}
+	}
+	return nil
+}
+
 // filterMetaResources filters kpt metadata files such as Kptfile, function configs.
 func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (output []*yaml.RNode, err error) {
 	pathsToExclude := fnConfigFilePaths(pl)

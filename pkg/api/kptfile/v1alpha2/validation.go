@@ -16,7 +16,7 @@ package v1alpha2
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -147,31 +147,21 @@ func IsNodeZero(n *yaml.Node) bool {
 		n.Line == 0 && n.Column == 0
 }
 
-// validateFnConfigPath validates given function config path and return an error if it's invalid
+// validateFnConfigPath validates syntactic correctness of given functionConfig path
+// and return an error if it's invalid.
 func validateFnConfigPath(p string) error {
 	if strings.TrimSpace(p) == "" {
 		return fmt.Errorf("path must not be empty")
 	}
-	p = path.Clean(p)
-	if path.IsAbs(p) {
+	p = filepath.Clean(p)
+	if filepath.IsAbs(p) {
 		return fmt.Errorf("path must be relative")
 	}
-	if strings.HasPrefix(p, "..") {
+	if strings.Contains(p, "..") {
 		// fn config must not live outside the package directory
 		// Allowing outside path opens up an attack vector that allows
 		// reading any YAML file on package consumer's machine.
 		return fmt.Errorf("path must not be outside the package directory")
-
-	}
-	if p != sourceAllSubPkgs && strings.Contains(p, "*") {
-		return fmt.Errorf("path contains asterisk, asterisk is only allowed in './*'")
-	}
-	// backslash (\\), alert bell (\a), backspace (\b), form feed (\f), vertical tab(\v) are
-	// unlikely to be in a valid path
-	for _, c := range "\\\a\b\f\v" {
-		if strings.Contains(p, string(c)) {
-			return fmt.Errorf("path cannot have character %q", c)
-		}
 	}
 	return nil
 }

@@ -111,6 +111,62 @@ metadata:
 			},
 			valid: false,
 		},
+		{
+			name: "pipeline: configpath referring file in parent",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: configpath contains valied .. references",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/b/../config.yaml",
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "pipeline: configpath contains valid .. references",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/b/../../../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: configpath contains invalid .. references",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/.../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
 	}
 
 	for _, c := range cases {
@@ -236,7 +292,7 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"./a/.../b",
-			true,
+			false,
 		},
 		{
 			".",
@@ -244,19 +300,19 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"a\\b",
-			false,
+			true,
 		},
 		{
 			"a\b",
-			false,
+			true,
 		},
 		{
 			"a\v",
-			false,
+			true,
 		},
 		{
 			"a:\\b\\c",
-			false,
+			true,
 		},
 		{
 			"../a/../b",
@@ -271,23 +327,7 @@ func TestValidatePath(t *testing.T) {
 			true,
 		},
 		{
-			"a/*/b",
-			false,
-		},
-		{
-			"./*",
-			false,
-		},
-		{
-			"a/b\\c",
-			false,
-		},
-		{
 			"././././",
-			true,
-		},
-		{
-			"./!&^%$/#(@)/_-=+|<;>?:'\"/'`",
 			true,
 		},
 		{
@@ -296,10 +336,6 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"\t \n",
-			false,
-		},
-		{
-			"*",
 			false,
 		},
 	}
