@@ -45,12 +45,13 @@ function convertFromHugo(content) {
 
 async function addVersionDropdown() {
   const sidebar = document.getElementsByClassName("sidebar").item(0);
+  const latestVersion = "v1.0.0-alpha";
   const versionDropdown = `
   <div class="dropdown">
-                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">v1.0.0-alpha.3
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">${latestVersion}
                 <span class="caret"></span></button>
                 <ol class="dropdown-menu">
-                <li><a href="/installation/">v1 beta 1</a></li>
+                <li><a href="/installation/">${latestVersion}</a></li>
                 <li><a href="https://googlecontainertools.github.io/kpt/installation/" target="_self">v0.39</a></li>
                 </ol>
               </div>
