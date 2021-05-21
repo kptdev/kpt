@@ -13,9 +13,9 @@ function expectedOutput() {
   if [ "$(echo "$@")" != "$(cat output.txt)" ]
   then 
     echo "Expected:"
-    echo $(echo "$@")
+    echo "$(echo "$@")"
     echo "Received:"
-    echo $(cat output.txt)
+    echo "$(cat output.txt)"
     exit 1
   else
     echo "Success"
