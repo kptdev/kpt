@@ -140,9 +140,15 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 
 	// Check if we have a ref in the upstream that matches the package-specific
 	// reference. If we do, we use that reference.
-	packageRef := path.Join(strings.TrimLeft(repoSpec.Path, "/"), repoSpec.Ref)
-	if _, found := upstreamRepo.ResolveTag(packageRef); found {
-		repoSpec.Ref = packageRef
+	ps := strings.Split(repoSpec.Path, "/")
+	for len(ps) != 0 {
+		p := path.Join(ps...)
+		packageRef := path.Join(strings.TrimLeft(p, "/"), repoSpec.Ref)
+		if _, found := upstreamRepo.ResolveTag(packageRef); found {
+			repoSpec.Ref = packageRef
+			break
+		}
+		ps = ps[:len(ps)-1]
 	}
 
 	// Pull the required ref into the repo git cache.
