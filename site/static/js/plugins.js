@@ -50,7 +50,7 @@ async function addVersionDropdown() {
                 <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">v1.0.0-alpha.3
                 <span class="caret"></span></button>
                 <ol class="dropdown-menu">
-                <li><a href="/">v1.0.0-alpha.3</a></li>
+                <li><a href="/installation/">v1.0.0-alpha.3</a></li>
                 <li><a href="https://googlecontainertools.github.io/kpt/installation/" target="_self">v0.39</a></li>
                 </ol>
               </div>
