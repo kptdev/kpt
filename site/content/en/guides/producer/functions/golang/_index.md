@@ -24,7 +24,7 @@ kyaml libraries' reference below.
 
 ```sh
 go mod init github.com/user/repo
-go get sigs.k8s.io/kustomize/kyaml
+go get sigs.k8s.io/kustomize/kyaml@v0.10.6
 ```
 
 ### Create the `main.go`
