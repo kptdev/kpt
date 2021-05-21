@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -eo pipefail
+
 kpt fn source \
 | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=staging \
 | kpt fn eval - --image gcr.io/kpt-fn/set-label:v0.1 -- foo=bar \
