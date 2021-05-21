@@ -174,6 +174,45 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	if err != nil {
 		return err
 	}
+
+	return parseNameAndNamespace(yml, fnResult)
+}
+
+func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
+	items, err := yml.Elements()
+	if err != nil {
+		return err
+	}
+
+	for i := range items {
+		r, err := items[i].Pipe(yaml.Lookup("resourceRef"))
+		if err != nil {
+			return err
+		}
+		if r == nil {
+			return nil
+		}
+		nameNode, err := r.Pipe(yaml.Lookup("name"))
+		if err != nil {
+			return err
+		}
+		namespaceNode, err := r.Pipe(yaml.Lookup("namespace"))
+		if err != nil {
+			return err
+		}
+
+		if nameNode != nil {
+			fnResult.Results[i].ResourceRef.Name = strings.TrimSpace(nameNode.MustString())
+		}
+
+		if namespaceNode != nil {
+			namespace := strings.TrimSpace(namespaceNode.MustString())
+			if namespace != "" && namespace != "''" {
+				fnResult.Results[i].ResourceRef.Namespace = strings.TrimSpace(namespace)
+			}
+		}
+	}
+
 	return nil
 }
 
