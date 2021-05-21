@@ -43,6 +43,23 @@ function convertFromHugo(content) {
   return content.replace(hugoHideDirectives, "").replace(hugoDirectiveTags, "");
 }
 
+async function addVersionDropdown() {
+  const sidebar = document.getElementsByClassName("sidebar").item(0);
+  const versionDropdown = `
+  <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">v1.0.0-alpha.3
+                <span class="caret"></span></button>
+                <ol class="dropdown-menu">
+                <li><a href="/installation/">v1 beta 1</a></li>
+                <li><a href="https://googlecontainertools.github.io/kpt/installation/" target="_self">v0.39</a></li>
+                </ol>
+              </div>
+                `;
+  const node = document.createElement("div");
+  node.innerHTML = versionDropdown;
+  sidebar.getElementsByClassName("app-name").item(0).appendChild(node);
+}
+
 function showBookPageFooters() {
   const paginationFooters = Array.from(
     document.getElementsByClassName("docsify-pagination-container")
@@ -161,6 +178,8 @@ function localPlugins(hook, _vm) {
 
   // Add title to book Markdown pages based on directory structure.
   hook.beforeEach(processBookPageTitle);
+
+  hook.mounted(addVersionDropdown);
 
   // Show navigation footer for book pages.
   hook.doneEach(showBookPageFooters);
