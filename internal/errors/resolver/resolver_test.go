@@ -15,22 +15,36 @@
 package resolver
 
 import (
-	goerrors "errors"
+	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/stretchr/testify/assert"
 )
 
-//nolint:gochecknoinits
-func init() {
-	AddErrorResolver(&alreadyHandledErrorResolver{})
+func TestResolveError_DefaultExitCode(t *testing.T) {
+	org := errorResolvers
+	AddErrorResolver(&TestErrorResolver{})
+	defer func() {
+		errorResolvers = org
+	}()
+
+	rr, ok := ResolveError(&TestError{})
+	assert.True(t, ok)
+	assert.Equal(t, 1, rr.ExitCode)
 }
 
-type alreadyHandledErrorResolver struct{}
+type TestErrorResolver struct{}
 
-func (*alreadyHandledErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	kioErr := errors.UnwrapKioError(err)
-	if goerrors.Is(kioErr, errors.ErrAlreadyHandled) {
+func (t *TestErrorResolver) Resolve(err error) (ResolvedResult, bool) {
+	var testError *TestError
+	if errors.As(err, &testError) {
 		return ResolvedResult{}, true
 	}
 	return ResolvedResult{}, false
+}
+
+type TestError struct{}
+
+func (e *TestError) Error() string {
+	return "this is a test"
 }

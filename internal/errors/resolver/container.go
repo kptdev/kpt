@@ -35,7 +35,6 @@ func (*containerImageErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		return ResolvedResult{}, false
 	}
 	return ResolvedResult{
-		Message:  containerImageError.Error(),
-		ExitCode: 1,
+		Message: containerImageError.Error(),
 	}, true
 }

@@ -121,8 +121,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var invExistsError *cmdliveinit.InvExistsError
 	if errors.As(err, &invExistsError) {
 		return ResolvedResult{
-			Message:  ExecuteTemplate(invInfoAlreadyExistsMsg, tmplArgs),
-			ExitCode: 1,
+			Message: ExecuteTemplate(invInfoAlreadyExistsMsg, tmplArgs),
 		}, true
 	}
 
