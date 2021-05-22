@@ -83,7 +83,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%q
+	if !assert.Equal(t, fmt.Sprintf(`%s
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
@@ -158,7 +158,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%q
+	if !assert.Equal(t, fmt.Sprintf(`%s
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
@@ -207,7 +207,7 @@ resources:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%q
+	if !assert.Equal(t, fmt.Sprintf(`%s
 └── [f2.yaml]  Deployment bar
 `, filepath.Base(d)), b.String()) {
 		return

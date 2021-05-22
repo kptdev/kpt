@@ -101,7 +101,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
 	} else {
 		// else it is just a directory, so print only directory name
-		tree.SetValue(fmt.Sprintf("%q", filepath.Base(p.Root)))
+		tree.SetValue(fmt.Sprintf("%s", filepath.Base(p.Root)))
 	}
 
 	out := tree.String()
