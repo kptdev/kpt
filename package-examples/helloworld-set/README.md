@@ -28,7 +28,7 @@ List the package contents in a tree structure.
 ```shell
 $ kpt pkg tree helloworld-set/
 
-PKG: helloworld-set
+Package "helloworld-set"
 ├── [Kptfile]  Kptfile helloworld-set
 ├── [deploy.yaml]  Deployment helloworld-gke
 └── [service.yaml]  Service helloworld-gke

@@ -6,7 +6,6 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.0.1
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
-	github.com/monopole/mdrip v1.0.2 // indirect
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/posener/complete/v2 v2.0.1-alpha.12
 	github.com/spf13/cobra v1.1.1

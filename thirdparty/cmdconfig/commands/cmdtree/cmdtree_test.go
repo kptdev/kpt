@@ -83,7 +83,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%q:
+	if !assert.Equal(t, fmt.Sprintf(`%q
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
@@ -158,7 +158,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%q:
+	if !assert.Equal(t, fmt.Sprintf(`%q
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
@@ -207,7 +207,7 @@ resources:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`%q:
+	if !assert.Equal(t, fmt.Sprintf(`%q
 └── [f2.yaml]  Deployment bar
 `, filepath.Base(d)), b.String()) {
 		return
@@ -305,12 +305,12 @@ openAPI:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`Package %q:
+	if !assert.Equal(t, fmt.Sprintf(`Package %q
 ├── [Kptfile]  Kptfile mainpkg
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
-└── Package "subpkg":
+└── Package "subpkg"
     ├── [Kptfile]  Kptfile subpkg
     └── [f2.yaml]  Deployment bar
 `, filepath.Base(d)), b.String()) {
@@ -389,10 +389,10 @@ metadata:
 		return
 	}
 
-	if !assert.Equal(t, `Package "Mainpkg":
+	if !assert.Equal(t, `Package "Mainpkg"
 ├── [Kptfile]  Kptfile Mainpkg
 ├── [f1.yaml]  Deployment foo
-└── Package "Subpkg":
+└── Package "Subpkg"
     ├── [Kptfile]  Kptfile Subpkg
     └── [f2.yaml]  Deployment bar
 `, b.String()) {

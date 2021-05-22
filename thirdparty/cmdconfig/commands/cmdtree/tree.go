@@ -24,7 +24,7 @@ const (
 	// Resources packages.
 	TreeStructurePackage TreeStructure = "directory"
 	// %q holds the package name
-	PkgNameFormat = "Package %q:"
+	PkgNameFormat = "Package %q"
 )
 
 var GraphStructures = []string{string(TreeStructurePackage)}
@@ -101,7 +101,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
 	} else {
 		// else it is just a directory, so print only directory name
-		tree.SetValue(fmt.Sprintf("%q:", filepath.Base(p.Root)))
+		tree.SetValue(fmt.Sprintf("%q", filepath.Base(p.Root)))
 	}
 
 	out := tree.String()
@@ -119,7 +119,7 @@ func branchName(root, dirRelPath string) string {
 		// Kptfile
 		return fmt.Sprintf(PkgNameFormat, name)
 	}
-	return fmt.Sprintf("%q:", name)
+	return name
 }
 
 // Write writes the ascii tree to p.Writer
