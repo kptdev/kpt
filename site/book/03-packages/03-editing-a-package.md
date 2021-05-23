@@ -20,6 +20,15 @@ _within_ a package.
 
 Before you make any changes to package, you should first initialize and commit the pristine package:
 
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+git init; git add .; git commit -m "Pristine wordpress package"
+```
+
+{{% /hide %}}
+
 ```shell
 $ git init; git add .; git commit -m "Pristine wordpress package"
 ```
@@ -45,6 +54,15 @@ different toolchains and languages, as well as at levels of abstraction.
 
 For example, setting a label on all the resources in the `wordpress` package can be done
 using the following function:
+
+{{% hide %}}
+
+<!--@fnEval @verifyBook-->
+```shell
+kpt fn eval wordpress --image gcr.io/kpt-fn/set-labels:v0.1 -- env=dev
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-labels:v0.1 -- env=dev

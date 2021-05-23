@@ -26,13 +26,13 @@ createOutputFile
 ```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 kpt pkg tree wordpress/ > output.txt
-expectedOutput "Package \"wordpress\":
+expectedOutput "Package \"wordpress\"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql"
+└── Package \"mysql\"
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
@@ -43,13 +43,13 @@ expectedOutput "Package \"wordpress\":
 
 ```shell
 $ kpt pkg tree wordpress/
-Package "wordpress":
+Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql":
+└── Package "mysql"
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
@@ -58,6 +58,15 @@ Package "wordpress":
 
 First, let's delete the `mysql` subpackage. Deleting a subpackage is done by simply deleting the
 subdirectory:
+
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+$ rm -r wordpress/mysql
+```
+
+{{% /hide %}}
 
 ```shell
 $ rm -r wordpress/mysql
@@ -69,6 +78,16 @@ approaches:
 ## Create a new package
 
 Create the directory:
+
+{{% hide %}}
+
+<!--@pkgInit @verifyBook-->
+```shell
+mkdir wordpress/mysql
+kpt pkg init wordpress/mysql
+```
+
+{{% /hide %}}
 
 ```shell
 $ mkdir wordpress/mysql
@@ -86,6 +105,16 @@ This creates a [dependent package].
 ## Get an existing package
 
 Remove the existing directory if it exists:
+
+{{% hide %}}
+
+<!-- @pkgGet @verifyBook-->
+```shell
+rm -rf wordpress/mysql
+kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20 wordpress/mysql
+```
+
+{{% /hide %}}
 
 ```shell
 $ rm -rf wordpress/mysql

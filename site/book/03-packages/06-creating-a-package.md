@@ -1,5 +1,15 @@
 Creating a new package is simple: create a new directory and [author resources]:
 
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+mkdir awesomeapp
+cd awesomeapp
+```
+
+{{% /hide %}}
+
 ```shell
 $ mkdir awesomeapp
 # Create resources in awesome/
@@ -7,6 +17,15 @@ $ mkdir awesomeapp
 
 For convenience, you can use `pkg init` command to create a minimal `Kptfile`
 and `README` files:
+
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+kpt pkg init
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt pkg init awesome

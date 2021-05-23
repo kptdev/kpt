@@ -25,13 +25,13 @@ createOutputFile
 ```shell
 kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 kpt pkg tree wordpress/ > output.txt
-expectedOutput "Package \"wordpress\":
+expectedOutput "Package \"wordpress\"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package \"mysql\":
+└── Package \"mysql\"
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
@@ -44,13 +44,13 @@ expectedOutput "Package \"wordpress\":
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 $ kpt pkg tree wordpress/
-Package "wordpress":
+Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql":
+└── Package "mysql"
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
@@ -91,6 +91,16 @@ upstream repo. This means that kpt is compatible with large corpus of existing
 Kubernetes configuration stored on Git today!
 
 For example, `cockroachdb` is just a vanilla directory of KRM:
+
+{{% hide %}}
+
+<!--@pkgGet @verifyBook-->
+```shell
+kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb
+```
+
+{{% /hide %}}
+
 
 ```shell
 $ kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb

@@ -1,5 +1,14 @@
 Regardless of how you have edited the package, you want to _render_ the package:
 
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+kpt fn render wordpress
+```
+
+{{% /hide %}}
+
 ```shell
 $ kpt fn render wordpress
 ```

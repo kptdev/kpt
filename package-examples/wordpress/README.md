@@ -17,6 +17,25 @@ and apply setters for individual packages.
 
 Get the example package on to local using `kpt pkg get`
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyPkgExamples-->
+```
+# Set up workspace for the test.
+setupWorkspace
+
+# Create output file.
+createOutputFile
+```
+
+<!-- @pkgGet @verifyPkgExamples-->
+```shell
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next
+
+```
+
+{{% /hide %}}
+
 ```sh
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next
 
@@ -26,6 +45,26 @@ fetching package /package-examples/wordpress from https://github.com/GoogleConta
 ### View the package contents
 
 List the package contents in a tree structure.
+
+{{% hide %}}
+
+<!-- @pkgTree @verifyPkgExamples-->
+```shell
+kpt pkg tree wordpress/ > output.txt
+expectedOutput "Package \"wordpress\"
+├── [Kptfile]  Kptfile wordpress
+├── [service.yaml]  Service wordpress
+├── deployment
+│   ├── [deployment.yaml]  Deployment wordpress
+│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+└── Package \"mysql\"
+  ├── [Kptfile]  Kptfile mysql
+  ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
+  ├── [deployment.yaml]  Deployment wordpress-mysql
+  └── [deployment.yaml]  Service wordpress-mysql"
+```
+
+{{% /hide %}}
 
 ```sh
 $ kpt pkg tree wordpress/
@@ -62,6 +101,15 @@ new value `wp-tag: 4.9-aapache` in `wordpress/Kptfile` and `ms-tag: 5.7` in `wor
 
 ### Render the declared values
 
+{{% hide %}}
+
+<!--@fnRender @verifyPkgExamples-->
+```sh
+kpt fn render wordpress/
+```
+
+{{% /hide %}}
+
 ```sh
 $ kpt fn render wordpress/
 ```
@@ -69,6 +117,15 @@ $ kpt fn render wordpress/
 ### Apply the package
 
 Apply all the contents of the package recursively to the cluster
+
+{{% hide %}}
+
+<!--@liveInit @verifyPkgExamples-->
+```sh
+kpt live init wordpress/
+```
+
+{{% /hide %}}
 
 ```sh
 $ kpt live init wordpress/
@@ -82,6 +139,16 @@ $ kubectl create ns my-space
 
 namespace/my-space created
 ```
+
+{{% hide %}}
+
+<!--@verifyPkgExamples-->
+```sh
+kpt live apply wordpress/
+```
+
+{{% /hide %}}
+
 
 ```sh
 $ kpt live apply wordpress/

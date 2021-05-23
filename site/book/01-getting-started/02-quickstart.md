@@ -42,7 +42,7 @@ Next, let's quickly view the content of the package:
 <!-- @pkgTree @verifyBook-->
 ```shell
 kpt pkg tree > output.txt
-expectedOutput "Package \"nginx\":
+expectedOutput "Package \"nginx\"
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
 └── [svc.yaml]  Service my-nginx-svc"
@@ -52,7 +52,7 @@ expectedOutput "Package \"nginx\":
 
 ```shell
 $ kpt pkg tree
-Package "nginx":
+Package "nginx"
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
 └── [svc.yaml]  Service my-nginx-svc
@@ -63,6 +63,15 @@ As you can see, this package contains 3 resources in 3 files. There is a special
 will explain the `Kptfile` in detail.
 
 Initialize a local Git repo and commit the forked copy of the package:
+
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+git init; git add .; git commit -m "Pristine nginx package"
+```
+
+{{% /hide %}}
 
 ```shell
 $ git init; git add .; git commit -m "Pristine nginx package"
@@ -84,6 +93,15 @@ Often, you want to automatically mutate and/or validate resources in a package.
 `kpt fn` commands enable you to execute programs called _kpt functions_. For
 instance, you can automatically search and replace all the occurrences of `app`
 name on resources in the package using path expressions:
+
+{{% hide %}}
+
+<!--@fnEval @verifyBook-->
+```shell
+kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-path=spec.**.app' 'put-value=my-nginx'
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-path=spec.**.app' 'put-value=my-nginx'
@@ -114,6 +132,15 @@ resources in the package.
 
 The pipeline is executed using the `render` command:
 
+{{% hide %}}
+
+<!--@fnRender @verifyBook-->
+```shell
+kpt fn render
+```
+
+{{% /hide %}}
+
 ```shell
 $ kpt fn render
 ```
@@ -134,6 +161,15 @@ Kubernetes cluster.
 
 First, initialize the package:
 
+{{% hide %}}
+
+<!--@liveInit @verifyBook-->
+```shell
+kpt live init
+```
+
+{{% /hide %}}
+
 ```shell
 $ kpt live init
 ```
@@ -145,11 +181,29 @@ package in the future, it will be pruned from the cluster.
 You can validate the resources and verify that the expected changes will be made
 to the cluster:
 
+{{% hide %}}
+
+<!--@liveApply @verifyBook-->
+```shell
+kpt live apply --dry-run
+```
+
+{{% /hide %}}
+
 ```shell
 $ kpt live apply --dry-run
 ```
 
 Apply the resources to the cluster:
+
+{{% hide %}}
+
+<!--@liveApply @verifyBook-->
+```shell
+kpt live apply --reconcile-timeout=15m
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt live apply --reconcile-timeout=15m
@@ -165,11 +219,29 @@ you want to merge the upstream changes with changes to your local package.
 
 First, commit your local changes:
 
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+git add .; git commit -m "My customizations"
+```
+
+{{% /hide %}}
+
 ```shell
 $ git add .; git commit -m "My customizations"
 ```
 
 Then update to version `v0.5`:
+
+{{% hide %}}
+
+<!--@pkgUpdate @verifyBook-->
+```shell
+kpt pkg update @v0.5
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt pkg update @v0.5
@@ -180,6 +252,15 @@ merge strategy.
 
 Apply the updated resources to the cluster:
 
+{{% hide %}}
+
+<!--@liveApply @verifyBook-->
+```shell
+kpt live apply --reconcile-timeout=15m
+```
+
+{{% /hide %}}
+
 ```shell
 $ kpt live apply --reconcile-timeout=15m
 ```
@@ -187,6 +268,15 @@ $ kpt live apply --reconcile-timeout=15m
 ## Clean up
 
 Delete the package from the cluster:
+
+{{% hide %}}
+
+<!--@liveDestroy @verifyBook-->
+```shell
+kpt live destroy
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt live destroy

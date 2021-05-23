@@ -14,6 +14,15 @@ $ git diff
 
 If you're happy with the changes, commit them:
 
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+git add .; git commit -m "My changes"
+```
+
+{{% /hide %}}
+
 ```shell
 $ git add .; git commit -m "My changes"
 ```
@@ -21,6 +30,15 @@ $ git add .; git commit -m "My changes"
 ## Update the package
 
 For example, you can update to version `v0.4` of the `wordpress` package:
+
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+kpt pkg update wordpress@v0.4
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt pkg update wordpress@v0.4
@@ -62,6 +80,15 @@ resource using OpenAPI schema.
 ## Commit the updated resources
 
 Once you have successfully updated the package, commit the changes:
+
+{{% hide %}}
+
+<!--@verifyBook-->
+```shell
+git add .; git commit -m "Updated wordpress to v0.4"
+```
+
+{{% /hide %}}
 
 ```shell
 $ git add .; git commit -m "Updated wordpress to v0.4"

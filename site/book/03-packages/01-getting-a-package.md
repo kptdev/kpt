@@ -3,6 +3,21 @@ committing them to a Git repository. Consumers fork the package to use it.
 
 Let's revisit the Wordpress example:
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyBook-->
+```
+# Set up workspace for the test.
+setupWorkspace
+```
+
+<!--@pkgGet @verifyBook-->
+```shell
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+```
+
+{{% /hide %}}
+
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 ```
@@ -93,6 +108,15 @@ think of the `Kptfile` in the `mysql` package as implicitly inheriting the
 It is possible to specify a different local directory name to the `get` command.
 For example, the following fetches the packages to a directory named
 `mywordpress`:
+
+{{% hide %}}
+
+<!--@pkgGet @verifyBook-->
+```shell
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3 mywordpress
+```
+
+{{% /hide %}}
 
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3 mywordpress

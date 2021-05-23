@@ -32,3 +32,14 @@ This step should describe the process and exact steps to render the declared val
 ### Apply the package
 
 This step should describe the process and exact commands needed to deploy the resources to a live cluster.
+
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyPkgExamples-->
+```
+# Runs the script which contains all verify functions.
+source ./scripts/setupVerify.sh
+```
+
+{{% /hide %}}
