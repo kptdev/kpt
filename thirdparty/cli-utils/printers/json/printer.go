@@ -4,8 +4,8 @@
 package json
 
 import (
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/printer"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/cli-utils/cmd/printers/printer"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/print/list"
 )

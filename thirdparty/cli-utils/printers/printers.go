@@ -4,13 +4,11 @@
 package printers
 
 import (
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/events"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/json"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/printer"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/table"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/cli-utils/cmd/printers/events"
-	"sigs.k8s.io/cli-utils/cmd/printers/json"
-	"sigs.k8s.io/cli-utils/cmd/printers/printer"
-	"sigs.k8s.io/cli-utils/cmd/printers/table"
-	"sigs.k8s.io/cli-utils/pkg/common"
-	"sigs.k8s.io/cli-utils/pkg/print/list"
 )
 
 const (
@@ -26,11 +24,7 @@ func GetPrinter(printerType string, ioStreams genericclioptions.IOStreams) print
 			IOStreams: ioStreams,
 		}
 	case JSONPrinter:
-		return &list.BaseListPrinter{
-			FormatterFactory: func(previewStrategy common.DryRunStrategy) list.Formatter {
-				return json.NewFormatter(ioStreams, previewStrategy)
-			},
-		}
+		return json.NewPrinter(ioStreams)
 	default:
 		return events.NewPrinter(ioStreams)
 	}
