@@ -37,7 +37,10 @@ import (
 
 // NewContainerRunner returns a kio.Filter given a specification of a container function
 // and it's config.
-func NewContainerRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath, fnResults *fnresult.ResultList, imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
+func NewContainerRunner(
+	ctx context.Context, f *kptfilev1alpha2.Function,
+	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
+	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
