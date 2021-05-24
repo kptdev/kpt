@@ -23,6 +23,7 @@ kpt fn source \
 | kpt fn sink $TEMP_DIR
 
 # copy back the resources
+rm -r ./*
 cp $TEMP_DIR/* .
 
 # remove temporary directory
