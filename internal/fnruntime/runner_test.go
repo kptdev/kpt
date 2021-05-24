@@ -24,6 +24,8 @@ import (
 	"strings"
 	"testing"
 
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
+
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
@@ -445,5 +447,151 @@ spec:
 			t.Errorf("wanted error %s, got %s", tc.expectedErr, err.Error())
 			t.FailNow()
 		}
+	}
+}
+
+func TestGetResourceRefMetadata(t *testing.T) {
+	tests := map[string]struct {
+		input    string // input
+		expected string // expected result
+	}{
+		"new format with name": {
+			input: `
+message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+			expected: `message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+		},
+		"new format with namespace": {
+			input: `
+message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+    namespace: my-namespace
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+			expected: `message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+    namespace: my-namespace
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+		},
+		"old format with name": {
+			input: `
+message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deployment
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+			expected: `message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+		},
+		"old format with namespace": {
+			input: `
+message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deployment
+      namespace: my-namespace
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+			expected: `message: selector is required
+severity: error
+resourceRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+    namespace: my-namespace
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+		},
+		"no resourceRef": {
+			input: `
+message: selector is required
+severity: error
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+			expected: `message: selector is required
+severity: error
+field:
+    path: selector
+file:
+    path: resources.yaml
+`,
+		},
+	}
+	for _, tc := range tests {
+		yml, err := yaml.Parse(tc.input)
+		assert.NoError(t, err)
+
+		result := fnresult.ResultItem{}
+		err = yaml.Unmarshal([]byte(tc.input), &result)
+		assert.NoError(t, err)
+
+		fnResult := &fnresult.Result{Results: []fnresult.ResultItem{result}}
+		assert.NoError(t, getResourceRefMetadata(yml, fnResult, 0))
+
+		out, err := yaml.Marshal(fnResult.Results[0])
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expected, string(out))
 	}
 }

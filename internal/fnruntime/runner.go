@@ -27,9 +27,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -185,34 +185,39 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	}
 
 	for i := range items {
-		r, err := items[i].Pipe(yaml.Lookup("resourceRef"))
-		if err != nil {
+		if err := getResourceRefMetadata(items[i], fnResult, i); err != nil {
 			return err
-		}
-		if r == nil {
-			return nil
-		}
-		nameNode, err := r.Pipe(yaml.Lookup("name"))
-		if err != nil {
-			return err
-		}
-		namespaceNode, err := r.Pipe(yaml.Lookup("namespace"))
-		if err != nil {
-			return err
-		}
-
-		if nameNode != nil {
-			fnResult.Results[i].ResourceRef.Name = strings.TrimSpace(nameNode.MustString())
-		}
-
-		if namespaceNode != nil {
-			namespace := strings.TrimSpace(namespaceNode.MustString())
-			if namespace != "" && namespace != "''" {
-				fnResult.Results[i].ResourceRef.Namespace = strings.TrimSpace(namespace)
-			}
 		}
 	}
 
+	return nil
+}
+
+func getResourceRefMetadata(item *yaml.RNode, fnResult *fnresult.Result, i int) error {
+	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return nil
+	}
+	nameNode, err := r.Pipe(yaml.Lookup("name"))
+	if err != nil {
+		return err
+	}
+	namespaceNode, err := r.Pipe(yaml.Lookup("namespace"))
+	if err != nil {
+		return err
+	}
+	if nameNode != nil {
+		fnResult.Results[i].ResourceRef.Name = strings.TrimSpace(nameNode.MustString())
+	}
+	if namespaceNode != nil {
+		namespace := strings.TrimSpace(namespaceNode.MustString())
+		if namespace != "" && namespace != "''" {
+			fnResult.Results[i].ResourceRef.Namespace = strings.TrimSpace(namespace)
+		}
+	}
 	return nil
 }
 
@@ -339,7 +344,7 @@ func (ri *multiLineFormatter) String() string {
 }
 
 // resultToString converts given structured result item to string format.
-func resultToString(result framework.ResultItem) string {
+func resultToString(result v1alpha2.ResultItem) string {
 	// TODO: Go SDK should implement Stringer method
 	// for framework.ResultItem. This is a temporary
 	// wrapper that will eventually be moved to Go SDK.
@@ -372,7 +377,7 @@ func resultToString(result framework.ResultItem) string {
 	return s.String()
 }
 
-func resourceRefToString(ref yaml.ResourceMeta) string {
+func resourceRefToString(ref yaml.ResourceIdentifier) string {
 	s := strings.Builder{}
 	if ref.APIVersion != "" {
 		s.WriteString(fmt.Sprintf("%s/", ref.APIVersion))
