@@ -34,7 +34,7 @@ func GetKptCommands(ctx context.Context, name, version string) []*cobra.Command 
 	var c []*cobra.Command
 	fnCmd := GetFnCommand(ctx, name)
 	pkgCmd := GetPkgCommand(ctx, name)
-	liveCmd := GetLiveCommand(name, version)
+	liveCmd := GetLiveCommand(ctx, name, version)
 
 	c = append(c, pkgCmd, fnCmd, liveCmd)
 

@@ -4,6 +4,6 @@ metadata:
   name: app
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-namespace:unstable
-    configMap:
-      namespace: staging
+    - image: gcr.io/kpt-fn/set-namespace:unstable
+      configMap:
+        namespace: staging

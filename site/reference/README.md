@@ -16,16 +16,20 @@ description: >
 
 <!--mdtogo:Long-->
 
-Usage: kpt \<group> \<command> \<positional args> [PKG_PATH] [flags]
+All kpt commands follow this general synopsis:
 
-kpt functionality is divided into the following command groups, each of
-which operates on a particular set of entities, with a consistent command
-syntax and pattern of inputs and outputs.
+```
+kpt <group> <command> <positional args> [PKG_PATH] [flags]
+```
+
+kpt functionality is divided into three command groups:
 
 | Group   | Description                                                             |
 | --------| ------------------------------------------------------------------------|
 | pkg     | get, update, and describe packages with resources.                      |
 | fn      | generate, transform, validate packages using containerized functions.   |
 | live    | deploy local configuration packages to a cluster.                       |
+
+
 
 <!--mdtogo-->

@@ -4,7 +4,6 @@
 package live
 
 import (
-	"fmt"
 	"io"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -14,6 +13,12 @@ import (
 )
 
 var _ manifestreader.ManifestLoader = &ResourceGroupManifestLoader{}
+
+type NoInvInfoError struct{}
+
+func (e *NoInvInfoError) Error() string {
+	return "inventory info not found in Kptfile"
+}
 
 // ResourceGroupManifestLoader implements the Provider interface, returning
 // ResourceGroup versions of some kpt live apply structures.
@@ -32,7 +37,7 @@ func NewResourceGroupManifestLoader(f util.Factory) *ResourceGroupManifestLoader
 func (f *ResourceGroupManifestLoader) InventoryInfo(objs []*unstructured.Unstructured) (inventory.InventoryInfo, []*unstructured.Unstructured, error) {
 	objs, invObj := findResourceGroupInv(objs)
 	if invObj == nil {
-		return nil, nil, fmt.Errorf("unable to find the ResourceGroup inventory info")
+		return nil, nil, &NoInvInfoError{}
 	}
 	return &InventoryResourceGroup{inv: invObj}, objs, nil
 }

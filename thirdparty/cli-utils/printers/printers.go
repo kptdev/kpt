@@ -9,7 +9,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/printer"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/table"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"sigs.k8s.io/cli-utils/pkg/print/list"
 )
 
 const (
@@ -25,10 +24,7 @@ func GetPrinter(printerType string, ioStreams genericclioptions.IOStreams) print
 			IOStreams: ioStreams,
 		}
 	case JSONPrinter:
-		return &list.BaseListPrinter{
-			IOStreams:        ioStreams,
-			FormatterFactory: json.NewFormatter,
-		}
+		return json.NewPrinter(ioStreams)
 	default:
 		return events.NewPrinter(ioStreams)
 	}
@@ -40,4 +36,13 @@ func SupportedPrinters() []string {
 
 func DefaultPrinter() string {
 	return EventsPrinter
+}
+
+func ValidatePrinterType(printerType string) bool {
+	for _, p := range SupportedPrinters() {
+		if printerType == p {
+			return true
+		}
+	}
+	return false
 }

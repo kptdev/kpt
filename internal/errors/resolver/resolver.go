@@ -28,9 +28,14 @@ func AddErrorResolver(er ErrorResolver) {
 // the error could not be resolved.
 func ResolveError(err error) (ResolvedResult, bool) {
 	for _, resolver := range errorResolvers {
-		msg, found := resolver.Resolve(err)
+		rr, found := resolver.Resolve(err)
+		// If the exit code hasn't been set, we default it to 1. We should
+		// never return exit code 0 for errors.
+		if rr.ExitCode == 0 {
+			rr.ExitCode = 1
+		}
 		if found {
-			return msg, true
+			return rr, true
 		}
 	}
 	return ResolvedResult{}, false

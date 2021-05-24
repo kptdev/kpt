@@ -104,7 +104,7 @@ func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.Result
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
 
-	printerutil.PrintFnResultInfo(ctx, resultsFile)
+	printerutil.PrintFnResultInfo(ctx, resultsFile, false)
 	return nil
 }
 
@@ -295,7 +295,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
 	// package structure. We should have function to get the relative package
 	// path here.
-	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n\n")
+	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
 
 	if len(input) == 0 {
 		return nil, nil
@@ -308,6 +308,11 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 	if pl.IsEmpty() {
 		return input, nil
+	}
+
+	// perform runtime validation for pipeline
+	if err := pn.pkg.ValidatePipeline(); err != nil {
+		return nil, err
 	}
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
@@ -445,9 +450,6 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 
 // trackInputFiles records file paths of input resources in the hydration context.
 func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
-	if err := detectPathConflicts(input); err != nil {
-		return err
-	}
 	if hctx.inputFiles == nil {
 		hctx.inputFiles = sets.String{}
 	}
@@ -464,9 +466,6 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 // trackOutputfiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
-	if err := detectPathConflicts(hctx.root.resources); err != nil {
-		return err
-	}
 	outputSet := sets.String{}
 
 	for _, r := range hctx.root.resources {
@@ -477,28 +476,6 @@ func trackOutputFiles(hctx *hydrationContext) error {
 		outputSet.Insert(path)
 	}
 	hctx.outputFiles = outputSet
-	return nil
-}
-
-// detectPathConflicts returns an error if the same index/path is on multiple resources
-func detectPathConflicts(nodes []*yaml.RNode) error {
-	// map has structure path -> index -> bool
-	// to keep track of paths and indexes found
-	pathIndexes := make(map[string]map[string]bool)
-	for _, node := range nodes {
-		fp, index, err := kioutil.GetFileAnnotations(node)
-		if err != nil {
-			return err
-		}
-		fp = path.Clean(fp)
-		if pathIndexes[fp] == nil {
-			pathIndexes[fp] = make(map[string]bool)
-		}
-		if _, ok := pathIndexes[fp][index]; ok {
-			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
-		}
-		pathIndexes[fp][index] = true
-	}
 	return nil
 }
 

@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -77,7 +76,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	// output
 	err := f.prepareImage()
 	if err != nil {
-		return fmt.Errorf("failed to check function image existence: %w", err)
+		return err
 	}
 
 	errSink := bytes.Buffer{}
@@ -90,7 +89,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError
 		if goerrors.As(err, &exitErr) {
-			return &errors.FnExecError{
+			return &ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
 				Stderr:         errSink.String(),
@@ -117,10 +116,6 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"run", "--rm", "-i",
 		"-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
 		"--network", string(network),
-		// TODO: this env is only used in TS SDK to print the errors
-		// to stderr. We don't need this once we support structured
-		// results.
-		"-e", "LOG_TO_STDERR=true",
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
 	}
@@ -128,7 +123,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		args = append(args, "--mount", storageMount.String())
 	}
 	args = append(args,
-		runtimeutil.NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
+		NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
 	args = append(args, f.Image)
 	// setup container run timeout
 	timeout := defaultTimeout
@@ -137,6 +132,26 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	return exec.CommandContext(ctx, dockerBin, args...), cancel
+}
+
+// NewContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing
+// input envStr. envStr example: ["foo=bar", "baz"]
+// using this instead of runtimeutil.NewContainerEnvFromStringSlice() to avoid
+// default envs LOG_TO_STDERR
+func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
+	ce := &runtimeutil.ContainerEnv{
+		EnvVars: make(map[string]string),
+	}
+	// default envs
+	for _, e := range envStr {
+		parts := strings.SplitN(e, "=", 2)
+		if len(parts) == 1 {
+			ce.AddKey(e)
+		} else {
+			ce.AddKeyValue(parts[0], parts[1])
+		}
+	}
+	return ce
 }
 
 // prepareImage will check local images and pull it if it doesn't
@@ -148,7 +163,10 @@ func (f *ContainerFn) prepareImage() error {
 	var output []byte
 	var err error
 	if output, err = cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to check local function image %q: %w", f.Image, err)
+		return &ContainerImageError{
+			Image:  f.Image,
+			Output: string(output),
+		}
 	}
 	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
 		// image exists locally
@@ -163,8 +181,22 @@ func (f *ContainerFn) prepareImage() error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
-	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("function image %q doesn't exist: %w", f.Image, err)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return &ContainerImageError{
+			Image:  f.Image,
+			Output: string(output),
+		}
 	}
 	return nil
+}
+
+// ContainerImageError is an error type which will be returned when
+// the container run time cannot verify docker image.
+type ContainerImageError struct {
+	Image  string
+	Output string
+}
+
+func (e *ContainerImageError) Error() string {
+	return fmt.Sprintf("Function image %q doesn't exist.", e.Image)
 }

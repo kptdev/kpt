@@ -26,6 +26,9 @@ kpt/kpt
 # VS Code individual configurations
 .vscode/
 
+# Firebase cache
+.firebase/
+
 # Node dependencies
 node_modules/
 package-lock.json

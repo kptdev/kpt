@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
@@ -20,15 +22,16 @@ import (
 )
 
 // GetEvalFnRunner returns a EvalFnRunner.
-func GetEvalFnRunner(ctx context.Context, name string) *EvalFnRunner {
+func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r := &EvalFnRunner{Ctx: ctx}
 	c := &cobra.Command{
-		Use:     "eval [DIR | -]",
-		Short:   docs.RunShort,
-		Long:    docs.RunLong,
-		Example: docs.RunExamples,
+		Use:     "eval [DIR | -] [flags] [--fn-args]",
+		Short:   docs.EvalShort,
+		Long:    docs.EvalShort + "\n" + docs.EvalLong,
+		Example: docs.EvalExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
+		PostRun: r.postRun,
 	}
 
 	r.Command = c
@@ -38,7 +41,7 @@ func GetEvalFnRunner(ctx context.Context, name string) *EvalFnRunner {
 		&r.Image, "image", "",
 		"run this image as a function")
 	r.Command.Flags().StringVar(
-		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
+		&r.ExecPath, "exec-path", "", "run an executable as a function.")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
 	r.Command.Flags().BoolVar(
@@ -55,6 +58,7 @@ func GetEvalFnRunner(ctx context.Context, name string) *EvalFnRunner {
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
+	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
 
@@ -290,4 +294,15 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 
 	// don't consider args for the function
 	return nil
+}
+
+func (r *EvalFnRunner) postRun(_ *cobra.Command, args []string) {
+	if len(args) > 0 && args[0] == "-" {
+		return
+	}
+	path := "."
+	if len(args) > 0 {
+		path = args[0]
+	}
+	pkgutil.FormatPackage(path)
 }

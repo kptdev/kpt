@@ -4,13 +4,13 @@ metadata:
   name: app
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-namespace:unstable
-    configMap:
-      namespace: staging
-  - image: gcr.io/kpt-fn/set-label:unstable
-    config: # invalid inline config, missing apiVersion/kind
-      tier: backend
-      envs:
-        - dev
-        - staging
-        - production
+    - image: gcr.io/kpt-fn/set-namespace:unstable
+      configMap:
+        namespace: staging
+    - image: gcr.io/kpt-fn/set-label:unstable
+      config: # invalid inline config, missing apiVersion/kind
+        envs:
+          - dev
+          - staging
+          - production
+        tier: backend

@@ -7,5 +7,5 @@ pipeline:
     - image: gcr.io/kpt-fn/enforce-gatekeeper:unstable
     - image: gcr.io/kpt-fn/kubeval:unstable
       configMap:
-        strict: "true"
         ignore_missing_schemas: "true"
+        strict: "true"

@@ -10,34 +10,18 @@ from git repositories.
 var CatShort = `Print the resources in a file/directory`
 var CatLong = `
   kpt pkg cat [FILE | DIR]
-  
-  DIR:
-    Path to a directory with resources. Defaults to the current working directory.
-  
-  FILE:
-    Path to a resource file.
+
+Args:
+  FILE | DIR:
+    Path to a directory either a directory containing files with KRM resources, or
+    a file with KRM resource(s). Defaults to the current directory.
 `
 var CatExamples = `
-  # print resource from a file
+  # Print resource from a file.
   kpt pkg cat path/to/deployment.yaml
 
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: nginx-deployment
-
-  # print resources from current directory
+  # Print resources from current directory.
   kpt pkg cat
-
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: nginx-deployment
-  ---
-  apiVersion: apps/v1
-  kind: Service
-  metadata:
-    name: nginx-service
 `
 
 var DiffShort = `Show differences between a local package and upstream.`
@@ -107,21 +91,6 @@ Environment Variables:
 var DiffExamples = `
   # Show changes in current package relative to upstream source package.
   kpt pkg diff
-
-  # Show changes in current package relative to upstream source package
-  # using meld tool with auto compare option.
-  kpt pkg diff --diff-tool meld --diff-tool-opts "-a"
-
-  # Show changes in upstream source package between current version and
-  # target version.
-  kpt pkg diff @v0.4.0 --diff-type remote
-
-  # Show changes in current package relative to target version.
-  kpt pkg diff @v0.4.0 --diff-type combined
-
-  # Show 3way changes between the local package, upstream package at original
-  # version and upstream package at target version using meld.
-  kpt pkg diff @v0.4.0 --diff-type 3way --diff-tool meld --diff-tool-opts "-a"
 `
 
 var GetShort = `Fetch a package from a git repo.`
@@ -217,21 +186,12 @@ var InitExamples = `
   kpt pkg init
 `
 
-var TreeShort = `Render resources using a tree structure`
+var TreeShort = `Display resources, files and packages in a tree structure.`
 var TreeLong = `
   kpt pkg tree [DIR | -]
-
-Args:
-
-  DIR:
-    Path to a package directory. Defaults to the current working directory.
-
-Flags:
-
-  
 `
 var TreeExamples = `
-  # print Resources using directory structure
+  # Show resources in the current directory.
   kpt pkg tree
 `
 

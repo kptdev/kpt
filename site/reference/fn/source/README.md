@@ -1,71 +1,64 @@
 ---
-title: "Source"
+title: "`source`"
 linkTitle: "source"
 type: docs
 description: >
-   Specify a directory as an input source package
+   Source resources from a local directory
 ---
 
 <!--mdtogo:Short
-    Specify a directory as an input source package
+    Source resources from a local directory
 -->
 
-Implements a [source function] by reading configuration and writing to STDOUT.
-
-### Examples
-
-{{% hide %}}
-
-<!-- @makeWorkplace @verifyExamples-->
-```
-# Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-```
-
-<!-- @fetchPackage @verifyExamples-->
-```shell
-export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@next DIR/
-```
-
-{{% /hide %}}
-
-<!--mdtogo:Examples-->
-
-<!-- @fnSource @verifyExamples-->
-```shell
-# print to stdout configuration from DIR/ formatted as an input source
-kpt fn source DIR/
-```
-
-```shell
-# run a function using explicit sources and sinks
-kpt fn source DIR/ |
-  kpt fn run --image gcr.io/example.com/my-fn |
-  kpt fn sink DIR/
-```
-
-<!--mdtogo-->
+`source` reads resources from a local directory and writes them in [Function Specification]
+wire format to `stdout`. The output of the `source` can be pipe'd to commands
+such as `kpt fn eval` that accepts [Function Specification] wire format. `source`
+is useful for chaining functions using Unix pipe. For more details, refer to
+[Chaining functions] and [Function Specification].
 
 ### Synopsis
 
 <!--mdtogo:Long-->
 
-```shell
-kpt fn source [DIR...]
+```
+kpt fn source [DIR] [flags]
+```
 
+#### Args
+
+```
 DIR:
-  Path to a package directory.  Defaults to stdin if unspecified.
+  Path to the local directory containing resources. Defaults to the current
+  working directory.
+```
+
+#### Flags
+
+```
+--fn-config:
+  Path to the file containing `functionConfig`.
+
+```
+
+<!--mdtogo-->
+### Examples
+
+<!--mdtogo:Examples-->
+
+```
+# read resources from DIR directory and write the output on stdout.
+$ kpt fn source DIR
+```
+
+```
+# read resources from DIR directory, execute my-fn on them and write the
+# output to DIR directory.
+$ kpt fn source DIR |
+  kpt fn eval --image gcr.io/example.com/my-fn - |
+  kpt fn sink DIR
 ```
 
 <!--mdtogo-->
 
-### Next Steps
-
-- Learn about [functions concepts] like sources, sinks, and pipelines.
-- See more examples of source functions in the functions [catalog].
-
-[source function]: https://kpt.dev#todo
-[functions concepts]: /book/02-concepts/02-functions
-[catalog]: https://kpt.dev#todo
+[Chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
+[Function Specification]: /book/05-developing-functions/02-function-specification

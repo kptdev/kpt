@@ -20,4 +20,4 @@ exitCode: 0
 # in the subsequent runs. So skipping it for now.
 nonIdempotent: true
 stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
+  [RUNNING] "gcr.io/kpt-fn/search-replace:v0.1"

@@ -16,21 +16,68 @@ import (
 )
 
 func NewFormatter(ioStreams genericclioptions.IOStreams,
-	previewStrategy common.DryRunStrategy) list.Formatter {
+	dryRunStrategy common.DryRunStrategy) list.Formatter {
 	return &formatter{
-		ioStreams:       ioStreams,
-		previewStrategy: previewStrategy,
+		ioStreams:      ioStreams,
+		dryRunStrategy: dryRunStrategy,
 	}
 }
 
 type formatter struct {
-	previewStrategy common.DryRunStrategy
-	ioStreams       genericclioptions.IOStreams
+	dryRunStrategy common.DryRunStrategy
+	ioStreams      genericclioptions.IOStreams
 }
 
-func (jf *formatter) FormatApplyEvent(ae event.ApplyEvent, as *list.ApplyStats, c list.Collector) error {
-	switch ae.Type {
-	case event.ApplyEventCompleted:
+func (jf *formatter) FormatApplyEvent(ae event.ApplyEvent) error {
+	eventInfo := jf.baseResourceEvent(ae.Identifier)
+	if ae.Error != nil {
+		eventInfo["error"] = ae.Error.Error()
+		return jf.printEvent("apply", "resourceFailed", eventInfo)
+	}
+	eventInfo["operation"] = ae.Operation.String()
+	return jf.printEvent("apply", "resourceApplied", eventInfo)
+}
+
+func (jf *formatter) FormatStatusEvent(se event.StatusEvent) error {
+	return jf.printResourceStatus(se)
+}
+
+func (jf *formatter) printResourceStatus(se event.StatusEvent) error {
+	eventInfo := jf.baseResourceEvent(se.Identifier)
+	eventInfo["status"] = se.PollResourceInfo.Status.String()
+	eventInfo["message"] = se.PollResourceInfo.Message
+	return jf.printEvent("status", "resourceStatus", eventInfo)
+}
+
+func (jf *formatter) FormatPruneEvent(pe event.PruneEvent) error {
+	eventInfo := jf.baseResourceEvent(pe.Identifier)
+	if pe.Error != nil {
+		eventInfo["error"] = pe.Error.Error()
+		return jf.printEvent("prune", "resourceFailed", eventInfo)
+	}
+	eventInfo["operation"] = pe.Operation.String()
+	return jf.printEvent("prune", "resourcePruned", eventInfo)
+}
+
+func (jf *formatter) FormatDeleteEvent(de event.DeleteEvent) error {
+	eventInfo := jf.baseResourceEvent(de.Identifier)
+	if de.Error != nil {
+		eventInfo["error"] = de.Error.Error()
+		return jf.printEvent("delete", "resourceFailed", eventInfo)
+	}
+	eventInfo["operation"] = de.Operation.String()
+	return jf.printEvent("delete", "resourceDeleted", eventInfo)
+}
+
+func (jf *formatter) FormatErrorEvent(ee event.ErrorEvent) error {
+	return jf.printEvent("error", "error", map[string]interface{}{
+		"error": ee.Err.Error(),
+	})
+}
+
+func (jf *formatter) FormatActionGroupEvent(age event.ActionGroupEvent, ags []event.ActionGroup,
+	as *list.ApplyStats, ps *list.PruneStats, ds *list.DeleteStats, c list.Collector) error {
+	if age.Action == event.ApplyAction && age.Type == event.Finished {
 		if err := jf.printEvent("apply", "completed", map[string]interface{}{
 			"count":           as.Sum(),
 			"createdCount":    as.Created,
@@ -41,112 +88,47 @@ func (jf *formatter) FormatApplyEvent(ae event.ApplyEvent, as *list.ApplyStats, 
 		}); err != nil {
 			return err
 		}
-
-		for id, se := range c.LatestStatus() {
-			if err := jf.printResourceStatus(id, se); err != nil {
-				return err
-			}
-		}
-	case event.ApplyEventResourceUpdate:
-		gk := ae.Identifier.GroupKind
-		eventInfo := map[string]interface{}{
-			"group":     gk.Group,
-			"kind":      gk.Kind,
-			"namespace": ae.Identifier.Namespace,
-			"name":      ae.Identifier.Name,
-			"operation": ae.Operation.String(),
-		}
-		if ae.Error != nil {
-			eventInfo["error"] = ae.Error.Error()
-		}
-
-		return jf.printEvent("apply", "resourceApplied", eventInfo)
 	}
-	return nil
-}
 
-func (jf *formatter) FormatStatusEvent(se event.StatusEvent, _ list.Collector) error {
-	if se.Type == event.StatusEventResourceUpdate {
-		id := se.Resource.Identifier
-		return jf.printResourceStatus(id, se)
-	}
-	return nil
-}
-
-func (jf *formatter) printResourceStatus(id object.ObjMetadata, se event.StatusEvent) error {
-	return jf.printEvent("status", "resourceStatus",
-		map[string]interface{}{
-			"group":     id.GroupKind.Group,
-			"kind":      id.GroupKind.Kind,
-			"namespace": id.Namespace,
-			"name":      id.Name,
-			"status":    se.Resource.Status.String(),
-			"message":   se.Resource.Message,
-		})
-}
-
-func (jf *formatter) FormatPruneEvent(pe event.PruneEvent, ps *list.PruneStats) error {
-	switch pe.Type {
-	case event.PruneEventCompleted:
+	if age.Action == event.PruneAction && age.Type == event.Finished {
 		return jf.printEvent("prune", "completed", map[string]interface{}{
 			"pruned":  ps.Pruned,
 			"skipped": ps.Skipped,
 		})
-	case event.PruneEventResourceUpdate:
-		gk := pe.Identifier.GroupKind
-		return jf.printEvent("prune", "resourcePruned", map[string]interface{}{
-			"group":     gk.Group,
-			"kind":      gk.Kind,
-			"namespace": pe.Identifier.Namespace,
-			"name":      pe.Identifier.Name,
-			"operation": pe.Operation.String(),
-		})
-	case event.PruneEventFailed:
-		gk := pe.Identifier.GroupKind
-		return jf.printEvent("prune", "resourceFailed", map[string]interface{}{
-			"group":     gk.Group,
-			"kind":      gk.Kind,
-			"namespace": pe.Identifier.Namespace,
-			"name":      pe.Identifier.Name,
-			"error":     pe.Error.Error(),
-		})
 	}
-	return nil
-}
 
-func (jf *formatter) FormatDeleteEvent(de event.DeleteEvent, ds *list.DeleteStats) error {
-	switch de.Type {
-	case event.DeleteEventCompleted:
+	if age.Action == event.DeleteAction && age.Type == event.Finished {
 		return jf.printEvent("delete", "completed", map[string]interface{}{
 			"deleted": ds.Deleted,
 			"skipped": ds.Skipped,
 		})
-	case event.DeleteEventResourceUpdate:
-		gk := de.Identifier.GroupKind
-		return jf.printEvent("delete", "resourceDeleted", map[string]interface{}{
-			"group":     gk.Group,
-			"kind":      gk.Kind,
-			"namespace": de.Identifier.Namespace,
-			"name":      de.Identifier.Name,
-			"operation": de.Operation.String(),
-		})
-	case event.DeleteEventFailed:
-		gk := de.Identifier.GroupKind
-		return jf.printEvent("delete", "resourceFailed", map[string]interface{}{
-			"group":     gk.Group,
-			"kind":      gk.Kind,
-			"namespace": de.Identifier.Namespace,
-			"name":      de.Identifier.Name,
-			"error":     de.Error.Error(),
-		})
+	}
+
+	if age.Action == event.WaitAction && age.Type == event.Started {
+		ag, found := list.ActionGroupByName(age.GroupName, ags)
+		if !found {
+			panic(fmt.Errorf("unknown action group name %q", age.GroupName))
+		}
+		for id, se := range c.LatestStatus() {
+			// Only print information about objects that we actually care about
+			// for this wait task.
+			if found := object.ObjMetas(ag.Identifiers).Contains(id); found {
+				if err := jf.printResourceStatus(se); err != nil {
+					return err
+				}
+			}
+		}
 	}
 	return nil
 }
 
-func (jf *formatter) FormatErrorEvent(ee event.ErrorEvent) error {
-	return jf.printEvent("error", "error", map[string]interface{}{
-		"error": ee.Err.Error(),
-	})
+func (jf *formatter) baseResourceEvent(identifier object.ObjMetadata) map[string]interface{} {
+	return map[string]interface{}{
+		"group":     identifier.GroupKind.Group,
+		"kind":      identifier.GroupKind.Kind,
+		"namespace": identifier.Namespace,
+		"name":      identifier.Name,
+	}
 }
 
 func (jf *formatter) printEvent(t, eventType string, content map[string]interface{}) error {

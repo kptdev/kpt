@@ -4,12 +4,12 @@ metadata:
   name: db
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/starlark:unstable
-# malformed Kptfile
-configPath: statefulset-filter.yaml
-  - image: gcr.io/kpt-fn/set-namespace:unstable
-    configMap:
-      namespace: db
-  - image: gcr.io/kpt-fn/set-label:unstable
-    configMap:
-      app: backend
+    - image: gcr.io/kpt-fn/starlark:unstable
+    # malformed Kptfile
+  configPath: statefulset-filter.yaml
+    - image: gcr.io/kpt-fn/set-namespace:unstable
+      configMap:
+        namespace: db
+    - image: gcr.io/kpt-fn/set-label:unstable
+      configMap:
+        app: backend

@@ -14,13 +14,13 @@ description: >
 ### Synopsis
 <!--mdtogo:Long-->
 ```
-kpt live destroy [PKG_PATH|-]
+kpt live destroy [PKG_PATH | -]
 ```
 
 #### Args
 
 ```
-PKG_PATH|-:
+PKG_PATH | -:
   Path to the local package which should be deleted from the cluster. It must
   contain a Kptfile with inventory information. Defaults to the current working
   directory.
@@ -29,6 +29,10 @@ PKG_PATH|-:
 
 #### Flags
 ```
+--dry-run:
+  It true, kpt will print the resources that will be removed from the cluster, 
+  but no resources will be deleted.
+
 --inventory-policy:
   Determines how to handle overlaps between the package being currently applied
   and existing resources in the cluster. The available options are:

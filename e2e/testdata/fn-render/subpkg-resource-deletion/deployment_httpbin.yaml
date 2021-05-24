@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: httpbin
+  namespace: staging
   labels:
     app: backend
     tier: db
-  name: httpbin
-  namespace: staging
 spec:
   replicas: 4
   selector:
@@ -33,5 +32,5 @@ spec:
         tier: db
     spec:
       containers:
-      - image: kennethreitz/httpbin
-        name: httpbin
+        - name: httpbin
+          image: kennethreitz/httpbin

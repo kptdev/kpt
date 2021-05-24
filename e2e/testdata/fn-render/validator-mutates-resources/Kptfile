@@ -4,7 +4,6 @@ metadata:
   name: app
 pipeline:
   validators:
-# mutating function is being used as validator
-    - image: gcr.io/kpt-fn/set-label:unstable
+    - image: gcr.io/kpt-fn/set-label:unstable # mutator function is being used as validator
       configMap:
         tier: backend

@@ -4,12 +4,12 @@ metadata:
   name: app
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-namespace:unstable
-    configMap:
-      namespace: staging
-  - image: gcr.io/kpt-fn/set-label:unstable
-    config: # inline config
-      apiVersion: v1
-      kind: ConfigMap
-      data:
-        tier: backend
+    - image: gcr.io/kpt-fn/set-namespace:unstable
+      configMap:
+        namespace: staging
+    - image: gcr.io/kpt-fn/set-label:unstable
+      config:
+        apiVersion: v1
+        kind: ConfigMap
+        data:
+          tier: backend

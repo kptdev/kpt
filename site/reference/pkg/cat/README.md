@@ -1,5 +1,5 @@
 ---
-title: "Cat"
+title: "`cat`"
 linkTitle: "cat"
 type: docs
 description: >
@@ -10,77 +10,52 @@ description: >
     Print the resources in a file/directory
 -->
 
-Prints the resources in a file/directory as yaml to stdout.
-
-`cat` is useful for printing the resources in a file/directory which might
-contain other non-resource files.
+`cat` prints the resources in a file or directory as yaml to stdout.
 
 ### Synopsis
-
 <!--mdtogo:Long-->
-
 ```
 kpt pkg cat [FILE | DIR]
+```
 
-DIR:
-  Path to a directory with resources. Defaults to the current working directory.
-
-FILE:
-  Path to a resource file.
+#### Args
+```
+FILE | DIR:
+  Path to a directory either a directory containing files with KRM resources, or
+  a file with KRM resource(s). Defaults to the current directory.
 ```
 
 <!--mdtogo-->
+
+#### Flags
+```
+--annotate
+  Annotate resources with their file origins.
+
+--format
+  Format resource before printing. Defaults to true.
+
+--recurse-subpackages, -R
+  Print resources recursively in all the nested subpackages. Defaults to true.
+
+--strip-comments
+  Remove comments from yaml.
+
+--style
+  yaml styles to apply. May be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
+```
 
 ### Examples
 
 <!--mdtogo:Examples-->
 
 ```
-# print resource from a file
+# Print resource from a file.
 kpt pkg cat path/to/deployment.yaml
 ```
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
 ```
-
-```
-# print resources from current directory
+# Print resources from current directory.
 kpt pkg cat
 ```
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
----
-apiVersion: apps/v1
-kind: Service
-metadata:
-  name: nginx-service
-```
-
 <!--mdtogo-->
-
-#### Flags
-
-```sh
---annotate
-  annotate resources with their file origins.
-
---format
-  format resource before printing. (default true)
-
---recurse-subpackages, -R
-  print resources recursively in all the nested subpackages. (default true)
-
---strip-comments
-  remove comments from yaml.
-
---style
-  yaml styles to apply. may be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
-```

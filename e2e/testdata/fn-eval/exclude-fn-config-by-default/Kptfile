@@ -4,5 +4,5 @@ metadata:
   name: app
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-label:v0.1
-    configPath: labelconfig.yaml
+    - image: gcr.io/kpt-fn/set-label:v0.1
+      configPath: labelconfig.yaml

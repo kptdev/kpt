@@ -107,7 +107,7 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 
 	sourcePath := filepath.Join(r.Dir, r.Path)
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
-	if err := pkgutil.CopyPackageWithSubpackages(sourcePath, dest); err != nil {
+	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
@@ -140,9 +140,15 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 
 	// Check if we have a ref in the upstream that matches the package-specific
 	// reference. If we do, we use that reference.
-	packageRef := path.Join(strings.TrimLeft(repoSpec.Path, "/"), repoSpec.Ref)
-	if _, found := upstreamRepo.ResolveTag(packageRef); found {
-		repoSpec.Ref = packageRef
+	ps := strings.Split(repoSpec.Path, "/")
+	for len(ps) != 0 {
+		p := path.Join(ps...)
+		packageRef := path.Join(strings.TrimLeft(p, "/"), repoSpec.Ref)
+		if _, found := upstreamRepo.ResolveTag(packageRef); found {
+			repoSpec.Ref = packageRef
+			break
+		}
+		ps = ps[:len(ps)-1]
 	}
 
 	// Pull the required ref into the repo git cache.

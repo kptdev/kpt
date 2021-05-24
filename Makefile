@@ -16,6 +16,14 @@
 
 GOBIN := $(shell go env GOPATH)/bin
 
+# T refers to an e2e test case matcher. This enables running e2e tests
+# selectively.  For example,
+# To invoke e2e tests related to fnconfig, run:
+# make test-fn-render T=fnconfig
+# make test-fn-eval T=fnconfig
+# By default, make test-fn-render/test-fn-eval will run all tests.
+T ?= ".*"
+
 build:
 	go build -o $(GOBIN)/kpt -v .
 
@@ -65,20 +73,20 @@ test:
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
 test-docker: build
-	KPT_E2E_BIN=$(GOBIN)/kpt go test -cover --tags=docker ./...
+	PATH=$(GOBIN):$(PATH) go test -cover --tags=docker ./...
 
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
 test-fn-render: build
-	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnRender ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
 test-fn-eval: build
-	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnEval ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
 
 # target to flush kpt-fn cache
 flush-fn-cache:
-	for fn in set-namespace set-label set-annotation starlark; do \
+	for fn in set-namespace set-labels set-annotations starlark; do \
 		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
 	done
 

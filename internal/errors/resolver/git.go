@@ -105,7 +105,6 @@ func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		msg = ExecuteTemplate(genericGitExecError, tmplArgs)
 	}
 	return ResolvedResult{
-		Message:  msg,
-		ExitCode: 1,
+		Message: msg,
 	}, true
 }

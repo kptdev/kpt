@@ -4,13 +4,13 @@ repository. Consumers fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case,
-we are specifying tag `v0.1`.
+we are specifying tag `v0.3`.
 
-> Refer to the [command reference][get-doc] for more details.
+?> Refer to the [get command reference][get-doc] for usage.
 
 The `Kptfile` contains metadata about the origin of the forked package. Take a look at the content
 of the `Kptfile` on your local filesystem:
@@ -26,14 +26,14 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: v0.1
+    ref: v0.3
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: package-examples/wordpress/v0.1
+    ref: package-examples/wordpress/v0.3
     commit: e0e0b3642969c2d14fe1d38d9698a73f18aa848f
 info:
   emails:
@@ -41,10 +41,9 @@ info:
   description: This is an example wordpress package with mysql subpackage
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
+    - image: gcr.io/kpt-fn/set-label:v0.1
       configMap:
-        wp-image: wordpress
-        wp-tag: 4.8-apache
+        app: wordpress
 ```
 
 The `Kptfile` contains two sections to keep track of the upstream package:
@@ -67,10 +66,9 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
+    - image: gcr.io/kpt-fn/set-label:v0.1
       configMap:
-        ms-image: mysql
-        ms-tag: 5.6
+        tier: mysql
 ```
 
 As you can see, this `Kptfile` doesn't have the `upstream` and `upstreamLock` sections.
@@ -91,7 +89,7 @@ It is possible to specify a different local directory name to the `get` command.
 the following fetches the packages to a directory named `mywordpress`:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.1 mywordpress
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and

@@ -26,6 +26,13 @@ information on using pull requests.
 This project follows [Google's Open Source Community Guidelines] and a [Code of
 Conduct].
 
+## Style Guides
+
+Contributions are required to follow these style guides:
+
+- [Error Message Style Guide]
+- [Documentation Style Guide]
+
 ## Building the Source
 
 1. Clone the project
@@ -47,15 +54,21 @@ Conduct].
    make all
    ```
 
-## Contributing to docs
+## Contribution to the Functions Catalog
 
-If you are updating the documentation, please do it in separate PRs from
-code changes and the commit message should start with `Docs:`.
+Refer to the
+[documentation in the kpt-functions-catalog](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
+repo.
+
+## Contributing to Documentation
+
+If you are updating the documentation, please do it in separate PRs from code
+changes and PR description should start with `Docs:`.
 
 ### Run the docs locally
 
-Make docs changes and test them by running the site in a docker container
-with `make site-run-server`.
+Make docs changes and test them by running the site in a docker container with
+`make site-run-server`.
 
 It's usually a good idea to test locally for the following:
 
@@ -66,25 +79,6 @@ It's usually a good idea to test locally for the following:
 
 Docs are under [site/] and use [docsify] to present the source markdown files.
 The sidebar is automatically updated for the site at deployment time.
-
-### Adding or updating catalog functions
-
-<!-- TODO: Update this once the catalog is live. -->
-The config functions catalog is auto-generated using [this node package]. Update
-the catalog.json file with the appropriate information for your function like
-its type (source, sink, validator, transformer, or generator). Regenerate the
-catalog page with:
-
-`make gencatalog`
-
-### Adding or updating asciinema
-
-- asciinema casts are under `site/static/casts`
-- add or modify a `*.sh*` script which will run the commands that will be
-  recorded
-- run `make-gif.sh` with the script name (without extension) as the argument
-- add the updated cast to git
-- Reference the cast using the `asciinema` shortcode
 
 ### Docs Hygiene
 
@@ -99,6 +93,8 @@ This includes:
 - Run the kpt website through the [W3 Link Checker] in recursive mode and fix
   warnings and errors.
 
+[error message style guide]: docs/style-guides/errors.md
+[documentation style guide]: docs/style-guides/docs.md
 [github help]: https://help.github.com/articles/about-pull-requests/
 [google's open source community guidelines]:
   https://opensource.google.com/conduct/

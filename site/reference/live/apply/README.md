@@ -18,12 +18,12 @@ cluster resources match the local package configuration.
 <!--mdtogo:Long-->
 
 ```
-kpt live apply [PKG_PATH|-] [flags]
+kpt live apply [PKG_PATH | -] [flags]
 ```
 
 #### Args
 ```
-PKG_PATH|-:
+PKG_PATH | -:
   Path to the local package which should be applied to the cluster. It must 
   contain a Kptfile with inventory information. Defaults to the current working
   directory.
@@ -32,6 +32,14 @@ PKG_PATH|-:
 
 #### Flags
 ```
+--dry-run:
+  It true, kpt will validate the resources in the package and print which
+  resources will be applied and which resources will be pruned, but no resources
+  will be changed.
+  If the --server-side flag is true, kpt will do a server-side dry-run, otherwise
+  it will be a client-side dry-run. Note that the output will differ somewhat
+  between the two alternatives. 
+
 --field-manager:
   Identifier for the **owner** of the fields being applied. Only usable
   when --server-side flag is specified. Default value is kubectl.

@@ -15,7 +15,7 @@ writing Kptfile
 writing README.md
 ```
 
-> Refer to the [command reference][init-doc] for more details.
+?> Refer to the [init command reference][init-doc] for usage.
 
 The `info` section of the `Kptfile` contains some optional package metadata you may want to set.
 These fields are not consumed by any functionality in kpt:
