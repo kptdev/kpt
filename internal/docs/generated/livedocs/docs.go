@@ -86,6 +86,17 @@ Flags:
     Perform the apply operation server-side rather than client-side.
     Default value is false (client-side).
 `
+var ApplyExamples = `
+  # apply resources in the current directory
+  kpt live apply
+
+  # apply resources in the my-dir directory and wait for all the resources to be
+  # reconciled before pruning
+  kpt live apply --reconcile-timeout=15m my-dir
+
+  # apply resources and specify how often to poll the cluster for resource status
+  kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir
+`
 
 var DestroyShort = `Remove all previously applied resources in a package from the cluster`
 var DestroyLong = `
@@ -167,6 +178,15 @@ var InitExamples = `
 
   # initialize a package with a specific name for the group of resources.
   kpt live init --namespace=test my-dir
+`
+
+var InstallResourceGroupShort = `Install the ResourceGroup CRD in the cluster.`
+var InstallResourceGroupLong = `
+  kpt live install-resource-group
+`
+var InstallResourceGroupExamples = `
+  # install ResourceGroup CRD into the current cluster.
+  kpt live install-resource-group
 `
 
 var MigrateShort = `Migrate a package and the inventory object to use the ResourceGroup CRD.`
