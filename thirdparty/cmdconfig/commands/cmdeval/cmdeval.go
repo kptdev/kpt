@@ -58,6 +58,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
+	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", "always",
+		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -75,6 +77,7 @@ type EvalFnRunner struct {
 	FnConfigPath         string
 	RunFns               runfn.RunFns
 	ResultsDir           string
+	ImagePullPolicy      string
 	Network              bool
 	Mounts               []string
 	Env                  []string
@@ -224,6 +227,9 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image or --exec-path")
 	}
+	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
+		return err
+	}
 	var dataItems []string
 	if c.ArgsLenAtDash() >= 0 {
 		dataItems = append(dataItems, args[c.ArgsLenAtDash():]...)
@@ -287,6 +293,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		AsCurrentUser:        r.AsCurrentUser,
 		FnConfigPath:         r.FnConfigPath,
 		IncludeMetaResources: r.IncludeMetaResources,
+		ImagePullPolicy:      cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,

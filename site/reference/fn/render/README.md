@@ -46,6 +46,11 @@ PKG_PATH:
 #### Flags
 
 ```shell
+--image-pull-policy:
+  If the image should be pulled before rendering the package(s). It can be set
+  to one of always, ifNotPresent, never. If unspecified, always will be the
+  default.
+
 --results-dir:
   Path to a directory to write structured results. Directory must exist.
   Structured results emitted by the functions are aggregated and saved

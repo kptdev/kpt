@@ -20,7 +20,6 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -34,13 +33,17 @@ import (
 type containerNetworkName string
 
 const (
-	ImagePullPolicyEnv = "KPT_FN_IMAGE_PULL_POLICY"
-
 	networkNameNone containerNetworkName = "none"
 	networkNameHost containerNetworkName = "host"
 	defaultTimeout  time.Duration        = 5 * time.Minute
 	dockerBin       string               = "docker"
+
+	AlwaysPull       ImagePullPolicy = "always"
+	IfNotPresentPull ImagePullPolicy = "ifNotPresent"
+	NeverPull        ImagePullPolicy = "never"
 )
+
+type ImagePullPolicy string
 
 // ContainerFnPermission contains the permission of container
 // function such as network access.
@@ -56,6 +59,8 @@ type ContainerFn struct {
 	Path types.UniquePath
 	// Image is the container image to run
 	Image string
+	// ImagePullPolicy controls the image pulling behavior.
+	ImagePullPolicy ImagePullPolicy
 	// Container function will be killed after this timeour.
 	// The default value is 5 minutes.
 	Timeout time.Duration
@@ -122,6 +127,9 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
 	}
+	if f.ImagePullPolicy == NeverPull {
+		args = append(args, "--pull", "never")
+	}
 	for _, storageMount := range f.StorageMounts {
 		args = append(args, "--mount", storageMount.String())
 	}
@@ -160,6 +168,11 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 // prepareImage will check local images and pull it if it doesn't
 // exist.
 func (f *ContainerFn) prepareImage() error {
+	// If ImagePullPolicy is set to "never", we don't need to do anything here.
+	if f.ImagePullPolicy == NeverPull {
+		return nil
+	}
+
 	// check image existence
 	foundImageInLocalCache := false
 	args := []string{"image", "inspect", f.Image}
@@ -171,19 +184,19 @@ func (f *ContainerFn) prepareImage() error {
 		foundImageInLocalCache = true
 	}
 
-	// If env var ImagePullPolicyEnv is set to "ifnotpresent", we scan the local
-	// images first. If there is a match, we just return. This can be useful for
-	// local development to prevent the remote image to accidentally override
-	// the local image when they use the same name and tag.
-	if strings.ToLower(os.Getenv(ImagePullPolicyEnv)) == "ifnotpresent" && foundImageInLocalCache {
+	// If ImagePullPolicy is set to "ifNotPresent", we scan the local images
+	// first. If there is a match, we just return. This can be useful for local
+	// development to prevent the remote image to accidentally override the
+	// local image when they use the same name and tag.
+	if f.ImagePullPolicy == IfNotPresentPull && foundImageInLocalCache {
 		return nil
 	}
 
-	// If env var ImagePullPolicyEnv is not set, we will try to pull the image
-	// regardless if the tag has been seen in the local cache. Because we want
-	// to ensure we have the latest release for "moving tags" like v1 and v1.2.
-	// The performance cost is very minimal, since `docker pull` checks the SHA
-	// first and only pull the missing layer(s).
+	// If ImagePullPolicy is set to always (which is the default), we will try
+	// to pull the image regardless if the tag has been seen in the local cache.
+	// This can help to ensure we have the latest release for "moving tags" like
+	// v1 and v1.2. The performance cost is very minimal, since `docker pull`
+	// checks the SHA first and only pull the missing docker layer(s).
 	args = []string{"image", "pull", f.Image}
 	// setup timeout
 	timeout := defaultTimeout
