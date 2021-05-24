@@ -142,7 +142,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 
 	// Autogenerate the name if it is not provided through the flag.
 	if c.Name == "" {
-		randomSuffix := common.RandomStr(time.Now().UTC().UnixNano())
+		randomSuffix := common.RandomStr()
 		name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
 	} else {
 		name = c.Name

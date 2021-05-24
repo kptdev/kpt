@@ -57,6 +57,7 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 		Long:    livedocs.StatusLong,
 		Example: livedocs.StatusExamples,
 	}
+	r.Command = c
 	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,
 		"Polling period for resource statuses.")
 	c.Flags().StringVar(&r.pollUntil, "poll-until", "known",
@@ -64,8 +65,6 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 	c.Flags().StringVar(&r.output, "output", "events", "Output format.")
 	c.Flags().DurationVar(&r.timeout, "timeout", 0,
 		"How long to wait before exiting")
-
-	r.Command = c
 	return r
 }
 

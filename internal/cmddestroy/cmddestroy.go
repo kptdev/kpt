@@ -137,8 +137,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if r.dryRun {
 		dryRunStrategy = common.DryRunClient
 	}
-	// TODO: This is terrible. Fix it.
-	r.Destroyer.DryRunStrategy = dryRunStrategy
 
 	// TODO(mortent): Figure out if we can do this differently.
 	if r.PreProcess != nil {
@@ -160,6 +158,7 @@ func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.Dr
 	}
 	option := &apply.DestroyerOption{
 		InventoryPolicy: r.inventoryPolicy,
+		DryRunStrategy:  dryRunStrategy,
 	}
 	ch := r.Destroyer.Run(inv, option)
 
