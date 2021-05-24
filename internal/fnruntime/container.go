@@ -207,7 +207,7 @@ func (f *ContainerFn) prepareImage() error {
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
 	output, err = cmd.CombinedOutput()
-	if !foundImageInLocalCache && err != nil {
+	if err != nil {
 		return &ContainerImageError{
 			Image:  f.Image,
 			Output: string(output),
@@ -224,5 +224,7 @@ type ContainerImageError struct {
 }
 
 func (e *ContainerImageError) Error() string {
-	return fmt.Sprintf("Function image %q doesn't exist.", e.Image)
+	return fmt.Sprintf(
+		"Function image %q doesn't exist remotely. If you are developing new functions locally, you can choose to set the image pull policy to ifNotPresent or never.\n%v",
+		e.Image, e.Output)
 }
