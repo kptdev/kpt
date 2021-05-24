@@ -632,7 +632,7 @@ assertContains "namespace: continue-err-namespace"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
 assertRGInventory "continue-err-namespace" "2"
 assertContains "pod/pod-a created"
-assertContains "pod/pod-B failed"
+assertContains "pod/pod-B apply failed"
 assertPodExists "pod-a" "continue-err-namespace"
 assertPodNotExists "pod-B" "continue-err-namespace"
 printResult
@@ -664,7 +664,7 @@ wait 2
 # in the "rbac-error" namespace (succeeds).
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status
 assertRGInventory "rbac-error" "1"
-assertContains "configmap/error-config-map failed"
+assertContains "configmap/error-config-map apply failed"
 assertContains "configmap/valid-config-map created"
 assertContains "2 resource(s) applied. 1 created, 0 unchanged, 0 configured, 1 failed"
 assertContains "0 resource(s) pruned, 0 skipped, 0 failed"

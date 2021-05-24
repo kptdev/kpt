@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/print/table"
 )
 
-func newResourceStateCollector(resourceGroups []event.ResourceGroup) *ResourceStateCollector {
+func newResourceStateCollector(resourceGroups []event.ActionGroup) *ResourceStateCollector {
 	resourceInfos := make(map[object.ObjMetadata]*ResourceInfo)
 	for _, group := range resourceGroups {
 		action := group.Action
@@ -70,15 +70,15 @@ type ResourceInfo struct {
 
 	// ApplyOpResult contains the result after
 	// a resource has been applied to the cluster.
-	ApplyOpResult *event.ApplyEventOperation
+	ApplyOpResult event.ApplyEventOperation
 
 	// PruneOpResult contains the result after
 	// a prune operation on a resource
-	PruneOpResult *event.PruneEventOperation
+	PruneOpResult event.PruneEventOperation
 
 	// DeleteOpResult contains the result after
 	// a delete operation on a resource
-	DeleteOpResult *event.DeleteEventOperation
+	DeleteOpResult event.DeleteEventOperation
 }
 
 // Identifier returns the identifier for the given resource.
@@ -182,48 +182,37 @@ func (r *ResourceStateCollector) processEvent(ev event.Event) error {
 // processStatusEvent handles events pertaining to a status
 // update for a resource.
 func (r *ResourceStateCollector) processStatusEvent(e event.StatusEvent) {
-	if e.Type == event.StatusEventResourceUpdate {
-		klog.V(7).Infoln("processing status event")
-		resource := e.Resource
-		if resource == nil {
-			klog.V(4).Infoln("status event missing Resource field; no processing")
-			return
-		}
-		previous, found := r.resourceInfos[resource.Identifier]
-		if !found {
-			klog.V(4).Infof("%s status event not found in ResourceInfos; no processing", resource.Identifier)
-			return
-		}
-		previous.resourceStatus = e.Resource
+	klog.V(7).Infoln("processing status event")
+	previous, found := r.resourceInfos[e.Identifier]
+	if !found {
+		klog.V(4).Infof("%s status event not found in ResourceInfos; no processing", e.Identifier)
+		return
 	}
+	previous.resourceStatus = e.PollResourceInfo
 }
 
 // processApplyEvent handles events relating to apply operations
 func (r *ResourceStateCollector) processApplyEvent(e event.ApplyEvent) {
-	if e.Type == event.ApplyEventResourceUpdate {
-		identifier := e.Identifier
-		klog.V(7).Infof("processing apply event for %s", identifier)
-		previous, found := r.resourceInfos[identifier]
-		if !found {
-			klog.V(4).Infof("%s apply event not found in ResourceInfos; no processing", identifier)
-			return
-		}
-		previous.ApplyOpResult = &e.Operation
+	identifier := e.Identifier
+	klog.V(7).Infof("processing apply event for %s", identifier)
+	previous, found := r.resourceInfos[identifier]
+	if !found {
+		klog.V(4).Infof("%s apply event not found in ResourceInfos; no processing", identifier)
+		return
 	}
+	previous.ApplyOpResult = e.Operation
 }
 
 // processPruneEvent handles event related to prune operations.
 func (r *ResourceStateCollector) processPruneEvent(e event.PruneEvent) {
-	if e.Type == event.PruneEventResourceUpdate {
-		identifier := e.Identifier
-		klog.V(7).Infof("processing prune event for %s", identifier)
-		previous, found := r.resourceInfos[identifier]
-		if !found {
-			klog.V(4).Infof("%s prune event not found in ResourceInfos; no processing", identifier)
-			return
-		}
-		previous.PruneOpResult = &e.Operation
+	identifier := e.Identifier
+	klog.V(7).Infof("processing prune event for %s", identifier)
+	previous, found := r.resourceInfos[identifier]
+	if !found {
+		klog.V(4).Infof("%s prune event not found in ResourceInfos; no processing", identifier)
+		return
 	}
+	previous.PruneOpResult = e.Operation
 }
 
 // ResourceState contains the latest state for all the resources.

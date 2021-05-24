@@ -35,15 +35,15 @@ const testMessage = "test message for ResourceStatus"
 
 func TestResourceStateCollector_New(t *testing.T) {
 	testCases := map[string]struct {
-		resourceGroups []event.ResourceGroup
+		resourceGroups []event.ActionGroup
 		resourceInfos  map[object.ObjMetadata]*ResourceInfo
 	}{
 		"no resources": {
-			resourceGroups: []event.ResourceGroup{},
+			resourceGroups: []event.ActionGroup{},
 			resourceInfos:  map[object.ObjMetadata]*ResourceInfo{},
 		},
 		"several resources for apply": {
-			resourceGroups: []event.ResourceGroup{
+			resourceGroups: []event.ActionGroup{
 				{
 					Action: event.ApplyAction,
 					Identifiers: []object.ObjMetadata{
@@ -61,7 +61,7 @@ func TestResourceStateCollector_New(t *testing.T) {
 			},
 		},
 		"several resources for prune": {
-			resourceGroups: []event.ResourceGroup{
+			resourceGroups: []event.ActionGroup{
 				{
 					Action: event.ApplyAction,
 					Identifiers: []object.ObjMetadata{
@@ -104,39 +104,30 @@ func TestResourceStateCollector_New(t *testing.T) {
 
 func TestResourceStateCollector_ProcessStatusEvent(t *testing.T) {
 	testCases := map[string]struct {
-		resourceGroups []event.ResourceGroup
+		resourceGroups []event.ActionGroup
 		statusEvent    event.StatusEvent
 	}{
 		"nil StatusEvent.Resource does not crash": {
-			resourceGroups: []event.ResourceGroup{},
+			resourceGroups: []event.ActionGroup{},
 			statusEvent: event.StatusEvent{
-				Type:     event.StatusEventResourceUpdate,
-				Resource: nil,
-			},
-		},
-		"type StatusEventCompleted does nothing": {
-			resourceGroups: []event.ResourceGroup{},
-			statusEvent: event.StatusEvent{
-				Type:     event.StatusEventCompleted,
 				Resource: nil,
 			},
 		},
 		"unfound Resource identifier does not crash": {
-			resourceGroups: []event.ResourceGroup{
+			resourceGroups: []event.ActionGroup{
 				{
 					Action:      event.ApplyAction,
 					Identifiers: []object.ObjMetadata{depID},
 				},
 			},
 			statusEvent: event.StatusEvent{
-				Type: event.StatusEventResourceUpdate,
-				Resource: &pe.ResourceStatus{
+				PollResourceInfo: &pe.ResourceStatus{
 					Identifier: customID, // Does not match identifier in resourceGroups
 				},
 			},
 		},
 		"basic status event for applying two resources updates resourceStatus": {
-			resourceGroups: []event.ResourceGroup{
+			resourceGroups: []event.ActionGroup{
 				{
 					Action: event.ApplyAction,
 					Identifiers: []object.ObjMetadata{
@@ -145,15 +136,14 @@ func TestResourceStateCollector_ProcessStatusEvent(t *testing.T) {
 				},
 			},
 			statusEvent: event.StatusEvent{
-				Type: event.StatusEventResourceUpdate,
-				Resource: &pe.ResourceStatus{
+				PollResourceInfo: &pe.ResourceStatus{
 					Identifier: depID,
 					Message:    testMessage,
 				},
 			},
 		},
 		"several resources for prune": {
-			resourceGroups: []event.ResourceGroup{
+			resourceGroups: []event.ActionGroup{
 				{
 					Action: event.ApplyAction,
 					Identifiers: []object.ObjMetadata{
@@ -168,8 +158,7 @@ func TestResourceStateCollector_ProcessStatusEvent(t *testing.T) {
 				},
 			},
 			statusEvent: event.StatusEvent{
-				Type: event.StatusEventResourceUpdate,
-				Resource: &pe.ResourceStatus{
+				PollResourceInfo: &pe.ResourceStatus{
 					Identifier: depID,
 					Message:    testMessage,
 				},
@@ -186,7 +175,7 @@ func TestResourceStateCollector_ProcessStatusEvent(t *testing.T) {
 				resourceInfo, found := rsc.resourceInfos[id]
 				if found {
 					// Validate the ResourceStatus was set from StatusEvent
-					if resourceInfo.resourceStatus != tc.statusEvent.Resource {
+					if resourceInfo.resourceStatus != tc.statusEvent.PollResourceInfo {
 						t.Errorf("status event not processed for %s", id)
 					}
 				}
@@ -199,5 +188,5 @@ func getID(e event.StatusEvent) (object.ObjMetadata, bool) {
 	if e.Resource == nil {
 		return object.ObjMetadata{}, false
 	}
-	return e.Resource.Identifier, true
+	return e.Identifier, true
 }
