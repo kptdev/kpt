@@ -11,13 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-exitCode: 1
-stdErr: |
-  Kptfile is invalid:
-  Field: `pipeline.mutators[1].configPath`
-  Value: "labelconfig1.yaml"
-  Reason: functionConfig must exist in the current package
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/set-labels:unstable"
-  [PASS] "gcr.io/kpt-fn/set-labels:unstable"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+  name: custom
+spec:
+  image: nginx:1.2.3

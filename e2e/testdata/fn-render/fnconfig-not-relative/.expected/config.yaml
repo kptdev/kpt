@@ -15,9 +15,6 @@
 exitCode: 1
 stdErr: |
   Kptfile is invalid:
-  Field: `pipeline.mutators[1].configPath`
-  Value: "labelconfig1.yaml"
-  Reason: functionConfig must exist in the current package
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/set-labels:unstable"
-  [PASS] "gcr.io/kpt-fn/set-labels:unstable"
+  Field: `pipeline.mutators[0].configPath`
+  Value: "/some/root/labelconfig.yaml"
+  Reason: path must be relative

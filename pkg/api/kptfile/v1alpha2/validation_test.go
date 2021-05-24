@@ -111,6 +111,62 @@ metadata:
 			},
 			valid: false,
 		},
+		{
+			name: "pipeline: configpath referring file in parent",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: cleaned configpath does not contain ..",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/b/../config.yaml",
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "pipeline: cleaned configpath contains ..",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/b/../../../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: configpath contains invalid .. references",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/.../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
 	}
 
 	for _, c := range cases {
@@ -236,7 +292,7 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"./a/.../b",
-			true,
+			false,
 		},
 		{
 			".",
@@ -244,23 +300,23 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"a\\b",
-			false,
+			true,
 		},
 		{
 			"a\b",
-			false,
+			true,
 		},
 		{
 			"a\v",
-			false,
+			true,
 		},
 		{
 			"a:\\b\\c",
-			false,
+			true,
 		},
 		{
 			"../a/../b",
-			true,
+			false,
 		},
 		{
 			"a//b",
@@ -271,23 +327,7 @@ func TestValidatePath(t *testing.T) {
 			true,
 		},
 		{
-			"a/*/b",
-			false,
-		},
-		{
-			"./*",
-			true,
-		},
-		{
-			"a/b\\c",
-			false,
-		},
-		{
 			"././././",
-			true,
-		},
-		{
-			"./!&^%$/#(@)/_-=+|<;>?:'\"/'`",
 			true,
 		},
 		{
@@ -298,16 +338,12 @@ func TestValidatePath(t *testing.T) {
 			"\t \n",
 			false,
 		},
-		{
-			"*",
-			false,
-		},
 	}
 
 	for _, c := range cases {
-		ret := validatePath(c.Path)
+		ret := validateFnConfigPath(c.Path)
 		if (ret == nil) != c.Valid {
-			t.Fatalf("returned value for path %s should be %t, got %t",
+			t.Fatalf("returned value for path %q should be %t, got %t",
 				c.Path, c.Valid, (ret == nil))
 		}
 	}

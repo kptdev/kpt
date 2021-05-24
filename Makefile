@@ -16,6 +16,14 @@
 
 GOBIN := $(shell go env GOPATH)/bin
 
+# T refers to an e2e test case matcher. This enables running e2e tests
+# selectively.  For example,
+# To invoke e2e tests related to fnconfig, run:
+# make test-fn-render T=fnconfig
+# make test-fn-eval T=fnconfig
+# By default, make test-fn-render/test-fn-eval will run all tests.
+T ?= ".*"
+
 build:
 	go build -o $(GOBIN)/kpt -v .
 
@@ -70,11 +78,11 @@ test-docker: build
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
 test-fn-render: build
-	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
 test-fn-eval: build
-	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
 
 # target to flush kpt-fn cache
 flush-fn-cache:

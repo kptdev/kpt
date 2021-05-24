@@ -16,15 +16,11 @@ package v1alpha2
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-)
-
-const (
-	sourceAllSubPkgs string = "./*"
 )
 
 func (kf *KptFile) Validate() error {
@@ -71,7 +67,7 @@ func (f *Function) validate(fnType string, idx int) error {
 
 	var configFields []string
 	if f.ConfigPath != "" {
-		if err := validatePath(f.ConfigPath); err != nil {
+		if err := validateFnConfigPath(f.ConfigPath); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
 				Value:  f.ConfigPath,
@@ -147,23 +143,21 @@ func IsNodeZero(n *yaml.Node) bool {
 		n.Line == 0 && n.Column == 0
 }
 
-// validatePath validates input path and return an error if it's invalid
-func validatePath(p string) error {
-	if path.IsAbs(p) {
-		return fmt.Errorf("path is not relative")
-	}
+// validateFnConfigPath validates syntactic correctness of given functionConfig path
+// and return an error if it's invalid.
+func validateFnConfigPath(p string) error {
 	if strings.TrimSpace(p) == "" {
-		return fmt.Errorf("path cannot have only white spaces")
+		return fmt.Errorf("path must not be empty")
 	}
-	if p != sourceAllSubPkgs && strings.Contains(p, "*") {
-		return fmt.Errorf("path contains asterisk, asterisk is only allowed in './*'")
+	p = filepath.Clean(p)
+	if filepath.IsAbs(p) {
+		return fmt.Errorf("path must be relative")
 	}
-	// backslash (\\), alert bell (\a), backspace (\b), form feed (\f), vertical tab(\v) are
-	// unlikely to be in a valid path
-	for _, c := range "\\\a\b\f\v" {
-		if strings.Contains(p, string(c)) {
-			return fmt.Errorf("path cannot have character %q", c)
-		}
+	if strings.Contains(p, "..") {
+		// fn config must not live outside the package directory
+		// Allowing outside path opens up an attack vector that allows
+		// reading any YAML file on package consumer's machine.
+		return fmt.Errorf("path must not be outside the package")
 	}
 	return nil
 }
