@@ -91,7 +91,7 @@ simple `DIR` with resources. Commands operate on the current working directory b
 
 ### Kptfile schema changes
 
-The existing `v1alpha1` Kptfile format/schema is not compatible with kpt `v1.0`.
+The existing [v1alpha1 Kptfile] format/schema is not compatible with kpt `v1.0`.
 Here is the schema for [v1alpha2 Kptfile] which is compatible with kpt `v1.0`.
 
 1. The `packageMetaData` section in `v1alpha1` Kptfile is transformed to `info` section in `v1alpha2` Kptfile.
@@ -275,3 +275,4 @@ functional parity.
 [installation instructions]: https://kpt.dev/installation/
 [install]: https://kpt.dev/installation/
 [kpt-functions-catalog]: https://catalog.kpt.dev/
+[v1alpha1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
