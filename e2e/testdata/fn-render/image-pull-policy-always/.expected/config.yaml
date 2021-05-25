@@ -14,3 +14,5 @@
 
 imagePullPolicy: always
 sequential: true
+exitCode: 1
+stdErr: foo

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/kpt-fn/set-annotations:v0.1
+image: gcr.io/mengqiy-playground/bar:v0.1
 sequential: true
 imagePullPolicy: ifNotPresent
-args:
-  foo: bar
+exitCode: 1
+stdErr: foo

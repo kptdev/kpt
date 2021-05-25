@@ -4,6 +4,4 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-annotations:v0.1
-      configMap:
-        foo: bar
+    - image: gcr.io/mengqiy-playground/foo:v0.1
