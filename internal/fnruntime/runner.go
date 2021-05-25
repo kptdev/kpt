@@ -177,6 +177,10 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return parseNameAndNamespace(yml, fnResult)
 }
 
+// parseNameAndNamespace populates name and namespace in fnResult.Result if a
+// function (e.g. using kyaml Go SDKs) gives results in a schema
+// that puts a resourceRef's name and namespace under a metadata field
+// TODO: fix upstream (https://github.com/GoogleContainerTools/kpt/issues/2091)
 func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	items, err := yml.Elements()
 	if err != nil {
@@ -184,7 +188,7 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	}
 
 	for i := range items {
-		if err := getResourceRefMetadata(items[i], fnResult, i); err != nil {
+		if err := populateResourceRef(items[i], &fnResult.Results[i]); err != nil {
 			return err
 		}
 	}
@@ -192,7 +196,7 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return nil
 }
 
-func getResourceRefMetadata(item *yaml.RNode, fnResult *fnresult.Result, i int) error {
+func populateResourceRef(item *yaml.RNode, resultItem *fnresult.ResultItem) error {
 	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
 	if err != nil {
 		return err
@@ -209,12 +213,12 @@ func getResourceRefMetadata(item *yaml.RNode, fnResult *fnresult.Result, i int) 
 		return err
 	}
 	if nameNode != nil {
-		fnResult.Results[i].ResourceRef.Name = strings.TrimSpace(nameNode.MustString())
+		resultItem.ResourceRef.Name = strings.TrimSpace(nameNode.MustString())
 	}
 	if namespaceNode != nil {
 		namespace := strings.TrimSpace(namespaceNode.MustString())
 		if namespace != "" && namespace != "''" {
-			fnResult.Results[i].ResourceRef.Namespace = strings.TrimSpace(namespace)
+			resultItem.ResourceRef.Namespace = strings.TrimSpace(namespace)
 		}
 	}
 	return nil

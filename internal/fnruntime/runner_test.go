@@ -583,14 +583,12 @@ file:
 		yml, err := yaml.Parse(tc.input)
 		assert.NoError(t, err)
 
-		result := fnresult.ResultItem{}
-		err = yaml.Unmarshal([]byte(tc.input), &result)
+		result := &fnresult.ResultItem{}
+		err = yaml.Unmarshal([]byte(tc.input), result)
 		assert.NoError(t, err)
+		assert.NoError(t, populateResourceRef(yml, result))
 
-		fnResult := &fnresult.Result{Results: []fnresult.ResultItem{result}}
-		assert.NoError(t, getResourceRefMetadata(yml, fnResult, 0))
-
-		out, err := yaml.Marshal(fnResult.Results[0])
+		out, err := yaml.Marshal(result)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, string(out))
 	}
