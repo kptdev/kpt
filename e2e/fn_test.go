@@ -1,4 +1,4 @@
-// +build docker
+// build docker
 
 // Copyright 2021 Google LLC
 //
