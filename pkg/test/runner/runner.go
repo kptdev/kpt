@@ -331,16 +331,16 @@ func (r *Runner) runFnRender() error {
 		if err != nil {
 			return err
 		}
-		// we passed result check, now we should break if the command error
-		// is expected
-		if fnErr != nil {
-			break
-		}
-
+		// we passed result check, now we should run teardown script and break
+		// if the command error is expected
 		err = r.runTearDownScript(pkgPath)
 		if err != nil {
 			return err
 		}
+		if fnErr != nil {
+			break
+		}
+
 	}
 	return nil
 }

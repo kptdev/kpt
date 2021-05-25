@@ -1,3 +1,4 @@
+#! /bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# One of the functions in the pipeline fails resulting in
-# non-zero exit code and no changes in the resources.
-exitCode: 1
-stdOut: "[ERROR] selector is required in object \"apps/v1/Deployment/nginx-deployment\" in file \"resources.yaml\" in field \"selector\""
+set -eo pipefail
+
+IMAGE_TAG="gcr.io/kpt-fn-demo/printenv:v0.1"
+export EXPORT_ENV="export_env_value"
+
+kpt fn source \
+| kpt fn eval - --image $IMAGE_TAG -e EXPORT_ENV -e FOO=BAR

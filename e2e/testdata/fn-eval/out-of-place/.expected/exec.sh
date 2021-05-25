@@ -1,3 +1,4 @@
+#! /bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# One of the functions in the pipeline fails resulting in
-# non-zero exit code and no changes in the resources.
-exitCode: 1
-stdOut: "[ERROR] selector is required in object \"apps/v1/Deployment/nginx-deployment\" in file \"resources.yaml\" in field \"selector\""
+set -eo pipefail
+
+# create a temporary directory
+TEMP_DIR=$(mktemp -d)
+
+kpt fn source \
+| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=staging \
+| kpt fn sink $TEMP_DIR
+
+# copy back the resources
+rm -r ./*
+cp $TEMP_DIR/* .
+
+# remove temporary directory
+rm -r $TEMP_DIR

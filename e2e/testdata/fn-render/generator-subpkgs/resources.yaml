@@ -11,8 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# One of the functions in the pipeline fails resulting in
-# non-zero exit code and no changes in the resources.
-exitCode: 1
-stdOut: "[ERROR] selector is required in object \"apps/v1/Deployment/nginx-deployment\" in file \"resources.yaml\" in field \"selector\""
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+  name: custom
+spec:
+  image: nginx:1.2.3

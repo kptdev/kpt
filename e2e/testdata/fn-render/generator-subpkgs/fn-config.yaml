@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: parent-map
+  namespace: def
+data:
+  parent-key: parent-value

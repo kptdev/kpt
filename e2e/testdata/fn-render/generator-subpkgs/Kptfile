@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: app-with-generator
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/upsert-resource:unstable
+      configPath: fn-config.yaml
