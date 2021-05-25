@@ -49,5 +49,6 @@
         - [migrate](reference/live/migrate/)
         - [status](reference/live/status/)
 - [Functions Catalog](https://catalog.kpt.dev/ ':target=_self')
+- [Migration](migration/)
 - [FAQ](faq/)
 - [Contact](contact/)
