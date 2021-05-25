@@ -32,8 +32,8 @@ journey of customers using a comprehensive kpt package example.
 
 ## Before you begin
 
-Please go through at least 1st and 2nd chapters of [kpt book] for `v1.0` binary installation instructions
-and understanding the basic model of kpt `v1.0`
+Please go through [installation instructions] for installing `v1.0` binary and
+at least 1st and 2nd chapters of [kpt book] for understanding the basic model of kpt `v1.0`
 
 ## What's new and changed?
 
@@ -250,8 +250,8 @@ functional parity.
 4. `TBD:` Feature releases and bug fixes for pre-v1 versions of kpt will be reserved
    for serious security bugs only. Customers will be asked to migrate to `v1.0`.
 
-[existing commands]: https://googlecontainertools.github.io/kpt/reference/
-[new commands]: https://kpt.dev/reference/
+[v0.39.0 commands]: https://googlecontainertools.github.io/kpt/reference/
+[v1.0 commands]: https://kpt.dev/reference/
 [v1alpha2 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/next/pkg/api/kptfile/v1alpha2/types.go
 [starlark functions]: https://catalog.kpt.dev/starlark/v0.1/
 [starlark function]: https://catalog.kpt.dev/starlark/v0.1/
@@ -272,3 +272,4 @@ functional parity.
 [eval guide]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution
 [function results]: https://kpt.dev/book/04-using-functions/03-function-results
 [kpt book]: https://kpt.dev/book/
+[installation instructions]: https://kpt.dev/installation/
