@@ -4,17 +4,17 @@
 - [What's new and changed?](#What's-new-and-changed?)
   - [CLI changes](#CLI-changes)
   - [Kptfile schema changes](#Kptfile-schema-changes)
-  - [`pkg` group changes](#pkg-group-changes)
+  - [`pkg`](#pkg)
     - [`sync` merged with `update`](#sync-merged-with-update)
-  - [`cfg` group changes](#cfg-group-changes)
+  - [`cfg`](#cfg)
     - [Changes to Setters](#Changes-to-Setters)
     - [Setter validations deprecated](#Setter-validations-deprecated)
     - [Auto setters deprecated](#Auto-setters-deprecated)
-  - [`fn` group changes](#fn-group-changes)
+  - [`fn`](#fn)
     - [`run` is split into `eval` and `render`](#run-is-split-into-eval-and-render)
     - [Function Config](#Function-Config)
     - [Function Results](#Function-Results)
-  - [`live` group changes](#live-group-changes)
+  - [`live`](#live)
 - [Migration steps](#Migration-steps)
   - [Automated portion of migration](#Automated-portion-of-migration)
     - [Changes made by the function](#Changes-made-by-the-function)
@@ -106,7 +106,7 @@ Here is the schema for [v1alpha2 Kptfile] which is compatible with kpt `v1.0`.
    section including [Starlark functions].
 6. `inventory-object` is moved to `inventory` section in `v1alpha2` Kptfile. [Details below](#live-group-changes).
 
-### `pkg` group changes
+### `pkg`
 
 #### `sync` merged with `update`
 
@@ -119,7 +119,7 @@ you can declare the desired version in the upstream section of the respective
 subpackage and invoking `kpt pkg update` on the root package will take care of updating
 all the nested subpackages. [Update guide]
 
-### `cfg` group changes
+### `cfg`
 
 #### Changes to Setters
 
@@ -147,7 +147,7 @@ which is scoped for post `v1.0` release. Stay tuned.
 migrated to a new and simple declarative version, package consumers can easily
 declare all the setter values and render them all at once.
 
-### `fn` group changes
+### `fn`
 
 #### `run` is split into `eval` and `render`
 
@@ -173,7 +173,7 @@ can point to the [function config] using `configPath` argument.
 In both `render` and `eval`, structured results can be enabled using the `--results-dir` flag.
 Please refer to the [function results] section for more information on the new structure of function results.
 
-### `live` group changes
+### `live`
 
 Kpt live in `v1.0` no longer uses an inventory object to track the grouping of resources
 in the cluster. Instead, it uses a more expressive `ResourceGroup` CRD. Please refer
