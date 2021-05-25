@@ -76,7 +76,7 @@ func NewResultList() *ResultList {
 
 // ResultItem is a duplicate of framework.ResultItem, except that
 // ResourceRef uses yaml.ResourceIdentifier here, whereas framework.ResultItem
-// uses yaml.ResourceMeta Eventually, we will need to fix it upstream.
+// uses yaml.ResourceMeta. Eventually, we will need to fix it upstream.
 // TODO: https://github.com/GoogleContainerTools/kpt/issues/2091
 type ResultItem struct {
 	// Message is a human readable message
