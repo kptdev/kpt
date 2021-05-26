@@ -14,6 +14,7 @@ require (
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	gotest.tools v2.2.0+incompatible
+	k8s.io/apiextensions-apiserver v0.18.10
 	k8s.io/apimachinery v0.21.0
 	k8s.io/cli-runtime v0.21.0
 	k8s.io/client-go v0.21.0

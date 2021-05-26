@@ -305,6 +305,7 @@ type Kptfile struct {
 	Upstream     *Upstream
 	UpstreamLock *UpstreamLock
 	Pipeline     *Pipeline
+	Inventory    *Inventory
 }
 
 func NewKptfile() *Kptfile {
@@ -380,6 +381,17 @@ type UpstreamLock struct {
 	Ref     string
 	Index   int
 	Commit  string
+}
+
+func (k *Kptfile) WithInventory(inv Inventory) *Kptfile {
+	k.Inventory = &inv
+	return k
+}
+
+type Inventory struct {
+	Name      string
+	Namespace string
+	ID        string
 }
 
 func (k *Kptfile) WithPipeline(functions ...Function) *Kptfile {
@@ -530,6 +542,18 @@ pipeline:
 {{- if .ConfigPath }}
   - configPath: {{ .ConfigPath }}
 {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory }}
+inventory:
+{{- if .Pkg.Kptfile.Inventory.Name }}
+  name: {{ .Pkg.Kptfile.Inventory.Name }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory.Namespace }}
+  namespace: {{ .Pkg.Kptfile.Inventory.Namespace }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory.ID }}
+  inventoryID: {{ .Pkg.Kptfile.Inventory.ID }}
 {{- end }}
 {{- end }}
 `

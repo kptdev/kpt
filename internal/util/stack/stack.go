@@ -64,6 +64,13 @@ func (ps *pkgStack) Push(p *pkg.Pkg) {
 	ps.slice = append(ps.slice, p)
 }
 
+func (ps *pkgStack) PushAll(pkgs []*pkg.Pkg) {
+	for i := range pkgs {
+		p := pkgs[i]
+		ps.Push(p)
+	}
+}
+
 func (ps *pkgStack) Pop() *pkg.Pkg {
 	l := len(ps.slice)
 	if l == 0 {

@@ -17,6 +17,7 @@ package pkg
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -118,24 +119,31 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
 func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
-	kf := &kptfilev1alpha2.KptFile{}
-
 	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
 	if err != nil {
-		return kf, &KptfileError{
+		return nil, &KptfileError{
 			Path: types.UniquePath(p),
 			Err:  err,
 		}
 	}
 	defer f.Close()
 
-	d := yaml.NewDecoder(f)
-	d.KnownFields(true)
-	if err = d.Decode(kf); err != nil {
-		return kf, &KptfileError{
+	kf, err := DecodeKptfile(f)
+	if err != nil {
+		return nil, &KptfileError{
 			Path: types.UniquePath(p),
 			Err:  err,
 		}
+	}
+	return kf, nil
+}
+
+func DecodeKptfile(in io.Reader) (*kptfilev1alpha2.KptFile, error) {
+	kf := &kptfilev1alpha2.KptFile{}
+	d := yaml.NewDecoder(in)
+	d.KnownFields(true)
+	if err := d.Decode(kf); err != nil {
+		return kf, err
 	}
 	return kf, nil
 }
