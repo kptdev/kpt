@@ -33,7 +33,7 @@ journey of customers using a comprehensive kpt package example.
 ## Before you begin
 
 Please go through [installation instructions] for installing `v1.0` binary and
-at least 1st and 2nd chapters of [kpt book] for understanding the basic model of kpt `v1.0`
+at least Chapter 1 and 2 of [The kpt Book] for understanding the basic model of kpt `v1.0`.
 
 ## What's new and changed?
 
@@ -271,7 +271,7 @@ functional parity.
 [render guide]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
 [eval guide]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution
 [function results]: https://kpt.dev/book/04-using-functions/03-function-results
-[kpt book]: https://kpt.dev/book/
+[the kpt book]: https://kpt.dev/book/
 [installation instructions]: https://kpt.dev/installation/
 [install]: https://kpt.dev/installation/
 [kpt-functions-catalog]: https://catalog.kpt.dev/
