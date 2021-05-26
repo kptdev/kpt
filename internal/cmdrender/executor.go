@@ -39,8 +39,9 @@ import (
 
 // Executor hydrates a given pkg.
 type Executor struct {
-	PkgPath        string
-	ResultsDirPath string
+	PkgPath         string
+	ResultsDirPath  string
+	ImagePullPolicy fnruntime.ImagePullPolicy
 
 	Printer printer.Printer
 }
@@ -58,9 +59,10 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root:      root,
-		pkgs:      map[types.UniquePath]*pkgNode{},
-		fnResults: fnresult.NewResultList(),
+		root:            root,
+		pkgs:            map[types.UniquePath]*pkgNode{},
+		fnResults:       fnresult.NewResultList(),
+		imagePullPolicy: e.ImagePullPolicy,
 	}
 
 	resources, err := hydrate(ctx, root, hctx)
@@ -134,6 +136,9 @@ type hydrationContext struct {
 	// fnResults stores function results gathered
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
+
+	// imagePullPolicy controls the image pulling behavior.
+	imagePullPolicy fnruntime.ImagePullPolicy
 }
 
 //
@@ -385,7 +390,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults)
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy)
 		if err != nil {
 			return err
 		}
@@ -439,7 +444,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults)
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
 		if err != nil {
 			return nil, err
 		}

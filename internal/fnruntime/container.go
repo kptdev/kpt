@@ -37,7 +37,13 @@ const (
 	networkNameHost containerNetworkName = "host"
 	defaultTimeout  time.Duration        = 5 * time.Minute
 	dockerBin       string               = "docker"
+
+	AlwaysPull       ImagePullPolicy = "always"
+	IfNotPresentPull ImagePullPolicy = "ifNotPresent"
+	NeverPull        ImagePullPolicy = "never"
 )
+
+type ImagePullPolicy string
 
 // ContainerFnPermission contains the permission of container
 // function such as network access.
@@ -53,6 +59,8 @@ type ContainerFn struct {
 	Path types.UniquePath
 	// Image is the container image to run
 	Image string
+	// ImagePullPolicy controls the image pulling behavior.
+	ImagePullPolicy ImagePullPolicy
 	// Container function will be killed after this timeour.
 	// The default value is 5 minutes.
 	Timeout time.Duration
@@ -119,6 +127,9 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
 	}
+	if f.ImagePullPolicy == NeverPull {
+		args = append(args, "--pull", "never")
+	}
 	for _, storageMount := range f.StorageMounts {
 		args = append(args, "--mount", storageMount.String())
 	}
@@ -157,21 +168,35 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 // prepareImage will check local images and pull it if it doesn't
 // exist.
 func (f *ContainerFn) prepareImage() error {
+	// If ImagePullPolicy is set to "never", we don't need to do anything here.
+	if f.ImagePullPolicy == NeverPull {
+		return nil
+	}
+
 	// check image existence
-	args := []string{"image", "ls", f.Image}
+	foundImageInLocalCache := false
+	args := []string{"image", "inspect", f.Image}
 	cmd := exec.Command(dockerBin, args...)
 	var output []byte
 	var err error
-	if output, err = cmd.CombinedOutput(); err != nil {
-		return &ContainerImageError{
-			Image:  f.Image,
-			Output: string(output),
-		}
-	}
-	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
+	if _, err = cmd.CombinedOutput(); err == nil {
 		// image exists locally
+		foundImageInLocalCache = true
+	}
+
+	// If ImagePullPolicy is set to "ifNotPresent", we scan the local images
+	// first. If there is a match, we just return. This can be useful for local
+	// development to prevent the remote image to accidentally override the
+	// local image when they use the same name and tag.
+	if f.ImagePullPolicy == IfNotPresentPull && foundImageInLocalCache {
 		return nil
 	}
+
+	// If ImagePullPolicy is set to always (which is the default), we will try
+	// to pull the image regardless if the tag has been seen in the local cache.
+	// This can help to ensure we have the latest release for "moving tags" like
+	// v1 and v1.2. The performance cost is very minimal, since `docker pull`
+	// checks the SHA first and only pull the missing docker layer(s).
 	args = []string{"image", "pull", f.Image}
 	// setup timeout
 	timeout := defaultTimeout
@@ -181,7 +206,8 @@ func (f *ContainerFn) prepareImage() error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
-	if output, err := cmd.CombinedOutput(); err != nil {
+	output, err = cmd.CombinedOutput()
+	if err != nil {
 		return &ContainerImageError{
 			Image:  f.Image,
 			Output: string(output),
@@ -198,5 +224,7 @@ type ContainerImageError struct {
 }
 
 func (e *ContainerImageError) Error() string {
-	return fmt.Sprintf("Function image %q doesn't exist.", e.Image)
+	return fmt.Sprintf(
+		"Function image %q doesn't exist remotely. If you are developing new functions locally, you can choose to set the image pull policy to ifNotPresent or never.\n%v",
+		e.Image, e.Output)
 }

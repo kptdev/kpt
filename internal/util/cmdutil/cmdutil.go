@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/spf13/cobra"
 )
 
@@ -93,4 +94,22 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 		return errors.E(op, fmt.Errorf("%s", suggestedText))
 	}
 	return nil
+}
+
+func ValidateImagePullPolicyValue(v string) error {
+	if v != string(fnruntime.AlwaysPull) && v != string(fnruntime.IfNotPresentPull) && v != string(fnruntime.NeverPull) {
+		return fmt.Errorf("image pull policy must be one of %s, %s and %s", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull)
+	}
+	return nil
+}
+
+func StringToImagePullPolicy(v string) fnruntime.ImagePullPolicy {
+	switch v {
+	case string(fnruntime.NeverPull):
+		return fnruntime.NeverPull
+	case string(fnruntime.IfNotPresentPull):
+		return fnruntime.IfNotPresentPull
+	default:
+		return fnruntime.AlwaysPull
+	}
 }

@@ -77,6 +77,16 @@ Flags:
     Container image of the function to execute e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
     ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec-path` + "`" + ` flag with this flag.
   
+  --image-pull-policy:
+    If the image should be pulled before rendering the package(s). It can be set
+    to one of always, ifNotPresent, never. If unspecified, always will be the
+    default.
+    If using always, kpt will ensure the function images to run are up-to-date
+    with the remote container registry. This can be useful for tags like v1.
+    If using ifNotPresent, kpt will only pull the image when it can't find it in
+    the local cache.
+    If using never, kpt will only use images from the local cache.
+  
   --include-meta-resources:
     If enabled, meta resources (i.e. ` + "`" + `Kptfile` + "`" + ` and ` + "`" + `functionConfig` + "`" + `) are included
     in the input to the function. By default it is disabled.
@@ -180,6 +190,11 @@ Args:
 
 Flags:
 
+  --image-pull-policy:
+    If the image should be pulled before rendering the package(s). It can be set
+    to one of always, ifNotPresent, never. If unspecified, always will be the
+    default.
+  
   --results-dir:
     Path to a directory to write structured results. Directory must exist.
     Structured results emitted by the functions are aggregated and saved
