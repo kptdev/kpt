@@ -22,11 +22,11 @@
 - [Timeline](#Timeline)
 
 kpt `v1.0` is going to be the latest major release of the kpt CLI. The implementation of kpt `v1.0`
-has changed considerably from kpt `v0.39.0`. A rich set of new features have been added
+has changed considerably from kpt `v0.39`. A rich set of new features have been added
 as a result of the customers’ input and requirements. Some features have been
-deprecated or refactored in ways that make them incompatible with kpt `v0.39.0`.
+deprecated or refactored in ways that make them incompatible with kpt `v0.39`.
 Since these are backwards incompatible changes, there should be a way for customers
-to migrate/fix their existing kpt packages which are compatible with `v0.39.0` version of kpt,
+to migrate/fix their existing kpt packages which are compatible with `v0.39` version of kpt,
 to become compatible with kpt `v1.0`. This document outlines the end to end migration
 journey of customers using a comprehensive kpt package example.
 
@@ -45,8 +45,8 @@ To start with, all the commands in kpt `v1.0` will follow the consistent pattern
 $ kpt <group> <command> <positional_args> [PKG_PATH | DIR | - STDIN] [flags]
 ```
 
-Almost all the existing commands/features in kpt `v0.39.0` are also offered in kpt `v1.0`
-but in a better and enhanced format. In kpt `v0.39.0`, `cfg` group had been a dumping ground
+Almost all the existing commands/features in kpt `v0.39` are also offered in kpt `v1.0`
+but in a better and enhanced format. In kpt `v0.39`, `cfg` group had been a dumping ground
 for many cli commands which don’t have a coherent story. `cfg` is often confused with
 `pkg` and vice-versa. As a major step, we removed the `cfg` subgroup and rearranged
 the functionality. Here are the one-liners for each command group in kpt `v1.0`.
@@ -59,7 +59,7 @@ the functionality. Here are the one-liners for each command group in kpt `v1.0`.
 the input directory must have a valid Kptfile. Few commands can work on just the
 simple `DIR` with resources. Commands operate on the current working directory by default.
 
-| [v0.39.0 Commands]                                                                                | [v1.0 Commands]                                                                                                                                                                                                                                      |
+| [v0.39 Commands]                                                                                | [v1.0 Commands]                                                                                                                                                                                                                                      |
 | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]`                      | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [flags] [LOCAL_DEST_DIRECTORY]` <br> Fetch a remote package from a git subdirectory and writes it to a new local directory.                                                                           |
 | `kpt pkg init DIR [flags]`                                                                        | `kpt pkg init [DIR] [flags]` <br> Initializes an existing empty directory as a kpt package by adding a Kptfile.                                                                                                                                      |
@@ -128,7 +128,7 @@ The setters and substitutions are simplified to use new and simple setter patter
 comments. Creating a setter is as simple as adding a line comment to the desired field.
 Users need not add any `OpenAPI` definitions. Please refer to [apply-setters] for
 the information about new syntax for setters and how to apply setter values, this is
-equivalent to the `kpt cfg set` in `v0.39.0`.
+equivalent to the `kpt cfg set` in `v0.39`.
 [Setter Inheritance] works as usual in kpt `v1.0`.
 
 Here is the [simple example] of setter syntax transformation.
@@ -136,7 +136,7 @@ Here is the [simple example] of setter syntax transformation.
 #### Setter validations deprecated
 
 We want to keep the authoring experience of setters as simple as possible and
-hence [OpenAPI validations] and [required setters] feature offered by `v0.39.0` setters
+hence [OpenAPI validations] and [required setters] feature offered by `v0.39` setters
 is no longer offered in `v1.0` version of kpt. However, we are working on providing
 an easy way to achieve similar functionality retaining the simplicity of setters,
 which is scoped for post `v1.0` release. Stay tuned.
@@ -151,7 +151,7 @@ declare all the setter values and render them all at once.
 
 #### `run` is split into `eval` and `render`
 
-The functionality of `kpt fn run` command in `v0.39.0` is split into two different CLI
+The functionality of `kpt fn run` command in `v0.39` is split into two different CLI
 commands that execute functions corresponding to two fundamentally different approaches:
 
 `kpt fn render:` Executes the pipeline of functions declared in the package and its
@@ -182,7 +182,7 @@ to the detailed guide on [migrating inventory objects] to the `ResourceGroup` eq
 ## Migration Steps
 
 Based on the changes discussed above, this section walks you through an end to end
-workflow to migrate an [example kpt package] which is compatible with `v0.39.0` version
+workflow to migrate an [example kpt package] which is compatible with `v0.39` version
 of kpt, and make it compatible with kpt `v1.0`.
 
 ### Automated portion of migration
@@ -222,12 +222,12 @@ changes to the resources in the live cluster.
    1. The order of functions also must be re-arranged manually by users if needed.
    2. Also, note that the [function config] is used to configure the function
       and is not included in the input list of resources to function.
-2. [OpenAPI validations] and required setters feature offered by `v0.39.0` setters is no
+2. [OpenAPI validations] and required setters feature offered by `v0.39` setters is no
    longer offered in `v1.0` version of kpt. Users must write their own validation functions
    to achieve the functionality.
    `Tip:` Adding a [starlark function] would be an easier alternative to achieve the
    equivalent validation functionality.
-3. If you have used [Starlark runtime] in `v0.39.0`, please checkout the new and improved
+3. If you have used [Starlark runtime] in `v0.39`, please checkout the new and improved
    [Starlark functions] and declare it accordingly in the pipeline.
 4. [Auto-setters] feature is deprecated in `v1.0` version of kpt. Since the setters are
    migrated to a new and simple declarative version, package consumers can easily
@@ -250,7 +250,7 @@ functional parity.
 4. `TBD:` Feature releases and bug fixes for pre-v1 versions of kpt will be reserved
    for serious security bugs only. Customers will be asked to migrate to kpt `v1.0`.
 
-[v0.39.0 commands]: https://googlecontainertools.github.io/kpt/reference/
+[v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/
 [v1alpha2 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/next/pkg/api/kptfile/v1alpha2/types.go
 [starlark functions]: https://catalog.kpt.dev/starlark/v0.1/
