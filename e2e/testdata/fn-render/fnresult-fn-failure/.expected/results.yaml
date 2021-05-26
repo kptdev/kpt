@@ -21,6 +21,7 @@ items:
           resourceRef:
             apiVersion: apps/v1
             kind: Deployment
+            name: nginx-deployment
           field:
             path: selector
           file:
@@ -30,6 +31,7 @@ items:
           resourceRef:
             apiVersion: apps/v1
             kind: Deployment
+            name: nginx-deployment
           field:
             path: template
           file:
@@ -39,6 +41,7 @@ items:
           resourceRef:
             apiVersion: apps/v1
             kind: Deployment
+            name: nginx-deployment
           field:
             path: spec.replicas
           file:
@@ -52,6 +55,7 @@ items:
           resourceRef:
             apiVersion: custom.io/v1
             kind: Custom
+            name: custom
           file:
             path: resources.yaml
             index: 1

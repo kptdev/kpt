@@ -59,7 +59,7 @@ Package "wordpress":
 [PASS] "gcr.io/kpt-fn/set-label:v0.1"
 [FAIL] "gcr.io/kpt-fn/kubeval:v0.1"
   Results:
-    [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/" in file "service.yaml" in field "spec.ports.0.port"
+    [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/wordpress" in file "service.yaml" in field "spec.ports.0.port"
   Exit code: 1
 
 For complete results, see /tmp/results.yaml
@@ -87,6 +87,7 @@ items:
         resourceRef:
           apiVersion: v1
           kind: Service
+          name: wordpress
         field:
           path: spec.ports.0.port
         file:

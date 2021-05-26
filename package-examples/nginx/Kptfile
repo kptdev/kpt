@@ -9,3 +9,5 @@ info:
 pipeline:
   validators:
     - image: gcr.io/kpt-fn/kubeval:v0.1
+      configMap:
+        strict: 'true'

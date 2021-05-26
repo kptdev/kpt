@@ -29,7 +29,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -38,15 +37,19 @@ import (
 
 // NewContainerRunner returns a kio.Filter given a specification of a container function
 // and it's config.
-func NewContainerRunner(ctx context.Context, f *kptfilev1alpha2.Function, pkgPath types.UniquePath, fnResults *fnresult.ResultList) (kio.Filter, error) {
+func NewContainerRunner(
+	ctx context.Context, f *kptfilev1alpha2.Function,
+	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
+	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 	cfn := &ContainerFn{
-		Path:  pkgPath,
-		Image: f.Image,
-		Ctx:   ctx,
+		Path:            pkgPath,
+		Image:           f.Image,
+		ImagePullPolicy: imagePullPolicy,
+		Ctx:             ctx,
 	}
 	fltr := &runtimeutil.FunctionFilter{
 		Run:            cfn.Run,
@@ -174,6 +177,54 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	if err != nil {
 		return err
 	}
+
+	return parseNameAndNamespace(yml, fnResult)
+}
+
+// parseNameAndNamespace populates name and namespace in fnResult.Result if a
+// function (e.g. using kyaml Go SDKs) gives results in a schema
+// that puts a resourceRef's name and namespace under a metadata field
+// TODO: fix upstream (https://github.com/GoogleContainerTools/kpt/issues/2091)
+func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
+	items, err := yml.Elements()
+	if err != nil {
+		return err
+	}
+
+	for i := range items {
+		if err := populateResourceRef(items[i], &fnResult.Results[i]); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func populateResourceRef(item *yaml.RNode, resultItem *fnresult.ResultItem) error {
+	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return nil
+	}
+	nameNode, err := r.Pipe(yaml.Lookup("name"))
+	if err != nil {
+		return err
+	}
+	namespaceNode, err := r.Pipe(yaml.Lookup("namespace"))
+	if err != nil {
+		return err
+	}
+	if nameNode != nil {
+		resultItem.ResourceRef.Name = strings.TrimSpace(nameNode.MustString())
+	}
+	if namespaceNode != nil {
+		namespace := strings.TrimSpace(namespaceNode.MustString())
+		if namespace != "" && namespace != "''" {
+			resultItem.ResourceRef.Namespace = strings.TrimSpace(namespace)
+		}
+	}
 	return nil
 }
 
@@ -300,7 +351,7 @@ func (ri *multiLineFormatter) String() string {
 }
 
 // resultToString converts given structured result item to string format.
-func resultToString(result framework.ResultItem) string {
+func resultToString(result fnresult.ResultItem) string {
 	// TODO: Go SDK should implement Stringer method
 	// for framework.ResultItem. This is a temporary
 	// wrapper that will eventually be moved to Go SDK.
@@ -333,7 +384,7 @@ func resultToString(result framework.ResultItem) string {
 	return s.String()
 }
 
-func resourceRefToString(ref yaml.ResourceMeta) string {
+func resourceRefToString(ref yaml.ResourceIdentifier) string {
 	s := strings.Builder{}
 	if ref.APIVersion != "" {
 		s.WriteString(fmt.Sprintf("%s/", ref.APIVersion))

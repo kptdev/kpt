@@ -181,6 +181,9 @@ func (r *Runner) runFnEval() error {
 			if resultsDir != "" {
 				kptArgs = append(kptArgs, "--results-dir", resultsDir)
 			}
+			if r.testCase.Config.ImagePullPolicy != "" {
+				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
+			}
 			if r.testCase.Config.EvalConfig.Network {
 				kptArgs = append(kptArgs, "--network")
 			}
@@ -311,6 +314,10 @@ func (r *Runner) runFnRender() error {
 				kptArgs = append(kptArgs, "--results-dir", resultsDir)
 			}
 
+			if r.testCase.Config.ImagePullPolicy != "" {
+				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
+			}
+
 			if r.testCase.Config.DisableOutputTruncate {
 				kptArgs = append(kptArgs, "--truncate-output=false")
 			}
@@ -331,16 +338,16 @@ func (r *Runner) runFnRender() error {
 		if err != nil {
 			return err
 		}
-		// we passed result check, now we should break if the command error
-		// is expected
-		if fnErr != nil {
-			break
-		}
-
+		// we passed result check, now we should run teardown script and break
+		// if the command error is expected
 		err = r.runTearDownScript(pkgPath)
 		if err != nil {
 			return err
 		}
+		if fnErr != nil {
+			break
+		}
+
 	}
 	return nil
 }

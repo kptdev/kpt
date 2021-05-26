@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cmdget contains the get command
+// Package cmdrender contains the render command
 package cmdrender
 
 import (
@@ -41,6 +41,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
+	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", "always",
+		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -52,10 +54,11 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function pipeline run command
 type Runner struct {
-	pkgPath        string
-	resultsDirPath string
-	Command        *cobra.Command
-	ctx            context.Context
+	pkgPath         string
+	resultsDirPath  string
+	imagePullPolicy string
+	Command         *cobra.Command
+	ctx             context.Context
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -78,7 +81,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 			return fmt.Errorf("results-dir %q check failed: %w", r.resultsDirPath, err)
 		}
 	}
-	return nil
+	return cmdutil.ValidateImagePullPolicyValue(r.imagePullPolicy)
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
@@ -87,8 +90,9 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 	executor := Executor{
-		PkgPath:        r.pkgPath,
-		ResultsDirPath: r.resultsDirPath,
+		PkgPath:         r.pkgPath,
+		ResultsDirPath:  r.resultsDirPath,
+		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
 	}
 	return executor.Execute(r.ctx)
 }

@@ -84,12 +84,6 @@ test-fn-render: build
 test-fn-eval: build
 	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
 
-# target to flush kpt-fn cache
-flush-fn-cache:
-	for fn in set-namespace set-labels set-annotations starlark; do \
-		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
-	done
-
 vet:
 	go vet ./...
 
