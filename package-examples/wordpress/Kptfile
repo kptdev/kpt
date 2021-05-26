@@ -4,12 +4,12 @@ metadata:
   name: wordpress
 info:
   emails:
-    - kpt-team@google.com
+  - kpt-team@google.com
   description: This is an example wordpress package with mysql subpackage.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
-      configMap:
-        app: wordpress
+  - image: gcr.io/kpt-fn/set-label:v0.1
+    configMap:
+      app: wordpress
   validators:
-    - image: gcr.io/kpt-fn/kubeval:v0.1
+  - image: gcr.io/kpt-fn/kubeval:v0.1

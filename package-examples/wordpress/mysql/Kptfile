@@ -4,10 +4,10 @@ metadata:
   name: mysql
 info:
   emails:
-    - kpt-team@google.com
+  - kpt-team@google.com
   description: This is an example mysql package.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
-      configMap:
-        tier: mysql
+  - image: gcr.io/kpt-fn/set-label:v0.1
+    configMap:
+      tier: mysql
