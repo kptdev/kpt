@@ -7,7 +7,7 @@ description: >
 ---
 
 <!--mdtogo:Short
-    Display the documentation for a function
+    Display the documentation for a function image
 -->
 
 ### Synopsis
