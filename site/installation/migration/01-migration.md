@@ -1,4 +1,4 @@
-## Migration from kpt `v0.39.0` to kpt `v1.0`
+## Migrating from kpt `v0.39` to `v1.0`
 
 - [Before you begin](#Before-you-begin)
 - [What's new and changed?](#What's-new-and-changed?)
