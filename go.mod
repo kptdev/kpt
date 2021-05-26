@@ -29,4 +29,5 @@ require (
 replace (
 	k8s.io/cli-runtime v0.20.4 => k8s.io/cli-runtime v0.21.0
 	k8s.io/kubectl v0.20.4 => k8s.io/kubectl v0.21.0
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 => gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
