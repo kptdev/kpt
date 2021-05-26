@@ -13,7 +13,7 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/mengqiy-playground/bar:v0.1
+image: gcr.io/kpt-fn-demo/bar:v0.1
 sequential: true
 imagePullPolicy: ifNotPresent
 exitCode: 1

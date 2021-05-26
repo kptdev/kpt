@@ -4,4 +4,4 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/mengqiy-playground/foo:v0.1
+    - image: pull gcr.io/kpt-fn-demo/foo:v0.1
