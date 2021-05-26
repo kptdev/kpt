@@ -88,6 +88,8 @@ type RunFns struct {
 	// IncludeMetaResources indicates will kpt add pkg meta resources such as
 	// Kptfile to the input resources to the function.
 	IncludeMetaResources bool
+
+	ImagePullPolicy fnruntime.ImagePullPolicy
 }
 
 // Execute runs the command
@@ -430,11 +432,12 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 		c := &fnruntime.ContainerFn{
-			Path:          r.uniquePath,
-			Image:         spec.Container.Image,
-			UIDGID:        uidgid,
-			StorageMounts: r.StorageMounts,
-			Env:           spec.Container.Env,
+			Path:            r.uniquePath,
+			Image:           spec.Container.Image,
+			ImagePullPolicy: r.ImagePullPolicy,
+			UIDGID:          uidgid,
+			StorageMounts:   r.StorageMounts,
+			Env:             spec.Container.Env,
 			Perm: fnruntime.ContainerFnPermission{
 				AllowNetwork: spec.Container.Network,
 				// mounts are always from CLI flags so we allow

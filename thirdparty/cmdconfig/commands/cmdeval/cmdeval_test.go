@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -182,6 +183,7 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
 				ResultsDir:            "foo/",
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
@@ -218,6 +220,7 @@ apiVersion: v1
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
@@ -240,6 +243,7 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
 				AsCurrentUser:         true,
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
