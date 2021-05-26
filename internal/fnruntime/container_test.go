@@ -19,7 +19,6 @@ package fnruntime_test
 import (
 	"bytes"
 	"context"
-	"os/exec"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
