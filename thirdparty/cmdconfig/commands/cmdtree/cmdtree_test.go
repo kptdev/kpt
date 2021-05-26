@@ -83,12 +83,12 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `.
+	if !assert.Equal(t, fmt.Sprintf(`%s
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
 └── [f2.yaml]  Deployment bar
-`, b.String()) {
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }
@@ -163,7 +163,7 @@ spec:
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
 └── [f2.yaml]  Deployment bar
-`, d), b.String()) {
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }
@@ -209,7 +209,7 @@ resources:
 
 	if !assert.Equal(t, fmt.Sprintf(`%s
 └── [f2.yaml]  Deployment bar
-`, d), b.String()) {
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }
@@ -305,15 +305,15 @@ openAPI:
 		return
 	}
 
-	if !assert.Equal(t, fmt.Sprintf(`PKG: %s
+	if !assert.Equal(t, fmt.Sprintf(`Package %q
 ├── [Kptfile]  Kptfile mainpkg
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
-└── PKG: subpkg
+└── Package "subpkg"
     ├── [Kptfile]  Kptfile subpkg
     └── [f2.yaml]  Deployment bar
-`, d), b.String()) {
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }
@@ -389,122 +389,11 @@ metadata:
 		return
 	}
 
-	if !assert.Equal(t, `PKG: Mainpkg
+	if !assert.Equal(t, `Package "Mainpkg"
 ├── [Kptfile]  Kptfile Mainpkg
 ├── [f1.yaml]  Deployment foo
-└── PKG: Subpkg
+└── Package "Subpkg"
     ├── [Kptfile]  Kptfile Subpkg
-    └── [f2.yaml]  Deployment bar
-`, b.String()) {
-		return
-	}
-}
-
-func TestTreeCommand_stdin(t *testing.T) {
-	// fmt the files
-	b := &bytes.Buffer{}
-	r := GetTreeRunner("")
-	r.Command.SetArgs([]string{"-"})
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: extensions/v1
-kind: Deployment
-metadata:
-  labels:
-    app: nginx2
-  name: foo3
-  namespace: default
-  annotations:
-    app: nginx2
-    config.kubernetes.io/path: f1.yaml
-spec:
-  replicas: 1
----
-apiVersion: extensions/v1
-kind: Deployment
-metadata:
-  labels:
-    app: nginx2
-  name: foo3
-  namespace: default
-  annotations:
-    app: nginx2
-    config.kubernetes.io/path: f1.yaml
-spec:
-  replicas: 1
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: nginx2
-  name: foo3
-  namespace: default
-  annotations:
-    app: nginx2
-    config.kubernetes.io/path: f1.yaml
-spec:
-  replicas: 1
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: nginx2
-  name: foo2
-  namespace: default2
-  annotations:
-    app: nginx2
-    config.kubernetes.io/path: f1.yaml
-spec:
-  replicas: 1
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: nginx3
-  name: foo
-  namespace: default
-  annotations:
-    app: nginx3
-    config.kubernetes.io/path: f1.yaml
-spec:
-  replicas: 1
----
-kind: Deployment
-metadata:
-  labels:
-    app: nginx
-  annotations:
-    app: nginx
-    config.kubernetes.io/path: bar-package/f2.yaml
-  name: bar
-spec:
-  replicas: 3
----
-kind: Service
-metadata:
-  name: foo
-  namespace: default
-  annotations:
-    app: nginx
-    config.kubernetes.io/path: f1.yaml
-spec:
-  selector:
-    app: nginx
-`))
-	r.Command.SetOut(b)
-	if !assert.NoError(t, r.Command.Execute()) {
-		return
-	}
-
-	if !assert.Equal(t, `.
-├── [f1.yaml]  Deployment default/foo
-├── [f1.yaml]  Service default/foo
-├── [f1.yaml]  Deployment default/foo3
-├── [f1.yaml]  Deployment default/foo3
-├── [f1.yaml]  Deployment default/foo3
-├── [f1.yaml]  Deployment default2/foo2
-└── bar-package
     └── [f2.yaml]  Deployment bar
 `, b.String()) {
 		return
