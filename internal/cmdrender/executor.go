@@ -270,6 +270,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
 
+	// Run the applicable set of functions on the input resources.
 	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)

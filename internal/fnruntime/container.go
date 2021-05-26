@@ -20,6 +20,7 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -181,10 +182,11 @@ func (f *ContainerFn) prepareImage() error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd = exec.CommandContext(ctx, dockerBin, args...)
-	if output, err := cmd.CombinedOutput(); err != nil {
+	cmd.Stdout = os.Stdout
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintln(os.Stdout, err)
 		return &ContainerImageError{
-			Image:  f.Image,
-			Output: string(output),
+			Image: f.Image,
 		}
 	}
 	return nil
