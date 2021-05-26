@@ -70,39 +70,3 @@ func TestContainerFn(t *testing.T) {
 		})
 	}
 }
-
-func TestFnImagePull(t *testing.T) {
-	image := "gcr.io/kpt-fn/search-replace:v0.1"
-
-	// Initial test setup (our environment must not already include the image)
-	cmdInspect := exec.Command("docker", "image", "inspect", image)
-	errInspect := cmdInspect.Run()
-	// docker image inspect exits successfully if an image is found
-	// If image is already present remove the image before running test
-	if errInspect == nil {
-		cmdRm := exec.Command("docker", "image", "rm", image)
-		errRm := cmdRm.Run()
-		// Image should remove successfully
-		assert.NoError(t, errRm)
-	}
-	// Test setup complete
-
-	// Exec function (this should pull the missing function image)
-	ctx := context.Background()
-	outBuff, errBuff := &bytes.Buffer{}, &bytes.Buffer{}
-	instance := fnruntime.ContainerFn{
-		Ctx:   printer.WithContext(ctx, printer.New(outBuff, errBuff)),
-		Image: image,
-	}
-	// Function execution should be a no-op
-	input := bytes.NewBufferString("")
-	output := &bytes.Buffer{}
-	err := instance.Run(input, output)
-	assert.NoError(t, err)
-
-	// Inspect fails with an exit code of 1 if no image is present
-	// We expect this command to succeed (the image exists)
-	cmdImageInspect := exec.Command("docker", "image", "inspect", image)
-	errImageInspect := cmdImageInspect.Run()
-	assert.NoError(t, errImageInspect)
-}

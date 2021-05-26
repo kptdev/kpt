@@ -20,7 +20,7 @@ kpt fn source \
 | kpt fn sink .
 
 docker image inspect gcr.io/kpt-fn/search-replace:v0.1
-if [[ $? == 0 ]]; then
+if [[ $? != 0 ]]; then
     echo "ERR: Image could not be found locally and may not have been pulled"
     exit 1
-else
+fi
