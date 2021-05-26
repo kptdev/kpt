@@ -178,7 +178,6 @@ func (f *ContainerFn) prepareImage() error {
 	foundImageInLocalCache := false
 	args := []string{"image", "inspect", f.Image}
 	cmd := exec.Command(dockerBin, args...)
-	var output []byte
 	var err error
 	if _, err = cmd.CombinedOutput(); err == nil {
 		// image exists locally
