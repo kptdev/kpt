@@ -28,4 +28,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          ./.github/pre-commit
+          ./.github/hooks/pre-commit
