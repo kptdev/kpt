@@ -18,7 +18,7 @@ description: >
 <!--mdtogo:Long-->
 
 ```
-kpt pkg tree [DIR | -]
+kpt pkg tree [DIR]
 ```
 
 <!--mdtogo-->
@@ -28,7 +28,6 @@ kpt pkg tree [DIR | -]
 ```
 DIR:
   Path to a directory containing KRM resource(s). Defaults to the current working directory.
-  Using '-' as as the directory path will cause kpt to read resources from stdin.
 ```
 
 ### Examples

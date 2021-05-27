@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "FOO=BAR EXPORT_ENV=export_env_value"
+stdErr: "EXPORT_ENV=export_env_value"

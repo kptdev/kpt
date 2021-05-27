@@ -20,4 +20,3 @@ args:
 stdErr: 'Function image "gcr.io/kpt-fn/dne" doesn''t exist'
 stdOut: |
   [RUNNING] "gcr.io/kpt-fn/dne"
-  [FAIL] "gcr.io/kpt-fn/dne"

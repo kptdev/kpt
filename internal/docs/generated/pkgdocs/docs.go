@@ -188,7 +188,7 @@ var InitExamples = `
 
 var TreeShort = `Display resources, files and packages in a tree structure.`
 var TreeLong = `
-  kpt pkg tree [DIR | -]
+  kpt pkg tree [DIR]
 `
 var TreeExamples = `
   # Show resources in the current directory.

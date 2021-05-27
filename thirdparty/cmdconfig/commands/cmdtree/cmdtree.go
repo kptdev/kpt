@@ -17,7 +17,7 @@ import (
 func GetTreeRunner(name string) *TreeRunner {
 	r := &TreeRunner{}
 	c := &cobra.Command{
-		Use:     "tree [DIR | -]",
+		Use:     "tree [DIR]",
 		Short:   pkgdocs.TreeShort,
 		Long:    pkgdocs.TreeLong,
 		Example: pkgdocs.TreeExamples,
@@ -44,13 +44,8 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		args = append(args, root)
 	}
-	if args[0] == "-" {
-		input = &kio.ByteReader{Reader: c.InOrStdin()}
-	} else {
-		root = filepath.Clean(args[0])
-		input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: r.getMatchFilesGlob()}
-	}
-
+	root = filepath.Clean(args[0])
+	input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: r.getMatchFilesGlob()}
 	fltrs := []kio.Filter{&filters.IsLocalConfig{
 		IncludeLocalConfig: true,
 	}}
