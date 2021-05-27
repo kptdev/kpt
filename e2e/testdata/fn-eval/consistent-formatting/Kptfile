@@ -28,16 +28,16 @@ upstreamLock:
     commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1
+    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
       configMap:
         namespace: some-space
     - image: gcr.io/kpt-fn/apply-setters:v0.1
       configMap:
         image: nginx
         tag: 1.14.1
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1.4
       configPath: ./fn-config.yaml
-    - image: gcr.io/kpt-fn/starlark:v0.1
+    - image: gcr.io/kpt-fn/starlark:v0.1.0
       configPath: path/to/foo-star.yaml
 inventory:
   namespace: some-space

@@ -16,6 +16,6 @@
 set -eo pipefail
 
 kpt fn eval \
---image gcr.io/kpt-fn/kubeval:v0.1 \
+--image gcr.io/kpt-fn/kubeval:v0.1.1 \
 -- \
 schema_location='https://kubernetesjsonschema.dev'
