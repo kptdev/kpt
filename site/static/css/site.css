@@ -50,6 +50,7 @@ body {
   font-family: unset;
   font-size: unset;
 }
+
 h1 {
   line-height: unset;
 }
@@ -87,6 +88,16 @@ h1 {
 
 .sidebar-nav .book-outline ul {
   margin-left: var(--sidebar-nav-indent);
+}
+
+#cli-changes ~ .table-wrapper * {
+  --table-cell-border-width: 1px;
+  --table-cell-padding: 0.5em 0.5em;
+  --table-head-border-width: 1px;
+  --table-row-even-background: var(--mono-tint3);
+  --table-row-odd-background: inherit;
+  table-layout: fixed;
+  white-space: initial;
 }
 
 .docsify-pagination-container {
