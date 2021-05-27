@@ -82,8 +82,7 @@ func (f *Function) validate(fnType string, idx int) error {
 	if len(configFields) > 1 {
 		return &ValidateError{
 			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: fmt.Sprintf("only one of 'configMap', 'configPath' can be specified. Got %q",
-				strings.Join(configFields, ", ")),
+			Reason: fmt.Sprintf("only one of 'configMap', 'configPath' can be specified; got both"),
 		}
 	}
 

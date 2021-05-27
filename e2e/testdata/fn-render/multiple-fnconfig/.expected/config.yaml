@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: 'only one of ''config'', ''configMap'', ''configPath'' can be specified. Got "configPath, configMap"'
+stdErr: 'only one of ''configMap'', ''configPath'' can be specified; got both'
