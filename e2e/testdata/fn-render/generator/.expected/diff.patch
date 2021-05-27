@@ -1,6 +1,6 @@
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
-index 0000000..0932111
+index 0000000..0d803c5
 --- /dev/null
 +++ b/db/deployment_httpbin.yaml
 @@ -0,0 +1,25 @@
@@ -25,15 +25,15 @@ index 0000000..0932111
 +        tier: db
 +    spec:
 +      containers:
-+        - name: httpbin
-+          image: kennethreitz/httpbin
-+          ports:
-+            - containerPort: 9876
++      - name: httpbin
++        image: kennethreitz/httpbin
++        ports:
++        - containerPort: 9876
 diff --git a/db/resources.yaml b/db/resources.yaml
-index ac1fd96..49fa8df 100644
+index 1f53907..4cfda3a 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -15,5 +15,18 @@ apiVersion: apps/v1
+@@ -2,5 +2,18 @@ apiVersion: apps/v1
  kind: StatefulSet
  metadata:
    name: db
@@ -53,10 +53,10 @@ index ac1fd96..49fa8df 100644
 +        app: backend
 +        tier: db
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..ac4edf8 100644
+index 62f8744..f3cb7bf 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,12 +15,25 @@ apiVersion: apps/v1
+@@ -2,12 +2,25 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment

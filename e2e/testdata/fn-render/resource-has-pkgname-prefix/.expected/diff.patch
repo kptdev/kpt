@@ -1,8 +1,8 @@
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index 173c2e1..1fecfa4 100644
+index c9253c0..d7f1566 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
-@@ -18,8 +18,10 @@ metadata:
+@@ -5,8 +5,10 @@ metadata:
    labels:
      app: wordpress
    annotations:
@@ -15,7 +15,7 @@ index 173c2e1..1fecfa4 100644
  spec:
    selector:
      app: wordpress
-@@ -35,8 +37,10 @@ metadata:
+@@ -22,8 +24,10 @@ metadata:
    labels:
      app: wordpress
    annotations:
@@ -28,7 +28,7 @@ index 173c2e1..1fecfa4 100644
  spec:
    resources:
      requests:
-@@ -51,8 +55,10 @@ metadata:
+@@ -38,8 +42,10 @@ metadata:
    labels:
      app: wordpress
    annotations:
@@ -41,7 +41,7 @@ index 173c2e1..1fecfa4 100644
  spec:
    selector:
      matchLabels:
-@@ -63,6 +69,9 @@ spec:
+@@ -50,6 +56,9 @@ spec:
        labels:
          app: wordpress
          tier: mysql
@@ -50,12 +50,12 @@ index 173c2e1..1fecfa4 100644
 +        foo: bar
      spec:
        containers:
-         - name: mysql
+       - name: mysql
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index f7bdc2a..3cbda32 100644
+index a0a602a..af87ac8 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
-@@ -16,8 +16,9 @@ metadata:
+@@ -5,8 +5,9 @@ metadata:
    labels:
      app: wordpress
    annotations:
@@ -67,7 +67,7 @@ index f7bdc2a..3cbda32 100644
  spec:
    type: LoadBalancer
    selector:
-@@ -33,8 +34,9 @@ metadata:
+@@ -22,8 +23,9 @@ metadata:
    labels:
      app: wordpress
    annotations:
@@ -79,7 +79,7 @@ index f7bdc2a..3cbda32 100644
  spec:
    resources:
      requests:
-@@ -49,8 +51,9 @@ metadata:
+@@ -38,8 +40,9 @@ metadata:
    labels:
      app: wordpress
    annotations:
@@ -91,7 +91,7 @@ index f7bdc2a..3cbda32 100644
  spec:
    selector:
      matchLabels:
-@@ -61,6 +64,8 @@ spec:
+@@ -50,6 +53,8 @@ spec:
        labels:
          app: wordpress
          tier: frontend
@@ -99,4 +99,4 @@ index f7bdc2a..3cbda32 100644
 +        abc: def
      spec:
        containers:
-         - name: wordpress
+       - name: wordpress

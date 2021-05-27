@@ -1,21 +1,8 @@
 diff --git a/db/resources.yaml b/db/resources.yaml
-index 2270171..9dabb18 100644
+index 36d87ea..9dabb18 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -1,26 +1,10 @@
--# Copyright 2021 Google LLC
--#
--# Licensed under the Apache License, Version 2.0 (the "License");
--# you may not use this file except in compliance with the License.
--# You may obtain a copy of the License at
--#
--#      http://www.apache.org/licenses/LICENSE-2.0
--#
--# Unless required by applicable law or agreed to in writing, software
--# distributed under the License is distributed on an "AS IS" BASIS,
--# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--# See the License for the specific language governing permissions and
--# limitations under the License.
+@@ -1,13 +1,10 @@
 -apiVersion: apps/v1
 -kind: StatefulSet
 -metadata:
@@ -35,23 +22,10 @@ index 2270171..9dabb18 100644
    image: nginx:1.2.3
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
-index 44bfc6b..0000000
+index 6eeec4b..0000000
 --- a/deployment_httpbin.yaml
 +++ /dev/null
-@@ -1,36 +0,0 @@
--# Copyright 2021 Google LLC
--#
--# Licensed under the Apache License, Version 2.0 (the "License");
--# you may not use this file except in compliance with the License.
--# You may obtain a copy of the License at
--#
--#      http://www.apache.org/licenses/LICENSE-2.0
--#
--# Unless required by applicable law or agreed to in writing, software
--# distributed under the License is distributed on an "AS IS" BASIS,
--# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--# See the License for the specific language governing permissions and
--# limitations under the License.
+@@ -1,23 +0,0 @@
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
@@ -73,13 +47,13 @@ index 44bfc6b..0000000
 -        tier: db
 -    spec:
 -      containers:
--        - name: httpbin
--          image: kennethreitz/httpbin
+-      - name: httpbin
+-        image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
-index 6590f6c..b5b54e0 100644
+index 0848ba0..7559fd9 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,5 +15,15 @@ apiVersion: apps/v1
+@@ -2,5 +2,15 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment
