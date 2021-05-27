@@ -17,4 +17,4 @@
 exitCode: 1
 stdErr: 'resource at path "resources.yaml" and index "0" already exists'
 stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/starlark:unstable"
+  [RUNNING] "gcr.io/kpt-fn/starlark:v0.1.0"

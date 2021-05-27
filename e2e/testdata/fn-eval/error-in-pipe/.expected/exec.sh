@@ -16,6 +16,6 @@
 set -eo pipefail
 
 kpt fn source \
-| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 \
+| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1.3 \
 | kpt fn eval - --image gcr.io/kpt-fn/dne -- foo=bar \
 | kpt fn sink .

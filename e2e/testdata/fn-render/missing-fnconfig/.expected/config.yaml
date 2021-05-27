@@ -19,5 +19,5 @@ stdErr: |
   Value: "labelconfig1.yaml"
   Reason: functionConfig must exist in the current package
 stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/set-labels:unstable"
-  [PASS] "gcr.io/kpt-fn/set-labels:unstable"
+  [RUNNING] "gcr.io/kpt-fn/set-labels:v0.1.4"
+  [PASS] "gcr.io/kpt-fn/set-labels:v0.1.4"

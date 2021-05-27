@@ -4,5 +4,5 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/starlark:unstable
+    - image: gcr.io/kpt-fn/starlark:v0.1.0
       configPath: starlark-gen-duplicate-path.yaml
