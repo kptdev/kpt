@@ -18,4 +18,3 @@ exitCode: 1
 stdErr: "httpbin-gen:4:1: got newline, want primary expression"
 stdOut: |
   [RUNNING] "gcr.io/kpt-fn/starlark:unstable"
-  [FAIL] "gcr.io/kpt-fn/starlark:unstable"

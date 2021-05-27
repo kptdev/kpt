@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testType: eval
 exitCode: 1
-image: gcr.io/kpt-fn/set-namespace:v0.1
-stdErr: "failed to configure function: input namespace cannot be empty"
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1"
+stdErr: |2-
+  [FAIL] "gcr.io/kpt-fn/set-namespace:v0.1"
+    Results:
+      [ERROR] failed to configure function: input namespace cannot be empty
+    Stderr:
+      "failed to configure function: input namespace cannot be empty"
+    Exit code: 1
+
+   
+  [FAIL] "gcr.io/kpt-fn/dne"
+  error: Function image "gcr.io/kpt-fn/dne" doesn't exist
