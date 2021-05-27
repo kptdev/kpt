@@ -38,7 +38,7 @@ List the package contents in a tree structure.
 ```shell
 $ kpt pkg tree pipeline-validate/
 
-PKG: pipeline-validate
+Package "pipeline-validate"
 ├── [Kptfile]  Kptfile kpt-pipeline-validate-example
 └── resources
     ├── [resources.yaml]  Namespace development

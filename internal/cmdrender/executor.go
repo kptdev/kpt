@@ -69,7 +69,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 	if err != nil {
 		// Note(droot): ignore the error in function result saving
 		// to avoid masking the hydration error.
-		_ = e.saveFnResults(ctx, hctx.fnResults)
+		_ = e.saveFnResults(ctx, hctx.fnResults, true)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -96,17 +96,16 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 
-	return e.saveFnResults(ctx, hctx.fnResults)
+	return e.saveFnResults(ctx, hctx.fnResults, false)
 }
 
-func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
-
+func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList, toStdErr bool) error {
 	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
 
-	printerutil.PrintFnResultInfo(ctx, resultsFile, false)
+	printerutil.PrintFnResultInfo(ctx, resultsFile, false, toStdErr)
 	return nil
 }
 

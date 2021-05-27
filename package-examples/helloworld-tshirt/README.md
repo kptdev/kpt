@@ -30,7 +30,7 @@ List the package contents in a tree structure.
 ```shell
 $ kpt pkg tree helloworld-tshirt/
 
-PKG: helloworld-tshirt
+Package "helloworld-tshirt"
 ├── [Kptfile]  Kptfile helloworld-tshirt
 ├── [helloworld.yaml]  Deployment helloworld-gke
 └── [helloworld.yaml]  Service helloworld-gke

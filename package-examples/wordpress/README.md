@@ -30,13 +30,13 @@ List the package contents in a tree structure.
 ```sh
 $ kpt pkg tree wordpress/
 
-PKG: wordpress
+Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── PKG: mysql
+└── Package "mysql"
   ├── [Kptfile]  Kptfile mysql
   ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
   ├── [deployment.yaml]  Deployment wordpress-mysql
