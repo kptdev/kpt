@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 74670e7..154c558 100644
+index fa1bd2d..dd352a8 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,16 +2,7 @@ apiVersion: kpt.dev/v1alpha2
@@ -36,7 +36,7 @@ index 74670e7..154c558 100644
 +  man: nginx man text
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/set-namespace:v0.1
+     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
 diff --git a/resources.yaml b/resources.yaml
 index c0f48b0..9e31a48 100644
 --- a/resources.yaml
