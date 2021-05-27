@@ -60,7 +60,7 @@ you to use gatekeeper for checks on the configuration.
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-labels:unstable
-      config:
+      configMap:
         color: blue
   validators:
     - image: gcr.io/kpt-fn/enforce-gatekeeper:unstable
