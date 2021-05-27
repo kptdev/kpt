@@ -65,7 +65,6 @@ func (f *Function) validate(fnType string, idx int) error {
 		}
 	}
 
-	var configFields []string
 	if f.ConfigPath != "" {
 		if err := validateFnConfigPath(f.ConfigPath); err != nil {
 			return &ValidateError{
@@ -74,15 +73,11 @@ func (f *Function) validate(fnType string, idx int) error {
 				Reason: err.Error(),
 			}
 		}
-		configFields = append(configFields, "configPath")
-	}
-	if len(f.ConfigMap) != 0 {
-		configFields = append(configFields, "configMap")
-	}
-	if len(configFields) > 1 {
-		return &ValidateError{
-			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: "only one of 'configMap', 'configPath' can be specified; got both",
+		if len(f.ConfigMap) != 0 {
+			return &ValidateError{
+				Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+				Reason: "only one of 'configMap', 'configPath' can be specified; got both",
+			}
 		}
 	}
 
