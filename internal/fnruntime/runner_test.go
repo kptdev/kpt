@@ -48,22 +48,6 @@ func TestFunctionConfig(t *testing.T) {
 			expected: "",
 		},
 		{
-			name: "inline config",
-			fn: kptfilev1alpha2.Function{
-				Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
-kind: ResourceHierarchy
-metadata:
-  name: root-hierarchy
-  namespace: hierarchy`).YNode(),
-			},
-			expected: `apiVersion: cft.dev/v1alpha1
-kind: ResourceHierarchy
-metadata:
-  name: root-hierarchy
-  namespace: hierarchy
-`,
-		},
-		{
 			name: "file config",
 			fn:   kptfilev1alpha2.Function{},
 			configFileContent: `apiVersion: cft.dev/v1alpha1

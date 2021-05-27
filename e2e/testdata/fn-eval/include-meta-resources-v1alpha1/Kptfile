@@ -12,13 +12,8 @@ dependencies:
     ensureNotExists: false
     functions:
       - image: gcr.io/kpt-fn/my-func:v0.1
-        config:
-          apiVersion: v1
-          kind: ConfigMap
-          metadata:
-            name: function-config
-          data:
-            param1: value1
+        configMap:
+          param1: value1
     git:
       directory: /package-examples/helloworld-set
       ref: master

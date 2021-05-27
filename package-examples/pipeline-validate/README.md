@@ -61,12 +61,7 @@ pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-labels:unstable
       config:
-        apiVersion: fn.kpt.dev/v1alpha1
-        kind: SetLabelConfig
-        metadata:
-          name: label-color-blue
-        labels:
-          color: blue
+        color: blue
   validators:
     - image: gcr.io/kpt-fn/enforce-gatekeeper:unstable
 ```

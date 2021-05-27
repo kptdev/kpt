@@ -79,20 +79,10 @@ func (f *Function) validate(fnType string, idx int) error {
 	if len(f.ConfigMap) != 0 {
 		configFields = append(configFields, "configMap")
 	}
-	if !IsNodeZero(&f.Config) {
-		config := yaml.NewRNode(&f.Config)
-		if _, err := config.GetMeta(); err != nil {
-			return &ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].config", fnType, idx),
-				Reason: "functionConfig must be a valid KRM resource with `apiVersion` and `kind` fields",
-			}
-		}
-		configFields = append(configFields, "config")
-	}
 	if len(configFields) > 1 {
 		return &ValidateError{
 			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: fmt.Sprintf("only one of 'config', 'configMap', 'configPath' can be specified. Got %q",
+			Reason: fmt.Sprintf("only one of 'configMap', 'configPath' can be specified. Got %q",
 				strings.Join(configFields, ", ")),
 		}
 	}
