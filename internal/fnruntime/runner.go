@@ -96,17 +96,16 @@ type FunctionRunner struct {
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	if fr.disableOutput {
-		return fr.do(input)
-	}
 	pr := printer.FromContextOrDie(fr.ctx)
-	printOpt := printer.NewOpt()
 
-	pr.OptPrintf(printOpt, "[RUNNING] %q\n", fr.name)
+	if !fr.disableOutput {
+		pr.Printf("[RUNNING] %q\n", fr.name)
+	}
 	output, err = fr.do(input)
 	if err != nil {
+		printOpt := printer.NewOpt().Stderr()
 		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
-		printFnResult(fr.ctx, fr.fnResult)
+		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		var fnErr *ExecError
 		if goerrors.As(err, &fnErr) {
 			printFnExecErr(fr.ctx, fnErr)
@@ -114,8 +113,10 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		}
 		return nil, err
 	}
-	pr.OptPrintf(printOpt, "[PASS] %q\n", fr.name)
-	printFnResult(fr.ctx, fr.fnResult)
+	if !fr.disableOutput {
+		pr.Printf("[PASS] %q\n", fr.name)
+		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
+	}
 	return output, err
 }
 
@@ -230,7 +231,7 @@ func populateResourceRef(item *yaml.RNode, resultItem *fnresult.ResultItem) erro
 
 // printFnResult prints given function result in a user friendly
 // format on kpt CLI.
-func printFnResult(ctx context.Context, fnResult *fnresult.Result) {
+func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.Options) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(fnResult.Results) > 0 {
 		// function returned structured results
@@ -243,7 +244,7 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result) {
 			Lines:          lines,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.Printf("%s", ri.String())
+		pr.OptPrintf(opt, "%s", ri.String())
 	}
 }
 

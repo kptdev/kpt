@@ -1,3 +1,4 @@
+#! /bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testType: eval
-exitCode: 1
-image: gcr.io/kpt-fn/set-namespace:v0.1
-stdErr: "failed to configure function: input namespace cannot be empty"
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1"
+set -eo pipefail
+
+kpt fn source \
+| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 \
+| kpt fn eval - --image gcr.io/kpt-fn/dne -- foo=bar \
+| kpt fn sink .

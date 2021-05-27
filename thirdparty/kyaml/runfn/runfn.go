@@ -229,22 +229,23 @@ func (r RunFns) runFunctions(
 	err = pipeline.Execute()
 	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
 	if err != nil {
+		// function fails
 		if resultErr == nil {
-			r.printFnResultsStatus(resultsFile)
+			r.printFnResultsStatus(resultsFile, true)
 		}
 		return err
 	}
 	if resultErr == nil {
-		r.printFnResultsStatus(resultsFile)
+		r.printFnResultsStatus(resultsFile, false)
 	}
 	return nil
 }
 
-func (r RunFns) printFnResultsStatus(resultsFile string) {
+func (r RunFns) printFnResultsStatus(resultsFile string, toStdErr bool) {
 	if r.isOutputDisabled() {
 		return
 	}
-	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true, toStdErr)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
