@@ -10,7 +10,8 @@ Install the ResourceGroup CRD in the cluster.
 -->
 
 `install-resource-group` installs the ResourceGroup CRD in the cluster. `kpt`
-uses ResourceGroup resources for storing the inventory list.
+uses ResourceGroup resources for storing the inventory list (which enables pruning)
+, so it must be installed in a cluster prior to applying packages.
 
 ### Synopsis
 <!--mdtogo:Long-->
