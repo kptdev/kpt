@@ -13,6 +13,7 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -319,4 +320,12 @@ func (r *EvalFnRunner) postRun(_ *cobra.Command, args []string) {
 		path = args[0]
 	}
 	pkgutil.FormatPackage(path)
+}
+
+// addDefaultImagePathPrefix adds default gcr.io/kpt-fn/ path prefix to image if only image name is specified
+func (r *EvalFnRunner) addDefaultImagePathPrefix() {
+	if r.Image != "" && !strings.Contains(r.Image, "/") &&
+		r.ImagePullPolicy == string(fnruntime.AlwaysPull) {
+		r.Image = fmt.Sprintf("gcr.io/kpt-fn/%s", r.Image)
+	}
 }
