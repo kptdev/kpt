@@ -5,7 +5,7 @@ metadata:
 exitCode: 1
 items:
     - image: gcr.io/kpt-fn/set-namespace:v0.1
-      stderr: 'failed to configure function: input namespace cannot be empty'
+      stderr: '[error] /// : failed to configure function: input namespace cannot be empty'
       exitCode: 1
       results:
         - message: 'failed to configure function: input namespace cannot be empty'
