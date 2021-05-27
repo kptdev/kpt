@@ -11,10 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
-exitCode: 1
+exitCode: 1 # One of the functions in the pipeline fails resulting in
 stdErr: 'resource at path "resources.yaml" and index "0" already exists'
 stdOut: |
   [RUNNING] "gcr.io/kpt-fn/starlark:unstable"

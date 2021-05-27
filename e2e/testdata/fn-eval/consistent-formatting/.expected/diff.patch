@@ -1,69 +1,94 @@
 diff --git a/Kptfile b/Kptfile
-index 74670e7..154c558 100644
+index b8ac860..0e8a5e6 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,16 +2,7 @@ apiVersion: kpt.dev/v1alpha2
+@@ -2,24 +2,31 @@ apiVersion: kpt.dev/v1alpha2
  kind: Kptfile
  metadata:
    name: nginx
--info:
--  description: describe this package
--  site: https://github.com/GoogleContainerTools/kpt
--  emails:
--    - foo@gmail.com
--  license: license text
--  keywords:
--    - tag1
--    - tag2
--  man: nginx man text
 +  namespace: staging
- upstream:
-   type: git
-   git:
-@@ -26,6 +17,16 @@ upstreamLock:
-     directory: package-examples/nginx
-     ref: package-examples/nginx/v0.2
-     commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
-+info:
++upstream:
++  type: git
++  git:
++    repo: https://github.com/GoogleContainerTools/kpt
++    directory: package-examples/nginx
++    ref: v0.2
++  updateStrategy: resource-merge
++upstreamLock:
++  type: git
++  git:
++    repo: https://github.com/GoogleContainerTools/kpt
++    directory: package-examples/nginx
++    ref: package-examples/nginx/v0.2
++    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
+ info:
+-  description: describe this package
 +  site: https://github.com/GoogleContainerTools/kpt
-+  emails:
-+    - foo@gmail.com
+   emails:
+   - foo@gmail.com
 +  license: license text
 +  description: describe this package
-+  keywords:
-+    - tag1
-+    - tag2
-+  man: nginx man text
+   keywords:
+   - tag1
+   - tag2
+-  license: license text
+   man: nginx man text
+-  site: https://github.com/GoogleContainerTools/kpt
+-inventory:
+-  name: inventory-00933591
+-  namespace: some-space
+-  labels:
+-    foo: bar
+-  annotations:
+-    abc: def
+-  inventoryID: 92c234b7e9267815b0c3e17c9e4d7139a16c104f-1620493522822890000
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/set-namespace:v0.1
+   - image: gcr.io/kpt-fn/set-namespace:v0.1
+@@ -33,17 +40,11 @@ pipeline:
+     configPath: ./fn-config.yaml
+   - image: gcr.io/kpt-fn/starlark:v0.1
+     configPath: path/to/foo-star.yaml
+-upstream:
+-  type: git
+-  updateStrategy: resource-merge
+-  git:
+-    directory: package-examples/nginx
+-    ref: v0.2
+-    repo: https://github.com/GoogleContainerTools/kpt
+-upstreamLock:
+-  type: git
+-  git:
+-    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
+-    directory: package-examples/nginx
+-    ref: package-examples/nginx/v0.2
+-    repo: https://github.com/GoogleContainerTools/kpt
++inventory:
++  namespace: some-space
++  name: inventory-00933591
++  inventoryID: 92c234b7e9267815b0c3e17c9e4d7139a16c104f-1620493522822890000
++  labels:
++    foo: bar
++  annotations:
++    abc: def
 diff --git a/resources.yaml b/resources.yaml
-index c0f48b0..9e31a48 100644
+index 53fcf70..823f072 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -14,9 +14,10 @@
- apiVersion: apps/v1
+@@ -2,6 +2,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
-+  name: my-nginx
+   name: my-nginx
 +  namespace: staging
    labels:
      foo: bar
--  name: my-nginx
  spec:
-   replicas: 3
-   selector:
-@@ -28,8 +29,8 @@ spec:
-         app: nginx
+@@ -16,7 +17,7 @@ spec:
      spec:
        containers:
--      - image: 'nginx:1.14.2'
--        name: nginx
--        ports:
--        - containerPort: 80
--          protocol: TCP
-+        - name: nginx
-+          image: nginx:1.14.2
-+          ports:
-+            - protocol: TCP
-+              containerPort: 80
+       - name: nginx
+-        image: 'nginx:1.14.2'
++        image: nginx:1.14.2
+         ports:
+         - protocol: TCP
+           containerPort: 80

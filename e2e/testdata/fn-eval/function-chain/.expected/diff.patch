@@ -1,8 +1,8 @@
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..0298ad0 100644
+index 62f8744..4959881 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,12 +15,25 @@ apiVersion: apps/v1
+@@ -2,12 +2,25 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment

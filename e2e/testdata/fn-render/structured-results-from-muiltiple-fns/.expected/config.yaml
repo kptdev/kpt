@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
-exitCode: 1
+exitCode: 1 # One of the functions in the pipeline fails resulting in
 # Skip for now because gatekeeper function output is not stable
 skip: true

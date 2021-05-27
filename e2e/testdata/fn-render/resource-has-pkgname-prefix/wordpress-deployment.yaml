@@ -1,4 +1,3 @@
-# Copyright 2019 Google LLC
 #
 # You may obtain a copy of the License at
 #
@@ -9,7 +8,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: v1
+apiVersion: v1 # Copyright 2019 Google LLC
 kind: Service
 metadata:
   name: wordpress
@@ -24,7 +23,7 @@ spec:
     app: wordpress
     tier: frontend
   ports:
-    - port: 80
+  - port: 80
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -40,7 +39,7 @@ spec:
     requests:
       storage: 20Gi
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
@@ -63,25 +62,25 @@ spec:
         tier: frontend
     spec:
       containers:
+      - name: wordpress
+        image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
+        ports:
         - name: wordpress
-          image: wordpress:4.8-apache # kpt-set: ${wp-image}:${wp-tag}
-          ports:
-            - name: wordpress
-              containerPort: 80
-          env:
-            - name: WORDPRESS_DB_HOST
-              value: wordpress-mysql
-            - name: WORDPRESS_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-pass
-                  key: password
-          volumeMounts:
-            - name: wordpress-persistent-storage
-              mountPath: /var/www/html
-      volumes:
+          containerPort: 80
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: wordpress-mysql
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        volumeMounts:
         - name: wordpress-persistent-storage
-          persistentVolumeClaim:
-            claimName: wp-pv-claim
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpress-persistent-storage
+        persistentVolumeClaim:
+          claimName: wp-pv-claim
   strategy:
     type: Recreate

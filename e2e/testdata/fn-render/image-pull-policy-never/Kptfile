@@ -4,4 +4,4 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/not-exist:unstable
+  - image: gcr.io/kpt-fn/not-exist:unstable

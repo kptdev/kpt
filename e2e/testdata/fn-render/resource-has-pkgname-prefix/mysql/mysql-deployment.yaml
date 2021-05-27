@@ -1,4 +1,3 @@
-# Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: v1
+apiVersion: v1 # Copyright 2019 Google LLC
 kind: Service
 metadata:
   name: wordpress-mysql
@@ -25,7 +24,7 @@ spec:
     app: wordpress
     tier: mysql
   ports:
-    - port: 3306
+  - port: 3306
   clusterIP: None
 ---
 apiVersion: v1
@@ -42,7 +41,7 @@ spec:
     requests:
       storage: 20Gi
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
 ---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
@@ -65,23 +64,23 @@ spec:
         tier: mysql
     spec:
       containers:
+      - name: mysql
+        image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
+        ports:
         - name: mysql
-          image: mysql:5.6 # kpt-set: ${ms-image}:${ms-tag}
-          ports:
-            - name: mysql
-              containerPort: 3306
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-pass
-                  key: password
-          volumeMounts:
-            - name: mysql-persistent-storage
-              mountPath: /var/lib/mysql
-      volumes:
+          containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        volumeMounts:
         - name: mysql-persistent-storage
-          persistentVolumeClaim:
-            claimName: mysql-pv-claim
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
   strategy:
     type: Recreate

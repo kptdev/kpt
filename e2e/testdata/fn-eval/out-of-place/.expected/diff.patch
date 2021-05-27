@@ -1,8 +1,8 @@
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..254b9cd 100644
+index 62f8744..b6cff46 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,6 +15,7 @@ apiVersion: apps/v1
+@@ -2,6 +2,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -10,7 +10,7 @@ index 7a494c9..254b9cd 100644
  spec:
    replicas: 3
  ---
-@@ -22,5 +23,6 @@ apiVersion: custom.io/v1
+@@ -9,5 +10,6 @@ apiVersion: custom.io/v1
  kind: Custom
  metadata:
    name: custom

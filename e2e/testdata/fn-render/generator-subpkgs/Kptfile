@@ -4,5 +4,5 @@ metadata:
   name: app-with-generator
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/upsert-resource:unstable
-      configPath: fn-config.yaml
+  - image: gcr.io/kpt-fn/upsert-resource:unstable
+    configPath: fn-config.yaml

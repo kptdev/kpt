@@ -4,13 +4,13 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:unstable
-      configMap:
-        namespace: staging
-    - image: gcr.io/kpt-fn/set-label:unstable
-      configMap: # invalid config
-        tier: backend
-        envs: # lists are not allowed in configmap
-         - dev
-         - staging
-         - production
+  - image: gcr.io/kpt-fn/set-namespace:unstable
+    configMap:
+      namespace: staging
+  - image: gcr.io/kpt-fn/set-label:unstable
+    configMap: # invalid config
+      envs: # lists are not allowed in configmap
+      - dev
+      - staging
+      - production
+      tier: backend

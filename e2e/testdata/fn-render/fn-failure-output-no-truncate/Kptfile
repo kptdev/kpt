@@ -4,6 +4,6 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/kubeval:v0.1
-      configMap:
-        strict: "true"
+  - image: gcr.io/kpt-fn/kubeval:v0.1
+    configMap:
+      strict: "true"

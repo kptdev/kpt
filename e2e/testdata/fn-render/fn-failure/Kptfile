@@ -4,7 +4,6 @@ metadata:
   name: app
 pipeline:
   mutators:
-# invalid starlark input results in failure of first fn
   - image: gcr.io/kpt-fn/starlark:unstable
     configPath: starlark-failure-fn.yaml
   - image: gcr.io/kpt-fn/set-namespace:unstable

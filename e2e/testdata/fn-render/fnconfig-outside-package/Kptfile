@@ -4,7 +4,7 @@ metadata:
   name: app-with-db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:unstable
-      configPath: labelconfig.yaml
-    - image: gcr.io/kpt-fn/set-label:unstable
-      configPath: some/../../home/.kube/config # config pointing outside the package
+  - image: gcr.io/kpt-fn/set-label:unstable
+    configPath: labelconfig.yaml
+  - image: gcr.io/kpt-fn/set-label:unstable
+    configPath: some/../../home/.kube/config # config pointing outside the package

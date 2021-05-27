@@ -4,11 +4,11 @@ metadata:
     name: fnresults
 exitCode: 0
 items:
-    - image: gcr.io/kpt-fn/search-replace:v0.1
-      exitCode: 0
-      results:
-        - message: Mutated field value to "4"
-          field:
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    exitCode: 0
+    results:
+      - message: Mutated field value to "4"
+        field:
             path: spec.replicas
-          file:
+        file:
             path: resources.yaml

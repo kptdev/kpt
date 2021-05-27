@@ -1,4 +1,3 @@
-# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: apps/v1
+apiVersion: apps/v1 # Copyright 2021 Google LLC
 kind: Deployment
 metadata:
   name: nginx-deployment
@@ -35,17 +34,17 @@ spec:
                 items:
                   type: string
   targets:
-    - rego: |-
-        package ban_keys
+  - rego: |-
+      package ban_keys
 
-        violation[{"msg": sprintf("%v", [val])}] {
-          keys = {key | input.review.object.data[key]}
-          banned = {key | input.parameters.keys[_] = key}
-          overlap = keys & banned
-          count(overlap) > 0
-          val := sprintf("The following banned keys are being used in the ConfigMap: %v", [overlap])
-        }
-      target: admission.k8s.gatekeeper.sh
+      violation[{"msg": sprintf("%v", [val])}] {
+        keys = {key | input.review.object.data[key]}
+        banned = {key | input.parameters.keys[_] = key}
+        overlap = keys & banned
+        count(overlap) > 0
+        val := sprintf("The following banned keys are being used in the ConfigMap: %v", [overlap])
+      }
+    target: admission.k8s.gatekeeper.sh
 ---
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sConfigMapKeysRulesV1
@@ -55,13 +54,13 @@ spec:
   enforcementAction: warn # create warning instead of errors
   match:
     kinds:
-      - apiGroups:
-          - ''
-        kinds:
-          - ConfigMap
+    - apiGroups:
+      - ''
+      kinds:
+      - ConfigMap
   parameters:
     keys:
-      - private_key
+    - private_key
 ---
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sConfigMapKeysRulesV1
@@ -71,13 +70,13 @@ spec:
   enforcementAction: dryrun # create info instead of errors
   match:
     kinds:
-      - apiGroups:
-          - ''
-        kinds:
-          - ConfigMap
+    - apiGroups:
+      - ''
+      kinds:
+      - ConfigMap
   parameters:
     keys:
-      - less_sensitive_key
+    - less_sensitive_key
 ---
 apiVersion: v1
 kind: ConfigMap

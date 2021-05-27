@@ -11,10 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
-exitCode: 0
+exitCode: 0 # One of the functions in the pipeline fails resulting in
 # This test checks function results and result output is not idempotent
 # because the results produced by search replace function gets changed
 # in the subsequent runs. So skipping it for now.
