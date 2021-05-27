@@ -1,4 +1,4 @@
-<asciinema-player src="/static/casts/quickstart.cast" cols="160"></asciinema-player>`
+<asciinema-player src="/static/casts/quickstart.cast" cols="160" rows="32"></asciinema-player>`
 
 <h2 id="overview"><span class="material-icons-outlined">download</span> Install</h2>
 
