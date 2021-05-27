@@ -245,8 +245,8 @@ functional parity.
 1. `Right now:` You can [install] and try the pre-release version of kpt `v1.0` binary.
 2. `June 1, 2021:` `gcr.io/kpt-fn/fix` function will be released in [kpt-functions-catalog].
    You can start migrating your existing kpt packages using the function.
-3. `July 1, 2021:` kpt `v1.0` binary will be released. The existing kpt packages are not
-   compatible with the kpt `v1.0` binary and users will be prompted to migrate/fix their packages.
+3. `July 1, 2021:` Package format `v1` will be released which guarantees backwards compatability for new packages going forward.
+   The existing kpt packages are not compatible with the kpt `v1.0` binary and users will be prompted to migrate/fix their packages.
 4. `TBD:` Feature releases and bug fixes for pre-v1 versions of kpt will be reserved
    for serious security bugs only. Customers will be asked to migrate to kpt `v1.0`.
 
