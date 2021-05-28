@@ -55,13 +55,13 @@ expectedOutput "Package \"wordpress\"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
-│   ├── [deployment.yaml]  Deployment wordpress
-│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+│   ├── [deployment.yaml]  Deployment wordpress
+│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
 └── Package \"mysql\"
-  ├── [Kptfile]  Kptfile mysql
-  ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
-  ├── [deployment.yaml]  Deployment wordpress-mysql
-  └── [deployment.yaml]  Service wordpress-mysql"
+    ├── [Kptfile]  Kptfile mysql
+    ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
+    ├── [deployment.yaml]  Deployment wordpress-mysql
+    └── [deployment.yaml]  Service wordpress-mysql"
 ```
 
 {{% /hide %}}
@@ -73,13 +73,13 @@ Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
-│   ├── [deployment.yaml]  Deployment wordpress
-│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+│   ├── [deployment.yaml]  Deployment wordpress
+│   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
 └── Package "mysql"
-  ├── [Kptfile]  Kptfile mysql
-  ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
-  ├── [deployment.yaml]  Deployment wordpress-mysql
-  └── [deployment.yaml]  Service wordpress-mysql
+    ├── [Kptfile]  Kptfile mysql
+    ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
+    ├── [deployment.yaml]  Deployment wordpress-mysql
+    └── [deployment.yaml]  Service wordpress-mysql
 ```
 
 ### Configure namespace
@@ -142,7 +142,7 @@ namespace/my-space created
 
 {{% hide %}}
 
-<!--@verifyPkgExamples-->
+<!--@verifyPkgExamples1-->
 ```sh
 kpt live apply wordpress/
 ```
