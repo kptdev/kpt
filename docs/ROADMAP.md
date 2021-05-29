@@ -9,7 +9,7 @@ Draft of the *v1* release slated for Summer 2021.
 kpt has added a declarative way to customize and validate configuration.  
 This allows you to run several mutation and validation 
 functions in a pipeline alleviating the need to create shell scripts that do 
-the same thing.  Further information can be founnd in the 
+the same thing.  Further information can be found in the 
 [declarative function execution]  section of the Kpt Book.
 
 ### 2. Setters
