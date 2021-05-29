@@ -72,8 +72,8 @@ CLI and the data format for kpt.  Please visit the [migration guide] for
 your existing kpt content.
 
 ## Feedback channels:
-kpt-users@googlegroups.com
-File a [new issue] on Github, but please search first. 
+1. File a [new issue] on Github, but please search first. 
+1. kpt-users@googlegroups.com
 
 
 [new issue]: https://github.com/GoogleContainerTools/kpt/issues/new/choose
