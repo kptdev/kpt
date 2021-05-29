@@ -66,6 +66,11 @@ are planning to complete the work in [Milestone 4].  For instance as of 6/1/21
 and features are going to be highly dependent on feedback we get from beta
 testers.
 
+## Upgrading from previous version of kpt.
+There are a number of breaking changes that had to be done to clean up the
+CLI and the data format for kpt.  Please visit the [migration guide] for 
+your existing kpt content.
+
 ## Feedback channels:
 kpt-users@googlegroups.com
 File a [new issue] on Github, but please search first. 
@@ -81,3 +86,4 @@ File a [new issue] on Github, but please search first.
 [Milestone 3]: https://github.com/GoogleContainerTools/kpt/milestone/10
 [Milestone 4]: https://github.com/GoogleContainerTools/kpt/milestone/11
 [out of place hydration]: https://github.com/GoogleContainerTools/kpt/issues/1412
+[migration guide]: https://kpt.dev/installation/migration
