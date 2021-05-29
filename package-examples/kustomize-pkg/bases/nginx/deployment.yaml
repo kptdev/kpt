@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,16 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: apps/v1
 kind: Deployment
-metadata:
-  name: helloworld-gke
+metadata: # kpt-merge: /my-nginx
+  name: my-nginx
 spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
   template:
+    metadata:
+      labels:
+        app: nginx
     spec:
       containers:
-      - name: helloworld-gke
-        env:
-        - name: TARGET
-          value: 'changeme!' # kpt-set: ${target}
+        - name: nginx
+          image: nginx:1.14.1
+          ports:
+            - containerPort: 80

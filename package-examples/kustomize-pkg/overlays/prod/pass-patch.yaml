@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: not-important
+spec:
+  replicas: 6
+  template:
+    spec:
+      containers:
+        - name: nginx
+          ports:
+            - containerPort: 443
