@@ -77,7 +77,7 @@ fn-args:
 --fn-config:
   Path to the file containing `functionConfig` for the function.
 
---image:
+--image, i:
   Container image of the function to execute e.g. `gcr.io/kpt-fn/set-namespace:v0.1`.
   `eval` executes only one function, so do not use `--exec-path` flag with this flag.
 
