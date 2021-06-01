@@ -528,3 +528,28 @@ func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.St
 	}
 	return fnConfigPaths, nil
 }
+
+// FunctionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
+// invoked by kio.LocalPackageReader when it reads the package. The filter will return
+// true if the file should be skipped during reading. Skipped files will not be included
+// in all steps following.
+func FunctionConfigFilterFunc(pkgPath types.UniquePath, includeMetaResources bool) (kio.LocalPackageSkipFileFunc, error) {
+	if includeMetaResources {
+		return func(relPath string) bool {
+			return false
+		}, nil
+	}
+
+	fnConfigPaths, err := FunctionConfigFilePaths(pkgPath, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
+	}
+
+	return func(relPath string) bool {
+		if len(fnConfigPaths) == 0 {
+			return false
+		}
+		// relPath is cleaned so we can directly use it here
+		return fnConfigPaths.Has(relPath)
+	}, nil
+}
