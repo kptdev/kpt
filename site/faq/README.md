@@ -74,6 +74,11 @@ Yes. kpt's architecture facilitates the developing programs which may
 generate or modify configuration. See the [Using Functions] for how to
 compose multiple programs together.
 
+#### **What is the roadmap for kpt?**
+
+Please visit the [roadmap document] and the [kpt milestones].
+
+
 #### **I still have questions. How do I contact you?**
 
 [Please reach out!][contact]
@@ -84,3 +89,5 @@ compose multiple programs together.
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
+[roadmap document]: https://github.com/GoogleContainerTools/kpt/blob/master/docs/ROADMAP.md
+[kpt milestones]: https://github.com/GoogleContainerTools/kpt/milestones
