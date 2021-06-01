@@ -65,18 +65,19 @@ func (f *Function) validate(fnType string, idx int) error {
 		}
 	}
 
+	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
+		return &ValidateError{
+			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+			Reason: "functionConfig must not specify both `configMap` and `configPath` at the same time",
+		}
+	}
+
 	if f.ConfigPath != "" {
 		if err := validateFnConfigPath(f.ConfigPath); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
 				Value:  f.ConfigPath,
 				Reason: err.Error(),
-			}
-		}
-		if len(f.ConfigMap) != 0 {
-			return &ValidateError{
-				Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-				Reason: "only one of 'configMap', 'configPath' can be specified; got both",
 			}
 		}
 	}
