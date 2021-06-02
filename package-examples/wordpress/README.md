@@ -101,15 +101,6 @@ new value `wp-tag: 4.9-aapache` in `wordpress/Kptfile` and `ms-tag: 5.7` in `wor
 
 ### Render the declared values
 
-{{% hide %}}
-
-<!--@fnRender @verifyPkgExamples-->
-```sh
-kpt fn render wordpress/
-```
-
-{{% /hide %}}
-
 ```sh
 $ kpt fn render wordpress/
 ```
@@ -117,15 +108,6 @@ $ kpt fn render wordpress/
 ### Apply the package
 
 Apply all the contents of the package recursively to the cluster
-
-{{% hide %}}
-
-<!--@liveInit @verifyPkgExamples-->
-```sh
-kpt live init wordpress/
-```
-
-{{% /hide %}}
 
 ```sh
 $ kpt live init wordpress/
@@ -139,16 +121,6 @@ $ kubectl create ns my-space
 
 namespace/my-space created
 ```
-
-{{% hide %}}
-
-<!--@verifyPkgExamples1-->
-```sh
-kpt live apply wordpress/
-```
-
-{{% /hide %}}
-
 
 ```sh
 $ kpt live apply wordpress/

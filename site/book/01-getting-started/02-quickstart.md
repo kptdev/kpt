@@ -152,15 +152,6 @@ Kubernetes cluster.
 
 First, initialize the package:
 
-{{% hide %}}
-
-<!--@liveInit @verifyBook-->
-```shell
-kpt live init
-```
-
-{{% /hide %}}
-
 ```shell
 $ kpt live init
 ```
@@ -172,29 +163,11 @@ package in the future, it will be pruned from the cluster.
 You can validate the resources and verify that the expected changes will be made
 to the cluster:
 
-{{% hide %}}
-
-<!--@liveApply @verifyBook-->
-```shell
-kpt live apply --dry-run
-```
-
-{{% /hide %}}
-
 ```shell
 $ kpt live apply --dry-run
 ```
 
 Apply the resources to the cluster:
-
-{{% hide %}}
-
-<!--@liveApply @verifyBook-->
-```shell
-kpt live apply --reconcile-timeout=15m
-```
-
-{{% /hide %}}
 
 ```shell
 $ kpt live apply --reconcile-timeout=15m
@@ -216,15 +189,6 @@ $ git add .; git commit -m "My customizations"
 
 Then update to version `v0.5`:
 
-{{% hide %}}
-
-<!--@pkgUpdate @verifyBook-->
-```shell
-kpt pkg update @v0.5
-```
-
-{{% /hide %}}
-
 ```shell
 $ kpt pkg update @v0.5
 ```
@@ -234,15 +198,6 @@ merge strategy.
 
 Apply the updated resources to the cluster:
 
-{{% hide %}}
-
-<!--@liveApply @verifyBook-->
-```shell
-kpt live apply --reconcile-timeout=15m
-```
-
-{{% /hide %}}
-
 ```shell
 $ kpt live apply --reconcile-timeout=15m
 ```
@@ -250,15 +205,6 @@ $ kpt live apply --reconcile-timeout=15m
 ## Clean up
 
 Delete the package from the cluster:
-
-{{% hide %}}
-
-<!--@liveDestroy @verifyBook-->
-```shell
-kpt live destroy
-```
-
-{{% /hide %}}
 
 ```shell
 $ kpt live destroy

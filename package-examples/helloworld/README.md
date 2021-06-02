@@ -68,29 +68,11 @@ Package "helloworld"
 
 Initialize the inventory object:
 
-{{% hide %}}
-
-<!--@liveInit @verifyPkgExamples-->
-```shell
-kpt live init helloworld/
-```
-
-{{% /hide %}}
-
 ```shell
 $ kpt live init helloworld/
 ```
 
 Apply all the contents of the package recursively to the cluster
-
-{{% hide %}}
-
-<!--@liveApply @verifyPkgExamples-->
-```shell
-kpt live apply helloworld/
-```
-
-{{% /hide %}}
 
 ```shell
 $ kpt live apply helloworld/
