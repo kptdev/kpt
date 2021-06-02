@@ -143,7 +143,7 @@ func validateFnConfigPathSyntax(p string) error {
 	return nil
 }
 
-func validateFnConfigPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
+func ValidateFnConfigPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
 	path := filepath.Join(string(pkgPath), configPath)
 	file, err := os.Open(path)
 	if err != nil {
@@ -153,6 +153,9 @@ func validateFnConfigPath(pkgPath types.UniquePath, configPath string) (*yaml.RN
 	nodes, err := reader.Read()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read function config '%s': %w", configPath, err)
+	}
+	if len(nodes) > 1 {
+		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config", configPath)
 	}
 	if err := IsKrm(nodes[0]); err != nil {
 		return nil, err
