@@ -34,7 +34,7 @@ func GetSourceRunner(name string) *SourceRunner {
 	c.Flags().StringVar(&r.FunctionConfig, "fn-config", "",
 		"path to function config file.")
 	c.Flags().BoolVar(&r.IncludeMetaResources,
-		"include-meta-resources", false, "include package meta resources in function input")
+		"include-meta-resources", false, "include package meta resources in the command output")
 	r.Command = c
 	_ = c.MarkFlagFilename("fn-config", "yaml", "json", "yml")
 	return r

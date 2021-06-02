@@ -542,7 +542,7 @@ func FunctionConfigFilterFunc(pkgPath types.UniquePath, includeMetaResources boo
 
 	fnConfigPaths, err := FunctionConfigFilePaths(pkgPath, true)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
+		return nil, fmt.Errorf("failed to get config paths for the functions in pipeline: %w", err)
 	}
 
 	return func(relPath string) bool {

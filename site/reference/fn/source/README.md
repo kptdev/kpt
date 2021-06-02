@@ -3,7 +3,7 @@ title: "`source`"
 linkTitle: "source"
 type: docs
 description: >
-   Source resources from a local directory
+  Source resources from a local directory
 ---
 
 <!--mdtogo:Short
@@ -38,9 +38,14 @@ DIR:
 --fn-config:
   Path to the file containing `functionConfig`.
 
+--include-meta-resources:
+  If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
+  in the output of the command. By default it is disabled.
+
 ```
 
 <!--mdtogo-->
+
 ### Examples
 
 <!--mdtogo:Examples-->
@@ -60,5 +65,5 @@ $ kpt fn source DIR |
 
 <!--mdtogo-->
 
-[Chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
-[Function Specification]: /book/05-developing-functions/02-function-specification
+[chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
+[function specification]: /book/05-developing-functions/02-function-specification
