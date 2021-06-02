@@ -13,8 +13,8 @@ description: >
 `eval` executes a function on resources in a directory. Functions are packaged
 as container images.
 
-If the function fails (i.e. exits with non-zero status code), `eval` will
-abort and the local filesystem is left intact.
+If the function fails (i.e. exits with non-zero status code), `eval` will abort
+and the local filesystem is left intact.
 
 Refer to the [Imperative Function Execution] for detailed overview.
 
@@ -37,9 +37,9 @@ DIR|-:
 
   1. Multi object YAML where resources are separated by `---`.
 
-  2. `Function Specification` wire format where resources are wrapped in an object
+  2. KRM Function Specification wire format where resources are wrapped in an object
      of kind ResourceList.
- 
+
   If the output is written to `stdout`, resources are written in multi object YAML
   format where resources are separated by `---`.
 ```
@@ -61,7 +61,7 @@ fn-args:
 --dry-run:
   If enabled, the resources are not written to local filesystem, instead they
   are written to stdout. By defaults it is disabled.
-  
+
 --env, e:
   List of local environment variables to be exported to the container function.
   By default, none of local environment variables are made available to the
@@ -73,7 +73,7 @@ fn-args:
   only one function, so do not use `--image` flag with this flag. This is useful
   for testing function locally during development. It enables faster dev iterations
   by avoiding the function to be published as container image.
-  
+
 --fn-config:
   Path to the file containing `functionConfig` for the function.
 
@@ -115,6 +115,7 @@ fn-args:
 <!--mdtogo-->
 
 ## Examples
+
 <!--mdtogo:Examples-->
 
 ```
@@ -149,7 +150,7 @@ $ kpt fn eval DIR --image gcr.io/example.com/my-fn --results-dir /tmp/my-results
 ```
 # execute container my-fn on the resources in DIR directory with network access enabled,
 # and write output back to DIR
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --network 
+$ kpt fn eval DIR --image gcr.io/example.com/my-fn --network
 ```
 
 ```
@@ -173,8 +174,11 @@ $ kpt fn source wordpress \
   | kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
   | kpt fn sink wordpress
 ```
+
 <!--mdtogo-->
 
 [docker volumes]: https://docs.docker.com/storage/volumes/
-[Imperative Function Execution]: /book/04-using-functions/02-imperative-function-execution
-[Function Specification]: /book/05-developing-functions/02-function-specification
+[imperative function execution]:
+  /book/04-using-functions/02-imperative-function-execution
+[function specification]:
+  /book/05-developing-functions/01-functions-specification
