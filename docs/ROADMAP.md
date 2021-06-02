@@ -33,9 +33,7 @@ _kpt live_ used to use ConfigMap to store inventory information. This was
 convenient as it didn't require any CRDs, but it had challenges around encoding
 of the GroupKind, name and namespace, and it didn't allow us to easily add
 additional metadata about a package, such as the package version. This is
-is now migrated to use ResourceGroup CRD.  You can learn more about in the
-[apply chapter] of [The Kpt Book].
-https://kpt.dev/book/06-apply/
+is now migrated to use ResourceGroup CRD.
 
 The majority of the code for kpt live is in the [cli-utils] repo. Our
 goal is to keep this code independent of kpt and provide the apply logic as a
@@ -62,11 +60,13 @@ examples and help. Please visit the [function catalog] for further information.
 Since this is a draft of the release notes you should be aware of the
 ongoing work.  At the time of writing the team is in [Milestone 3], and we
 are planning to complete the work in [Milestone 4].  For instance as of 6/1/21
-[out of place hydration] support is still in the works.  The exact dates
-and features are going to be highly dependent on feedback we get from beta
-testers.
+[out of place hydration] support is in the works and will land in O(week)
+timeline.
 
-The list of all the future milestones can be found here: [kpt milestones]
+The list of all the future milestones can be found here: [kpt milestones].
+As dictated by semver, post v1 releases will be guaranteed to be backwards
+compatible. Major enhancement in release 1.1 will be around OpenAPI
+schema extensability.
 
 ## Upgrading from previous version of kpt.
 There are a number of breaking changes that had to be done to clean up the
