@@ -13,7 +13,7 @@ provide your business logic.
 The following is an example package with a `starlark` function declaration:
 
 ```shell
-$ kpt pkg get kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark/simple
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark/simple
 ```
 
 It contains the following `functionConfig`:
