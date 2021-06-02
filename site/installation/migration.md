@@ -23,12 +23,12 @@
 
 kpt `v1.0` is going to be the latest major release of the kpt CLI. The implementation of kpt `v1.0`
 has changed considerably from kpt `v0.39`. A rich set of new features have been added
-as a result of the customers’ input and requirements. Some features have been
+as a result of the users’ input and requirements. Some features have been
 deprecated or refactored in ways that make them incompatible with kpt `v0.39`.
-Since these are backwards incompatible changes, there should be a way for customers
+Since these are backwards incompatible changes, there should be a way for users
 to migrate/fix their existing kpt packages which are compatible with `v0.39` version of kpt,
 to become compatible with kpt `v1.0`. This document outlines the end to end migration
-journey of customers using a comprehensive kpt package example.
+journey of users using a comprehensive kpt package example.
 
 ## Before you begin
 
@@ -248,7 +248,7 @@ functional parity.
 3. `July 1, 2021:` Package format `v1` will be released which guarantees backwards compatability for new packages going forward.
    The existing kpt packages are not compatible with the kpt `v1.0` binary and users will be prompted to migrate/fix their packages.
 4. `TBD:` Feature releases and bug fixes for pre-v1 versions of kpt will be reserved
-   for serious security bugs only. Customers will be asked to migrate to kpt `v1.0`.
+   for serious security bugs only. Users will be asked to migrate to kpt `v1.0`.
 
 [v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/
