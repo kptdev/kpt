@@ -406,7 +406,6 @@ func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.R
 	const op errors.Op = "fn.readConfig"
 	var fn errors.Fn = errors.Fn(f.Image)
 
-	var node *yaml.RNode
 	switch {
 	case f.ConfigPath != "":
 		path := filepath.Join(string(pkgPath), f.ConfigPath)
@@ -419,14 +418,18 @@ func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.R
 		if err != nil {
 			return nil, errors.E(op, fn, err)
 		}
-		node, err = yaml.Parse(string(b))
+		nodes, err := kio.FromBytes(b)
 		if err != nil {
 			return nil, errors.E(op, fn, fmt.Errorf("invalid function config %q %w", f.ConfigPath, err))
 		}
+		if len(nodes) != 1 {
+			return nil, errors.E(op, fn, fmt.Errorf("function config file %q must not contain more than 1 config, got %d",
+				f.ConfigPath, len(nodes)))
+		}
 		// directly use the config from file
-		return node, nil
+		return nodes[0], nil
 	case len(f.ConfigMap) != 0:
-		node = yaml.NewMapRNode(&f.ConfigMap)
+		node := yaml.NewMapRNode(&f.ConfigMap)
 		if node == nil {
 			return nil, nil
 		}
