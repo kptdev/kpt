@@ -402,7 +402,8 @@ func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
 		return nil, fmt.Errorf("failed to read function config %q: %w", r.FnConfigPath, err)
 	}
 	if len(nodes) > 1 {
-		return nil, fmt.Errorf("function config file %q must not contain more than 1 config", r.FnConfigPath)
+		return nil, fmt.Errorf("function config file %q must not contain more than 1 config, got %d",
+			r.FnConfigPath, len(nodes))
 	}
 	return nodes[0], nil
 }
