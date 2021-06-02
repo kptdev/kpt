@@ -166,7 +166,7 @@ type GitLock struct {
 // PackageInfo contains optional information about the package such as license, documentation, etc.
 // These fields are not consumed by any functionality in kpt and are simply passed through.
 // Note that like any other KRM resource, humans and automation can also use `metadata.labels` and
-// `metadata.annotations` as the extrension mechanism.
+// `metadata.annotations` as the extension mechanism.
 type PackageInfo struct {
 	// Site is the URL for package web page.
 	Site string `yaml:"site,omitempty"`

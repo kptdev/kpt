@@ -16,15 +16,18 @@ package v1alpha2
 
 import (
 	"fmt"
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	"os"
 	"path/filepath"
 	"regexp"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func (kf *KptFile) Validate() error {
-	if err := kf.Pipeline.validate(); err != nil {
+func (kf *KptFile) Validate(pkgPath types.UniquePath) error {
+	if err := kf.Pipeline.validate(pkgPath); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)
 	}
 	// TODO: validate other fields
@@ -34,20 +37,20 @@ func (kf *KptFile) Validate() error {
 // validate will validate all fields in the Pipeline
 // 'mutators' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
-func (p *Pipeline) validate() error {
+func (p *Pipeline) validate(pkgPath types.UniquePath) error {
 	if p == nil {
 		return nil
 	}
 	for i := range p.Mutators {
 		f := p.Mutators[i]
-		err := f.validate("mutators", i)
+		err := f.validate("mutators", i, pkgPath)
 		if err != nil {
 			return fmt.Errorf("function %q: %w", f.Image, err)
 		}
 	}
 	for i := range p.Validators {
 		f := p.Validators[i]
-		err := f.validate("validators", i)
+		err := f.validate("validators", i, pkgPath)
 		if err != nil {
 			return fmt.Errorf("function %q: %w", f.Image, err)
 		}
@@ -55,7 +58,7 @@ func (p *Pipeline) validate() error {
 	return nil
 }
 
-func (f *Function) validate(fnType string, idx int) error {
+func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) error {
 	err := validateFunctionName(f.Image)
 	if err != nil {
 		return &ValidateError{
@@ -73,7 +76,14 @@ func (f *Function) validate(fnType string, idx int) error {
 	}
 
 	if f.ConfigPath != "" {
-		if err := validateFnConfigPath(f.ConfigPath); err != nil {
+		if err := validateFnConfigPathSyntax(f.ConfigPath); err != nil {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
+				Value:  f.ConfigPath,
+				Reason: err.Error(),
+			}
+		}
+		if _ , err := ValidateFnConfigPath(pkgPath, f.ConfigPath); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
 				Value:  f.ConfigPath,
@@ -81,7 +91,6 @@ func (f *Function) validate(fnType string, idx int) error {
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -115,22 +124,9 @@ func validateFunctionName(name string) error {
 	return nil
 }
 
-// IsNodeZero returns true if all the public fields in the Node are empty.
-// Which means it's not initialized and should be omitted when marshal.
-// The Node itself has a method IsZero but it is not released
-// in yaml.v3. https://pkg.go.dev/gopkg.in/yaml.v3#Node.IsZero
-// TODO: Use `IsYNodeZero` method from kyaml when kyaml has been updated to
-// >= 0.10.5
-func IsNodeZero(n *yaml.Node) bool {
-	return n != nil && n.Kind == 0 && n.Style == 0 && n.Tag == "" && n.Value == "" &&
-		n.Anchor == "" && n.Alias == nil && n.Content == nil &&
-		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" &&
-		n.Line == 0 && n.Column == 0
-}
-
 // validateFnConfigPath validates syntactic correctness of given functionConfig path
 // and return an error if it's invalid.
-func validateFnConfigPath(p string) error {
+func validateFnConfigPathSyntax(p string) error {
 	if strings.TrimSpace(p) == "" {
 		return fmt.Errorf("path must not be empty")
 	}
@@ -147,13 +143,47 @@ func validateFnConfigPath(p string) error {
 	return nil
 }
 
+func validateFnConfigPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
+	path := filepath.Join(string(pkgPath), configPath)
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("functionConfig must exist in the current package")
+	}
+	reader := kio.ByteReader{Reader: file}
+	nodes, err := reader.Read()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read function config '%s': %w", configPath, err)
+	}
+	if err := IsKrm(nodes[0]); err != nil {
+		return nil, err
+	}
+	return nodes[0], nil
+}
+
+func IsKrm(n *yaml.RNode) error {
+	meta, err := n.GetMeta()
+	if err != nil {
+		return fmt.Errorf("resource must have `apiVersion`, `kind`, and `name`")
+	}
+	if meta.APIVersion == "" {
+		return fmt.Errorf("resource must have `apiVersion`")
+	}
+	if meta.Kind == "" {
+		return fmt.Errorf("resource must have `kind`")
+	}
+	if meta.Name == "" {
+		return fmt.Errorf("resource must have `metadata.name`")
+	}
+	return nil
+}
+
 // ValidateError is the error returned when validation fails.
 type ValidateError struct {
 	// Field is the field that causes error
 	Field string
 	// Value is the value of invalid field
 	Value string
-	// Reason is the reson for the error
+	// Reason is the reason for the error
 	Reason string
 }
 
