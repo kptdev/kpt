@@ -425,9 +425,6 @@ func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.R
 		}
 		// directly use the config from file
 		return node, nil
-	case !kptfilev1alpha2.IsNodeZero(&f.Config):
-		// directly use the inline config
-		return yaml.NewRNode(&f.Config), nil
 	case len(f.ConfigMap) != 0:
 		node = yaml.NewMapRNode(&f.ConfigMap)
 		if node == nil {

@@ -65,7 +65,13 @@ func (f *Function) validate(fnType string, idx int) error {
 		}
 	}
 
-	var configFields []string
+	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
+		return &ValidateError{
+			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+			Reason: "functionConfig must not specify both `configMap` and `configPath` at the same time",
+		}
+	}
+
 	if f.ConfigPath != "" {
 		if err := validateFnConfigPath(f.ConfigPath); err != nil {
 			return &ValidateError{
@@ -73,27 +79,6 @@ func (f *Function) validate(fnType string, idx int) error {
 				Value:  f.ConfigPath,
 				Reason: err.Error(),
 			}
-		}
-		configFields = append(configFields, "configPath")
-	}
-	if len(f.ConfigMap) != 0 {
-		configFields = append(configFields, "configMap")
-	}
-	if !IsNodeZero(&f.Config) {
-		config := yaml.NewRNode(&f.Config)
-		if _, err := config.GetMeta(); err != nil {
-			return &ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].config", fnType, idx),
-				Reason: "functionConfig must be a valid KRM resource with `apiVersion` and `kind` fields",
-			}
-		}
-		configFields = append(configFields, "config")
-	}
-	if len(configFields) > 1 {
-		return &ValidateError{
-			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: fmt.Sprintf("only one of 'config', 'configMap', 'configPath' can be specified. Got %q",
-				strings.Join(configFields, ", ")),
 		}
 	}
 

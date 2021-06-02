@@ -15,8 +15,6 @@ package v1alpha2
 
 import (
 	"testing"
-
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestKptfileValidate(t *testing.T) {
@@ -39,14 +37,6 @@ func TestKptfileValidate(t *testing.T) {
 			kptfile: KptFile{
 				Pipeline: &Pipeline{
 					Mutators: []Function{
-						{
-							Image: "gcr.io/kpt-functions/generate-folders",
-							Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
-kind: ResourceHierarchy
-metadata:
-  name: root-hierarchy
-  namespace: hierarchy # {"$kpt-set":"namespace"}`).YNode(),
-						},
 						{
 							Image:      "patch-strategic-merge",
 							ConfigPath: "./patch.yaml",

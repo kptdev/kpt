@@ -377,11 +377,8 @@ metadata:
 pipeline:
   mutators:
     - image: my:image
-      config:
-        apiVersion: kpt.dev/v1alpha2
-        kind: Function
-        spec:
-          foo: bar
+      configMap:
+        foo: bar
     - image: foo:bar
 `,
 			updateUpstream: true,
@@ -393,11 +390,8 @@ metadata:
 pipeline:
   mutators:
     - image: my:image
-      config:
-        apiVersion: kpt.dev/v1alpha2
-        kind: Function
-        spec:
-          foo: bar
+      configMap:
+        foo: bar
     - image: foo:bar
 `,
 		},
