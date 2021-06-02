@@ -22,15 +22,6 @@ $ git add .; git commit -m "My changes"
 
 For example, you can update to version `v0.4` of the `wordpress` package:
 
-{{% hide %}}
-
-<!--@verifyBook-->
-```shell
-kpt pkg update wordpress@v0.4
-```
-
-{{% /hide %}}
-
 ```shell
 $ kpt pkg update wordpress@v0.4
 ```
