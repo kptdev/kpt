@@ -78,5 +78,5 @@ enough that you don't have to alias it. It is pronounced "kept".
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
-[roadmap document]: https://github.com/GoogleContainerTools/kpt/blob/master/docs/ROADMAP.md
+[roadmap document]: https://github.com/GoogleContainerTools/kpt/blob/next/docs/ROADMAP.md
 [kpt milestones]: https://github.com/GoogleContainerTools/kpt/milestones
