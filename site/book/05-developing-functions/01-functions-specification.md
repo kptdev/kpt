@@ -5,8 +5,8 @@ kpt CLI) and functions. This standard was published as [KRM Configuration
 Functions Specification][spec] and donated to the CNCF as part of the Kubernetes
 SIG-CLI.
 
-Understanding this standard enables you to have a deeper understanding of how
-things work under the hood. It also enables to create your own toolchain for
+Understanding this specification enables you to have a deeper understanding of
+how things work under the hood. It also enables to create your own toolchain for
 function development if you so desire.
 
 As an example, you can see the `ResourceList` containing resources in the

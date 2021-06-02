@@ -13,13 +13,13 @@ provide your business logic.
 The following is an example package with a `starlark` function declaration:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark/simple
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark/set-namespace@starlark/v0.1
 ```
 
 It contains the following `functionConfig`:
 
 ```yaml
-# simple/fn-config.yaml
+# set-namespace/fn-config.yaml
 apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
@@ -37,7 +37,7 @@ The `source` field includes the Starlark logic that sets the namespace on all
 resources. Go ahead and render the package:
 
 ```shell
-$ kpt fn render simple
+$ kpt fn render set-namespace
 ```
 
 You should now see that resources have `namespace` set to `prod`.
@@ -57,7 +57,7 @@ data structures.
 The following is an example package with a `gatekeeper` function declaration:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/enforce-gatekeeper/invalid-configmap
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/gatekeeper/invalid-configmap@gatekeeper/v0.1
 ```
 
 It contains the policy constraint containing the Rego logic which looks for
@@ -65,7 +65,7 @@ banned fields in `ConfigMap` which may contain credentials which you do not want
 declared in a package and committed to Git:
 
 ```yaml
-# invalid-configmap/resources.yaml (Excerpt)
+# invalid-configmap/policy.yaml
 apiVersion: templates.gatekeeper.sh/v1beta1
 kind: ConstraintTemplate
 metadata: # kpt-merge: /k8sbannedconfigmapkeysv1

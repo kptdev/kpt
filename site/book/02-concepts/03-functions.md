@@ -10,6 +10,8 @@ KRM resources. Some example use cases:
   bootstraping a new team
 - Bulk transformation of all `PodSecurityPolicy` resources to improve the
   security posture.
+- Inject a sidecar container (service mesh, mysql proxy, logging) in a workload
+  resource (e.g. `Deployment`)
 
 Since functions are containerized, they can encapsulate different toolchains,
 languages, and runtimes. For example, the function container image can
