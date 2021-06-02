@@ -39,7 +39,6 @@ func TestKptfileValidate(t *testing.T) {
 					Mutators: []Function{
 						{
 							Image:      "patch-strategic-merge",
-							ConfigPath: "./patch.yaml",
 						},
 						{
 							Image: "gcr.io/kpt-fn/set-annotations:v0.1",
@@ -116,20 +115,6 @@ func TestKptfileValidate(t *testing.T) {
 			valid: false,
 		},
 		{
-			name: "pipeline: cleaned configpath does not contain ..",
-			kptfile: KptFile{
-				Pipeline: &Pipeline{
-					Mutators: []Function{
-						{
-							Image:      "image",
-							ConfigPath: "a/b/../config.yaml",
-						},
-					},
-				},
-			},
-			valid: true,
-		},
-		{
 			name: "pipeline: cleaned configpath contains ..",
 			kptfile: KptFile{
 				Pipeline: &Pipeline{
@@ -162,7 +147,7 @@ func TestKptfileValidate(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			err := c.kptfile.Validate()
+			err := c.kptfile.Validate("")
 			if c.valid && err != nil {
 				t.Fatalf("kptfile should be valid, %s", err)
 			}
@@ -328,10 +313,14 @@ func TestValidatePath(t *testing.T) {
 			"\t \n",
 			false,
 		},
+		{
+			"a/b/../config.yaml",
+			true,
+		},
 	}
 
 	for _, c := range cases {
-		ret := validateFnConfigPath(c.Path)
+		ret := validateFnConfigPathSyntax(c.Path)
 		if (ret == nil) != c.Valid {
 			t.Fatalf("returned value for path %q should be %t, got %t",
 				c.Path, c.Valid, (ret == nil))

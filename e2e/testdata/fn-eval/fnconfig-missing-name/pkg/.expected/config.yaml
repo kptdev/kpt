@@ -16,4 +16,4 @@ testType: eval
 image: gcr.io/kpt-fn/set-namespace:v0.1
 fnConfig: ../../config.yaml
 exitCode: 1
-stdErr: "fnconfig-missing-name/config.yaml' is missing field `metadata.name`"
+stdErr: "error: resource must have `metadata.name`"

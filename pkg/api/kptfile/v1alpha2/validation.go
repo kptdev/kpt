@@ -16,13 +16,13 @@ package v1alpha2
 
 import (
 	"fmt"
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -83,7 +83,7 @@ func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) er
 				Reason: err.Error(),
 			}
 		}
-		if _ , err := ValidateFnConfigPath(pkgPath, f.ConfigPath); err != nil {
+		if _ , err := GetValidatedFnConfigFromPath(pkgPath, f.ConfigPath); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
 				Value:  f.ConfigPath,
@@ -143,7 +143,7 @@ func validateFnConfigPathSyntax(p string) error {
 	return nil
 }
 
-func ValidateFnConfigPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
+func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
 	path := filepath.Join(string(pkgPath), configPath)
 	file, err := os.Open(path)
 	if err != nil {
@@ -155,10 +155,10 @@ func ValidateFnConfigPath(pkgPath types.UniquePath, configPath string) (*yaml.RN
 		return nil, fmt.Errorf("failed to read function config '%s': %w", configPath, err)
 	}
 	if len(nodes) > 1 {
-		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config", configPath)
+		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config, got %d", configPath, len(nodes))
 	}
 	if err := IsKrm(nodes[0]); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid function config file '%s': %s", configPath, err.Error())
 	}
 	return nodes[0], nil
 }
