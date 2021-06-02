@@ -87,11 +87,7 @@ Apply all the contents of the package recursively to the cluster
 
 <!--@liveApply @verifyPkgExamples-->
 ```shell
-kpt live apply helloworld/ > output.txt
-expectedOutput "service/helloworld-gke created
-deployment.apps/helloworld-gke created
-2 resource(s) applied. 2 created, 0 unchanged, 0 configured, 0 failed
-0 resource(s) pruned, 0 skipped, 0 failed"
+kpt live apply helloworld/
 ```
 
 {{% /hide %}}

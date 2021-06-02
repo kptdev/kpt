@@ -64,15 +64,6 @@ will explain the `Kptfile` in detail.
 
 Initialize a local Git repo and commit the forked copy of the package:
 
-{{% hide %}}
-
-<!--@verifyBook-->
-```shell
-git init; git add .; git commit -m "Pristine nginx package"
-```
-
-{{% /hide %}}
-
 ```shell
 $ git init; git add .; git commit -m "Pristine nginx package"
 ```
@@ -218,15 +209,6 @@ At some point, there will be a new version of the upstream `nginx` package, and
 you want to merge the upstream changes with changes to your local package.
 
 First, commit your local changes:
-
-{{% hide %}}
-
-<!--@verifyBook-->
-```shell
-git add .; git commit -m "My customizations"
-```
-
-{{% /hide %}}
 
 ```shell
 $ git add .; git commit -m "My customizations"

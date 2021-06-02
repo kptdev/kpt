@@ -20,15 +20,6 @@ _within_ a package.
 
 Before you make any changes to package, you should first initialize and commit the pristine package:
 
-{{% hide %}}
-
-<!--@verifyBook-->
-```shell
-git init; git add .; git commit -m "Pristine wordpress package"
-```
-
-{{% /hide %}}
-
 ```shell
 $ git init; git add .; git commit -m "Pristine wordpress package"
 ```

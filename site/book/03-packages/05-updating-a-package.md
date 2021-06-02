@@ -14,15 +14,6 @@ $ git diff
 
 If you're happy with the changes, commit them:
 
-{{% hide %}}
-
-<!--@verifyBook-->
-```shell
-git add .; git commit -m "My changes"
-```
-
-{{% /hide %}}
-
 ```shell
 $ git add .; git commit -m "My changes"
 ```
@@ -80,15 +71,6 @@ resource using OpenAPI schema.
 ## Commit the updated resources
 
 Once you have successfully updated the package, commit the changes:
-
-{{% hide %}}
-
-<!--@verifyBook-->
-```shell
-git add .; git commit -m "Updated wordpress to v0.4"
-```
-
-{{% /hide %}}
 
 ```shell
 $ git add .; git commit -m "Updated wordpress to v0.4"
