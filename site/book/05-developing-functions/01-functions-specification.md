@@ -17,4 +17,4 @@ $ kpt fn source wordpress | less
 ```
 
 [spec]:
-  https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
+  https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification
