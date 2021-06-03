@@ -16,7 +16,7 @@ This is a simple package that shows how kpt packages can be used instead of remo
 Get the example package on to local using `kpt pkg get`. Note that this package is for this example, wihin that package we are also using the nginx sub-package which is an alternative to having a remote base. 
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/kustomize-pkg
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/kustomize-pkg@next
 
 fetching package /package-examples/kustomize-pkg from https://github.com/GoogleContainerTools/kpt to kustomize-pkg
 ```

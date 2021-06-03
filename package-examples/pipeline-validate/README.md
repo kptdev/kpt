@@ -26,7 +26,7 @@ validate and apply the package:
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate@next
 
 fetching package /package-examples/pipeline-validate from https://github.com/GoogleContainerTools/kpt to pipeline-validate
 ```

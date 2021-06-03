@@ -16,7 +16,7 @@ setters in it.
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@next
 
 fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld-set
 ```
