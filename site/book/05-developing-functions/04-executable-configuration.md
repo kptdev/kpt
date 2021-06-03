@@ -118,7 +118,7 @@ $ kpt fn render invalid-configmap
 ```
 
 ?> Refer to the
-[Functions Catalog](https://catalog.kpt.dev/enforce-gatekeeper/v0.1/) for
+[Functions Catalog](https://catalog.kpt.dev/gatekeeper/v0.1/) for
 details on how use this function.
 
 [executable configuration pattern]:
