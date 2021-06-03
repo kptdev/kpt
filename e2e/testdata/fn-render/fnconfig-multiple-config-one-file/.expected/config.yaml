@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 exitCode: 1
-stdErr: "must not contain more than 1 config, got 2"
+stdErr: "functionConfig \"labelconfig.yaml\" must not contain more than one config, got 2"

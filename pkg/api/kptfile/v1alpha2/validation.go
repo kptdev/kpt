@@ -155,18 +155,18 @@ func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (
 	reader := kio.ByteReader{Reader: file}
 	nodes, err := reader.Read()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read functionConfig '%q': %w", configPath, err)
+		return nil, fmt.Errorf("failed to read functionConfig %q: %w", configPath, err)
 	}
 	if len(nodes) > 1 {
-		return nil, fmt.Errorf("functionConfig '%q' must not contain more than one config, got %d", configPath, len(nodes))
+		return nil, fmt.Errorf("functionConfig %q must not contain more than one config, got %d", configPath, len(nodes))
 	}
-	if err := IsKrm(nodes[0]); err != nil {
-		return nil, fmt.Errorf("functionConfig '%q': %s", configPath, err.Error())
+	if err := IsKRM(nodes[0]); err != nil {
+		return nil, fmt.Errorf("functionConfig %q: %s", configPath, err.Error())
 	}
 	return nodes[0], nil
 }
 
-func IsKrm(n *yaml.RNode) error {
+func IsKRM(n *yaml.RNode) error {
 	meta, err := n.GetMeta()
 	if err != nil {
 		return fmt.Errorf("resource must have `apiVersion`, `kind`, and `name`")

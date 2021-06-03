@@ -16,4 +16,4 @@ testType: eval
 image: gcr.io/kpt-fn/set-namespace:v0.1.3
 fnConfig: ../../config.yaml
 exitCode: 1
-stdErr: "must not contain more than 1 config, got 2"
+stdErr: "must not contain more than one config, got 2"
