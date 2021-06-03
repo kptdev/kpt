@@ -26,14 +26,13 @@ var testNamespace = "test-inventory-namespace"
 var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
-var rgInvStr = `
-apiVersion: "kpt.dev/v1alpha1"
-kind: ResourceGroup
-metadata:
-  namespace: test-inventory-namespace
+var kptfileStr = `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+inventory:
   name: test-inventory-obj
-  labels:
-    cli-utils.sigs.k8s.io/inventory-id: test-inventory-label
+  namespace: test-inventory-namespace
+  inventoryID: test-inventory-label
 `
 
 var rgInvObj = &unstructured.Unstructured{
@@ -146,8 +145,7 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
 			err = migrateRunner.updateKptfile(ctx, []string{dir}, testInventoryID)
 			// Check if there should be an error
@@ -206,8 +204,7 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
@@ -284,12 +281,12 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			isError: false,
 		},
 		"One migrate object is valid": {
-			invObj:  rgInvStr,
+			invObj:  kptfileStr,
 			objs:    []object.ObjMetadata{object.UnstructuredToObjMeta(pod1)},
 			isError: false,
 		},
 		"Multiple migrate objects are valid": {
-			invObj: rgInvStr,
+			invObj: kptfileStr,
 			objs: []object.ObjMetadata{
 				object.UnstructuredToObjMeta(pod1),
 				object.UnstructuredToObjMeta(pod2),
@@ -310,8 +307,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewFakeResourceGroupProvider(tf, tc.objs)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
 			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {

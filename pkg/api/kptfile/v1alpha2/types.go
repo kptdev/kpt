@@ -23,6 +23,7 @@ import (
 
 const (
 	KptFileName       = "Kptfile"
+	KptFileKind       = "Kptfile"
 	KptFileGroup      = "kpt.dev"
 	KptFileVersion    = "v1alpha2"
 	KptFileAPIVersion = KptFileGroup + "/" + KptFileVersion

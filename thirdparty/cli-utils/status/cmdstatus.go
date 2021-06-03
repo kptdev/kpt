@@ -11,6 +11,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
@@ -24,7 +25,6 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
@@ -40,12 +40,11 @@ var (
 	PollUntilOptions = []string{Known, Current, Deleted, Forever}
 )
 
-func NewRunner(ctx context.Context, provider provider.Provider, loader manifestreader.ManifestLoader,
+func NewRunner(ctx context.Context, provider provider.Provider,
 	ioStreams genericclioptions.IOStreams) *Runner {
 	r := &Runner{
 		ctx:               ctx,
 		provider:          provider,
-		loader:            loader,
 		pollerFactoryFunc: pollerFactoryFunc,
 		ioStreams:         ioStreams,
 	}
@@ -69,8 +68,8 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 }
 
 func NewCommand(ctx context.Context, provider provider.Provider,
-	loader manifestreader.ManifestLoader, ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, loader, ioStreams).Command
+	ioStreams genericclioptions.IOStreams) *cobra.Command {
+	return NewRunner(ctx, provider, ioStreams).Command
 }
 
 // Runner captures the parameters for the command and contains
@@ -80,7 +79,6 @@ type Runner struct {
 	Command   *cobra.Command
 	ioStreams genericclioptions.IOStreams
 	provider  provider.Provider
-	loader    manifestreader.ManifestLoader
 
 	period    time.Duration
 	pollUntil string
@@ -101,7 +99,7 @@ func (r *Runner) preRunE(*cobra.Command, []string) error {
 // runE implements the logic of the command and will delegate to the
 // poller to compute status for each of the resources. One of the printer
 // implementations takes care of printing the output.
-func (r *Runner) runE(cmd *cobra.Command, args []string) error {
+func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		// default to the current working directory
 		cwd, err := os.Getwd()
@@ -116,16 +114,12 @@ func (r *Runner) runE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	reader, err := r.loader.ManifestReader(cmd.InOrStdin(), args[0])
-	if err != nil {
-		return err
-	}
-	objs, err := reader.Read()
+	_, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
 
-	inv, _, err := r.loader.InventoryInfo(objs)
+	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
 	}
@@ -137,7 +131,7 @@ func (r *Runner) runE(cmd *cobra.Command, args []string) error {
 
 	// Based on the inventory template manifest we look up the inventory
 	// from the live state using the inventory client.
-	identifiers, err := invClient.GetClusterObjs(inv)
+	identifiers, err := invClient.GetClusterObjs(invInfo)
 	if err != nil {
 		return err
 	}

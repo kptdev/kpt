@@ -67,7 +67,7 @@ func (f *Function) validate(fnType string, idx int) error {
 
 	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
 		return &ValidateError{
-			Field: fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
 			Reason: "functionConfig must not specify both `configMap` and `configPath` at the same time",
 		}
 	}
