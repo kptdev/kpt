@@ -1,3 +1,5 @@
+# Installation
+
 Users can get kpt in a variety of ways:
 
 ?> If you are migrating from kpt `v0.39`, please follow the [migration guide] to kpt `v1.0+` binary.

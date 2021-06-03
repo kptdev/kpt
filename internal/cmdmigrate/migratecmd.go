@@ -41,13 +41,11 @@ type MigrateRunner struct {
 	cmProvider provider.Provider
 	rgProvider provider.Provider
 	cmLoader   manifestreader.ManifestLoader
-	rgLoader   manifestreader.ManifestLoader
 }
 
 // NewRunner returns a pointer to an initial MigrateRunner structure.
 func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
-	cmLoader manifestreader.ManifestLoader, rgLoader manifestreader.ManifestLoader,
-	ioStreams genericclioptions.IOStreams) *MigrateRunner {
+	cmLoader manifestreader.ManifestLoader, ioStreams genericclioptions.IOStreams) *MigrateRunner {
 	r := &MigrateRunner{
 		ctx:        ctx,
 		ioStreams:  ioStreams,
@@ -55,7 +53,6 @@ func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider pro
 		cmProvider: cmProvider,
 		rgProvider: rgProvider,
 		cmLoader:   cmLoader,
-		rgLoader:   rgLoader,
 		dir:        "",
 	}
 	cmd := &cobra.Command{
@@ -87,9 +84,8 @@ func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider pro
 
 // NewCommand returns the cobra command for the migrate command.
 func NewCommand(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
-	cmLoader manifestreader.ManifestLoader, rgLoader manifestreader.ManifestLoader,
-	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
+	cmLoader manifestreader.ManifestLoader, ioStreams genericclioptions.IOStreams) *cobra.Command {
+	return NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams).Command
 }
 
 // Run executes the migration from the ConfigMap based inventory to the ResourceGroup
@@ -263,25 +259,22 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 		fmt.Fprintln(mr.ioStreams.Out, "success")
 		return nil
 	}
-	rgReader, err := mr.rgLoader.ManifestReader(reader, args[0])
+
+	_, inv, err := live.Load(mr.rgProvider.Factory(), args[0], reader)
 	if err != nil {
 		return err
 	}
-	objs, err := rgReader.Read()
+
+	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
 	}
-	// Filter the ConfigMap inventory object.
-	rgInv, err := findResourceGroupInv(objs)
-	if err != nil {
-		return err
-	}
+
 	rgInvClient, err := mr.rgProvider.InventoryClient()
 	if err != nil {
 		return err
 	}
-	inv := live.WrapInventoryInfoObj(rgInv)
-	_, err = rgInvClient.Merge(inv, cmObjs)
+	_, err = rgInvClient.Merge(invInfo, cmObjs)
 	if err != nil {
 		return err
 	}

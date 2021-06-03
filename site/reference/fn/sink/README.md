@@ -3,7 +3,7 @@ title: "`sink`"
 linkTitle: "sink"
 type: docs
 description: >
-   Write resources to a local directory
+  Write resources to a local directory
 ---
 
 <!--mdtogo:Short
@@ -13,13 +13,13 @@ description: >
 `sink` reads resources from `stdin` and writes them to a local directory.
 Resources must be in one of the following input formats:
 
-  1. Multi object YAML where resources are separated by `---`.
+1. Multi object YAML where resources are separated by `---`.
 
-  2. `Function Specification` wire format where resources are wrapped in an object
-     of kind ResourceList.
+2. KRM Function Specification wire format where resources are wrapped in an
+   object of kind ResourceList.
 
-`sink` is useful for chaining functions using Unix pipe. For more details,
-refer to [Chaining functions].
+`sink` is useful for chaining functions using Unix pipe. For more details, refer
+to [Chaining functions].
 
 ### Synopsis
 
@@ -48,5 +48,7 @@ $ kpt fn source DIR |
 
 <!--mdtogo-->
 
-[Chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
-[Function Specification]: /book/05-developing-functions/02-function-specification
+[chaining functions]:
+  /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
+[function specification]:
+  /book/05-developing-functions/01-functions-specification

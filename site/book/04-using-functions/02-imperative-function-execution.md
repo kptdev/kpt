@@ -1,7 +1,8 @@
-The `fn eval` command enables you to execute a single function without declaring it in the package.
-This is referred to as imperative function execution.
+The `fn eval` command enables you to execute a single function without declaring
+it in the package. This is referred to as imperative function execution.
 
-For example, to set the namespace of all resources in the wordpress package hierarchy:
+For example, to set the namespace of all resources in the wordpress package
+hierarchy:
 
 ```shell
 $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
@@ -9,7 +10,8 @@ $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=my
 
 ?> Refer to the [eval command reference][eval-doc] for usage.
 
-This changes the resources in the `wordpress` package and the `mysql` subpackage.
+This changes the resources in the `wordpress` package and the `mysql`
+subpackage.
 
 For comparison, this has the same effect as the following declaration:
 
@@ -44,8 +46,9 @@ There are two ways to specify the `functionConfig`.
 
 ### `fn-config` flag
 
-The general way to provide a `functionConfig` of arbitrary kind (core or custom resources), is to
-declare the resource in a separate file and use the `fn-config` flag.
+The general way to provide a `functionConfig` of arbitrary kind (core or custom
+resources), is to declare the resource in a separate file and use the
+`fn-config` flag.
 
 ```shell
 $ cat << EOF > /tmp/fn-config.yaml
@@ -64,9 +67,10 @@ $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 --fn-config /tm
 
 ### CLI arguments
 
-Many functions take a `functionConfig` of kind `ConfigMap` since they only need simple key/value
-pairs as argument. For convenience, there is a way to provide the key/value pairs as command line
-arguments. The following is equivalent to what we showed previously:
+Many functions take a `functionConfig` of kind `ConfigMap` since they only need
+simple key/value pairs as argument. For convenience, there is a way to provide
+the key/value pairs as command line arguments. The following is equivalent to
+what we showed previously:
 
 ```shell
 $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
@@ -76,22 +80,24 @@ Note that the arguments must come after the separator `--`.
 
 ## Privileged Execution
 
-Since the function is provided explicitly by the user, `eval` can be more privileged and low-level
-than a declarative invocation using `render`. For example, it can optionally operate on meta
-resources or have access to the host system.
+Since the function is provided explicitly by the user, `eval` can be more
+privileged and low-level than a declarative invocation using `render`. For
+example, it can optionally operate on meta resources or have access to the host
+system.
 
-In general, we recommend against having functions that require privileged access to the host since
-they can only be executed imperatively and pose a challenge in terms of security, correctness, portability
-and speed. If at all possible, functions should be executed hermetically with all required
-dependencies either passed in as KRM resources (input items or functionConfig) or included in the
-container image. However, there are some legitimate use cases where the only available option
-requires either network access or mounting a volume from the host. In those situations, you can use
-`eval` as described below.
+In general, we recommend against having functions that require privileged access
+to the host since they can only be executed imperatively and pose a challenge in
+terms of security, correctness, portability and speed. If at all possible,
+functions should be executed hermetically with all required dependencies either
+passed in as KRM resources (input items or functionConfig) or included in the
+container image. However, there are some legitimate use cases where the only
+available option requires either network access or mounting a volume from the
+host. In those situations, you can use `eval` as described below.
 
 ### Network Access
 
-By default, functions cannot access the network. You can enable network access using
-the `--network` flag.
+By default, functions cannot access the network. You can enable network access
+using the `--network` flag.
 
 For example, `kubeval` function can download a JSON schema file:
 
@@ -101,9 +107,9 @@ $ kpt fn eval wordpress --image gcr.io/kpt-fn/kubeval:v0.1 --network -- schema_l
 
 ### Mounting Directories
 
-By default, functions cannot access the host file system. You can use the `--mount` flag to
-mount host volumes. kpt accepts the same options to `--mount` specified on the [Docker Volumes]
-page.
+By default, functions cannot access the host file system. You can use the
+`--mount` flag to mount host volumes. kpt accepts the same options to `--mount`
+specified on the [Docker Volumes] page.
 
 For example, `kubeval` function can consume a JSON schema file:
 
@@ -111,8 +117,8 @@ For example, `kubeval` function can consume a JSON schema file:
 $ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
 ```
 
-Note that the `--as-current-user` flag may be required to run the function as your uid instead of the
-default `nobody` to access the host filesystem.
+Note that the `--as-current-user` flag may be required to run the function as
+your uid instead of the default `nobody` to access the host filesystem.
 
 All volumes are mounted readonly by default. Specify `rw=true` to mount volumes
 in read-write mode.
@@ -123,18 +129,19 @@ in read-write mode.
 
 ### Mutate Meta Resources
 
-By default, functions cannot mutate meta resources i.e. `Kptfile` and functionConfig(s).
-There are use cases for having _meta functions_ that can operate on meta resources. For example,
-they can perform the following:
+By default, functions cannot mutate meta resources i.e. `Kptfile` and
+functionConfig(s). There are use cases for having _meta functions_ that can
+operate on meta resources. For example, they can perform the following:
 
-- Enforce a policy on functions declared in all `Kptfile`(s) in the package hierarchy
+- Enforce a policy on functions declared in all `Kptfile`(s) in the package
+  hierarchy
 - Add a function to the `validators` list in the `Kptfile`
 - Set the `info.license` field in the `Kptfile` to `Apache-2.0`
 
 This is enabled using the `--include-meta-resources` flag.
 
-For instance, the following will set the labels on all resources in the `wordpress` package, including
-the `Kptfile`:
+For instance, the following will set the labels on all resources in the
+`wordpress` package, including the `Kptfile`:
 
 ```shell
 $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-labels:v0.1 --include-meta-resources -- app=wordpress env=prod
@@ -142,8 +149,8 @@ $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-labels:v0.1 --include-meta-res
 
 ## Chaining functions using the Unix pipe
 
-As an alternative to declaring a pipeline in the `Kptfile`, you can chain functions using the Unix
-pipe.
+As an alternative to declaring a pipeline in the `Kptfile`, you can chain
+functions using the Unix pipe.
 
 Here is an example:
 
@@ -154,25 +161,30 @@ $ kpt fn source wordpress \
   | kpt fn sink wordpress
 ```
 
-?> Refer to the command reference for usage of [source][source-doc] and [sink][sink-doc] commands.
+?> Refer to the command reference for usage of [source][source-doc] and
+[sink][sink-doc] commands.
 
 The following describes the above pipeline:
 
-1. The `source` command is used to read the resources in the package hierarchy (`wordpress` and
-   `mysql` packages). The output of the `source` command follows the Function
-   Specification standard, which we are going to look at in chapter 5.
-2. The output of the `source` function is piped into the `set-namespace` function. `eval` function
-   is instructed to read inputs items from the `stdin` using `-`. This is the convention used in all
-   commands in kpt that can read from `stdin`. The `set-namespace` function mutates the input items and
-   emits the output items.
-3. The output of the `set-namespace` function is piped into `set-labels` function which adds the
-   given labels to all resources.
-4. The `sink` command writes the output of `set-labels` to the filesystem in-place.
+1. The `source` command is used to read the resources in the package hierarchy
+   (`wordpress` and `mysql` packages). The output of the `source` command
+   follows the KRM Function Specification standard, which we are going to look
+   at in chapter 5.
+2. The output of the `source` function is piped into the `set-namespace`
+   function. `eval` function is instructed to read inputs items from the `stdin`
+   using `-`. This is the convention used in all commands in kpt that can read
+   from `stdin`. The `set-namespace` function mutates the input items and emits
+   the output items.
+3. The output of the `set-namespace` function is piped into `set-labels`
+   function which adds the given labels to all resources.
+4. The `sink` command writes the output of `set-labels` to the filesystem
+   in-place.
 
-This is a low-level and less abstracted approach to executing functions. You can instead write
-the output of the pipeline to a different directory instead of mutating the directory in-place. You
-can also pipe to other programs (e.g. `sed`, `yq`) that are not functions. Be mindful that the cost
-of this low-level flexibility is not having benefits provided by functions: scalability,
+This is a low-level and less abstracted approach to executing functions. You can
+instead write the output of the pipeline to a different directory instead of
+mutating the directory in-place. You can also pipe to other programs (e.g.
+`sed`, `yq`) that are not functions. Be mindful that the cost of this low-level
+flexibility is not having benefits provided by functions: scalability,
 reusability, and encapsulation.
 
 [eval-doc]: /reference/fn/eval/

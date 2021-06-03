@@ -93,9 +93,8 @@ func TestCmd(t *testing.T) {
 			defer revert()
 
 			rgProvider := live.NewResourceGroupProvider(tf)
-			rgLoader := live.NewResourceGroupManifestLoader(tf)
 
-			runner := NewRunner(fake.CtxWithNilPrinter(), rgProvider, rgLoader, ioStreams)
+			runner := NewRunner(fake.CtxWithNilPrinter(), rgProvider, ioStreams)
 			runner.Command.SetArgs(tc.args)
 			runner.destroyRunner = func(_ *Runner, inv inventory.InventoryInfo, _ common.DryRunStrategy) error {
 				tc.destroyCallbackFunc(t, inv)

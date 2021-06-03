@@ -61,28 +61,27 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	}
 
 	f := newFactory(liveCmd, version)
-
 	rgProvider := live.NewResourceGroupProvider(f)
-	rgLoader := live.NewResourceGroupManifestLoader(f)
-
-	cmProvider := provider.NewProvider(f)
-	cmLoader := manifestreader.NewManifestLoader(f)
 
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
 	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
-	applyCmd := cmdapply.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
-	destroyCmd := cmddestroy.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
-	statusCmd := status.NewCommand(ctx, rgProvider, rgLoader, ioStreams)
-
-	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd)
+	applyCmd := cmdapply.NewCommand(ctx, rgProvider, ioStreams)
+	destroyCmd := cmddestroy.NewCommand(ctx, rgProvider, ioStreams)
+	statusCmd := status.NewCommand(ctx, rgProvider, ioStreams)
+	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
+	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd, installRGCmd)
 
 	// Add the migrate command to change from ConfigMap to ResourceGroup inventory
-	// object. Also add the install-resource-group command.
+	// object.
 	klog.V(2).Infoln("adding kpt live migrate command")
-	migrateCmd := cmdmigrate.NewCommand(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
-	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
-	liveCmd.AddCommand(migrateCmd, installRGCmd)
+	cmProvider := provider.NewProvider(f)
+	// TODO: Remove the loader implementation for ConfigMap once we remove the
+	// migrate command.
+	cmLoader := manifestreader.NewManifestLoader(f)
+	migrateCmd := cmdmigrate.NewCommand(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
+
+	liveCmd.AddCommand(migrateCmd)
 
 	return liveCmd
 }

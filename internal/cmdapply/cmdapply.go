@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"github.com/spf13/cobra"
@@ -29,18 +30,16 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
 // NewRunner returns a command runner
-func NewRunner(ctx context.Context, provider provider.Provider, loader manifestreader.ManifestLoader,
+func NewRunner(ctx context.Context, provider provider.Provider,
 	ioStreams genericclioptions.IOStreams) *Runner {
 	r := &Runner{
 		ctx:       ctx,
 		Applier:   apply.NewApplier(provider),
 		provider:  provider,
-		loader:    loader,
 		ioStreams: ioStreams,
 	}
 	c := &cobra.Command{
@@ -76,9 +75,9 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 	return r
 }
 
-func NewCommand(ctx context.Context, provider provider.Provider, loader manifestreader.ManifestLoader,
+func NewCommand(ctx context.Context, provider provider.Provider,
 	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, loader, ioStreams).Command
+	return NewRunner(ctx, provider, ioStreams).Command
 }
 
 // Runner contains the run function
@@ -89,7 +88,6 @@ type Runner struct {
 	ioStreams  genericclioptions.IOStreams
 	Applier    *apply.Applier
 	provider   provider.Provider
-	loader     manifestreader.ManifestLoader
 
 	installCRD                   bool
 	serverSideOptions            common.ServerSideOptions
@@ -140,24 +138,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		args = append(args, cwd)
 	}
 
-	if r.installCRD {
-		err := cmdutil.InstallResourceGroupCRD(r.ctx, r.provider.Factory())
-		if err != nil {
-			return err
-		}
-	}
-
-	reader, err := r.loader.ManifestReader(c.InOrStdin(), args[0])
+	objs, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
 
-	objs, err := reader.Read()
-	if err != nil {
-		return err
-	}
-
-	inv, objs, err := r.loader.InventoryInfo(objs)
+	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
 	}
@@ -173,7 +159,14 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// TODO(mortent): Figure out if we can do this differently.
 	if r.PreProcess != nil {
-		r.inventoryPolicy, err = r.PreProcess(inv, dryRunStrategy)
+		r.inventoryPolicy, err = r.PreProcess(invInfo, dryRunStrategy)
+		if err != nil {
+			return err
+		}
+	}
+
+	if r.installCRD {
+		err := cmdutil.InstallResourceGroupCRD(r.ctx, r.provider.Factory())
 		if err != nil {
 			return err
 		}
@@ -184,7 +177,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err := r.Applier.Initialize(); err != nil {
 		return err
 	}
-	ch := r.Applier.Run(r.ctx, inv, objs, apply.Options{
+	ch := r.Applier.Run(r.ctx, invInfo, objs, apply.Options{
 		ServerSideOptions: r.serverSideOptions,
 		PollInterval:      r.period,
 		ReconcileTimeout:  r.reconcileTimeout,

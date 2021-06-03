@@ -37,8 +37,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command = c
 	r.Command.Flags().BoolVar(
 		&r.DryRun, "dry-run", false, "print results to stdout")
-	r.Command.Flags().StringVar(
-		&r.Image, "image", "",
+	r.Command.Flags().StringVarP(
+		&r.Image, "image", "i", "",
 		"run this image as a function")
 	r.Command.Flags().StringVar(
 		&r.ExecPath, "exec-path", "", "run an executable as a function.")

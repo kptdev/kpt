@@ -10,11 +10,11 @@ description: >
     Source resources from a local directory
 -->
 
-`source` reads resources from a local directory and writes them in [Function Specification]
-wire format to `stdout`. The output of the `source` can be pipe'd to commands
-such as `kpt fn eval` that accepts [Function Specification] wire format. `source`
-is useful for chaining functions using Unix pipe. For more details, refer to
-[Chaining functions] and [Function Specification].
+`source` reads resources from a local directory and writes them in [Function
+Specification] wire format to `stdout`. The output of the `source` can be pipe'd
+to commands such as `kpt fn eval` that accepts Function Specification wire
+format. `source` is useful for chaining functions using Unix pipe. For more
+details, refer to [Chaining functions].
 
 ### Synopsis
 
@@ -66,4 +66,4 @@ $ kpt fn source DIR |
 <!--mdtogo-->
 
 [chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
-[function specification]: /book/05-developing-functions/02-function-specification
+[function specification]: /book/05-developing-functions/01-functions-specification
