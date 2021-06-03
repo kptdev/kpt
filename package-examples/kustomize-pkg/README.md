@@ -27,22 +27,26 @@ fetching package /package-examples/kustomize-pkg from https://github.com/GoogleC
 List the package contents in a tree structure.
 
 ```shell
-$ kpt pkg tree kustomize-pkg/
+$ tree kustomize-pkg
 
-PKG: kustomize-pkg
-├── [Kptfile]  Kptfile kustomize-pkg
-├── PKG: nginx
-│   ├── [Kptfile]  Kptfile nginx
-│   ├── [deployment.yaml]  Deployment my-nginx
-│   └── [svc.yaml]  Service my-nginx-svc
-├── PKG: dev
-│   ├── [Kptfile]  Kptfile dev
-│   ├── [kustomization.yaml]  Kustomization 
-│   └── [pass-patch.yaml]  Deployment deployment-patch
-└── PKG: prod
-    ├── [Kptfile]  Kptfile prod
-    ├── [kustomization.yaml]  Kustomization 
-    └── [pass-patch.yaml]  Deployment deployment-patch
+kustomize-pkg
+├── Kptfile
+├── README.md
+├── bases
+│   └── nginx
+│       ├── Kptfile
+│       ├── deployment.yaml
+│       ├── kustomization.yaml
+│       └── svc.yaml
+└── overlays
+    ├── dev
+    │   ├── Kptfile
+    │   ├── kustomization.yaml
+    │   └── pass-patch.yaml
+    └── prod
+        ├── Kptfile
+        ├── kustomization.yaml
+        └── pass-patch.yaml
 ```
 
 ### kustomize the config
