@@ -9,6 +9,7 @@ This is a simple package that shows how kpt packages can be used instead of remo
 3. [kustomize the config](#kustomize-the-config)
 4. [Render the kustomization](#render-the-kustomization)
 5. [Apply the package](#apply-the-package)
+6. [Clean up resources](#clean-up-resources)
 
 ### Fetch the package
 
@@ -123,7 +124,7 @@ metadata:
 
 ### Apply the package
 
-It is possible to use kustomize build and kpt live apply, but it does require passing the inventory to `kpt live apply` from `kustomize build` output.  It is best to have Kptfiles with inventory objects in overlay folders in case the variants of the package are deployed to the same cluster.  Every variant of this application will need to be mapped to it\'s own inventory for pruning.  In case you have two variants that use the same inventory object the consequent deploy might wipe out the previous variant.
+It is possible to use kustomize build and kpt live apply, but it does require passing the inventory information to `kpt live apply` from `kustomize build` output.  It is best to have Kptfiles with inventory information in overlay folders in case the variants of the package are deployed to the same cluster.  Every variant of this application will need to be mapped to it\'s own inventory for pruning.  In case you have two variants that use the same inventory information the consequent deploy might wipe out the previous variant.
 
 ```shell
 $ kpt live init kustomize-pkg/overlays/dev
@@ -138,5 +139,20 @@ Kustomize build will need to be piped to kpt live apply:
 ```shell
 $ kustomize build kustomize-pkg/overlays/dev | kpt live apply - 
 
-TODO - need to address the kpt live apply
+service/dev-my-nginx-svc created
+deployment.apps/dev-my-nginx created
+2 resource(s) applied. 2 created, 0 unchanged, 0 configured, 0 failed
+0 resource(s) pruned, 0 skipped, 0 failed
+```
+
+### Clean up resources
+
+You can use kpt to prune and clean up resources from your build by using `kpt live destroy`.  As long as the inventory information is passed in kpt will know how to clean everything up:
+
+```shell
+$ kustomize build kustomize-pkg/overlays/dev | kpt live destroy - 
+
+deployment.apps/dev-my-nginx deleted
+service/dev-my-nginx-svc deleted
+2 resource(s) deleted, 0 skipped
 ```
