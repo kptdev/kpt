@@ -30,7 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/logs"
 )

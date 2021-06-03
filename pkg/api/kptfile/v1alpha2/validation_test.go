@@ -38,7 +38,7 @@ func TestKptfileValidate(t *testing.T) {
 				Pipeline: &Pipeline{
 					Mutators: []Function{
 						{
-							Image:      "patch-strategic-merge",
+							Image: "patch-strategic-merge",
 						},
 						{
 							Image: "gcr.io/kpt-fn/set-annotations:v0.1",

@@ -83,7 +83,7 @@ func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) er
 				Reason: err.Error(),
 			}
 		}
-		if _ , err := GetValidatedFnConfigFromPath(pkgPath, f.ConfigPath); err != nil {
+		if _, err := GetValidatedFnConfigFromPath(pkgPath, f.ConfigPath); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
 				Value:  f.ConfigPath,

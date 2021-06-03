@@ -27,10 +27,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Go 1.15
+      - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.15
+          go-version: 1.16
       - run: |
           ./scripts/create-licenses.sh
       # Upload the licenses list so it's available if needed

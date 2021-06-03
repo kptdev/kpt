@@ -99,7 +99,7 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 				"cr.yaml": cr,
 			},
 			namespace:      "test-namespace",
-			expectedErrMsg: "can't find scope for resource Custom.custom.io cr",
+			expectedErrMsg: "unknown resource types: Custom.custom.io",
 		},
 	}
 
