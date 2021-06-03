@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The hello service provides a load-balancing proxy over the hello-app
-# pods. By specifying the type as a 'LoadBalancer', Kubernetes Engine will
-# create an external HTTP load balancer.
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: helloworld-gke
-  labels:
-    app: hello
-    version: '0.1.0'
+  name: deployment-patch
 spec:
-  type: LoadBalancer
-  selector:
-    app: hello
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: http
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: nginx
+          ports:
+            - containerPort: 80

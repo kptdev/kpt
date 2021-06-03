@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-commonLabels:
-  app: hello
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 resources:
-- resources/deploy.yaml
-- resources/service.yaml
-patchesStrategicMerge:
-- patches/patch.yaml
+- ../../bases/nginx
+- Kptfile
+patches:
+- path: pass-patch.yaml
+  target:
+    kind: Deployment
+commonLabels:
+    environ: prod
+namePrefix: prod-

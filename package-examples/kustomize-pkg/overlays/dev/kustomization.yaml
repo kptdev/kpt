@@ -12,30 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This file configures the hello-world app which serves public web traffic.
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: helloworld-gke
-  labels:
-    app: hello
-    version: "0.1.0"
-spec:
-  replicas: 5
-  selector:
-    matchLabels:
-      app: hello
-  template:
-    metadata:
-      labels:
-        app: hello
-    spec:
-      containers:
-        - name: helloworld-gke
-          image: gcr.io/kpt-dev/helloworld-gke:0.3.0
-          ports:
-            - name: http
-              containerPort: 80
-          env:
-            - name: PORT
-              value: "80"
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../bases/nginx
+- Kptfile
+patches:
+- path: pass-patch.yaml
+  target:
+    kind: Deployment
+commonLabels:
+    environ: dev
+namePrefix: dev-
