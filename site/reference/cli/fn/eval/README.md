@@ -170,8 +170,8 @@ $ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 \
 # chaining functions using the unix pipe to set namespace and set labels on
 # wordpress package
 $ kpt fn source wordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
+  | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
+  | kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
   | kpt fn sink wordpress
 ```
 

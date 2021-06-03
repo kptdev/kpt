@@ -40,7 +40,7 @@ import (
 func NewContainerRunner(
 	ctx context.Context, f *kptfilev1alpha2.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
+	imagePullPolicy ImagePullPolicy, disableCLIOutput bool) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -61,14 +61,14 @@ func NewContainerRunner(
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
 	}
-	return NewFunctionRunner(ctx, fltr, false, fnResult, fnResults)
+	return NewFunctionRunner(ctx, fltr, disableCLIOutput, fnResult, fnResults)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
-	disableOutput bool,
+	disableCLIOutput bool,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList) (kio.Filter, error) {
 	name := fnResult.Image
@@ -76,29 +76,29 @@ func NewFunctionRunner(ctx context.Context,
 		name = fnResult.ExecPath
 	}
 	return &FunctionRunner{
-		ctx:           ctx,
-		name:          name,
-		filter:        fltr,
-		disableOutput: disableOutput,
-		fnResult:      fnResult,
-		fnResults:     fnResults,
+		ctx:              ctx,
+		name:             name,
+		filter:           fltr,
+		disableCLIOutput: disableCLIOutput,
+		fnResult:         fnResult,
+		fnResults:        fnResults,
 	}, nil
 }
 
 // FunctionRunner wraps FunctionFilter and implements kio.Filter interface.
 type FunctionRunner struct {
-	ctx           context.Context
-	name          string
-	disableOutput bool
-	filter        *runtimeutil.FunctionFilter
-	fnResult      *fnresult.Result
-	fnResults     *fnresult.ResultList
+	ctx              context.Context
+	name             string
+	disableCLIOutput bool
+	filter           *runtimeutil.FunctionFilter
+	fnResult         *fnresult.Result
+	fnResults        *fnresult.ResultList
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
 
-	if !fr.disableOutput {
+	if !fr.disableCLIOutput {
 		pr.Printf("[RUNNING] %q\n", fr.name)
 	}
 	output, err = fr.do(input)
@@ -113,7 +113,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		}
 		return nil, err
 	}
-	if !fr.disableOutput {
+	if !fr.disableCLIOutput {
 		pr.Printf("[PASS] %q\n", fr.name)
 		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
 	}

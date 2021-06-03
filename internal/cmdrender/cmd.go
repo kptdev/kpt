@@ -16,8 +16,10 @@
 package cmdrender
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
@@ -41,6 +43,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
+	c.Flags().StringVarP(&r.dest, "output", "o", "",
+		fmt.Sprintf("location (and format) to write output resources to. One of: %s|%s|<OUT_DIR_PATH>", cmdutil.StdOut, cmdutil.Unwrap))
 	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", "always",
 		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	cmdutil.FixDocs("kpt", parent, c)
@@ -57,6 +61,7 @@ type Runner struct {
 	pkgPath         string
 	resultsDirPath  string
 	imagePullPolicy string
+	dest            string
 	Command         *cobra.Command
 	ctx             context.Context
 }
@@ -89,14 +94,31 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	var output io.Writer
+	outContent := bytes.Buffer{}
+	if r.dest != "" {
+		// this means the output should be written to another destination
+		// capture the content to be written
+		output = &outContent
+	}
 	executor := Executor{
 		PkgPath:         r.pkgPath,
 		ResultsDirPath:  r.resultsDirPath,
+		Output:          output,
 		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
 	}
-	return executor.Execute(r.ctx)
+	err = executor.Execute(r.ctx)
+	if err != nil {
+		return err
+	}
+
+	return cmdutil.WriteFnOutput(r.dest, outContent.String(), false, c.OutOrStdout())
 }
 
 func (r *Runner) postRun(_ *cobra.Command, _ []string) {
+	if r.dest != "" {
+		// do not format/modify resources in package if output should be written to other dest
+		return
+	}
 	pkgutil.FormatPackage(r.pkgPath)
 }

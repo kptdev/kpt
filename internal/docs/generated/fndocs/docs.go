@@ -143,8 +143,8 @@ var EvalExamples = `
   # chaining functions using the unix pipe to set namespace and set labels on
   # wordpress package
   $ kpt fn source wordpress \
-    | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
-    | kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
+    | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
+    | kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
     | kpt fn sink wordpress
 `
 
@@ -223,7 +223,7 @@ var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn eval --image gcr.io/example.com/my-fn - |
+    kpt fn eval - --image gcr.io/example.com/my-fn - |
     kpt fn sink DIR
 `
 
@@ -250,6 +250,6 @@ var SourceExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn eval --image gcr.io/example.com/my-fn - |
+    kpt fn eval - --image gcr.io/example.com/my-fn - |
     kpt fn sink DIR
 `
