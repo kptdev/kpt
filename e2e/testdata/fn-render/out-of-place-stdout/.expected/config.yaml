@@ -1,0 +1,24 @@
+stdOut: |
+  apiVersion: config.kubernetes.io/v1alpha1
+  kind: ResourceList
+  items:
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-deployment
+        namespace: staging
+        annotations:
+          config.kubernetes.io/index: "0"
+          config.kubernetes.io/path: resources.yaml
+      spec:
+        replicas: 3
+    - apiVersion: custom.io/v1
+      kind: Custom
+      metadata:
+        name: custom
+        namespace: staging
+        annotations:
+          config.kubernetes.io/index: "1"
+          config.kubernetes.io/path: resources.yaml
+      spec:
+        image: nginx:1.2.3

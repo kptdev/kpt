@@ -1,0 +1,39 @@
+stdOut: |
+  apiVersion: config.kubernetes.io/v1alpha1
+  kind: ResourceList
+  items:
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-deployment
+        namespace: staging
+        labels:
+          tier: backend
+        annotations:
+          config.kubernetes.io/index: "0"
+          config.kubernetes.io/path: resources.yaml
+          foo: bar
+      spec:
+        replicas: 3
+        selector:
+          matchLabels:
+            tier: backend
+        template:
+          metadata:
+            labels:
+              tier: backend
+            annotations:
+              foo: bar
+    - apiVersion: custom.io/v1
+      kind: Custom
+      metadata:
+        name: custom
+        namespace: staging
+        labels:
+          tier: backend
+        annotations:
+          config.kubernetes.io/index: "1"
+          config.kubernetes.io/path: resources.yaml
+          foo: bar
+      spec:
+        image: nginx:1.2.3
