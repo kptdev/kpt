@@ -76,6 +76,8 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	// object.
 	klog.V(2).Infoln("adding kpt live migrate command")
 	cmProvider := provider.NewProvider(f)
+	// TODO: Remove the loader implementation for ConfigMap once we remove the
+	// migrate command.
 	cmLoader := manifestreader.NewManifestLoader(f)
 	migrateCmd := cmdmigrate.NewCommand(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
 
