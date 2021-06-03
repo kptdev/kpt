@@ -3,7 +3,7 @@ title: "Export"
 linkTitle: "export"
 type: docs
 description: >
-   Auto-generating function pipelines for different workflow orchestrators
+  Auto-generating function pipelines for different workflow orchestrators
 ---
 
 <!--mdtogo:Short
@@ -18,6 +18,7 @@ configurations.
 {{% hide %}}
 
 <!-- @makeWorkplace @verifyExamples-->
+
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
@@ -25,9 +26,10 @@ cd $TEST_HOME
 ```
 
 <!-- @fetchPackage @verifyExamples-->
+
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@next DIR/
+kpt pkg get $SRC_REPO/package-examples/helloworld-set@main DIR/
 ```
 
 {{% /hide %}}
@@ -35,6 +37,7 @@ kpt pkg get $SRC_REPO/package-examples/helloworld-set@next DIR/
 <!--mdtogo:Examples-->
 
 <!-- @fnExport @verifyExamples-->
+
 ```shell
 # read functions from DIR, run them against it as one step.
 # write the generated GitHub Actions pipeline to main.yaml.
@@ -42,6 +45,7 @@ kpt fn export DIR/ --output main.yaml --workflow github-actions
 ```
 
 <!-- @fnExport @verifyExamples-->
+
 ```shell
 # discover functions in FUNCTIONS_DIR and run them against resource in DIR.
 # write the generated Cloud Build pipeline to stdout.
@@ -78,7 +82,7 @@ OUTPUT_FILENAME:
 
 ## Next Steps
 
-- Get detailed tutorials on how to use `kpt fn export` from the
-  [Export a Workflow] guide.
+- Get detailed tutorials on how to use `kpt fn export` from the [Export a
+  Workflow] guide.
 
-[Export a Workflow]: https://kpt.dev#todo
+[export a workflow]: https://kpt.dev#todo
