@@ -54,6 +54,12 @@ type KptFile struct {
 
 	// Inventory contains parameters for the inventory object used in apply.
 	Inventory *Inventory `yaml:"inventory,omitempty"`
+
+	// Ignore contains .gitignore-style patterns for files and directories that should
+	// be ignored by kpt. Files/directories that match will be fetched and
+	// updated as part of the package, but will be ignored by the other
+	// kpt functionality.
+	Ignore []string `yaml:"ignore,omitempty"`
 }
 
 // OriginType defines the type of origin for a package.
