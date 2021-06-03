@@ -124,7 +124,7 @@ func validateFunctionName(name string) error {
 	return nil
 }
 
-// validateFnConfigPath validates syntactic correctness of given functionConfig path
+// validateFnConfigPathSyntax validates syntactic correctness of given functionConfig path
 // and return an error if it's invalid.
 func validateFnConfigPathSyntax(p string) error {
 	if strings.TrimSpace(p) == "" {
@@ -143,6 +143,9 @@ func validateFnConfigPathSyntax(p string) error {
 	return nil
 }
 
+// GetValidatedFnConfigFromPath validates the functionConfig at the path specified by
+// the package path (pkgPath) and configPath, returning the functionConfig as an
+// RNode if the validation is successful.
 func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
 	path := filepath.Join(string(pkgPath), configPath)
 	file, err := os.Open(path)
@@ -152,13 +155,13 @@ func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (
 	reader := kio.ByteReader{Reader: file}
 	nodes, err := reader.Read()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read function config '%s': %w", configPath, err)
+		return nil, fmt.Errorf("failed to read functionConfig '%q': %w", configPath, err)
 	}
 	if len(nodes) > 1 {
-		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config, got %d", configPath, len(nodes))
+		return nil, fmt.Errorf("functionConfig '%q' must not contain more than one config, got %d", configPath, len(nodes))
 	}
 	if err := IsKrm(nodes[0]); err != nil {
-		return nil, fmt.Errorf("invalid function config file '%s': %s", configPath, err.Error())
+		return nil, fmt.Errorf("functionConfig '%q': %s", configPath, err.Error())
 	}
 	return nodes[0], nil
 }

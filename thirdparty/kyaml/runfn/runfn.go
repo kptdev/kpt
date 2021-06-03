@@ -27,7 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
 // RunFns runs the set of configuration functions in a local directory against
@@ -141,7 +141,7 @@ func (r RunFns) getNodesAndFilters() (
 	var outputPkg *kio.LocalPackageReadWriter
 	matchFilesGlob := kio.MatchAll
 	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
+		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	}
 	if r.Path != "" {
 		functionConfigFilter, err := r.functionConfigFilterFunc()
@@ -389,7 +389,7 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 // getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	return v1alpha2.GetValidatedFnConfigFromPath("", r.FnConfigPath)
+	return kptfile.GetValidatedFnConfigFromPath("", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters
