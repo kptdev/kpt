@@ -31,28 +31,31 @@ $ kpt pkg tree kustomize-pkg/
 PKG: kustomize-pkg
 ├── [Kptfile]  Kptfile kustomize-pkg
 ├── PKG: nginx
-│   ├── [Kptfile]  Kptfile nginx
-│   ├── [deployment.yaml]  Deployment my-nginx
-│   └── [svc.yaml]  Service my-nginx-svc
-├── dev
-│   ├── [kustomization.yaml]  Kustomization 
-│   └── [pass-patch.yaml]  Deployment deployment-patch
-└── prod
+│   ├── [Kptfile]  Kptfile nginx
+│   ├── [deployment.yaml]  Deployment my-nginx
+│   └── [svc.yaml]  Service my-nginx-svc
+├── PKG: dev
+│   ├── [Kptfile]  Kptfile dev
+│   ├── [kustomization.yaml]  Kustomization 
+│   └── [pass-patch.yaml]  Deployment deployment-patch
+└── PKG: prod
+    ├── [Kptfile]  Kptfile prod
     ├── [kustomization.yaml]  Kustomization 
     └── [pass-patch.yaml]  Deployment deployment-patch
 ```
 
 ### kustomize the config
 
-We recommend that you keep the kustomize instructions to rendering only such as adding a namespace, transforming or applying a patch.  The second you mix kpt packages and remote bases you will be missing out on a big advantage of having a guaranteed stable base.
+Kustomize is a great tool for out of place hydration, but we don't recommend that you mix kpt packages and remote bases.  It's best to have a clear delienation what you are using each tools for: kpt for packages and remote resources, kustomize for hydration like adding labels, setting namespaces and overlays.
 
-You can edit the patches and kustomize files we have created in the overlay folders.
+In the example below what was a remote base is now fetched locally as a kpt package and kustomize is used for hydration.
 
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - ../../bases/nginx
+- Kptfile
 patches:
 - path: pass-patch.yaml
   target:
@@ -109,50 +112,26 @@ spec:
         - containerPort: 80
 ---
 apiVersion: kpt.dev/v1alpha2
+info:
+  description: sample description
 kind: Kptfile
 metadata:
   labels:
     environ: dev
-  name: dev-nginx
-pipeline:
-  validators:
-  - image: gcr.io/kpt-fn/kubeval:v0.1
-upstream:
-  git:
-    directory: package-examples/nginx
-    ref: v0.2
-    repo: https://github.com/GoogleContainerTools/kpt
-  type: git
-  updateStrategy: resource-merge
-upstreamLock:
-  git:
-    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
-    directory: package-examples/nginx
-    ref: package-examples/nginx/v0.2
-    repo: https://github.com/GoogleContainerTools/kpt
-  type: git
-```
+  name: dev-dev
+
 
 ### Apply the package
 
-It's possible to use kustomize build and kpt live apply, but it does require passing the inventory to `kpt live apply` from `kustomize build` output.  One of the base Kptfiles needs to be initialized with the inventory object.  We will use the nginx base, but in real life exployment it might be better to initialize inventory on your root package.
+It is possible to use kustomize build and kpt live apply, but it does require passing the inventory to `kpt live apply` from `kustomize build` output.  It is best to have Kptfiles with inventory objects in overlay folders in case the variants of the package are deployed to the same cluster.  Every variant of this application will need to be mapped to it\'s own inventory for pruning.  In case you have two variants that use the same inventory object the consequent deploy might wipe out the previous variant.
 
 ```shell
-$ kpt live init bases/nginx
+$ kpt live init kustomize-pkg/overlays/dev
 
 initializing Kptfile inventory info (namespace: default)...success
 ```
 
-We will also need to ensure that the Kptfile is a part of kustomize output and the simplest way to do it is just to add it to one of the kustomization.yaml files.  In our case it's: kustomize-pkg/bases/nginx/kustomization.yaml
-
-```yaml
-resources:
-- deployment.yaml
-- svc.yaml
-- Kptfile
-```
-
-Note that because Kpt has a powerful package merge it's possible to add and change files locally and still get upstream changes.  In this case the kustomization.yaml doesn't exist in the upstream package, we added it locally only.
+You might have noticed that the overlays have Kptfiles and they are added to the kustomization.yaml so the contents are passed all the way through the kustomize build.
 
 Kustomize build will need to be piped to kpt live apply:
 
