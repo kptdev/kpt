@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
+	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
@@ -296,7 +297,7 @@ func TestLoad_StdIn(t *testing.T) {
 						),
 				),
 			namespace:      "foo",
-			expectedErrMsg: "multiple Kptfiles with inventory information found",
+			expectedErrMsg: "multiple Kptfiles contains inventory information",
 		},
 	}
 
@@ -348,6 +349,66 @@ func TestLoad_StdIn(t *testing.T) {
 			assert.Equal(t, tc.expectedObjs, objMetas)
 
 			assert.Equal(t, tc.expectedInv, inv)
+		})
+	}
+}
+
+func TestValidateInventory(t *testing.T) {
+	testCases := map[string]struct {
+		inventory           kptfile.Inventory
+		expectErr           bool
+		expectedErrorFields []string
+	}{
+		"complete inventory info validate": {
+			inventory: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "default",
+				InventoryID: "foo-default",
+			},
+			expectErr: false,
+		},
+		"inventory info without name doesn't validate": {
+			inventory: kptfile.Inventory{
+				Namespace:   "default",
+				InventoryID: "foo-default",
+			},
+			expectErr:           true,
+			expectedErrorFields: []string{"name"},
+		},
+		"inventory without id or namespace doesn't validate": {
+			inventory: kptfile.Inventory{
+				Name: "foo",
+			},
+			expectErr:           true,
+			expectedErrorFields: []string{"namespace", "inventoryID"},
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			err := validateInventory(tc.inventory)
+
+			if !tc.expectErr {
+				assert.NoError(t, err)
+				return
+			}
+
+			if !assert.Error(t, err) {
+				t.FailNow()
+			}
+
+			invInfoValError, ok := err.(*InventoryInfoValidationError)
+			if !ok {
+				t.Errorf("expected error of type *InventoryInfoValidationError")
+				t.FailNow()
+			}
+			assert.Equal(t, len(tc.expectedErrorFields), len(invInfoValError.Violations))
+			fields := invInfoValError.Violations.Fields()
+			for i := range tc.expectedErrorFields {
+				if !slice.ContainsString(fields, tc.expectedErrorFields[i], nil) {
+					t.Errorf("expected error for field %s, but didn't find it", tc.expectedErrorFields[i])
+				}
+			}
 		})
 	}
 }

@@ -17,11 +17,9 @@ package kptfileutil
 import (
 	"bytes"
 	goerrors "errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -78,32 +76,6 @@ func WriteFile(dir string, k kptfilev1alpha2.KptFile) error {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 	return nil
-}
-
-// ValidateInventory returns true and a nil error if the passed inventory
-// is valid; otherwise, false and the reason the inventory is not valid
-// is returned. A valid inventory must have a non-empty namespace, name,
-// and id.
-func ValidateInventory(inv *kptfilev1alpha2.Inventory) (bool, error) {
-	const op errors.Op = "kptfileutil.ValidateInventory"
-	if inv == nil {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile missing inventory section"))
-	}
-	// Validate the name, namespace, and inventory id
-	if strings.TrimSpace(inv.Name) == "" {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile inventory empty name"))
-	}
-	if strings.TrimSpace(inv.Namespace) == "" {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile inventory empty namespace"))
-	}
-	if strings.TrimSpace(inv.InventoryID) == "" {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile inventory missing inventoryID"))
-	}
-	return true, nil
 }
 
 func Equal(kf1, kf2 kptfilev1alpha2.KptFile) (bool, error) {

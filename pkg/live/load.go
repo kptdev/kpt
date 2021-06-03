@@ -22,8 +22,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -32,6 +32,25 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// InventoryInfoValidationError is the error returned if validation of the
+// inventory information fails.
+type InventoryInfoValidationError struct {
+	errors.ValidationError
+}
+
+func (e *InventoryInfoValidationError) Error() string {
+	return fmt.Sprintf("inventory failed validation for fields: %s",
+		strings.JoinStringsWithQuotes(e.Violations.Fields()))
+}
+
+// MultipleInventoryInfoError is the error returned if there are multiple
+// Kptfile resources in a stream which has inventory information.
+type MultipleInventoryInfoError struct{}
+
+func (e *MultipleInventoryInfoError) Error() string {
+	return "multiple Kptfiles contains inventory information"
+}
 
 // Load reads resources either from disk or from an input stream. It filters
 // out resources that should be ignored and defaults the namespace for
@@ -80,8 +99,7 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1alpha2.Inventory, error) {
 	if err := (&kio.Pipeline{
 		Inputs: []kio.Reader{
 			&kio.ByteReader{
-				Reader:                in,
-				OmitReaderAnnotations: true,
+				Reader: in,
 			},
 		},
 		Filters: []kio.Filter{
@@ -92,7 +110,7 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1alpha2.Inventory, error) {
 	}
 
 	if len(invFilter.Inventories) > 1 {
-		return kptfilev1alpha2.Inventory{}, fmt.Errorf("multiple Kptfiles with inventory information found")
+		return kptfilev1alpha2.Inventory{}, &MultipleInventoryInfoError{}
 	}
 
 	if len(invFilter.Inventories) == 1 {
@@ -195,18 +213,50 @@ func toReaderOptions(f util.Factory) (manifestreader.ReaderOptions, error) {
 // ToInventoryInfo takes the information in the provided inventory object and
 // return an InventoryResourceGroup implementation of the InventoryInfo interface.
 func ToInventoryInfo(inventory kptfilev1alpha2.Inventory) (inventory.InventoryInfo, error) {
-	invObj, err := generateInventoryObj(inventory)
-	if err != nil {
+	if err := validateInventory(inventory); err != nil {
 		return nil, err
 	}
+	invObj := generateInventoryObj(inventory)
 	return WrapInventoryInfoObj(invObj), nil
 }
 
-func generateInventoryObj(inv kptfilev1alpha2.Inventory) (*unstructured.Unstructured, error) {
-	// First, ensure the Kptfile inventory section is valid.
-	if isValid, err := kptfileutil.ValidateInventory(&inv); !isValid {
-		return nil, err
+func validateInventory(inventory kptfilev1alpha2.Inventory) error {
+	var violations errors.Violations
+	if inventory.Name == "" {
+		violations = append(violations, errors.Violation{
+			Field:  "name",
+			Value:  inventory.Name,
+			Type:   errors.Missing,
+			Reason: "\"inventory.name\" must not be empty",
+		})
 	}
+	if inventory.Namespace == "" {
+		violations = append(violations, errors.Violation{
+			Field:  "namespace",
+			Value:  inventory.Namespace,
+			Type:   errors.Missing,
+			Reason: "\"inventory.namespace\" must not be empty",
+		})
+	}
+	if inventory.InventoryID == "" {
+		violations = append(violations, errors.Violation{
+			Field:  "inventoryID",
+			Value:  inventory.InventoryID,
+			Type:   errors.Missing,
+			Reason: "\"inventory.inventoryID\" must not be empty",
+		})
+	}
+	if len(violations) > 0 {
+		return &InventoryInfoValidationError{
+			ValidationError: errors.ValidationError{
+				Violations: violations,
+			},
+		}
+	}
+	return nil
+}
+
+func generateInventoryObj(inv kptfilev1alpha2.Inventory) *unstructured.Unstructured {
 	// Create and return ResourceGroup custom resource as inventory object.
 	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
 	var inventoryObj = &unstructured.Unstructured{
@@ -232,5 +282,5 @@ func generateInventoryObj(inv kptfilev1alpha2.Inventory) (*unstructured.Unstruct
 	labels[common.InventoryLabel] = inv.InventoryID
 	inventoryObj.SetLabels(labels)
 	inventoryObj.SetAnnotations(inv.Annotations)
-	return inventoryObj, nil
+	return inventoryObj
 }

@@ -60,7 +60,7 @@ func TestStatusCommand(t *testing.T) {
 	}{
 		"no inventory template": {
 			kptfileInv:     nil,
-			expectedErrMsg: "missing parameter value: kptfile inventory empty name",
+			expectedErrMsg: "inventory failed validation",
 		},
 		"invalid value for pollUntil": {
 			pollUntil:      "doesNotExist",
