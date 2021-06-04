@@ -140,12 +140,7 @@ func (r *Runner) runFnEval() error {
 	var resultsDir string
 
 	if r.IsFnResultExpected() {
-		// create result dir
 		resultsDir = filepath.Join(tmpDir, "results")
-		err = os.Mkdir(resultsDir, 0755)
-		if err != nil {
-			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
-		}
 	}
 
 	// copy package to temp directory
@@ -267,12 +262,7 @@ func (r *Runner) runFnRender() error {
 	var resultsDir string
 
 	if r.IsFnResultExpected() {
-		// create result dir
 		resultsDir = filepath.Join(tmpDir, "results")
-		err = os.Mkdir(resultsDir, 0755)
-		if err != nil {
-			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
-		}
 	}
 
 	// copy package to temp directory

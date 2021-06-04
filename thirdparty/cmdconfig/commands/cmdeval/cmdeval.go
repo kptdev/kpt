@@ -230,6 +230,12 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
 		return err
 	}
+	if r.ResultsDir != "" {
+		err := os.MkdirAll(r.ResultsDir, 0755)
+		if err != nil {
+			return fmt.Errorf("cannot read or create results dir %q: %w", r.ResultsDir, err)
+		}
+	}
 	var dataItems []string
 	if c.ArgsLenAtDash() >= 0 {
 		dataItems = append(dataItems, args[c.ArgsLenAtDash():]...)

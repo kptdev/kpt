@@ -21,7 +21,6 @@ import (
 	"os"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/spf13/cobra"
@@ -74,11 +73,9 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		r.pkgPath = args[0]
 	}
 	if r.resultsDirPath != "" {
-		if _, err := os.Stat(r.resultsDirPath); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				return fmt.Errorf("results-dir %q must exist", r.resultsDirPath)
-			}
-			return fmt.Errorf("results-dir %q check failed: %w", r.resultsDirPath, err)
+		err := os.MkdirAll(r.resultsDirPath, 0755)
+		if err != nil {
+			return fmt.Errorf("cannot read or create results dir %q: %w", r.resultsDirPath, err)
 		}
 	}
 	return cmdutil.ValidateImagePullPolicyValue(r.imagePullPolicy)
