@@ -37,7 +37,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 
 	r.Command = c
 	r.Command.Flags().StringVarP(&r.Dest, "output", "o", "",
-		fmt.Sprintf("location (and format) to write output resources to. One of: %s|%s|<OUT_DIR_PATH>", cmdutil.StdOut, cmdutil.Unwrap))
+		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVar(
 		&r.Image, "image", "", "run this image as a function")
 	r.Command.Flags().StringVar(

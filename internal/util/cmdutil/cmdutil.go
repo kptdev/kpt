@@ -33,7 +33,7 @@ import (
 const (
 	StackTraceOnErrors = "COBRA_STACK_TRACE_ON_ERRORS"
 	trueString         = "true"
-	StdOut             = "stdout"
+	Stdout             = "stdout"
 	Unwrap             = "unwrap"
 )
 
@@ -123,7 +123,7 @@ func StringToImagePullPolicy(v string) fnruntime.ImagePullPolicy {
 func WriteFnOutput(dest, content string, fromStdin bool, w io.Writer) error {
 	r := strings.NewReader(content)
 	switch dest {
-	case StdOut:
+	case Stdout:
 		// if user specified dest is "stdout" directly write the content as it is already wrapped
 		_, err := w.Write([]byte(content))
 		return err
@@ -148,11 +148,9 @@ func WriteFnOutput(dest, content string, fromStdin bool, w io.Writer) error {
 func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 	var outputs []kio.Writer
 	if outDir != "" {
-		if _, err := os.Stat(outDir); err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				return fmt.Errorf("output directory %q must exist", outDir)
-			}
-			return fmt.Errorf("output directory %q check failed: %w", outDir, err)
+		err := os.MkdirAll(outDir, 0700)
+		if err != nil {
+			return fmt.Errorf("failed to create output directory %q: %q", outDir, err.Error())
 		}
 		outputs = []kio.Writer{&kio.LocalPackageWriter{PackagePath: outDir}}
 	} else {

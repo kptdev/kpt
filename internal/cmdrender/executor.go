@@ -53,6 +53,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
 	disableCLIOutput := false
 	if e.Output != nil {
+		// disable output written to stdout in case of out-of-place hydration
 		disableCLIOutput = true
 	}
 
@@ -91,13 +92,20 @@ func (e *Executor) Execute(ctx context.Context) error {
 	}
 
 	if e.Output == nil {
+		// the intent of the user is to modify resources in-place
 		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
 		err = pkgWriter.Write(resources)
 		if err != nil {
 			return fmt.Errorf("failed to save resources: %w", err)
 		}
+
+		if err = pruneResources(hctx); err != nil {
+			return err
+		}
+		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 	} else {
-		// write to the output instead of the pkg directory if e.Output is specified
+		// the intent of the user is to write the resources to either stdout|unwrapped|<OUT_DIR>
+		// so, write the resources to provided e.Output which will be written to appropriate destination by cobra layer
 		writer := &kio.ByteWriter{
 			Writer:                e.Output,
 			KeepReaderAnnotations: true,
@@ -108,14 +116,6 @@ func (e *Executor) Execute(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to write resources: %w", err)
 		}
-	}
-
-	if err = pruneResources(hctx); err != nil {
-		return err
-	}
-
-	if !disableCLIOutput {
-		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 	}
 
 	return e.saveFnResults(ctx, hctx.fnResults, false)
@@ -161,6 +161,8 @@ type hydrationContext struct {
 	// imagePullPolicy controls the image pulling behavior.
 	imagePullPolicy fnruntime.ImagePullPolicy
 
+	// disableCLIOutput disables the cli output written to stdout
+	// stderr is not affected by this
 	disableCLIOutput bool
 }
 

@@ -44,7 +44,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
-		fmt.Sprintf("location (and format) to write output resources to. One of: %s|%s|<OUT_DIR_PATH>", cmdutil.StdOut, cmdutil.Unwrap))
+		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", "always",
 		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	cmdutil.FixDocs("kpt", parent, c)

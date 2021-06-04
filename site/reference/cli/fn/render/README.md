@@ -56,9 +56,9 @@ PKG_PATH:
 --output, o:
   If specified, the output resources are written to provided location.
   Allowed values: stdout|unwrap|<OUT_DIR_PATH>
-  stdout: output resources are wrapped in ResourceList and written to stdout.
-  unwrap: output resources are written to stdout.
-  OUT_DIR_PATH: output resources are written to provided directory.
+  1. stdout: output resources are wrapped in ResourceList and written to stdout.
+  2. unwrap: output resources are written to stdout, in multi-object yaml format.
+  3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
 
 --results-dir:
   Path to a directory to write structured results. Directory must exist.
@@ -100,10 +100,11 @@ $ kpt fn render -o unwrap | kubectl apply -
 ```
 
 ```shell
-# Render resources in current directory, pass the wrapped resources to eval command
-# and the output resources can be written to another directory
+# Render resources in current directory, write the wrapped resources
+# to stdout which are piped to 'set-annotations' function,
+# the transformed resources are written to another directory
 $ kpt fn render -o stdout \
-| kpt fn eval - -o path/to/dir --image gcr.io/kpt-fn/set-annotations:v0.1.3 -- foo=bar
+| kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
 ```
 
 <!--mdtogo-->
