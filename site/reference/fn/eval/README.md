@@ -106,8 +106,8 @@ fn-args:
   By default it is disabled.
 
 --results-dir:
-  Path to a directory to write structured results. Directory must exist.
-  Structured results emitted by the functions are aggregated and saved
+  Path to a directory to write structured results. Directory will be created if
+  it doesn't exist. Structured results emitted by the functions are aggregated and saved
   to `results.yaml` file in the specified directory.
   If not specified, no result files are written to the local filesystem.
 ```
@@ -178,7 +178,5 @@ $ kpt fn source wordpress \
 <!--mdtogo-->
 
 [docker volumes]: https://docs.docker.com/storage/volumes/
-[imperative function execution]:
-  /book/04-using-functions/02-imperative-function-execution
-[function specification]:
-  /book/05-developing-functions/01-functions-specification
+[imperative function execution]: /book/04-using-functions/02-imperative-function-execution
+[function specification]: /book/05-developing-functions/01-functions-specification

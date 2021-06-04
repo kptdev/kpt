@@ -3,8 +3,9 @@ title: "`render`"
 linkTitle: "render"
 type: docs
 description: >
-   Render a package
+  Render a package
 ---
+
 <!--mdtogo:Short
    Render a package.
 -->
@@ -31,6 +32,7 @@ Refer to the [Declarative Functions Execution] for more details.
 ### Synopsis
 
 <!--mdtogo:Long-->
+
 ```shell
 kpt fn render [PKG_PATH] [flags]
 ```
@@ -52,11 +54,12 @@ PKG_PATH:
   default.
 
 --results-dir:
-  Path to a directory to write structured results. Directory must exist.
-  Structured results emitted by the functions are aggregated and saved
+  Path to a directory to write structured results. Directory will be created if
+  it doesn't exist. Structured results emitted by the functions are aggregated and saved
   to `results.yaml` file in the specified directory.
   If not specified, no result files are written to the local filesystem.
 ```
+
 <!--mdtogo-->
 
 ### Examples
@@ -70,7 +73,7 @@ $ kpt fn render
 
 ```shell
 # Render the package in current directory and save results in my-results-dir
-$ kpt fn render --results-dir my-results-dir 
+$ kpt fn render --results-dir my-results-dir
 ```
 
 ```shell
@@ -80,4 +83,4 @@ $ kpt fn render my-package-dir
 
 <!--mdtogo-->
 
-[Declarative Functions Execution]: /book/04-using-functions/01-declarative-function-execution
+[declarative functions execution]: /book/04-using-functions/01-declarative-function-execution

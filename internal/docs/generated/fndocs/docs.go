@@ -37,9 +37,9 @@ Args:
   
     1. Multi object YAML where resources are separated by ` + "`" + `---` + "`" + `.
   
-    2. ` + "`" + `Function Specification` + "`" + ` wire format where resources are wrapped in an object
+    2. KRM Function Specification wire format where resources are wrapped in an object
        of kind ResourceList.
-   
+  
     If the output is written to ` + "`" + `stdout` + "`" + `, resources are written in multi object YAML
     format where resources are separated by ` + "`" + `---` + "`" + `.
 
@@ -57,7 +57,7 @@ Flags:
   --dry-run:
     If enabled, the resources are not written to local filesystem, instead they
     are written to stdout. By defaults it is disabled.
-    
+  
   --env, e:
     List of local environment variables to be exported to the container function.
     By default, none of local environment variables are made available to the
@@ -69,7 +69,7 @@ Flags:
     only one function, so do not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful
     for testing function locally during development. It enables faster dev iterations
     by avoiding the function to be published as container image.
-    
+  
   --fn-config:
     Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
   
@@ -102,8 +102,8 @@ Flags:
     By default it is disabled.
   
   --results-dir:
-    Path to a directory to write structured results. Directory must exist.
-    Structured results emitted by the functions are aggregated and saved
+    Path to a directory to write structured results. Directory will be created if
+    it doesn't exist. Structured results emitted by the functions are aggregated and saved
     to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
     If not specified, no result files are written to the local filesystem.
 `
@@ -129,7 +129,7 @@ var EvalExamples = `
 
   # execute container my-fn on the resources in DIR directory with network access enabled,
   # and write output back to DIR
-  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --network 
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --network
 
   # execute container my-fn on the resource in DIR and export KUBECONFIG
   # and foo environment variable
@@ -196,8 +196,8 @@ Flags:
     default.
   
   --results-dir:
-    Path to a directory to write structured results. Directory must exist.
-    Structured results emitted by the functions are aggregated and saved
+    Path to a directory to write structured results. Directory will be created if
+    it doesn't exist. Structured results emitted by the functions are aggregated and saved
     to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
     If not specified, no result files are written to the local filesystem.
 `
@@ -206,7 +206,7 @@ var RenderExamples = `
   $ kpt fn render
 
   # Render the package in current directory and save results in my-results-dir
-  $ kpt fn render --results-dir my-results-dir 
+  $ kpt fn render --results-dir my-results-dir
 
   # Render my-package-dir
   $ kpt fn render my-package-dir
