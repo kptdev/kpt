@@ -52,6 +52,7 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
+	outDir              string = "out"
 	setupScript         string = "setup.sh"
 	teardownScript      string = "teardown.sh"
 	execScript          string = "exec.sh"
@@ -243,6 +244,12 @@ func (r *Runner) IsFnResultExpected() bool {
 	return err == nil
 }
 
+// IsOutOfPlace determines if command output is saved in a different directory (out-of-place).
+func (r *Runner) IsOutOfPlace() bool {
+	_, err := ioutil.ReadDir(filepath.Join(r.testCase.Path, outDir))
+	return err == nil
+}
+
 func (r *Runner) runFnRender() error {
 	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
@@ -264,7 +271,7 @@ func (r *Runner) runFnRender() error {
 		return fmt.Errorf("failed to create original dir %s: %w", origPkgPath, err)
 	}
 
-	var resultsDir string
+	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
 		// create result dir
@@ -273,6 +280,10 @@ func (r *Runner) runFnRender() error {
 		if err != nil {
 			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
 		}
+	}
+
+	if r.IsOutOfPlace() {
+		destDir = filepath.Join(pkgPath, outDir)
 	}
 
 	// copy package to temp directory
@@ -312,6 +323,10 @@ func (r *Runner) runFnRender() error {
 
 			if resultsDir != "" {
 				kptArgs = append(kptArgs, "--results-dir", resultsDir)
+			}
+
+			if destDir != "" {
+				kptArgs = append(kptArgs, "-o", destDir)
 			}
 
 			if r.testCase.Config.ImagePullPolicy != "" {
