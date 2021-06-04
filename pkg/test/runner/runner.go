@@ -138,7 +138,7 @@ func (r *Runner) runFnEval() error {
 	defer os.RemoveAll(tmpDir)
 	pkgPath := filepath.Join(tmpDir, r.pkgName)
 
-	var resultsDir string
+	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
 		// create result dir
@@ -147,6 +147,10 @@ func (r *Runner) runFnEval() error {
 		if err != nil {
 			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
 		}
+	}
+
+	if r.IsOutOfPlace() {
+		destDir = filepath.Join(pkgPath, outDir)
 	}
 
 	// copy package to temp directory
@@ -181,6 +185,9 @@ func (r *Runner) runFnEval() error {
 
 			if resultsDir != "" {
 				kptArgs = append(kptArgs, "--results-dir", resultsDir)
+			}
+			if destDir != "" {
+				kptArgs = append(kptArgs, "-o", destDir)
 			}
 			if r.testCase.Config.ImagePullPolicy != "" {
 				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
