@@ -46,7 +46,7 @@ may look like this:
 ![img](/static/images/lifecycle/flow3.svg)
 
 - **Initialize**: One-time process using `kpt live init`
-- **Dry-run**: Using `kpt live apply --dry-run`
+- **Preview**: Using `kpt live apply --dry-run`
 - **Apply**: Using `kpt live apply`
 - **Observe**: Using `kpt live status`
 
