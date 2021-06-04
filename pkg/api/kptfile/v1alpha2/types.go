@@ -59,6 +59,23 @@ type KptFile struct {
 	// be ignored by kpt. Files/directories that match will be fetched and
 	// updated as part of the package, but will be ignored by the other
 	// kpt functionality.
+	//
+	// The following patterns are supported:
+	// * Absolute path (/path/to/ignore): If the pattern has a leading slash, it will
+	//   only match the specific path underneath the package root.
+	//   Example: "/ignore.me" will only match the file if it is in the root of
+	//   the package.
+	// * Relative path (path/to/ignore): If the pattern does not have a leading slash,
+	//   it will match at any depth in the package.
+	//   Example: "ignore.me" will match all files called "ignore.me" within the
+	//   package.
+	// * Accept pattern (!path/to/accept): Negate a previous pattern so the path
+	//   will be included.
+	// * Directory pattern (path/to/directory/): If the pattern has a slash at the
+	//   end, it will only match directories.
+	// * Glob pattern (path/to/*.txt): * matches all characters except slash.
+	//
+	// Recursive patterns (path/**/ignore) are not supported.
 	Ignore []string `yaml:"ignore,omitempty"`
 }
 
