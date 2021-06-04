@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/spf13/cobra"
 )
@@ -80,10 +79,8 @@ func ResolveAbsAndRelPaths(path string) (string, string, error) {
 // DockerCmdAvailable runs `docker ps` to check that the docker command is
 // available, and returns an error with installation instructions if it is not
 func DockerCmdAvailable() error {
-	const op errors.Op = "docker.check"
-
-	suggestedText := `Docker is required to run this command.
-To install docker, follow the instructions at https://docs.docker.com/get-docker/
+	suggestedText := `docker must be running to use this command
+To install docker, follow the instructions at https://docs.docker.com/get-docker/.
 `
 	buffer := &bytes.Buffer{}
 
@@ -91,7 +88,7 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 	cmd.Stderr = buffer
 	err := cmd.Run()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("%s", suggestedText))
+		return fmt.Errorf("%s", suggestedText)
 	}
 	return nil
 }
