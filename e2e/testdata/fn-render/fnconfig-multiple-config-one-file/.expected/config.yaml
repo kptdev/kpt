@@ -11,10 +11,5 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 exitCode: 1
-stdErr: |
-  Kptfile is invalid:
-  Field: `pipeline.mutators[1].configPath`
-  Value: "labelconfig1.yaml"
-  Reason: functionConfig must exist in the current package
+stdErr: "functionConfig \"labelconfig.yaml\" must not contain more than one config, got 2"

@@ -13,8 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: |
-  Kptfile is invalid:
-  Field: `pipeline.mutators[1].configPath`
-  Value: "labelconfig1.yaml"
-  Reason: functionConfig must exist in the current package
+stdErr: "resource must have `metadata.name`"
