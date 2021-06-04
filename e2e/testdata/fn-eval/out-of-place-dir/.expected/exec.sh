@@ -15,14 +15,4 @@
 
 set -eo pipefail
 
-# create a temporary directory
-TEMP_DIR=$(mktemp -d)
-
-kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1.3 -o $TEMP_DIR -- namespace=staging
-
-# copy back the resources
-rm -r ./*
-cp $TEMP_DIR/* .
-
-# remove temporary directory
-rm -r $TEMP_DIR
+kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1.3 -o out -- namespace=staging
