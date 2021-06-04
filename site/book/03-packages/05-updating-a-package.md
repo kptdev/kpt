@@ -76,15 +76,15 @@ $ git add .; git commit -m "Updated wordpress to v0.4"
 
 ### Resource-merge
 
-The `resource-merge` strategy performs a structural comparison of each resource using the
-OpenAPI schema. So rather than performing a text-based merge, `kpt` leverages the
+The resource-merge strategy performs a structural comparison of each resource using the
+OpenAPI schema. So rather than performing a text-based merge, kpt leverages the
 common structure of KRM resources.
 
 #### Resource identity
-In order to perform a per-resource merge, `kpt` needs to be able to match a resource in
+In order to perform a per-resource merge, kpt needs to be able to match a resource in
 the local package with the same resource in the upstream version of the package. It does
 this matching based on the identity of a resource, which is the combination of group,
-kind, name and namespace. So in our `wordpress` example, the identity of the`Deployment`
+kind, name and namespace. So in our wordpress example, the identity of the`Deployment`
 resource is:
 ```
 group: apps
@@ -93,10 +93,10 @@ name: wordpress
 namespace: ""
 ```
 Changing the name and/or namespace of a resource is a pretty common way to customize
-a package. In order to make sure this doesn't create problems during merge, `kpt` will
+a package. In order to make sure this doesn't create problems during merge, kpt will
 automatically adding the `# kpt-merge: <namespace>/<name>` comment on the `metadata` 
 field of every resource when getting or updating a package. An example is the `Deployment`
-resource from the `wordpress` package:
+resource from the wordpress package:
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -108,7 +108,7 @@ metadata: # kpt-merge: /wordpress
 ```
 
 #### Merge rules
-`kpt` performs a 3-way merge for every resource. This means it will use the resource
+kpt performs a 3-way merge for every resource. This means it will use the resource
 in the local package, the updated resource from upstream, as well as the resource
 at the version where the local and upstream package diverged (i.e.
 common ancestor). When discussing the merge rules in detail, we will be referring to
@@ -116,10 +116,39 @@ the three different sources as local, upstream and origin.
 
 In the discussion, we will be referring to non-associative and associative lists. A
 non-associative list either has elements that are scalars or another list, or it has elements
-that are mappings but without an associative key. An associative list has elements that are mappings and
+that are mappings but without an associative key. An example of this in the kubernetes
+API is the command property on containers:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+    - name: hello
+      image: busybox
+      command: ['sh', '-c', 'echo "Hello, World!"]
+```
+
+An associative list has elements that are mappings and
 one or more of the fields in the mappings are designated as associative keys. An associative key
 (also sometimes referred to as a merge key) is used to identify the "same" elements in two
-different lists for the purpose of merging them. `kpt` will primarily look for information about
+different lists for the purpose of merging them. An example from the kubernetes API
+is the list of containers in a pod which uses the `name` property as the merge key:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+    - name: web
+      image: nginx
+    - name: sidecar
+      image: log-collector
+```
+
+kpt will primarily look for information about
 any associative keys from the OpenAPI schema, but some fields are also automatically recognized as
 associative keys:
 * `mountPath`
@@ -130,38 +159,44 @@ associative keys:
 * `name`
 * `containerPort`
 
-On the resource level, the merge rules are as follows:
-* A resource present in origin and deleted from upstream will be deleted from local.
-* A resource missing from origin and added in upstream will be added to local.
-* A resource only in local will be kept without changes.
-* A resource in both upstream and local will be merged into local.
+
+| Resource level |
+| --- |
+| A resource present in origin and deleted from upstream will be deleted from local | 
+| A resource missing from origin and added in upstream will be added to local |
+| A resource only in local will be kept without changes |
+| A resource in both upstream and local will be merged into local |
 
 On the field level, the rules differ based on the type of field:
-* Scalars and non-associative lists:
-    * If the field is present in either upstream or local and the value is `null`, remove the field from local.
-    * If the field is unchanged between upstream and local, leave the local value unchanged.
-    * If the field has been changed in both upstream and local, update local with the value from upstream.
 
-* Mappings:
-    * If the field is present in either upstream or local and the value is `null`, remove the field from local.
-    * If the field is present only in local, leave the local value unchanged.
-    * If the field is not present in local, add the delta between origin and upstream as the value in local.
-    * If the field is present in both upstream and local, recursively merge the values between local, upstream and origin.
+| Scalars and non-associative lists |
+| --- |
+| If the field is present in either upstream or local and the value is `null`, remove the field from local |
+| If the field is unchanged between upstream and local, leave the local value unchanged |
+| If the field has been changed in both upstream and local, update local with the value from upstream |
 
-* Associative lists:
-    * If the field is present in either upstream or local and the value is `null`, remove the field from local.
-    * If the field is present only in local, leave the local value unchanged.
-    * If the field is not present in local, add the delta between origin and upstream as the value in local.
-    * If the field is present in both upstream and local, recursively merge the values between local, upstream and origin.
+| Mappings |
+| --- |
+| If the field is present in either upstream or local and the value is `null`, remove the field from local |
+| If the field is present only in local, leave the local value unchanged |
+| If the field is not present in local, add the delta between origin and upstream as the value in local |
+| If the field is present in both upstream and local, recursively merge the values between local, upstream and origin |
+
+| Associative lists |
+| --- |
+| If the field is present in either upstream or local and the value is `null`, remove the field from local |
+| If the field is present only in local, leave the local value unchanged |
+| If the field is not present in local, add the delta between origin and upstream as the value in local |
+| If the field is present in both upstream and local, recursively merge the values between local, upstream and origin |
 
 ### Fast-forward
 
-The `fast-forward` strategy updates a local package with the changes from upstream, but will
+The fast-forward strategy updates a local package with the changes from upstream, but will
 fail if the local package has been modified since it was fetched. 
 
 ### Force-delete-replace
 
-The `force-delete-replace` strategy updates a local package with changes from upstream, but will
+The force-delete-replace strategy updates a local package with changes from upstream, but will
 wipe out any modifications to the local package.
 
 [update-doc]: /reference/cli/pkg/update/
