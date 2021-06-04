@@ -132,7 +132,7 @@ func (u Command) Run(ctx context.Context) error {
 	if u.Strategy != "" {
 		rootKf.Upstream.UpdateStrategy = u.Strategy
 	}
-	err = kptfileutil.WriteFile(u.Pkg.UniquePath.String(), *rootKf)
+	err = kptfileutil.WriteFile(u.Pkg.UniquePath.String(), rootKf)
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
@@ -442,7 +442,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 		// Both exists, so just go ahead as normal.
 	}
 
-	pkgKf, err := kptfileutil.ReadFile(localPath)
+	pkgKf, err := pkg.ReadKptfile(localPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}

@@ -16,6 +16,7 @@
 package pkg
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -47,6 +49,29 @@ func (k *KptfileError) Error() string {
 
 func (k *KptfileError) Unwrap() error {
 	return k.Err
+}
+
+// RemoteKptfileError records errors regarding reading or parsing of a Kptfile
+// in a remote repo.
+type RemoteKptfileError struct {
+	RepoSpec *git.RepoSpec
+	Err      error
+}
+
+func (e *RemoteKptfileError) Error() string {
+	return fmt.Sprintf("error reading Kptfile from %q: %v", e.RepoSpec.RepoRef(), e.Err)
+}
+
+func (e *RemoteKptfileError) Unwrap() error {
+	return e.Err
+}
+
+// DeprecatedKptfileError is an implementation of the error interface that is
+// returned whenever kpt encounters a Kptfile using the legacy format.
+type DeprecatedKptfileError struct{}
+
+func (e *DeprecatedKptfileError) Error() string {
+	return "Kptfile is using an old format"
 }
 
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
@@ -86,9 +111,6 @@ func New(path string) (*Pkg, error) {
 		// combining the current working directory with the path.
 		absPath = filepath.Join(cwd, path)
 	}
-	if err != nil {
-		return nil, err
-	}
 	pkg := &Pkg{
 		UniquePath: types.UniquePath(absPath),
 		// by default, rootPkgParentDirPath should be the absolute path to the parent directory of package being instantiated
@@ -103,7 +125,7 @@ func New(path string) (*Pkg, error) {
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 	if p.kptfile == nil {
-		kf, err := readKptfile(p.UniquePath.String())
+		kf, err := ReadKptfile(p.UniquePath.String())
 		if err != nil {
 			return nil, err
 		}
@@ -112,13 +134,13 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 	return p.kptfile, nil
 }
 
-// readKptfile reads the KptFile in the given pkg.
+// ReadKptfile reads the KptFile in the given pkg.
 // TODO(droot): This method exists for current version of Kptfile.
 // Need to reconcile with the team how we want to handle multiple versions
 // of Kptfile in code. One option is to follow Kubernetes approach to
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
-func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
+func ReadKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
 	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
 	if err != nil {
 		return nil, &KptfileError{
@@ -140,12 +162,43 @@ func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
 
 func DecodeKptfile(in io.Reader) (*kptfilev1alpha2.KptFile, error) {
 	kf := &kptfilev1alpha2.KptFile{}
-	d := yaml.NewDecoder(in)
+	c, err := io.ReadAll(in)
+	if err != nil {
+		return kf, err
+	}
+
+	if err := CheckKptfileVersion(c); err != nil {
+		return kf, err
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(c))
 	d.KnownFields(true)
 	if err := d.Decode(kf); err != nil {
 		return kf, err
 	}
 	return kf, nil
+}
+
+// CheckKptfileVersion verifies the apiVersion and kind of the resource
+// within the Kptfile. If the legacy version is found, the DeprecatedKptfileError
+// is returned. If the currently supported apiVersion and kind is found, no
+// error is returned.
+func CheckKptfileVersion(content []byte) error {
+	r, err := yaml.Parse(string(content))
+	if err != nil {
+		return err
+	}
+	apiVersion := r.GetApiVersion()
+	kind := r.GetKind()
+
+	switch {
+	case apiVersion == "kpt.dev/v1alpha1" && kind == "Kptfile":
+		return &DeprecatedKptfileError{}
+	case apiVersion == kptfilev1alpha2.KptFileAPIVersion && kind == kptfilev1alpha2.KptFileKind:
+		return nil
+	default:
+		return fmt.Errorf("unknown resource type: %s, Kind=%s", apiVersion, kind)
+	}
 }
 
 // Pipeline returns the Pipeline section of the pkg's Kptfile.
@@ -288,7 +341,7 @@ func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]
 			// path to the slice and return SkipDir since we don't need to
 			// walk any deeper into the directory.
 			if isPkg {
-				kf, err := readKptfile(path)
+				kf, err := ReadKptfile(path)
 				if err != nil {
 					return errors.E(op, types.UniquePath(path), err)
 				}
@@ -351,7 +404,7 @@ func IsPackageDir(path string) (bool, error) {
 // information, it will always return false.
 // If a Kptfile is not found on the provided path, an error will be returned.
 func IsPackageUnfetched(path string) (bool, error) {
-	kf, err := readKptfile(path)
+	kf, err := ReadKptfile(path)
 	if err != nil {
 		return false, err
 	}

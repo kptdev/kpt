@@ -15,7 +15,6 @@
 package kptfileutil
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,98 +23,41 @@ import (
 
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// TestReadFile tests the ReadFile function.
-func TestReadFile(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstreamLock:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := ReadFile(dir)
-	assert.NoError(t, err)
-	assert.Equal(t, kptfilev1alpha2.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: "cockroachdb",
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
-		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
-			Git: &kptfilev1alpha2.GitLock{
-				Commit:    "dd7adeb5492cca4c24169cecee023dbe632e5167",
-				Directory: "staging/cockroachdb",
-				Ref:       "refs/heads/owners-update",
-				Repo:      "https://github.com/kubernetes/examples",
-			},
-		},
-	}, f)
-}
-
-// TestReadFile_failRead verifies an error is returned if the file cannot be read
-func TestReadFile_failRead(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstream:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := ReadFile(dir)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "no such file or directory")
-	assert.Equal(t, kptfilev1alpha2.KptFile{}, f)
-}
-
-// TestReadFile_failUnmarshal verifies an error is returned if the file contains any unrecognized fields.
-func TestReadFile_failUnmarshal(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstreamBadField:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := ReadFile(dir)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "upstreamBadField not found")
-	assert.Equal(t, kptfilev1alpha2.KptFile{}, f)
+// TestValidateInventory tests the ValidateInventory function.
+func TestValidateInventory(t *testing.T) {
+	// nil inventory should not validate
+	isValid, err := ValidateInventory(nil)
+	if isValid || err == nil {
+		t.Errorf("nil inventory should not validate")
+	}
+	// Empty inventory should not validate
+	inv := &kptfilev1alpha2.Inventory{}
+	isValid, err = ValidateInventory(inv)
+	if isValid || err == nil {
+		t.Errorf("empty inventory should not validate")
+	}
+	// Empty inventory parameters strings should not validate
+	inv = &kptfilev1alpha2.Inventory{
+		Namespace:   "",
+		Name:        "",
+		InventoryID: "",
+	}
+	isValid, err = ValidateInventory(inv)
+	if isValid || err == nil {
+		t.Errorf("empty inventory parameters strings should not validate")
+	}
+	// Inventory with non-empty namespace, name, and id should validate.
+	inv = &kptfilev1alpha2.Inventory{
+		Namespace:   "test-namespace",
+		Name:        "test-name",
+		InventoryID: "test-id",
+	}
+	isValid, err = ValidateInventory(inv)
+	if !isValid || err != nil {
+		t.Errorf("inventory with non-empty namespace, name, and id should validate")
+	}
 }
 
 func TestUpdateKptfile(t *testing.T) {
@@ -465,5 +407,4 @@ pipeline: {}
 			assert.Equal(t, strings.TrimSpace(tc.expected)+"\n", string(c))
 		})
 	}
-
 }

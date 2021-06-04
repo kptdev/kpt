@@ -32,6 +32,11 @@ const (
 Error: No Kptfile found at {{ printf "%q" .path }}.
 `
 
+	//nolint:lll
+	deprecatedKptfileMsg = `
+Error: Kptfile at {{ printf "%q" .path }} is using and old version of the Kptfile format used by pre-1.0 versions of kpt. Please update the package to use the new format. See https://kpt.dev for more details on how to do the migration.
+`
+
 	kptfileReadErrMsg = `
 Error: Kptfile at {{ printf "%q" .path }} can't be read.
 
@@ -45,7 +50,6 @@ type pkgErrorResolver struct{}
 
 func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var kptfileError *pkg.KptfileError
-	var validateError *kptfile.ValidateError
 	if errors.As(err, &kptfileError) {
 		path := kptfileError.Path
 		tmplArgs := map[string]interface{}{
@@ -53,16 +57,20 @@ func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 			"err":  kptfileError,
 		}
 
-		if errors.Is(kptfileError, os.ErrNotExist) {
-			return ResolvedResult{
-				Message: ExecuteTemplate(noKptfileMsg, tmplArgs),
-			}, true
-		}
-
-		return ResolvedResult{
-			Message: ExecuteTemplate(kptfileReadErrMsg, tmplArgs),
-		}, true
+		return resolveNestedErr(kptfileError, tmplArgs)
 	}
+
+	var remoteKptfileError *pkg.RemoteKptfileError
+	if errors.As(err, &remoteKptfileError) {
+		path := remoteKptfileError.RepoSpec.RepoRef()
+		tmplArgs := map[string]interface{}{
+			"path": path,
+			"err":  kptfileError,
+		}
+		return resolveNestedErr(remoteKptfileError, tmplArgs)
+	}
+
+	var validateError *kptfile.ValidateError
 	if errors.As(err, &validateError) {
 		return ResolvedResult{
 			Message: validateError.Error(),
@@ -70,4 +78,23 @@ func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	}
 
 	return ResolvedResult{}, false
+}
+
+func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResult, bool) {
+	if errors.Is(err, os.ErrNotExist) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(noKptfileMsg, tmplArgs),
+		}, true
+	}
+
+	var deprecatedKptfileError *pkg.DeprecatedKptfileError
+	if errors.As(err, &deprecatedKptfileError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(deprecatedKptfileMsg, tmplArgs),
+		}, true
+	}
+
+	return ResolvedResult{
+		Message: ExecuteTemplate(kptfileReadErrMsg, tmplArgs),
+	}, true
 }
