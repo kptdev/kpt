@@ -37,9 +37,9 @@ Args:
   
     1. Multi object YAML where resources are separated by ` + "`" + `---` + "`" + `.
   
-    2. ` + "`" + `Function Specification` + "`" + ` wire format where resources are wrapped in an object
+    2. KRM Function Specification wire format where resources are wrapped in an object
        of kind ResourceList.
-   
+  
     If the output is written to ` + "`" + `stdout` + "`" + `, resources are written in multi object YAML
     format where resources are separated by ` + "`" + `---` + "`" + `.
 
@@ -57,7 +57,7 @@ Flags:
   --dry-run:
     If enabled, the resources are not written to local filesystem, instead they
     are written to stdout. By defaults it is disabled.
-    
+  
   --env, e:
     List of local environment variables to be exported to the container function.
     By default, none of local environment variables are made available to the
@@ -69,7 +69,7 @@ Flags:
     only one function, so do not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful
     for testing function locally during development. It enables faster dev iterations
     by avoiding the function to be published as container image.
-    
+  
   --fn-config:
     Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
   
@@ -101,6 +101,13 @@ Flags:
     If enabled, container functions are allowed to access network.
     By default it is disabled.
   
+  --output, o:
+    If specified, the output resources are written to provided location.
+    Allowed values: stdout|unwrap|<OUT_DIR_PATH>
+    stdout: output resources are wrapped in ResourceList and written to stdout.
+    unwrap: output resources are written to stdout.
+    OUT_DIR_PATH: output resources are written to provided directory.
+  
   --results-dir:
     Path to a directory to write structured results. Directory must exist.
     Structured results emitted by the functions are aggregated and saved
@@ -129,7 +136,7 @@ var EvalExamples = `
 
   # execute container my-fn on the resources in DIR directory with network access enabled,
   # and write output back to DIR
-  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --network 
+  $ kpt fn eval DIR --image gcr.io/example.com/my-fn --network
 
   # execute container my-fn on the resource in DIR and export KUBECONFIG
   # and foo environment variable
@@ -146,6 +153,21 @@ var EvalExamples = `
     | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
     | kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
     | kpt fn sink wordpress
+
+  # execute container 'set-namespace' on the resources in current directory and write
+  # the output resources to another directory
+  $ kpt fn eval -o path/to/dir --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
+
+  # execute container 'set-namespace' on the resources in current directory and write
+  # the output resources to stdout which can be piped to 'kubectl apply'
+  $ kpt fn eval -o unwrap --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
+  | kubectl apply -
+
+  # execute container 'set-namespace' on the resources in current directory and write
+  # the wrapped output resources to stdout which can be passed to 'set-annotations' function
+  # and the final output resources can be written to another directory
+  $ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 -o stdout \
+  | kpt fn eval - -o path/to/dir --image gcr.io/kpt-fn/set-annotations:v0.1.3 -- foo=bar
 `
 
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
@@ -195,6 +217,13 @@ Flags:
     to one of always, ifNotPresent, never. If unspecified, always will be the
     default.
   
+  --output, o:
+    If specified, the output resources are written to provided location.
+    Allowed values: stdout|unwrap|<OUT_DIR_PATH>
+    stdout: output resources are wrapped in ResourceList and written to stdout.
+    unwrap: output resources are written to stdout.
+    OUT_DIR_PATH: output resources are written to provided directory.
+  
   --results-dir:
     Path to a directory to write structured results. Directory must exist.
     Structured results emitted by the functions are aggregated and saved
@@ -206,10 +235,22 @@ var RenderExamples = `
   $ kpt fn render
 
   # Render the package in current directory and save results in my-results-dir
-  $ kpt fn render --results-dir my-results-dir 
+  $ kpt fn render --results-dir my-results-dir
 
   # Render my-package-dir
   $ kpt fn render my-package-dir
+
+  # Render the package in current directory and write output resources to another DIR
+  $ kpt fn render -o path/to/dir
+
+  # Render resources in current directory and write unwrapped resources to stdout
+  # which can be piped to kubectl apply
+  $ kpt fn render -o unwrap | kubectl apply -
+
+  # Render resources in current directory, pass the wrapped resources to eval command
+  # and the output resources can be written to another directory
+  $ kpt fn render -o stdout \
+  | kpt fn eval - -o path/to/dir --image gcr.io/kpt-fn/set-annotations:v0.1.3 -- foo=bar
 `
 
 var SinkShort = `Write resources to a local directory`

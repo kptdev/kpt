@@ -105,6 +105,13 @@ fn-args:
   If enabled, container functions are allowed to access network.
   By default it is disabled.
 
+--output, o:
+  If specified, the output resources are written to provided location.
+  Allowed values: stdout|unwrap|<OUT_DIR_PATH>
+  stdout: output resources are wrapped in ResourceList and written to stdout.
+  unwrap: output resources are written to stdout.
+  OUT_DIR_PATH: output resources are written to provided directory.
+
 --results-dir:
   Path to a directory to write structured results. Directory must exist.
   Structured results emitted by the functions are aggregated and saved
@@ -175,10 +182,29 @@ $ kpt fn source wordpress \
   | kpt fn sink wordpress
 ```
 
+```shell
+# execute container 'set-namespace' on the resources in current directory and write
+# the output resources to another directory
+$ kpt fn eval -o path/to/dir --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
+```
+
+```shell
+# execute container 'set-namespace' on the resources in current directory and write
+# the output resources to stdout which can be piped to 'kubectl apply'
+$ kpt fn eval -o unwrap --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
+| kubectl apply -
+```
+
+```shell
+# execute container 'set-namespace' on the resources in current directory and write
+# the wrapped output resources to stdout which can be passed to 'set-annotations' function
+# and the final output resources can be written to another directory
+$ kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 -o stdout \
+| kpt fn eval - -o path/to/dir --image gcr.io/kpt-fn/set-annotations:v0.1.3 -- foo=bar
+```
+
 <!--mdtogo-->
 
 [docker volumes]: https://docs.docker.com/storage/volumes/
-[imperative function execution]:
-  /book/04-using-functions/02-imperative-function-execution
-[function specification]:
-  /book/05-developing-functions/01-functions-specification
+[imperative function execution]: /book/04-using-functions/02-imperative-function-execution
+[function specification]: /book/05-developing-functions/01-functions-specification

@@ -3,8 +3,9 @@ title: "`render`"
 linkTitle: "render"
 type: docs
 description: >
-   Render a package
+  Render a package
 ---
+
 <!--mdtogo:Short
    Render a package.
 -->
@@ -31,6 +32,7 @@ Refer to the [Declarative Functions Execution] for more details.
 ### Synopsis
 
 <!--mdtogo:Long-->
+
 ```shell
 kpt fn render [PKG_PATH] [flags]
 ```
@@ -51,12 +53,20 @@ PKG_PATH:
   to one of always, ifNotPresent, never. If unspecified, always will be the
   default.
 
+--output, o:
+  If specified, the output resources are written to provided location.
+  Allowed values: stdout|unwrap|<OUT_DIR_PATH>
+  stdout: output resources are wrapped in ResourceList and written to stdout.
+  unwrap: output resources are written to stdout.
+  OUT_DIR_PATH: output resources are written to provided directory.
+
 --results-dir:
   Path to a directory to write structured results. Directory must exist.
   Structured results emitted by the functions are aggregated and saved
   to `results.yaml` file in the specified directory.
   If not specified, no result files are written to the local filesystem.
 ```
+
 <!--mdtogo-->
 
 ### Examples
@@ -70,7 +80,7 @@ $ kpt fn render
 
 ```shell
 # Render the package in current directory and save results in my-results-dir
-$ kpt fn render --results-dir my-results-dir 
+$ kpt fn render --results-dir my-results-dir
 ```
 
 ```shell
@@ -78,6 +88,24 @@ $ kpt fn render --results-dir my-results-dir
 $ kpt fn render my-package-dir
 ```
 
+```shell
+# Render the package in current directory and write output resources to another DIR
+$ kpt fn render -o path/to/dir
+```
+
+```shell
+# Render resources in current directory and write unwrapped resources to stdout
+# which can be piped to kubectl apply
+$ kpt fn render -o unwrap | kubectl apply -
+```
+
+```shell
+# Render resources in current directory, pass the wrapped resources to eval command
+# and the output resources can be written to another directory
+$ kpt fn render -o stdout \
+| kpt fn eval - -o path/to/dir --image gcr.io/kpt-fn/set-annotations:v0.1.3 -- foo=bar
+```
+
 <!--mdtogo-->
 
-[Declarative Functions Execution]: /book/04-using-functions/01-declarative-function-execution
+[declarative functions execution]: /book/04-using-functions/01-declarative-function-execution
