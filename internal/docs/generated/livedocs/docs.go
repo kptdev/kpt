@@ -217,7 +217,7 @@ Flags:
 
   --output:
     Determines the output format for the status information. Must be one of the following:
-    
+  
       * events: The output will be a list of the status events as they become available.
       * json: The output will be a list of the status events as they become available,
         each formatted as a json object.
@@ -225,20 +225,20 @@ Flags:
         as the status of resources become available.
   
     The default value is ‘events’.
-    
+  
   --poll-period:
     The frequency with which the cluster will be polled to determine the status
     of the applied resources. The default value is 2 seconds.
   
   --poll-until:
     When to stop polling for status and exist. Must be one of the following:
-    
+  
       * known: Exit when the status for all resources have been found.
       * current: Exit when the status for all resources have reached the Current status.
       * deleted: Exit when the status for all resources have reached the NotFound
         status, i.e. all the resources have been deleted from the live state.
       * forever: Keep polling for status until interrupted.
-    
+  
     The default value is ‘known’.
   
   --timeout:

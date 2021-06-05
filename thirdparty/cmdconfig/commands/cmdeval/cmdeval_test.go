@@ -4,6 +4,7 @@
 package cmdeval
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"os"
@@ -51,7 +52,7 @@ apiVersion: v1
 			name:   "config map stdin / stdout",
 			args:   []string{"eval", "-", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			input:  os.Stdin,
-			output: os.Stdout,
+			output: &bytes.Buffer{},
 			expected: `
 metadata:
   name: function-input
@@ -65,8 +66,8 @@ apiVersion: v1
 		},
 		{
 			name:   "config map dry-run",
-			args:   []string{"eval", "dir", "--image", "foo:bar", "--dry-run", "--", "a=b", "c=d", "e=f"},
-			output: os.Stdout,
+			args:   []string{"eval", "dir", "--image", "foo:bar", "-o", "stdout", "--", "a=b", "c=d", "e=f"},
+			output: &bytes.Buffer{},
 			path:   "dir",
 			expected: `
 metadata:

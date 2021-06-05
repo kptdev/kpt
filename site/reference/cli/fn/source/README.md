@@ -55,7 +55,7 @@ $ kpt fn source DIR
 # read resources from DIR directory, execute my-fn on them and write the
 # output to DIR directory.
 $ kpt fn source DIR |
-  kpt fn eval --image gcr.io/example.com/my-fn - |
+  kpt fn eval - --image gcr.io/example.com/my-fn - |
   kpt fn sink DIR
 ```
 

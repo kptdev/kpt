@@ -526,7 +526,11 @@ metadata:
 		},
 		{
 			ContinueOnEmptyResult: true,
-			ExpectedOutput:        "kind: generated\n",
+			ExpectedOutput: `apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+  - kind: generated
+`,
 		},
 	}
 	for i := range test {

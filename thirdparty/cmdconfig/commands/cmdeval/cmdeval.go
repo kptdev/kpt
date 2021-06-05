@@ -4,6 +4,7 @@
 package cmdeval
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -35,11 +36,10 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	}
 
 	r.Command = c
-	r.Command.Flags().BoolVar(
-		&r.DryRun, "dry-run", false, "print results to stdout")
-	r.Command.Flags().StringVarP(
-		&r.Image, "image", "i", "",
-		"run this image as a function")
+	r.Command.Flags().StringVarP(&r.Dest, "output", "o", "",
+		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
+	r.Command.Flags().StringVar(
+		&r.Image, "image", "", "run this image as a function")
 	r.Command.Flags().StringVar(
 		&r.ExecPath, "exec-path", "", "run an executable as a function.")
 	r.Command.Flags().StringVar(
@@ -71,7 +71,9 @@ func EvalCommand(ctx context.Context, name string) *cobra.Command {
 // EvalFnRunner contains the run function
 type EvalFnRunner struct {
 	Command              *cobra.Command
-	DryRun               bool
+	Dest                 string
+	OutContent           bytes.Buffer
+	FromStdin            bool
 	Image                string
 	ExecPath             string
 	FnConfigPath         string
@@ -87,7 +89,11 @@ type EvalFnRunner struct {
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
-	return runner.HandleError(c, r.RunFns.Execute())
+	err := runner.HandleError(c, r.RunFns.Execute())
+	if err != nil {
+		return err
+	}
+	return cmdutil.WriteFnOutput(r.Dest, r.OutContent.String(), r.FromStdin, c.OutOrStdout())
 }
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
@@ -254,13 +260,16 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// set the output to stdout if in dry-run mode or no arguments are specified
 	var output io.Writer
 	var input io.Reader
+	r.OutContent = bytes.Buffer{}
 	if args[0] == "-" {
-		output = c.OutOrStdout()
+		output = &r.OutContent
 		input = c.InOrStdin()
+		r.FromStdin = true
+
 		// clear args as it indicates stdin and not path
 		args = []string{}
-	} else if r.DryRun {
-		output = c.OutOrStdout()
+	} else if r.Dest != "" {
+		output = &r.OutContent
 	}
 
 	// set the path if specified as an argument
@@ -299,7 +308,6 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		ContinueOnEmptyResult: true,
 	}
 
-	// don't consider args for the function
 	return nil
 }
 
