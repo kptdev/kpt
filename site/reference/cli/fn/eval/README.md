@@ -105,6 +105,14 @@ fn-args:
   If enabled, container functions are allowed to access network.
   By default it is disabled.
 
+--output, o:
+  If specified, the output resources are written to provided location,
+  if not specified, resources are modified in-place.
+  Allowed values: stdout|unwrap|<OUT_DIR_PATH>
+  1. stdout: output resources are wrapped in ResourceList and written to stdout.
+  2. unwrap: output resources are written to stdout, in multi-object yaml format.
+  3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
+
 --results-dir:
   Path to a directory to write structured results. Directory will be created if
   it doesn't exist. Structured results emitted by the functions are aggregated and saved
@@ -118,61 +126,82 @@ fn-args:
 
 <!--mdtogo:Examples-->
 
-```
+```shell
 # execute container my-fn on the resources in DIR directory and
 # write output back to DIR
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn
+$ kpt fn eval DIR -i gcr.io/example.com/my-fn
 ```
 
-```
+```shell
 # execute container my-fn on the resources in DIR directory with
 # `functionConfig` my-fn-config
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --fn-config my-fn-config
+$ kpt fn eval DIR -i gcr.io/example.com/my-fn --fn-config my-fn-config
 ```
 
-```
+```shell
 # execute container my-fn with an input ConfigMap containing `data: {foo: bar}`
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+$ kpt fn eval DIR -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 ```
 
-```
+```shell
 # execute executable my-fn on the resources in DIR directory and
 # write output back to DIR
 $ kpt fn eval DIR --exec-path ./my-fn
 ```
 
-```
+```shell
 # execute container my-fn on the resources in DIR directory,
 # save structured results in /tmp/my-results dir and write output back to DIR
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir
+$ kpt fn eval DIR -i gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir
 ```
 
-```
+```shell
 # execute container my-fn on the resources in DIR directory with network access enabled,
 # and write output back to DIR
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --network
+$ kpt fn eval DIR -i gcr.io/example.com/my-fn --network
 ```
 
-```
+```shell
 # execute container my-fn on the resource in DIR and export KUBECONFIG
 # and foo environment variable
-$ kpt fn eval DIR --image gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
+$ kpt fn eval DIR -i gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 ```
 
-```
+```shell
 # execute kubeval function by mounting schema from a local directory on wordpress package
-$ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 \
+$ kpt fn eval -i gcr.io/kpt-fn/kubeval:v0.1 \
   --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir \
   --as-current-user wordpress -- additional_schema_locations=/schema-dir
 ```
 
-```
+```shell
 # chaining functions using the unix pipe to set namespace and set labels on
 # wordpress package
 $ kpt fn source wordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
-  | kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
+  | kpt fn eval - -i gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
+  | kpt fn eval - -i gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
   | kpt fn sink wordpress
+```
+
+```shell
+# execute container 'set-namespace' on the resources in current directory and write
+# the output resources to another directory
+$ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o path/to/dir -- namespace=mywordpress
+```
+
+```shell
+# execute container 'set-namespace' on the resources in current directory and write
+# the output resources to stdout which are piped to 'kubectl apply'
+$ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordpress \
+| kubectl apply -
+```
+
+```shell
+# execute container 'set-namespace' on the resources in current directory and write
+# the wrapped output resources to stdout which are passed to 'set-annotations' function
+# and the output resources after setting namespace and annotation is written to another directory
+$ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout \
+| kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
 ```
 
 <!--mdtogo-->

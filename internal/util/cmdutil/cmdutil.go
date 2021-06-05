@@ -17,6 +17,7 @@ package cmdutil
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,11 +26,15 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
 const (
 	StackTraceOnErrors = "COBRA_STACK_TRACE_ON_ERRORS"
 	trueString         = "true"
+	Stdout             = "stdout"
+	Unwrap             = "unwrap"
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -112,4 +117,50 @@ func StringToImagePullPolicy(v string) fnruntime.ImagePullPolicy {
 	default:
 		return fnruntime.AlwaysPull
 	}
+}
+
+// WriteFnOutput writes the output resources of function commands to provided destination
+func WriteFnOutput(dest, content string, fromStdin bool, w io.Writer) error {
+	r := strings.NewReader(content)
+	switch dest {
+	case Stdout:
+		// if user specified dest is "stdout" directly write the content as it is already wrapped
+		_, err := w.Write([]byte(content))
+		return err
+	case Unwrap:
+		// if user specified dest is "unwrap", write the unwrapped content to the provided writer
+		return WriteToOutput(r, w, "")
+	case "":
+		if fromStdin {
+			// if user didn't specify dest, and if input is from STDIN, write the wrapped content provided writer
+			// this is same as "stdout" input above
+			_, err := w.Write([]byte(content))
+			return err
+		}
+	default:
+		// this means user specified a directory as dest, write the content to dest directory
+		return WriteToOutput(r, nil, dest)
+	}
+	return nil
+}
+
+// WriteToOutput reads the input from r and writes the output to either w or outDir
+func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
+	var outputs []kio.Writer
+	if outDir != "" {
+		err := os.MkdirAll(outDir, 0700)
+		if err != nil {
+			return fmt.Errorf("failed to create output directory %q: %q", outDir, err.Error())
+		}
+		outputs = []kio.Writer{&kio.LocalPackageWriter{PackagePath: outDir}}
+	} else {
+		outputs = []kio.Writer{&kio.ByteWriter{
+			Writer:           w,
+			ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation}},
+		}
+	}
+
+	return kio.Pipeline{
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
+		Outputs: outputs}.Execute()
 }

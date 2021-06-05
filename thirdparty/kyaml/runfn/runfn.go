@@ -212,7 +212,12 @@ func (r RunFns) runFunctions(
 	} else {
 		// write to the output instead of the directory if r.Output is specified or
 		// the output is nil (reading from Input)
-		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
+		outputs = append(outputs, kio.ByteWriter{
+			Writer:                r.Output,
+			KeepReaderAnnotations: true,
+			WrappingKind:          kio.ResourceListKind,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+		})
 	}
 
 	// add format filter at the end to consistently format output resources

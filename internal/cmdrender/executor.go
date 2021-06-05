@@ -17,6 +17,7 @@ package cmdrender
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -41,6 +42,7 @@ import (
 type Executor struct {
 	PkgPath         string
 	ResultsDirPath  string
+	Output          io.Writer
 	ImagePullPolicy fnruntime.ImagePullPolicy
 
 	Printer printer.Printer
@@ -49,6 +51,11 @@ type Executor struct {
 // Execute runs a pipeline.
 func (e *Executor) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
+	disableCLIOutput := false
+	if e.Output != nil {
+		// disable output written to stdout in case of out-of-place hydration
+		disableCLIOutput = true
+	}
 
 	pr := printer.FromContextOrDie(ctx)
 
@@ -59,17 +66,19 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root:            root,
-		pkgs:            map[types.UniquePath]*pkgNode{},
-		fnResults:       fnresult.NewResultList(),
-		imagePullPolicy: e.ImagePullPolicy,
+		root:             root,
+		pkgs:             map[types.UniquePath]*pkgNode{},
+		fnResults:        fnresult.NewResultList(),
+		imagePullPolicy:  e.ImagePullPolicy,
+		disableCLIOutput: disableCLIOutput,
 	}
 
 	resources, err := hydrate(ctx, root, hctx)
 	if err != nil {
 		// Note(droot): ignore the error in function result saving
 		// to avoid masking the hydration error.
-		_ = e.saveFnResults(ctx, hctx.fnResults, true)
+		// don't disable the CLI output in case of error
+		_ = e.saveFnResults(ctx, hctx.fnResults, true, false)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -77,32 +86,50 @@ func (e *Executor) Execute(ctx context.Context) error {
 		return err
 	}
 
-	pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
-
 	// format resources before writing
 	_, err = filters.FormatFilter{UseSchema: true}.Filter(resources)
 	if err != nil {
 		return err
 	}
 
-	err = pkgWriter.Write(resources)
-	if err != nil {
-		return fmt.Errorf("failed to save resources: %w", err)
+	if e.Output == nil {
+		// the intent of the user is to modify resources in-place
+		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
+		err = pkgWriter.Write(resources)
+		if err != nil {
+			return fmt.Errorf("failed to save resources: %w", err)
+		}
+
+		if err = pruneResources(hctx); err != nil {
+			return err
+		}
+		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
+	} else {
+		// the intent of the user is to write the resources to either stdout|unwrapped|<OUT_DIR>
+		// so, write the resources to provided e.Output which will be written to appropriate destination by cobra layer
+		writer := &kio.ByteWriter{
+			Writer:                e.Output,
+			KeepReaderAnnotations: true,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+			WrappingKind:          kio.ResourceListKind,
+		}
+		err = writer.Write(resources)
+		if err != nil {
+			return fmt.Errorf("failed to write resources: %w", err)
+		}
 	}
 
-	if err = pruneResources(hctx); err != nil {
-		return err
-	}
-
-	pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
-
-	return e.saveFnResults(ctx, hctx.fnResults, false)
+	return e.saveFnResults(ctx, hctx.fnResults, false, disableCLIOutput)
 }
 
-func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList, toStdErr bool) error {
+func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList, toStdErr, disableCLIOutput bool) error {
 	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
+	}
+
+	if disableCLIOutput {
+		return nil
 	}
 
 	printerutil.PrintFnResultInfo(ctx, resultsFile, false, toStdErr)
@@ -138,6 +165,10 @@ type hydrationContext struct {
 
 	// imagePullPolicy controls the image pulling behavior.
 	imagePullPolicy fnruntime.ImagePullPolicy
+
+	// disableCLIOutput disables the cli output written to stdout
+	// stderr is not affected by this
+	disableCLIOutput bool
 }
 
 //
@@ -299,7 +330,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
 	// package structure. We should have function to get the relative package
 	// path here.
-	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
+	if !hctx.disableCLIOutput {
+		pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
+	}
 
 	if len(input) == 0 {
 		return nil, nil
@@ -328,7 +361,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
 	// print a new line after a pipeline running
-	pr.Printf("\n")
+	if !hctx.disableCLIOutput {
+		pr.Printf("\n")
+	}
 	return mutatedResources, nil
 }
 
@@ -389,7 +424,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy)
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, hctx.disableCLIOutput)
 		if err != nil {
 			return err
 		}
@@ -443,7 +478,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, hctx.disableCLIOutput)
 		if err != nil {
 			return nil, err
 		}
