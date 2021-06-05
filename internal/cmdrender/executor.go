@@ -77,7 +77,8 @@ func (e *Executor) Execute(ctx context.Context) error {
 	if err != nil {
 		// Note(droot): ignore the error in function result saving
 		// to avoid masking the hydration error.
-		_ = e.saveFnResults(ctx, hctx.fnResults, true, disableCLIOutput)
+		// don't disable the CLI output in case of error
+		_ = e.saveFnResults(ctx, hctx.fnResults, true, false)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
