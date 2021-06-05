@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: helloworld-gke
-spec:
-  template:
-    spec:
-      containers:
-      - name: helloworld-gke
-        env:
-        - name: TARGET
-          value: 'changeme!' # kpt-set: ${target}
+exitCode: 1
+stdErr: |
+  Kptfile is invalid:
+  Field: `pipeline.mutators[0].configPath`
+  Value: "db/labelconfig.yaml"
+  Reason: functionConfig must exist in the current package

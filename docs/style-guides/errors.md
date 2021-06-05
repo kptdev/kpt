@@ -32,7 +32,7 @@ In the table below, origin and scope of rules are denoted with a prefix
 | K2  | When asserting a requirement in the positive, use "must". Avoid words like "should" as they imply that the assertion is optional.  | a) "must be greater than 0"  b) "must match regex '[a-z]+'"  |
 | K3  | When asserting a formatting requirement in the negative, use "must not". Avoid words like "should not" as they imply that the assertion is optional.  | "must not contain '..'"  |
 | K5  | When referencing a user-provided string value, indicate the literal in quotes.  N Use quotes (%q format specifier in Go) around user-provided values. This includes file paths.  | "must not contain '..'"  |
-| K6  | When referencing a field name, indicate the name in back-quotes.  N Where unclear from the message, reference the full field path.  | "must be greater than `spec.request.size`"  |
+| K6  | When referencing a field name, indicate the name in back-quotes.  Where it's unclear from the message, reference the full field path.  | "must be greater than `spec.request.size`"  |
 | K7  | When specifying inequalities, use words rather than symbols. Do not use words like "larger than", "bigger than", "more than", "higher than", etc.  | a) "must be less than 256"  b) "must be greater than or equal to 0".   |
 | K8  | When specifying numeric ranges, use inclusive ranges when possible.  |   |
 | R1  | If wrapping a runtime error, such as the result of a failed API Server call, use %w formatting verb in fmt.Errorf()(err) to include the root cause error. Refer to [Go error enhancements in 1.13](https://blog.golang.org/go1.13-errors).  |   |

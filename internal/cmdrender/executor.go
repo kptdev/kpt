@@ -175,7 +175,7 @@ func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
-	if err := kf.Validate(); err != nil {
+	if err := kf.Validate(p.UniquePath); err != nil {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 

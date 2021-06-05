@@ -6,7 +6,8 @@ $ cd awesomeapp
 # Create resources in awesome/
 ```
 
-For convenience, you can use `pkg init` command to create a minimal `Kptfile` and `README` files:
+For convenience, you can use `pkg init` command to create a minimal `Kptfile`
+and `README` files:
 
 ```shell
 $ cd awesomeapp
@@ -17,8 +18,8 @@ writing README.md
 
 ?> Refer to the [init command reference][init-doc] for usage.
 
-The `info` section of the `Kptfile` contains some optional package metadata you may want to set.
-These fields are not consumed by any functionality in kpt:
+The `info` section of the `Kptfile` contains some optional package metadata you
+may want to set. These fields are not consumed by any functionality in kpt:
 
 ```yaml
 apiVersion: kpt.dev/v1alpha2
@@ -38,4 +39,4 @@ info:
 ```
 
 [author resources]: /book/03-packages/03-editing-a-package
-[init-doc]: /reference/pkg/init/
+[init-doc]: /reference/cli/pkg/init/

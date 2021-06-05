@@ -361,25 +361,10 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
-// etFunctionConfig returns yaml representation of functionConfig that can
+// getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	if r.FnConfigPath == "" {
-		return nil, fmt.Errorf("function config file path must not be empty")
-	}
-	f, err := os.Open(r.FnConfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("missing function config '%s': %w", r.FnConfigPath, err)
-	}
-	reader := kio.ByteReader{Reader: f}
-	nodes, err := reader.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read function config '%s': %w", r.FnConfigPath, err)
-	}
-	if len(nodes) > 1 {
-		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config", r.FnConfigPath)
-	}
-	return nodes[0], nil
+	return kptfile.GetValidatedFnConfigFromPath("", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters

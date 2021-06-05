@@ -96,6 +96,6 @@ kpt help
 [gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
 [gcr.io/kpt-dev/kpt-gcloud]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
-[linux]: https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-alpha.4/kpt_linux_amd64
-[darwin]: https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-alpha.4/kpt_darwin_amd64
+[linux]: https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-alpha.5/kpt_linux_amd64
+[darwin]: https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-alpha.5/kpt_darwin_amd64
 [migration guide]: /installation/migration

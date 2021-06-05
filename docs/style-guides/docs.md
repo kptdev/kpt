@@ -14,8 +14,8 @@
    ```
 
 3. Links to other kpt doc pages should be absolute:
-   - Correct: `[pkg]: /reference/pkg/get/`
-   - Incorrect: `[pkg]: ../../../reference/pkg/get`
+   - Correct: `[pkg]: /reference/cli/pkg/get/`
+   - Incorrect: `[pkg]: ../../../reference/cli/pkg/get`
 4. Flags must appear after positional args:
 
    - Correct:
