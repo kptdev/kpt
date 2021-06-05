@@ -156,16 +156,16 @@ var manTemplate = `# {{.Name}}
 
 ### Fetch the package
 'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] {{.Name}}'
-Details: https://kpt.dev/reference/pkg/get/
+Details: https://kpt.dev/reference/cli/pkg/get/
 
 ### View package content
 'kpt pkg tree {{.Name}}'
-Details: https://kpt.dev/reference/pkg/tree/
+Details: https://kpt.dev/reference/cli/pkg/tree/
 
 ### Apply the package
 '''
 kpt live init {{.Name}}
 kpt live apply {{.Name}} --reconcile-timeout=2m --output=table
 '''
-Details: https://kpt.dev/reference/live/
+Details: https://kpt.dev/reference/cli/live/
 `

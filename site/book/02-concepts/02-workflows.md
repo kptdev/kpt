@@ -46,12 +46,13 @@ may look like this:
 ![img](/static/images/lifecycle/flow3.svg)
 
 - **Initialize**: One-time process using `kpt live init`
-- **Preview**: Using `kpt live preview`
+- **Preview**: Using `kpt live apply --dry-run`
 - **Apply**: Using `kpt live apply`
 - **Observe**: Using `kpt live status`
 
-First, you preview deployment of the package to the cluster. Then if the preview looks good,
-you apply the package. Afterwards, you may observe the status of the package on the cluster.
+First, you use dry-run to validate the resources in your package and verify that the expected
+resources will be applied and pruned. Then if that looks good, you apply the package. Afterwards,
+you may observe the status of the package on the cluster.
 
 You typically want to store the package on Git:
 

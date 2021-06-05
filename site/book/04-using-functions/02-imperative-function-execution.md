@@ -187,7 +187,7 @@ mutating the directory in-place. You can also pipe to other programs (e.g.
 flexibility is not having benefits provided by functions: scalability,
 reusability, and encapsulation.
 
-[eval-doc]: /reference/fn/eval/
-[source-doc]: /reference/fn/source/
-[sink-doc]: /reference/fn/sink/
+[eval-doc]: /reference/cli/fn/eval/
+[source-doc]: /reference/cli/fn/source/
+[sink-doc]: /reference/cli/fn/sink/
 [docker volumes]: https://docs.docker.com/storage/volumes/
