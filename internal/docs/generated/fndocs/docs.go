@@ -54,10 +54,6 @@ Flags:
     By default, container function is executed as ` + "`" + `nobody` + "`" + ` user. You may want to use
     this flag to run higher privilege operations such as mounting the local filesystem.
   
-  --dry-run:
-    If enabled, the resources are not written to local filesystem, instead they
-    are written to stdout. By defaults it is disabled.
-  
   --env, e:
     List of local environment variables to be exported to the container function.
     By default, none of local environment variables are made available to the
@@ -151,8 +147,8 @@ var EvalExamples = `
   # chaining functions using the unix pipe to set namespace and set labels on
   # wordpress package
   $ kpt fn source wordpress \
-    | kpt fn eval - -i gcr.io/kpt-fn/set-namespace:v0.1 - -- namespace=mywordpress \
-    | kpt fn eval - -i gcr.io/kpt-fn/set-labels:v0.1 - -- label_name=color label_value=orange \
+    | kpt fn eval - -i gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
+    | kpt fn eval - -i gcr.io/kpt-fn/set-labels:v0.1 -- label_name=color label_value=orange \
     | kpt fn sink wordpress
 
   # execute container 'set-namespace' on the resources in current directory and write
@@ -162,12 +158,12 @@ var EvalExamples = `
   # execute container 'set-namespace' on the resources in current directory and write
   # the output resources to stdout which are piped to 'kubectl apply'
   $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordpress \
-  | kubectl apply -
+  | kubectl apply -f -
 
   # execute container 'set-namespace' on the resources in current directory and write
   # the wrapped output resources to stdout which are passed to 'set-annotations' function
   # and the output resources after setting namespace and annotation is written to another directory
-  $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout \
+  $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging \
   | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
 `
 
@@ -247,7 +243,7 @@ var RenderExamples = `
 
   # Render resources in current directory and write unwrapped resources to stdout
   # which can be piped to kubectl apply
-  $ kpt fn render -o unwrap | kubectl apply -
+  $ kpt fn render -o unwrap | kubectl apply -f -
 
   # Render resources in current directory, write the wrapped resources
   # to stdout which are piped to 'set-annotations' function,

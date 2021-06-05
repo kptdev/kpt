@@ -97,7 +97,7 @@ $ kpt fn render -o path/to/dir
 ```shell
 # Render resources in current directory and write unwrapped resources to stdout
 # which can be piped to kubectl apply
-$ kpt fn render -o unwrap | kubectl apply -
+$ kpt fn render -o unwrap | kubectl apply -f -
 ```
 
 ```shell
