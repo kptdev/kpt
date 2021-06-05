@@ -39,8 +39,8 @@ func GetMain(ctx context.Context) *cobra.Command {
 	installComp := false
 	cmd := &cobra.Command{
 		Use:          "kpt",
-		Short:        overview.ReferenceShort,
-		Long:         overview.ReferenceLong,
+		Short:        overview.CliShort,
+		Long:         overview.CliLong,
 		SilenceUsage: true,
 		// We handle all errors in main after return from cobra so we can
 		// adjust the error message coming from libraries

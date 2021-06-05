@@ -106,7 +106,8 @@ fn-args:
   By default it is disabled.
 
 --output, o:
-  If specified, the output resources are written to provided location.
+  If specified, the output resources are written to provided location,
+  if not specified, resources are modified in-place.
   Allowed values: stdout|unwrap|<OUT_DIR_PATH>
   1. stdout: output resources are wrapped in ResourceList and written to stdout.
   2. unwrap: output resources are written to stdout, in multi-object yaml format.
