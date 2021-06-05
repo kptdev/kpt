@@ -62,8 +62,8 @@ PKG_PATH:
   3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
 
 --results-dir:
-  Path to a directory to write structured results. Directory must exist.
-  Structured results emitted by the functions are aggregated and saved
+  Path to a directory to write structured results. Directory will be created if
+  it doesn't exist. Structured results emitted by the functions are aggregated and saved
   to `results.yaml` file in the specified directory.
   If not specified, no result files are written to the local filesystem.
 ```
