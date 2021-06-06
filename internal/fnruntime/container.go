@@ -197,6 +197,7 @@ func (f *ContainerFn) prepareImage() error {
 	// This can help to ensure we have the latest release for "moving tags" like
 	// v1 and v1.2. The performance cost is very minimal, since `docker pull`
 	// checks the SHA first and only pull the missing docker layer(s).
+	f.Image = AddDefaultImagePathPrefix(f.Image)
 	args := []string{"image", "pull", f.Image}
 	// setup timeout
 	timeout := defaultLongTimeout
@@ -228,6 +229,14 @@ func (f *ContainerFn) checkImageExistence() bool {
 		return true
 	}
 	return false
+}
+
+// AddDefaultImagePathPrefix adds default gcr.io/kpt-fn/ path prefix to image if only image name is specified
+func AddDefaultImagePathPrefix(image string) string {
+	if !strings.Contains(image, "/") {
+		return fmt.Sprintf("gcr.io/kpt-fn/%s", image)
+	}
+	return image
 }
 
 // ContainerImageError is an error type which will be returned when

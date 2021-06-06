@@ -13,6 +13,6 @@
 # limitations under the License.
 
 testType: eval
-image: set-namespace:v0.1
+image: set-namespace:v0.1.3
 args:
   namespace: staging
