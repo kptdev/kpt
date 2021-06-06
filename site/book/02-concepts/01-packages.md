@@ -40,7 +40,6 @@ expectedOutput "Package \"wordpress\"
 
 {{% /hide %}}
 
-
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
 $ kpt pkg tree wordpress/
@@ -100,7 +99,6 @@ kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb
 ```
 
 {{% /hide %}}
-
 
 ```shell
 $ kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb

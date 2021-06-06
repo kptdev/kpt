@@ -10,6 +10,16 @@ description: >
     Display the documentation for a function
 -->
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Set up workspace for the test.
+setupWorkspace
+```
+
+{{% /hide %}}
+
 ### Synopsis
 
 <!--mdtogo:Long-->
@@ -30,6 +40,7 @@ print the error message to STDERR.
 
 <!--mdtogo:Examples-->
 
+<!--@verifyExamples-->
 ```shell
 # diplay the documentation for image gcr.io/kpt-fn/set-namespace:v0.1.1
 $ kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1

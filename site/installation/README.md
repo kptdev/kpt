@@ -90,7 +90,7 @@ $ GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt@next
 with `go get`.
 
 ```shell
-kpt help
+$ kpt help
 ```
 
 [gcr.io/kpt-dev/kpt]: https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30

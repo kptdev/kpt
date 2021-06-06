@@ -30,7 +30,6 @@ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/hel
 
 {{% /hide %}}
 
-
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@next
 

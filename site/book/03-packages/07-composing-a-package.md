@@ -63,7 +63,7 @@ subdirectory:
 
 <!--@verifyBook-->
 ```shell
-$ rm -r wordpress/mysql
+rm -r wordpress/mysql
 ```
 
 {{% /hide %}}

@@ -170,7 +170,8 @@ var EvalExamples = `
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
 var ExportLong = `
   kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
-  
+
+Args:
   DIR:
     Path to a package directory.
   FUNCTIONS_DIR:

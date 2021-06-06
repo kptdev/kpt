@@ -25,3 +25,13 @@ kpt functionality is divided into three command groups:
 [pkg]: /reference/cli/pkg/
 [fn]: /reference/cli/fn/
 [live]: /reference/cli/live/
+
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+```
+# Runs the script which contains all verify functions. 
+source ./scripts/setupVerify.sh
+```
+
+{{% /hide %}}

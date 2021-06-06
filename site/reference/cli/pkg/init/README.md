@@ -58,14 +58,14 @@ setupWorkspace
 
 <!--mdtogo:Examples-->
 
-<!-- @pkgInit @verifyStaleExamples-->
-
+<!-- @pkgInit @verifyExamples-->
 ```shell
 # Creates a new Kptfile with metadata in the cockroachdb directory.
 $ mkdir cockroachdb; kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
     --description "my cockroachdb implementation"
 ```
 
+<!-- @pkgInit @verifyExamples-->
 ```shell
 # Creates a new Kptfile without metadata in the current directory.
 $ kpt pkg init

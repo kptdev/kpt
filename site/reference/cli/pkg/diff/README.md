@@ -110,8 +110,7 @@ KPT_CACHE_DIR:
 setupWorkspace
 ```
 
-<!-- @fetchPackage @verifyExamples-->
-
+<!-- @pkgGet @verifyExamples-->
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
 kpt pkg get $SRC_REPO/package-examples/helloworld-set@next hello-world
@@ -121,6 +120,7 @@ cd hello-world
 {{% /hide %}}
 
 <!--mdtogo:Examples-->
+
 <!-- @pkgDiff @verifyExamples-->
 
 ```shell

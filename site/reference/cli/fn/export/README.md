@@ -13,6 +13,35 @@ description: >
 Exports a workflow pipeline that runs kpt functions alongside necessary
 configurations.
 
+### Synopsis
+
+<!--mdtogo:Long-->
+
+```shell
+kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
+```
+
+#### Args
+```
+DIR:
+  Path to a package directory.
+FUNCTIONS_DIR:
+  Read functions from the directory instead of the DIR/.
+ORCHESTRATOR:
+  Supported orchestrators are:
+    - github-actions
+    - cloud-build
+    - gitlab-ci
+    - jenkins
+    - tekton
+    - circleci
+OUTPUT_FILENAME:
+  Specifies the filename of the generated pipeline. If omitted, the default
+  output is stdout
+```
+
+<!--mdtogo-->
+
 ### Examples
 
 {{% hide %}}
@@ -45,32 +74,6 @@ kpt fn export DIR/ --output main.yaml --workflow github-actions
 # discover functions in FUNCTIONS_DIR and run them against resource in DIR.
 # write the generated Cloud Build pipeline to stdout.
 kpt fn export DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
-```
-
-<!--mdtogo-->
-
-### Synopsis
-
-<!--mdtogo:Long-->
-
-```shell
-kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
-
-DIR:
-  Path to a package directory.
-FUNCTIONS_DIR:
-  Read functions from the directory instead of the DIR/.
-ORCHESTRATOR:
-  Supported orchestrators are:
-    - github-actions
-    - cloud-build
-    - gitlab-ci
-    - jenkins
-    - tekton
-    - circleci
-OUTPUT_FILENAME:
-  Specifies the filename of the generated pipeline. If omitted, the default
-  output is stdout
 ```
 
 <!--mdtogo-->

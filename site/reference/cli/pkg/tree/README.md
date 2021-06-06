@@ -34,6 +34,23 @@ DIR:
 
 <!--mdtogo:Examples-->
 
+{{% hide %}}
+
+<!-- @makeWorkplace @verifyExamples-->
+
+```
+# Set up workspace for the test.
+setupWorkspace
+```
+<!-- @pkgGet @verifyExamples-->
+```shell
+kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master 
+cd cockroachdb
+```
+
+{{% /hide %}}
+
+<!-- @pkgTree @verifyExamples-->
 ```shell
 # Show resources in the current directory.
 $ kpt pkg tree
