@@ -15,6 +15,7 @@
 package fnruntime
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 
@@ -28,13 +29,16 @@ func SaveResults(resultsDir string, fnResults *fnresult.ResultList) (string, err
 		return "", nil
 	}
 	filePath := filepath.Join(resultsDir, "results.yaml")
+	out := &bytes.Buffer{}
 
-	content, err := yaml.Marshal(fnResults)
+	// use kyaml encoder to ensure consistent indentation
+	e := yaml.NewEncoder(out)
+	err := e.Encode(fnResults)
 	if err != nil {
 		return "", err
 	}
 
-	err = ioutil.WriteFile(filePath, content, 0744)
+	err = ioutil.WriteFile(filePath, out.Bytes(), 0744)
 	if err != nil {
 		return "", err
 	}
