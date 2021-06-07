@@ -1,12 +1,12 @@
 apiVersion: kpt.dev/v1alpha2
 kind: FunctionResultList
 metadata:
-    name: fnresults
+  name: fnresults
 exitCode: 1
 items:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
-      stderr: '[error] /// : failed to configure function: input namespace cannot be empty'
-      exitCode: 1
-      results:
-        - message: 'failed to configure function: input namespace cannot be empty'
-          severity: error
+  - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    stderr: '[error] /// : failed to configure function: input namespace cannot be empty'
+    exitCode: 1
+    results:
+      - message: 'failed to configure function: input namespace cannot be empty'
+        severity: error
