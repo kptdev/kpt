@@ -84,8 +84,8 @@ jobs:
       # For linux builds allow execution of kpt
       - name:  Install Kpt Binary
         if: matrix.os != 'windows-latest'
-        run: 
-          mv ./kpt/${{ matrix.binary }} /bin/kpt \
+        run: |
+          mv ./kpt/${{ matrix.binary }} /bin/
           chmod +x /bin/kpt
       # Validate kpt installation
       # If kpt installation fails there is no reason to setup go or run tests
