@@ -34,7 +34,11 @@ Error: No Kptfile found at {{ printf "%q" .path }}.
 
 	//nolint:lll
 	deprecatedKptfileMsg = `
-Error: Kptfile at {{ printf "%q" .path }} is using and old version of the Kptfile format used by pre-1.0 versions of kpt. Please update the package to use the new format. See https://kpt.dev for more details on how to do the migration.
+Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema. Please update the package to the latest format. See https://kpt.dev/installation/migration for more details.
+`
+
+	unknownKptfileResourceMsg = `
+Error: Kptfile at {{ printf "%q" .path }} has an unknown resource type ({{ printf "%q" .gvk.String }}).
 `
 
 	kptfileReadErrMsg = `
@@ -89,8 +93,17 @@ func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResul
 
 	var deprecatedKptfileError *pkg.DeprecatedKptfileError
 	if errors.As(err, &deprecatedKptfileError) {
+		tmplArgs["version"] = deprecatedKptfileError.Version
 		return ResolvedResult{
 			Message: ExecuteTemplate(deprecatedKptfileMsg, tmplArgs),
+		}, true
+	}
+
+	var unknownKptfileResourceError *pkg.UnknownKptfileResourceError
+	if errors.As(err, &unknownKptfileResourceError) {
+		tmplArgs["gvk"] = unknownKptfileResourceError.GVK
+		return ResolvedResult{
+			Message: ExecuteTemplate(unknownKptfileResourceMsg, tmplArgs),
 		}, true
 	}
 

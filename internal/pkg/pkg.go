@@ -28,6 +28,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -36,6 +38,10 @@ import (
 
 const CurDir = "."
 const ParentDir = ".."
+
+var DeprecatedKptfileVersions = []string{
+	"v1alpha1",
+}
 
 // KptfileError records errors regarding reading or parsing of a Kptfile.
 type KptfileError struct {
@@ -68,10 +74,20 @@ func (e *RemoteKptfileError) Unwrap() error {
 
 // DeprecatedKptfileError is an implementation of the error interface that is
 // returned whenever kpt encounters a Kptfile using the legacy format.
-type DeprecatedKptfileError struct{}
+type DeprecatedKptfileError struct {
+	Version string
+}
 
 func (e *DeprecatedKptfileError) Error() string {
-	return "Kptfile is using an old format"
+	return fmt.Sprintf("old resource version %q found in Kptfile", e.Version)
+}
+
+type UnknownKptfileResourceError struct {
+	GVK schema.GroupVersionKind
+}
+
+func (e *UnknownKptfileResourceError) Error() string {
+	return fmt.Sprintf("unknown resource type %q found in Kptfile", e.GVK.String())
 }
 
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
@@ -188,17 +204,43 @@ func CheckKptfileVersion(content []byte) error {
 	if err != nil {
 		return err
 	}
-	apiVersion := r.GetApiVersion()
-	kind := r.GetKind()
+
+	m, err := r.GetMeta()
+	if err != nil {
+		return err
+	}
+
+	kind := m.Kind
+	gv, err := schema.ParseGroupVersion(m.APIVersion)
+	if err != nil {
+		return err
+	}
 
 	switch {
-	case apiVersion == "kpt.dev/v1alpha1" && kind == "Kptfile":
-		return &DeprecatedKptfileError{}
-	case apiVersion == kptfilev1alpha2.KptFileAPIVersion && kind == kptfilev1alpha2.KptFileKind:
+	// If the resource type matches what we are looking for, just return nil.
+	case gv.Group == kptfilev1alpha2.KptFileGroup &&
+		gv.Version == kptfilev1alpha2.KptFileVersion &&
+		kind == kptfilev1alpha2.KptFileKind:
 		return nil
+	// If the kind and group is correct and the version is a known deprecated
+	// schema for the Kptfile, return DeprecatedKptfileError.
+	case gv.Group == kptfilev1alpha2.KptFileGroup &&
+		kind == kptfilev1alpha2.KptFileKind &&
+		isDeprecatedKptfileVersion(gv.Version):
+		return &DeprecatedKptfileError{
+			Version: gv.Version,
+		}
+	// If the combination of group, version and kind are unknown to us, return
+	// UnknownKptfileResourceError.
 	default:
-		return fmt.Errorf("unknown resource type: %s, Kind=%s", apiVersion, kind)
+		return &UnknownKptfileResourceError{
+			GVK: gv.WithKind(kind),
+		}
 	}
+}
+
+func isDeprecatedKptfileVersion(version string) bool {
+	return slice.ContainsString(DeprecatedKptfileVersions, version, nil)
 }
 
 // Pipeline returns the Pipeline section of the pkg's Kptfile.
