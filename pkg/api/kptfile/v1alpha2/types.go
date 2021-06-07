@@ -55,10 +55,11 @@ type KptFile struct {
 	// Inventory contains parameters for the inventory object used in apply.
 	Inventory *Inventory `yaml:"inventory,omitempty"`
 
-	// Ignore contains .gitignore-style patterns for files and directories that should
-	// be ignored by kpt. Files/directories that match will be fetched and
-	// updated as part of the package, but will be ignored by the other
-	// kpt functionality.
+	// Ignore contains a list of .gitignore patterns for files and directories
+	// that should be ignored by kpt. Files/directories that match will be
+	// fetched and updated as part of the package, but will be ignored by the other
+	// kpt functionality. The patterns will only impact resources within the
+	// same package, and it is not possible to ignore subpackages.
 	//
 	// The following patterns are supported:
 	// * Absolute path (/path/to/ignore): If the pattern has a leading slash, it will
