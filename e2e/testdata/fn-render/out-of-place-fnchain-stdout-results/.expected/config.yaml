@@ -1,3 +1,5 @@
+stdErr: "For complete results, see"
+
 stdOut: |
   apiVersion: config.kubernetes.io/v1alpha1
   kind: ResourceList
