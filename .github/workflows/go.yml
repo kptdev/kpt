@@ -95,5 +95,6 @@ jobs:
         with:
           go-version: 1.16
         id: go
-      # Run kpt e2e tests
-      - run: go test -cover --tags=docker ./e2e
+      # Run kpt e2e tests.
+      # Note: current e2e tests require docker. Docker is not supported on MacOS
+      - run: go test -cover ./e2e
