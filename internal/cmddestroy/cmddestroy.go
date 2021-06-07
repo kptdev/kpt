@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
@@ -53,7 +53,7 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 	r.Command = c
 
 	c.Flags().StringVar(&r.output, "output", printers.DefaultPrinter(),
-		fmt.Sprintf("Output format, must be one of %s", cmdutil.JoinStringsWithQuotes(printers.SupportedPrinters())))
+		fmt.Sprintf("Output format, must be one of %s", strings.JoinStringsWithQuotes(printers.SupportedPrinters())))
 	c.Flags().StringVar(&r.inventoryPolicyString, flagutils.InventoryPolicyFlag, flagutils.InventoryPolicyStrict,
 		"It determines the behavior when the resources don't belong to current inventory. Available options "+
 			fmt.Sprintf("%q and %q.", flagutils.InventoryPolicyStrict, flagutils.InventoryPolicyAdopt))

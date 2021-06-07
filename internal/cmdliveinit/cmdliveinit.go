@@ -189,10 +189,6 @@ func updateKptfile(p *pkg.Pkg, inv *kptfilev1alpha2.Inventory, force bool) error
 	if !isEmpty && !force {
 		return errors.E(op, p.UniquePath, &InvExistsError{})
 	}
-	// Check the new inventory values are valid.
-	if err := inv.Validate(); err != nil {
-		return errors.E(op, p.UniquePath, err)
-	}
 	// Finally, set the inventory parameters in the Kptfile and write it.
 	kf.Inventory = inv
 	if err := kptfileutil.WriteFile(p.UniquePath.String(), *kf); err != nil {

@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
 	"github.com/go-errors/errors"
@@ -60,7 +60,7 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,
 		"Polling period for resource statuses.")
 	c.Flags().StringVar(&r.pollUntil, "poll-until", "known",
-		fmt.Sprintf("When to stop polling. Must be one of %s", cmdutil.JoinStringsWithQuotes(PollUntilOptions)))
+		fmt.Sprintf("When to stop polling. Must be one of %s", strings.JoinStringsWithQuotes(PollUntilOptions)))
 	c.Flags().StringVar(&r.output, "output", "events", "Output format.")
 	c.Flags().DurationVar(&r.timeout, "timeout", 0,
 		"How long to wait before exiting")
@@ -91,7 +91,7 @@ type Runner struct {
 func (r *Runner) preRunE(*cobra.Command, []string) error {
 	if !slice.ContainsString(PollUntilOptions, r.pollUntil, nil) {
 		return fmt.Errorf("pollUntil must be one of %s",
-			cmdutil.JoinStringsWithQuotes(PollUntilOptions))
+			strings.JoinStringsWithQuotes(PollUntilOptions))
 	}
 	return nil
 }

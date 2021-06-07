@@ -202,17 +202,3 @@ func (e *ValidateError) Error() string {
 	sb.WriteString(fmt.Sprintf("Reason: %s\n", e.Reason))
 	return sb.String()
 }
-
-// Validate validates the fields in the inventory.
-func (i *Inventory) Validate() error {
-	if len(i.Name) == 0 {
-		return fmt.Errorf("name is required")
-	}
-	if len(i.Namespace) == 0 {
-		return fmt.Errorf("namespace is required")
-	}
-	if len(i.InventoryID) == 0 {
-		return fmt.Errorf("inventoryID is required")
-	}
-	return nil
-}

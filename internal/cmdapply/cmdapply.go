@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
@@ -58,7 +59,7 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 	c.Flags().StringVar(&r.serverSideOptions.FieldManager, "field-manager", common.DefaultFieldManager,
 		"The client owner of the fields being applied on the server-side.")
 	c.Flags().StringVar(&r.output, "output", printers.DefaultPrinter(),
-		fmt.Sprintf("Output format, must be one of %s", cmdutil.JoinStringsWithQuotes(printers.SupportedPrinters())))
+		fmt.Sprintf("Output format, must be one of %s", strings.JoinStringsWithQuotes(printers.SupportedPrinters())))
 	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,
 		"Polling period for resource statuses.")
 	c.Flags().DurationVar(&r.reconcileTimeout, "reconcile-timeout", time.Duration(0),

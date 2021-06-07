@@ -27,41 +27,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// TestValidateInventory tests the ValidateInventory function.
-func TestValidateInventory(t *testing.T) {
-	// nil inventory should not validate
-	isValid, err := ValidateInventory(nil)
-	if isValid || err == nil {
-		t.Errorf("nil inventory should not validate")
-	}
-	// Empty inventory should not validate
-	inv := &kptfilev1alpha2.Inventory{}
-	isValid, err = ValidateInventory(inv)
-	if isValid || err == nil {
-		t.Errorf("empty inventory should not validate")
-	}
-	// Empty inventory parameters strings should not validate
-	inv = &kptfilev1alpha2.Inventory{
-		Namespace:   "",
-		Name:        "",
-		InventoryID: "",
-	}
-	isValid, err = ValidateInventory(inv)
-	if isValid || err == nil {
-		t.Errorf("empty inventory parameters strings should not validate")
-	}
-	// Inventory with non-empty namespace, name, and id should validate.
-	inv = &kptfilev1alpha2.Inventory{
-		Namespace:   "test-namespace",
-		Name:        "test-name",
-		InventoryID: "test-id",
-	}
-	isValid, err = ValidateInventory(inv)
-	if !isValid || err != nil {
-		t.Errorf("inventory with non-empty namespace, name, and id should validate")
-	}
-}
-
 // TestReadFile tests the ReadFile function.
 func TestReadFile(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
