@@ -41,7 +41,7 @@ type ExecFn struct {
 // writes the output to w.
 func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 	// setup exec run timeout
-	timeout := defaultTimeout
+	timeout := defaultLongTimeout
 	if f.Timeout != 0 {
 		timeout = f.Timeout
 	}
