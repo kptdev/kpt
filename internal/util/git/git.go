@@ -16,6 +16,8 @@
 package git
 
 import (
+	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -69,4 +71,12 @@ func isAzureHost(host string) bool {
 // https://docs.aws.amazon.com/codecommit/latest/userguide/regions.html
 func isAWSHost(host string) bool {
 	return strings.Contains(host, "amazonaws.com")
+}
+
+func (rs *RepoSpec) RepoRef() string {
+	repoPath := path.Join(rs.CloneSpec(), rs.Path)
+	if rs.Ref != "" {
+		return repoPath + fmt.Sprintf("@%s", rs.Ref)
+	}
+	return repoPath
 }

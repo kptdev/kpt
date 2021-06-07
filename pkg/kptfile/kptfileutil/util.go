@@ -15,16 +15,37 @@
 package kptfileutil
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// UnknownKptfileVersionError is returned when kpt encounters a Kptfile
+// that uses an unsupported version of the Kptfile resource.
+type UnknownKptfileVersionError struct {
+	PkgPath  string
+	RepoSpec *git.RepoSpec
+	Version  string
+}
+
+func (e *UnknownKptfileVersionError) Error() string {
+	var source string
+	if e.RepoSpec != nil {
+		source = e.RepoSpec.RepoRef()
+	} else {
+		source = e.PkgPath
+	}
+	return fmt.Sprintf("package at %q is using an unknown version of the Kptfile schema. It might be for a newer version of kpt. Please try updating kpt.", source)
+}
 
 // ReadFile reads the KptFile in the given directory
 func ReadFile(dir string) (kptfile.KptFile, error) {
@@ -39,14 +60,22 @@ func ReadFile(dir string) (kptfile.KptFile, error) {
 		f, err = os.Open(filepath.Join(dir, kptfile.KptFileName))
 	}
 	if err != nil {
-		return kptfile.KptFile{}, errors.Errorf("unable to read %q: %v", kptfile.KptFileName, err)
+		return kptfile.KptFile{}, fmt.Errorf("unable to read %q: %w", kptfile.KptFileName, err)
 	}
 	defer f.Close()
 
-	d := yaml.NewDecoder(f)
+	c, err := ioutil.ReadAll(f)
+	if err != nil {
+		return kptfile.KptFile{}, fmt.Errorf("unable to read %q: %w", kptfile.KptFileName, err)
+	}
+	if err := CheckKptfileVersion(c, dir); err != nil {
+		return kptfile.KptFile{}, err
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(c))
 	d.KnownFields(true)
 	if err = d.Decode(&kpgfile); err != nil {
-		return kptfile.KptFile{}, errors.Errorf("unable to parse %q: %v", kptfile.KptFileName, err)
+		return kptfile.KptFile{}, fmt.Errorf("unable to parse %q: %w", kptfile.KptFileName, err)
 	}
 	return kpgfile, nil
 }
@@ -74,6 +103,38 @@ func WriteFile(dir string, k kptfile.KptFile) error {
 
 	// fyi: perm is ignored if the file already exists
 	return ioutil.WriteFile(filepath.Join(dir, kptfile.KptFileName), []byte(kptFileStr), 0600)
+}
+
+// CheckKptfileVersion checks that the KRM provided KRM resource uses
+// the correct group, version and kind for this version of kpt.
+func CheckKptfileVersion(content []byte, path string) error {
+	r, err := yaml.Parse(string(content))
+	if err != nil {
+		return err
+	}
+
+	meta, err := r.GetMeta()
+	if err != nil {
+		return err
+	}
+
+	kind := meta.Kind
+	gv, err := schema.ParseGroupVersion(meta.APIVersion)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case gv.Group == "kpt.dev" && gv.Version == "v1alpha1" && kind == "Kptfile":
+		return nil
+	case gv.Group == "kpt.dev" && kind == "Kptfile":
+		return &UnknownKptfileVersionError{
+			PkgPath: path,
+			Version: gv.Version,
+		}
+	default:
+		return fmt.Errorf("unknown resource type: %s, Kind=%s", meta.APIVersion, kind)
+	}
 }
 
 // ReadFileStrict reads a Kptfile for a package and validates that it contains required

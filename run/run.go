@@ -16,10 +16,12 @@ package run
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -30,12 +32,14 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptopenapi "github.com/GoogleContainerTools/kpt/internal/util/openapi"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/cmd/config/ext"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
 )
 
 var pgr []string
@@ -85,6 +89,10 @@ func GetMain() *cobra.Command {
 		}
 		err := kptopenapi.ConfigureOpenAPI(f, cmdutil.K8sSchemaSource, cmdutil.K8sSchemaPath)
 		if err != nil {
+			return err
+		}
+
+		if err := verifyKptfileVersion(cmd, args); err != nil {
 			return err
 		}
 
@@ -256,4 +264,89 @@ func hideFlags(cmd *cobra.Command) {
 	for _, f := range flags {
 		_ = cmd.PersistentFlags().MarkHidden(f)
 	}
+}
+
+// verifyKptfileVersion checks whether the DIR arg is provided, and if so,
+// checks if any Kptfiles has the correct GVK.
+func verifyKptfileVersion(cmd *cobra.Command, args []string) error {
+	var cmdChain []string
+	c := cmd
+	for {
+		cmdChain = append([]string{c.Name()}, cmdChain...)
+		c = c.Parent()
+		if c == nil {
+			break
+		}
+	}
+
+	// If the user just used "$ kpt" without any subcommand, just do nothing.
+	if len(cmdChain) < 2 {
+		return nil
+	}
+
+	// The handling here depends on the command group.
+	switch cmdChain[1] {
+	// For commands that doesn't take the path to a Kptfile as an argument we
+	// don't need to check anything.
+	case "version":
+		fallthrough
+	case "ttl":
+		fallthrough
+	case "help":
+		fallthrough
+	case "guide":
+		return nil
+
+	// The pkg commands needs special handling and the code is all in the kpt
+	// repo. So no need to do a check here.
+	case "pkg":
+		return nil
+	}
+
+	// For the cfg, fn and live command groups, we need to verify the
+	// version of the Kptfile schema here.
+	if len(args) == 0 {
+		// If there are no arguments we don't have a directory where we can
+		// look for Kptfiles, so just return.
+		return nil
+	}
+
+	pathArg := args[0]
+	var fullPath string
+	if filepath.IsAbs(pathArg) {
+		fullPath = pathArg
+	} else {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		fullPath = filepath.Join(cwd, pathArg)
+	}
+
+	_, err := os.Stat(fullPath)
+	if err != nil {
+		// If the folder doesn't exist, we don't do any checks here and rely
+		// on other functionality to report any errors.
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+
+	paths, err := pathutil.DirsWithFile(fullPath, kptfile.KptFileName, true)
+	if err != nil {
+		return err
+	}
+
+	for _, p := range paths {
+		_, err := kptfileutil.ReadFile(p)
+		if err != nil {
+			var unknownKptfileVersionError *kptfileutil.UnknownKptfileVersionError
+			if errors.As(err, &unknownKptfileVersionError) {
+				unknownKptfileVersionError.PkgPath = p
+			}
+			return err
+		}
+	}
+	return nil
 }

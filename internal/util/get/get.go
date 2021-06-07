@@ -17,6 +17,7 @@ package get
 
 import (
 	"bytes"
+	goerrors "errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -132,6 +133,23 @@ func ClonerUsingGitExec(repoSpec *git.RepoSpec, defaultRef string) error {
 				"you may need to remove /blob/%s from the url:\n%v", defaultRef, err)
 		}
 		return errors.Errorf("failed to clone git repo: %v", err)
+	}
+
+	// Read the Kptfile in the package to make sure it is using the correct
+	// version of the Kptfile resource.
+	if _, err := kptfileutil.ReadFile(filepath.Join(repoSpec.Dir, repoSpec.Path)); err != nil {
+		// Packages might not have a Kptfile, and that is ok.
+		if goerrors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+
+		// Update the error with the repoSpec information so we don't end up
+		// printing the path to a Kptfile in some temporary directory.
+		var unknownKptfileVersionError *kptfileutil.UnknownKptfileVersionError
+		if goerrors.As(err, &unknownKptfileVersionError) {
+			unknownKptfileVersionError.RepoSpec = repoSpec
+		}
+		return err
 	}
 
 	return nil

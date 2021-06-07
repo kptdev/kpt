@@ -248,7 +248,7 @@ func TestSetInheritedSetters(t *testing.T) {
 			name:       "autoset-inherited-setters",
 			parentPath: "${baseDir}/parentPath",
 			childPath:  "${baseDir}/parentPath/somedir/childPath",
-			parentKptfile: `apiVersion: krm.dev/v1alpha1
+			parentKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: parent
@@ -270,7 +270,7 @@ kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}
   name: child_name # {"$kpt-set":"name"}`,
-			nestedKptfile: `apiVersion: krm.dev/v1alpha1
+			nestedKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -292,7 +292,7 @@ kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}
   name: child_name # {"$kpt-set":"name"}`,
-			childKptfile: `apiVersion: krm.dev/v1alpha1
+			childKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -309,7 +309,7 @@ openAPI:
           name: name
           value: child_name
 `,
-			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+			expectedChildKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -343,7 +343,7 @@ automatically set 1 field(s) for setter "name" to value "parent_name" in package
 			name:       "child-has-no-parent",
 			parentPath: "${baseDir}/parentPath",
 			childPath:  "${baseDir}/childPath",
-			parentKptfile: `apiVersion: krm.dev/v1alpha1
+			parentKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: parent
@@ -359,7 +359,7 @@ kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
-			childKptfile: `apiVersion: krm.dev/v1alpha1
+			childKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -371,7 +371,7 @@ openAPI:
           name: namespace
           value: child_namespace
 `,
-			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+			expectedChildKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -393,7 +393,7 @@ metadata:
 			name:       "autoset-inherited-setters-error",
 			parentPath: "${baseDir}/parentPath",
 			childPath:  "${baseDir}/parentPath/somedir/childPath",
-			parentKptfile: `apiVersion: krm.dev/v1alpha1
+			parentKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: parent
@@ -409,7 +409,7 @@ kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}
 `,
-			childKptfile: `apiVersion: krm.dev/v1alpha1
+			childKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -422,7 +422,7 @@ openAPI:
           name: namespace
           value: child_namespace
 `,
-			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+			expectedChildKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -450,7 +450,7 @@ namespace in body should be at most 15 chars long
 			name:       "skip-autoset-inherited-setters-already-set",
 			parentPath: "${baseDir}/parentPath",
 			childPath:  "${baseDir}/parentPath/somedir/childPath",
-			parentKptfile: `apiVersion: krm.dev/v1alpha1
+			parentKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: parent
@@ -465,7 +465,7 @@ openAPI:
 kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}`,
-			childKptfile: `apiVersion: krm.dev/v1alpha1
+			childKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -478,7 +478,7 @@ openAPI:
           value: child_namespace
           isSet: true
 `,
-			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+			expectedChildKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -501,7 +501,7 @@ metadata:
 			name:       "no setter definitions in parent",
 			parentPath: "${baseDir}/parentPath",
 			childPath:  "${baseDir}/parentPath/somedir/childPath",
-			parentKptfile: `apiVersion: krm.dev/v1alpha1
+			parentKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: parent`,
@@ -509,7 +509,7 @@ metadata:
 kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}`,
-			childKptfile: `apiVersion: krm.dev/v1alpha1
+			childKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -522,7 +522,7 @@ openAPI:
           value: child_namespace
           isSet: true
 `,
-			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+			expectedChildKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -545,7 +545,7 @@ metadata:
 			name:       "inherit-defalut-values-from-parent",
 			parentPath: "${baseDir}/parentPath",
 			childPath:  "${baseDir}/parentPath/somedir/childPath",
-			parentKptfile: `apiVersion: krm.dev/v1alpha1
+			parentKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: parent
@@ -560,7 +560,7 @@ openAPI:
 kind: Deployment
 metadata:
   namespace: child_namespace # {"$kpt-set":"namespace"}`,
-			childKptfile: `apiVersion: krm.dev/v1alpha1
+			childKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child
@@ -572,7 +572,7 @@ openAPI:
           name: namespace
           value: child_namespace
 `,
-			expectedChildKptfile: `apiVersion: krm.dev/v1alpha1
+			expectedChildKptfile: `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: child

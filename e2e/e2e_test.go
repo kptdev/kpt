@@ -243,14 +243,14 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 3
- `,
+`,
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 `,
 			expectedOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:
@@ -260,7 +260,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
- `,
+`,
 			expectedResources: `
 apiVersion: apps/v1
 kind: Deployment
@@ -268,7 +268,7 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 3 # {"$kpt-set":"replicas"}
- `,
+`,
 		},
 		{
 			name:    "substitution replicas",
@@ -289,10 +289,10 @@ spec:
         image: nginx:1.7.9
       - name: sidecar
         image: sidecar:1.7.9
- `,
+`,
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.my-image-setter:
@@ -305,10 +305,10 @@ openAPI:
         setter:
           name: my-tag-setter
           value: "1.7.9"
- `,
+`,
 			expectedOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.my-image-setter:
@@ -331,7 +331,7 @@ openAPI:
             ref: '#/definitions/io.k8s.cli.setters.my-image-setter'
           - marker: ${my-tag-setter}
             ref: '#/definitions/io.k8s.cli.setters.my-tag-setter'
- `,
+`,
 			expectedResources: `
 apiVersion: apps/v1
 kind: Deployment
@@ -346,7 +346,7 @@ spec:
         image: nginx:1.7.9 # {"$kpt-set":"my-image-subst"}
       - name: sidecar
         image: sidecar:1.7.9
- `,
+`,
 		},
 		{
 			name:    "set replicas",
@@ -354,8 +354,8 @@ spec:
 			args:    []string{"replicas", "4", "--description", "hi there", "--set-by", "pw"},
 			out:     "set 1 fields\n",
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:
@@ -365,7 +365,7 @@ openAPI:
           name: replicas
           value: "3"
           setBy: me
- `,
+`,
 			input: `
 apiVersion: apps/v1
 kind: Deployment
@@ -373,10 +373,10 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 3 # {"$kpt-set":"replicas"}
- `,
+`,
 			expectedOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:
@@ -387,7 +387,7 @@ openAPI:
           value: "4"
           setBy: pw
           isSet: true
- `,
+`,
 			expectedResources: `
 apiVersion: apps/v1
 kind: Deployment
@@ -395,7 +395,7 @@ metadata:
   name: nginx-deployment
 spec:
   replicas: 4 # {"$kpt-set":"replicas"}
- `,
+`,
 		},
 		{
 			name:    "empty string setter",
@@ -403,8 +403,8 @@ spec:
 			args:    []string{"foo", "testnew"},
 			out:     "set 1 fields\n",
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.foo:
@@ -437,8 +437,8 @@ foo: "test" # {"$kpt-set":"foo"}
 baz: "test-baz" # {"$kpt-set":"baz"}
  `,
 			expectedOpenAPI: `
-apiVersion: v1alpha1
-kind: Example
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.foo:
@@ -561,8 +561,8 @@ func TestLiveCommands(t *testing.T) {
 			name:    "test preview command setters pre-check",
 			command: "preview",
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: OpenAPIfile
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:
@@ -581,8 +581,8 @@ openAPI:
 			name:    "test apply command setters pre-check",
 			command: "apply",
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: OpenAPIfile
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:
@@ -601,8 +601,8 @@ openAPI:
 			name:    "preview command setters pre-check pass",
 			command: "preview",
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: OpenAPIfile
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:
@@ -620,8 +620,8 @@ openAPI:
 			name:    "apply command setters pre-check pass",
 			command: "apply",
 			inputOpenAPI: `
-apiVersion: v1alpha1
-kind: OpenAPIfile
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 openAPI:
   definitions:
     io.k8s.cli.setters.replicas:

@@ -71,7 +71,7 @@ func TestMergeSubPackages(t *testing.T) {
 	defer os.RemoveAll(originalRoot)
 
 	// modify updated/upstream by adding a new setter definition to one of the subpackages Kptfile
-	nosettersUpdated := `apiVersion: krm.dev/v1alpha1
+	nosettersUpdated := `apiVersion: kpt.dev/v1alpha1
 kind: Kptfile
 metadata:
   name: nosetters

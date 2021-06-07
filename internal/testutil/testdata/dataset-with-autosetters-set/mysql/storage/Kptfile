@@ -1,5 +1,5 @@
-apiVersion: krm.dev/v1alpha1
-kind: Krmfile
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
 metadata:
   name: storage
 packageMetadata:
