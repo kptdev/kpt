@@ -107,13 +107,8 @@ h1 {
 pre.language-shell button.copy-button {
   position: absolute;
   top: 0;
-  right: 0;
-  z-index: 1;
-  opacity: 0;
-}
-
-pre.language-shell:hover button.copy-button {
-  opacity: 1;
+  background: transparent;
+  border: none;
 }
 
 .github-widget {

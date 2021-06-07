@@ -158,11 +158,18 @@ function addCodeCopyButtons() {
   );
   const makeButton = () => {
     const copyButton = document.createElement("button");
-    copyButton.classList.add("copy-button");
-    copyButton.textContent = "Copy to clipboard";
-    copyButton.addEventListener("click", ({ target }) =>
+    const buttonClassName = "copy-button";
+    copyButton.classList.add(buttonClassName);
+    copyButton.title = "Copy to clipboard";
+
+    const copyIcon = document.createElement("span");
+    copyIcon.innerText = "copy";
+    copyIcon.classList.add("material-icons-outlined");
+    copyButton.appendChild(copyIcon);
+
+    copyButton.addEventListener("click", ({ path }) =>
       navigator.clipboard.writeText([
-        target.previousElementSibling.textContent
+        path.find(el => el.classList.contains(buttonClassName)).previousElementSibling.textContent
           .split("\n")
           .filter((s) => s.startsWith("$"))
           .map((s) => s.replace(/^\$\s+/, ""))
