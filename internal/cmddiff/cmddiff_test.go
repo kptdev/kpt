@@ -15,6 +15,7 @@
 package cmddiff_test
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -25,10 +26,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
+
 func TestCmdInvalidDiffType(t *testing.T) {
 	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
 	runner.C.SetArgs([]string{"--diff-type", "invalid"})
-	runner.C.SilenceErrors = true
 	err := runner.C.Execute()
 	assert.EqualError(t,
 		err,
@@ -38,7 +42,6 @@ func TestCmdInvalidDiffType(t *testing.T) {
 func TestCmdInvalidDiffTool(t *testing.T) {
 	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
 	runner.C.SetArgs([]string{"--diff-tool", "nodiff"})
-	runner.C.SilenceErrors = true
 	err := runner.C.Execute()
 	assert.EqualError(t,
 		err,
@@ -63,7 +66,6 @@ func TestCmdExecute(t *testing.T) {
 
 	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
 	runner.C.SetArgs([]string{dest, "--diff-type", "local"})
-	runner.C.SilenceErrors = true
 	err = runner.C.Execute()
 	assert.NoError(t, err)
 }

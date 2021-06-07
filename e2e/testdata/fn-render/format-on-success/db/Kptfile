@@ -1,0 +1,9 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: db
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+      configMap:
+        namespace: db

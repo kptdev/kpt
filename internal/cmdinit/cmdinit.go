@@ -47,8 +47,7 @@ func NewRunner(parent string) *Runner {
 	}
 
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
-	c.Flags().StringVar(&r.Name, "name", "", "package name.  defaults to the directory base name.")
-	c.Flags().StringSliceVar(&r.KeyWords, "keyWords", []string{}, "list of keyWords for the package.")
+	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
 	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
@@ -62,7 +61,7 @@ func NewCommand(parent string) *cobra.Command {
 // Runner contains the run function
 type Runner struct {
 	Command     *cobra.Command
-	KeyWords    []string
+	Keywords    []string
 	Name        string
 	Description string
 	Site        string
@@ -76,16 +75,14 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if r.Name == "" {
-		r.Name = filepath.Base(string(p.UniquePath))
-	}
+	r.Name = string(p.DisplayPath)
 
-	dp := string(p.DisplayPath)
-	if _, err = os.Stat(dp); os.IsNotExist(err) {
+	up := string(p.UniquePath)
+	if _, err = os.Stat(string(p.UniquePath)); os.IsNotExist(err) {
 		return errors.Errorf("%s does not exist", err)
 	}
 
-	if _, err = os.Stat(filepath.Join(dp, kptfilev1alpha2.KptFileName)); os.IsNotExist(err) {
+	if _, err = os.Stat(filepath.Join(up, kptfilev1alpha2.KptFileName)); os.IsNotExist(err) {
 		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], "Kptfile"))
 		k := kptfilev1alpha2.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
@@ -98,7 +95,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			Info: &kptfilev1alpha2.PackageInfo{
 				Description: r.Description,
 				Site:        r.Site,
-				Keywords:    r.KeyWords,
+				Keywords:    r.Keywords,
 			},
 		}
 
@@ -107,7 +104,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		k.APIVersion = kptfilev1alpha2.TypeMeta.APIVersion
 
 		err = func() error {
-			f, err := os.Create(filepath.Join(dp, kptfilev1alpha2.KptFileName))
+			f, err := os.Create(filepath.Join(up, kptfilev1alpha2.KptFileName))
 			if err != nil {
 				return err
 			}
@@ -122,7 +119,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	if _, err = os.Stat(filepath.Join(dp, man.ManFilename)); os.IsNotExist(err) {
+	if _, err = os.Stat(filepath.Join(up, man.ManFilename)); os.IsNotExist(err) {
 		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], man.ManFilename))
 		buff := &bytes.Buffer{}
 		t, err := template.New("man").Parse(manTemplate)
@@ -138,7 +135,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		// Replace single quotes with backticks.
 		content := strings.ReplaceAll(buff.String(), "'", "`")
 
-		err = ioutil.WriteFile(filepath.Join(dp, man.ManFilename), []byte(content), 0600)
+		err = ioutil.WriteFile(filepath.Join(up, man.ManFilename), []byte(content), 0600)
 		if err != nil {
 			return err
 		}
@@ -159,16 +156,16 @@ var manTemplate = `# {{.Name}}
 
 ### Fetch the package
 'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] {{.Name}}'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/get/
+Details: https://kpt.dev/reference/cli/pkg/get/
 
 ### View package content
 'kpt pkg tree {{.Name}}'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/tree/
+Details: https://kpt.dev/reference/cli/pkg/tree/
 
 ### Apply the package
 '''
 kpt live init {{.Name}}
 kpt live apply {{.Name}} --reconcile-timeout=2m --output=table
 '''
-Details: https://googlecontainertools.github.io/kpt/reference/live/
+Details: https://kpt.dev/reference/cli/live/
 `

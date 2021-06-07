@@ -30,6 +30,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
+
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
 func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	_, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{})
@@ -84,7 +88,7 @@ func TestCommand_Run(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -102,7 +106,7 @@ func TestCommand_Run(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -143,7 +147,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -161,7 +165,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
@@ -204,7 +208,7 @@ func TestCommand_Run_destination(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -222,7 +226,7 @@ func TestCommand_Run_destination(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -268,7 +272,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -286,7 +290,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "master",
@@ -348,7 +352,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
@@ -364,7 +368,7 @@ func TestCommand_Run_branch(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
@@ -431,7 +435,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 
 	// verify the KptFile contains the expected values
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
@@ -447,7 +451,7 @@ func TestCommand_Run_tag(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
@@ -573,7 +577,7 @@ func TestCommand_Run_ref(t *testing.T) {
 
 			expectedPath := tc.expected.ExpandPkgWithName(t, repos[testutil.Upstream].RepoName, testutil.ToReposInfo(repos))
 
-			testutil.KptfileAwarePkgEqual(t, expectedPath, absPath)
+			testutil.KptfileAwarePkgEqual(t, expectedPath, absPath, true)
 		})
 	}
 }
@@ -605,7 +609,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -619,7 +623,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -658,7 +662,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	assert.Contains(t, err.Error(), "destination directory already exists")
 
 	// verify files are unchanged
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -672,7 +676,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
@@ -710,7 +714,7 @@ func TestCommand_Run_nonexistingParentDir(t *testing.T) {
 		Destination: absPath,
 	}.Run(fake.CtxWithNilPrinter())
 	assert.NoError(t, err)
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath)
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
 }
 
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
@@ -732,7 +736,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	if !assert.Contains(t, err.Error(), "failed to lookup master(or main) branch") {
+	if !assert.Contains(t, err.Error(), "'foo' does not appear to be a git repository") {
 		t.FailNow()
 	}
 }
@@ -1329,7 +1333,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			}
 
 			expectedPath := tc.expectedResult.ExpandPkgWithName(t, targetDir, testutil.ToReposInfo(repos))
-			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
+			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
 		})
 	}
 }
@@ -1347,21 +1351,19 @@ func TestCommand_Run_symlinks(t *testing.T) {
 							WithKptfile().
 							WithResource(pkgbuilder.ConfigMapResource),
 					),
+				UpdateFunc: func(path string) error {
+					// Create symlink in the upstream repo.
+					return os.Symlink(filepath.Join(path, "subpkg"),
+						filepath.Join(path, "subpkg-sym"))
+				},
 			},
 		},
 	})
 	defer clean()
 	upstreamRepo := repos[testutil.Upstream]
 
-	// Create a symlink in the upstream repo
-	err := os.Symlink(filepath.Join(upstreamRepo.RepoDirectory, "subpkg"),
-		filepath.Join(upstreamRepo.RepoDirectory, "subpkg-sym"))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
 	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
-	err = Command{
+	err := Command{
 		Git: &kptfilev1alpha2.Git{
 			Repo:      upstreamRepo.RepoDirectory,
 			Directory: "/",
@@ -1388,5 +1390,5 @@ func TestCommand_Run_symlinks(t *testing.T) {
 		)
 	expectedPath := expectedPkg.ExpandPkgWithName(t, upstreamRepo.RepoName, testutil.ToReposInfo(repos))
 
-	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath())
+	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
 }

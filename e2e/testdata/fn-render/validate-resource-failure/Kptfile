@@ -4,5 +4,5 @@ metadata:
   name: db
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/starlark:unstable # validates httpbin deployment exists
+    - image: gcr.io/kpt-fn/starlark:v0.1.0 # validates httpbin deployment exists
       configPath: starlark-httpbin-val.yaml

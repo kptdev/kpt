@@ -4,36 +4,30 @@
 package status
 
 import (
-	"bytes"
 	"context"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/spf13/cobra"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	pollevent "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
 var (
-	inventoryTemplate = `
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  labels:
-    cli-utils.sigs.k8s.io/inventory-id: test
-  name: foo
-  namespace: default
-`
 	depObject = object.ObjMetadata{
 		Name:      "foo",
 		Namespace: "default",
@@ -58,24 +52,36 @@ func TestStatusCommand(t *testing.T) {
 		pollUntil      string
 		printer        string
 		timeout        time.Duration
-		input          string
+		kptfileInv     *kptfilev1alpha2.Inventory
 		inventory      []object.ObjMetadata
 		events         []pollevent.Event
 		expectedErrMsg string
 		expectedOutput string
 	}{
 		"no inventory template": {
-			input:          "",
-			expectedErrMsg: "Package uninitialized. Please run \"init\" command.",
+			kptfileInv:     nil,
+			expectedErrMsg: "inventory failed validation",
+		},
+		"invalid value for pollUntil": {
+			pollUntil:      "doesNotExist",
+			expectedErrMsg: "pollUntil must be one of \"known\", \"current\", \"deleted\", \"forever\"",
 		},
 		"no inventory in live state": {
-			input:          inventoryTemplate,
+			kptfileInv: &kptfilev1alpha2.Inventory{
+				Name:        "foo",
+				Namespace:   "default",
+				InventoryID: "test",
+			},
 			expectedOutput: "no resources found in the inventory\n",
 		},
 		"wait for all known": {
 			pollUntil: "known",
 			printer:   "events",
-			input:     inventoryTemplate,
+			kptfileInv: &kptfilev1alpha2.Inventory{
+				Name:        "foo",
+				Namespace:   "default",
+				InventoryID: "test",
+			},
 			inventory: []object.ObjMetadata{
 				depObject,
 				stsObject,
@@ -106,7 +112,11 @@ statefulset.apps/bar is Current: current
 		"wait for all current": {
 			pollUntil: "current",
 			printer:   "events",
-			input:     inventoryTemplate,
+			kptfileInv: &kptfilev1alpha2.Inventory{
+				Name:        "foo",
+				Namespace:   "default",
+				InventoryID: "test",
+			},
 			inventory: []object.ObjMetadata{
 				depObject,
 				stsObject,
@@ -155,7 +165,11 @@ deployment.apps/foo is Current: current
 		"wait for all deleted": {
 			pollUntil: "deleted",
 			printer:   "events",
-			input:     inventoryTemplate,
+			kptfileInv: &kptfilev1alpha2.Inventory{
+				Name:        "foo",
+				Namespace:   "default",
+				InventoryID: "test",
+			},
 			inventory: []object.ObjMetadata{
 				depObject,
 				stsObject,
@@ -187,7 +201,11 @@ deployment.apps/foo is NotFound: notFound
 			pollUntil: "forever",
 			printer:   "events",
 			timeout:   2 * time.Second,
-			input:     inventoryTemplate,
+			kptfileInv: &kptfilev1alpha2.Inventory{
+				Name:        "foo",
+				Namespace:   "default",
+				InventoryID: "test",
+			},
 			inventory: []object.ObjMetadata{
 				depObject,
 				stsObject,
@@ -221,27 +239,36 @@ deployment.apps/foo is InProgress: inProgress
 		t.Run(tn, func(t *testing.T) {
 			tf := cmdtesting.NewTestFactory().WithNamespace("namespace")
 			defer tf.Cleanup()
+			ioStreams, _, outBuf, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			provider := provider.NewFakeProvider(tf, tc.inventory)
-			loader := manifestreader.NewFakeLoader(tf, tc.inventory)
-			runner := &StatusRunner{
-				provider: provider,
-				loader:   loader,
-				pollerFactoryFunc: func(c cmdutil.Factory) (poller.Poller, error) {
-					return &fakePoller{tc.events}, nil
-				},
+			w, clean := testutil.SetupWorkspace(t)
+			defer clean()
+			kf := kptfileutil.DefaultKptfile(filepath.Base(w.WorkspaceDirectory))
+			kf.Inventory = tc.kptfileInv
+			testutil.AddKptfileToWorkspace(t, w, kf)
 
-				pollUntil: tc.pollUntil,
-				output:    tc.printer,
-				timeout:   tc.timeout,
+			revert := testutil.Chdir(t, w.WorkspaceDirectory)
+			defer revert()
+
+			provider := live.NewFakeResourceGroupProvider(tf, tc.inventory)
+			runner := NewRunner(fake.CtxWithNilPrinter(), provider, ioStreams)
+			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
+				return &fakePoller{tc.events}, nil
 			}
 
-			cmd := &cobra.Command{}
-			cmd.SetIn(strings.NewReader(tc.input))
-			var buf bytes.Buffer
-			cmd.SetOut(&buf)
-
-			err := runner.runE(cmd, []string{})
+			args := []string{}
+			if tc.pollUntil != "" {
+				args = append(args, []string{
+					"--poll-until", tc.pollUntil,
+				}...)
+			}
+			if tc.timeout != time.Duration(0) {
+				args = append(args, []string{
+					"--timeout", tc.timeout.String(),
+				}...)
+			}
+			runner.Command.SetArgs(args)
+			err := runner.Command.Execute()
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -252,7 +279,7 @@ deployment.apps/foo is InProgress: inProgress
 			}
 
 			assert.NoError(t, err)
-			assert.Equal(t, strings.TrimSpace(buf.String()), strings.TrimSpace(tc.expectedOutput))
+			assert.Equal(t, strings.TrimSpace(tc.expectedOutput), strings.TrimSpace(outBuf.String()))
 		})
 	}
 }

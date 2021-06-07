@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdcat"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdtree"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +31,6 @@ func GetPkgCommand(ctx context.Context, name string) *cobra.Command {
 		Use:     "pkg",
 		Short:   pkgdocs.PkgShort,
 		Long:    pkgdocs.PkgLong,
-		Example: pkgdocs.PkgExamples,
 		Aliases: []string{"package"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
@@ -49,7 +47,7 @@ func GetPkgCommand(ctx context.Context, name string) *cobra.Command {
 	pkg.AddCommand(
 		cmdget.NewCommand(ctx, name), cmdinit.NewCommand(name),
 		cmdupdate.NewCommand(ctx, name), cmddiff.NewCommand(ctx, name),
-		cmdcat.NewCommand(name), cmdtree.NewCommand(name),
+		cmdtree.NewCommand(name),
 	)
 	return pkg
 }

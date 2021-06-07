@@ -16,6 +16,7 @@ package testutil
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,6 +28,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -50,7 +52,6 @@ const (
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"
-	HelloWorldSet       = "helloworld-set"
 )
 
 // TestGitRepo manages a local git repository for testing
@@ -89,12 +90,8 @@ func diffSet(path string) sets.String {
 // may have been changed after the destDir was copied, it is often better to explicitly
 // use a set of golden files as the sourceDir rather than the original TestGitRepo
 // that was copied.
-func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string) bool {
-	return AssertPkgEqual(t, sourceDir, destDir)
-}
-
-func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
-	diff, err := Diff(sourceDir, destDir)
+func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string, addMergeCommentsToSource bool) bool {
+	diff, err := Diff(sourceDir, destDir, addMergeCommentsToSource)
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -105,8 +102,8 @@ func AssertPkgEqual(t *testing.T, sourceDir, destDir string) bool {
 // KptfileAwarePkgEqual compares two packages (including any subpackages)
 // and has special handling of Kptfiles to handle fields that contain
 // values which cannot easily be specified in the golden package.
-func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string) bool {
-	diff, err := Diff(pkg1, pkg2)
+func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string, addMergeCommentsToSource bool) bool {
+	diff, err := Diff(pkg1, pkg2, addMergeCommentsToSource)
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -166,8 +163,20 @@ func kptfileExists(t *testing.T, path string) bool {
 //
 // Diff is guaranteed to return a non-empty set if any files differ, but
 // this set is not guaranteed to contain all differing files.
-func Diff(sourceDir, destDir string) (sets.String, error) {
+func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String, error) {
 	// get set of filenames in the package source
+	var newSourceDir string
+	if addMergeCommentsToSource {
+		dir, clean, err := addmergecomment.ProcessWithCleanup(sourceDir)
+		defer clean()
+		if err != nil {
+			return sets.String{}, err
+		}
+		newSourceDir = dir
+	}
+	if newSourceDir != "" {
+		sourceDir = newSourceDir
+	}
 	upstreamFiles := sets.String{}
 	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -231,7 +240,6 @@ func Diff(sourceDir, destDir string) (sets.String, error) {
 
 		s1 := strings.TrimSpace(strings.TrimPrefix(string(b1), trimPrefix))
 		s2 := strings.TrimSpace(strings.TrimPrefix(string(b2), trimPrefix))
-
 		if s1 != s2 {
 			fmt.Println(copyutil.PrettyFileDiff(s1, s2))
 			diff.Insert(f)
@@ -317,6 +325,12 @@ func (g *TestGitRepo) ReplaceData(data string) error {
 	}
 
 	return replaceData(g.RepoDirectory, data)
+}
+
+// CustomUpdate executes the provided update function and passes in the
+// path to the directory of the repository.
+func (g *TestGitRepo) CustomUpdate(f func(string) error) error {
+	return f(g.RepoDirectory)
 }
 
 // SetupTestGitRepo initializes a new git repository and populates it with data from a source
@@ -419,9 +433,14 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 	err := w.SetupTestWorkspace()
 	assert.NoError(t, err)
 
-	gr := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
-	if !assert.NoError(t, gr.Run("init")) {
-		assert.FailNowf(t, "%s %s", gr.Stdout.String(), gr.Stderr.String())
+	gr, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	rr, err := gr.Run(context.Background(), "init")
+	if !assert.NoError(t, err) {
+		assert.FailNowf(t, "%s %s", rr.Stdout, rr.Stderr)
 	}
 	return w, func() {
 		_ = w.RemoveAll()
@@ -441,7 +460,12 @@ func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.Kp
 		t.FailNow()
 	}
 
-	if !assert.NoError(t, gitutil.NewLocalGitRunner(w.WorkspaceDirectory).Run("add", ".")) {
+	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	_, err = gitRunner.Run(context.Background(), "add", ".")
+	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 	_, err = w.Commit("added Kptfile")
@@ -765,6 +789,12 @@ func (w *TestWorkspace) ReplaceData(data string) error {
 	return replaceData(filepath.Join(w.WorkspaceDirectory, w.PackageDir), data)
 }
 
+// CustomUpdate executes the provided update function and passes in the
+// path to the directory of the repository.
+func (w *TestWorkspace) CustomUpdate(f func(string) error) error {
+	return f(w.WorkspaceDirectory)
+}
+
 // Commit performs a git commit
 func (w *TestWorkspace) Commit(message string) (string, error) {
 	return commit(w.WorkspaceDirectory, message)
@@ -815,6 +845,23 @@ func Chdir(t *testing.T, path string) func() {
 		t.FailNow()
 	}
 	return revertFunc
+}
+
+// ConfigureTestKptCache sets up a temporary directory for the kpt git
+// cache, sets the env variable so it will be used for tests, and cleans
+// up the directory afterwards.
+func ConfigureTestKptCache(m *testing.M) int {
+	cacheDir, err := ioutil.TempDir("", "kpt-test-cache-repos-")
+	if err != nil {
+		panic(fmt.Errorf("error creating temp dir for cache: %w", err))
+	}
+	defer func() {
+		_ = os.RemoveAll(cacheDir)
+	}()
+	if err := os.Setenv(gitutil.RepoCacheDirEnv, cacheDir); err != nil {
+		panic(fmt.Errorf("error setting repo cache env variable: %w", err))
+	}
+	return m.Run()
 }
 
 var EmptyReposInfo = &ReposInfo{}

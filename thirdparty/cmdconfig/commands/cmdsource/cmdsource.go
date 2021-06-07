@@ -5,8 +5,12 @@ package cmdsource
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -15,23 +19,24 @@ import (
 
 // GetSourceRunner returns a command for Source.
 func GetSourceRunner(name string) *SourceRunner {
-	r := &SourceRunner{}
+	r := &SourceRunner{
+		WrapKind:       kio.ResourceListKind,
+		WrapAPIVersion: kio.ResourceListAPIVersion,
+	}
 	c := &cobra.Command{
-		Use:     "source [DIR]",
+		Use:     "source [DIR] [flags]",
 		Short:   fndocs.SourceShort,
-		Long:    fndocs.SourceLong,
+		Long:    fndocs.SourceShort + "\n" + fndocs.SourceLong,
 		Example: fndocs.SourceExamples,
 		Args:    cobra.MaximumNArgs(1),
 		RunE:    r.runE,
 	}
-	c.Flags().StringVar(&r.WrapKind, "wrap-kind", kio.ResourceListKind,
-		"output using this format.")
-	c.Flags().StringVar(&r.WrapAPIVersion, "wrap-version", kio.ResourceListAPIVersion,
-		"output using this format.")
-	c.Flags().StringVar(&r.FunctionConfig, "function-config", "",
-		"path to function config.")
+	c.Flags().StringVar(&r.FunctionConfig, "fn-config", "",
+		"path to function config file.")
+	c.Flags().BoolVar(&r.IncludeMetaResources,
+		"include-meta-resources", false, "include package meta resources in the command output")
 	r.Command = c
-	_ = c.MarkFlagFilename("function-config", "yaml", "json", "yml")
+	_ = c.MarkFlagFilename("fn-config", "yaml", "json", "yml")
 	return r
 }
 
@@ -41,10 +46,11 @@ func NewCommand(name string) *cobra.Command {
 
 // SourceRunner contains the run function
 type SourceRunner struct {
-	WrapKind       string
-	WrapAPIVersion string
-	FunctionConfig string
-	Command        *cobra.Command
+	WrapKind             string
+	WrapAPIVersion       string
+	FunctionConfig       string
+	Command              *cobra.Command
+	IncludeMetaResources bool
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
@@ -75,8 +81,24 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	})
 
 	var inputs []kio.Reader
+	matchFilesGlob := kio.MatchAll
+	if r.IncludeMetaResources {
+		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
+	}
 	for _, a := range args {
-		inputs = append(inputs, kio.LocalPackageReader{PackagePath: a, MatchFilesGlob: kio.MatchAll})
+		pkgPath, err := filepath.Abs(a)
+		if err != nil {
+			return fmt.Errorf("cannot convert input path %q to absolute path: %w", a, err)
+		}
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(types.UniquePath(pkgPath), r.IncludeMetaResources)
+		if err != nil {
+			return err
+		}
+		inputs = append(inputs, kio.LocalPackageReader{
+			PackagePath:    a,
+			MatchFilesGlob: matchFilesGlob,
+			FileSkipFunc:   functionConfigFilter,
+		})
 	}
 
 	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()

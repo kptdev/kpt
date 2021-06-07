@@ -35,7 +35,7 @@ func TestActionColumnDef(t *testing.T) {
 		"applied": {
 			resource: &ResourceInfo{
 				ResourceAction: event.ApplyAction,
-				ApplyOpResult:  &createdOpResult,
+				ApplyOpResult:  createdOpResult,
 			},
 			columnWidth:    15,
 			expectedOutput: "Created",
@@ -43,7 +43,7 @@ func TestActionColumnDef(t *testing.T) {
 		"pruned": {
 			resource: &ResourceInfo{
 				ResourceAction: event.PruneAction,
-				PruneOpResult:  &prunedOpResult,
+				PruneOpResult:  prunedOpResult,
 			},
 			columnWidth:    15,
 			expectedOutput: "Pruned",
@@ -51,7 +51,7 @@ func TestActionColumnDef(t *testing.T) {
 		"trimmed output": {
 			resource: &ResourceInfo{
 				ResourceAction: event.ApplyAction,
-				ApplyOpResult:  &createdOpResult,
+				ApplyOpResult:  createdOpResult,
 			},
 			columnWidth:    5,
 			expectedOutput: "Creat",

@@ -16,6 +16,7 @@ package pkg
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -23,40 +24,160 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestNewPkg(t *testing.T) {
+	// this test creates a folders with structure
+	// foo
+	// └── bar
+	//     └── baz
 	var tests = []struct {
 		name        string
+		workingDir  string
 		inputPath   string
-		uniquePath  string
 		displayPath string
 	}{
 		{
-			name:        "test1",
+			name:        "invoked from working directory foo on path .",
+			workingDir:  "foo",
 			inputPath:   ".",
-			displayPath: ".",
+			displayPath: "foo",
 		},
 		{
-			name:        "test2",
+			name:        "invoked from working directory foo/bar on path ../",
+			workingDir:  "foo/bar",
 			inputPath:   "../",
-			displayPath: "..",
+			displayPath: "foo",
 		},
 		{
-			name:        "test3",
-			inputPath:   "./foo/bar/",
-			displayPath: "foo/bar",
+			name:        "invoked from working directory foo on nested package baz",
+			workingDir:  "foo",
+			inputPath:   "./bar/baz",
+			displayPath: "baz",
+		},
+		{
+			name:        "invoked from working directory foo/bar on nested package baz",
+			workingDir:  "foo/bar",
+			inputPath:   "../../foo/bar/baz",
+			displayPath: "baz",
+		},
+		{
+			name:        "invoked from working directory baz on ancestor package foo",
+			workingDir:  "foo/bar/baz",
+			inputPath:   "../../",
+			displayPath: "foo",
 		},
 	}
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", "")
+			defer os.RemoveAll(dir)
+			assert.NoError(t, err)
+			err = os.MkdirAll(filepath.Join(dir, "foo", "bar", "baz"), 0700)
+			assert.NoError(t, err)
+			revert := Chdir(t, filepath.Join(dir, test.workingDir))
+			defer revert()
 			p, err := New(test.inputPath)
 			assert.NoError(t, err)
 			assert.Equal(t, test.displayPath, string(p.DisplayPath))
+		})
+	}
+}
+
+func TestAdjustDisplayPathForSubpkg(t *testing.T) {
+	// this test creates a folders with structure
+	// rootPkgParentDir
+	// └── rootPkg
+	//     └── subPkg
+	//         └── nestedPkg
+	var tests = []struct {
+		name                 string
+		workingDir           string
+		pkgPath              string
+		subPkgPath           string
+		rootPkgParentDirPath string
+		displayPath          string
+	}{
+		{
+			name:        "display path of subPkg should include rootPkg",
+			workingDir:  "rootPkg",
+			pkgPath:     ".",
+			subPkgPath:  "./subPkg",
+			displayPath: "rootPkg/subPkg",
+		},
+		{
+			name:        "display path of nestedPkg should include rootPkg/subPkg",
+			workingDir:  "rootPkg",
+			pkgPath:     ".",
+			subPkgPath:  "./subPkg/nestedPkg",
+			displayPath: "rootPkg/subPkg/nestedPkg",
+		},
+		{
+			name:        "display path of subPkg should include rootPkg independent of workingDir",
+			workingDir:  "rootPkg/subPkg",
+			pkgPath:     "../",
+			subPkgPath:  "../subPkg",
+			displayPath: "rootPkg/subPkg",
+		},
+		{
+			name:        "display path of nestedPkg should include rootPkg independent of workingDir 1",
+			workingDir:  "rootPkg/subPkg/nestedPkg",
+			pkgPath:     "../../",
+			subPkgPath:  "../../subPkg/nestedPkg",
+			displayPath: "rootPkg/subPkg/nestedPkg",
+		},
+		{
+			name:                 "display path of nestedPkg should include rootPkg independent of workingDir 2",
+			workingDir:           "rootPkg",
+			rootPkgParentDirPath: "../",
+			pkgPath:              "./subPkg",
+			subPkgPath:           "./subPkg/nestedPkg",
+			displayPath:          "rootPkg/subPkg/nestedPkg",
+		},
+		{
+			name:                 "display path of nestedPkg should include rootPkg independent of workingDir 3",
+			workingDir:           "rootPkg/subPkg",
+			rootPkgParentDirPath: "../../",
+			pkgPath:              "../subPkg",
+			subPkgPath:           "../subPkg/nestedPkg",
+			displayPath:          "rootPkg/subPkg/nestedPkg",
+		},
+		{
+			name:                 "display path of nestedPkg should include rootPkg independent of workingDir 4",
+			workingDir:           "rootPkg/subPkg/nestedPkg",
+			rootPkgParentDirPath: "../../../",
+			pkgPath:              "../../subPkg",
+			subPkgPath:           "../../subPkg/nestedPkg",
+			displayPath:          "rootPkg/subPkg/nestedPkg",
+		},
+	}
+	for i := range tests {
+		test := tests[i]
+		t.Run(test.name, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", "")
+			defer os.RemoveAll(dir)
+			assert.NoError(t, err)
+			err = os.MkdirAll(filepath.Join(dir, "rootPkgParentDir", "rootPkg", "subPkg", "nestedPkg"), 0700)
+			assert.NoError(t, err)
+			revert := Chdir(t, filepath.Join(dir, "rootPkgParentDir", test.workingDir))
+			defer revert()
+			parent, err := New(test.pkgPath)
+			assert.NoError(t, err)
+			if test.rootPkgParentDirPath != "" {
+				rootPkg, err := New(test.rootPkgParentDirPath)
+				assert.NoError(t, err)
+				parent.rootPkgParentDirPath = string(rootPkg.UniquePath)
+			}
+			subPkg, err := New(test.subPkgPath)
+			assert.NoError(t, err)
+			err = parent.adjustDisplayPathForSubpkg(subPkg)
+			assert.NoError(t, err)
+			assert.Equal(t, test.displayPath, string(subPkg.DisplayPath))
 		})
 	}
 }
@@ -128,18 +249,18 @@ kind: Custom
 spec:
   image: nginx:1.2.3`,
 				`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: mysql
-setterDefinitions:
-  replicas:
-    description: "replica setter"
-    type: integer
-setterValues:
-  replicas: 5`,
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/apply-setters:unstable
+      configMap:
+        replicas: 5
+`,
 				`
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Pipeline
 sources:
   - "."`,
@@ -285,7 +406,7 @@ func TestDirectSubpackages(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, nil)
-
+			defer os.RemoveAll(pkgPath)
 			p, err := New(pkgPath)
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -423,6 +544,16 @@ func TestSubpackages(t *testing.T) {
 						"local-sub1",
 					},
 				},
+				{
+					matcher:   []SubpackageMatcher{None},
+					recursive: []bool{false},
+					expected:  []string{},
+				},
+				{
+					matcher:   []SubpackageMatcher{None},
+					recursive: []bool{true},
+					expected:  []string{},
+				},
 			},
 		},
 		"no subpackages": {
@@ -432,7 +563,7 @@ func TestSubpackages(t *testing.T) {
 				WithKptfile(),
 			cases: []variants{
 				{
-					matcher:   []SubpackageMatcher{All, Local, Remote},
+					matcher:   []SubpackageMatcher{All, Local, Remote, None},
 					recursive: []bool{true, false},
 					expected:  []string{},
 				},
@@ -443,7 +574,7 @@ func TestSubpackages(t *testing.T) {
 			pkg: pkgbuilder.NewRootPkg(),
 			cases: []variants{
 				{
-					matcher:   []SubpackageMatcher{All, Local, Remote},
+					matcher:   []SubpackageMatcher{All, Local, Remote, None},
 					recursive: []bool{true, false},
 					expected:  []string{},
 				},
@@ -510,4 +641,154 @@ func TestSubpackages_symlinks(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Equal(t, []string{"subpkg"}, paths)
+}
+
+func TestFunctionConfigFilePaths(t *testing.T) {
+	type variants struct {
+		recursive bool
+		expected  []string
+	}
+
+	testCases := map[string]struct {
+		pkg   *pkgbuilder.RootPkg
+		cases []variants
+	}{
+		"remote and local nested subpackages": {
+			// root
+			//  ├── remote-sub1 (remote)
+			//  │   ├── Kptfile
+			//  │   ├── fn-config.yaml
+			//  │   └── directory
+			//  │       └── remote-sub3 (remote)
+			//  │           ├── Kptfile
+			//  │           ├── fn-config2.yaml
+			//  │           └── fn-config1.yaml
+			//  └── local-sub1 (local)
+			//      ├── Kptfile
+			//      ├── fn-config.yaml
+			//      ├── directory
+			//      │   └── remote-sub3 (remote)
+			//      │       └── Kptfile
+			//      └── local-sub2 (local)
+			//          ├── fn-config.yaml
+			//          └── Kptfile
+			pkg: pkgbuilder.NewRootPkg().
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("remote-sub1").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstream("github.com/GoogleContainerTools/kpt",
+									"/", "main", string(kptfilev1alpha2.ResourceMerge)).
+								WithPipeline(
+									pkgbuilder.NewFunction("image").
+										WithConfigPath("fn-config.yaml"),
+								),
+						).
+						WithFile("fn-config.yaml", "I'm function config file.").
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("directory").
+								WithSubPackages(
+									pkgbuilder.NewSubPkg("remote-sub3").
+										WithKptfile(
+											pkgbuilder.NewKptfile().
+												WithUpstream("github.com/GoogleContainerTools/kpt",
+													"/", "main", string(kptfilev1alpha2.ResourceMerge)).
+												WithPipeline(
+													pkgbuilder.NewFunction("image").
+														WithConfigPath("fn-config1.yaml"),
+													pkgbuilder.NewFunction("image").
+														WithConfigPath("fn-config2.yaml"),
+												),
+										).
+										WithFile("fn-config1.yaml", "I'm function config file.").
+										WithFile("fn-config2.yaml", "I'm function config file."),
+								),
+						),
+					pkgbuilder.NewSubPkg("local-sub1").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithPipeline(pkgbuilder.NewFunction("image").
+									WithConfigPath("fn-config.yaml")),
+						).
+						WithFile("fn-config.yaml", "I'm function config file.").
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("directory").
+								WithSubPackages(
+									pkgbuilder.NewSubPkg("remote-sub3").
+										WithKptfile(
+											pkgbuilder.NewKptfile().
+												WithUpstream("github.com/GoogleContainerTools/kpt",
+													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
+										),
+								),
+							pkgbuilder.NewSubPkg("local-sub2").
+								WithKptfile(
+									pkgbuilder.NewKptfile().
+										WithPipeline(pkgbuilder.NewFunction("image").
+											WithConfigPath("fn-config.yaml")),
+								).
+								WithFile("fn-config.yaml", "I'm function config file."),
+						),
+				),
+			cases: []variants{
+				{
+					recursive: true,
+					expected: []string{
+						"local-sub1/fn-config.yaml",
+						"local-sub1/local-sub2/fn-config.yaml",
+						"remote-sub1/directory/remote-sub3/fn-config1.yaml",
+						"remote-sub1/directory/remote-sub3/fn-config2.yaml",
+						"remote-sub1/fn-config.yaml",
+					},
+				},
+				{
+					recursive: false,
+					expected:  nil,
+				},
+			},
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			pkgPath := tc.pkg.ExpandPkg(t, nil)
+			defer func() {
+				_ = os.RemoveAll(pkgPath)
+			}()
+
+			for _, v := range tc.cases {
+				v := v
+				t.Run(fmt.Sprintf("recursive:%t", v.recursive), func(t *testing.T) {
+					paths, err := FunctionConfigFilePaths(types.UniquePath(pkgPath), v.recursive)
+					if !assert.NoError(t, err) {
+						t.FailNow()
+					}
+
+					pathsList := paths.List()
+					sort.Strings(pathsList)
+					sort.Strings(v.expected)
+
+					assert.Equal(t, v.expected, pathsList)
+				})
+			}
+		})
+	}
+}
+
+func Chdir(t *testing.T, path string) func() {
+	cwd, err := os.Getwd()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	revertFunc := func() {
+		if err := os.Chdir(cwd); err != nil {
+			panic(err)
+		}
+	}
+	err = os.Chdir(path)
+	if !assert.NoError(t, err) {
+		defer revertFunc()
+		t.FailNow()
+	}
+	return revertFunc
 }

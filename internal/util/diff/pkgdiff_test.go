@@ -63,7 +63,19 @@ func TestPkgDiff(t *testing.T) {
 			diff: toStringSet(),
 		},
 		{
-			name: "subpackages are not included",
+			name: "different pipelines in Kptfile is a diff",
+			pkg1: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithPipeline(pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"))).
+				WithResource(pkgbuilder.DeploymentResource),
+			pkg2: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithPipeline(pkgbuilder.NewFunction("gcr.io/kpt-dev/buzz:latest"))).
+				WithResource(pkgbuilder.DeploymentResource),
+			diff: toStringSet("Kptfile"),
+		},
+		{
+			name: "subpackages are not included in no diff",
 			pkg1: pkgbuilder.NewRootPkg().
 				WithKptfile().
 				WithResource(pkgbuilder.DeploymentResource).
@@ -81,6 +93,46 @@ func TestPkgDiff(t *testing.T) {
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 			diff: toStringSet(),
+		},
+		{
+			name: "subpackages are not included in root package diff",
+			pkg1: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpackage").
+						WithKptfile(pkgbuilder.NewKptfile()).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+			pkg2: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpackage").
+						WithKptfile().
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+			diff: toStringSet("deployment.yaml", "configmap.yaml"),
+		},
+		{
+			name: "package doesn't exist",
+			pkg1: nil,
+			pkg2: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile()),
+			diff: toStringSet("Kptfile"),
+		},
+		{
+			name: "package doesn't have a kptfile",
+			pkg1: pkgbuilder.NewRootPkg(),
+			pkg2: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpackage").
+						WithKptfile().
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+			diff: toStringSet("Kptfile", "deployment.yaml"),
 		},
 	}
 

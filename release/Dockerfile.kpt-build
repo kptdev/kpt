@@ -1,3 +1,0 @@
-FROM golang:1.13
-RUN apt-get -qqy update && \
-    apt-get install -qqy tar bzip2 gzip jq zip

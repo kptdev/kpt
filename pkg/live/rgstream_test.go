@@ -4,60 +4,102 @@
 package live
 
 import (
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
+	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
 func TestResourceStreamManifestReader_Read(t *testing.T) {
+	_ = apiextv1.AddToScheme(scheme.Scheme)
 	testCases := map[string]struct {
-		manifests map[string]string
-		numObjs   int
+		manifests      map[string]string
+		namespace      string
+		expectedObjs   []object.ObjMetadata
+		expectedErrMsg string
 	}{
-		"Kptfile only is valid": {
+		"Kptfile is excluded": {
 			manifests: map[string]string{
 				"Kptfile": kptFile,
 			},
-			numObjs: 1,
+			namespace:    "test-namespace",
+			expectedObjs: []object.ObjMetadata{},
 		},
 		"Only a pod is valid": {
 			manifests: map[string]string{
 				"pod-a.yaml": podA,
 			},
-			numObjs: 1,
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "Pod",
+					},
+					Name:      "pod-a",
+					Namespace: "test-namespace",
+				},
+			},
 		},
-		"Multiple pods are valid": {
+		"Multiple resources are valid": {
 			manifests: map[string]string{
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
 			},
-			numObjs: 2,
-		},
-		"Basic ResourceGroup inventory object created": {
-			manifests: map[string]string{
-				"Kptfile":    kptFile,
-				"pod-a.yaml": podA,
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "Pod",
+					},
+					Name:      "pod-a",
+					Namespace: "test-namespace",
+				},
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apps",
+						Kind:  "Deployment",
+					},
+					Name:      "test-deployment",
+					Namespace: "test-namespace",
+				},
 			},
-			numObjs: 2,
 		},
-		"ResourceGroup inventory object created, multiple objects": {
+		"CR and CRD in the same set is ok": {
 			manifests: map[string]string{
-				"Kptfile":           kptFile,
-				"pod-a.yaml":        podA,
-				"deployment-a.yaml": deploymentA,
+				"crd.yaml": crd,
+				"cr.yaml":  cr,
 			},
-			numObjs: 3,
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Group: "custom.io",
+						Kind:  "Custom",
+					},
+					Name: "cr",
+				},
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apiextensions.k8s.io",
+						Kind:  "CustomResourceDefinition",
+					},
+					Name: "custom.io",
+				},
+			},
 		},
-		"ResourceGroup inventory object created, Kptfile last": {
+		"CR with unknown type is not allowed": {
 			manifests: map[string]string{
-				"deployment-a.yaml": deploymentA,
-				"Kptfile":           kptFile,
+				"cr.yaml": cr,
 			},
-			numObjs: 2,
+			namespace:      "test-namespace",
+			expectedErrMsg: "unknown resource types: Custom.custom.io",
 		},
 	}
 
@@ -76,31 +118,31 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 				streamStr = streamStr + "\n---\n" + manifestStr
 			}
 			streamStr += "\n---\n"
-			streamReader := &manifestreader.StreamManifestReader{
+			rgStreamReader := &ResourceGroupStreamManifestReader{
 				ReaderName: "rgstream",
 				Reader:     strings.NewReader(streamStr),
 				ReaderOptions: manifestreader.ReaderOptions{
 					Mapper:           mapper,
-					Namespace:        inventoryNamespace,
+					Namespace:        tc.namespace,
 					EnforceNamespace: false,
 				},
 			}
-			rgStreamReader := &ResourceGroupStreamManifestReader{
-				streamReader: streamReader,
-			}
 			readObjs, err := rgStreamReader.Read()
+			if tc.expectedErrMsg != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				assert.Contains(t, err.Error(), tc.expectedErrMsg)
+				return
+			}
 			assert.NoError(t, err)
-			assert.Equal(t, tc.numObjs, len(readObjs))
-			for _, obj := range readObjs {
-				assert.Equal(t, inventoryNamespace, obj.GetNamespace())
-			}
-			invObj := findResourceGroupInventory(readObjs)
-			if invObj != nil {
-				assert.Equal(t, inventoryName, invObj.GetName())
-				actualID, err := getInventoryLabel(invObj)
-				assert.NoError(t, err)
-				assert.Equal(t, inventoryID, actualID)
-			}
+
+			readObjMetas := object.UnstructuredsToObjMetas(readObjs)
+
+			sort.Slice(readObjMetas, func(i, j int) bool {
+				return readObjMetas[i].String() < readObjMetas[j].String()
+			})
+			assert.Equal(t, tc.expectedObjs, readObjMetas)
 		})
 	}
 }
@@ -214,16 +256,4 @@ metadata:
 			}
 		})
 	}
-}
-
-// Returns the ResourceGroup inventory object from a slice
-// of objects, or nil if it does not exist.
-func findResourceGroupInventory(infos []*unstructured.Unstructured) *unstructured.Unstructured {
-	for _, info := range infos {
-		invLabel, _ := getInventoryLabel(info)
-		if len(invLabel) != 0 {
-			return info
-		}
-	}
-	return nil
 }

@@ -11,20 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: v1
 kind: Service
 metadata:
   name: wordpress
   labels:
     app: wordpress
-  annotations:
-    projectId: "PROJECT_ID" # {"$kpt-set":"gcloud.core.project"}
-    teamname: "YOURTEAM" # {"$kpt-set":"teamname"}
 spec:
-  ports:
-    - port: 80
+  type: LoadBalancer
   selector:
     app: wordpress
     tier: frontend
-  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80

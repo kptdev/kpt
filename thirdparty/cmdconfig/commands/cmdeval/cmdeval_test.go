@@ -4,11 +4,14 @@
 package cmdeval
 
 import (
+	"bytes"
+	"context"
 	"io"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -49,7 +52,7 @@ apiVersion: v1
 			name:   "config map stdin / stdout",
 			args:   []string{"eval", "-", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			input:  os.Stdin,
-			output: os.Stdout,
+			output: &bytes.Buffer{},
 			expected: `
 metadata:
   name: function-input
@@ -63,8 +66,8 @@ apiVersion: v1
 		},
 		{
 			name:   "config map dry-run",
-			args:   []string{"eval", "dir", "--image", "foo:bar", "--dry-run", "--", "a=b", "c=d", "e=f"},
-			output: os.Stdout,
+			args:   []string{"eval", "dir", "--image", "foo:bar", "-o", "stdout", "--", "a=b", "c=d", "e=f"},
+			output: &bytes.Buffer{},
 			path:   "dir",
 			expected: `
 metadata:
@@ -181,8 +184,10 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
 				ResultsDir:            "foo/",
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -211,34 +216,15 @@ apiVersion: v1
 			err:  "must have keys and values separated by",
 		},
 		{
-			name: "log steps",
-			args: []string{"eval", "dir", "--log-steps", "--image", "foo:bar"},
-			path: "dir",
-			expectedStruct: &runfn.RunFns{
-				Path:                  "dir",
-				LogSteps:              true,
-				Env:                   []string{},
-				ContinueOnEmptyResult: true,
-			},
-			expected: `
-metadata:
-  name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
-data: {}
-kind: ConfigMap
-apiVersion: v1
-`,
-		},
-		{
 			name: "envs",
 			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -258,8 +244,10 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
 				AsCurrentUser:         true,
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
 			},
 			expected: `
 metadata:
@@ -287,7 +275,7 @@ apiVersion: v1
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
-			r := GetEvalFnRunner("kpt")
+			r := GetEvalFnRunner(context.TODO(), "kpt")
 			// Don't run the actual command
 			r.Command.Run = nil
 			r.Command.RunE = func(cmd *cobra.Command, args []string) error { return nil }

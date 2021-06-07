@@ -14,5 +14,6 @@
 
 testType: eval
 exitCode: 1
-image: gcr.io/kpt-fn/set-namespace:v0.1
+image: gcr.io/kpt-fn/set-namespace:v0.1.3
 fnConfig: ../../config.yaml
+stdErr: "wrong Node Kind for  expected: MappingNode was ScalarNode: value: {I am not a valid config file}"

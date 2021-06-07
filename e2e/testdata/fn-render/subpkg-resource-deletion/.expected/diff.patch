@@ -1,8 +1,8 @@
 diff --git a/db/resources.yaml b/db/resources.yaml
-index 3aca276..adf2fec 100644
+index 2270171..9dabb18 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -1,27 +1,10 @@
+@@ -1,26 +1,10 @@
 -# Copyright 2021 Google LLC
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,6 @@ index 3aca276..adf2fec 100644
 -# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -# See the License for the specific language governing permissions and
 -# limitations under the License.
--
 -apiVersion: apps/v1
 -kind: StatefulSet
 -metadata:
@@ -27,19 +26,19 @@ index 3aca276..adf2fec 100644
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
+   name: custom
++  namespace: staging
 +  labels:
 +    app: backend
 +    tier: backend
-   name: custom
-+  namespace: staging
  spec:
    image: nginx:1.2.3
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
-index 0ef5d14..0000000
+index 44bfc6b..0000000
 --- a/deployment_httpbin.yaml
 +++ /dev/null
-@@ -1,37 +0,0 @@
+@@ -1,36 +0,0 @@
 -# Copyright 2021 Google LLC
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,15 +52,14 @@ index 0ef5d14..0000000
 -# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -# See the License for the specific language governing permissions and
 -# limitations under the License.
--
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
+-  name: httpbin
+-  namespace: staging
 -  labels:
 -    app: backend
 -    tier: db
--  name: httpbin
--  namespace: staging
 -spec:
 -  replicas: 4
 -  selector:
@@ -75,20 +73,19 @@ index 0ef5d14..0000000
 -        tier: db
 -    spec:
 -      containers:
--      - image: kennethreitz/httpbin
--        name: httpbin
+-        - name: httpbin
+-          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
-index 6590f6c..725ad34 100644
+index 6590f6c..b5b54e0 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -14,6 +14,16 @@
- apiVersion: apps/v1
+@@ -15,5 +15,15 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
-+  labels:
-+    tier: backend
    name: nginx-deployment
 +  namespace: staging
++  labels:
++    tier: backend
  spec:
    replicas: 3
 +  selector:

@@ -15,8 +15,6 @@ package v1alpha2
 
 import (
 	"testing"
-
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestKptfileValidate(t *testing.T) {
@@ -40,19 +38,10 @@ func TestKptfileValidate(t *testing.T) {
 				Pipeline: &Pipeline{
 					Mutators: []Function{
 						{
-							Image: "gcr.io/kpt-functions/generate-folders",
-							Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
-kind: ResourceHierarchy
-metadata:
-  name: root-hierarchy
-  namespace: hierarchy # {"$kpt-set":"namespace"}`).YNode(),
+							Image: "patch-strategic-merge",
 						},
 						{
-							Image:      "patch-strategic-merge",
-							ConfigPath: "./patch.yaml",
-						},
-						{
-							Image: "gcr.io/kpt-functions/set-annotation",
+							Image: "gcr.io/kpt-fn/set-annotations:v0.1",
 							ConfigMap: map[string]string{
 								"environment": "dev",
 							},
@@ -111,12 +100,54 @@ metadata:
 			},
 			valid: false,
 		},
+		{
+			name: "pipeline: configpath referring file in parent",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: cleaned configpath contains ..",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/b/../../../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: configpath contains invalid .. references",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "image",
+							ConfigPath: "a/.../config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
 	}
 
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			err := c.kptfile.Validate()
+			err := c.kptfile.Validate("")
 			if c.valid && err != nil {
 				t.Fatalf("kptfile should be valid, %s", err)
 			}
@@ -236,7 +267,7 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"./a/.../b",
-			true,
+			false,
 		},
 		{
 			".",
@@ -244,23 +275,23 @@ func TestValidatePath(t *testing.T) {
 		},
 		{
 			"a\\b",
-			false,
+			true,
 		},
 		{
 			"a\b",
-			false,
+			true,
 		},
 		{
 			"a\v",
-			false,
+			true,
 		},
 		{
 			"a:\\b\\c",
-			false,
+			true,
 		},
 		{
 			"../a/../b",
-			true,
+			false,
 		},
 		{
 			"a//b",
@@ -271,23 +302,7 @@ func TestValidatePath(t *testing.T) {
 			true,
 		},
 		{
-			"a/*/b",
-			false,
-		},
-		{
-			"./*",
-			true,
-		},
-		{
-			"a/b\\c",
-			false,
-		},
-		{
 			"././././",
-			true,
-		},
-		{
-			"./!&^%$/#(@)/_-=+|<;>?:'\"/'`",
 			true,
 		},
 		{
@@ -299,15 +314,15 @@ func TestValidatePath(t *testing.T) {
 			false,
 		},
 		{
-			"*",
-			false,
+			"a/b/../config.yaml",
+			true,
 		},
 	}
 
 	for _, c := range cases {
-		ret := validatePath(c.Path)
+		ret := validateFnConfigPathSyntax(c.Path)
 		if (ret == nil) != c.Valid {
-			t.Fatalf("returned value for path %s should be %t, got %t",
+			t.Fatalf("returned value for path %q should be %t, got %t",
 				c.Path, c.Valid, (ret == nil))
 		}
 	}

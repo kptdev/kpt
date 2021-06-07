@@ -15,6 +15,7 @@
 package pkgutil_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -101,6 +102,297 @@ func TestWalkPackage(t *testing.T) {
 			sort.Strings(visited)
 
 			assert.Equal(t, tc.expected, visited)
+		})
+	}
+}
+
+func TestCopyPackage(t *testing.T) {
+	testCases := map[string]struct {
+		pkg               *pkgbuilder.RootPkg
+		copyRootKptfile   bool
+		subpackageMatcher pkg.SubpackageMatcher
+		expected          []string
+	}{
+		"subpackages without root kptfile": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:   false,
+			subpackageMatcher: pkg.Local,
+			expected: []string{
+				".",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"ignores .git folder": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithFile("abc.yaml", "42").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg(".git").
+						WithFile("INDEX", "ABC123"),
+				),
+			subpackageMatcher: pkg.None,
+			expected: []string{
+				".",
+				"abc.yaml",
+			},
+		},
+		"ignore subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.None,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"test.txt",
+			},
+		},
+		"include all subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+					pkgbuilder.NewSubPkg("bar").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.All,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"bar",
+				"bar/Kptfile",
+				"bar/def.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include only local subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+					pkgbuilder.NewSubPkg("bar").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Local,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include only remote subpackages": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123"),
+					pkgbuilder.NewSubPkg("bar").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123"),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Remote,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"bar",
+				"bar/Kptfile",
+				"bar/def.yaml",
+				"test.txt",
+			},
+		},
+		"include local subpackage with remote child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Local,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include local subpackage with local child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile().
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile().
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Local,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
+				"foo/def.yaml",
+				"test.txt",
+			},
+		},
+		"include remote subpackage with local child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile().
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Remote,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
+				"test.txt",
+			},
+		},
+		"include remote subpackage with remote child": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithFile("abc.yaml", "42").
+				WithFile("test.txt", "Hello, World!").
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("foo").
+						WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+						WithFile("def.yaml", "123").WithSubPackages(
+						pkgbuilder.NewSubPkg("bar").
+							WithKptfile(pkgbuilder.NewKptfile().WithUpstream("", "", "", "")).
+							WithFile("def.yaml", "123"),
+					),
+				),
+			copyRootKptfile:   true,
+			subpackageMatcher: pkg.Remote,
+			expected: []string{
+				".",
+				"Kptfile",
+				"abc.yaml",
+				"foo",
+				"foo/Kptfile",
+				"foo/def.yaml",
+				"foo/bar",
+				"foo/bar/Kptfile",
+				"foo/bar/def.yaml",
+				"test.txt",
+			},
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
+			dest, err := ioutil.TempDir("", "kpt-")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			var visited []string
+			if err = filepath.Walk(dest, func(s string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				relPath, err := filepath.Rel(dest, s)
+				if err != nil {
+					return err
+				}
+				visited = append(visited, relPath)
+				return nil
+			}); !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			sort.Strings(visited)
+
+			assert.ElementsMatch(t, tc.expected, visited)
 		})
 	}
 }

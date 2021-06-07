@@ -17,6 +17,7 @@ package pkg
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -34,10 +35,36 @@ import (
 const CurDir = "."
 const ParentDir = ".."
 
+// KptfileError records errors regarding reading or parsing of a Kptfile.
+type KptfileError struct {
+	Path types.UniquePath
+	Err  error
+}
+
+func (k *KptfileError) Error() string {
+	return fmt.Sprintf("error reading Kptfile at %q: %s", k.Path.String(), k.Err.Error())
+}
+
+func (k *KptfileError) Unwrap() error {
+	return k.Err
+}
+
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
-	UniquePath  types.UniquePath
+	// UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
+	UniquePath types.UniquePath
+
+	// DisplayPath represents Slash-separated path to the package directory on the filesystem relative
+	// to parent directory of root package on which the command is invoked.
+	// root package is defined as the package on which the command is invoked by user
+	// This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
+	// be used for display purposes and is subject to change.
 	DisplayPath types.DisplayPath
+
+	// rootPkgParentDirPath is the absolute path to the parent directory of root package
+	// root package is defined as the package on which the command is invoked by user
+	// this must be same for all the nested subpackages in root package
+	rootPkgParentDirPath string
 
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
@@ -51,26 +78,25 @@ func New(path string) (*Pkg, error) {
 	if err != nil {
 		return nil, err
 	}
-	var relPath string
 	var absPath string
 	if filepath.IsAbs(path) {
-		// If the provided path is absolute, we find the relative path by
-		// comparing it to the current working directory.
-		relPath, err = filepath.Rel(cwd, path)
-		if err != nil {
-			return nil, err
-		}
 		absPath = filepath.Clean(path)
 	} else {
 		// If the provided path is relative, we find the absolute path by
-		// combining the current working directory with the relative path.
-		relPath = filepath.Clean(path)
+		// combining the current working directory with the path.
 		absPath = filepath.Join(cwd, path)
 	}
-	return &Pkg{
-		UniquePath:  types.UniquePath(absPath),
-		DisplayPath: types.DisplayPath(relPath),
-	}, nil
+	if err != nil {
+		return nil, err
+	}
+	pkg := &Pkg{
+		UniquePath: types.UniquePath(absPath),
+		// by default, rootPkgParentDirPath should be the absolute path to the parent directory of package being instantiated
+		rootPkgParentDirPath: filepath.Dir(absPath),
+		// by default, DisplayPath should be the package name which is same as directory name
+		DisplayPath: types.DisplayPath(filepath.Base(absPath)),
+	}
+	return pkg, nil
 }
 
 // Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
@@ -93,20 +119,31 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
 func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
-	const op errors.Op = "pkg.readKptfile"
-
-	kf := &kptfilev1alpha2.KptFile{}
-
 	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
 	if err != nil {
-		return kf, errors.E(op, fmt.Errorf("package must have a %q: %w", kptfilev1alpha2.KptFileName, err))
+		return nil, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
 	}
 	defer f.Close()
 
-	d := yaml.NewDecoder(f)
+	kf, err := DecodeKptfile(f)
+	if err != nil {
+		return nil, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
+	}
+	return kf, nil
+}
+
+func DecodeKptfile(in io.Reader) (*kptfilev1alpha2.KptFile, error) {
+	kf := &kptfilev1alpha2.KptFile{}
+	d := yaml.NewDecoder(in)
 	d.KnownFields(true)
-	if err = d.Decode(kf); err != nil {
-		return kf, errors.E(op, fmt.Errorf("unable to parse %q: %w", kptfilev1alpha2.KptFileName, err))
+	if err := d.Decode(kf); err != nil {
+		return kf, err
 	}
 	return kf, nil
 }
@@ -158,7 +195,10 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 	for _, subPkgPath := range packagePaths {
 		subPkg, err := New(filepath.Join(p.UniquePath.String(), subPkgPath))
 		if err != nil {
-			return subPkgs, fmt.Errorf("failed to read subpkg at path %s %w", subPkgPath, err)
+			return subPkgs, fmt.Errorf("failed to read package at path %q: %w", subPkgPath, err)
+		}
+		if err := p.adjustDisplayPathForSubpkg(subPkg); err != nil {
+			return subPkgs, fmt.Errorf("failed to resolve display path for %q: %w", subPkgPath, err)
 		}
 		subPkgs = append(subPkgs, subPkg)
 	}
@@ -167,6 +207,22 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 		return subPkgs[i].DisplayPath < subPkgs[j].DisplayPath
 	})
 	return subPkgs, nil
+}
+
+// adjustDisplayPathForSubpkg adjusts the display path of subPkg relative to the RootPkgUniquePath
+// subPkg also inherits the RootPkgUniquePath value from parent package p
+func (p *Pkg) adjustDisplayPathForSubpkg(subPkg *Pkg) error {
+	// inherit the rootPkgParentDirPath from the parent package
+	subPkg.rootPkgParentDirPath = p.rootPkgParentDirPath
+	// display path of subPkg should be relative to parent dir of rootPkg
+	// e.g. if mysql(subPkg) is direct subpackage of wordpress(p), DisplayPath of "mysql" should be "wordpress/mysql"
+	dp, err := filepath.Rel(subPkg.rootPkgParentDirPath, string(subPkg.UniquePath))
+	if err != nil {
+		return err
+	}
+	// make sure that the DisplayPath is always Slash-separated os-agnostic
+	subPkg.DisplayPath = types.DisplayPath(filepath.ToSlash(dp))
+	return nil
 }
 
 // SubpackageMatcher is type for specifying the types of subpackages which
@@ -180,6 +236,8 @@ const (
 	Local SubpackageMatcher = "LOCAL"
 	// remote means only remote subpackages will be returned.
 	Remote SubpackageMatcher = "REMOTE"
+	// None means that no subpackages will be returned.
+	None SubpackageMatcher = "NONE"
 )
 
 // Subpackages returns a slice of paths to any subpackages of the provided path.
@@ -335,9 +393,57 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	return resources, err
 }
 
+// Validates the package pipeline.
+func (p *Pkg) ValidatePipeline() error {
+	pl, err := p.Pipeline()
+	if err != nil {
+		return err
+	}
+
+	if pl.IsEmpty() {
+		return nil
+	}
+
+	// read all resources including function pipeline.
+	resources, err := p.LocalResources(true)
+	if err != nil {
+		return err
+	}
+
+	resourcesByPath := sets.String{}
+
+	for _, r := range resources {
+		rPath, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return fmt.Errorf("resource missing path annotation err: %w", err)
+		}
+		resourcesByPath.Insert(filepath.Clean(rPath))
+	}
+
+	for i, fn := range pl.Mutators {
+		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
+			return &kptfilev1alpha2.ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "mutators", i),
+				Value:  fn.ConfigPath,
+				Reason: "functionConfig must exist in the current package",
+			}
+		}
+	}
+	for i, fn := range pl.Validators {
+		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
+			return &kptfilev1alpha2.ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "validators", i),
+				Value:  fn.ConfigPath,
+				Reason: "functionConfig must exist in the current package",
+			}
+		}
+	}
+	return nil
+}
+
 // filterMetaResources filters kpt metadata files such as Kptfile, function configs.
 func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (output []*yaml.RNode, err error) {
-	pathsToExclude := functionConfigFilePaths(pl)
+	pathsToExclude := fnConfigFilePaths(pl)
 	for _, r := range input {
 		meta, err := r.GetMeta()
 		if err != nil {
@@ -360,9 +466,9 @@ func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (out
 	return output, nil
 }
 
-// functionConfigFilePaths returns paths to function config files referred in the
+// fnConfigFilePaths returns paths to function config files referred in the
 // given pipeline.
-func functionConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.String) {
+func fnConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.String) {
 	if pl == nil {
 		return nil
 	}
@@ -381,4 +487,77 @@ func functionConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.S
 		}
 	}
 	return fnConfigPaths
+}
+
+// FunctionConfigFilePaths returns a set of config file paths that used by
+// package pipeline. rootPath is the path to the package. recursive decides
+// will config file paths in subpackages will be returned. Returned paths
+// are all relative to rootPath.
+func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.String, error) {
+	const op errors.Op = "pkg.FunctionConfigFilePaths"
+	ok, err := IsPackageDir(string(rootPath))
+	if err != nil {
+		return nil, errors.E(op, rootPath, err)
+	}
+	var pkgPaths []types.UniquePath
+	if ok {
+		pkgPaths = []types.UniquePath{rootPath}
+	}
+	if recursive {
+		subPkgPaths, err := Subpackages(string(rootPath), All, true)
+		if err != nil {
+			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get subpackage paths: %w", err))
+		}
+		for _, spp := range subPkgPaths {
+			// sub package paths are all relative to rootPath
+			pkgPaths = append(pkgPaths, types.UniquePath(filepath.Join(string(rootPath), spp)))
+		}
+	}
+	fnConfigPaths := sets.String{}
+	for _, uniquePath := range pkgPaths {
+		path := string(uniquePath)
+		p, err := New(path)
+		if err != nil {
+			return nil, errors.E(op, rootPath, err)
+		}
+		pl, err := p.Pipeline()
+		if err != nil {
+			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get pipeline in package %s: %w", path, err))
+		}
+		// function file path are relative to the package which it's in
+		for _, ffp := range fnConfigFilePaths(pl).List() {
+			fnRelPath, err := filepath.Rel(string(rootPath), filepath.Join(path, ffp))
+			if err != nil {
+				return nil, errors.E(op, rootPath, fmt.Errorf("failed to get path relative to %s from %s: %w",
+					rootPath, filepath.Join(path, ffp), err))
+			}
+			fnConfigPaths.Insert(fnRelPath)
+		}
+	}
+	return fnConfigPaths, nil
+}
+
+// FunctionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
+// invoked by kio.LocalPackageReader when it reads the package. The filter will return
+// true if the file should be skipped during reading. Skipped files will not be included
+// in all steps following.
+func FunctionConfigFilterFunc(pkgPath types.UniquePath, includeMetaResources bool) (kio.LocalPackageSkipFileFunc, error) {
+	if includeMetaResources {
+		return func(relPath string) bool {
+			return false
+		}, nil
+	}
+
+	fnConfigPaths, err := FunctionConfigFilePaths(pkgPath, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(relPath string) bool {
+		if len(fnConfigPaths) == 0 {
+			return false
+		}
+		// relPath is cleaned so we can directly use it here
+		return fnConfigPaths.Has(relPath)
+	}, nil
 }

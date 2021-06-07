@@ -15,6 +15,7 @@
 package cmdupdate_test
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -31,6 +32,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 // TestCmd_execute verifies that update is correctly invoked.
 func TestCmd_execute(t *testing.T) {
@@ -51,14 +56,19 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
-	gitRunner := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
-	if !assert.NoError(t, gitRunner.Run("add", ".")) {
+	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	_, err = gitRunner.Run(context.Background(), "add", ".")
+	if !assert.NoError(t, err) {
 		return
 	}
-	if !assert.NoError(t, gitRunner.Run("commit", "-m", "commit local package -- ds1")) {
+	_, err = gitRunner.Run(context.Background(), "commit", "-m", "commit local package -- ds1")
+	if !assert.NoError(t, err) {
 		return
 	}
 
@@ -77,7 +87,7 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, updateCmd.Command.Execute()) {
 		return
 	}
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest, true) {
 		return
 	}
 
@@ -107,7 +117,7 @@ func TestCmd_execute(t *testing.T) {
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: kptfilev1alpha2.GitOrigin,
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",
@@ -137,7 +147,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
 
@@ -158,9 +168,9 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "package must be committed to git before attempting to update")
+	assert.Contains(t, err.Error(), "contains uncommitted changes")
 
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
 }

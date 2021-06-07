@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate $GOBIN/mdtogo site/reference/live internal/docs/generated/livedocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/reference/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/reference/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/reference internal/docs/generated/overview --license=none --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/cli/live internal/docs/generated/livedocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/cli/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/cli/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/cli/README.md internal/docs/generated/overview --license=none --strategy=cmdDocs
 package main
 
 import (
@@ -25,16 +25,25 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/errors/resolver"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
+	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/logs"
-	cliutilserror "sigs.k8s.io/cli-utils/pkg/errors"
 )
 
 func main() {
+	// Handle all setup in the runMain function so os.Exit doesn't interfere
+	// with defer.
+	os.Exit(runMain())
+}
+
+// runMain does the initial setup in order to run kpt. The return value from
+// this function will be the exit code when kpt terminates.
+func runMain() int {
 	var logFlags flag.FlagSet
 	var err error
 
@@ -44,9 +53,6 @@ func main() {
 	logs.InitLogs()
 	defer func() {
 		logs.FlushLogs()
-		if err != nil {
-			os.Exit(1)
-		}
 	}()
 
 	// Enable commandline flags for klog.
@@ -61,20 +67,36 @@ func main() {
 
 	err = cmd.Execute()
 	if err != nil {
-		handleErr(cmd, err)
+		return handleErr(cmd, err)
 	}
+	return 0
 }
 
-func handleErr(cmd *cobra.Command, err error) {
-	var kptErr *errors.Error
-
-	if errors.As(err, &kptErr) {
-		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", kptErr.Error())
-		return
+// handleErr takes care of printing an error message for a given error.
+func handleErr(cmd *cobra.Command, err error) int {
+	// First attempt to see if we can resolve the error into a specific
+	// error message.
+	if re, resolved := resolver.ResolveError(err); resolved {
+		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", re.Message)
+		return re.ExitCode
 	}
-	// fmt.Fprintf(cmd.ErrOrStderr(), "%s\n", err)
-	cmdutil.PrintErrorStacktrace(err)
-	// TODO: find a way to avoid having to provide `kpt live` as a
-	// parameter here.
-	cliutilserror.CheckErr(cmd.ErrOrStderr(), err, "kpt live")
+
+	// Then try to see if it is of type *errors.Error
+	var kptErr *errors.Error
+	if errors.As(err, &kptErr) {
+		unwrapped, ok := errors.UnwrapErrors(kptErr)
+		if ok && !cmdutil.PrintErrorStacktrace() {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Error: %s \n", unwrapped.Error())
+			return 1
+		}
+		fmt.Fprintf(cmd.ErrOrStderr(), "%s \n", kptErr.Error())
+		return 1
+	}
+
+	// Finally just let the error handler for kubectl handle it. This handles
+	// printing of several error types used in kubectl
+	// TODO: See if we can handle this in kpt and get a uniform experience
+	// across all of kpt.
+	k8scmdutil.CheckErr(err)
+	return 1
 }

@@ -1,9 +1,9 @@
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
-index 0ef5d14..0000000
+index 44bfc6b..0000000
 --- a/deployment_httpbin.yaml
 +++ /dev/null
-@@ -1,37 +0,0 @@
+@@ -1,36 +0,0 @@
 -# Copyright 2021 Google LLC
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +17,14 @@ index 0ef5d14..0000000
 -# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -# See the License for the specific language governing permissions and
 -# limitations under the License.
--
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
+-  name: httpbin
+-  namespace: staging
 -  labels:
 -    app: backend
 -    tier: db
--  name: httpbin
--  namespace: staging
 -spec:
 -  replicas: 4
 -  selector:
@@ -39,20 +38,19 @@ index 0ef5d14..0000000
 -        tier: db
 -    spec:
 -      containers:
--      - image: kennethreitz/httpbin
--        name: httpbin
+-        - name: httpbin
+-          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..c77c357 100644
+index 7a494c9..a9dd224 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -14,13 +14,26 @@
- apiVersion: apps/v1
+@@ -15,12 +15,25 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
-+  labels:
-+    tier: backend
    name: nginx-deployment
 +  namespace: staging
++  labels:
++    tier: backend
  spec:
    replicas: 3
 +  selector:
@@ -66,9 +64,9 @@ index 7a494c9..c77c357 100644
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
-+  labels:
-+    tier: backend
    name: custom
 +  namespace: staging
++  labels:
++    tier: backend
  spec:
    image: nginx:1.2.3

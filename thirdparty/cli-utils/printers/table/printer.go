@@ -35,7 +35,7 @@ func (t *Printer) Print(ch <-chan event.Event, _ common.DryRunStrategy) error {
 	}
 	// Create a new collector and initialize it with the resources
 	// we are interested in.
-	coll := newResourceStateCollector(initEvent.ResourceGroups)
+	coll := newResourceStateCollector(initEvent.ActionGroups)
 
 	stop := make(chan struct{})
 
@@ -89,11 +89,11 @@ var (
 			var text string
 			switch resInfo.ResourceAction {
 			case event.ApplyAction:
-				if resInfo.ApplyOpResult != nil {
+				if resInfo.ApplyOpResult != event.ApplyUnspecified {
 					text = resInfo.ApplyOpResult.String()
 				}
 			case event.PruneAction:
-				if resInfo.PruneOpResult != nil {
+				if resInfo.PruneOpResult != event.PruneUnspecified {
 					text = resInfo.PruneOpResult.String()
 				}
 			}
@@ -138,7 +138,6 @@ func (t *Printer) runPrintLoop(coll *ResourceStateCollector, stop chan struct{})
 				ticker.Stop()
 				latestState := coll.LatestState()
 				linesPrinted = baseTablePrinter.PrintTable(latestState, linesPrinted)
-				_, _ = fmt.Fprint(t.IOStreams.Out, "\n")
 				return
 			case <-ticker.C:
 				latestState := coll.LatestState()

@@ -15,6 +15,7 @@
 package testutil
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -64,6 +65,11 @@ type Content struct {
 	Pkg          *pkgbuilder.RootPkg
 	Tag          string
 	Message      string
+
+	// UpdateFunc is invoked after the repo has been updated with the new
+	// content, but before it is committed. This allows for making changes
+	// that isn't supported by the pkgbuilder (like creating symlinks).
+	UpdateFunc func(path string) error
 }
 
 // Init initializes test data
@@ -107,11 +113,16 @@ func (g *TestSetupManager) Init() bool {
 		}}.Run(fake.CtxWithNilPrinter())) {
 		return false
 	}
-	localGit := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
-	if !assert.NoError(g.T, localGit.Run("add", ".")) {
+	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
+	if !assert.NoError(g.T, err) {
 		return false
 	}
-	if !assert.NoError(g.T, localGit.Run("commit", "-m", "add files")) {
+	_, err = localGit.Run(context.Background(), "add", ".")
+	if !assert.NoError(g.T, err) {
+		return false
+	}
+	_, err = localGit.Run(context.Background(), "commit", "-m", "add files")
+	if !assert.NoError(g.T, err) {
 		return false
 	}
 
@@ -133,6 +144,7 @@ type GitDirectory interface {
 	ReplaceData(data string) error
 	Commit(message string) (string, error)
 	Tag(tagName string) error
+	CustomUpdate(updateFunc func(string) error) error
 }
 
 func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Content, repos map[string]*TestGitRepo) error {
@@ -157,6 +169,13 @@ func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Cont
 		err := gitDir.ReplaceData(pkgData)
 		if !assert.NoError(t, err) {
 			return err
+		}
+
+		if content.UpdateFunc != nil {
+			err = gitDir.CustomUpdate(content.UpdateFunc)
+			if !assert.NoError(t, err) {
+				return err
+			}
 		}
 
 		sha, err := gitDir.Commit(content.Message)
@@ -202,7 +221,7 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Directory: g.GetSubDirectory,
 				Repo:      g.Repos[Upstream].RepoDirectory,
 				Ref:       ref,
@@ -215,7 +234,7 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 		g.T, filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir), expectedKptfile)
 }
 
-func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {
+func (g *TestSetupManager) AssertLocalDataEquals(path string, addMergeCommentToSource bool) bool {
 	var sourceDir string
 	if filepath.IsAbs(path) {
 		sourceDir = path
@@ -223,7 +242,7 @@ func (g *TestSetupManager) AssertLocalDataEquals(path string) bool {
 		sourceDir = filepath.Join(g.Repos[Upstream].DatasetDirectory, path)
 	}
 	destDir := filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir)
-	return g.Repos[Upstream].AssertEqual(g.T, sourceDir, destDir)
+	return g.Repos[Upstream].AssertEqual(g.T, sourceDir, destDir, addMergeCommentToSource)
 }
 
 func (g *TestSetupManager) Clean() {

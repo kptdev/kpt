@@ -22,11 +22,14 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	os.Exit(testutil.ConfigureTestKptCache(m))
+}
 
 // TestCmd verifies the directory is initialized
 func TestCmd(t *testing.T) {
@@ -61,18 +64,18 @@ my description
 
 ### Fetch the package
 'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] my-pkg'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/get/
+Details: https://kpt.dev/reference/cli/pkg/get/
 
 ### View package content
 'kpt pkg tree my-pkg'
-Details: https://googlecontainertools.github.io/kpt/reference/pkg/tree/
+Details: https://kpt.dev/reference/cli/pkg/tree/
 
 ### Apply the package
 '''
 kpt live init my-pkg
 kpt live apply my-pkg --reconcile-timeout=2m --output=table
 '''
-Details: https://googlecontainertools.github.io/kpt/reference/live/
+Details: https://kpt.dev/reference/cli/live/
 `, "'", "`"), string(b))
 }
 
@@ -162,64 +165,5 @@ func TestCmd_failNotExists(t *testing.T) {
 	err = r.Command.Execute()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "does not exist")
-	}
-}
-
-func TestGitUtil_DefaultRef(t *testing.T) {
-	// set up git repo with both main and master branches
-	g, _, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
-		Data:   testutil.Dataset1,
-		Branch: "master",
-	})
-	defer clean()
-
-	// check if master is picked as default if both main and master branches exist
-	defaultRef, err := gitutil.DefaultRef("file://" + g.RepoDirectory)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, "master", defaultRef) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, "master", defaultRef) {
-		t.FailNow()
-	}
-
-	err = g.CheckoutBranch("main", true)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	// delete master branch and check if main is selected as default
-	err = g.DeleteBranch("master")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	defaultRef, err = gitutil.DefaultRef("file://" + g.RepoDirectory)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, "main", defaultRef) {
-		t.FailNow()
-	}
-
-	err = g.CheckoutBranch("master", true)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	// delete main branch and check if master is selected as default
-	err = g.DeleteBranch("main")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	defaultRef, err = gitutil.DefaultRef("file://" + g.RepoDirectory)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	if !assert.Equal(t, "master", defaultRef) {
-		t.FailNow()
 	}
 }

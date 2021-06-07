@@ -4,11 +4,11 @@ metadata:
   name: db
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/starlark:unstable
-    configPath: statefulset-filter.yaml
-  - image: gcr.io/kpt-fn/set-namespace:unstable
-    configMap:
-      namespace: db
-  - image: gcr.io/kpt-fn/set-label:unstable
-    configMap:
-      app: backend
+    - image: gcr.io/kpt-fn/starlark:v0.1.0
+      configPath: statefulset-filter.yaml
+    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+      configMap:
+        namespace: db
+    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+      configMap:
+        app: backend

@@ -21,17 +21,14 @@ import (
 
 func TestFormatter_FormatApplyEvent(t *testing.T) {
 	testCases := map[string]struct {
-		previewStrategy common.DryRunStrategy
-		event           event.ApplyEvent
-		applyStats      *list.ApplyStats
-		statusCollector list.Collector
-		expected        []map[string]interface{}
+		dryRunStrategy common.DryRunStrategy
+		event          event.ApplyEvent
+		expected       []map[string]interface{}
 	}{
 		"resource created without dryrun": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.ApplyEvent{
 				Operation:  event.Created,
-				Type:       event.ApplyEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "default", "my-dep"),
 			},
 			expected: []map[string]interface{}{
@@ -48,10 +45,9 @@ func TestFormatter_FormatApplyEvent(t *testing.T) {
 			},
 		},
 		"resource updated with client dryrun": {
-			previewStrategy: common.DryRunClient,
+			dryRunStrategy: common.DryRunClient,
 			event: event.ApplyEvent{
 				Operation:  event.Configured,
-				Type:       event.ApplyEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
 			},
 			expected: []map[string]interface{}{
@@ -68,10 +64,9 @@ func TestFormatter_FormatApplyEvent(t *testing.T) {
 			},
 		},
 		"resource updated with server dryrun": {
-			previewStrategy: common.DryRunServer,
+			dryRunStrategy: common.DryRunServer,
 			event: event.ApplyEvent{
 				Operation:  event.Configured,
-				Type:       event.ApplyEventResourceUpdate,
 				Identifier: createIdentifier("batch", "CronJob", "foo", "my-cron"),
 			},
 			expected: []map[string]interface{}{
@@ -87,63 +82,13 @@ func TestFormatter_FormatApplyEvent(t *testing.T) {
 				},
 			},
 		},
-		"completed event": {
-			previewStrategy: common.DryRunNone,
-			event: event.ApplyEvent{
-				Type: event.ApplyEventCompleted,
-			},
-			applyStats: &list.ApplyStats{
-				ServersideApplied: 1,
-			},
-			statusCollector: &fakeCollector{
-				m: map[object.ObjMetadata]event.StatusEvent{
-					object.ObjMetadata{ //nolint:gofmt
-						GroupKind: schema.GroupKind{
-							Group: "apps",
-							Kind:  "Deployment",
-						},
-						Namespace: "foo",
-						Name:      "my-dep",
-					}: {
-						Resource: &pollevent.ResourceStatus{
-							Status:  status.CurrentStatus,
-							Message: "Resource is Current",
-						},
-					},
-				},
-			},
-			expected: []map[string]interface{}{
-				{
-					"configuredCount": 0,
-					"count":           1,
-					"createdCount":    0,
-					"eventType":       "completed",
-					"failedCount":     0,
-					"serverSideCount": 1,
-					"type":            "apply",
-					"unchangedCount":  0,
-					"timestamp":       "",
-				},
-				{
-					"eventType": "resourceStatus",
-					"group":     "apps",
-					"kind":      "Deployment",
-					"message":   "Resource is Current",
-					"name":      "my-dep",
-					"namespace": "foo",
-					"status":    "Current",
-					"timestamp": "",
-					"type":      "status",
-				},
-			},
-		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-			formatter := NewFormatter(ioStreams, tc.previewStrategy)
-			err := formatter.FormatApplyEvent(tc.event, tc.applyStats, tc.statusCollector)
+			formatter := NewFormatter(ioStreams, tc.dryRunStrategy)
+			err := formatter.FormatApplyEvent(tc.event)
 			assert.NoError(t, err)
 
 			objects := strings.Split(strings.TrimSpace(out.String()), "\n")
@@ -162,14 +107,20 @@ func TestFormatter_FormatStatusEvent(t *testing.T) {
 	testCases := map[string]struct {
 		previewStrategy common.DryRunStrategy
 		event           event.StatusEvent
-		statusCollector list.Collector
 		expected        map[string]interface{}
 	}{
 		"resource update with Current status": {
 			previewStrategy: common.DryRunNone,
 			event: event.StatusEvent{
-				Type: event.StatusEventResourceUpdate,
-				Resource: &pollevent.ResourceStatus{
+				Identifier: object.ObjMetadata{
+					GroupKind: schema.GroupKind{
+						Group: "apps",
+						Kind:  "Deployment",
+					},
+					Namespace: "foo",
+					Name:      "bar",
+				},
+				PollResourceInfo: &pollevent.ResourceStatus{
 					Identifier: object.ObjMetadata{
 						GroupKind: schema.GroupKind{
 							Group: "apps",
@@ -200,7 +151,7 @@ func TestFormatter_FormatStatusEvent(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 			formatter := NewFormatter(ioStreams, tc.previewStrategy)
-			err := formatter.FormatStatusEvent(tc.event, tc.statusCollector)
+			err := formatter.FormatStatusEvent(tc.event)
 			assert.NoError(t, err)
 
 			assertOutput(t, tc.expected, out.String())
@@ -210,16 +161,15 @@ func TestFormatter_FormatStatusEvent(t *testing.T) {
 
 func TestFormatter_FormatPruneEvent(t *testing.T) {
 	testCases := map[string]struct {
-		previewStrategy common.DryRunStrategy
-		event           event.PruneEvent
-		pruneStats      *list.PruneStats
-		expected        map[string]interface{}
+		dryRunStrategy common.DryRunStrategy
+		event          event.PruneEvent
+		pruneStats     *list.PruneStats
+		expected       map[string]interface{}
 	}{
 		"resource pruned without dryrun": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.PruneEvent{
 				Operation:  event.Pruned,
-				Type:       event.PruneEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "default", "my-dep"),
 			},
 			expected: map[string]interface{}{
@@ -234,10 +184,9 @@ func TestFormatter_FormatPruneEvent(t *testing.T) {
 			},
 		},
 		"resource skipped with client dryrun": {
-			previewStrategy: common.DryRunClient,
+			dryRunStrategy: common.DryRunClient,
 			event: event.PruneEvent{
 				Operation:  event.PruneSkipped,
-				Type:       event.PruneEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
 			},
 			expected: map[string]interface{}{
@@ -251,30 +200,13 @@ func TestFormatter_FormatPruneEvent(t *testing.T) {
 				"type":      "prune",
 			},
 		},
-		"prune event with completed status": {
-			previewStrategy: common.DryRunNone,
-			event: event.PruneEvent{
-				Type: event.PruneEventCompleted,
-			},
-			pruneStats: &list.PruneStats{
-				Pruned:  1,
-				Skipped: 2,
-			},
-			expected: map[string]interface{}{
-				"eventType": "completed",
-				"skipped":   2,
-				"pruned":    1,
-				"timestamp": "",
-				"type":      "prune",
-			},
-		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-			formatter := NewFormatter(ioStreams, tc.previewStrategy)
-			err := formatter.FormatPruneEvent(tc.event, tc.pruneStats)
+			formatter := NewFormatter(ioStreams, tc.dryRunStrategy)
+			err := formatter.FormatPruneEvent(tc.event)
 			assert.NoError(t, err)
 
 			assertOutput(t, tc.expected, out.String())
@@ -284,17 +216,16 @@ func TestFormatter_FormatPruneEvent(t *testing.T) {
 
 func TestFormatter_FormatDeleteEvent(t *testing.T) {
 	testCases := map[string]struct {
-		previewStrategy common.DryRunStrategy
+		dryRunStrategy  common.DryRunStrategy
 		event           event.DeleteEvent
 		deleteStats     *list.DeleteStats
 		statusCollector list.Collector
 		expected        map[string]interface{}
 	}{
 		"resource deleted without no dryrun": {
-			previewStrategy: common.DryRunNone,
+			dryRunStrategy: common.DryRunNone,
 			event: event.DeleteEvent{
 				Operation:  event.Deleted,
-				Type:       event.DeleteEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "default", "my-dep"),
 			},
 			expected: map[string]interface{}{
@@ -309,10 +240,9 @@ func TestFormatter_FormatDeleteEvent(t *testing.T) {
 			},
 		},
 		"resource skipped with client dryrun": {
-			previewStrategy: common.DryRunClient,
+			dryRunStrategy: common.DryRunClient,
 			event: event.DeleteEvent{
 				Operation:  event.DeleteSkipped,
-				Type:       event.DeleteEventResourceUpdate,
 				Identifier: createIdentifier("apps", "Deployment", "", "my-dep"),
 			},
 			expected: map[string]interface{}{
@@ -326,30 +256,13 @@ func TestFormatter_FormatDeleteEvent(t *testing.T) {
 				"type":      "delete",
 			},
 		},
-		"delete event with completed status": {
-			previewStrategy: common.DryRunNone,
-			event: event.DeleteEvent{
-				Type: event.DeleteEventCompleted,
-			},
-			deleteStats: &list.DeleteStats{
-				Deleted: 1,
-				Skipped: 2,
-			},
-			expected: map[string]interface{}{
-				"deleted":   1,
-				"eventType": "completed",
-				"skipped":   2,
-				"timestamp": "",
-				"type":      "delete",
-			},
-		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			ioStreams, _, out, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-			formatter := NewFormatter(ioStreams, tc.previewStrategy)
-			err := formatter.FormatDeleteEvent(tc.event, tc.deleteStats)
+			formatter := NewFormatter(ioStreams, tc.dryRunStrategy)
+			err := formatter.FormatDeleteEvent(tc.event)
 			assert.NoError(t, err)
 
 			assertOutput(t, tc.expected, out.String())
@@ -393,12 +306,4 @@ func createIdentifier(group, kind, namespace, name string) object.ObjMetadata {
 			Kind:  kind,
 		},
 	}
-}
-
-type fakeCollector struct {
-	m map[object.ObjMetadata]event.StatusEvent
-}
-
-func (f *fakeCollector) LatestStatus() map[object.ObjMetadata]event.StatusEvent {
-	return f.m
 }

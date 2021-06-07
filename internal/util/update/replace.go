@@ -44,7 +44,6 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 		}
 		localSubPkgPath := filepath.Join(options.LocalPath, p)
 		updatedSubPkgPath := filepath.Join(options.UpdatedPath, p)
-
 		err = pkgutil.RemovePackageContent(localSubPkgPath, !isRootPkg)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localSubPkgPath), err)
@@ -63,7 +62,7 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 			}
 		} else {
 
-			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg); err != nil {
+			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}
 		}

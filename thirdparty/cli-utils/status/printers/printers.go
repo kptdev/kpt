@@ -4,9 +4,9 @@
 package printers
 
 import (
-	"sigs.k8s.io/cli-utils/cmd/status/printers/event"
-	"sigs.k8s.io/cli-utils/cmd/status/printers/printer"
-	"sigs.k8s.io/cli-utils/cmd/status/printers/table"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers/event"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers/printer"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers/table"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )

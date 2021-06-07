@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"gopkg.in/yaml.v3"
 )
@@ -55,9 +56,25 @@ type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
 
+	// StdErr is the expected standard error output and should be checked
+	// when a nonzero exit code is expected. Default: ""
+	StdErr string `json:"stdErr,omitempty" yaml:"stdErr,omitempty"`
+
+	// StdOut is the expected standard output from running the command.
+	// Default: ""
+	StdOut string `json:"stdOut,omitempty" yaml:"stdOut,omitempty"`
+
 	// NonIdempotent indicates if the test case is not idempotent.
 	// By default, tests are assumed to be idempotent, so it defaults to false.
 	NonIdempotent bool `json:"nonIdempotent,omitempty" yaml:"nonIdempotent,omitempty"`
+
+	// Sequential means should this test case be run sequentially. Default: false
+	Sequential bool `json:"sequential,omitempty" yaml:"sequential,omitempty"`
+
+	// ImagePullPolicy controls the image pulling behavior. It can be set to one
+	// of always, ifNotPresent and never. If unspecified, the default will be
+	// the same as the CLI flag.
+	ImagePullPolicy fnruntime.ImagePullPolicy `json:"imagePullPolicy,omitempty" yaml:"imagePullPolicy,omitempty"`
 
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
@@ -71,6 +88,9 @@ type TestCaseConfig struct {
 	// TestType is the type of the test case. Possible value: ['render', 'eval']
 	// Default: 'eval'
 	TestType string `json:"testType,omitempty" yaml:"testType,omitempty"`
+
+	// DisableOutputTruncate indicates should error output be truncated
+	DisableOutputTruncate bool `json:"disableOutputTruncate,omitempty" yaml:"disableOutputTruncate,omitempty"`
 
 	// EvalConfig is the configs for eval tests
 	EvalConfig *EvalTestCaseConfig `json:",inline" yaml:",inline"`

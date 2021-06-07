@@ -17,11 +17,9 @@ package kptfileutil
 import (
 	"bytes"
 	goerrors "errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -78,32 +76,6 @@ func WriteFile(dir string, k kptfilev1alpha2.KptFile) error {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 	return nil
-}
-
-// ValidateInventory returns true and a nil error if the passed inventory
-// is valid; otherwise, false and the reason the inventory is not valid
-// is returned. A valid inventory must have a non-empty namespace, name,
-// and id.
-func ValidateInventory(inv *kptfilev1alpha2.Inventory) (bool, error) {
-	const op errors.Op = "kptfileutil.ValidateInventory"
-	if inv == nil {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile missing inventory section"))
-	}
-	// Validate the name, namespace, and inventory id
-	if strings.TrimSpace(inv.Name) == "" {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile inventory empty name"))
-	}
-	if strings.TrimSpace(inv.Namespace) == "" {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile inventory empty namespace"))
-	}
-	if strings.TrimSpace(inv.InventoryID) == "" {
-		return false, errors.E(op, errors.MissingParam,
-			fmt.Errorf("kptfile inventory missing inventoryID"))
-	}
-	return true, nil
 }
 
 func Equal(kf1, kf2 kptfilev1alpha2.KptFile) (bool, error) {
@@ -221,20 +193,14 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 		return errors.E(op, types.UniquePath(path), err)
 	}
 
-	// find the git commit sha that we cloned the package at so we can write it to the KptFile
-	commit, err := git.LookupCommit(spec.AbsPath())
-	if err != nil {
-		return errors.E(op, types.UniquePath(spec.AbsPath()), err)
-	}
-
 	// populate the cloneFrom values so we know where the package came from
 	kpgfile.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 		Type: kptfilev1alpha2.GitOrigin,
-		GitLock: &kptfilev1alpha2.GitLock{
+		Git: &kptfilev1alpha2.GitLock{
 			Repo:      spec.OrgRepo,
 			Directory: spec.Path,
 			Ref:       spec.Ref,
-			Commit:    commit,
+			Commit:    spec.Commit,
 		},
 	}
 	err = WriteFile(path, kpgfile)
@@ -297,11 +263,11 @@ func merge(localKf, updatedKf, originalKf kptfilev1alpha2.KptFile) (kptfilev1alp
 	if localKf.UpstreamLock != nil {
 		mergedKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 			Type: localKf.UpstreamLock.Type,
-			GitLock: &kptfilev1alpha2.GitLock{
-				Commit:    localKf.UpstreamLock.GitLock.Commit,
-				Directory: localKf.UpstreamLock.GitLock.Directory,
-				Repo:      localKf.UpstreamLock.GitLock.Repo,
-				Ref:       localKf.UpstreamLock.GitLock.Ref,
+			Git: &kptfilev1alpha2.GitLock{
+				Commit:    localKf.UpstreamLock.Git.Commit,
+				Directory: localKf.UpstreamLock.Git.Directory,
+				Repo:      localKf.UpstreamLock.Git.Repo,
+				Ref:       localKf.UpstreamLock.Git.Ref,
 			},
 		}
 	}
@@ -324,11 +290,11 @@ func updateUpstreamAndUpstreamLock(localKf, updatedKf kptfilev1alpha2.KptFile) k
 	if updatedKf.UpstreamLock != nil {
 		localKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
 			Type: updatedKf.UpstreamLock.Type,
-			GitLock: &kptfilev1alpha2.GitLock{
-				Commit:    updatedKf.UpstreamLock.GitLock.Commit,
-				Directory: updatedKf.UpstreamLock.GitLock.Directory,
-				Repo:      updatedKf.UpstreamLock.GitLock.Repo,
-				Ref:       updatedKf.UpstreamLock.GitLock.Ref,
+			Git: &kptfilev1alpha2.GitLock{
+				Commit:    updatedKf.UpstreamLock.Git.Commit,
+				Directory: updatedKf.UpstreamLock.Git.Directory,
+				Repo:      updatedKf.UpstreamLock.Git.Repo,
+				Ref:       updatedKf.UpstreamLock.Git.Ref,
 			},
 		}
 	}

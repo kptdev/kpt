@@ -27,41 +27,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// TestValidateInventory tests the ValidateInventory function.
-func TestValidateInventory(t *testing.T) {
-	// nil inventory should not validate
-	isValid, err := ValidateInventory(nil)
-	if isValid || err == nil {
-		t.Errorf("nil inventory should not validate")
-	}
-	// Empty inventory should not validate
-	inv := &kptfilev1alpha2.Inventory{}
-	isValid, err = ValidateInventory(inv)
-	if isValid || err == nil {
-		t.Errorf("empty inventory should not validate")
-	}
-	// Empty inventory parameters strings should not validate
-	inv = &kptfilev1alpha2.Inventory{
-		Namespace:   "",
-		Name:        "",
-		InventoryID: "",
-	}
-	isValid, err = ValidateInventory(inv)
-	if isValid || err == nil {
-		t.Errorf("empty inventory parameters strings should not validate")
-	}
-	// Inventory with non-empty namespace, name, and id should validate.
-	inv = &kptfilev1alpha2.Inventory{
-		Namespace:   "test-namespace",
-		Name:        "test-name",
-		InventoryID: "test-id",
-	}
-	isValid, err = ValidateInventory(inv)
-	if !isValid || err != nil {
-		t.Errorf("inventory with non-empty namespace, name, and id should validate")
-	}
-}
-
 // TestReadFile tests the ReadFile function.
 func TestReadFile(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
@@ -72,7 +37,7 @@ metadata:
   name: cockroachdb
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: dd7adeb5492cca4c24169cecee023dbe632e5167
     directory: staging/cockroachdb
     ref: refs/heads/owners-update
@@ -95,7 +60,7 @@ upstreamLock:
 		},
 		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
 			Type: "git",
-			GitLock: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1alpha2.GitLock{
 				Commit:    "dd7adeb5492cca4c24169cecee023dbe632e5167",
 				Directory: "staging/cockroachdb",
 				Ref:       "refs/heads/owners-update",
@@ -109,7 +74,7 @@ upstreamLock:
 func TestReadFile_failRead(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: cockroachdb
@@ -133,7 +98,7 @@ upstream:
 func TestReadFile_failUnmarshal(t *testing.T) {
 	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha1
+	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: cockroachdb
@@ -267,7 +232,7 @@ upstream:
     ref: v2
 upstreamLock:
   type: git
-  gitLock:
+  git:
     repo: github.com/GoogleContainerTools/kpt
     directory: /
     ref: v2
@@ -293,7 +258,7 @@ upstream:
     ref: v2
 upstreamLock:
   type: git
-  gitLock:
+  git:
     repo: github.com/GoogleContainerTools/kpt
     directory: /
     ref: v2
@@ -377,11 +342,8 @@ metadata:
 pipeline:
   mutators:
     - image: my:image
-      config:
-        apiVersion: kpt.dev/v1alpha2
-        kind: Function
-        spec:
-          foo: bar
+      configMap:
+        foo: bar
     - image: foo:bar
 `,
 			updateUpstream: true,
@@ -393,11 +355,8 @@ metadata:
 pipeline:
   mutators:
     - image: my:image
-      config:
-        apiVersion: kpt.dev/v1alpha2
-        kind: Function
-        spec:
-          foo: bar
+      configMap:
+        foo: bar
     - image: foo:bar
 `,
 		},

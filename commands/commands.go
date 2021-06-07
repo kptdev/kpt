@@ -19,7 +19,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"k8s.io/kubectl/pkg/cmd/util"
 )
 
 // NormalizeCommand will modify commands to be consistent, e.g. silencing errors
@@ -31,11 +30,11 @@ func NormalizeCommand(c ...*cobra.Command) {
 }
 
 // GetKptCommands returns the set of kpt commands to be registered
-func GetKptCommands(ctx context.Context, name string, f util.Factory) []*cobra.Command {
+func GetKptCommands(ctx context.Context, name, version string) []*cobra.Command {
 	var c []*cobra.Command
 	fnCmd := GetFnCommand(ctx, name)
 	pkgCmd := GetPkgCommand(ctx, name)
-	liveCmd := GetLiveCommand(name, f)
+	liveCmd := GetLiveCommand(ctx, name, version)
 
 	c = append(c, pkgCmd, fnCmd, liveCmd)
 

@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This defines the build for goreleaser (https://goreleaser.com/). It is
+# executed through a Github Action that is triggered by new tags being created
+# in the kpt repo.
 builds:
   - env:
       - CGO_ENABLED=0
@@ -19,15 +22,28 @@ builds:
     goos:
       - darwin
       - linux
-      - windows
     goarch:
       - amd64
+      - arm64
     ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+dockers:
+  - image_templates:
+      - "gcr.io/kpt-dev/kpt:{{ .Tag }}"
+      - "gcr.io/kpt-dev/kpt:next"
+    dockerfile: "release/images/Dockerfile"
+  - image_templates:
+      - "gcr.io/kpt-dev/kpt-gcloud:{{ .Tag }}"
+      - "gcr.io/kpt-dev/kpt-gcloud:next"
+    dockerfile: "release/images/Dockerfile-gcloud"
 archives:
-  - files:
+  - id: archived
+    files:
       - LICENSES*
       - lib.zip*
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
+  - id: bin-only
+    format: binary
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -45,3 +61,5 @@ release:
   github:
     owner: GoogleContainerTools
     name: kpt
+  draft: false
+  prerelease: true

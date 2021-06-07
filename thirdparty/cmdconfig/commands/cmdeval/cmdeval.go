@@ -4,11 +4,16 @@
 package cmdeval
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
@@ -18,73 +23,77 @@ import (
 )
 
 // GetEvalFnRunner returns a EvalFnRunner.
-func GetEvalFnRunner(name string) *EvalFnRunner {
-	r := &EvalFnRunner{}
+func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
+	r := &EvalFnRunner{Ctx: ctx}
 	c := &cobra.Command{
-		Use:     "eval [DIR | -]",
+		Use:     "eval [DIR | -] [flags] [--fn-args]",
+		Short:   docs.EvalShort,
+		Long:    docs.EvalShort + "\n" + docs.EvalLong,
+		Example: docs.EvalExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
+		PostRun: r.postRun,
 	}
 
-	c.Flags().BoolVar(&r.IncludeSubpackages, "include-subpackages", true,
-		"also print resources from subpackages.")
 	r.Command = c
-	r.Command.Flags().BoolVar(
-		&r.DryRun, "dry-run", false, "print results to stdout")
+	r.Command.Flags().StringVarP(&r.Dest, "output", "o", "",
+		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
+	r.Command.Flags().StringVarP(
+		&r.Image, "image", "i", "", "run this image as a function")
 	r.Command.Flags().StringVar(
-		&r.Image, "image", "",
-		"run this image as a function")
-	r.Command.Flags().StringVar(
-		&r.ExecPath, "exec-path", "", "run an executable as a function. (Alpha)")
-
+		&r.ExecPath, "exec-path", "", "run an executable as a function.")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
-
 	r.Command.Flags().BoolVar(
 		&r.IncludeMetaResources, "include-meta-resources", false, "include package meta resources in function input")
-
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
-
 	r.Command.Flags().BoolVar(
 		&r.Network, "network", false, "enable network access for functions that declare it")
 	r.Command.Flags().StringArrayVar(
 		&r.Mounts, "mount", []string{},
 		"a list of storage options read from the filesystem")
-	r.Command.Flags().BoolVar(
-		&r.LogSteps, "log-steps", false, "log steps to stderr")
 	r.Command.Flags().StringArrayVarP(
 		&r.Env, "env", "e", []string{},
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
+	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", "always",
+		"pull image before running the container. It should be one of always, ifNotPresent and never.")
+	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
 
-func EvalCommand(name string) *cobra.Command {
-	return GetEvalFnRunner(name).Command
+func EvalCommand(ctx context.Context, name string) *cobra.Command {
+	return GetEvalFnRunner(ctx, name).Command
 }
 
 // EvalFnRunner contains the run function
 type EvalFnRunner struct {
-	IncludeSubpackages   bool
 	Command              *cobra.Command
-	DryRun               bool
+	Dest                 string
+	OutContent           bytes.Buffer
+	FromStdin            bool
 	Image                string
 	ExecPath             string
 	FnConfigPath         string
 	RunFns               runfn.RunFns
 	ResultsDir           string
+	ImagePullPolicy      string
 	Network              bool
 	Mounts               []string
-	LogSteps             bool
 	Env                  []string
 	AsCurrentUser        bool
 	IncludeMetaResources bool
+	Ctx                  context.Context
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
-	return runner.HandleError(c, r.RunFns.Execute())
+	err := runner.HandleError(c, r.RunFns.Execute())
+	if err != nil {
+		return err
+	}
+	return cmdutil.WriteFnOutput(r.Dest, r.OutContent.String(), r.FromStdin, c.OutOrStdout())
 }
 
 // getContainerFunctions parses the commandline flags and arguments into explicit
@@ -224,6 +233,21 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image or --exec-path")
 	}
+	if r.Image != "" {
+		err := cmdutil.DockerCmdAvailable()
+		if err != nil {
+			return err
+		}
+	}
+	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
+		return err
+	}
+	if r.ResultsDir != "" {
+		err := os.MkdirAll(r.ResultsDir, 0755)
+		if err != nil {
+			return fmt.Errorf("cannot read or create results dir %q: %w", r.ResultsDir, err)
+		}
+	}
 	var dataItems []string
 	if c.ArgsLenAtDash() >= 0 {
 		dataItems = append(dataItems, args[c.ArgsLenAtDash():]...)
@@ -248,13 +272,16 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// set the output to stdout if in dry-run mode or no arguments are specified
 	var output io.Writer
 	var input io.Reader
+	r.OutContent = bytes.Buffer{}
 	if args[0] == "-" {
-		output = c.OutOrStdout()
+		output = &r.OutContent
 		input = c.InOrStdin()
+		r.FromStdin = true
+
 		// clear args as it indicates stdin and not path
 		args = []string{}
-	} else if r.DryRun {
-		output = c.OutOrStdout()
+	} else if r.Dest != "" {
+		output = &r.OutContent
 	}
 
 	// set the path if specified as an argument
@@ -275,6 +302,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	r.RunFns = runfn.RunFns{
+		Ctx:                  r.Ctx,
 		Functions:            fns,
 		Output:               output,
 		Input:                input,
@@ -282,16 +310,26 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Network:              r.Network,
 		StorageMounts:        storageMounts,
 		ResultsDir:           r.ResultsDir,
-		LogSteps:             r.LogSteps,
 		Env:                  r.Env,
 		AsCurrentUser:        r.AsCurrentUser,
 		FnConfigPath:         r.FnConfigPath,
 		IncludeMetaResources: r.IncludeMetaResources,
+		ImagePullPolicy:      cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,
 	}
 
-	// don't consider args for the function
 	return nil
+}
+
+func (r *EvalFnRunner) postRun(_ *cobra.Command, args []string) {
+	if len(args) > 0 && args[0] == "-" {
+		return
+	}
+	path := "."
+	if len(args) > 0 {
+		path = args[0]
+	}
+	pkgutil.FormatPackage(path)
 }

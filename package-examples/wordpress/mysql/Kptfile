@@ -1,39 +1,13 @@
-apiVersion: kpt.dev/v1alpha1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: mysql
-packageMetadata:
-  shortDescription: sample description
-openAPI:
-  definitions:
-    io.k8s.cli.setters.teamname:
-      x-k8s-cli:
-        setter:
-          name: teamname
-          value: YOURTEAM
-          required: true
-    io.k8s.cli.setters.gcloud.core.project:
-      x-k8s-cli:
-        setter:
-          name: gcloud.core.project
-          value: PROJECT_ID
-    io.k8s.cli.substitutions.image-tag:
-      x-k8s-cli:
-        substitution:
-          name: image-tag
-          pattern: ${image}:${tag}
-          values:
-          - marker: ${image}
-            ref: '#/definitions/io.k8s.cli.setters.image'
-          - marker: ${tag}
-            ref: '#/definitions/io.k8s.cli.setters.tag'
-    io.k8s.cli.setters.image:
-      x-k8s-cli:
-        setter:
-          name: image
-          value: mysql
-    io.k8s.cli.setters.tag:
-      x-k8s-cli:
-        setter:
-          name: tag
-          value: "5.6"
+info:
+  emails:
+    - kpt-team@google.com
+  description: This is an example mysql package.
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-label:v0.1
+      configMap:
+        tier: mysql

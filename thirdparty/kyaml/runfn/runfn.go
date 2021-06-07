@@ -4,6 +4,7 @@
 package runfn
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -13,27 +14,34 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync/atomic"
 
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/container"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/exec"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
 // RunFns runs the set of configuration functions in a local directory against
 // the Resources in that directory
 type RunFns struct {
+	Ctx context.Context
+
 	StorageMounts []runtimeutil.StorageMount
 
 	// Path is the path to the directory containing functions
 	Path string
+
+	// uniquePath is the absolute version of Path
+	uniquePath types.UniquePath
 
 	// FnConfigPath specifies a config file which contains the configs used in
 	// function input. It can be absolute or relative to kpt working directory.
@@ -55,14 +63,7 @@ type RunFns struct {
 	// ResultsDir is where to write each functions results
 	ResultsDir string
 
-	// LogSteps enables logging the function that is running.
-	LogSteps bool
-
-	// LogWriter can be set to write the logs to LogWriter rather than stderr if LogSteps is enabled.
-	LogWriter io.Writer
-
-	// resultsCount is used to generate the results filename for each container
-	resultsCount uint32
+	fnResults *fnresult.ResultList
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -87,19 +88,14 @@ type RunFns struct {
 	// IncludeMetaResources indicates will kpt add pkg meta resources such as
 	// Kptfile to the input resources to the function.
 	IncludeMetaResources bool
+
+	ImagePullPolicy fnruntime.ImagePullPolicy
 }
 
 // Execute runs the command
 func (r RunFns) Execute() error {
-	// make the path absolute so it works on mac
-	var err error
-	r.Path, err = filepath.Abs(r.Path)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
 	// default the containerFilterProvider if it hasn't been override.  Split out for testing.
-	err = (&r).init()
+	err := (&r).init()
 	if err != nil {
 		return err
 	}
@@ -120,10 +116,18 @@ func (r RunFns) getNodesAndFilters() (
 	var outputPkg *kio.LocalPackageReadWriter
 	matchFilesGlob := kio.MatchAll
 	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
+		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	}
 	if r.Path != "" {
-		outputPkg = &kio.LocalPackageReadWriter{PackagePath: r.Path, MatchFilesGlob: matchFilesGlob}
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(r.uniquePath, r.IncludeMetaResources)
+		if err != nil {
+			return nil, nil, outputPkg, err
+		}
+		outputPkg = &kio.LocalPackageReadWriter{
+			PackagePath:    string(r.uniquePath),
+			MatchFilesGlob: matchFilesGlob,
+			FileSkipFunc:   functionConfigFilter,
+		}
 	}
 
 	if r.Input == nil {
@@ -183,8 +187,17 @@ func (r RunFns) runFunctions(
 	} else {
 		// write to the output instead of the directory if r.Output is specified or
 		// the output is nil (reading from Input)
-		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
+		outputs = append(outputs, kio.ByteWriter{
+			Writer:                r.Output,
+			KeepReaderAnnotations: true,
+			WrappingKind:          kio.ResourceListKind,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+		})
 	}
+
+	// add format filter at the end to consistently format output resources
+	fmtfltr := filters.FormatFilter{UseSchema: true}
+	fltrs = append(fltrs, fmtfltr)
 
 	var err error
 	pipeline := kio.Pipeline{
@@ -193,52 +206,33 @@ func (r RunFns) runFunctions(
 		Outputs:               outputs,
 		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
-	if r.LogSteps {
-		err = pipeline.ExecuteWithCallback(func(op kio.Filter) {
-			var identifier string
-
-			switch filter := op.(type) {
-			case *container.Filter:
-				identifier = filter.Image
-			case *exec.Filter:
-				identifier = filter.Path
-			case *starlark.Filter:
-				identifier = filter.String()
-			default:
-				identifier = "unknown-type function"
-			}
-
-			_, _ = fmt.Fprintf(r.LogWriter, "Running %s\n", identifier)
-		})
-	} else {
-		err = pipeline.Execute()
-	}
+	err = pipeline.Execute()
+	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
 	if err != nil {
+		// function fails
+		if resultErr == nil {
+			r.printFnResultsStatus(resultsFile, true)
+		}
 		return err
 	}
-
-	// check for deferred function errors
-	var errs []string
-	for i := range fltrs {
-		cf, ok := fltrs[i].(runtimeutil.DeferFailureFunction)
-		if !ok {
-			continue
-		}
-		if cf.GetExit() != nil {
-			errs = append(errs, cf.GetExit().Error())
-		}
-	}
-	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n---\n"))
+	if resultErr == nil {
+		r.printFnResultsStatus(resultsFile, false)
 	}
 	return nil
+}
+
+func (r RunFns) printFnResultsStatus(resultsFile string, toStdErr bool) {
+	if r.isOutputDisabled() {
+		return
+	}
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true, toStdErr)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
 // file (declarative). If they have same key, the imperative value will be respected.
 func (r RunFns) mergeContainerEnv(envs []string) []string {
-	imperative := runtimeutil.NewContainerEnvFromStringSlice(r.Env)
-	declarative := runtimeutil.NewContainerEnvFromStringSlice(envs)
+	imperative := fnruntime.NewContainerEnvFromStringSlice(r.Env)
+	declarative := fnruntime.NewContainerEnvFromStringSlice(envs)
 	for key, value := range imperative.EnvVars {
 		declarative.AddKeyValue(key, value)
 	}
@@ -326,16 +320,21 @@ func (r *RunFns) init() error {
 		if r.Input == nil {
 			r.Input = os.Stdin
 		}
+	} else {
+		// make the path absolute so it works on mac
+		var err error
+		absPath, err := filepath.Abs(r.Path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		r.uniquePath = types.UniquePath(absPath)
 	}
+
+	r.fnResults = fnresult.NewResultList()
 
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
 		r.functionFilterProvider = r.defaultFnFilterProvider
-	}
-
-	// if LogSteps is enabled and LogWriter is not specified, use stderr
-	if r.LogSteps && r.LogWriter == nil {
-		r.LogWriter = os.Stderr
 	}
 
 	// fn config path should be absolute
@@ -367,25 +366,10 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
-// etFunctionConfig returns yaml representation of functionConfig that can
+// getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	if r.FnConfigPath == "" {
-		return nil, fmt.Errorf("function config file path must not be empty")
-	}
-	f, err := os.Open(r.FnConfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("missing function config '%s': %w", r.FnConfigPath, err)
-	}
-	reader := kio.ByteReader{Reader: f}
-	nodes, err := reader.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read function config '%s': %w", r.FnConfigPath, err)
-	}
-	if len(nodes) > 1 {
-		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config", r.FnConfigPath)
-	}
-	return nodes[0], nil
+	return kptfile.GetValidatedFnConfigFromPath("", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters
@@ -394,12 +378,6 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		return nil, fmt.Errorf("either image name or executable path need to be provided")
 	}
 
-	var resultsFile string
-	if r.ResultsDir != "" {
-		resultsFile = filepath.Join(r.ResultsDir, fmt.Sprintf(
-			"results-%v.yaml", r.resultsCount))
-		atomic.AddUint32(&r.resultsCount, 1)
-	}
 	var err error
 	if r.FnConfigPath != "" {
 		fnConfig, err = r.getFunctionConfig()
@@ -407,36 +385,55 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 	}
+	var fltr *runtimeutil.FunctionFilter
+	fnResult := &fnresult.Result{
+		// TODO(droot): This is required for making structured results subpackage aware.
+		// Enable this once test harness supports filepath based assertions.
+		// Pkg: string(r.uniquePath),
+	}
 	if spec.Container.Image != "" {
 		// TODO: Add a test for this behavior
 		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
 		if err != nil {
 			return nil, err
 		}
-		c := container.NewContainer(
-			runtimeutil.ContainerSpec{
-				Image:         spec.Container.Image,
-				Network:       spec.Container.Network,
-				StorageMounts: r.StorageMounts,
-				Env:           spec.Container.Env,
+		c := &fnruntime.ContainerFn{
+			Path:            r.uniquePath,
+			Image:           spec.Container.Image,
+			ImagePullPolicy: r.ImagePullPolicy,
+			UIDGID:          uidgid,
+			StorageMounts:   r.StorageMounts,
+			Env:             spec.Container.Env,
+			Perm: fnruntime.ContainerFnPermission{
+				AllowNetwork: spec.Container.Network,
+				// mounts are always from CLI flags so we allow
+				// them by default for eval
+				AllowMount: true,
 			},
-			uidgid,
-		)
-		cf := &c
-		cf.Exec.FunctionConfig = fnConfig
-		cf.Exec.ResultsFile = resultsFile
-		cf.Exec.DeferFailure = spec.DeferFailure
-		return cf, nil
+		}
+		fltr = &runtimeutil.FunctionFilter{
+			Run:            c.Run,
+			FunctionConfig: fnConfig,
+			DeferFailure:   spec.DeferFailure,
+		}
+		fnResult.Image = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
-		ef := &exec.Filter{Path: spec.Exec.Path}
-
-		ef.FunctionConfig = fnConfig
-		ef.ResultsFile = resultsFile
-		ef.DeferFailure = spec.DeferFailure
-		return ef, nil
+		e := &fnruntime.ExecFn{
+			Path: spec.Exec.Path,
+		}
+		fltr = &runtimeutil.FunctionFilter{
+			Run:            e.Run,
+			FunctionConfig: fnConfig,
+			DeferFailure:   spec.DeferFailure,
+		}
+		fnResult.ExecPath = spec.Exec.Path
 	}
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
+}
 
-	return nil, nil
+func (r RunFns) isOutputDisabled() bool {
+	// if output is not nil we will write the resources to stdout
+	return r.Output != nil
 }

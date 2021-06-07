@@ -305,6 +305,7 @@ type Kptfile struct {
 	Upstream     *Upstream
 	UpstreamLock *UpstreamLock
 	Pipeline     *Pipeline
+	Inventory    *Inventory
 }
 
 func NewKptfile() *Kptfile {
@@ -382,6 +383,17 @@ type UpstreamLock struct {
 	Commit  string
 }
 
+func (k *Kptfile) WithInventory(inv Inventory) *Kptfile {
+	k.Inventory = &inv
+	return k
+}
+
+type Inventory struct {
+	Name      string
+	Namespace string
+	ID        string
+}
+
 func (k *Kptfile) WithPipeline(functions ...Function) *Kptfile {
 	k.Pipeline = &Pipeline{
 		Functions: functions,
@@ -400,7 +412,13 @@ func NewFunction(image string) Function {
 }
 
 type Function struct {
-	Image string
+	Image      string
+	ConfigPath string
+}
+
+func (f Function) WithConfigPath(configPath string) Function {
+	f.ConfigPath = configPath
+	return f
 }
 
 // RemoteSubpackage contains information about remote subpackages that should
@@ -510,7 +528,7 @@ upstream:
 {{- if .Pkg.Kptfile.UpstreamLock }}
 upstreamLock:
   type: git
-  gitLock:
+  git:
     commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
     directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
     ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
@@ -521,6 +539,21 @@ pipeline:
   mutators:
 {{- range .Pkg.Kptfile.Pipeline.Functions }}
   - image: {{ .Image }}
+{{- if .ConfigPath }}
+  - configPath: {{ .ConfigPath }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory }}
+inventory:
+{{- if .Pkg.Kptfile.Inventory.Name }}
+  name: {{ .Pkg.Kptfile.Inventory.Name }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory.Namespace }}
+  namespace: {{ .Pkg.Kptfile.Inventory.Namespace }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory.ID }}
+  inventoryID: {{ .Pkg.Kptfile.Inventory.ID }}
 {{- end }}
 {{- end }}
 `

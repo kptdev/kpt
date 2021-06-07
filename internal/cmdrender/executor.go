@@ -17,17 +17,22 @@ package cmdrender
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -35,13 +40,22 @@ import (
 
 // Executor hydrates a given pkg.
 type Executor struct {
-	PkgPath string
+	PkgPath         string
+	ResultsDirPath  string
+	Output          io.Writer
+	ImagePullPolicy fnruntime.ImagePullPolicy
+
 	Printer printer.Printer
 }
 
 // Execute runs a pipeline.
 func (e *Executor) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
+	disableCLIOutput := false
+	if e.Output != nil {
+		// disable output written to stdout in case of out-of-place hydration
+		disableCLIOutput = true
+	}
 
 	pr := printer.FromContextOrDie(ctx)
 
@@ -52,12 +66,19 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root: root,
-		pkgs: map[types.UniquePath]*pkgNode{},
+		root:             root,
+		pkgs:             map[types.UniquePath]*pkgNode{},
+		fnResults:        fnresult.NewResultList(),
+		imagePullPolicy:  e.ImagePullPolicy,
+		disableCLIOutput: disableCLIOutput,
 	}
 
 	resources, err := hydrate(ctx, root, hctx)
 	if err != nil {
+		// Note(droot): ignore the error in function result saving
+		// to avoid masking the hydration error.
+		// don't disable the CLI output in case of error
+		_ = e.saveFnResults(ctx, hctx.fnResults, true, false)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -65,17 +86,53 @@ func (e *Executor) Execute(ctx context.Context) error {
 		return err
 	}
 
-	pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
-	err = pkgWriter.Write(resources)
+	// format resources before writing
+	_, err = filters.FormatFilter{UseSchema: true}.Filter(resources)
 	if err != nil {
-		return fmt.Errorf("failed to save resources: %w", err)
-	}
-
-	if err = pruneResources(hctx); err != nil {
 		return err
 	}
 
-	pr.PkgPrintf(root.pkg.UniquePath, "rendered successfully\n")
+	if e.Output == nil {
+		// the intent of the user is to modify resources in-place
+		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
+		err = pkgWriter.Write(resources)
+		if err != nil {
+			return fmt.Errorf("failed to save resources: %w", err)
+		}
+
+		if err = pruneResources(hctx); err != nil {
+			return err
+		}
+		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
+	} else {
+		// the intent of the user is to write the resources to either stdout|unwrapped|<OUT_DIR>
+		// so, write the resources to provided e.Output which will be written to appropriate destination by cobra layer
+		writer := &kio.ByteWriter{
+			Writer:                e.Output,
+			KeepReaderAnnotations: true,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+			WrappingKind:          kio.ResourceListKind,
+		}
+		err = writer.Write(resources)
+		if err != nil {
+			return fmt.Errorf("failed to write resources: %w", err)
+		}
+	}
+
+	return e.saveFnResults(ctx, hctx.fnResults, false, disableCLIOutput)
+}
+
+func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList, toStdErr, disableCLIOutput bool) error {
+	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults)
+	if err != nil {
+		return fmt.Errorf("failed to save function results: %w", err)
+	}
+
+	if disableCLIOutput {
+		return nil
+	}
+
+	printerutil.PrintFnResultInfo(ctx, resultsFile, false, toStdErr)
 	return nil
 }
 
@@ -98,6 +155,20 @@ type hydrationContext struct {
 	// outputFiles is a set of filepaths containing output resources. This
 	// will be compared with the inputFiles to identify files be pruned.
 	outputFiles sets.String
+
+	// executedFunctionCnt is the counter for functions that have been executed.
+	executedFunctionCnt int
+
+	// fnResults stores function results gathered
+	// during pipeline execution.
+	fnResults *fnresult.ResultList
+
+	// imagePullPolicy controls the image pulling behavior.
+	imagePullPolicy fnruntime.ImagePullPolicy
+
+	// disableCLIOutput disables the cli output written to stdout
+	// stderr is not affected by this
+	disableCLIOutput bool
 }
 
 //
@@ -135,7 +206,7 @@ func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
-	if err := kf.Validate(); err != nil {
+	if err := kf.Validate(p.UniquePath); err != nil {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
@@ -234,7 +305,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
 
-	output, err = curr.runPipeline(ctx, input)
+	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
@@ -253,8 +324,15 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 }
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
-func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
+	pr := printer.FromContextOrDie(ctx)
+	// TODO: the DisplayPath is a relative file path. It cannot represent the
+	// package structure. We should have function to get the relative package
+	// path here.
+	if !hctx.disableCLIOutput {
+		pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
+	}
 
 	if len(input) == 0 {
 		return nil, nil
@@ -269,25 +347,102 @@ func (pn *pkgNode) runPipeline(ctx context.Context, input []*yaml.RNode) ([]*yam
 		return input, nil
 	}
 
-	fnChain, err := fnChain(ctx, pl, pn.pkg.UniquePath)
+	// perform runtime validation for pipeline
+	if err := pn.pkg.ValidatePipeline(); err != nil {
+		return nil, err
+	}
+
+	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
 
+	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
+		return nil, errors.E(op, pn.pkg.UniquePath, err)
+	}
+	// print a new line after a pipeline running
+	if !hctx.disableCLIOutput {
+		pr.Printf("\n")
+	}
+	return mutatedResources, nil
+}
+
+// runMutators runs a set of mutators functions on given input resources.
+func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+	if len(input) == 0 {
+		return input, nil
+	}
+
+	pl, err := pn.pkg.Pipeline()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pl.Mutators) == 0 {
+		return input, nil
+	}
+
+	mutators, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
+	if err != nil {
+		return nil, err
+	}
+
 	output := &kio.PackageBuffer{}
 	// create a kio pipeline from kyaml library to execute the function chains
-	kioPipeline := kio.Pipeline{
+	mutation := kio.Pipeline{
 		Inputs: []kio.Reader{
 			&kio.PackageBuffer{Nodes: input},
 		},
-		Filters: fnChain,
+		Filters: mutators,
 		Outputs: []kio.Writer{output},
 	}
-	err = kioPipeline.Execute()
+	err = mutation.Execute()
 	if err != nil {
-		return nil, errors.E(op, pn.pkg.UniquePath, err)
+		return nil, err
 	}
+	hctx.executedFunctionCnt += len(mutators)
 	return output.Nodes, nil
+}
+
+// runValidators runs a set of validator functions on input resources.
+// We bail out on first validation failure today, but the logic can be
+// improved to report multiple failures. Reporting multiple failures
+// will require changes to the way we print errors
+func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) error {
+	if len(input) == 0 {
+		return nil
+	}
+
+	pl, err := pn.pkg.Pipeline()
+	if err != nil {
+		return err
+	}
+
+	if len(pl.Validators) == 0 {
+		return nil
+	}
+
+	for i := range pl.Validators {
+		fn := pl.Validators[i]
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, hctx.disableCLIOutput)
+		if err != nil {
+			return err
+		}
+		// validators are run on a copy of mutated resources to ensure
+		// resources are not mutated.
+		if _, err = validator.Filter(cloneResources(input)); err != nil {
+			return err
+		}
+		hctx.executedFunctionCnt++
+	}
+	return nil
+}
+
+func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
+	for _, resource := range input {
+		output = append(output, resource.Copy())
+	}
+	return
 }
 
 // path (location) of a KRM resources is tracked in a special key in
@@ -318,17 +473,12 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 	return resources, nil
 }
 
-// fnChain returns a slice of function runners from the
-// functions and configs defined in pipeline.
-func fnChain(ctx context.Context, pl *kptfilev1alpha2.Pipeline, pkgPath types.UniquePath) ([]kio.Filter, error) {
-	fns := []kptfilev1alpha2.Function{}
-	fns = append(fns, pl.Mutators...)
-	// TODO: Validators cannot modify resources.
-	fns = append(fns, pl.Validators...)
+// fnChain returns a slice of function runners given a list of functions defined in pipeline.
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := newFnRunner(ctx, &fn, pkgPath)
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, hctx.disableCLIOutput)
 		if err != nil {
 			return nil, err
 		}
@@ -339,9 +489,6 @@ func fnChain(ctx context.Context, pl *kptfilev1alpha2.Pipeline, pkgPath types.Un
 
 // trackInputFiles records file paths of input resources in the hydration context.
 func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
-	if err := detectPathConflicts(input); err != nil {
-		return err
-	}
 	if hctx.inputFiles == nil {
 		hctx.inputFiles = sets.String{}
 	}
@@ -358,9 +505,6 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 // trackOutputfiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
-	if err := detectPathConflicts(hctx.root.resources); err != nil {
-		return err
-	}
 	outputSet := sets.String{}
 
 	for _, r := range hctx.root.resources {
@@ -371,28 +515,6 @@ func trackOutputFiles(hctx *hydrationContext) error {
 		outputSet.Insert(path)
 	}
 	hctx.outputFiles = outputSet
-	return nil
-}
-
-// detectPathConflicts returns an error if the same index/path is on multiple resources
-func detectPathConflicts(nodes []*yaml.RNode) error {
-	// map has structure path -> index -> bool
-	// to keep track of paths and indexes found
-	pathIndexes := make(map[string]map[string]bool)
-	for _, node := range nodes {
-		fp, index, err := kioutil.GetFileAnnotations(node)
-		if err != nil {
-			return err
-		}
-		fp = path.Clean(fp)
-		if pathIndexes[fp] == nil {
-			pathIndexes[fp] = make(map[string]bool)
-		}
-		if _, ok := pathIndexes[fp][index]; ok {
-			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
-		}
-		pathIndexes[fp][index] = true
-	}
 	return nil
 }
 

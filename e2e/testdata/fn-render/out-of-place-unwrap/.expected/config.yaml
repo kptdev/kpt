@@ -1,0 +1,16 @@
+stdOut: |
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    namespace: staging
+  spec:
+    replicas: 3
+  ---
+  apiVersion: custom.io/v1
+  kind: Custom
+  metadata:
+    name: custom
+    namespace: staging
+  spec:
+    image: nginx:1.2.3

@@ -22,6 +22,7 @@ import (
 	goerrors "errors"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	kyaml_errors "github.com/go-errors/errors"
 )
 
 // Error is the type that implements error interface used in the kpt codebase.
@@ -41,6 +42,9 @@ type Error struct {
 
 	// Fn is the kpt function being run either as part of "fn render" or "fn eval"
 	Fn Fn
+
+	// Repo is the git repo used for get, update or diff
+	Repo Repo
 
 	// Class refers to class of errors
 	Class Class
@@ -72,6 +76,12 @@ func (e *Error) Error() string {
 		pad(b, ": ")
 		b.WriteString("fn ")
 		b.WriteString(string(e.Fn))
+	}
+
+	if e.Repo != "" {
+		pad(b, ": ")
+		b.WriteString("repo ")
+		b.WriteString(string(e.Repo))
 	}
 
 	if e.Class != 0 {
@@ -118,6 +128,9 @@ type Op string
 
 // Fn describes the kpt function associated with the error.
 type Fn string
+
+// Repo describes the repo associated with the error.
+type Repo string
 
 // Class describes the class of errors encountered.
 type Class int
@@ -169,6 +182,8 @@ func E(args ...interface{}) error {
 			e.Op = a
 		case Fn:
 			e.Fn = a
+		case Repo:
+			e.Repo = a
 		case Class:
 			e.Class = a
 		case *Error:
@@ -198,6 +213,10 @@ func E(args ...interface{}) error {
 		wrappedErr.Fn = ""
 	}
 
+	if e.Repo == wrappedErr.Repo {
+		wrappedErr.Repo = ""
+	}
+
 	if e.Class == wrappedErr.Class {
 		wrappedErr.Class = 0
 	}
@@ -214,3 +233,40 @@ func Is(err, target error) bool {
 func As(err error, target interface{}) bool {
 	return goerrors.As(err, target)
 }
+
+// UnwrapKioError unwraps the error returned by kio pipeline.
+// The error returned by kio pipeline is wrapped by
+// library 'github.com/go-errors/errors' and it doesn't
+// support 'Unwrap' method so 'errors.As' will not work.
+// This function will return the first error wrapped by kio
+// pipeline. If the error is not wrapped by kio pipeline, it
+// will return the original error.
+func UnwrapKioError(err error) error {
+	var kioErr *kyaml_errors.Error
+	if !goerrors.As(err, &kioErr) {
+		return err
+	}
+	return kioErr.Err
+}
+
+// UnwrapErrors unwraps any *Error errors in the chain and returns
+// the first error it finds that is of a different type. If no such error
+// can be found, the last return value will be false.
+//nolint
+func UnwrapErrors(err error) (error, bool) {
+	for {
+		if err == nil {
+			return nil, false
+		}
+		e, ok := err.(*Error)
+		if !ok {
+			return err, true
+		}
+		err = e.Err
+	}
+}
+
+// ErrAlreadyHandled is an error that is already handled by
+// a kpt command and nothing needs to be done by the global
+// error handler except to return a non-zero exit code.
+var ErrAlreadyHandled error = fmt.Errorf("already handled error")

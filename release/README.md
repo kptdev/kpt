@@ -16,8 +16,11 @@ To cut a new kpt release perform the following:
   - `git fetch upstream`
   - `git reset --hard upstream/master`
 - Tag the commit
-  - `git tag v0.MINOR.0`
-  - `git push upstream v0.MINOR.0`
+  - `git tag 1.0.0-(alpha|beta|rc).*`
+  - `git push upstream 1.0.0-(alpha|beta|rc).*`
+- This will trigger a Github Action that will use goreleaser to make the release. The
+  result will be a github release in the draft state and upload docker images to GCR.
+  - Verify that the release looks good. If it does, publish the release through the github UI.
 - Update the Homebrew release
   - `go run ./release/formula/main.go v0.MINOR.0`
   - `git add . && git commit -m "update homebrew to v0.MINOR.0"`
@@ -26,11 +29,7 @@ To cut a new kpt release perform the following:
 
 ## Artifacts
 
-Release artifacts such as binaries and images will be built automatically by Cloud Build in the
-`kpt-dev` GCP project.  The binaries linked from the README.md docs will be automatically updated
-because they point to the `latest` binaries which are updated for tagged releases.  Images are
-also updated with the `latest` tag for tagged releases.
-
-- `kpt-dev` release buckets
-  - `gs://kpt-dev/latest`
-  - `gs://kpt-dev/releases`
+Release artifacts such as binaries and images will be built automatically by the Github Action.
+The binaries linked from the README.md docs will be automatically updated
+because they point to the `latest` binaries which are updated for tagged releases. Images
+created from the `next` branch will not be tagged with `latest`.

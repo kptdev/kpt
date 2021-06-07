@@ -1,4 +1,4 @@
-In order to follow along with the examples in this book, the following needs to be installed on you
+In order to follow along with the examples in this book, the following needs to be installed on your
 system:
 
 ## kpt
@@ -8,9 +8,6 @@ system:
 ```shell
 $ kpt version
 ```
-
-TODO: Clean up installation page.
-TODO: kpt 1.0 binaries needs to be available.
 
 ## Git
 

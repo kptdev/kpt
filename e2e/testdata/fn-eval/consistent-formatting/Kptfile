@@ -1,0 +1,49 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: nginx
+info:
+  description: describe this package
+  site: https://github.com/GoogleContainerTools/kpt
+  emails:
+    - foo@gmail.com
+  license: license text
+  keywords:
+    - tag1
+    - tag2
+  man: nginx man text
+upstream:
+  type: git
+  git:
+    repo: https://github.com/GoogleContainerTools/kpt
+    directory: package-examples/nginx
+    ref: v0.2
+  updateStrategy: resource-merge
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/GoogleContainerTools/kpt
+    directory: package-examples/nginx
+    ref: package-examples/nginx/v0.2
+    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+      configMap:
+        namespace: some-space
+    - image: gcr.io/kpt-fn/apply-setters:v0.1
+      configMap:
+        image: nginx
+        tag: 1.14.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+      configPath: ./fn-config.yaml
+    - image: gcr.io/kpt-fn/starlark:v0.1.0
+      configPath: path/to/foo-star.yaml
+inventory:
+  namespace: some-space
+  name: inventory-00933591
+  inventoryID: 92c234b7e9267815b0c3e17c9e4d7139a16c104f-1620493522822890000
+  labels:
+    foo: bar
+  annotations:
+    abc: def

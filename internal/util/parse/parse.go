@@ -15,6 +15,7 @@
 package parse
 
 import (
+	"context"
 	"os"
 	"path"
 	"path/filepath"
@@ -30,7 +31,7 @@ type Target struct {
 	Destination string
 }
 
-func GitParseArgs(args []string) (Target, error) {
+func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 	g := Target{}
 	if args[0] == "-" {
 		return g, nil
@@ -52,7 +53,11 @@ func GitParseArgs(args []string) (Target, error) {
 			dir = parts[1]
 		}
 		if version == "" {
-			defaultRef, err := gitutil.DefaultRef(repo)
+			gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+			if err != nil {
+				return g, err
+			}
+			defaultRef, err := gur.GetDefaultBranch(ctx)
 			if err != nil {
 				return g, err
 			}
@@ -81,7 +86,11 @@ func GitParseArgs(args []string) (Target, error) {
 		return g, err
 	}
 	if version == "" {
-		defaultRef, err := gitutil.DefaultRef(repo)
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+		if err != nil {
+			return g, err
+		}
+		defaultRef, err := gur.GetDefaultBranch(ctx)
 		if err != nil {
 			return g, err
 		}
@@ -153,7 +162,7 @@ func getDest(v, repo, subdir string) (string, error) {
 		parent := filepath.Dir(v)
 		if _, err := os.Stat(parent); os.IsNotExist(err) {
 			// error -- fetch to directory where parent does not exist
-			return "", errors.Errorf("parent directory %s does not exist", parent)
+			return "", errors.Errorf("parent directory %q does not exist", parent)
 		}
 		// fetch to a specific directory -- don't default the name
 		return v, nil
@@ -171,7 +180,7 @@ func getDest(v, repo, subdir string) (string, error) {
 
 	// make sure the destination directory does not yet exist yet
 	if _, err := os.Stat(v); !os.IsNotExist(err) {
-		return "", errors.Errorf("destination directory %s already exists", v)
+		return "", errors.Errorf("destination directory %q already exists", v)
 	}
 	return v, nil
 }

@@ -11,24 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package v1alpha2
 
 import (
 	"fmt"
-	"path"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const (
-	sourceAllSubPkgs string = "./*"
-)
-
-func (kf *KptFile) Validate() error {
-	if err := kf.Pipeline.validate(); err != nil {
-		return fmt.Errorf("pipeline is not valid: %w", err)
+func (kf *KptFile) Validate(pkgPath types.UniquePath) error {
+	if err := kf.Pipeline.validate(pkgPath); err != nil {
+		return fmt.Errorf("invalid pipeline: %w", err)
 	}
 	// TODO: validate other fields
 	return nil
@@ -37,47 +37,60 @@ func (kf *KptFile) Validate() error {
 // validate will validate all fields in the Pipeline
 // 'mutators' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
-func (p *Pipeline) validate() error {
+func (p *Pipeline) validate(pkgPath types.UniquePath) error {
 	if p == nil {
 		return nil
 	}
-	fns := []Function{}
-	fns = append(fns, p.Mutators...)
-	fns = append(fns, p.Validators...)
-	for i := range fns {
-		f := fns[i]
-		err := f.validate()
+	for i := range p.Mutators {
+		f := p.Mutators[i]
+		err := f.validate("mutators", i, pkgPath)
 		if err != nil {
-			return fmt.Errorf("function %q is invalid: %w", f.Image, err)
+			return fmt.Errorf("function %q: %w", f.Image, err)
+		}
+	}
+	for i := range p.Validators {
+		f := p.Validators[i]
+		err := f.validate("validators", i, pkgPath)
+		if err != nil {
+			return fmt.Errorf("function %q: %w", f.Image, err)
 		}
 	}
 	return nil
 }
 
-func (f *Function) validate() error {
+func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) error {
 	err := validateFunctionName(f.Image)
 	if err != nil {
-		return fmt.Errorf("'image' is invalid: %w", err)
-	}
-
-	var configFields []string
-	if f.ConfigPath != "" {
-		if err := validatePath(f.ConfigPath); err != nil {
-			return fmt.Errorf("'configPath' %q is invalid: %w", f.ConfigPath, err)
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].image", fnType, idx),
+			Value:  f.Image,
+			Reason: err.Error(),
 		}
-		configFields = append(configFields, "configPath")
-	}
-	if len(f.ConfigMap) != 0 {
-		configFields = append(configFields, "configMap")
-	}
-	if !IsNodeZero(&f.Config) {
-		configFields = append(configFields, "config")
-	}
-	if len(configFields) > 1 {
-		return fmt.Errorf("following fields are mutually exclusive: 'config', 'configMap', 'configPath'. Got %q",
-			strings.Join(configFields, ", "))
 	}
 
+	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+			Reason: "functionConfig must not specify both `configMap` and `configPath` at the same time",
+		}
+	}
+
+	if f.ConfigPath != "" {
+		if err := validateFnConfigPathSyntax(f.ConfigPath); err != nil {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
+				Value:  f.ConfigPath,
+				Reason: err.Error(),
+			}
+		}
+		if _, err := GetValidatedFnConfigFromPath(pkgPath, f.ConfigPath); err != nil {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
+				Value:  f.ConfigPath,
+				Reason: err.Error(),
+			}
+		}
+	}
 	return nil
 }
 
@@ -111,36 +124,81 @@ func validateFunctionName(name string) error {
 	return nil
 }
 
-// IsNodeZero returns true if all the public fields in the Node are empty.
-// Which means it's not initialized and should be omitted when marshal.
-// The Node itself has a method IsZero but it is not released
-// in yaml.v3. https://pkg.go.dev/gopkg.in/yaml.v3#Node.IsZero
-// TODO: Use `IsYNodeZero` method from kyaml when kyaml has been updated to
-// >= 0.10.5
-func IsNodeZero(n *yaml.Node) bool {
-	return n != nil && n.Kind == 0 && n.Style == 0 && n.Tag == "" && n.Value == "" &&
-		n.Anchor == "" && n.Alias == nil && n.Content == nil &&
-		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" &&
-		n.Line == 0 && n.Column == 0
-}
-
-// validatePath validates input path and return an error if it's invalid
-func validatePath(p string) error {
-	if path.IsAbs(p) {
-		return fmt.Errorf("path is not relative")
-	}
+// validateFnConfigPathSyntax validates syntactic correctness of given functionConfig path
+// and return an error if it's invalid.
+func validateFnConfigPathSyntax(p string) error {
 	if strings.TrimSpace(p) == "" {
-		return fmt.Errorf("path cannot have only white spaces")
+		return fmt.Errorf("path must not be empty")
 	}
-	if p != sourceAllSubPkgs && strings.Contains(p, "*") {
-		return fmt.Errorf("path contains asterisk, asterisk is only allowed in './*'")
+	p = filepath.Clean(p)
+	if filepath.IsAbs(p) {
+		return fmt.Errorf("path must be relative")
 	}
-	// backslash (\\), alert bell (\a), backspace (\b), form feed (\f), vertical tab(\v) are
-	// unlikely to be in a valid path
-	for _, c := range "\\\a\b\f\v" {
-		if strings.Contains(p, string(c)) {
-			return fmt.Errorf("path cannot have character %q", c)
-		}
+	if strings.Contains(p, "..") {
+		// fn config must not live outside the package directory
+		// Allowing outside path opens up an attack vector that allows
+		// reading any YAML file on package consumer's machine.
+		return fmt.Errorf("path must not be outside the package")
 	}
 	return nil
+}
+
+// GetValidatedFnConfigFromPath validates the functionConfig at the path specified by
+// the package path (pkgPath) and configPath, returning the functionConfig as an
+// RNode if the validation is successful.
+func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
+	path := filepath.Join(string(pkgPath), configPath)
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("functionConfig must exist in the current package")
+	}
+	reader := kio.ByteReader{Reader: file}
+	nodes, err := reader.Read()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read functionConfig %q: %w", configPath, err)
+	}
+	if len(nodes) > 1 {
+		return nil, fmt.Errorf("functionConfig %q must not contain more than one config, got %d", configPath, len(nodes))
+	}
+	if err := IsKRM(nodes[0]); err != nil {
+		return nil, fmt.Errorf("functionConfig %q: %s", configPath, err.Error())
+	}
+	return nodes[0], nil
+}
+
+func IsKRM(n *yaml.RNode) error {
+	meta, err := n.GetMeta()
+	if err != nil {
+		return fmt.Errorf("resource must have `apiVersion`, `kind`, and `name`")
+	}
+	if meta.APIVersion == "" {
+		return fmt.Errorf("resource must have `apiVersion`")
+	}
+	if meta.Kind == "" {
+		return fmt.Errorf("resource must have `kind`")
+	}
+	if meta.Name == "" {
+		return fmt.Errorf("resource must have `metadata.name`")
+	}
+	return nil
+}
+
+// ValidateError is the error returned when validation fails.
+type ValidateError struct {
+	// Field is the field that causes error
+	Field string
+	// Value is the value of invalid field
+	Value string
+	// Reason is the reason for the error
+	Reason string
+}
+
+func (e *ValidateError) Error() string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Kptfile is invalid:\nField: `%s`\n", e.Field))
+	if e.Value != "" {
+		sb.WriteString(fmt.Sprintf("Value: %q\n", e.Value))
+	}
+	sb.WriteString(fmt.Sprintf("Reason: %s\n", e.Reason))
+	return sb.String()
 }
