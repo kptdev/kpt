@@ -85,8 +85,9 @@ jobs:
       - name:  Install Kpt Binary
         if: matrix.os != 'windows-latest'
         run: |
-          mv ./kpt/${{ matrix.binary }} /bin/
-          chmod +x /bin/kpt
+          mkdir -p ${GITHUB_WORKSPACE}/bin
+          mv ./kpt/${{ matrix.binary }} ${GITHUB_WORKSPACE}/bin/kpt
+          chmod +x ${GITHUB_WORKSPACE}/bin/kpt
       # Validate kpt installation
       # If kpt installation fails there is no reason to setup go or run tests
       - run: "kpt version"
