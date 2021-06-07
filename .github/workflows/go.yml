@@ -27,10 +27,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.16
+    - name: Set up Go 1.15
       uses: actions/setup-go@v1
       with:
-        go-version: 1.16
+        go-version: 1.15
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
@@ -82,7 +82,18 @@ jobs:
           name: ${{ matrix.binary }}
           path: "kpt"
       # For linux builds allow execution of kpt
-      - name: Update permissions
+      - name:  Install Kpt Binary
         if: matrix.os != 'windows-latest'
-        run: chmod +x ./kpt/*
-      - run: "./kpt/${{ matrix.binary }} version"
+        run: 
+          mv ./kpt/${{ matrix.binary }} /bin/kpt \
+          chmod +x /bin/kpt
+      # Validate kpt installation
+      # If kpt installation fails there is no reason to setup go or run tests
+      - run: "kpt version"
+      - name: Set up Go 1.15
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.15
+        id: go
+      # Run kpt e2e tests
+      - run: go test -cover --tags=docker ./e2e
