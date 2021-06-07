@@ -30,42 +30,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
-// WalkPackage walks the package defined at src and provides a callback for
-// every folder and file. Any subpackages and the .git folder are excluded.
-func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
-	excludedDirs := make(map[string]bool)
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return c(path, info, err)
-		}
-		// don't copy the .git dir
-		if path != src {
-			rel := strings.TrimPrefix(path, src)
-			if copyutil.IsDotGitFolder(rel) {
-				return nil
-			}
-		}
-
-		for dir := range excludedDirs {
-			if strings.HasPrefix(path, dir) {
-				return nil
-			}
-		}
-
-		if info.IsDir() {
-			_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
-			if err != nil && !os.IsNotExist(err) {
-				return c(path, info, err)
-			}
-			if err == nil && path != src {
-				excludedDirs[path] = true
-				return nil
-			}
-		}
-		return c(path, info, err)
-	})
-}
-
 // CopyPackage copies the content of a single package from src to dst. If includeSubpackages
 // is true, it will copy resources belonging to any subpackages.
 func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
@@ -74,7 +38,15 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 		return err
 	}
 
-	err = WalkPackage(src, func(path string, info os.FileInfo, err error) error {
+	p, err := pkg.New(src)
+	if err != nil {
+		return err
+	}
+
+	err = (&pkg.Walker{
+		FileMatchFunc:      pkg.AllFileMatchFunc,
+		HonorKptfileIgnore: true,
+	}).Walk(p, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -176,7 +148,15 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 	// since we don't want to end up deleting directories that might
 	// contain a nested subpackage.
 	var dirs []string
-	if err := WalkPackage(path, func(p string, info os.FileInfo, err error) error {
+	p, err := pkg.New(path)
+	if err != nil {
+		return err
+	}
+
+	err = (&pkg.Walker{
+		FileMatchFunc:      pkg.AllFileMatchFunc,
+		HonorKptfileIgnore: true,
+	}).Walk(p, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				return nil
@@ -196,7 +176,8 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 		}
 
 		return os.Remove(p)
-	}); err != nil {
+	})
+	if err != nil {
 		return err
 	}
 

@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -105,7 +104,15 @@ func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
 
 func pkgSet(pkgPath string) (sets.String, error) {
 	pkgFiles := sets.String{}
-	if err := pkgutil.WalkPackage(pkgPath, func(path string, info os.FileInfo, err error) error {
+	p, err := pkg.New(pkgPath)
+	if err != nil {
+		return sets.String{}, err
+	}
+
+	err = (&pkg.Walker{
+		FileMatchFunc:      pkg.AllFileMatchFunc,
+		HonorKptfileIgnore: true,
+	}).Walk(p, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -115,7 +122,8 @@ func pkgSet(pkgPath string) (sets.String, error) {
 		}
 		pkgFiles.Insert(relPath)
 		return nil
-	}); err != nil {
+	})
+	if err != nil {
 		return sets.String{}, err
 	}
 	return pkgFiles, nil

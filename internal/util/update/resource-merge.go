@@ -250,7 +250,15 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	const op errors.Op = "update.getSubDirsAndNonKrmFiles"
 	files := sets.String{}
 	dirs := sets.String{}
-	err := pkgutil.WalkPackage(root, func(path string, info os.FileInfo, err error) error {
+	p, err := pkg.New(root)
+	if err != nil {
+		return dirs, files, err
+	}
+
+	err = (&pkg.Walker{
+		FileMatchFunc:      pkg.AllFileMatchFunc,
+		HonorKptfileIgnore: true,
+	}).Walk(p, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.E(op, errors.IO, err)
 		}
@@ -275,7 +283,7 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, nil, errors.E(op, err)
+		return dirs, files, errors.E(op, err)
 	}
 	return dirs, files, nil
 }

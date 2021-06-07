@@ -329,7 +329,7 @@ const (
 	All SubpackageMatcher = "ALL"
 	// Local means only local subpackages will be returned.
 	Local SubpackageMatcher = "LOCAL"
-	// remote means only remote subpackages will be returned.
+	// Remote means only remote subpackages will be returned.
 	Remote SubpackageMatcher = "REMOTE"
 	// None means that no subpackages will be returned.
 	None SubpackageMatcher = "NONE"

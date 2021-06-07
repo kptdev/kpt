@@ -306,6 +306,7 @@ type Kptfile struct {
 	UpstreamLock *UpstreamLock
 	Pipeline     *Pipeline
 	Inventory    *Inventory
+	Ignore       []string
 }
 
 func NewKptfile() *Kptfile {
@@ -419,6 +420,11 @@ type Function struct {
 func (f Function) WithConfigPath(configPath string) Function {
 	f.ConfigPath = configPath
 	return f
+}
+
+func (k *Kptfile) WithIgnore(ignorePaths ...string) *Kptfile {
+	k.Ignore = ignorePaths
+	return k
 }
 
 // RemoteSubpackage contains information about remote subpackages that should
@@ -554,6 +560,12 @@ inventory:
 {{- end }}
 {{- if .Pkg.Kptfile.Inventory.ID }}
   inventoryID: {{ .Pkg.Kptfile.Inventory.ID }}
+{{- end }}
+{{- end }}
+{{- if .Pkg.Kptfile.Ignore }}
+ignore:
+{{- range .Pkg.Kptfile.Ignore }}
+  - {{ printf "%q" . }}
 {{- end }}
 {{- end }}
 `
