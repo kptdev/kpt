@@ -233,6 +233,12 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image or --exec-path")
 	}
+	if r.Image != "" {
+		err := cmdutil.DockerCmdAvailable()
+		if err != nil {
+			return err
+		}
+	}
 	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
 		return err
 	}
