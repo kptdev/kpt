@@ -15,6 +15,10 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 exitCode: 1
-stdErr: "httpbin-gen:4:1: got newline, want primary expression"
-stdOut: |
+stdErr: |
   [RUNNING] "gcr.io/kpt-fn/starlark:v0.1.0"
+  [FAIL] "gcr.io/kpt-fn/starlark:v0.1.0"
+    Results:
+      [ERROR] httpbin-gen:4:1: got newline, want primary expression
+    Stderr:
+      "httpbin-gen:4:1: got newline, want primary expression"

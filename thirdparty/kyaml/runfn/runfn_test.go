@@ -535,14 +535,15 @@ items:
 	}
 	for i := range test {
 		ouputBuffer := bytes.Buffer{}
-		instance := RunFns{
+		r := RunFns{
+			Ctx:                    fake.CtxWithNilPrinter(),
 			Input:                  bytes.NewReader([]byte{}),
 			Output:                 &ouputBuffer,
 			Functions:              []*yaml.RNode{fn1, fn2},
 			functionFilterProvider: getGeneratorFilterProvider(t),
 			ContinueOnEmptyResult:  test[i].ContinueOnEmptyResult,
 		}
-		if !assert.NoError(t, instance.Execute()) {
+		if !assert.NoError(t, r.Execute()) {
 			t.FailNow()
 		}
 		assert.Equal(t, test[i].ExpectedOutput, ouputBuffer.String())

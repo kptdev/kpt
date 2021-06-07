@@ -40,7 +40,7 @@ import (
 func NewContainerRunner(
 	ctx context.Context, f *kptfilev1alpha2.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, disableCLIOutput bool) (kio.Filter, error) {
+	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -61,14 +61,13 @@ func NewContainerRunner(
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
 	}
-	return NewFunctionRunner(ctx, fltr, disableCLIOutput, fnResult, fnResults)
+	return NewFunctionRunner(ctx, fltr, fnResult, fnResults)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
-	disableCLIOutput bool,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList) (kio.Filter, error) {
 	name := fnResult.Image
@@ -76,12 +75,11 @@ func NewFunctionRunner(ctx context.Context,
 		name = fnResult.ExecPath
 	}
 	return &FunctionRunner{
-		ctx:              ctx,
-		name:             name,
-		filter:           fltr,
-		disableCLIOutput: disableCLIOutput,
-		fnResult:         fnResult,
-		fnResults:        fnResults,
+		ctx:       ctx,
+		name:      name,
+		filter:    fltr,
+		fnResult:  fnResult,
+		fnResults: fnResults,
 	}, nil
 }
 
