@@ -1,5 +1,6 @@
 :root {
   --content-max-width: 60em;
+  --code-block-padding: 1.75em 2em 1.5em 1.5em;
   --search-input-color: black;
   --search-result-heading-color: white;
   --search-result-keyword-background: unset;
@@ -106,8 +107,9 @@ h1 {
 
 pre.language-shell button.copy-button {
   position: absolute;
-  top: 0;
-  background: transparent;
+  top: 1.75em;
+  right: 0px;
+  background: inherit;
   border: none;
 }
 
