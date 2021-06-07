@@ -282,6 +282,10 @@ Flags:
   --fn-config:
     Path to the file containing ` + "`" + `functionConfig` + "`" + `.
   
+  --include-meta-resources:
+    If enabled, meta resources (i.e. ` + "`" + `Kptfile` + "`" + ` and ` + "`" + `functionConfig` + "`" + `) are included
+    in the output of the command. By default it is disabled.
+  
 `
 var SourceExamples = `
   # read resources from DIR directory and write the output on stdout.

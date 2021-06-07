@@ -106,31 +106,6 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
-// functionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
-// invoked by kio.LocalPackageReader when it reads the package. The filter will return
-// true if the file should be skipped during reading. Skipped files will not be included
-// in all steps following.
-func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
-	if r.IncludeMetaResources {
-		return func(relPath string) bool {
-			return false
-		}, nil
-	}
-
-	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
-	}
-
-	return func(relPath string) bool {
-		if len(fnConfigPaths) == 0 {
-			return false
-		}
-		// relPath is cleaned so we can directly use it here
-		return fnConfigPaths.Has(relPath)
-	}, nil
-}
-
 func (r RunFns) getNodesAndFilters() (
 	*kio.PackageBuffer, []kio.Filter, *kio.LocalPackageReadWriter, error) {
 	// Read Resources from Directory or Input
@@ -144,7 +119,7 @@ func (r RunFns) getNodesAndFilters() (
 		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	}
 	if r.Path != "" {
-		functionConfigFilter, err := r.functionConfigFilterFunc()
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(r.uniquePath, r.IncludeMetaResources)
 		if err != nil {
 			return nil, nil, outputPkg, err
 		}

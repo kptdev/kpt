@@ -38,6 +38,10 @@ DIR:
 --fn-config:
   Path to the file containing `functionConfig`.
 
+--include-meta-resources:
+  If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
+  in the output of the command. By default it is disabled.
+
 ```
 
 <!--mdtogo-->
@@ -61,7 +65,5 @@ $ kpt fn source DIR |
 
 <!--mdtogo-->
 
-[chaining functions]:
-  /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
-[function specification]:
-  /book/05-developing-functions/01-functions-specification
+[chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
+[function specification]: /book/05-developing-functions/01-functions-specification
