@@ -152,6 +152,28 @@ function processAsciinemaTags(content) {
   );
 }
 
+function addCodeCopyButtons() {
+  const preBlocks = Array.from(document.getElementsByTagName("pre")).filter(
+    (el) => el.classList.contains("language-shell")
+  );
+  const makeButton = () => {
+    const copyButton = document.createElement("button");
+    copyButton.classList.add("copy-button");
+    copyButton.textContent = "Copy to clipboard";
+    copyButton.addEventListener("click", ({ target }) =>
+      navigator.clipboard.writeText([
+        target.previousElementSibling.textContent
+          .split("\n")
+          .filter((s) => s.startsWith("$"))
+          .map((s) => s.replace(/^\$\s+/, ""))
+          .join("\n"),
+      ])
+    );
+    return copyButton;
+  };
+  preBlocks.forEach((pre) => pre.appendChild(makeButton()));
+}
+
 // Workaround for https://github.com/docsifyjs/docsify/pull/1468
 function defaultLinkTargets() {
   const externalPageLinks = Array.from(
@@ -187,6 +209,8 @@ function localPlugins(hook, _vm) {
 
   // Reset all external links to their appropriate targets.
   hook.doneEach(defaultLinkTargets);
+
+  hook.doneEach(addCodeCopyButtons);
 
   addGitHubWidget(hook);
 
