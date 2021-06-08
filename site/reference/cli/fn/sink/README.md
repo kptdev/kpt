@@ -38,7 +38,7 @@ DIR:
 
 <!--mdtogo:Examples-->
 
-```
+```shell
 # read resources from DIR directory, execute my-fn on them and write the
 # output to DIR directory.
 $ kpt fn source DIR |

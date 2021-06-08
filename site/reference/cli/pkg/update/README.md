@@ -3,20 +3,23 @@ title: "`update`"
 linkTitle: "update"
 type: docs
 description: >
-   Apply upstream package updates.
+  Apply upstream package updates.
 ---
+
 <!--mdtogo:Short
     Apply upstream package updates.
 -->
 
-`update` pulls in upstream changes and merges them into a local package.
-Changes may be applied using one of several strategies.
+`update` pulls in upstream changes and merges them into a local package. Changes
+may be applied using one of several strategies.
 
-Since this will update the local package, all changes must be committed to 
-git before running `update`.
+Since this will update the local package, all changes must be committed to git
+before running `update`.
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```
 kpt pkg update [PKG_PATH][@VERSION] [flags]
 ```
@@ -44,7 +47,7 @@ VERSION:
 ```
 --strategy:
   Defines which strategy should be used to update the package. This will change
-  the update strategy for the current kpt package for the current and future 
+  the update strategy for the current kpt package for the current and future
   updates. If a strategy is not provided, the strategy specified in the package
   Kptfile will be used.
 
@@ -65,25 +68,29 @@ KPT_CACHE_DIR:
   On macOS and Linux <HOME> is determined by the $HOME env variable, while on
   Windows it is given by the %USERPROFILE% env variable.
 ```
+
 <!--mdtogo-->
 
 ### Examples
+
 <!--mdtogo:Examples-->
+
 ```shell
 # Update package in the current directory.
-git add . && git commit -m 'some message'
-kpt pkg update
+# git add . && git commit -m 'some message'
+$ kpt pkg update
 ```
 
 ```shell
 # Update my-package-dir/ to match the v1.3 branch or tag.
-git add . && git commit -m 'some message'
-kpt pkg update my-package-dir/@v1.3
+# git add . && git commit -m 'some message'
+$ kpt pkg update my-package-dir/@v1.3
 ```
 
 ```shell
 # Update with the fast-forward strategy.
-git add . && git commit -m "package updates"
-kpt pkg update my-package-dir/@master --strategy fast-forward
+# git add . && git commit -m "some message"
+$ kpt pkg update my-package-dir/@master --strategy fast-forward
 ```
+
 <!--mdtogo-->

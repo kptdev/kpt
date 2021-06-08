@@ -3,8 +3,9 @@ title: "`get`"
 linkTitle: "get"
 type: docs
 description: >
-   Fetch a package from a git repo.
+  Fetch a package from a git repo.
 ---
+
 <!--mdtogo:Short
     Fetch a package from a git repo.
 -->
@@ -13,12 +14,15 @@ description: >
 local directory.
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```
 kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY] [flags]
 ```
 
 #### Args
+
 ```
 REPO_URI:
   URI of a git repository containing 1 or more packages as subdirectories.
@@ -44,11 +48,12 @@ LOCAL_DEST_DIRECTORY:
 ```
 
 #### Flags
+
 ```
 --strategy:
   Defines which strategy should be used to update the package. It defaults to
   'resource-merge'.
-  
+
     * resource-merge: Perform a structural comparison of the original /
       updated resources, and merge the changes into the local package.
     * fast-forward: Fail without updating if the local package was modified
@@ -58,6 +63,7 @@ LOCAL_DEST_DIRECTORY:
 ```
 
 #### Env Vars
+
 ```
 KPT_CACHE_DIR:
   Controls where to cache remote packages when fetching them.
@@ -65,6 +71,7 @@ KPT_CACHE_DIR:
   On macOS and Linux <HOME> is determined by the $HOME env variable, while on
   Windows it is given by the %USERPROFILE% env variable.
 ```
+
 <!--mdtogo-->
 
 ### Examples
@@ -72,6 +79,7 @@ KPT_CACHE_DIR:
 {{% hide %}}
 
 <!-- @makeWorkplace @verifyExamples-->
+
 ```
 # Set up workspace for the test.
 TEST_HOME=$(mktemp -d)
@@ -83,25 +91,29 @@ cd $TEST_HOME
 <!--mdtogo:Examples-->
 
 <!-- @pkgGet @verifyExamples-->
+
 ```shell
 # Fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
 # This creates a new subdirectory 'cockroachdb' for the downloaded package.
-kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master
+$ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master
 ```
 
 <!-- @pkgGet @verifyExamples-->
+
 ```shell
 # Fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
 # This will create a new directory 'my-package' for the downloaded package if it
 # doesn't already exist.
-kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
+$ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
 ```
 
 <!-- @pkgGet @verifyExamples-->
+
 ```shell
 # Fetch package examples from github.com/kubernetes/examples at the specified
-# git hash. 
+# git hash.
 # This will create a new directory 'examples' for the package.
-kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792
+$ kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792
 ```
+
 <!--mdtogo-->

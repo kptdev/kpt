@@ -123,7 +123,7 @@ your uid instead of the default `nobody` to access the host filesystem.
 All volumes are mounted readonly by default. Specify `rw=true` to mount volumes
 in read-write mode.
 
-```shell
+```
 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir,rw=true
 ```
 

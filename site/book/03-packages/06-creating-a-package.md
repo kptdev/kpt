@@ -2,7 +2,6 @@ Creating a new package is simple: create a new directory and [author resources]:
 
 ```shell
 $ mkdir awesomeapp
-$ cd awesomeapp
 # Create resources in awesome/
 ```
 
@@ -10,8 +9,7 @@ For convenience, you can use `pkg init` command to create a minimal `Kptfile`
 and `README` files:
 
 ```shell
-$ cd awesomeapp
-$ kpt pkg init
+$ kpt pkg init awesome
 writing Kptfile
 writing README.md
 ```

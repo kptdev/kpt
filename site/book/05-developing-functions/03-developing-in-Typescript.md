@@ -7,10 +7,10 @@ It provides the following features:
   - An extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
   - Robust community support and detailed documentation
-- **Idiomatic:** The TS SDK provides a different level of abstraction compared to
-  the Go library we saw previously. Instead of exposing the low-level YAML AST,
-  resources are marshalled into native Typescript objects. As a result, you get
-  a more idiomatic and high-level abstraction. Ideally, you should work with
+- **Idiomatic:** The TS SDK provides a different level of abstraction compared
+  to the Go library we saw previously. Instead of exposing the low-level YAML
+  AST, resources are marshalled into native Typescript objects. As a result, you
+  get a more idiomatic and high-level abstraction. Ideally, you should work with
   native data structure/object in each language and not think about YAML which
   is just a file format. Even though resources in configuration files are
   round-tripped to Typescript objects, the kpt orchestrator ensures that
@@ -91,7 +91,9 @@ Currently supported platforms: amd64 Linux/Mac
 
    ```shell
    $ export CONFIGS=../../example-configs
+   ```
 
+   ```shell
    $ kpt fn source $CONFIGS \
      | node dist/label_namespace_run.js -d label_name=color -d label_value=orange \
      | kpt fn sink $CONFIGS
@@ -143,6 +145,11 @@ Currently supported platforms: amd64 Linux/Mac
    $ kpt fn source $CONFIGS \
      | node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com \
      | kpt fn sink $CONFIGS
+   ```
+
+   Look at the changes made by the function:
+
+   ```shell
    $ git diff $CONFIGS
    ```
 
@@ -215,6 +222,11 @@ Currently supported platforms: amd64 Linux/Mac
    $ kpt fn source $CONFIGS \
     | node dist/expand_team_cr_run.js \
     | kpt fn sink $CONFIGS
+   ```
+
+   Look at the changes made by the function:
+
+   ```shell
    $ git diff $CONFIGS
    ```
 

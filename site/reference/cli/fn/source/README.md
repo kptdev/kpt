@@ -50,12 +50,12 @@ DIR:
 
 <!--mdtogo:Examples-->
 
-```
+```shell
 # read resources from DIR directory and write the output on stdout.
 $ kpt fn source DIR
 ```
 
-```
+```shell
 # read resources from DIR directory, execute my-fn on them and write the
 # output to DIR directory.
 $ kpt fn source DIR |
@@ -65,5 +65,7 @@ $ kpt fn source DIR |
 
 <!--mdtogo-->
 
-[chaining functions]: /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
-[function specification]: /book/05-developing-functions/01-functions-specification
+[chaining functions]:
+  /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
+[function specification]:
+  /book/05-developing-functions/01-functions-specification
