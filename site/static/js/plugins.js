@@ -167,11 +167,14 @@ function addCodeCopyButtons() {
     copyIcon.classList.add("material-icons-outlined");
     copyButton.appendChild(copyIcon);
 
-    copyButton.addEventListener("click", el =>
+    copyButton.addEventListener("click", (el) =>
       navigator.clipboard.writeText([
-        el.composedPath().find(el => el.classList.contains(buttonClassName)).previousElementSibling.textContent
-          .split("\n")
-          .filter((s) => s.startsWith("$"))
+        el
+          .composedPath()
+          .find((el) => el.classList.contains(buttonClassName))
+          .previousElementSibling.textContent.split("\n")
+          .map((s) => s.trimLeft())
+          .filter((s) => s.startsWith("$") || s.startsWith("|"))
           .map((s) => s.replace(/^\$\s+/, ""))
           .join("\n"),
       ])
