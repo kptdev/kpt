@@ -249,7 +249,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 
 	g := kf.Upstream.Git
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
-	pr.Printf("Fetching upstream from %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+	pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 	if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
@@ -259,7 +259,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	if kf.UpstreamLock != nil {
 		gLock := kf.UpstreamLock.Git
 		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
-		pr.Printf("Fetching origin from %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+		pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 		if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
