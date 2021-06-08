@@ -107,8 +107,8 @@ h1 {
 
 pre.language-shell button.copy-button {
   position: absolute;
-  top: 1.75em;
-  right: 0px;
+  top: 2px;
+  right: 3em;
   background: inherit;
   border: none;
   opacity: 0.3;
