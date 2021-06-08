@@ -166,3 +166,5 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
 		Outputs: outputs}.Execute()
 }
+
+

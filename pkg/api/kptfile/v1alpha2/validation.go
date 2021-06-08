@@ -183,6 +183,20 @@ func IsKRM(n *yaml.RNode) error {
 	return nil
 }
 
+//nolint
+func AreKRM(nodes []*yaml.RNode) error {
+	for i := range nodes {
+		if err := IsKRM(nodes[i]); err != nil {
+			nodes[i].PipeE(yaml.ClearAnnotation("config.kubernetes.io/index"))
+			nodes[i].PipeE(yaml.ClearAnnotation("config.kubernetes.io/path"))
+			yaml.ClearEmptyAnnotations(nodes[i])
+			str := nodes[i].MustString()
+			return fmt.Errorf("%s:\n...\n%s...", err.Error(), str)
+		}
+	}
+	return nil
+}
+
 // ValidateError is the error returned when validation fails.
 type ValidateError struct {
 	// Field is the field that causes error

@@ -136,6 +136,17 @@ func (r RunFns) getNodesAndFilters() (
 	} else {
 		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input}}
 	}
+	var nodes []*yaml.RNode
+	for i := range p.Inputs {
+		n, err := p.Inputs[i].Read()
+		if err != nil {
+			return nil, nil, outputPkg, fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
+		}
+		nodes = append(nodes, n...)
+	}
+	if err := kptfile.AreKRM(nodes); err != nil {
+		return nil, nil, outputPkg, fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
+	}
 	if err := p.Execute(); err != nil {
 		return nil, nil, outputPkg, err
 	}
