@@ -4,6 +4,7 @@
 package runfn
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -136,7 +137,7 @@ func (r RunFns) getNodesAndFilters() (
 	} else {
 		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input}}
 	}
-	if err := r.validateInputs(p.Inputs); err != nil {
+	if err := r.validateInputs(&p.Inputs); err != nil {
 		return nil, nil, outputPkg, err
 	}
 	if err := p.Execute(); err != nil {
@@ -151,13 +152,22 @@ func (r RunFns) getNodesAndFilters() (
 }
 
 // validateInputs checks that the inputs are KRM resources
-func (r RunFns) validateInputs(inputs []kio.Reader) error {
+func (r RunFns) validateInputs(inputs *[]kio.Reader) error {
+	var result []kio.Reader
 	var nodes []*yaml.RNode
-	for i := range inputs {
-		n, err := inputs[i].Read()
+	for i := range *inputs {
+		n, err := (*inputs)[i].Read()
 		if err != nil {
 			return fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
 		}
+		// we need to write the nodes back to the buffer so that the function
+		// can read them upon execution
+		input := &bytes.Buffer{}
+		err = kio.ByteWriter{Writer: input}.Write(n)
+		if err != nil {
+			return err
+		}
+		result = append(result, []kio.Reader{&kio.ByteReader{Reader: input}}...)
 		nodes = append(nodes, n...)
 	}
 	nodes, err := (&filters.IsLocalConfig{
@@ -169,6 +179,7 @@ func (r RunFns) validateInputs(inputs []kio.Reader) error {
 	if err := kptfile.AreKRM(nodes); err != nil {
 		return fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
 	}
+	*inputs = result
 	return nil
 }
 
