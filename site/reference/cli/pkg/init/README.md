@@ -10,8 +10,8 @@ description: >
     Initialize an empty package.
 -->
 
-`init` initializes an existing empty directory as a kpt package by adding
-a Kptfile and a placeholder `README.md` file.
+`init` initializes an existing empty directory as a kpt package by adding a
+Kptfile and a placeholder `README.md` file.
 
 ### Synopsis
 
@@ -63,14 +63,13 @@ cd $TEST_HOME
 
 ```shell
 # Creates a new Kptfile with metadata in the cockroachdb directory.
-mkdir cockroachdb
-kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
+$ mkdir cockroachdb; kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
     --description "my cockroachdb implementation"
 ```
 
 ```shell
 # Creates a new Kptfile without metadata in the current directory.
-kpt pkg init
+$ kpt pkg init
 ```
 
 <!--mdtogo-->

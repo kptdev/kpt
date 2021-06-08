@@ -13,12 +13,15 @@ description: >
 `cat` prints the resources in a file or directory as yaml to stdout.
 
 ### Synopsis
+
 <!--mdtogo:Long-->
+
 ```
 kpt pkg cat [FILE | DIR]
 ```
 
 #### Args
+
 ```
 FILE | DIR:
   Path to a directory either a directory containing files with KRM resources, or
@@ -28,6 +31,7 @@ FILE | DIR:
 <!--mdtogo-->
 
 #### Flags
+
 ```
 --annotate
   Annotate resources with their file origins.
@@ -49,13 +53,14 @@ FILE | DIR:
 
 <!--mdtogo:Examples-->
 
-```
+```shell
 # Print resource from a file.
-kpt pkg cat path/to/deployment.yaml
+$ kpt pkg cat path/to/deployment.yaml
 ```
 
-```
+```shell
 # Print resources from current directory.
-kpt pkg cat
+$ kpt pkg cat
 ```
+
 <!--mdtogo-->

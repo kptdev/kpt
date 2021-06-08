@@ -43,7 +43,7 @@ kpt `v1.0`.
 
 To start with, all the commands in kpt `v1.0` will follow the consistent pattern
 
-```shell
+```
 $ kpt <group> <command> <positional_args> [PKG_PATH | DIR | - STDIN] [flags]
 ```
 

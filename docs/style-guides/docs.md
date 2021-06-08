@@ -5,8 +5,8 @@
    - Correct: `diff`
    - Incorrect: `Diff`
    - Incorrect: `The Diff tool`
-2. Shell commands should be in `shell` code blocks and start with `$` to
-   distinguish the command from its output:
+2. Shell commands should be in `shell` code blocks and should contain exactly
+   one command specifing using`$`:
 
    ```shell
    $ kpt <command>

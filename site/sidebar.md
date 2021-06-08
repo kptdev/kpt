@@ -46,7 +46,7 @@
       - [apply](reference/cli/live/apply/)
       - [destroy](reference/cli/live/destroy/)
       - [init](reference/cli/live/init/)
-      - [install-resource-group](reference/live/install-resource-group/)
+      - [install-resource-group](reference/cli/live/install-resource-group/)
       - [migrate](reference/cli/live/migrate/)
       - [status](reference/cli/live/status/)
   - [Schema](reference/schema/)

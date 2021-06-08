@@ -74,13 +74,13 @@ PKG_PATH | -:
 ```shell
 # Monitor status for the resources belonging to the package in the current
 # directory. Wait until all resources have reconciled.
-kpt live status
+$ kpt live status
 ```
 
 ```shell
 # Monitor status for the resources belonging to the package in the my-app
 # directory. Output in table format:
-kpt live status my-app --poll-until=forever --output=table
+$ kpt live status my-app --poll-until=forever --output=table
 ```
 
 <!--mdtogo-->

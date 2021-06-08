@@ -14,18 +14,18 @@ description: >
 writes the output to the local filesystem in-place.
 
 `render` executes the pipelines in the package hierarchy in a depth-first order.
-For example, if a package A contains subpackage B, then the pipeline in B is executed
-on resources in B and then the pipeline in A is executed on resources in A and
-the output of the pipeline from package B. The output of the pipeline from A is
-then written to the local filesystem in-place.
+For example, if a package A contains subpackage B, then the pipeline in B is
+executed on resources in B and then the pipeline in A is executed on resources
+in A and the output of the pipeline from package B. The output of the pipeline
+from A is then written to the local filesystem in-place.
 
 `render` formats the resources before writing them to the local filesystem.
 
-Meta resources (i.e. `Kptfile` and `functionConfig`) are excluded from the inputs
-to the functions.
+Meta resources (i.e. `Kptfile` and `functionConfig`) are excluded from the
+inputs to the functions.
 
-If any of the functions in the pipeline fails, then the entire pipeline is aborted and
-the local filesystem is left intact.
+If any of the functions in the pipeline fails, then the entire pipeline is
+aborted and the local filesystem is left intact.
 
 Refer to the [Declarative Functions Execution] for more details.
 
@@ -33,13 +33,13 @@ Refer to the [Declarative Functions Execution] for more details.
 
 <!--mdtogo:Long-->
 
-```shell
+```
 kpt fn render [PKG_PATH] [flags]
 ```
 
 #### Args
 
-```shell
+```
 PKG_PATH:
   Local package path to render. Directory must exist and contain a Kptfile
   to be updated. Defaults to the current working directory.
@@ -47,7 +47,7 @@ PKG_PATH:
 
 #### Flags
 
-```shell
+```
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
   to one of always, ifNotPresent, never. If unspecified, always will be the
@@ -110,4 +110,5 @@ $ kpt fn render -o stdout \
 
 <!--mdtogo-->
 
-[declarative functions execution]: /book/04-using-functions/01-declarative-function-execution
+[declarative functions execution]:
+  /book/04-using-functions/01-declarative-function-execution
