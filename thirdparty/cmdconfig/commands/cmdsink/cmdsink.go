@@ -5,6 +5,7 @@ package cmdsink
 
 import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -34,7 +35,7 @@ type SinkRunner struct {
 }
 
 func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
-	dir := "."
+	dir := pkg.CurDir
 	if len(args) > 0 {
 		dir = args[0]
 	}
