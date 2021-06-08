@@ -53,7 +53,7 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Short:   livedocs.StatusShort,
-		Long:    livedocs.StatusLong,
+		Long:    livedocs.StatusShort + "\n" + livedocs.StatusLong,
 		Example: livedocs.StatusExamples,
 	}
 	r.Command = c

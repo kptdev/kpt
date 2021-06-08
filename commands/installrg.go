@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"k8s.io/kubectl/pkg/util/i18n"
 )
 
 // InstallRGRunner encapsulates fields for the kpt live install-resource-group command.
@@ -28,9 +28,10 @@ func GetInstallRGRunner(factory cmdutil.Factory, ioStreams genericclioptions.IOS
 		ioStreams: ioStreams,
 	}
 	cmd := &cobra.Command{
-		Use:                   "install-resource-group",
-		DisableFlagsInUseLine: true,
-		Short:                 i18n.T("Install ResourceGroup custom resource definition as inventory object into APIServer"),
+		Use:     "install-resource-group",
+		Short:   livedocs.InstallResourceGroupShort,
+		Long:    livedocs.InstallResourceGroupShort + "\n" + livedocs.InstallResourceGroupLong,
+		Example: livedocs.InstallResourceGroupExamples,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return r.Run(ioStreams.In, args)
 		},
