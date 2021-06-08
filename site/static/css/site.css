@@ -111,6 +111,11 @@ pre.language-shell button.copy-button {
   right: 0px;
   background: inherit;
   border: none;
+  opacity: 0.3;
+}
+
+pre.language-shell button.copy-button:hover {
+  opacity: 1;
 }
 
 .github-widget {
