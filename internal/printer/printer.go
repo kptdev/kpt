@@ -112,21 +112,21 @@ func (pr *printer) LogStream() io.Writer {
 
 func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
-		fmt.Fprint(pr.outStream, "\n")
+		fmt.Fprint(pr.errStream, "\n")
 	}
-	fmt.Fprintf(pr.outStream, "Package %q:\n", p.DisplayPath)
+	fmt.Fprintf(pr.errStream, "Package %q:\n", p.DisplayPath)
 }
 
 // Printf is the wrapper over fmt.Printf that displays the output.
 func (pr *printer) Printf(format string, args ...interface{}) {
-	fmt.Fprintf(pr.outStream, format, args...)
+	fmt.Fprintf(pr.errStream, format, args...)
 }
 
 // OptPrintf is the wrapper over fmt.Printf that displays the output according
 // to the opt.
 func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
 	if opt == nil {
-		fmt.Fprintf(pr.outStream, format, args...)
+		fmt.Fprintf(pr.errStream, format, args...)
 		return
 	}
 	o := pr.outStream
