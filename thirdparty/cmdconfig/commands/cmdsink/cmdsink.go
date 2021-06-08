@@ -19,7 +19,6 @@ func GetSinkRunner(name string) *SinkRunner {
 		Long:    fndocs.SinkShort + "\n" + fndocs.SinkLong,
 		Example: fndocs.SinkExamples,
 		RunE:    r.runE,
-		Args:    cobra.MinimumNArgs(1),
 	}
 	r.Command = c
 	return r
@@ -35,7 +34,11 @@ type SinkRunner struct {
 }
 
 func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
-	outputs := []kio.Writer{&kio.LocalPackageWriter{PackagePath: args[0]}}
+	dir := "."
+	if len(args) > 0 {
+		dir = args[0]
+	}
+	outputs := []kio.Writer{&kio.LocalPackageWriter{PackagePath: dir}}
 
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}},
