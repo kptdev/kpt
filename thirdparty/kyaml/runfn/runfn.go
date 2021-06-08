@@ -136,16 +136,8 @@ func (r RunFns) getNodesAndFilters() (
 	} else {
 		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input}}
 	}
-	var nodes []*yaml.RNode
-	for i := range p.Inputs {
-		n, err := p.Inputs[i].Read()
-		if err != nil {
-			return nil, nil, outputPkg, fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
-		}
-		nodes = append(nodes, n...)
-	}
-	if err := kptfile.AreKRM(nodes); err != nil {
-		return nil, nil, outputPkg, fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
+	if err := r.validateInputs(p.Inputs); err != nil {
+		return nil, nil, outputPkg, err
 	}
 	if err := p.Execute(); err != nil {
 		return nil, nil, outputPkg, err
@@ -156,6 +148,28 @@ func (r RunFns) getNodesAndFilters() (
 		return nil, nil, outputPkg, err
 	}
 	return buff, fltrs, outputPkg, nil
+}
+
+// validateInputs checks that the inputs are KRM resources
+func (r RunFns) validateInputs(inputs []kio.Reader) error {
+	var nodes []*yaml.RNode
+	for i := range inputs {
+		n, err := inputs[i].Read()
+		if err != nil {
+			return fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
+		}
+		nodes = append(nodes, n...)
+	}
+	nodes, err := (&filters.IsLocalConfig{
+		IncludeLocalConfig: r.IncludeMetaResources,
+	}).Filter(nodes)
+	if err != nil {
+		return err
+	}
+	if err := kptfile.AreKRM(nodes); err != nil {
+		return fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
+	}
+	return nil
 }
 
 func (r RunFns) getFilters() ([]kio.Filter, error) {
