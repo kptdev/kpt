@@ -36,14 +36,10 @@ type Printer interface {
 	Printf(format string, args ...interface{})
 	OptPrintf(opt *Options, format string, args ...interface{})
 	OutStream() io.Writer
-	LogStream() io.Writer
 }
 
 // Options are optional options for printer
 type Options struct {
-	// OutputToStderr indicates should output be printed to stderr instead
-	// of stdout
-	OutputToStderr bool
 	// PkgPath is the unique path to the package
 	PkgPath types.UniquePath
 	// PkgDisplayPath is the display path for the package
@@ -64,12 +60,6 @@ func (opt *Options) Pkg(p types.UniquePath) *Options {
 // PkgDisplayPath sets the package display path in options
 func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
 	opt.PkgDisplayPath = p
-	return opt
-}
-
-// Stderr sets output to stderr in options
-func (opt *Options) Stderr() *Options {
-	opt.OutputToStderr = true
 	return opt
 }
 
@@ -102,14 +92,13 @@ type contextKey int
 // different integer values.
 const printerKey contextKey = 0
 
+// OutStream returns the StdOut stream, this can be used by callers to print
+// command output to stdout, do not print error/debug logs to this stream
 func (pr *printer) OutStream() io.Writer {
 	return pr.outStream
 }
 
-func (pr *printer) LogStream() io.Writer {
-	return pr.errStream
-}
-
+// PrintPackage prints the package display path to stderr
 func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
 		fmt.Fprint(pr.errStream, "\n")
@@ -118,21 +107,19 @@ func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 }
 
 // Printf is the wrapper over fmt.Printf that displays the output.
+// this will print messages to stderr stream
 func (pr *printer) Printf(format string, args ...interface{}) {
 	fmt.Fprintf(pr.errStream, format, args...)
 }
 
 // OptPrintf is the wrapper over fmt.Printf that displays the output according
-// to the opt.
+// to the opt, this will print messages to stderr stream
 func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
 	if opt == nil {
 		fmt.Fprintf(pr.errStream, format, args...)
 		return
 	}
-	o := pr.outStream
-	if opt.OutputToStderr {
-		o = pr.errStream
-	}
+	o := pr.errStream
 	if !opt.PkgDisplayPath.Empty() {
 		format = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath)) + format
 	} else if !opt.PkgPath.Empty() {

@@ -101,7 +101,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	}
 	output, err = fr.do(input)
 	if err != nil {
-		printOpt := printer.NewOpt().Stderr()
+		printOpt := printer.NewOpt()
 		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		var fnErr *ExecError
@@ -258,9 +258,9 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.OptPrintf(printOpt.Stderr(), "%s", errLines.String())
+		pr.OptPrintf(printOpt, "%s", errLines.String())
 	}
-	pr.OptPrintf(printOpt.Stderr(), "  Exit code: %d\n\n", fnErr.ExitCode)
+	pr.OptPrintf(printOpt, "  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // path (location) of a KRM resources is tracked in a special key in

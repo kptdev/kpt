@@ -74,7 +74,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	err := cmd.Run()
 	pr := printer.FromContextOrDie(r.Ctx)
 	if err != nil {
-		fmt.Fprintln(pr.LogStream(), errout.String())
+		pr.Printf(errout.String())
 		return fmt.Errorf("please ensure the container has an entrypoint and it supports --help flag: %w", err)
 	}
 	fmt.Fprintln(pr.OutStream(), out.String())

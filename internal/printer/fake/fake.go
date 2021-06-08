@@ -37,8 +37,6 @@ func (np *FakePrinter) Printf(string, ...interface{}) {}
 
 func (np *FakePrinter) OutStream() io.Writer { return np.outStream }
 
-func (np *FakePrinter) LogStream() io.Writer { return np.logStream }
-
 // CtxWithFakePrinter returns a new context with the NilPrinter added.
 func CtxWithFakePrinter(outStream, logStream io.Writer) context.Context {
 	ctx := context.Background()

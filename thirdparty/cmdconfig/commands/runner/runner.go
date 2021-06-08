@@ -114,12 +114,12 @@ func HandleError(ctx context.Context, err error) error {
 	pr := printer.FromContextOrDie(ctx)
 	if StackOnError {
 		if err, ok := err.(*errors.Error); ok {
-			fmt.Fprintf(pr.LogStream(), "%s", err.Stack())
+			pr.Printf("%s", err.Stack())
 		}
 	}
 
 	if ExitOnError {
-		fmt.Fprintf(pr.LogStream(), "Error: %v\n", err)
+		pr.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
 	return err

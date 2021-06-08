@@ -18,7 +18,6 @@ package cmdinit
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -90,7 +89,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	pr := printer.FromContextOrDie(r.Ctx)
 
 	if _, err = os.Stat(filepath.Join(up, kptfilev1alpha2.KptFileName)); os.IsNotExist(err) {
-		fmt.Fprintf(pr.LogStream(), "writing %s\n", filepath.Join(args[0], "Kptfile"))
+		pr.Printf("writing %s\n", filepath.Join(args[0], "Kptfile"))
 		k := kptfilev1alpha2.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
 				ObjectMeta: yaml.ObjectMeta{
@@ -127,7 +126,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	if _, err = os.Stat(filepath.Join(up, man.ManFilename)); os.IsNotExist(err) {
-		fmt.Fprintf(pr.LogStream(), "writing %s\n", filepath.Join(args[0], man.ManFilename))
+		pr.Printf("writing %s\n", filepath.Join(args[0], man.ManFilename))
 		buff := &bytes.Buffer{}
 		t, err := template.New("man").Parse(manTemplate)
 		if err != nil {
