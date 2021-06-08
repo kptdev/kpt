@@ -339,7 +339,7 @@ locally changed: foo
 				DiffTool:     tc.diffTool,
 				DiffToolOpts: tc.diffOpts,
 				Output:       diffOutput,
-			}).Run(fake.CtxWithNilPrinter())
+			}).Run(fake.CtxWithFakePrinter(nil, nil))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -386,7 +386,7 @@ func TestCommand_InvalidRef(t *testing.T) {
 		DiffTool:     "diff",
 		DiffToolOpts: "-r -i -w",
 		Output:       diffOutput,
-	}).Run(fake.CtxWithNilPrinter())
+	}).Run(fake.CtxWithFakePrinter(nil, nil))
 	assert.Error(t, err)
 
 	assert.Contains(t, err.Error(), "unknown revision or path not in the working tree.")
@@ -426,7 +426,7 @@ func TestCommand_Diff3Parameters(t *testing.T) {
 		DiffTool:     "echo", // this is a proxy for 3 way diffing to validate we pass proper values
 		DiffToolOpts: "",
 		Output:       diffOutput,
-	}).Run(fake.CtxWithNilPrinter())
+	}).Run(fake.CtxWithFakePrinter(nil, nil))
 	assert.NoError(t, err)
 
 	// Expect 3 value to be printed (1 per source)
@@ -463,7 +463,7 @@ func TestCommand_NotAKptDirectory(t *testing.T) {
 				DiffTool:     "diff",
 				DiffToolOpts: "-r -i -w",
 				Output:       diffOutput,
-			}).Run(fake.CtxWithNilPrinter())
+			}).Run(fake.CtxWithFakePrinter(nil, nil))
 			assert.Error(t, cmdErr)
 
 			assert.Contains(t, cmdErr.Error(), "no such file or directory")

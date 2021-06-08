@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,7 +77,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetTreeRunner("")
+	r := GetTreeRunner(fake.CtxWithFakePrinter(b, b), "")
 	r.Command.SetArgs([]string{})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -151,7 +152,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetTreeRunner("")
+	r := GetTreeRunner(fake.CtxWithFakePrinter(b, nil), "")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -200,7 +201,7 @@ resources:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetTreeRunner("")
+	r := GetTreeRunner(fake.CtxWithFakePrinter(b, nil), "")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -298,7 +299,7 @@ openAPI:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetTreeRunner("")
+	r := GetTreeRunner(fake.CtxWithFakePrinter(b, nil), "")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -382,7 +383,7 @@ metadata:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetTreeRunner("")
+	r := GetTreeRunner(fake.CtxWithFakePrinter(b, nil), "")
 	r.Command.SetArgs([]string{})
 	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {

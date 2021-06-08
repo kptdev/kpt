@@ -45,9 +45,9 @@ func GetPkgCommand(ctx context.Context, name string) *cobra.Command {
 	}
 
 	pkg.AddCommand(
-		cmdget.NewCommand(ctx, name), cmdinit.NewCommand(name),
+		cmdget.NewCommand(ctx, name), cmdinit.NewCommand(ctx, name),
 		cmdupdate.NewCommand(ctx, name), cmddiff.NewCommand(ctx, name),
-		cmdtree.NewCommand(name),
+		cmdtree.NewCommand(ctx, name),
 	)
 	return pkg
 }

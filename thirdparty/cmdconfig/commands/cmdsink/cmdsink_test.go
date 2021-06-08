@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +21,7 @@ func TestSinkCommand(t *testing.T) {
 	}
 	defer os.RemoveAll(d)
 
-	r := GetSinkRunner("")
+	r := GetSinkRunner(fake.CtxWithFakePrinter(nil, nil), "")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
@@ -142,7 +143,7 @@ func TestSinkCommandJSON(t *testing.T) {
 	}
 	defer os.RemoveAll(d)
 
-	r := GetSinkRunner("")
+	r := GetSinkRunner(fake.CtxWithFakePrinter(nil, nil), "")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:

@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -312,7 +313,7 @@ func (r *RunFns) init() error {
 	// if no path is specified, default reading from stdin and writing to stdout
 	if r.Path == "" {
 		if r.Output == nil {
-			r.Output = os.Stdout
+			r.Output = printer.FromContextOrDie(r.Ctx).OutStream()
 		}
 		if r.Input == nil {
 			r.Input = os.Stdin

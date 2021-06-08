@@ -44,8 +44,6 @@ type Executor struct {
 	ResultsDirPath  string
 	Output          io.Writer
 	ImagePullPolicy fnruntime.ImagePullPolicy
-
-	Printer printer.Printer
 }
 
 // Execute runs a pipeline.

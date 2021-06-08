@@ -17,18 +17,21 @@ package cmdfndoc
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
 
-func NewRunner(parent string) *Runner {
-	r := &Runner{}
+func NewRunner(ctx context.Context, parent string) *Runner {
+	r := &Runner{
+		Ctx: ctx,
+	}
 	c := &cobra.Command{
 		Use:     "doc --image=IMAGE",
 		Args:    cobra.MaximumNArgs(0),
@@ -43,13 +46,14 @@ func NewRunner(parent string) *Runner {
 	return r
 }
 
-func NewCommand(parent string) *cobra.Command {
-	return NewRunner(parent).Command
+func NewCommand(ctx context.Context, parent string) *cobra.Command {
+	return NewRunner(ctx, parent).Command
 }
 
 type Runner struct {
 	Image   string
 	Command *cobra.Command
+	Ctx     context.Context
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
@@ -68,10 +72,11 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	cmd.Stdout = &out
 	cmd.Stderr = &errout
 	err := cmd.Run()
+	pr := printer.FromContextOrDie(r.Ctx)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, errout.String())
+		fmt.Fprintln(pr.LogStream(), errout.String())
 		return fmt.Errorf("please ensure the container has an entrypoint and it supports --help flag: %w", err)
 	}
-	fmt.Fprintln(os.Stdout, out.String())
+	fmt.Fprintln(pr.OutStream(), out.String())
 	return nil
 }

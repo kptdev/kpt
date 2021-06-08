@@ -16,23 +16,34 @@ package fake
 
 import (
 	"context"
+	"io"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 )
 
-// NilPrinter implements the printer.Printer interface and just ignores
+// FakePrinter implements the printer.Printer interface and just ignores
 // all print calls.
-type NilPrinter struct{}
+type FakePrinter struct {
+	outStream io.Writer
+	logStream io.Writer
+}
 
-func (np *NilPrinter) PrintPackage(*pkg.Pkg, bool) {}
+func (np *FakePrinter) PrintPackage(*pkg.Pkg, bool) {}
 
-func (np *NilPrinter) OptPrintf(*printer.Options, string, ...interface{}) {}
+func (np *FakePrinter) OptPrintf(*printer.Options, string, ...interface{}) {}
 
-func (np *NilPrinter) Printf(string, ...interface{}) {}
+func (np *FakePrinter) Printf(string, ...interface{}) {}
 
-// CtxWithNilPrinter returns a new context with the NilPrinter added.
-func CtxWithNilPrinter() context.Context {
+func (np *FakePrinter) OutStream() io.Writer { return np.outStream }
+
+func (np *FakePrinter) LogStream() io.Writer { return np.logStream }
+
+// CtxWithFakePrinter returns a new context with the NilPrinter added.
+func CtxWithFakePrinter(outStream, logStream io.Writer) context.Context {
 	ctx := context.Background()
-	return printer.WithContext(ctx, &NilPrinter{})
+	return printer.WithContext(ctx, &FakePrinter{
+		outStream: outStream,
+		logStream: logStream,
+	})
 }

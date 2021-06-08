@@ -4,11 +4,13 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
@@ -105,18 +107,19 @@ func ParseFieldPath(path string) ([]string, error) {
 	return newParts, nil
 }
 
-func HandleError(c *cobra.Command, err error) error {
+func HandleError(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}
+	pr := printer.FromContextOrDie(ctx)
 	if StackOnError {
 		if err, ok := err.(*errors.Error); ok {
-			fmt.Fprintf(os.Stderr, "%s", err.Stack())
+			fmt.Fprintf(pr.LogStream(), "%s", err.Stack())
 		}
 	}
 
 	if ExitOnError {
-		fmt.Fprintf(c.ErrOrStderr(), "Error: %v\n", err)
+		fmt.Fprintf(pr.LogStream(), "Error: %v\n", err)
 		os.Exit(1)
 	}
 	return err

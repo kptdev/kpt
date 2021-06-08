@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdfndoc"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
@@ -44,9 +45,8 @@ func TestFnDoc(t *testing.T) {
 
 	for _, tc := range testcases {
 		b := &bytes.Buffer{}
-		runner := cmdfndoc.NewRunner("kpt")
+		runner := cmdfndoc.NewRunner(fake.CtxWithFakePrinter(b, b), "kpt")
 		runner.Image = tc.image
-		runner.Command.SetOut(b)
 		err := runner.Command.Execute()
 		if tc.expectErr == "" {
 			testutil.AssertNoError(t, err)

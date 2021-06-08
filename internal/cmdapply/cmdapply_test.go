@@ -139,7 +139,7 @@ func TestCmd(t *testing.T) {
 
 			rgProvider := live.NewResourceGroupProvider(tf)
 
-			runner := NewRunner(fake.CtxWithNilPrinter(), rgProvider, ioStreams)
+			runner := NewRunner(fake.CtxWithFakePrinter(nil, nil), rgProvider, ioStreams)
 			runner.Command.SetArgs(tc.args)
 			runner.applyRunner = func(_ *Runner, inv inventory.InventoryInfo,
 				_ []*unstructured.Unstructured, _ common.DryRunStrategy) error {

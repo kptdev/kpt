@@ -15,6 +15,8 @@
 package cmdinit_test
 
 import (
+	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -22,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/stretchr/testify/assert"
@@ -37,10 +40,19 @@ func TestCmd(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 
-	r := cmdinit.NewRunner("kpt")
+	out := &bytes.Buffer{}
+	log := &bytes.Buffer{}
+	r := cmdinit.NewRunner(fake.CtxWithFakePrinter(out, log), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
+
+	assert.Equal(t, "", out.String())
+	expectedLogs := fmt.Sprintf(
+		`writing %s/my-pkg/Kptfile
+writing %s/my-pkg/README.md
+`, d, d)
+	assert.Equal(t, expectedLogs, log.String())
 
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(d, "my-pkg", "Kptfile"))
@@ -83,7 +95,8 @@ func TestCmd_currentDir(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
-
+	out := &bytes.Buffer{}
+	log := &bytes.Buffer{}
 	packageDir := filepath.Join(d, "my-pkg")
 	currentDir, err := os.Getwd()
 	assert.NoError(t, err)
@@ -99,11 +112,17 @@ func TestCmd_currentDir(t *testing.T) {
 			}
 		}()
 
-		r := cmdinit.NewRunner("kpt")
+		r := cmdinit.NewRunner(fake.CtxWithFakePrinter(out, log), "kpt")
 		r.Command.SetArgs([]string{".", "--description", "my description"})
 		return r.Command.Execute()
 	}()
 	assert.NoError(t, err)
+
+	assert.Equal(t, "", out.String())
+	expectedLogs := `writing Kptfile
+writing README.md
+`
+	assert.Equal(t, expectedLogs, log.String())
 
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
@@ -121,7 +140,8 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
-
+	out := &bytes.Buffer{}
+	log := &bytes.Buffer{}
 	packageDir := filepath.Join(d, "my-pkg")
 	currentDir, err := os.Getwd()
 	assert.NoError(t, err)
@@ -137,11 +157,17 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 			}
 		}()
 
-		r := cmdinit.NewRunner("kpt")
+		r := cmdinit.NewRunner(fake.CtxWithFakePrinter(out, log), "kpt")
 		r.Command.SetArgs([]string{"--description", "my description"})
 		return r.Command.Execute()
 	}()
 	assert.NoError(t, err)
+
+	assert.Equal(t, "", out.String())
+	expectedLogs := `writing Kptfile
+writing README.md
+`
+	assert.Equal(t, expectedLogs, log.String())
 
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
@@ -160,10 +186,15 @@ func TestCmd_failNotExists(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
 
-	r := cmdinit.NewRunner("kpt")
+	out := &bytes.Buffer{}
+	log := &bytes.Buffer{}
+
+	r := cmdinit.NewRunner(fake.CtxWithFakePrinter(nil, nil), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "does not exist")
 	}
+	assert.Equal(t, "", out.String())
+	assert.Equal(t, "", log.String())
 }

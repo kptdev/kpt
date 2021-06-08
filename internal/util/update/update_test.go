@@ -78,7 +78,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			if !assert.NoError(t, Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
-			}.Run(fake.CtxWithNilPrinter())) {
+			}.Run(fake.CtxWithFakePrinter(nil, nil))) {
 				return
 			}
 
@@ -130,7 +130,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "v1.2",
 				Strategy: strategy,
-			}.Run(fake.CtxWithNilPrinter())) {
+			}.Run(fake.CtxWithFakePrinter(nil, nil))) {
 				return
 			}
 
@@ -185,7 +185,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			err := Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: u.updater,
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 			if u.err == "" {
 				if !assert.NoError(t, err) {
 					return
@@ -244,7 +244,7 @@ func TestCommand_Run_noCommit(t *testing.T) {
 			err = Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 			if !assert.Error(t, err) {
 				return
 			}
@@ -291,7 +291,7 @@ func TestCommand_Run_noAdd(t *testing.T) {
 			err = Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 			if !assert.Error(t, err) {
 				return
 			}
@@ -329,7 +329,7 @@ func TestCommand_Run_noGitRepo(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, d),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithFakePrinter(nil, nil))
 	if !assert.Error(t, err) {
 		return
 	}
@@ -494,7 +494,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      masterBranch,
 				Strategy: tc.strategy,
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 
 			// check the error response
 			if tc.expectedErr == "" {
@@ -564,7 +564,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "exp",
-			}.Run(fake.CtxWithNilPrinter())) {
+			}.Run(fake.CtxWithFakePrinter(nil, nil))) {
 				return
 			}
 
@@ -624,7 +624,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
-			}.Run(fake.CtxWithNilPrinter())) {
+			}.Run(fake.CtxWithFakePrinter(nil, nil))) {
 				return
 			}
 
@@ -681,7 +681,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
-			}.Run(fake.CtxWithNilPrinter())) {
+			}.Run(fake.CtxWithFakePrinter(nil, nil))) {
 				t.FailNow()
 			}
 
@@ -722,7 +722,7 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 	// Update the local package
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithFakePrinter(nil, nil))
 
 	assert.Contains(t, err.Error(), "must have an upstream reference")
 
@@ -737,7 +737,7 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 			err := Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, path),
 				Strategy: strategy,
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 			if assert.Error(t, err) {
 				assert.Contains(t, err.Error(), "no such file or directory")
 			}
@@ -801,7 +801,7 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 			// Update the local package.
 			err = Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 
 			if assert.Error(t, err) {
 				assert.Contains(t, err.Error(), tc.expectedErrorMsg)
@@ -838,7 +838,7 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "exp",
 				Strategy: strategy,
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 			if !assert.Error(t, err) {
 				return
 			}
@@ -894,7 +894,7 @@ func TestCommand_Run_manualChange(t *testing.T) {
 
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithFakePrinter(nil, nil))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -948,7 +948,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 
 	err := Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithFakePrinter(nil, nil))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -997,7 +997,7 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 	err := Command{
 		Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 		Strategy: strategy,
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithFakePrinter(nil, nil))
 	if !assert.Error(t, err, strategy) {
 		return
 	}
@@ -1776,7 +1776,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 				err := Command{
 					Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 					Strategy: strategy,
-				}.Run(fake.CtxWithNilPrinter())
+				}.Run(fake.CtxWithFakePrinter(nil, nil))
 
 				result := findExpectedResultForStrategy(test.expectedResults, strategy)
 
@@ -3310,7 +3310,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 
 			err := Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -3453,7 +3453,7 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 
 			err := Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithFakePrinter(nil, nil))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

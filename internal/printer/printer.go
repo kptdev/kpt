@@ -35,6 +35,8 @@ type Printer interface {
 	PrintPackage(pkg *pkg.Pkg, leadingNewline bool)
 	Printf(format string, args ...interface{})
 	OptPrintf(opt *Options, format string, args ...interface{})
+	OutStream() io.Writer
+	LogStream() io.Writer
 }
 
 // Options are optional options for printer
@@ -72,17 +74,22 @@ func (opt *Options) Stderr() *Options {
 }
 
 // New returns an instance of Printer.
-func New(errStream io.Writer) Printer {
+func New(outStream, errStream io.Writer) Printer {
+	if outStream == nil {
+		outStream = os.Stdout
+	}
 	if errStream == nil {
 		errStream = os.Stderr
 	}
 	return &printer{
+		outStream: outStream,
 		errStream: errStream,
 	}
 }
 
 // printer implements default Printer to be used in kpt codebase.
 type printer struct {
+	outStream io.Writer
 	errStream io.Writer
 }
 
@@ -95,26 +102,37 @@ type contextKey int
 // different integer values.
 const printerKey contextKey = 0
 
+func (pr *printer) OutStream() io.Writer {
+	return pr.outStream
+}
+
+func (pr *printer) LogStream() io.Writer {
+	return pr.errStream
+}
+
 func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
-		fmt.Fprint(pr.errStream, "\n")
+		fmt.Fprint(pr.outStream, "\n")
 	}
-	fmt.Fprintf(pr.errStream, "Package %q:\n", p.DisplayPath)
+	fmt.Fprintf(pr.outStream, "Package %q:\n", p.DisplayPath)
 }
 
 // Printf is the wrapper over fmt.Printf that displays the output.
 func (pr *printer) Printf(format string, args ...interface{}) {
-	fmt.Fprintf(pr.errStream, format, args...)
+	fmt.Fprintf(pr.outStream, format, args...)
 }
 
 // OptPrintf is the wrapper over fmt.Printf that displays the output according
 // to the opt.
 func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
 	if opt == nil {
-		fmt.Fprintf(pr.errStream, format, args...)
+		fmt.Fprintf(pr.outStream, format, args...)
 		return
 	}
-	o := pr.errStream
+	o := pr.outStream
+	if opt.OutputToStderr {
+		o = pr.errStream
+	}
 	if !opt.PkgDisplayPath.Empty() {
 		format = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath)) + format
 	} else if !opt.PkgPath.Empty() {
