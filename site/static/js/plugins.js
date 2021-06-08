@@ -31,7 +31,7 @@ function addGitHubWidget(hook) {
     container.classList.add("github-widget");
     container.appendChild(createIssue);
     container.appendChild(editPage);
-    document.getElementById("main").appendChild(container);
+    document.getElementsByClassName("pagination-item--previous").item(0).after(container);
   });
 }
 

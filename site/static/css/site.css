@@ -105,10 +105,9 @@ h1 {
 }
 
 .github-widget {
-  display: flex;
-  justify-content: center;
-  width: fit-content;
-  margin: auto;
+  margin-left: auto;
+  margin-top: 2.5em;
+  padding-top: 8px;
 }
 
 .github-widget .material-icons-outlined {
