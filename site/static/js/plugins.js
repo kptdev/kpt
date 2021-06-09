@@ -160,7 +160,7 @@ function addCodeCopyButtons() {
         .split("\n")
         .find((line) => line.trimLeft().startsWith("$"))
   );
-  
+
   const makeButton = () => {
     const copyButton = document.createElement("button");
     const buttonClassName = "copy-button";
@@ -178,8 +178,11 @@ function addCodeCopyButtons() {
           .composedPath()
           .find((el) => el.classList.contains(buttonClassName))
           .previousElementSibling.textContent.split("\n")
-          .map((s) => s.trimLeft())
-          .filter((s) => s.startsWith("$") || s.startsWith("|"))
+          .map((s) => s.trim())
+          .filter(
+            (s, ix, arr) =>
+              s.startsWith("$") || (ix > 0 && arr[ix - 1].endsWith("\\"))
+          )
           .map((s) => s.replace(/^\$\s+/, ""))
           .join("\n"),
       ])

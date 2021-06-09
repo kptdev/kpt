@@ -4,6 +4,22 @@
 
 const plugins = require("./plugins");
 
+{
+  /* <button class="copy-button" title="Copy to clipboard"><span class="material-icons-outlined">copy</span></button> */
+}
+const originalClipboard = { ...global.navigator.clipboard };
+beforeEach(() => {
+  const mockClipboard = {
+    writeText: jest.fn(),
+  };
+  global.navigator.clipboard = mockClipboard;
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+  global.navigator.clipboard = originalClipboard;
+});
+
 test("clipboard copying button exists only on shell blocks with a '$'", () => {
   document.body.innerHTML = `<pre v-pre="" data-lang="shell" class="language-shell">
     <code class="lang-shell language-shell">
@@ -26,3 +42,39 @@ test("clipboard copying button exists only on shell blocks with a '$'", () => {
   expect(preTags.item(1).getElementsByClassName("copy-button").length).toBe(1);
   expect(preTags.item(2).getElementsByClassName("copy-button").length).toBe(0);
 });
+
+test.each([
+  [
+    [
+      `kpt fn source wordpress \\
+| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \\
+| kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 -- app=wordpress env=prod \\
+| kpt fn sink wordpress`,
+    ],
+    `$ kpt fn source wordpress \\
+| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \\
+| kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 -- app=wordpress env=prod \\
+| kpt fn sink wordpress`,
+  ],
+  [
+    [
+      `kpt fn eval - --image \\
+gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress`,
+    ],
+    `$ kpt fn eval - --image \\
+gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
+output`,
+  ],
+])(
+  "clipboard copying button copies all lines of command: %s",
+  (expected, shellCodeText) => {
+    document.body.innerHTML = `<pre v-pre="" data-lang="shell" class="language-shell">
+    <code class="lang-shell language-shell">
+    ${shellCodeText}
+    </code>
+    </pre>`;
+    plugins.addCodeCopyButtons();
+    document.getElementsByClassName("copy-button").item(0).click();
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expected);
+  }
+);
