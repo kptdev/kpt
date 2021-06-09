@@ -4,9 +4,6 @@
 
 const plugins = require("./plugins");
 
-{
-  /* <button class="copy-button" title="Copy to clipboard"><span class="material-icons-outlined">copy</span></button> */
-}
 const originalClipboard = { ...global.navigator.clipboard };
 beforeEach(() => {
   const mockClipboard = {
