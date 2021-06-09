@@ -21,7 +21,7 @@ func TestSinkCommand(t *testing.T) {
 	}
 	defer os.RemoveAll(d)
 
-	r := GetSinkRunner(fake.CtxWithEmptyPrinter(), "")
+	r := GetSinkRunner(fake.CtxWithDefaultPrinter(), "")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
@@ -143,7 +143,7 @@ func TestSinkCommandJSON(t *testing.T) {
 	}
 	defer os.RemoveAll(d)
 
-	r := GetSinkRunner(fake.CtxWithEmptyPrinter(), "")
+	r := GetSinkRunner(fake.CtxWithDefaultPrinter(), "")
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:

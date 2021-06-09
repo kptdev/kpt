@@ -38,7 +38,7 @@ func TestCmd(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 
-	r := cmdinit.NewRunner(fake.CtxWithEmptyPrinter(), "kpt")
+	r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
@@ -99,7 +99,7 @@ func TestCmd_currentDir(t *testing.T) {
 			}
 		}()
 
-		r := cmdinit.NewRunner(fake.CtxWithEmptyPrinter(), "kpt")
+		r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 		r.Command.SetArgs([]string{".", "--description", "my description"})
 		return r.Command.Execute()
 	}()
@@ -136,7 +136,7 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 			}
 		}()
 
-		r := cmdinit.NewRunner(fake.CtxWithEmptyPrinter(), "kpt")
+		r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 		r.Command.SetArgs([]string{"--description", "my description"})
 		return r.Command.Execute()
 	}()
@@ -158,7 +158,7 @@ info:
 func TestCmd_failNotExists(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
-	r := cmdinit.NewRunner(fake.CtxWithEmptyPrinter(), "kpt")
+	r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	if assert.Error(t, err) {
