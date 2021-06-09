@@ -154,8 +154,13 @@ function processAsciinemaTags(content) {
 
 function addCodeCopyButtons() {
   const preBlocks = Array.from(document.getElementsByTagName("pre")).filter(
-    (el) => el.classList.contains("language-shell")
+    (el) =>
+      el.classList.contains("language-shell") &&
+      el.firstElementChild.textContent
+        .split("\n")
+        .find((line) => line.trimLeft().startsWith("$"))
   );
+  
   const makeButton = () => {
     const copyButton = document.createElement("button");
     const buttonClassName = "copy-button";
@@ -236,3 +241,8 @@ function localPlugins(hook, _vm) {
 // Load plugins into Docsify.
 window.$docsify = window.$docsify || {};
 window.$docsify.plugins = [localPlugins].concat(window.$docsify.plugins || []);
+
+// Export functions for testing.
+if (typeof module !== "undefined") {
+  module.exports = { addCodeCopyButtons };
+}
