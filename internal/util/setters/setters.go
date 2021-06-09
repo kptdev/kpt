@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
 	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
+	spec2 "k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
@@ -364,7 +365,7 @@ func DefExists(resourcePath, setterName string) bool {
 	if err != nil {
 		return false
 	}
-	setter, _ := openapi.Resolve(&ref, sc)
+	setter, _ := openapi.Resolve((*spec2.Ref)(&ref), sc)
 	return setter != nil
 }
 

@@ -92,8 +92,6 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 		OriginalPath: original.AbsPath(),
 		UpdatedPath:  updated.AbsPath(),
 		DestPath:     options.PackagePath,
-		// TODO: Write a test to ensure this is set
-		MergeOnPath: true,
 	}.Merge()
 	if err != nil {
 		return err

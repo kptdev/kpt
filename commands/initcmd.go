@@ -76,7 +76,7 @@ func (io *KptInitOptions) Run(args []string) error {
 	io.namespace = strings.TrimSpace(ns)
 	// Set the init options default inventory object name, if not set by flag.
 	if io.name == "" {
-		randomSuffix := common.RandomStr(time.Now().UTC().UnixNano())
+		randomSuffix := common.RandomStr()
 		io.name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
 	}
 	if io.inventoryID == "" {
