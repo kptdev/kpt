@@ -33,10 +33,11 @@ import (
 type containerNetworkName string
 
 const (
-	networkNameNone containerNetworkName = "none"
-	networkNameHost containerNetworkName = "host"
-	defaultTimeout  time.Duration        = 5 * time.Minute
-	dockerBin       string               = "docker"
+	networkNameNone     containerNetworkName = "none"
+	networkNameHost     containerNetworkName = "host"
+	defaultLongTimeout  time.Duration        = 5 * time.Minute
+	defaultShortTimeout time.Duration        = 5 * time.Second
+	dockerBin           string               = "docker"
 
 	AlwaysPull       ImagePullPolicy = "always"
 	IfNotPresentPull ImagePullPolicy = "ifNotPresent"
@@ -137,7 +138,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
 	args = append(args, f.Image)
 	// setup container run timeout
-	timeout := defaultTimeout
+	timeout := defaultLongTimeout
 	if f.Timeout != 0 {
 		timeout = f.Timeout
 	}
@@ -174,15 +175,7 @@ func (f *ContainerFn) prepareImage() error {
 	}
 
 	// check image existence
-	foundImageInLocalCache := false
-	args := []string{"image", "inspect", f.Image}
-	cmd := exec.Command(dockerBin, args...)
-	var output []byte
-	var err error
-	if _, err = cmd.CombinedOutput(); err == nil {
-		// image exists locally
-		foundImageInLocalCache = true
-	}
+	foundImageInLocalCache := f.checkImageExistence()
 
 	// If ImagePullPolicy is set to "ifNotPresent", we scan the local images
 	// first. If there is a match, we just return. This can be useful for local
@@ -197,16 +190,16 @@ func (f *ContainerFn) prepareImage() error {
 	// This can help to ensure we have the latest release for "moving tags" like
 	// v1 and v1.2. The performance cost is very minimal, since `docker pull`
 	// checks the SHA first and only pull the missing docker layer(s).
-	args = []string{"image", "pull", f.Image}
+	args := []string{"image", "pull", f.Image}
 	// setup timeout
-	timeout := defaultTimeout
+	timeout := defaultLongTimeout
 	if f.Timeout != 0 {
 		timeout = f.Timeout
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd = exec.CommandContext(ctx, dockerBin, args...)
-	output, err = cmd.CombinedOutput()
+	cmd := exec.CommandContext(ctx, dockerBin, args...)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return &ContainerImageError{
 			Image:  f.Image,
@@ -214,6 +207,20 @@ func (f *ContainerFn) prepareImage() error {
 		}
 	}
 	return nil
+}
+
+// checkImageExistence returns true if the image does exist in
+// local cache
+func (f *ContainerFn) checkImageExistence() bool {
+	args := []string{"image", "inspect", f.Image}
+	ctx, cancel := context.WithTimeout(context.Background(), defaultShortTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, dockerBin, args...)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		// image exists locally
+		return true
+	}
+	return false
 }
 
 // ContainerImageError is an error type which will be returned when
