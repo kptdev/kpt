@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile"
-	"github.com/go-openapi/spec"
 	"github.com/pkg/errors"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"

@@ -18,10 +18,10 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"net/http"
 	"testing"
 
-	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
