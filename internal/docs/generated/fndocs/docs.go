@@ -253,10 +253,11 @@ var RenderExamples = `
 
 var SinkShort = `Write resources to a local directory`
 var SinkLong = `
-  kpt fn sink DIR [flags]
+  kpt fn sink [DIR] [flags]
   
   DIR:
-    Path to a local directory to write resources to. Directory must exist.
+    Path to a local directory to write resources to. Defaults to the current
+    working directory. Directory must exist.
 `
 var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
