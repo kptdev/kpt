@@ -12,20 +12,22 @@ var ApplyLong = `
   kpt live apply [PKG_PATH | -] [flags]
 
 Args:
+
   PKG_PATH | -:
-    Path to the local package which should be applied to the cluster. It must 
+    Path to the local package which should be applied to the cluster. It must
     contain a Kptfile with inventory information. Defaults to the current working
     directory.
     Using '-' as the package path will cause kpt to read resources from stdin.
 
 Flags:
+
   --dry-run:
     It true, kpt will validate the resources in the package and print which
     resources will be applied and which resources will be pruned, but no resources
     will be changed.
     If the --server-side flag is true, kpt will do a server-side dry-run, otherwise
     it will be a client-side dry-run. Note that the output will differ somewhat
-    between the two alternatives. 
+    between the two alternatives.
   
   --field-manager:
     Identifier for the **owner** of the fields being applied. Only usable
@@ -35,7 +37,7 @@ Flags:
     Force overwrite of field conflicts during apply due to different field
     managers. Only usable when --server-side flag is specified.
     Default value is false (error and failure when field managers conflict).
-    
+  
   --install-resource-group:
     Install the ResourceGroup CRD into the cluster if it isn't already
     available. Default is false.
@@ -43,18 +45,18 @@ Flags:
   --inventory-policy:
     Determines how to handle overlaps between the package being currently applied
     and existing resources in the cluster. The available options are:
-    
+  
       * strict: If any of the resources already exist in the cluster, but doesn't
         belong to the current package, it is considered an error.
-      * adopt: If a resource already exist in the cluster, but belongs to a 
+      * adopt: If a resource already exist in the cluster, but belongs to a
         different package, it is considered an error. Resources that doesn't belong
         to other packages are adopted into the current package.
-        
+  
     The default value is ` + "`" + `strict` + "`" + `.
-    
+  
   --output:
     Determines the output format for the status information. Must be one of the following:
-    
+  
       * events: The output will be a list of the status events as they become available.
       * json: The output will be a list of the status events as they become available,
         each formatted as a json object.
@@ -62,7 +64,7 @@ Flags:
         as the status of resources become available.
   
     The default value is ‘events’.
-    
+  
   --poll-period:
     The frequency with which the cluster will be polled to determine
     the status of the applied resources. The default value is 2 seconds.
@@ -88,14 +90,14 @@ Flags:
 `
 var ApplyExamples = `
   # apply resources in the current directory
-  kpt live apply
+  $ kpt live apply
 
   # apply resources in the my-dir directory and wait for all the resources to be
   # reconciled before pruning
-  kpt live apply --reconcile-timeout=15m my-dir
+  $ kpt live apply --reconcile-timeout=15m my-dir
 
   # apply resources and specify how often to poll the cluster for resource status
-  kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir
+  $ kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir
 `
 
 var DestroyShort = `Remove all previously applied resources in a package from the cluster`
@@ -111,25 +113,26 @@ Args:
     Using '-' as the package path will cause kpt to read resources from stdin.
 
 Flags:
+
   --dry-run:
-    It true, kpt will print the resources that will be removed from the cluster, 
+    It true, kpt will print the resources that will be removed from the cluster,
     but no resources will be deleted.
   
   --inventory-policy:
     Determines how to handle overlaps between the package being currently applied
     and existing resources in the cluster. The available options are:
-    
+  
       * strict: If any of the resources already exist in the cluster, but doesn't
         belong to the current package, it is considered an error.
-      * adopt: If a resource already exist in the cluster, but belongs to a 
+      * adopt: If a resource already exist in the cluster, but belongs to a
         different package, it is considered an error. Resources that doesn't belong
         to other packages are adopted into the current package.
-        
+  
     The default value is ` + "`" + `strict` + "`" + `.
   
   --output:
     Determines the output format for the status information. Must be one of the following:
-    
+  
       * events: The output will be a list of the status events as they become available.
       * json: The output will be a list of the status events as they become available,
         each formatted as a json object.
@@ -140,7 +143,7 @@ Flags:
 `
 var DestroyExamples = `
   # remove all resources in the current package from the cluster.
-  kpt live destroy
+  $ kpt live destroy
 `
 
 var InitShort = `Initialize a package with the information needed for inventory tracking.`
@@ -148,17 +151,19 @@ var InitLong = `
   kpt live init [PKG_PATH] [flags]
 
 Args:
+
   PKG_PATH:
     Path to the local package which should be updated with inventory information.
     It must contain a Kptfile. Defaults to the current working directory.
 
 Flags:
+
   --force:
     Forces the inventory values to be updated, even if they are already set.
     Defaults to false.
   
   --inventory-id:
-    Inventory identifier for the package. This is used to detect overlap between 
+    Inventory identifier for the package. This is used to detect overlap between
     packages that might use the same name and namespace for the inventory object.
     Defaults to an auto-generated value.
   
@@ -169,15 +174,15 @@ Flags:
   --namespace:
     The namespace for the ResourceGroup resource that contains the inventory
     for the package. If not provided, kpt will check if all the resources
-    in the package belong in the same namespace. If they do, that namespace will 
+    in the package belong in the same namespace. If they do, that namespace will
     be used. If they do not, the namespace in the user's context will be chosen.
 `
 var InitExamples = `
   # initialize a package in the current directory.
-  kpt live init
+  $ kpt live init
 
   # initialize a package with a specific name for the group of resources.
-  kpt live init --namespace=test my-dir
+  $ kpt live init --namespace=test my-dir
 `
 
 var InstallResourceGroupShort = `Install the ResourceGroup CRD in the cluster.`
@@ -186,7 +191,7 @@ var InstallResourceGroupLong = `
 `
 var InstallResourceGroupExamples = `
   # install ResourceGroup CRD into the current cluster.
-  kpt live install-resource-group
+  $ kpt live install-resource-group
 `
 
 var MigrateShort = `Migrate a package and the inventory object to use the ResourceGroup CRD.`
@@ -194,11 +199,13 @@ var MigrateLong = `
   kpt live migrate [PKG_PATH] [flags]
 
 Args:
+
   PKG_PATH:
     Path to the local package. It must have a Kptfile and an existing inventory
     template in the root of the package. It defaults to the current directory.
 
 Flags:
+
   --dry-run:
     Go through the steps of migration, but don't make any changes.
   
@@ -218,7 +225,7 @@ Flags:
 `
 var MigrateExamples = `
   # Migrate the package in the current directory.
-  kpt live migrate
+  $ kpt live migrate
 `
 
 var StatusShort = `Display shows the status for the resources in the cluster`
@@ -269,9 +276,9 @@ Flags:
 var StatusExamples = `
   # Monitor status for the resources belonging to the package in the current
   # directory. Wait until all resources have reconciled.
-  kpt live status
+  $ kpt live status
 
   # Monitor status for the resources belonging to the package in the my-app
   # directory. Output in table format:
-  kpt live status my-app --poll-until=forever --output=table
+  $ kpt live status my-app --poll-until=forever --output=table
 `

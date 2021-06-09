@@ -13,10 +13,9 @@ var DocLong = `
 
   kpt fn doc --image=IMAGE
 
---image is a required flag.
-If the function supports --help, it will print the documentation to STDOUT.
-Otherwise, it will exit with non-zero exit code and print the error message to
-STDERR.
+--image is a required flag. If the function supports --help, it will print the
+documentation to STDOUT. Otherwise, it will exit with non-zero exit code and
+print the error message to STDERR.
 `
 var DocExamples = `
   # diplay the documentation for image gcr.io/kpt-fn/set-namespace:v0.1.1

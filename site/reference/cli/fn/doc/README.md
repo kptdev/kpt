@@ -43,7 +43,7 @@ print the error message to STDERR.
 <!--@verifyExamples-->
 ```shell
 # diplay the documentation for image gcr.io/kpt-fn/set-namespace:v0.1.1
-$ kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1
+kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1
 ```
 
 <!--mdtogo-->
