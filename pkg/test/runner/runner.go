@@ -401,7 +401,7 @@ func (r *Runner) compareResult(cnt int, exitErr error, stdout string, stderr str
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	// we only check ouput and results for the first iteration of running because
+	// we only check output and results for the first iteration of running because
 	// idempotency is only applied to changes in file system.
 	if cnt == 0 {
 		err = r.compareOutput(stdout, stderr)
