@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
@@ -89,11 +90,11 @@ type EvalFnRunner struct {
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
-	err := runner.HandleError(c, r.RunFns.Execute())
+	err := runner.HandleError(r.Ctx, r.RunFns.Execute())
 	if err != nil {
 		return err
 	}
-	return cmdutil.WriteFnOutput(r.Dest, r.OutContent.String(), r.FromStdin, c.OutOrStdout())
+	return cmdutil.WriteFnOutput(r.Dest, r.OutContent.String(), r.FromStdin, printer.FromContextOrDie(r.Ctx).OutStream())
 }
 
 // getContainerFunctions parses the commandline flags and arguments into explicit

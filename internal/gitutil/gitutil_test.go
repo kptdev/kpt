@@ -15,7 +15,6 @@
 package gitutil_test
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	. "github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
@@ -67,12 +67,12 @@ func TestLocalGitRunner(t *testing.T) {
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			_, err = runner.Run(context.Background(), "init", "--initial-branch=main")
+			_, err = runner.Run(fake.CtxWithDefaultPrinter(), "init", "--initial-branch=main")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			rr, err := runner.Run(context.Background(), tc.command, tc.args...)
+			rr, err := runner.Run(fake.CtxWithDefaultPrinter(), tc.command, tc.args...)
 			if tc.expectedErr != nil {
 				var gitExecError *GitExecError
 				if !errors.As(err, &gitExecError) {
@@ -99,7 +99,7 @@ func TestNewGitUpstreamRepo_noRepo(t *testing.T) {
 		t.FailNow()
 	}
 
-	_, err = NewGitUpstreamRepo(context.Background(), dir)
+	_, err = NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), dir)
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -116,12 +116,12 @@ func TestNewGitUpstreamRepo_noRefs(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	_, err = runner.Run(context.Background(), "init", "--bare")
+	_, err = runner.Run(fake.CtxWithDefaultPrinter(), "init", "--bare")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	gur, err := NewGitUpstreamRepo(context.Background(), dir)
+	gur, err := NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), dir)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -178,7 +178,7 @@ func TestNewGitUpstreamRepo(t *testing.T) {
 				t.FailNow()
 			}
 
-			gur, err := NewGitUpstreamRepo(context.Background(), g[testutil.Upstream].RepoDirectory)
+			gur, err := NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -198,16 +198,16 @@ func TestGitUpstreamRepo_GetDefaultBranch_noRefs(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	_, err = runner.Run(context.Background(), "init", "--bare")
+	_, err = runner.Run(fake.CtxWithDefaultPrinter(), "init", "--bare")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	gur, err := NewGitUpstreamRepo(context.Background(), dir)
+	gur, err := NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), dir)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	_, err = gur.GetDefaultBranch(context.Background())
+	_, err = gur.GetDefaultBranch(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -254,12 +254,12 @@ func TestGitUpstreamRepo_GetDefaultBranch(t *testing.T) {
 			})
 			defer clean()
 
-			gur, err := NewGitUpstreamRepo(context.Background(), g[testutil.Upstream].RepoDirectory)
+			gur, err := NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			defaultRef, err := gur.GetDefaultBranch(context.Background())
+			defaultRef, err := gur.GetDefaultBranch(fake.CtxWithDefaultPrinter())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -315,7 +315,7 @@ func TestGitUpstreamRepo_GetRepo(t *testing.T) {
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				rr, err := runner.Run(context.Background(), "show-ref", "-s", "abc/123")
+				rr, err := runner.Run(fake.CtxWithDefaultPrinter(), "show-ref", "-s", "abc/123")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
@@ -336,12 +336,12 @@ func TestGitUpstreamRepo_GetRepo(t *testing.T) {
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				rr, err := runner.Run(context.Background(), "show-ref", "-s", "abc/123")
+				rr, err := runner.Run(fake.CtxWithDefaultPrinter(), "show-ref", "-s", "abc/123")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
 				sha := strings.TrimSpace(rr.Stdout)
-				rr, err = runner.Run(context.Background(), "rev-parse", "--short", sha)
+				rr, err = runner.Run(fake.CtxWithDefaultPrinter(), "rev-parse", "--short", sha)
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
@@ -357,12 +357,12 @@ func TestGitUpstreamRepo_GetRepo(t *testing.T) {
 			})
 			defer clean()
 
-			gur, err := NewGitUpstreamRepo(context.Background(), g[testutil.Upstream].RepoDirectory)
+			gur, err := NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 			refs := tc.refsFunc(t, g[testutil.Upstream].RepoDirectory)
-			dir, err := gur.GetRepo(context.Background(), refs)
+			dir, err := gur.GetRepo(fake.CtxWithDefaultPrinter(), refs)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -377,7 +377,7 @@ func TestGitUpstreamRepo_GetRepo(t *testing.T) {
 					// Assume the ref is a commit...
 					sha = r
 				}
-				_, err := runner.Run(context.Background(), "reset", "--hard", sha)
+				_, err := runner.Run(fake.CtxWithDefaultPrinter(), "reset", "--hard", sha)
 				assert.NoError(t, err)
 			}
 		})
@@ -425,11 +425,11 @@ func TestGitUpstreamRepo_GetRepo_multipleUpdates(t *testing.T) {
 }
 
 func getRepoAndVerify(t *testing.T, repo, branchName string) string {
-	gur, err := NewGitUpstreamRepo(context.Background(), repo)
+	gur, err := NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), repo)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	dir, err := gur.GetRepo(context.Background(), []string{branchName})
+	dir, err := gur.GetRepo(fake.CtxWithDefaultPrinter(), []string{branchName})
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -440,7 +440,7 @@ func getRepoAndVerify(t *testing.T, repo, branchName string) string {
 	}
 
 	sha, _ := gur.ResolveBranch(branchName)
-	_, err = runner.Run(context.Background(), "reset", "--hard", sha)
+	_, err = runner.Run(fake.CtxWithDefaultPrinter(), "reset", "--hard", sha)
 	assert.NoError(t, err)
 
 	return dir

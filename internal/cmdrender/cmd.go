@@ -23,6 +23,7 @@ import (
 	"os"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/spf13/cobra"
@@ -109,7 +110,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return cmdutil.WriteFnOutput(r.dest, outContent.String(), false, c.OutOrStdout())
+	return cmdutil.WriteFnOutput(r.dest, outContent.String(), false, printer.FromContextOrDie(r.ctx).OutStream())
 }
 
 func (r *Runner) postRun(_ *cobra.Command, _ []string) {

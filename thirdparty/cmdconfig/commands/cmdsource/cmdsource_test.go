@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -73,9 +74,8 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetSourceRunner("")
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
 	r.Command.SetArgs([]string{d})
-	r.Command.SetOut(b)
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
 	}
@@ -198,9 +198,9 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetSourceRunner("")
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
 	r.Command.SetArgs([]string{})
-	r.Command.SetOut(b)
+
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
 	}
@@ -308,9 +308,9 @@ func TestSourceCommandJSON(t *testing.T) {
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetSourceRunner("")
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
 	r.Command.SetArgs([]string{d})
-	r.Command.SetOut(b)
+
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
 	}

@@ -46,7 +46,7 @@ func TestCmd_execute(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
-	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+	r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	// defaults LOCAL_DEST_DIR to current working directory
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/"})
 	err := r.Command.Execute()
@@ -107,7 +107,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 		t.FailNow()
 	}
 
-	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+	r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
 	err = r.Command.Execute()
 
@@ -153,7 +153,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 
 // TestCmd_fail verifies that that command returns an error rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+	r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "./"})
@@ -379,7 +379,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			})
 			defer clean()
 
-			r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+			r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 			r.Command.SilenceErrors = true
 			r.Command.SilenceUsage = true
 			r.Command.RunE = tc.runE

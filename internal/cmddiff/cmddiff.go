@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/diff"
@@ -55,7 +56,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c.Flags().BoolVar(&r.Debug, "debug", false,
 		"when true, prints additional debug information and do not delete staged pkg dirs")
 	r.C = c
-	r.Output = c.OutOrStdout()
+	r.Output = printer.FromContextOrDie(r.ctx).OutStream()
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -100,6 +101,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	r.Path = string(p.UniquePath)
 	r.Ref = version
+	r.Output = printer.FromContextOrDie(r.ctx).OutStream()
 
 	return r.Validate()
 }

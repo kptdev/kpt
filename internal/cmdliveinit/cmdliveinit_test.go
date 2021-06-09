@@ -117,7 +117,7 @@ func TestCmd_Run_NoKptfile(t *testing.T) {
 	revert := testutil.Chdir(t, w.WorkspaceDirectory)
 	defer revert()
 
-	runner := NewRunner(fake.CtxWithNilPrinter(), tf, ioStreams)
+	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 	runner.Command.SetArgs([]string{})
 	err := runner.Command.Execute()
 
@@ -201,7 +201,7 @@ func TestCmd_Run(t *testing.T) {
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
 
-			runner := NewRunner(fake.CtxWithNilPrinter(), tf, ioStreams)
+			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.namespace = tc.namespace
 			args := []string{
 				"--name", tc.name,

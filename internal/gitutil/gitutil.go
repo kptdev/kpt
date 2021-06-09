@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 )
 
 // RepoCacheDirEnv is the name of the environment variable that controls the cache directory
@@ -100,12 +101,12 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, 
 	// Disable git prompting the user for credentials.
 	cmd.Env = append(os.Environ(),
 		"GIT_TERMINAL_PROMPT=0")
-
+	pr := printer.FromContextOrDie(ctx)
 	cmdStdout := &bytes.Buffer{}
 	cmdStderr := &bytes.Buffer{}
 	if verbose {
-		cmd.Stdout = io.MultiWriter(cmdStdout, os.Stdout)
-		cmd.Stderr = io.MultiWriter(cmdStderr, os.Stderr)
+		cmd.Stdout = io.MultiWriter(cmdStdout, pr.OutStream())
+		cmd.Stderr = io.MultiWriter(cmdStderr, pr.ErrStream())
 	} else {
 		cmd.Stdout = cmdStdout
 		cmd.Stderr = cmdStderr

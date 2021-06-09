@@ -48,9 +48,9 @@ func GetFnCommand(ctx context.Context, name string) *cobra.Command {
 	functions.AddCommand(
 		cmdeval.EvalCommand(ctx, name),
 		cmdrender.NewCommand(ctx, name),
-		cmdfndoc.NewCommand(name),
-		cmdsource.NewCommand(name),
-		cmdsink.NewCommand(name),
+		cmdfndoc.NewCommand(ctx, name),
+		cmdsource.NewCommand(ctx, name),
+		cmdsink.NewCommand(ctx, name),
 		cmdexport.ExportCommand(),
 	)
 	return functions

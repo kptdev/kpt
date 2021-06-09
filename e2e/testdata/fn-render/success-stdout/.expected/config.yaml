@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-stdOut: "Successfully executed 2 function(s) in 1 package(s)"
+stdErr: "Successfully executed 2 function(s) in 1 package(s)"

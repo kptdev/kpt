@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -211,21 +212,18 @@ func (r RunFns) runFunctions(
 	if err != nil {
 		// function fails
 		if resultErr == nil {
-			r.printFnResultsStatus(resultsFile, true)
+			r.printFnResultsStatus(resultsFile)
 		}
 		return err
 	}
 	if resultErr == nil {
-		r.printFnResultsStatus(resultsFile, false)
+		r.printFnResultsStatus(resultsFile)
 	}
 	return nil
 }
 
-func (r RunFns) printFnResultsStatus(resultsFile string, toStdErr bool) {
-	if r.isOutputDisabled() {
-		return
-	}
-	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true, toStdErr)
+func (r RunFns) printFnResultsStatus(resultsFile string) {
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -315,7 +313,7 @@ func (r *RunFns) init() error {
 	// if no path is specified, default reading from stdin and writing to stdout
 	if r.Path == "" {
 		if r.Output == nil {
-			r.Output = os.Stdout
+			r.Output = printer.FromContextOrDie(r.Ctx).OutStream()
 		}
 		if r.Input == nil {
 			r.Input = os.Stdin
@@ -430,10 +428,5 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 		fnResult.ExecPath = spec.Exec.Path
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
-}
-
-func (r RunFns) isOutputDisabled() bool {
-	// if output is not nil we will write the resources to stdout
-	return r.Output != nil
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, fnResult, r.fnResults)
 }
