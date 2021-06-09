@@ -44,7 +44,7 @@ func (e *UnknownKptfileVersionError) Error() string {
 	} else {
 		source = e.PkgPath
 	}
-	return fmt.Sprintf("package at %q is using an unknown version of the Kptfile schema. It might be for a newer version of kpt. Please try updating kpt.", source)
+	return fmt.Sprintf("package at %q is using a newer version (%q) of the Kptfile schema. Please try updating kpt.", source, e.Version)
 }
 
 // ReadFile reads the KptFile in the given directory
