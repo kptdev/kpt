@@ -36,7 +36,7 @@ type Result struct {
 	// ExitCode is the exit code from running the function
 	ExitCode int `yaml:"exitCode"`
 	// Results is the list of results for the function
-	Results []ResultItem `yaml:"results,omitempty"`
+	Results []framework.ResultItem `yaml:"results,omitempty"`
 }
 
 const (
@@ -72,25 +72,4 @@ func NewResultList() *ResultList {
 		},
 		Items: []Result{},
 	}
-}
-
-// ResultItem is a duplicate of framework.ResultItem, except that
-// ResourceRef uses yaml.ResourceIdentifier here, whereas framework.ResultItem
-// uses yaml.ResourceMeta. Eventually, we will need to fix it upstream.
-// TODO: https://github.com/GoogleContainerTools/kpt/issues/2091
-type ResultItem struct {
-	// Message is a human readable message
-	Message string `yaml:"message,omitempty"`
-
-	// Severity is the severity of this result
-	Severity framework.Severity `yaml:"severity,omitempty"`
-
-	// ResourceRef is a reference to a resource
-	ResourceRef yaml.ResourceIdentifier `yaml:"resourceRef,omitempty"`
-
-	// Field is a reference to the field in a resource this result refers to
-	Field framework.Field `yaml:"field,omitempty"`
-
-	// File references a file containing the resource this result refers to
-	File framework.File `yaml:"file,omitempty"`
 }

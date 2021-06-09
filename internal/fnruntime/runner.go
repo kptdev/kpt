@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -199,7 +200,7 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return nil
 }
 
-func populateResourceRef(item *yaml.RNode, resultItem *fnresult.ResultItem) error {
+func populateResourceRef(item *yaml.RNode, resultItem *framework.ResultItem) error {
 	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
 	if err != nil {
 		return err
@@ -349,7 +350,7 @@ func (ri *multiLineFormatter) String() string {
 }
 
 // resultToString converts given structured result item to string format.
-func resultToString(result fnresult.ResultItem) string {
+func resultToString(result framework.ResultItem) string {
 	// TODO: Go SDK should implement Stringer method
 	// for framework.ResultItem. This is a temporary
 	// wrapper that will eventually be moved to Go SDK.
