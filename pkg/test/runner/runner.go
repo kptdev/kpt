@@ -221,7 +221,7 @@ func (r *Runner) runFnEval() error {
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
+		err = r.compareResult(i, fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -346,7 +346,7 @@ func (r *Runner) runFnRender() error {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// compare results
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
+		err = r.compareResult(i, fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -384,7 +384,7 @@ func (r *Runner) preparePackage(pkgPath string) error {
 	return err
 }
 
-func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
+func (r *Runner) compareResult(cnt int, exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
 	expected, err := newExpected(tmpPkgPath)
 	if err != nil {
 		return err
@@ -401,27 +401,31 @@ func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpP
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	err = r.compareOutput(stdout, stderr)
-	if err != nil {
-		return err
-	}
+	// we only check output and results for the first iteration of running because
+	// idempotency is only applied to changes in file system.
+	if cnt == 0 {
+		err = r.compareOutput(stdout, stderr)
+		if err != nil {
+			return err
+		}
 
-	// compare results
-	actual, err := readActualResults(resultsPath)
-	if err != nil {
-		return fmt.Errorf("failed to read actual results: %w", err)
-	}
-	diffOfResult, err := diffStrings(actual, expected.Results)
-	if err != nil {
-		return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
-	}
-	if actual != expected.Results {
-		return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
-			actual, diffOfResult)
+		// compare results
+		actual, err := readActualResults(resultsPath)
+		if err != nil {
+			return fmt.Errorf("failed to read actual results: %w", err)
+		}
+		diffOfResult, err := diffStrings(actual, expected.Results)
+		if err != nil {
+			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+		}
+		if actual != expected.Results {
+			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+				actual, diffOfResult)
+		}
 	}
 
 	// compare diff
-	actual, err = readActualDiff(tmpPkgPath, r.initialCommit)
+	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}

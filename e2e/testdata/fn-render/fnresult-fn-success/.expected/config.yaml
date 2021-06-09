@@ -15,9 +15,5 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 exitCode: 0
-# This test checks function results and result output is not idempotent
-# because the results produced by search replace function gets changed
-# in the subsequent runs. So skipping it for now.
-nonIdempotent: true
 stdOut: |
   [RUNNING] "gcr.io/kpt-fn/search-replace:v0.1"
