@@ -17,6 +17,7 @@ package fake
 import (
 	"context"
 	"io"
+	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -42,6 +43,11 @@ func (np *Printer) ErrStream() io.Writer { return np.errStream }
 // CtxWithEmptyPrinter returns a new context with the Empty printer added.
 func CtxWithEmptyPrinter() context.Context {
 	return CtxWithPrinter(nil, nil)
+}
+
+// CtxWithDefaultPrinter returns a new context with the printer which has os streams
+func CtxWithDefaultPrinter() context.Context {
+	return CtxWithPrinter(os.Stdout, os.Stderr)
 }
 
 // CtxWithPrinter returns a new context with Printer added.

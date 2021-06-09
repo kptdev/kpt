@@ -15,7 +15,6 @@
 package testutil
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -110,18 +109,18 @@ func (g *TestSetupManager) Init() bool {
 			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
-		}}.Run(fake.CtxWithEmptyPrinter())) {
+		}}.Run(fake.CtxWithDefaultPrinter())) {
 		return false
 	}
 	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
 	if !assert.NoError(g.T, err) {
 		return false
 	}
-	_, err = localGit.Run(context.Background(), "add", ".")
+	_, err = localGit.Run(fake.CtxWithDefaultPrinter(), "add", ".")
 	if !assert.NoError(g.T, err) {
 		return false
 	}
-	_, err = localGit.Run(context.Background(), "commit", "-m", "add files")
+	_, err = localGit.Run(fake.CtxWithDefaultPrinter(), "commit", "-m", "add files")
 	if !assert.NoError(g.T, err) {
 		return false
 	}
