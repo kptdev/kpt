@@ -21,12 +21,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/go-openapi/spec"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest/fake"
-	spec2 "k8s.io/kube-openapi/pkg/validation/spec"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
@@ -124,7 +123,7 @@ func TestSomething(t *testing.T) {
 
 			ref, err := spec.NewRef(test.includesRefString)
 			assert.NoError(t, err)
-			res, err := openapi.Resolve((*spec2.Ref)(&ref), openapi.Schema())
+			res, err := openapi.Resolve(&ref, openapi.Schema())
 			assert.NoError(t, err)
 			assert.NotNil(t, res)
 
@@ -133,13 +132,13 @@ func TestSomething(t *testing.T) {
 			if test.notIncludesRefString != "" {
 				ref2, err := spec.NewRef(test.notIncludesRefString)
 				assert.NoError(t, err)
-				res2, _ := openapi.Resolve((*spec2.Ref)(&ref2), openapi.Schema())
+				res2, _ := openapi.Resolve(&ref2, openapi.Schema())
 				assert.Nil(t, res2)
 			}
 
 			// Verify that we have the Kustomize openAPI included.
 			kustomizeRef, _ := spec.NewRef("#/definitions/io.k8s.api.apps.v1.Kustomization")
-			kustomizeRes, err := openapi.Resolve((*spec2.Ref)(&kustomizeRef), openapi.Schema())
+			kustomizeRes, err := openapi.Resolve(&kustomizeRef, openapi.Schema())
 			assert.NoError(t, err)
 			assert.NotNil(t, kustomizeRes)
 		})
