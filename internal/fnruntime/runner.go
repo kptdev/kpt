@@ -250,7 +250,6 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 // on kpt CLI.
 func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
-	printOpt := printer.NewOpt()
 	if len(fnErr.Stderr) > 0 {
 		errLines := &multiLineFormatter{
 			Title:          "Stderr",
@@ -258,9 +257,9 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.OptPrintf(printOpt, "%s", errLines.String())
+		pr.Printf("%s", errLines.String())
 	}
-	pr.OptPrintf(printOpt, "  Exit code: %d\n\n", fnErr.ExitCode)
+	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // path (location) of a KRM resources is tracked in a special key in

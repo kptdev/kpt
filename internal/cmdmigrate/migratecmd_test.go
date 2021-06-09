@@ -140,7 +140,7 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
 
-			ctx := fake.CtxWithFakePrinter(nil, nil)
+			ctx := fake.CtxWithEmptyPrinter()
 			// Create MigrateRunner and call "updateKptfile"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
@@ -199,7 +199,7 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			ctx := fake.CtxWithFakePrinter(nil, nil)
+			ctx := fake.CtxWithEmptyPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
@@ -302,7 +302,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			ctx := fake.CtxWithFakePrinter(nil, nil)
+			ctx := fake.CtxWithEmptyPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewFakeResourceGroupProvider(tf, tc.objs)

@@ -85,7 +85,7 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, pkgPath),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -104,7 +104,7 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -127,7 +127,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -150,7 +150,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -177,7 +177,7 @@ func TestCommand_Run(t *testing.T) {
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -239,7 +239,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -317,7 +317,7 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -398,7 +398,7 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -508,7 +508,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 			actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
 			err = Command{
 				Pkg: actualPkg,
-			}.Run(fake.CtxWithFakePrinter(nil, nil))
+			}.Run(fake.CtxWithEmptyPrinter())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -566,7 +566,7 @@ func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
 	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
 	err = Command{
 		Pkg: actualPkg,
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -611,7 +611,7 @@ func TestCommand_Run_no_subdir_at_invalid_tag(t *testing.T) {
 	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
 	err = Command{
 		Pkg: actualPkg,
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -633,7 +633,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -657,7 +657,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -684,7 +684,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithFakePrinter(nil, nil))
+	}.Run(fake.CtxWithEmptyPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}

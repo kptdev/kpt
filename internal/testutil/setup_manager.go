@@ -110,7 +110,7 @@ func (g *TestSetupManager) Init() bool {
 			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
-		}}.Run(fake.CtxWithFakePrinter(nil, nil))) {
+		}}.Run(fake.CtxWithEmptyPrinter())) {
 		return false
 	}
 	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)

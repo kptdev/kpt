@@ -74,7 +74,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetSourceRunner(fake.CtxWithFakePrinter(b, nil), "")
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
 	r.Command.SetArgs([]string{d})
 	if !assert.NoError(t, r.Command.Execute()) {
 		return
@@ -198,7 +198,7 @@ spec:
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetSourceRunner(fake.CtxWithFakePrinter(b, nil), "")
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
 	r.Command.SetArgs([]string{})
 
 	if !assert.NoError(t, r.Command.Execute()) {
@@ -308,7 +308,7 @@ func TestSourceCommandJSON(t *testing.T) {
 
 	// fmt the files
 	b := &bytes.Buffer{}
-	r := GetSourceRunner(fake.CtxWithFakePrinter(b, nil), "")
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
 	r.Command.SetArgs([]string{d})
 
 	if !assert.NoError(t, r.Command.Execute()) {

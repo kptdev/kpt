@@ -45,7 +45,7 @@ func TestFnDoc(t *testing.T) {
 
 	for _, tc := range testcases {
 		b := &bytes.Buffer{}
-		runner := cmdfndoc.NewRunner(fake.CtxWithFakePrinter(b, b), "kpt")
+		runner := cmdfndoc.NewRunner(fake.CtxWithPrinter(b, b), "kpt")
 		runner.Image = tc.image
 		err := runner.Command.Execute()
 		if tc.expectErr == "" {

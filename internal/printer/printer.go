@@ -36,6 +36,7 @@ type Printer interface {
 	Printf(format string, args ...interface{})
 	OptPrintf(opt *Options, format string, args ...interface{})
 	OutStream() io.Writer
+	ErrStream() io.Writer
 }
 
 // Options are optional options for printer
@@ -98,6 +99,12 @@ func (pr *printer) OutStream() io.Writer {
 	return pr.outStream
 }
 
+// ErrStream returns the StdErr stream, this can be used by callers to print
+// command output to stderr, print only error/debug/info logs to this stream
+func (pr *printer) ErrStream() io.Writer {
+	return pr.errStream
+}
+
 // PrintPackage prints the package display path to stderr
 func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
@@ -114,6 +121,7 @@ func (pr *printer) Printf(format string, args ...interface{}) {
 
 // OptPrintf is the wrapper over fmt.Printf that displays the output according
 // to the opt, this will print messages to stderr stream
+// https://mehulkar.com/blog/2017/11/stdout-vs-stderr/
 func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
 	if opt == nil {
 		fmt.Fprintf(pr.errStream, format, args...)

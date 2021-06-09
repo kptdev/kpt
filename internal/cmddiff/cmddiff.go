@@ -101,6 +101,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	r.Path = string(p.UniquePath)
 	r.Ref = version
+	r.Output = printer.FromContextOrDie(r.ctx).OutStream()
 
 	return r.Validate()
 }

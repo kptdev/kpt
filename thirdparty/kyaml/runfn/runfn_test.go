@@ -225,7 +225,7 @@ func TestCmd_Execute(t *testing.T) {
 	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithFakePrinter(nil, nil),
+		Ctx:                    fake.CtxWithEmptyPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
 		Functions:              []*yaml.RNode{fn},
@@ -258,7 +258,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithFakePrinter(nil, nil),
+		Ctx:                    fake.CtxWithEmptyPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		IncludeMetaResources:   true,
@@ -293,7 +293,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithFakePrinter(nil, nil),
+		Ctx:                    fake.CtxWithEmptyPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		fnResults:              fnresult.NewResultList(),
@@ -372,7 +372,7 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 
 	// run the functions, providing the path to the directory of filters
 	instance := RunFns{
-		Ctx:          fake.CtxWithFakePrinter(nil, nil),
+		Ctx:          fake.CtxWithEmptyPrinter(),
 		FnConfigPath: tmpF.Name(),
 		Path:         dir,
 		Functions:    []*yaml.RNode{fn},
@@ -406,7 +406,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 
 	out := &bytes.Buffer{}
 	instance := RunFns{
-		Ctx:                    fake.CtxWithFakePrinter(nil, nil),
+		Ctx:                    fake.CtxWithEmptyPrinter(),
 		Output:                 out, // write to out
 		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
@@ -457,7 +457,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithFakePrinter(nil, nil),
+		Ctx:                    fake.CtxWithEmptyPrinter(),
 		Input:                  input, // read from input
 		Path:                   outDir,
 		functionFilterProvider: getFilterProvider(t),
@@ -536,7 +536,7 @@ items:
 	for i := range test {
 		ouputBuffer := bytes.Buffer{}
 		r := RunFns{
-			Ctx:                    fake.CtxWithFakePrinter(nil, nil),
+			Ctx:                    fake.CtxWithEmptyPrinter(),
 			Input:                  bytes.NewReader([]byte{}),
 			Output:                 &ouputBuffer,
 			Functions:              []*yaml.RNode{fn1, fn2},
