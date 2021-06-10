@@ -113,6 +113,10 @@ pre.language-shell button.copy-button {
   opacity: 0.3;
 }
 
+pre.language-shell button.copy-button span {
+  font-size: 18px;
+}
+
 pre.language-shell button.copy-button:hover {
   opacity: 1;
 }
