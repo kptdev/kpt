@@ -108,6 +108,12 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 		return fmt.Errorf("unexpected function error: %w", err)
 	}
 
+	if errSink.Len() != 0 {
+		return &StderrNotEmpty{
+			Stderr: errSink.String(),
+		}
+	}
+
 	return nil
 }
 

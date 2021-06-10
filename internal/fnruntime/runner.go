@@ -137,12 +137,18 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		return output, resultErr
 	}
 	if err != nil {
-		var fnErr *ExecError
-		if goerrors.As(err, &fnErr) {
-			fnResult.ExitCode = fnErr.ExitCode
-			fnResult.Stderr = fnErr.Stderr
-			fnErr.FnResult = fnResult
+		var execErr *ExecError
+		var stderrNotEmpty *StderrNotEmpty
+		switch {
+		case goerrors.As(err, &execErr):
+			fnResult.ExitCode = execErr.ExitCode
+			fnResult.Stderr = execErr.Stderr
 			fr.fnResults.ExitCode = 1
+		case goerrors.As(err, &stderrNotEmpty):
+			fnResult.ExitCode = 0
+			fnResult.Stderr = stderrNotEmpty.Stderr
+			// this is not a real error
+			err = nil
 		}
 		// accumulate the results
 		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
