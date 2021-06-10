@@ -31,6 +31,6 @@ and namespace of the `ResourceGroup` resource.
 
 !> Once a package is applied to the cluster, you do not want to change the
 metadata in the `inventory` section as it severs the association between the
-package and the `ResourceGroup` and will be destructive.
+package and the `ResourceGroup` leading to destructive operations.
 
 [init-doc]: /reference/cli/live/init/
