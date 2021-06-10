@@ -104,6 +104,23 @@ h1 {
   margin-bottom: -24px;
 }
 
+pre.language-shell button.copy-button {
+  position: absolute;
+  top: 2px;
+  right: 3em;
+  background: inherit;
+  border: none;
+  opacity: 0.3;
+}
+
+pre.language-shell button.copy-button span {
+  font-size: 18px;
+}
+
+pre.language-shell button.copy-button:hover {
+  opacity: 1;
+}
+
 .github-widget {
   display: flex;
   justify-content: center;
