@@ -60,13 +60,8 @@ examples and help. Please visit the [function catalog] for further information.
 
 ## Ongoing work
 Since this is a draft of the release notes you should be aware of the
-ongoing work.  At the time of writing the team is in [Milestone 3], and we
-are planning to complete the work in [Milestone 4].  For instance as of 6/1/21
-[out of place hydration] support is still in the works.  The exact dates
-and features are going to be highly dependent on feedback we get from beta
-testers.
-
-The list of all the future milestones can be found here: [kpt milestones]
+ongoing work. The list of all the current and future milestones can be
+found here: [kpt milestones]
 
 ## Upgrading from previous version of kpt.
 There are a number of breaking changes that had to be done to clean up the
