@@ -25,9 +25,9 @@ $ kpt live apply wordpress --reconcile-timeout=2m
 ## `ResourceGroup` CRD
 
 By default, `live apply` automatically installs the `ResourceGroup` CRD (unless
-`--dry-run` is specified) since it needs to create the associate `ResourceGroup`
-custom resource. You can also manually install the CRD before running
-`live apply`:
+`--dry-run` is specified) since it needs to create the associated
+`ResourceGroup` custom resource. You can also manually install the CRD before
+running `live apply`:
 
 ```shell
 $ kpt live install-resource-group
@@ -68,7 +68,7 @@ persistentvolumeclaim/wp-pv-claim created (dry-run)
 After you have deployed the package, you can get its current status at any time:
 
 ```shell
-kpt live status wordpress
+$ kpt live status wordpress
 deployment.apps/wordpress is InProgress: Available: 0/1
 persistentvolumeclaim/wp-pv-claim is InProgress: PVC is not Bound. phase: Pending
 service/wordpress-mysql is Current: Service is ready
@@ -85,7 +85,7 @@ To delete all the resources in a package, you can use the `live destroy`
 command:
 
 ```shell
-kpt live destroy wordpress
+$ kpt live destroy wordpress
 persistentvolumeclaim/wp-pv-claim deleted
 persistentvolumeclaim/mysql-pv-claim deleted
 deployment.apps/wordpress-mysql deleted
