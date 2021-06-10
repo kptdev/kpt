@@ -18,7 +18,7 @@ resource sizes.
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@next
 
 fetching package /package-examples/helloworld-tshirt from https://github.com/GoogleContainerTools/kpt to helloworld-tshirt
 ```

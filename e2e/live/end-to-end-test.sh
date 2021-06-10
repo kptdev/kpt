@@ -144,6 +144,8 @@ function downloadPreviousKpt {
 function buildKpt {
     set -e
     if [ -z $BUILD_DEPS_AT_HEAD ]; then
+	echo "checking go version"
+	go version
 	echo "Building kpt locally..."
 	go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
 	echo "Building kpt locally...SUCCESS"
@@ -430,16 +432,9 @@ ${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a > $OUTPUT_
 assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
 printResult
 
-# Test: Apply without ResourceGroup CRD installation fails
-echo "[ResourceGroup] Testing basic apply without ResourceGroup inventory CRD"
-echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
-assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
-printResult
-
 # Test: Apply forcing ResourceGroup CRD installation succeeds
 echo "[ResourceGroup] Testing create inventory CRD before basic apply"
-echo "kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a"
+echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "namespace/rg-test-namespace"
 assertContains "pod/pod-a created"
@@ -488,7 +483,7 @@ printResult
 echo "Testing init for Kptfile/ResourceGroup"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile > $OUTPUT_DIR/status 2>&1
@@ -662,7 +657,7 @@ wait 2
 
 # Attempt to apply two ConfigMaps: one in the default namespace (fails), and one
 # in the "rbac-error" namespace (succeeds).
-${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply --install-resource-group=false e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status
 assertRGInventory "rbac-error" "1"
 assertContains "configmap/error-config-map apply failed"
 assertContains "configmap/valid-config-map created"

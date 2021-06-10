@@ -1,50 +1,50 @@
 apiVersion: kpt.dev/v1alpha2
 kind: FunctionResultList
 metadata:
-    name: fnresults
+  name: fnresults
 exitCode: 1
 items:
-    - image: gcr.io/kpt-fn/kubeval:unstable
-      exitCode: 1
-      results:
-        - message: selector is required
-          severity: error
-          resourceRef:
-            apiVersion: apps/v1
-            kind: Deployment
-            name: nginx-deployment
-          field:
-            path: selector
-          file:
-            path: resources.yaml
-        - message: template is required
-          severity: error
-          resourceRef:
-            apiVersion: apps/v1
-            kind: Deployment
-            name: nginx-deployment
-          field:
-            path: template
-          file:
-            path: resources.yaml
-        - message: 'Invalid type. Expected: [integer,null], given: string'
-          severity: error
-          resourceRef:
-            apiVersion: apps/v1
-            kind: Deployment
-            name: nginx-deployment
-          field:
-            path: spec.replicas
-          file:
-            path: resources.yaml
-        - message: |
-            Validating arbitrary CRDs is not supported yet. You can skip them by setting ignore_missing_schemas or skip_kinds in the function config:
-            ERR  - stdin: Failed initializing schema file:///tmp/master-standalone-strict/custom-custom-v1.json: open /tmp/master-standalone-strict/custom-custom-v1.json: no such file or directory
-          severity: error
-          resourceRef:
-            apiVersion: custom.io/v1
-            kind: Custom
-            name: custom
-          file:
-            path: resources.yaml
-            index: 1
+  - image: gcr.io/kpt-fn/kubeval:v0.1.1
+    exitCode: 1
+    results:
+      - message: selector is required
+        severity: error
+        resourceRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: nginx-deployment
+        field:
+          path: selector
+        file:
+          path: resources.yaml
+      - message: template is required
+        severity: error
+        resourceRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: nginx-deployment
+        field:
+          path: template
+        file:
+          path: resources.yaml
+      - message: 'Invalid type. Expected: [integer,null], given: string'
+        severity: error
+        resourceRef:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: nginx-deployment
+        field:
+          path: spec.replicas
+        file:
+          path: resources.yaml
+      - message: |
+          Validating arbitrary CRDs is not supported yet. You can skip them by setting ignore_missing_schemas or skip_kinds in the function config:
+          ERR  - stdin: Failed initializing schema file:///tmp/master-standalone-strict/custom-custom-v1.json: open /tmp/master-standalone-strict/custom-custom-v1.json: no such file or directory
+        severity: error
+        resourceRef:
+          apiVersion: custom.io/v1
+          kind: Custom
+          name: custom
+        file:
+          path: resources.yaml
+          index: 1

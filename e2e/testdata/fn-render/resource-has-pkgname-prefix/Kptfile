@@ -4,6 +4,6 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-annotation:unstable
+    - image: gcr.io/kpt-fn/set-annotations:v0.1.3
       configMap:
         abc: def

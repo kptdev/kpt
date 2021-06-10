@@ -16,20 +16,27 @@ package cmdutil
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
 const (
-	StackTraceOnErrors = "COBRA_STACK_TRACE_ON_ERRORS"
-	trueString         = "true"
+	StackTraceOnErrors                 = "COBRA_STACK_TRACE_ON_ERRORS"
+	trueString                         = "true"
+	Stdout                             = "stdout"
+	Unwrap                             = "unwrap"
+	dockerVersionTimeout time.Duration = 5 * time.Second
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -80,18 +87,18 @@ func ResolveAbsAndRelPaths(path string) (string, string, error) {
 // DockerCmdAvailable runs `docker ps` to check that the docker command is
 // available, and returns an error with installation instructions if it is not
 func DockerCmdAvailable() error {
-	const op errors.Op = "docker.check"
-
-	suggestedText := `Docker is required to run this command.
-To install docker, follow the instructions at https://docs.docker.com/get-docker/
+	suggestedText := `docker must be running to use this command
+To install docker, follow the instructions at https://docs.docker.com/get-docker/.
 `
 	buffer := &bytes.Buffer{}
 
-	cmd := exec.Command("docker", "version")
+	ctx, cancel := context.WithTimeout(context.Background(), dockerVersionTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "docker", "version")
 	cmd.Stderr = buffer
 	err := cmd.Run()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("%s", suggestedText))
+		return fmt.Errorf("%s", suggestedText)
 	}
 	return nil
 }
@@ -112,4 +119,50 @@ func StringToImagePullPolicy(v string) fnruntime.ImagePullPolicy {
 	default:
 		return fnruntime.AlwaysPull
 	}
+}
+
+// WriteFnOutput writes the output resources of function commands to provided destination
+func WriteFnOutput(dest, content string, fromStdin bool, w io.Writer) error {
+	r := strings.NewReader(content)
+	switch dest {
+	case Stdout:
+		// if user specified dest is "stdout" directly write the content as it is already wrapped
+		_, err := w.Write([]byte(content))
+		return err
+	case Unwrap:
+		// if user specified dest is "unwrap", write the unwrapped content to the provided writer
+		return WriteToOutput(r, w, "")
+	case "":
+		if fromStdin {
+			// if user didn't specify dest, and if input is from STDIN, write the wrapped content provided writer
+			// this is same as "stdout" input above
+			_, err := w.Write([]byte(content))
+			return err
+		}
+	default:
+		// this means user specified a directory as dest, write the content to dest directory
+		return WriteToOutput(r, nil, dest)
+	}
+	return nil
+}
+
+// WriteToOutput reads the input from r and writes the output to either w or outDir
+func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
+	var outputs []kio.Writer
+	if outDir != "" {
+		err := os.MkdirAll(outDir, 0700)
+		if err != nil {
+			return fmt.Errorf("failed to create output directory %q: %q", outDir, err.Error())
+		}
+		outputs = []kio.Writer{&kio.LocalPackageWriter{PackagePath: outDir}}
+	} else {
+		outputs = []kio.Writer{&kio.ByteWriter{
+			Writer:           w,
+			ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation}},
+		}
+	}
+
+	return kio.Pipeline{
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
+		Outputs: outputs}.Execute()
 }

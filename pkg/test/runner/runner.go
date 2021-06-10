@@ -52,6 +52,7 @@ const (
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
+	outDir              string = "out"
 	setupScript         string = "setup.sh"
 	teardownScript      string = "teardown.sh"
 	execScript          string = "exec.sh"
@@ -137,15 +138,14 @@ func (r *Runner) runFnEval() error {
 	defer os.RemoveAll(tmpDir)
 	pkgPath := filepath.Join(tmpDir, r.pkgName)
 
-	var resultsDir string
+	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
-		// create result dir
 		resultsDir = filepath.Join(tmpDir, "results")
-		err = os.Mkdir(resultsDir, 0755)
-		if err != nil {
-			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
-		}
+	}
+
+	if r.IsOutOfPlace() {
+		destDir = filepath.Join(pkgPath, outDir)
 	}
 
 	// copy package to temp directory
@@ -180,6 +180,9 @@ func (r *Runner) runFnEval() error {
 
 			if resultsDir != "" {
 				kptArgs = append(kptArgs, "--results-dir", resultsDir)
+			}
+			if destDir != "" {
+				kptArgs = append(kptArgs, "-o", destDir)
 			}
 			if r.testCase.Config.ImagePullPolicy != "" {
 				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
@@ -218,7 +221,7 @@ func (r *Runner) runFnEval() error {
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
+		err = r.compareResult(i, fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -243,6 +246,12 @@ func (r *Runner) IsFnResultExpected() bool {
 	return err == nil
 }
 
+// IsOutOfPlace determines if command output is saved in a different directory (out-of-place).
+func (r *Runner) IsOutOfPlace() bool {
+	_, err := ioutil.ReadDir(filepath.Join(r.testCase.Path, outDir))
+	return err == nil
+}
+
 func (r *Runner) runFnRender() error {
 	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-pipeline-e2e-*")
@@ -264,15 +273,14 @@ func (r *Runner) runFnRender() error {
 		return fmt.Errorf("failed to create original dir %s: %w", origPkgPath, err)
 	}
 
-	var resultsDir string
+	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
-		// create result dir
 		resultsDir = filepath.Join(tmpDir, "results")
-		err = os.Mkdir(resultsDir, 0755)
-		if err != nil {
-			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
-		}
+	}
+
+	if r.IsOutOfPlace() {
+		destDir = filepath.Join(pkgPath, outDir)
 	}
 
 	// copy package to temp directory
@@ -314,6 +322,10 @@ func (r *Runner) runFnRender() error {
 				kptArgs = append(kptArgs, "--results-dir", resultsDir)
 			}
 
+			if destDir != "" {
+				kptArgs = append(kptArgs, "-o", destDir)
+			}
+
 			if r.testCase.Config.ImagePullPolicy != "" {
 				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
 			}
@@ -334,7 +346,7 @@ func (r *Runner) runFnRender() error {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// compare results
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
+		err = r.compareResult(i, fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -372,7 +384,7 @@ func (r *Runner) preparePackage(pkgPath string) error {
 	return err
 }
 
-func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
+func (r *Runner) compareResult(cnt int, exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
 	expected, err := newExpected(tmpPkgPath)
 	if err != nil {
 		return err
@@ -389,27 +401,31 @@ func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpP
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	err = r.compareOutput(stdout, stderr)
-	if err != nil {
-		return err
-	}
+	// we only check output and results for the first iteration of running because
+	// idempotency is only applied to changes in file system.
+	if cnt == 0 {
+		err = r.compareOutput(stdout, stderr)
+		if err != nil {
+			return err
+		}
 
-	// compare results
-	actual, err := readActualResults(resultsPath)
-	if err != nil {
-		return fmt.Errorf("failed to read actual results: %w", err)
-	}
-	diffOfResult, err := diffStrings(actual, expected.Results)
-	if err != nil {
-		return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
-	}
-	if actual != expected.Results {
-		return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
-			actual, diffOfResult)
+		// compare results
+		actual, err := readActualResults(resultsPath)
+		if err != nil {
+			return fmt.Errorf("failed to read actual results: %w", err)
+		}
+		diffOfResult, err := diffStrings(actual, expected.Results)
+		if err != nil {
+			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+		}
+		if actual != expected.Results {
+			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+				actual, diffOfResult)
+		}
 	}
 
 	// compare diff
-	actual, err = readActualDiff(tmpPkgPath, r.initialCommit)
+	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}

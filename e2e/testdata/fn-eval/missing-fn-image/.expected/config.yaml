@@ -18,5 +18,3 @@ image: gcr.io/kpt-fn/dne # non-existing image
 args:
   namespace: staging
 stdErr: 'Function image "gcr.io/kpt-fn/dne" doesn''t exist'
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/dne"

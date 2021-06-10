@@ -13,13 +13,13 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/klog"
-	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -41,13 +41,11 @@ type MigrateRunner struct {
 	cmProvider provider.Provider
 	rgProvider provider.Provider
 	cmLoader   manifestreader.ManifestLoader
-	rgLoader   manifestreader.ManifestLoader
 }
 
 // NewRunner returns a pointer to an initial MigrateRunner structure.
 func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
-	cmLoader manifestreader.ManifestLoader, rgLoader manifestreader.ManifestLoader,
-	ioStreams genericclioptions.IOStreams) *MigrateRunner {
+	cmLoader manifestreader.ManifestLoader, ioStreams genericclioptions.IOStreams) *MigrateRunner {
 	r := &MigrateRunner{
 		ctx:        ctx,
 		ioStreams:  ioStreams,
@@ -55,13 +53,13 @@ func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider pro
 		cmProvider: cmProvider,
 		rgProvider: rgProvider,
 		cmLoader:   cmLoader,
-		rgLoader:   rgLoader,
 		dir:        "",
 	}
 	cmd := &cobra.Command{
-		Use:                   "migrate [DIR | -]",
-		DisableFlagsInUseLine: true,
-		Short:                 i18n.T("Migrate inventory from ConfigMap to ResourceGroup custom resource"),
+		Use:     "migrate [DIR | -]",
+		Short:   livedocs.MigrateShort,
+		Long:    livedocs.MigrateShort + "\n" + livedocs.MigrateLong,
+		Example: livedocs.MigrateExamples,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				// default to current working directory
@@ -87,9 +85,8 @@ func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider pro
 
 // NewCommand returns the cobra command for the migrate command.
 func NewCommand(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
-	cmLoader manifestreader.ManifestLoader, rgLoader manifestreader.ManifestLoader,
-	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams).Command
+	cmLoader manifestreader.ManifestLoader, ioStreams genericclioptions.IOStreams) *cobra.Command {
+	return NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams).Command
 }
 
 // Run executes the migration from the ConfigMap based inventory to the ResourceGroup
@@ -263,25 +260,22 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 		fmt.Fprintln(mr.ioStreams.Out, "success")
 		return nil
 	}
-	rgReader, err := mr.rgLoader.ManifestReader(reader, args[0])
+
+	_, inv, err := live.Load(mr.rgProvider.Factory(), args[0], reader)
 	if err != nil {
 		return err
 	}
-	objs, err := rgReader.Read()
+
+	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
 	}
-	// Filter the ConfigMap inventory object.
-	rgInv, err := findResourceGroupInv(objs)
-	if err != nil {
-		return err
-	}
+
 	rgInvClient, err := mr.rgProvider.InventoryClient()
 	if err != nil {
 		return err
 	}
-	inv := live.WrapInventoryInfoObj(rgInv)
-	_, err = rgInvClient.Merge(inv, cmObjs)
+	_, err = rgInvClient.Merge(invInfo, cmObjs)
 	if err != nil {
 		return err
 	}

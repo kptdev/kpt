@@ -25,8 +25,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/cpuguy83/go-md2man/v2/md2man"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -58,7 +58,7 @@ func (m Command) Run() error {
 	}
 
 	// lookup the path to the man page
-	k, err := kptfileutil.ReadFile(m.Path)
+	k, err := pkg.ReadKptfile(m.Path)
 	if err != nil {
 		return err
 	}

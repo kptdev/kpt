@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/strings"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"github.com/spf13/cobra"
@@ -28,18 +29,16 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
-func NewRunner(ctx context.Context, provider provider.Provider, loader manifestreader.ManifestLoader,
+func NewRunner(ctx context.Context, provider provider.Provider,
 	ioStreams genericclioptions.IOStreams) *Runner {
 
 	r := &Runner{
 		ctx:           ctx,
 		Destroyer:     apply.NewDestroyer(provider),
 		provider:      provider,
-		loader:        loader,
 		ioStreams:     ioStreams,
 		destroyRunner: runDestroy,
 	}
@@ -54,7 +53,7 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 	r.Command = c
 
 	c.Flags().StringVar(&r.output, "output", printers.DefaultPrinter(),
-		fmt.Sprintf("Output format, must be one of %s", cmdutil.JoinStringsWithQuotes(printers.SupportedPrinters())))
+		fmt.Sprintf("Output format, must be one of %s", strings.JoinStringsWithQuotes(printers.SupportedPrinters())))
 	c.Flags().StringVar(&r.inventoryPolicyString, flagutils.InventoryPolicyFlag, flagutils.InventoryPolicyStrict,
 		"It determines the behavior when the resources don't belong to current inventory. Available options "+
 			fmt.Sprintf("%q and %q.", flagutils.InventoryPolicyStrict, flagutils.InventoryPolicyAdopt))
@@ -64,9 +63,9 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 }
 
 // NewCommand returns a cobra command.
-func NewCommand(ctx context.Context, provider provider.Provider, loader manifestreader.ManifestLoader,
+func NewCommand(ctx context.Context, provider provider.Provider,
 	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, loader, ioStreams).Command
+	return NewRunner(ctx, provider, ioStreams).Command
 }
 
 // Runner contains the run function that contains the cli functionality for the
@@ -77,7 +76,6 @@ type Runner struct {
 	PreProcess func(info inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error)
 	Destroyer  *apply.Destroyer
 	provider   provider.Provider
-	loader     manifestreader.ManifestLoader
 	ioStreams  genericclioptions.IOStreams
 
 	output                string
@@ -118,17 +116,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		args = append(args, cwd)
 	}
 
-	reader, err := r.loader.ManifestReader(c.InOrStdin(), args[0])
+	_, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
 
-	objs, err := reader.Read()
-	if err != nil {
-		return err
-	}
-
-	inv, _, err := r.loader.InventoryInfo(objs)
+	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
 	}
@@ -140,13 +133,13 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// TODO(mortent): Figure out if we can do this differently.
 	if r.PreProcess != nil {
-		r.inventoryPolicy, err = r.PreProcess(inv, dryRunStrategy)
+		r.inventoryPolicy, err = r.PreProcess(invInfo, dryRunStrategy)
 		if err != nil {
 			return err
 		}
 	}
 
-	return r.destroyRunner(r, inv, dryRunStrategy)
+	return r.destroyRunner(r, invInfo, dryRunStrategy)
 }
 
 func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.DryRunStrategy) error {

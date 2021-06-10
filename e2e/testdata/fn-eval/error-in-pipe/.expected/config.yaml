@@ -13,14 +13,16 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: |2-
-  [FAIL] "gcr.io/kpt-fn/set-namespace:v0.1"
+stdErr: |
+  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
+  [FAIL] "gcr.io/kpt-fn/set-namespace:v0.1.3"
     Results:
       [ERROR] failed to configure function: input namespace cannot be empty
     Stderr:
-      "failed to configure function: input namespace cannot be empty"
+      "[error] /// : failed to configure function: input namespace cannot be empty"
     Exit code: 1
 
    
+  [RUNNING] "gcr.io/kpt-fn/dne"
   [FAIL] "gcr.io/kpt-fn/dne"
-  error: Function image "gcr.io/kpt-fn/dne" doesn't exist
+  Error: Function image "gcr.io/kpt-fn/dne" doesn't exist

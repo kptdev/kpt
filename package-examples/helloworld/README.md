@@ -14,7 +14,7 @@ doesn't do anything beyond declaring the current directory as a `kpt` package.
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@next
 
 fetching package /package-examples/helloworld from https://github.com/GoogleContainerTools/kpt to helloworld
 ```

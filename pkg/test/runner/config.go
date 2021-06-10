@@ -64,10 +64,6 @@ type TestCaseConfig struct {
 	// Default: ""
 	StdOut string `json:"stdOut,omitempty" yaml:"stdOut,omitempty"`
 
-	// NonIdempotent indicates if the test case is not idempotent.
-	// By default, tests are assumed to be idempotent, so it defaults to false.
-	NonIdempotent bool `json:"nonIdempotent,omitempty" yaml:"nonIdempotent,omitempty"`
-
 	// Sequential means should this test case be run sequentially. Default: false
 	Sequential bool `json:"sequential,omitempty" yaml:"sequential,omitempty"`
 
@@ -97,9 +93,6 @@ type TestCaseConfig struct {
 }
 
 func (c *TestCaseConfig) RunCount() int {
-	if c.NonIdempotent {
-		return 1
-	}
 	return 2
 }
 

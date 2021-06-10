@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -26,14 +26,13 @@ var testNamespace = "test-inventory-namespace"
 var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
-var rgInvStr = `
-apiVersion: "kpt.dev/v1alpha1"
-kind: ResourceGroup
-metadata:
-  namespace: test-inventory-namespace
+var kptfileStr = `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+inventory:
   name: test-inventory-obj
-  labels:
-    cli-utils.sigs.k8s.io/inventory-id: test-inventory-label
+  namespace: test-inventory-namespace
+  inventoryID: test-inventory-label
 `
 
 var rgInvObj = &unstructured.Unstructured{
@@ -141,13 +140,12 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
 
-			ctx := fake.CtxWithNilPrinter()
+			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "updateKptfile"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
 			err = migrateRunner.updateKptfile(ctx, []string{dir}, testInventoryID)
 			// Check if there should be an error
@@ -158,8 +156,10 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			kf, err := kptfileutil.ReadFile(dir)
-			assert.NoError(t, err)
+			kf, err := pkg.ReadKptfile(dir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 			// Check the kptfile inventory section now has values.
 			if !tc.dryRun {
 				assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
@@ -201,13 +201,12 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			ctx := fake.CtxWithNilPrinter()
+			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
@@ -284,12 +283,12 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			isError: false,
 		},
 		"One migrate object is valid": {
-			invObj:  rgInvStr,
+			invObj:  kptfileStr,
 			objs:    []object.ObjMetadata{object.UnstructuredToObjMeta(pod1)},
 			isError: false,
 		},
 		"Multiple migrate objects are valid": {
-			invObj: rgInvStr,
+			invObj: kptfileStr,
 			objs: []object.ObjMetadata{
 				object.UnstructuredToObjMeta(pod1),
 				object.UnstructuredToObjMeta(pod2),
@@ -305,13 +304,12 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			ctx := fake.CtxWithNilPrinter()
+			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewFakeResourceGroupProvider(tf, tc.objs)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			rgLoader := live.NewResourceGroupManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, rgLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
 			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
@@ -365,7 +363,7 @@ inventory:
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
 var kptFile = `
-apiVersion: kpt.dev/v1alph2
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1

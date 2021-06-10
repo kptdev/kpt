@@ -30,7 +30,7 @@ import (
 
 const markdownExtension = ".md"
 const introPage = "00.md"
-const templatePath = "scripts/generate_site_sidebar/sidebar_template.md"
+const templatePath = "scripts/generate_site_sidebar/sidebar_template.md.tmpl"
 
 var pagePrefix = regexp.MustCompile(`^\d\d-?`)
 

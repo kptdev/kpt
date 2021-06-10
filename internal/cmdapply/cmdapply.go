@@ -21,32 +21,38 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/strings"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
 // NewRunner returns a command runner
-func NewRunner(ctx context.Context, provider provider.Provider, loader manifestreader.ManifestLoader,
+func NewRunner(ctx context.Context, provider provider.Provider,
 	ioStreams genericclioptions.IOStreams) *Runner {
 	r := &Runner{
-		ctx:       ctx,
-		Applier:   apply.NewApplier(provider),
-		provider:  provider,
-		loader:    loader,
-		ioStreams: ioStreams,
+		ctx:         ctx,
+		Applier:     apply.NewApplier(provider),
+		provider:    provider,
+		ioStreams:   ioStreams,
+		applyRunner: runApply,
 	}
 	c := &cobra.Command{
 		Use:     "apply [PKG_PATH | -]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
+		Short:   livedocs.ApplyShort,
+		Long:    livedocs.ApplyShort + "\n" + livedocs.ApplyLong,
+		Example: livedocs.ApplyExamples,
 	}
 	r.Command = c
 
@@ -57,7 +63,7 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 	c.Flags().StringVar(&r.serverSideOptions.FieldManager, "field-manager", common.DefaultFieldManager,
 		"The client owner of the fields being applied on the server-side.")
 	c.Flags().StringVar(&r.output, "output", printers.DefaultPrinter(),
-		fmt.Sprintf("Output format, must be one of %s", cmdutil.JoinStringsWithQuotes(printers.SupportedPrinters())))
+		fmt.Sprintf("Output format, must be one of %s", strings.JoinStringsWithQuotes(printers.SupportedPrinters())))
 	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,
 		"Polling period for resource statuses.")
 	c.Flags().DurationVar(&r.reconcileTimeout, "reconcile-timeout", time.Duration(0),
@@ -69,16 +75,16 @@ func NewRunner(ctx context.Context, provider provider.Provider, loader manifestr
 	c.Flags().StringVar(&r.inventoryPolicyString, flagutils.InventoryPolicyFlag, flagutils.InventoryPolicyStrict,
 		"It determines the behavior when the resources don't belong to current inventory. Available options "+
 			fmt.Sprintf("%q and %q.", flagutils.InventoryPolicyStrict, flagutils.InventoryPolicyAdopt))
-	c.Flags().BoolVar(&r.installCRD, "install-resource-group", false,
+	c.Flags().BoolVar(&r.installCRD, "install-resource-group", true,
 		"If true, install the inventory ResourceGroup CRD before applying.")
 	c.Flags().BoolVar(&r.dryRun, "dry-run", false,
 		"dry-run apply for the resources in the package.")
 	return r
 }
 
-func NewCommand(ctx context.Context, provider provider.Provider, loader manifestreader.ManifestLoader,
+func NewCommand(ctx context.Context, provider provider.Provider,
 	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, loader, ioStreams).Command
+	return NewRunner(ctx, provider, ioStreams).Command
 }
 
 // Runner contains the run function
@@ -89,7 +95,6 @@ type Runner struct {
 	ioStreams  genericclioptions.IOStreams
 	Applier    *apply.Applier
 	provider   provider.Provider
-	loader     manifestreader.ManifestLoader
 
 	installCRD                   bool
 	serverSideOptions            common.ServerSideOptions
@@ -103,9 +108,12 @@ type Runner struct {
 
 	inventoryPolicy inventory.InventoryPolicy
 	prunePropPolicy v1.DeletionPropagation
+
+	applyRunner func(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.Unstructured,
+		dryRunStrategy common.DryRunStrategy) error
 }
 
-func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
+func (r *Runner) preRunE(cmd *cobra.Command, _ []string) error {
 	var err error
 	r.prunePropPolicy, err = flagutils.ConvertPropagationPolicy(r.prunePropagationPolicyString)
 	if err != nil {
@@ -119,6 +127,12 @@ func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
 
 	if found := printers.ValidatePrinterType(r.output); !found {
 		return fmt.Errorf("unknown output type %q", r.output)
+	}
+
+	// We default the install-resource-group flag to false if we are doing
+	// dry-run, unless the user has explicitly used the install-resource-group flag.
+	if r.dryRun && !cmd.Flags().Changed("install-resource-group") {
+		r.installCRD = false
 	}
 
 	if !r.installCRD {
@@ -140,24 +154,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		args = append(args, cwd)
 	}
 
-	if r.installCRD {
-		err := cmdutil.InstallResourceGroupCRD(r.ctx, r.provider.Factory())
-		if err != nil {
-			return err
-		}
-	}
-
-	reader, err := r.loader.ManifestReader(c.InOrStdin(), args[0])
+	objs, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
 
-	objs, err := reader.Read()
-	if err != nil {
-		return err
-	}
-
-	inv, objs, err := r.loader.InventoryInfo(objs)
+	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
 	}
@@ -173,7 +175,19 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// TODO(mortent): Figure out if we can do this differently.
 	if r.PreProcess != nil {
-		r.inventoryPolicy, err = r.PreProcess(inv, dryRunStrategy)
+		r.inventoryPolicy, err = r.PreProcess(invInfo, dryRunStrategy)
+		if err != nil {
+			return err
+		}
+	}
+
+	return r.applyRunner(r, invInfo, objs, dryRunStrategy)
+}
+
+func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.Unstructured,
+	dryRunStrategy common.DryRunStrategy) error {
+	if r.installCRD {
+		err := cmdutil.InstallResourceGroupCRD(r.ctx, r.provider.Factory())
 		if err != nil {
 			return err
 		}
@@ -184,7 +198,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if err := r.Applier.Initialize(); err != nil {
 		return err
 	}
-	ch := r.Applier.Run(r.ctx, inv, objs, apply.Options{
+	ch := r.Applier.Run(r.ctx, invInfo, objs, apply.Options{
 		ServerSideOptions: r.serverSideOptions,
 		PollInterval:      r.period,
 		ReconcileTimeout:  r.reconcileTimeout,

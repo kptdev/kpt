@@ -14,5 +14,3 @@
 
 exitCode: 1
 stdErr: "fail: could not find httpbin deployment"
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/starlark:unstable"

@@ -116,7 +116,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 
 func hasKfDiff(localPath, orgPath string) (bool, error) {
 	const op errors.Op = "update.hasKfDiff"
-	localKf, err := kptfileutil.ReadFile(localPath)
+	localKf, err := pkg.ReadKptfile(localPath)
 	if err != nil {
 		return false, errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -137,7 +137,7 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 		}
 		return false, errors.E(op, types.UniquePath(localPath), err)
 	}
-	orgKf, err := kptfileutil.ReadFile(orgPath)
+	orgKf, err := pkg.ReadKptfile(orgPath)
 	if err != nil {
 		return false, errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -151,7 +151,7 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 	return !equal, nil
 }
 
-func isDefaultKptfile(localKf kptfilev1alpha2.KptFile, name string) (bool, error) {
+func isDefaultKptfile(localKf *kptfilev1alpha2.KptFile, name string) (bool, error) {
 	defaultKf := kptfileutil.DefaultKptfile(name)
 	return kptfileutil.Equal(localKf, defaultKf)
 }

@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -61,14 +62,13 @@ func NewContainerRunner(
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
 	}
-	return NewFunctionRunner(ctx, fltr, false, fnResult, fnResults)
+	return NewFunctionRunner(ctx, fltr, fnResult, fnResults)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
-	disableOutput bool,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList) (kio.Filter, error) {
 	name := fnResult.Image
@@ -76,34 +76,33 @@ func NewFunctionRunner(ctx context.Context,
 		name = fnResult.ExecPath
 	}
 	return &FunctionRunner{
-		ctx:           ctx,
-		name:          name,
-		filter:        fltr,
-		disableOutput: disableOutput,
-		fnResult:      fnResult,
-		fnResults:     fnResults,
+		ctx:       ctx,
+		name:      name,
+		filter:    fltr,
+		fnResult:  fnResult,
+		fnResults: fnResults,
 	}, nil
 }
 
 // FunctionRunner wraps FunctionFilter and implements kio.Filter interface.
 type FunctionRunner struct {
-	ctx           context.Context
-	name          string
-	disableOutput bool
-	filter        *runtimeutil.FunctionFilter
-	fnResult      *fnresult.Result
-	fnResults     *fnresult.ResultList
+	ctx              context.Context
+	name             string
+	disableCLIOutput bool
+	filter           *runtimeutil.FunctionFilter
+	fnResult         *fnresult.Result
+	fnResults        *fnresult.ResultList
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
 
-	if !fr.disableOutput {
+	if !fr.disableCLIOutput {
 		pr.Printf("[RUNNING] %q\n", fr.name)
 	}
 	output, err = fr.do(input)
 	if err != nil {
-		printOpt := printer.NewOpt().Stderr()
+		printOpt := printer.NewOpt()
 		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		var fnErr *ExecError
@@ -113,7 +112,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		}
 		return nil, err
 	}
-	if !fr.disableOutput {
+	if !fr.disableCLIOutput {
 		pr.Printf("[PASS] %q\n", fr.name)
 		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
 	}
@@ -201,7 +200,7 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return nil
 }
 
-func populateResourceRef(item *yaml.RNode, resultItem *fnresult.ResultItem) error {
+func populateResourceRef(item *yaml.RNode, resultItem *framework.ResultItem) error {
 	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
 	if err != nil {
 		return err
@@ -252,7 +251,6 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 // on kpt CLI.
 func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
-	printOpt := printer.NewOpt()
 	if len(fnErr.Stderr) > 0 {
 		errLines := &multiLineFormatter{
 			Title:          "Stderr",
@@ -260,9 +258,9 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.OptPrintf(printOpt.Stderr(), "%s", errLines.String())
+		pr.Printf("%s", errLines.String())
 	}
-	pr.OptPrintf(printOpt.Stderr(), "  Exit code: %d\n\n", fnErr.ExitCode)
+	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // path (location) of a KRM resources is tracked in a special key in
@@ -352,7 +350,7 @@ func (ri *multiLineFormatter) String() string {
 }
 
 // resultToString converts given structured result item to string format.
-func resultToString(result fnresult.ResultItem) string {
+func resultToString(result framework.ResultItem) string {
 	// TODO: Go SDK should implement Stringer method
 	// for framework.ResultItem. This is a temporary
 	// wrapper that will eventually be moved to Go SDK.
@@ -425,9 +423,6 @@ func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.R
 		}
 		// directly use the config from file
 		return node, nil
-	case !kptfilev1alpha2.IsNodeZero(&f.Config):
-		// directly use the inline config
-		return yaml.NewRNode(&f.Config), nil
 	case len(f.ConfigMap) != 0:
 		node = yaml.NewMapRNode(&f.ConfigMap)
 		if node == nil {

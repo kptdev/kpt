@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	pkgtesting "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
@@ -59,7 +60,7 @@ func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1alpha2.Git, 
 }
 
 func setKptfileName(workspace *testutil.TestWorkspace, name string) error {
-	kf, err := kptfileutil.ReadFile(workspace.FullPackagePath())
+	kf, err := pkg.ReadKptfile(workspace.FullPackagePath())
 	if err != nil {
 		return err
 	}
@@ -85,7 +86,7 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, pkgPath),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -104,7 +105,7 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -127,7 +128,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -150,7 +151,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -177,7 +178,7 @@ func TestCommand_Run(t *testing.T) {
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -239,7 +240,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -317,7 +318,7 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -398,7 +399,7 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -508,7 +509,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 			actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
 			err = Command{
 				Pkg: actualPkg,
-			}.Run(fake.CtxWithNilPrinter())
+			}.Run(fake.CtxWithDefaultPrinter())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -566,7 +567,7 @@ func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
 	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
 	err = Command{
 		Pkg: actualPkg,
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -611,7 +612,7 @@ func TestCommand_Run_no_subdir_at_invalid_tag(t *testing.T) {
 	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
 	err = Command{
 		Pkg: actualPkg,
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -633,7 +634,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -657,7 +658,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -684,7 +685,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 
 	err = Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}

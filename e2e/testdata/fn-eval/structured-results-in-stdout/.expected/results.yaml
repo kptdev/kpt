@@ -1,14 +1,14 @@
 apiVersion: kpt.dev/v1alpha2
 kind: FunctionResultList
 metadata:
-    name: fnresults
+  name: fnresults
 exitCode: 0
 items:
-    - image: gcr.io/kpt-fn/search-replace:v0.1
-      exitCode: 0
-      results:
-        - message: Mutated field value to "4"
-          field:
-            path: spec.replicas
-          file:
-            path: resources.yaml
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    exitCode: 0
+    results:
+      - message: Mutated field value to "4"
+        field:
+          path: spec.replicas
+        file:
+          path: resources.yaml

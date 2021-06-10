@@ -60,7 +60,7 @@ func TestStatusCommand(t *testing.T) {
 	}{
 		"no inventory template": {
 			kptfileInv:     nil,
-			expectedErrMsg: "inventory info not found in Kptfile",
+			expectedErrMsg: "inventory failed validation",
 		},
 		"invalid value for pollUntil": {
 			pollUntil:      "doesNotExist",
@@ -251,8 +251,7 @@ deployment.apps/foo is InProgress: inProgress
 			defer revert()
 
 			provider := live.NewFakeResourceGroupProvider(tf, tc.inventory)
-			loader := live.NewResourceGroupManifestLoader(tf)
-			runner := NewRunner(fake.CtxWithNilPrinter(), provider, loader, ioStreams)
+			runner := NewRunner(fake.CtxWithDefaultPrinter(), provider, ioStreams)
 			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
 			}

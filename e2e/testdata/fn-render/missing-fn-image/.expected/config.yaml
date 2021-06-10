@@ -14,6 +14,3 @@
 
 exitCode: 1
 stdErr: 'Error: Function image "gcr.io/kpt-fn/dne" doesn''t exist'
-stdOut: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:unstable"
-  [PASS] "gcr.io/kpt-fn/set-namespace:unstable"

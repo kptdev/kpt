@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -27,7 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 )
 
 // RunFns runs the set of configuration functions in a local directory against
@@ -106,31 +107,6 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
-// functionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
-// invoked by kio.LocalPackageReader when it reads the package. The filter will return
-// true if the file should be skipped during reading. Skipped files will not be included
-// in all steps following.
-func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
-	if r.IncludeMetaResources {
-		return func(relPath string) bool {
-			return false
-		}, nil
-	}
-
-	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
-	}
-
-	return func(relPath string) bool {
-		if len(fnConfigPaths) == 0 {
-			return false
-		}
-		// relPath is cleaned so we can directly use it here
-		return fnConfigPaths.Has(relPath)
-	}, nil
-}
-
 func (r RunFns) getNodesAndFilters() (
 	*kio.PackageBuffer, []kio.Filter, *kio.LocalPackageReadWriter, error) {
 	// Read Resources from Directory or Input
@@ -141,10 +117,10 @@ func (r RunFns) getNodesAndFilters() (
 	var outputPkg *kio.LocalPackageReadWriter
 	matchFilesGlob := kio.MatchAll
 	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
+		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	}
 	if r.Path != "" {
-		functionConfigFilter, err := r.functionConfigFilterFunc()
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(r.uniquePath, r.IncludeMetaResources)
 		if err != nil {
 			return nil, nil, outputPkg, err
 		}
@@ -212,7 +188,12 @@ func (r RunFns) runFunctions(
 	} else {
 		// write to the output instead of the directory if r.Output is specified or
 		// the output is nil (reading from Input)
-		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
+		outputs = append(outputs, kio.ByteWriter{
+			Writer:                r.Output,
+			KeepReaderAnnotations: true,
+			WrappingKind:          kio.ResourceListKind,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+		})
 	}
 
 	// add format filter at the end to consistently format output resources
@@ -231,21 +212,18 @@ func (r RunFns) runFunctions(
 	if err != nil {
 		// function fails
 		if resultErr == nil {
-			r.printFnResultsStatus(resultsFile, true)
+			r.printFnResultsStatus(resultsFile)
 		}
 		return err
 	}
 	if resultErr == nil {
-		r.printFnResultsStatus(resultsFile, false)
+		r.printFnResultsStatus(resultsFile)
 	}
 	return nil
 }
 
-func (r RunFns) printFnResultsStatus(resultsFile string, toStdErr bool) {
-	if r.isOutputDisabled() {
-		return
-	}
-	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true, toStdErr)
+func (r RunFns) printFnResultsStatus(resultsFile string) {
+	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -335,7 +313,7 @@ func (r *RunFns) init() error {
 	// if no path is specified, default reading from stdin and writing to stdout
 	if r.Path == "" {
 		if r.Output == nil {
-			r.Output = os.Stdout
+			r.Output = printer.FromContextOrDie(r.Ctx).OutStream()
 		}
 		if r.Input == nil {
 			r.Input = os.Stdin
@@ -386,25 +364,10 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
-// etFunctionConfig returns yaml representation of functionConfig that can
+// getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	if r.FnConfigPath == "" {
-		return nil, fmt.Errorf("function config file path must not be empty")
-	}
-	f, err := os.Open(r.FnConfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("missing function config '%s': %w", r.FnConfigPath, err)
-	}
-	reader := kio.ByteReader{Reader: f}
-	nodes, err := reader.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read function config '%s': %w", r.FnConfigPath, err)
-	}
-	if len(nodes) > 1 {
-		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config", r.FnConfigPath)
-	}
-	return nodes[0], nil
+	return kptfile.GetValidatedFnConfigFromPath("", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters
@@ -465,10 +428,5 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 		fnResult.ExecPath = spec.Exec.Path
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
-}
-
-func (r RunFns) isOutputDisabled() bool {
-	// if output is not nil we will write the resources to stdout
-	return r.Output != nil
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, fnResult, r.fnResults)
 }

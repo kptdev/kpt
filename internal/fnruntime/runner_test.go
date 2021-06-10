@@ -24,11 +24,10 @@ import (
 	"strings"
 	"testing"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -46,22 +45,6 @@ func TestFunctionConfig(t *testing.T) {
 			name:     "no config",
 			fn:       kptfilev1alpha2.Function{},
 			expected: "",
-		},
-		{
-			name: "inline config",
-			fn: kptfilev1alpha2.Function{
-				Config: *yaml.MustParse(`apiVersion: cft.dev/v1alpha1
-kind: ResourceHierarchy
-metadata:
-  name: root-hierarchy
-  namespace: hierarchy`).YNode(),
-			},
-			expected: `apiVersion: cft.dev/v1alpha1
-kind: ResourceHierarchy
-metadata:
-  name: root-hierarchy
-  namespace: hierarchy
-`,
 		},
 		{
 			name: "file config",
@@ -583,7 +566,7 @@ file:
 		yml, err := yaml.Parse(tc.input)
 		assert.NoError(t, err)
 
-		result := &fnresult.ResultItem{}
+		result := &framework.ResultItem{}
 		err = yaml.Unmarshal([]byte(tc.input), result)
 		assert.NoError(t, err)
 		assert.NoError(t, populateResourceRef(yml, result))

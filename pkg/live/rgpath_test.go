@@ -4,152 +4,128 @@
 package live
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
-	"sigs.k8s.io/cli-utils/pkg/common"
-	"sigs.k8s.io/cli-utils/pkg/inventory"
+	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
-var (
-	inventoryNamespace = "test-namespace"
-	inventoryName      = "inventory-obj-name"
-	inventoryID        = "XXXXXXXXXX-FOOOOOO"
-)
-
-var kptFile = `
-apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: test1
-upstreamLock:
-  type: git
-  git:
-    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
-    repo: git@github.com:seans3/blueprint-helloworld
-    directory: /
-    ref: master
-inventory:
-  namespace: test-namespace
-  name: inventory-obj-name
-  inventoryID: XXXXXXXXXX-FOOOOOO
-`
-
-var kptFileMissingID = `
-apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: test1
-upstreamLock:
-  type: git
-  git:
-    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
-    repo: git@github.com:seans3/blueprint-helloworld
-    directory: /
-    ref: master
-inventory:
-  namespace: test-namespace
-  name: inventory-obj-name
-`
-var kptFileWithAnnotations = `
-apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: test1
-upstreamLock:
-  type: git
-  git:
-    commit: 786b898857bd7e9647c229d5f39b0be4de86c915
-    repo: git@github.com:seans3/blueprint-helloworld
-    directory: /
-    ref: master
-inventory:
-  namespace: test-namespace
-  name: inventory-obj-name
-  inventoryID: XXXXXXXXXX-FOOOOOO
-  annotations:
-    random-key: random-value
-`
-
-var podA = `
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pod-a
-  namespace: test-namespace
-  labels:
-    name: test-pod-label
-spec:
-  containers:
-  - name: kubernetes-pause
-    image: k8s.gcr.io/pause:2.0
-`
-
-var deploymentA = `
-kind: Deployment
-apiVersion: apps/v1
-metadata:
-  name: test-deployment
-spec:
-  replicas: 1
-`
-
-func TestInvGenPathManifestReader_Read(t *testing.T) {
+func TestPathManifestReader_Read(t *testing.T) {
+	_ = apiextv1.AddToScheme(scheme.Scheme)
 	testCases := map[string]struct {
-		manifests  map[string]string
-		numObjs    int
-		hasKptfile bool
-		annotated  bool
+		manifests      map[string]string
+		namespace      string
+		expectedObjs   []object.ObjMetadata
+		expectedErrMsg string
 	}{
-		"Kptfile missing inventory id returns only Pod": {
-			manifests: map[string]string{
-				"Kptfile":    kptFileMissingID,
-				"pod-a.yaml": podA,
-			},
-			numObjs:    1,
-			hasKptfile: false,
+		"Empty package is ok": {
+			manifests:    map[string]string{},
+			namespace:    "test-namespace",
+			expectedObjs: []object.ObjMetadata{},
 		},
-		"Basic ResourceGroup inventory object created": {
+		"Kptfile are ignored": {
 			manifests: map[string]string{
 				"Kptfile":    kptFile,
 				"pod-a.yaml": podA,
 			},
-			numObjs:    2,
-			hasKptfile: true,
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "Pod",
+					},
+					Name:      "pod-a",
+					Namespace: "test-namespace",
+				},
+			},
 		},
-		"ResourceGroup inventory object created, multiple objects": {
+		"Namespace gets set on namespaced resources": {
 			manifests: map[string]string{
-				"Kptfile":           kptFile,
+				"pod-a.yaml":      podA,
+				"deployment.yaml": deploymentA,
+			},
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "Pod",
+					},
+					Name:      "pod-a",
+					Namespace: "test-namespace",
+				},
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apps",
+						Kind:  "Deployment",
+					},
+					Name:      "test-deployment",
+					Namespace: "test-namespace",
+				},
+			},
+		},
+		"Function config resources are ignored": {
+			manifests: map[string]string{
+				"Kptfile":           kptFileWithPipeline,
 				"pod-a.yaml":        podA,
 				"deployment-a.yaml": deploymentA,
+				"cm.yaml":           configMap,
 			},
-			numObjs:    3,
-			hasKptfile: true,
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "Pod",
+					},
+					Name:      "pod-a",
+					Namespace: "test-namespace",
+				},
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apps",
+						Kind:  "Deployment",
+					},
+					Name:      "test-deployment",
+					Namespace: "test-namespace",
+				},
+			},
 		},
-		"ResourceGroup inventory object created, Kptfile last": {
+		"CR and CRD in the same set is ok": {
 			manifests: map[string]string{
-				"deployment-a.yaml": deploymentA,
-				"Kptfile":           kptFile,
+				"crd.yaml": crd,
+				"cr.yaml":  cr,
 			},
-			numObjs:    2,
-			hasKptfile: true,
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Group: "custom.io",
+						Kind:  "Custom",
+					},
+					Name: "cr",
+				},
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apiextensions.k8s.io",
+						Kind:  "CustomResourceDefinition",
+					},
+					Name: "custom.io",
+				},
+			},
 		},
-		"ResourceGroup inventory object created with annotation, multiple objects": {
+		"CR with unknown type is not allowed": {
 			manifests: map[string]string{
-				"Kptfile":           kptFileWithAnnotations,
-				"pod-a.yaml":        podA,
-				"deployment-a.yaml": deploymentA,
+				"cr.yaml": cr,
 			},
-			numObjs:    3,
-			hasKptfile: true,
-			annotated:  true,
+			namespace:      "test-namespace",
+			expectedErrMsg: "unknown resource types: Custom.custom.io",
 		},
 	}
 
@@ -173,59 +149,31 @@ func TestInvGenPathManifestReader_Read(t *testing.T) {
 			}
 
 			// Create the ResourceGroupPathManifestReader, and Read()
-			// the manifests into infos.
-			pathReader := &manifestreader.PathManifestReader{
-				Path: dir,
+			// the manifests into unstructureds
+			rgPathReader := &ResourceGroupPathManifestReader{
+				PkgPath: dir,
 				ReaderOptions: manifestreader.ReaderOptions{
 					Mapper:           mapper,
-					Namespace:        inventoryNamespace,
+					Namespace:        tc.namespace,
 					EnforceNamespace: false,
 				},
 			}
-			rgPathReader := &ResourceGroupPathManifestReader{
-				pathReader: pathReader,
-			}
 			readObjs, err := rgPathReader.Read()
-			assert.NoError(t, err)
-			assert.Equal(t, len(readObjs), tc.numObjs)
-			for _, obj := range readObjs {
-				assert.Equal(t, inventoryNamespace, obj.GetNamespace())
-			}
-			if tc.hasKptfile {
-				invObj, _, err := inventory.SplitUnstructureds(readObjs)
-				assert.NoError(t, err)
-				assert.Equal(t, inventoryName, invObj.GetName())
-				actualID, err := getInventoryLabel(invObj)
-				assert.NoError(t, err)
-				assert.Equal(t, inventoryID, actualID)
-				actualAnnotations := getInventoryAnnotations(invObj)
-				if tc.annotated {
-					assert.Equal(t, map[string]string{"random-key": "random-value"}, actualAnnotations)
-				} else {
-					assert.Equal(t, map[string]string(nil), actualAnnotations)
+			if tc.expectedErrMsg != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
 				}
+				assert.Contains(t, err.Error(), tc.expectedErrMsg)
+				return
 			}
+			assert.NoError(t, err)
+
+			readObjMetas := object.UnstructuredsToObjMetas(readObjs)
+
+			sort.Slice(readObjMetas, func(i, j int) bool {
+				return readObjMetas[i].String() < readObjMetas[j].String()
+			})
+			assert.Equal(t, tc.expectedObjs, readObjMetas)
 		})
 	}
-}
-
-func getInventoryLabel(inv *unstructured.Unstructured) (string, error) {
-	accessor, err := meta.Accessor(inv)
-	if err != nil {
-		return "", err
-	}
-	labels := accessor.GetLabels()
-	inventoryLabel, exists := labels[common.InventoryLabel]
-	if !exists {
-		return "", fmt.Errorf("inventory label does not exist for inventory object: %s", common.InventoryLabel)
-	}
-	return inventoryLabel, nil
-}
-
-func getInventoryAnnotations(inv *unstructured.Unstructured) map[string]string {
-	accessor, err := meta.Accessor(inv)
-	if err != nil {
-		return nil
-	}
-	return accessor.GetAnnotations()
 }

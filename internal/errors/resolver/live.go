@@ -18,8 +18,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
+	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 )
 
 //nolint:gochecknoinits
@@ -66,6 +68,29 @@ Error: The ResourceGroup CRD was not found in the cluster. Please install it eit
 	//nolint:lll
 	invInfoAlreadyExistsMsg = `
 Error: Inventory information has already been added to the package Kptfile. Changing it after a package has been applied to the cluster can lead to undesired results. Use the --force flag to suppress this error.
+`
+
+	multipleInvInfoMsg = `
+Error: Multiple Kptfile resources with inventory information found. Please make sure at most one Kptfile resource contains inventory information.
+`
+
+	//nolint:lll
+	inventoryInfoValidationMsg = `
+Error: The inventory information is not valid. Please update the information in the Kptfile or provide information with the command line flags. To generate the inventory information the first time, use the 'kpt live init' command.
+
+Details:
+{{- range .err.Violations}}
+{{printf "%s" .Reason }}
+{{- end}}
+`
+
+	unknownTypesMsg = `
+Error: {{ printf "%d" (len .err.GroupKinds) }} resource types could not be found in the cluster or as CRDs among the applied resources.
+
+Resource types:
+{{- range .err.GroupKinds}}
+{{ printf "%s" .String }}
+{{- end}}
 `
 
 	TimeoutErrorExitCode = 3
@@ -125,5 +150,25 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		}, true
 	}
 
+	var multipleInvInfoError *live.MultipleInventoryInfoError
+	if errors.As(err, &multipleInvInfoError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(multipleInvInfoMsg, tmplArgs),
+		}, true
+	}
+
+	var inventoryInfoValidationError *live.InventoryInfoValidationError
+	if errors.As(err, &inventoryInfoValidationError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(inventoryInfoValidationMsg, tmplArgs),
+		}, true
+	}
+
+	var unknownTypesError *manifestreader.UnknownTypesError
+	if errors.As(err, &unknownTypesError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(unknownTypesMsg, tmplArgs),
+		}, true
+	}
 	return ResolvedResult{}, false
 }
