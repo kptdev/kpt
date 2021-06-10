@@ -5,9 +5,11 @@ package cmdsink
 
 import (
 	"context"
+	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -44,6 +46,17 @@ func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		dir = args[0]
 	}
+
+	pr := printer.FromContextOrDie(r.Ctx)
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		pr.Printf("directory %q doesn't exist, creating the directory...", dir)
+		err := os.MkdirAll(dir, 0700)
+		if err != nil {
+			return err
+		}
+	}
+
 	outputs := []kio.Writer{&kio.LocalPackageWriter{PackagePath: dir}}
 
 	err := kio.Pipeline{

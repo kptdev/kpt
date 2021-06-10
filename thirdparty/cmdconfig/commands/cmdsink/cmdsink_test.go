@@ -5,11 +5,13 @@ package cmdsink
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
@@ -130,6 +132,61 @@ metadata:
     app: nginx
 spec:
   replicas: 3
+`
+	if !assert.Equal(t, expected, string(actual)) {
+		t.FailNow()
+	}
+}
+
+func TestSinkCommand_CreateDir(t *testing.T) {
+	d, err := ioutil.TempDir("", "source-test")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	// delete the dir as we just want the temp dir path
+	// directory should be created by the command
+	os.RemoveAll(d)
+
+	r := GetSinkRunner(fake.CtxWithDefaultPrinter(), "")
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- kind: Deployment
+  metadata:
+    labels:
+      app: nginx2
+    name: foo
+    annotations:
+      app: nginx2
+      config.kubernetes.io/index: '0'
+      config.kubernetes.io/path: 'f1.yaml'
+  spec:
+    replicas: 1
+`))
+	r.Command.SetArgs([]string{d})
+	logs := &bytes.Buffer{}
+	r.Ctx = printer.WithContext(r.Ctx, printer.New(nil, logs))
+	if !assert.NoError(t, r.Command.Execute()) {
+		t.FailNow()
+	}
+
+	if !assert.Equal(t, fmt.Sprintf("directory %q doesn't exist, creating the directory...", d), logs.String()) {
+		t.FailNow()
+	}
+
+	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.yaml"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	expected := `kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
 `
 	if !assert.Equal(t, expected, string(actual)) {
 		t.FailNow()

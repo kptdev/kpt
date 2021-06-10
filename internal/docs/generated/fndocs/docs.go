@@ -102,7 +102,9 @@ Flags:
     Allowed values: stdout|unwrap|<OUT_DIR_PATH>
     1. stdout: output resources are wrapped in ResourceList and written to stdout.
     2. unwrap: output resources are written to stdout, in multi-object yaml format.
-    3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
+    3. OUT_DIR_PATH: output resources are written to provided directory.
+       a. If the directory doesn't already exist, it will be created.
+       b. If the directory already exists, the existing files in it are not deleted.
   
   --results-dir:
     Path to a directory to write structured results. Directory will be created if
@@ -221,7 +223,9 @@ Flags:
     Allowed values: stdout|unwrap|<OUT_DIR_PATH>
     1. stdout: output resources are wrapped in ResourceList and written to stdout.
     2. unwrap: output resources are written to stdout, in multi-object yaml format.
-    3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
+    3. OUT_DIR_PATH: output resources are written to provided directory.
+       a. If the directory doesn't already exist, it will be created.
+       b. If the directory already exists, the existing files in it are not deleted.
   
   --results-dir:
     Path to a directory to write structured results. Directory will be created if
@@ -259,7 +263,9 @@ var SinkLong = `
   
   DIR:
     Path to a local directory to write resources to. Defaults to the current
-    working directory. Directory must exist.
+    working directory.
+    1. If the directory doesn't already exist, it will be created.
+    2. If the directory already exists, the existing files in it are not deleted.
 `
 var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
