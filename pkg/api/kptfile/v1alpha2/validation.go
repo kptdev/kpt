@@ -19,11 +19,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
