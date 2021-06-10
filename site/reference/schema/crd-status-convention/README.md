@@ -1,28 +1,24 @@
 # CRD Status Convention
 
-The custom controller should use the following conditions to signal whether a
-resource has been fully reconciled, and whether it has encountered any problems:
+To enable kpt to calculate the [reconcile status] for CRDs, this document
+provides additional conventions for status conditions following the [Kubernetes
+API Guideline]. Custom controllers should use the following conditions types to
+signal whether a resource has been fully reconciled, and whether it has
+encountered any problems:
 
-**Reconciling**: Indicates that the resource does not yet match its spec. i.e.
-the desired state as expressed in the resource spec object has not been fully
-realized in the cluster. A value of True means the controller is in the process
-of reconciling the resource while a value of False means there are no work left
-for the controller.
-
-**Stalled**: Indicates that the controller is not able to make the expected
-progress towards reconciling the resource. The cause of this status can be
-either that the controller observes an actual problem (like a pod not being able
-to start), or that something is taking longer than expected (similar to the
-`progressDeadlineSeconds` timeout on Deployments). If this condition is True, it
-should be interpreted that something might be wrong. It does not mean that the
-resource will never be reconciled. Most process in Kubernetes retry forever, so
-this should not be considered a terminal state.
-
-These conditions adhere to the [Kubernetes design principles] which include
-expressing conditions using abnormal-true polarity. There is currently a
-[proposal] to change to guidance for conditions. If this is accepted, the
-recommended conditions for kpt might also change, but we will continue to
-support the current set of conditions.
+- `Reconciling`: Indicates that the resource does not yet match its spec. i.e.
+  the desired state as expressed in the resource spec object has not been fully
+  realized in the cluster. A value of `"True"` means the controller is in the
+  process of reconciling the resource while a value of `"False"` means there are
+  no work left for the controller.
+- `Stalled`: Indicates that the controller is not able to make the expected
+  progress towards reconciling the resource. The cause of this status can be
+  either that the controller observes an actual problem (like a pod not being
+  able to start), or that something is taking longer than expected (similar to
+  the `progressDeadlineSeconds` timeout on Deployments). If this condition is
+  `"True"`, it should be interpreted that something might be wrong. It does not
+  mean that the resource will never be reconciled. Most process in Kubernetes
+  retry forever, so this should not be considered a terminal state.
 
 CRDs should also set the `observedGeneration` field in the status object, a
 pattern already common in the built-in types. The controller should update this
@@ -57,7 +53,8 @@ status:
       type: Stalled
 ```
 
-The status for this resource state will be `InProgress`.
+The calculated reconcile status for this resource is `InProgress`.
 
-[kubernetes design principles]:
+[kubernetes api guideline]:
   https://www.google.com/url?q=https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md%23typical-status-properties&sa=D&ust=1585160635349000&usg=AFQjCNE3ncANdus3xckLj3fkeupwFUoABw
+[reconcile status]: /book/06-deploying-packages/?id=reconcile-status

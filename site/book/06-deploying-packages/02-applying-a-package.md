@@ -63,6 +63,9 @@ persistentvolumeclaim/wp-pv-claim created (dry-run)
 0 resource(s) pruned, 0 skipped, 0 failed (dry-run)
 ```
 
+When combined with server-side apply, the resources in the package pass through
+all the validation steps on the API server.
+
 ## Observe the package
 
 After you have deployed the package, you can get its current status at any time:
