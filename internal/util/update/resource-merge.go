@@ -256,8 +256,7 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	}
 
 	err = (&pkg.Walker{
-		FileMatchFunc:      pkg.AllFileMatchFunc,
-		HonorKptfileIgnore: true,
+		FileMatcher: pkg.AllMatcher,
 	}).Walk(p, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.E(op, errors.IO, err)

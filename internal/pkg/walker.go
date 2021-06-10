@@ -26,15 +26,17 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
-// AllFileMatchFunc is a matcher func that matches all files.
-var AllFileMatchFunc FileMatchFunc = func(string, os.FileInfo) bool {
+// AllMatcher is a FileMatcher implementation that matches all files and
+// directories.
+var AllMatcher = FileMatcherFunc(func(string, os.FileInfo) bool {
 	return true
-}
+})
 
-// YamlFileMatchFunc is a matcher func that matches all files with .yaml or
-// .yml extensions.
-var YamlFileMatchFunc FileMatchFunc = func(_ string, info os.FileInfo) bool {
+// YamlMatcher is a FileMatcher implementation that matches all files
+// with .yaml or .yml extensions and all directories.
+var YamlMatcher = FileMatcherFunc(func(_ string, info os.FileInfo) bool {
 	if info.IsDir() {
+		// We want to match all directories, so just return true here.
 		return true
 	}
 
@@ -43,12 +45,13 @@ var YamlFileMatchFunc FileMatchFunc = func(_ string, info os.FileInfo) bool {
 		return true
 	}
 	return false
-}
+})
 
-// KptfileYamlFileMatchFunc is a matcher func that matches the Kptfile and files
-// with either .yaml or .yml extensions.
-var KptfileYamlFileMatchFunc FileMatchFunc = func(s string, info os.FileInfo) bool {
+// KptfileYamlMatcher is a FileMatcher implementation that matches the
+// Kptfile, files with either .yaml or .yml extensions, and all directories.
+var KptfileYamlMatcher = FileMatcherFunc(func(s string, info os.FileInfo) bool {
 	if info.IsDir() {
+		// We want to match all directories, so just return true here.
 		return true
 	}
 
@@ -57,32 +60,39 @@ var KptfileYamlFileMatchFunc FileMatchFunc = func(s string, info os.FileInfo) bo
 	}
 
 	ext := filepath.Ext(info.Name())
-	if ext == ".yaml" || ext == ".yml" {
-		return true
-	}
-	return false
-}
+	return ext == ".yaml" || ext == ".yml"
+})
 
 // WalkFunc defines the type for the callback function used by the
 // Walker.Walk function.
 type WalkFunc func(string, os.FileInfo, error) error
 
-// FileMatchFunc is the type of a function that can be provided to the
-// Walker to filter the files that will be provided to the caller.
-type FileMatchFunc func(string, os.FileInfo) bool
+// FileMatcher defines the interface used by the Walker to determine which
+// files and directories that should be visited by the walker.
+type FileMatcher interface {
+	Match(string, os.FileInfo) bool
+}
+
+// FileMatcherFunc provides a function implementation of the FileMatcher
+// interface.
+type FileMatcherFunc func(string, os.FileInfo) bool
+
+func (f FileMatcherFunc) Match(path string, info os.FileInfo) bool {
+	return f(path, info)
+}
 
 // Walker provides functionality for walking the content of a
 // kpt package. It allows for customization of the files and directories
 // that will be provided to the caller through the callback function.
 type Walker struct {
-	// FileMatchFunc defines the function that will be used by the walker to
-	// filter which files should be provided to the callback. By default, all
-	// files will be provided.
-	FileMatchFunc FileMatchFunc
+	// FileMatcher is used to determine which files or directories that should
+	// trigger a callback for the walker. By default all files and directories
+	// will be provided.
+	FileMatcher FileMatcher
 
-	// HonorKptfileIgnore defines whether the walker should honor the ignore
-	// list from the package Kptfile.
-	HonorKptfileIgnore bool
+	// IgnoreKptfileIgnorePatterns defines whether the walker should consider
+	// the Ignore patterns in the Kptfile.
+	IgnoreKptfileIgnorePatterns bool
 }
 
 // Walk traverses the kpt package provided and invokes the provided
@@ -96,14 +106,15 @@ func (p *Walker) Walk(pkg *Pkg, cb WalkFunc) error {
 		return err
 	}
 
-	// If the Kptfile could be read and it has at least one ignore pattern,
-	// turn it into a string.
+	// Read the ignore patterns from the Kptfile (if found) and combine
+	// them into a single string. This is the format required by the
+	// gitignore library.
 	var ignorePatterns string
 	if err == nil && len(kf.Ignore) > 0 {
 		ignorePatterns = strings.Join(kf.Ignore, "\n")
 	}
 
-	pkgPath := pkg.UniquePath.String()
+	pkgPath := string(pkg.UniquePath)
 	ignoreMatcher := gitignore.NewGitIgnoreFromReader(pkgPath, bytes.NewBufferString(ignorePatterns))
 
 	return filepath.Walk(pkgPath, func(path string, info os.FileInfo, err error) error {
@@ -131,13 +142,13 @@ func (p *Walker) Walk(pkg *Pkg, cb WalkFunc) error {
 		}
 
 		// If the file doesn't meet the matcher criteria, we can just return.
-		if !p.FileMatchFunc(path, info) {
+		if p.FileMatcher != nil && !p.FileMatcher.Match(path, info) {
 			return nil
 		}
 
-		// If HonorKptfileIgnore is set and the file/directory is covered by
+		// If IgnoreKptfileIgnorePatterns if false and the file/directory is covered by
 		// any of the ignore patterns, we don't invoke the callback.
-		if p.HonorKptfileIgnore && ignoreMatcher.Match(path, info.IsDir()) {
+		if !p.IgnoreKptfileIgnorePatterns && ignoreMatcher.Match(path, info.IsDir()) {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}

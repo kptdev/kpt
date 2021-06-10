@@ -44,8 +44,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 	}
 
 	err = (&pkg.Walker{
-		FileMatchFunc:      pkg.AllFileMatchFunc,
-		HonorKptfileIgnore: true,
+		FileMatcher: pkg.AllMatcher,
 	}).Walk(p, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -154,8 +153,7 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 	}
 
 	err = (&pkg.Walker{
-		FileMatchFunc:      pkg.AllFileMatchFunc,
-		HonorKptfileIgnore: true,
+		FileMatcher: pkg.AllMatcher,
 	}).Walk(p, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {

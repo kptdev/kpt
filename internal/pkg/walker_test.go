@@ -40,7 +40,7 @@ func TestPackageWalker_Walk_PackageDoesNotExist(t *testing.T) {
 	p := testing2.CreatePkgOrFail(t, filepath.Join(dir, "doesNotExist"))
 
 	err = (&Walker{
-		FileMatchFunc: AllFileMatchFunc,
+		FileMatcher: AllMatcher,
 	}).Walk(p, func(s string, info os.FileInfo, err error) error {
 		return err
 	})
@@ -49,15 +49,15 @@ func TestPackageWalker_Walk_PackageDoesNotExist(t *testing.T) {
 
 func TestPackageWalker_Walk(t *testing.T) {
 	testCases := map[string]struct {
-		pkg                *pkgbuilder.RootPkg
-		fileMatchFunc      FileMatchFunc
-		checkKptfileIgnore bool
-		expectedPaths      []string
+		pkg                         *pkgbuilder.RootPkg
+		fileMatcher                 FileMatcher
+		ignoreKptfileIgnorePatterns bool
+		expectedPaths               []string
 	}{
 		"empty package without Kptfile": {
-			pkg:                pkgbuilder.NewRootPkg(),
-			fileMatchFunc:      AllFileMatchFunc,
-			checkKptfileIgnore: true,
+			pkg:                         pkgbuilder.NewRootPkg(),
+			fileMatcher:                 AllMatcher,
+			ignoreKptfileIgnorePatterns: false,
 			expectedPaths: []string{
 				".",
 			},
@@ -67,8 +67,8 @@ func TestPackageWalker_Walk(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile(),
 				),
-			fileMatchFunc:      AllFileMatchFunc,
-			checkKptfileIgnore: true,
+			fileMatcher:                 AllMatcher,
+			ignoreKptfileIgnorePatterns: false,
 			expectedPaths: []string{
 				".",
 				kptfilev1alpha2.KptFileName,
@@ -81,8 +81,8 @@ func TestPackageWalker_Walk(t *testing.T) {
 				).
 				WithResource(pkgbuilder.DeploymentResource).
 				WithFile("foo.txt", "this is a test"),
-			fileMatchFunc:      YamlFileMatchFunc,
-			checkKptfileIgnore: true,
+			fileMatcher:                 YamlMatcher,
+			ignoreKptfileIgnorePatterns: false,
 			expectedPaths: []string{
 				".",
 				"deployment.yaml",
@@ -99,8 +99,8 @@ func TestPackageWalker_Walk(t *testing.T) {
 						WithKptfile().
 						WithResource(pkgbuilder.SecretResource),
 				),
-			fileMatchFunc:      KptfileYamlFileMatchFunc,
-			checkKptfileIgnore: true,
+			fileMatcher:                 KptfileYamlMatcher,
+			ignoreKptfileIgnorePatterns: false,
 			expectedPaths: []string{
 				".",
 				"Kptfile",
@@ -114,8 +114,8 @@ func TestPackageWalker_Walk(t *testing.T) {
 						WithIgnore("deployment.yml"),
 				).
 				WithFile("deployment.yml", "yaml"),
-			fileMatchFunc:      KptfileYamlFileMatchFunc,
-			checkKptfileIgnore: true,
+			fileMatcher:                 KptfileYamlMatcher,
+			ignoreKptfileIgnorePatterns: false,
 			expectedPaths: []string{
 				".",
 				"Kptfile",
@@ -132,15 +132,15 @@ func TestPackageWalker_Walk(t *testing.T) {
 					pkgbuilder.NewSubPkg("subdir").
 						WithResource(pkgbuilder.SecretResource),
 				),
-			fileMatchFunc:      KptfileYamlFileMatchFunc,
-			checkKptfileIgnore: true,
+			fileMatcher:                 KptfileYamlMatcher,
+			ignoreKptfileIgnorePatterns: false,
 			expectedPaths: []string{
 				".",
 				"Kptfile",
 				"deployment.yml",
 			},
 		},
-		"ignore list are disregarded if checkKptfileIgnore is false": {
+		"ignore list are disregarded if ignoreKptfileIgnorePatterns is false": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
@@ -151,8 +151,8 @@ func TestPackageWalker_Walk(t *testing.T) {
 					pkgbuilder.NewSubPkg("subdir").
 						WithResource(pkgbuilder.SecretResource),
 				),
-			fileMatchFunc:      KptfileYamlFileMatchFunc,
-			checkKptfileIgnore: false,
+			fileMatcher:                 KptfileYamlMatcher,
+			ignoreKptfileIgnorePatterns: true,
 			expectedPaths: []string{
 				".",
 				"Kptfile",
@@ -173,8 +173,8 @@ func TestPackageWalker_Walk(t *testing.T) {
 
 			cbPaths := make([]string, 0)
 			err := (&Walker{
-				FileMatchFunc:      tc.fileMatchFunc,
-				HonorKptfileIgnore: tc.checkKptfileIgnore,
+				FileMatcher:                 tc.fileMatcher,
+				IgnoreKptfileIgnorePatterns: tc.ignoreKptfileIgnorePatterns,
 			}).Walk(p, func(s string, info os.FileInfo, err error) error {
 				cbPaths = append(cbPaths, s)
 				return err
@@ -375,8 +375,7 @@ func TestPackageWalker_Walk_Ignore(t *testing.T) {
 
 			cbPaths := make([]string, 0)
 			err := (&Walker{
-				FileMatchFunc:      AllFileMatchFunc,
-				HonorKptfileIgnore: true,
+				FileMatcher: AllMatcher,
 			}).Walk(p, func(s string, info os.FileInfo, err error) error {
 				cbPaths = append(cbPaths, s)
 				return err
