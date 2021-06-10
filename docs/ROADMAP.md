@@ -15,8 +15,8 @@ the same thing.  Further information can be found in the
 ### 2. Setters
 
 Setters used to be a special entity without sufficient differentiation from
-KRM functions. In kpt v1 setters become just another function and drastically
-simplify syntax.  Configuring 4 setters used to take 20 lines of yaml 
+KRM functions. In kpt v1 setters become just another function with drastically
+simplified syntax.  Configuring 4 setters used to take 20 lines of yaml 
 and now takes 6.  Setters also get recursively applied to sub-packages by
 default.  For further information on the setter function please visit: 
 [apply-setters documentation]. 
@@ -34,13 +34,7 @@ convenient as it didn't require any CRDs, but it had challenges around encoding
 of the GroupKind, name and namespace, and it didn't allow us to easily add
 additional metadata about a package, such as the package version. This is
 is now migrated to use ResourceGroup CRD.  You can learn more about in the
-[apply chapter] of [The Kpt Book].
-https://kpt.dev/book/06-apply/
-
-The majority of the code for kpt live is in the [cli-utils] repo. Our
-goal is to keep this code independent of kpt and provide the apply logic as a
-library that can be used by other tools. The API is still going through some
-changes, but we are actively working to stabilize it.
+[The Kpt Book](https://kpt.dev/book/06-deploying-packages/).
 
 ### 5. Updated documentation
 
@@ -80,8 +74,5 @@ your existing kpt content.
 [apply chapter]: https://kpt.dev/book/06-apply/
 [cli-utils]: https://github.com/kubernetes-sigs/cli-utils
 [function catalog]: https://catalog.kpt.dev/
-[Milestone 3]: https://github.com/GoogleContainerTools/kpt/milestone/10
-[Milestone 4]: https://github.com/GoogleContainerTools/kpt/milestone/11
 [kpt milestones]: https://github.com/GoogleContainerTools/kpt/milestones
-[out of place hydration]: https://github.com/GoogleContainerTools/kpt/issues/1412
 [migration guide]: https://kpt.dev/installation/migration
