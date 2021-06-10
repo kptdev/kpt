@@ -69,6 +69,37 @@ example_bin arg1
 	assert.Equal(t, "\n  \n  # An example invocation\n  example_bin arg1\n", docs[0].Examples)
 }
 
+func TestParsingDocWithBackticks(t *testing.T) {
+	testDir := path.Join(t.TempDir(), "example")
+	dirErr := os.Mkdir(testDir, os.ModePerm)
+	assert.NoError(t, dirErr)
+	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
+	assert.NoError(t, err)
+
+	testData := []byte(`
+<!--mdtogo:Short
+Short ` +
+		"`documentation`" +
+		`.
+-->
+Test document.
+` +
+		"```\n" +
+		`
+
+<!--mdtogo-->
+	`)
+
+	err = ioutil.WriteFile(exampleMd.Name(), testData, os.ModePerm)
+	assert.NoError(t, err)
+
+	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
+	assert.Equal(t, 1, len(docs))
+	assert.Equal(t, "Example", docs[0].Name)
+	assert.Equal(t, "Short ` + \"`\" + `documentation` + \"`\" + `.", docs[0].Short)
+	assert.Equal(t, "var ExampleShort = `Short ` + \"`\" + `documentation` + \"`\" + `.`\n", docs[0].String())
+}
+
 func TestParsingDocWithNameFromComment(t *testing.T) {
 	testDir := path.Join(t.TempDir(), "example")
 	dirErr := os.Mkdir(testDir, os.ModePerm)
