@@ -326,6 +326,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	}
 
 	if pl.IsEmpty() {
+		if err := kptfilev1alpha2.AreKRM(input); err != nil {
+			return nil, fmt.Errorf("input resource list must contain only KRM resources: %s", err.Error())
+		}
 		return input, nil
 	}
 

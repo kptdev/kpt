@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -183,15 +184,11 @@ func IsKRM(n *yaml.RNode) error {
 	return nil
 }
 
-//nolint
 func AreKRM(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		if err := IsKRM(nodes[i]); err != nil {
-			nodes[i].PipeE(yaml.ClearAnnotation("config.kubernetes.io/index"))
-			nodes[i].PipeE(yaml.ClearAnnotation("config.kubernetes.io/path"))
-			yaml.ClearEmptyAnnotations(nodes[i])
-			str := nodes[i].MustString()
-			return fmt.Errorf("%s:\n...\n%s...", err.Error(), str)
+			path, _, _ := kioutil.GetFileAnnotations(nodes[i])
+			return fmt.Errorf("%s: %s", path, err.Error())
 		}
 	}
 	return nil
