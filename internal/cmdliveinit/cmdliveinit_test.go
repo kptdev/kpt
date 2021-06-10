@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -26,7 +26,7 @@ var (
 )
 
 var kptFile = `
-apiVersion: kpt.dev/v1alph2
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
@@ -225,7 +225,7 @@ func TestCmd_Run(t *testing.T) {
 
 			// Otherwise, validate the kptfile values
 			assert.NoError(t, err)
-			kf, err := kptfileutil.ReadFile(w.WorkspaceDirectory)
+			kf, err := pkg.ReadKptfile(w.WorkspaceDirectory)
 			assert.NoError(t, err)
 			if !assert.NotNil(t, kf.Inventory) {
 				t.FailNow()

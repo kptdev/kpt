@@ -118,7 +118,7 @@ type Command struct {
 func (c *Command) Run(ctx context.Context) error {
 	c.DefaultValues()
 
-	kptFile, err := kptfileutil.ReadFile(c.Path)
+	kptFile, err := pkg.ReadKptfile(c.Path)
 	if err != nil {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}

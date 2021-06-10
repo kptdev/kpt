@@ -144,6 +144,8 @@ function downloadPreviousKpt {
 function buildKpt {
     set -e
     if [ -z $BUILD_DEPS_AT_HEAD ]; then
+	echo "checking go version"
+	go version
 	echo "Building kpt locally..."
 	go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
 	echo "Building kpt locally...SUCCESS"

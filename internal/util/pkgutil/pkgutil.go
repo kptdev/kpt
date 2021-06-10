@@ -319,7 +319,7 @@ func RoundTripKptfilesInPkg(pkgPath string) error {
 	pkgsPaths = append(pkgsPaths, pkgPath)
 
 	for _, pkgPath := range pkgsPaths {
-		kf, err := kptfileutil.ReadFile(pkgPath)
+		kf, err := pkg.ReadKptfile(pkgPath)
 		if err != nil {
 			// do not throw error if formatting fails
 			return err

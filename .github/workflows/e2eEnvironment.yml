@@ -28,6 +28,10 @@ jobs:
       matrix:
         version: [ 1.18, 1.19 ]
     steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
       - uses: actions/checkout@master
       # Pinned to Commit to ensure action is consistent: https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
       # If you upgrade this version confirm the changes match your expectations

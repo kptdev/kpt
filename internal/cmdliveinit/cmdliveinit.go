@@ -192,7 +192,7 @@ func updateKptfile(p *pkg.Pkg, inv *kptfilev1alpha2.Inventory, force bool) error
 	}
 	// Finally, set the inventory parameters in the Kptfile and write it.
 	kf.Inventory = inv
-	if err := kptfileutil.WriteFile(p.UniquePath.String(), *kf); err != nil {
+	if err := kptfileutil.WriteFile(p.UniquePath.String(), kf); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	return nil

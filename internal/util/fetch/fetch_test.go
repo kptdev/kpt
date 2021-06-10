@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	pkgtesting "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
@@ -59,7 +60,7 @@ func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1alpha2.Git, 
 }
 
 func setKptfileName(workspace *testutil.TestWorkspace, name string) error {
-	kf, err := kptfileutil.ReadFile(workspace.FullPackagePath())
+	kf, err := pkg.ReadKptfile(workspace.FullPackagePath())
 	if err != nil {
 		return err
 	}

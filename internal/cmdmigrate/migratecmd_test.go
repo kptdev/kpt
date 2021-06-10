@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -156,8 +156,10 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			kf, err := kptfileutil.ReadFile(dir)
-			assert.NoError(t, err)
+			kf, err := pkg.ReadKptfile(dir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 			// Check the kptfile inventory section now has values.
 			if !tc.dryRun {
 				assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
@@ -361,7 +363,7 @@ inventory:
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
 var kptFile = `
-apiVersion: kpt.dev/v1alph2
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
