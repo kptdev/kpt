@@ -16,7 +16,7 @@ name: Check Documentation Synchronized
 on:
   pull_request:
     branches:
-      - master
+      - v0
       - main
 jobs:
   build:

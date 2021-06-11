@@ -16,7 +16,7 @@ name: Markdown
 on:
   pull_request:
     branches:
-      - master
+      - v0
 jobs:
   build:
     runs-on: ubuntu-latest
