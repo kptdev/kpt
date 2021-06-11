@@ -17,7 +17,7 @@ import (
 )
 
 func TestSinkCommand(t *testing.T) {
-	d, err := ioutil.TempDir("", "source-test")
+	d, err := ioutil.TempDir("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -139,7 +139,7 @@ spec:
 }
 
 func TestSinkCommand_CreateDir(t *testing.T) {
-	d, err := ioutil.TempDir("", "source-test")
+	d, err := ioutil.TempDir("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -194,7 +194,7 @@ spec:
 }
 
 func TestSinkCommandJSON(t *testing.T) {
-	d, err := ioutil.TempDir("", "source-test")
+	d, err := ioutil.TempDir("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

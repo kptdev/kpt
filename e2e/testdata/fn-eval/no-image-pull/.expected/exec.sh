@@ -17,7 +17,7 @@ set -eo pipefail
 
 kpt fn source \
 | kpt fn eval - --image gcr.io/kpt-fn/search-replace:v0.1\
-| kpt fn sink .
+| kpt fn sink
 
 docker image inspect gcr.io/kpt-fn/search-replace:v0.1
 if [[ $? != 0 ]]; then
