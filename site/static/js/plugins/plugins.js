@@ -25,7 +25,7 @@ function addGitHubWidget(hook) {
     let path = document.location.pathname;
     const pageName = path.match(bookPath) ? "00.md" : "README.md";
     path += path.endsWith("/") ? pageName : ".md";
-    editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/next/site${path}`;
+    editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/main/site${path}`;
 
     const container = document.createElement("div");
     container.classList.add("github-widget");
