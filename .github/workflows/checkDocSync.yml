@@ -17,7 +17,7 @@ on:
   pull_request:
     branches:
       - master
-      - next
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
