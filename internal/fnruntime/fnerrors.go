@@ -59,15 +59,3 @@ func (fe *ExecError) String() string {
 func (fe *ExecError) Error() string {
 	return fe.String()
 }
-
-// StderrNotEmpty is an error type which indicates that the function
-// finished successfully but writes something to stderr. Orchestrator should
-// aggregate the stuff in stderr.
-type StderrNotEmpty struct {
-	// Stderr is the content written to function stderr
-	Stderr string `yaml:"stderr,omitempty"`
-}
-
-func (sne *StderrNotEmpty) Error() string {
-	return sne.Stderr
-}

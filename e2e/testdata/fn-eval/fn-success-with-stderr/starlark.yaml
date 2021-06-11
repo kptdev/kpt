@@ -17,4 +17,4 @@ kind: StarlarkRun
 metadata:
   name: httpbin-gen
 source: |
-  print("error message")
+  print("function succeeded, reporting it on stderr")

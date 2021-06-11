@@ -46,21 +46,23 @@ func NewContainerRunner(
 	if err != nil {
 		return nil, err
 	}
-	cfn := &ContainerFn{
-		Path:            pkgPath,
-		Image:           f.Image,
-		ImagePullPolicy: imagePullPolicy,
-		Ctx:             ctx,
-	}
-	fltr := &runtimeutil.FunctionFilter{
-		Run:            cfn.Run,
-		FunctionConfig: config,
-	}
+
 	fnResult := &fnresult.Result{
 		Image: f.Image,
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
+	}
+	cfn := &ContainerFn{
+		Path:            pkgPath,
+		Image:           f.Image,
+		ImagePullPolicy: imagePullPolicy,
+		Ctx:             ctx,
+		FnResult:        fnResult,
+	}
+	fltr := &runtimeutil.FunctionFilter{
+		Run:            cfn.Run,
+		FunctionConfig: config,
 	}
 	return NewFunctionRunner(ctx, fltr, fnResult, fnResults)
 }
@@ -138,17 +140,10 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	}
 	if err != nil {
 		var execErr *ExecError
-		var stderrNotEmpty *StderrNotEmpty
-		switch {
-		case goerrors.As(err, &execErr):
+		if goerrors.As(err, &execErr) {
 			fnResult.ExitCode = execErr.ExitCode
 			fnResult.Stderr = execErr.Stderr
 			fr.fnResults.ExitCode = 1
-		case goerrors.As(err, &stderrNotEmpty):
-			fnResult.ExitCode = 0
-			fnResult.Stderr = stderrNotEmpty.Stderr
-			// this is not a real error
-			err = nil
 		}
 		// accumulate the results
 		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
