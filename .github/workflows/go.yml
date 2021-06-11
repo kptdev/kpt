@@ -15,15 +15,15 @@
 name: Go
 on:
   # Trigger the workflow on push or pull request,
-  # but only for the 'next' branch
+  # but only for the 'main' branch
   push:
     branches:
-      - next
+      - main
   pull_request:
     branches:
-      - next
-jobs:
+      - main
 
+jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
