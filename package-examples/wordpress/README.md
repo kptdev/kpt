@@ -19,7 +19,7 @@ individual packages.
 Get the example package on to local using `kpt pkg get`
 
 ```sh
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@main
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress
 
 fetching package /package-examples/wordpress from https://github.com/GoogleContainerTools/kpt to wordpress
 ```

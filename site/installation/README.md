@@ -83,7 +83,7 @@ $ docker run gcr.io/kpt-dev/kpt-gcloud:next version
 Install by compiling the source.
 
 ```shell
-$ GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt@main
+$ GO111MODULE=on go get -v github.com/GoogleContainerTools/kpt
 ```
 
 **Note:** `kpt version` will return _unknown_ for binaries installed with

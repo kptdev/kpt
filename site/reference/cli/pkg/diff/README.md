@@ -115,7 +115,7 @@ cd $TEST_HOME
 
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@main hello-world
+kpt pkg get $SRC_REPO/package-examples/helloworld-set hello-world
 cd hello-world
 ```
 

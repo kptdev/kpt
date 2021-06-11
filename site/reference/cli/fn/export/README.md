@@ -29,7 +29,7 @@ cd $TEST_HOME
 
 ```shell
 export SRC_REPO=https://github.com/GoogleContainerTools/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set@main DIR/
+kpt pkg get $SRC_REPO/package-examples/helloworld-set DIR/
 ```
 
 {{% /hide %}}
