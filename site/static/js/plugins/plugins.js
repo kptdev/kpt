@@ -148,47 +148,6 @@ function processAsciinemaTags(content) {
       `<asciinema-player src="${window.location.origin}/static/casts/${fileName}.cast" cols="160"></asciinema-player>`
   );
 }
-
-function addCodeCopyButtons() {
-  const preBlocks = Array.from(document.getElementsByTagName("pre")).filter(
-    (el) =>
-      el.classList.contains("language-shell") &&
-      el.firstElementChild.textContent
-        .split("\n")
-        .find((line) => line.trimLeft().startsWith("$"))
-  );
-
-  const makeButton = () => {
-    const copyButton = document.createElement("button");
-    const buttonClassName = "copy-button";
-    copyButton.classList.add(buttonClassName);
-    copyButton.title = "Copy to clipboard";
-
-    const copyIcon = document.createElement("span");
-    copyIcon.innerText = "copy";
-    copyIcon.classList.add("material-icons-outlined");
-    copyButton.appendChild(copyIcon);
-
-    copyButton.addEventListener("click", (el) =>
-      navigator.clipboard.writeText([
-        el
-          .composedPath()
-          .find((el) => el.classList.contains(buttonClassName))
-          .previousElementSibling.textContent.split("\n")
-          .map((s) => s.trim())
-          .filter(
-            (s, ix, arr) =>
-              s.startsWith("$") || (ix > 0 && arr[ix - 1].endsWith("\\"))
-          )
-          .map((s) => s.replace(/^\$\s+/, ""))
-          .join("\n"),
-      ])
-    );
-    return copyButton;
-  };
-  preBlocks.forEach((pre) => pre.appendChild(makeButton()));
-}
-
 // Workaround for https://github.com/docsifyjs/docsify/pull/1468
 function defaultLinkTargets() {
   const externalPageLinks = Array.from(
@@ -225,8 +184,6 @@ function localPlugins(hook, _vm) {
   // Reset all external links to their appropriate targets.
   hook.doneEach(defaultLinkTargets);
 
-  hook.doneEach(addCodeCopyButtons);
-
   addGitHubWidget(hook);
 
   // Process elements in the navigation sidebar.
@@ -242,7 +199,3 @@ function localPlugins(hook, _vm) {
 window.$docsify = window.$docsify || {};
 window.$docsify.plugins = [localPlugins].concat(window.$docsify.plugins || []);
 
-// Export functions for testing.
-if (typeof module !== "undefined") {
-  module.exports = { addCodeCopyButtons };
-}
