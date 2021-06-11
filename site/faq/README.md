@@ -51,6 +51,47 @@ resource configuration provides a number of desirable properties:
 7. it **supports display in UI and tools** which use either OpenAPI or the
    YAML/JSON directly.
 
+
+### Does kpt and kustomize work together?
+
+Yes!  Because both tools subscribe to template/DSL free approach to configuraiton it's possible to use both tools together.  We have created a 
+[kustomize solution] which shows how you can leverage both of these tools
+in your environment.
+
+#### Kustomize background
+[Kustomize] is a CNCF project that is a part of Kubernetes.  It's included in 
+the `kubectl` in order to allow users to customize their configurations without introducing templates.   Kustomize was started by Googlers and still has 
+large contributions by Google engineers.  A lot of the Google engineers working
+on kpt also work on kustomize and a lot of the underlying libraries are shared.
+
+While kpt and kustomize support customization of configuration yaml there are 
+important differences and scope to these projects.  Kpt supports end to end 
+scenarios of packaging, customization and application of resource to the 
+clusters.  For kustomize packaging is explicitly out of scope and application 
+is deferred to whatever kubectl provides.
+
+#### kpt vs kustomize customization approach.
+While kpt is set to support both in place and out-of-place customization,
+kustomize is only focused on providing out-of-place hydration using the 
+overlay pattern.  Here are the strengths and investment areas for these 
+products:
+
+*kpt*
+- Allows you to edit the configuration in-place without creating complex patches
+- Focuses on rebase with resource merge strategy allowing for edited config to 
+be updated
+- Is more intuitive and has a continuous learning curve as you usually start 
+small with modifying several YAML files using an editor and then want to scale 
+with complexity of the application
+- Allows to mix programmatic changes (functions) with manual edits in the same 
+[workflow]
+
+*kustomize*
+- Treats base layers as immutable
+- Programmatic changes (plugins) do not have to be idempotent
+- Provide overlays and components that assemble that “build” the final 
+configuration
+
 ### I really like DSL / templating solution X. Can I use it with kpt?
 
 Yes. kpt supports plugging in solutions which generate or manipulate
@@ -85,3 +126,6 @@ don't have to alias it. It is pronounced "kept".
 [roadmap document]:
   https://github.com/GoogleContainerTools/kpt/blob/next/docs/ROADMAP.md
 [kpt milestones]: https://github.com/GoogleContainerTools/kpt/milestones
+[kustomize solution]: /solutions/kustomize/
+[kustomize]: https://kustomize.io
+[workflow]: /book/02-concepts/02-workflows/
