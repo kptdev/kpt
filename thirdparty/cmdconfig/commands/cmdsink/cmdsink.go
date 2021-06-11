@@ -49,8 +49,9 @@ func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
 
 	pr := printer.FromContextOrDie(r.Ctx)
 
+	dirAlreadyExists := true
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		pr.Printf("directory %q doesn't exist, creating the directory...", dir)
+		dirAlreadyExists = false
 		err := os.MkdirAll(dir, 0700)
 		if err != nil {
 			return err
@@ -62,5 +63,8 @@ func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}},
 		Outputs: outputs}.Execute()
+	if !dirAlreadyExists {
+		pr.Printf("directory %q doesn't exist, creating the directory...\n", dir)
+	}
 	return runner.HandleError(r.Ctx, err)
 }

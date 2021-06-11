@@ -170,7 +170,7 @@ items:
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, fmt.Sprintf("directory %q doesn't exist, creating the directory...", d), logs.String()) {
+	if !assert.Equal(t, fmt.Sprintf("directory %q doesn't exist, creating the directory...\n", d), logs.String()) {
 		t.FailNow()
 	}
 
