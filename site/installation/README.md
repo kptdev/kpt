@@ -7,18 +7,22 @@ kpt `v1.0+` binary.
 
 ## Binaries
 
-Download pre-compiled binaries.
+Download pre-compiled binaries:
 
-| Platform | ------------------------ | [Linux (x64)][linux] | [macOS
-(x64)][darwin]
+- [Linux (x64)][linux]
+- [MacOS(x64)][darwin]
+
+On Linux and MacOS, make it executable:
 
 ```shell
-# For linux/mac
+
 $ chmod +x kpt
 ```
 
-**Note:** to run on **MacOS** the first time, it may be necessary to open the
+?> On MacOS the first time, it may be necessary to open the
 program from the finder with _ctrl-click open_.
+
+Verify the version:
 
 ```shell
 $ kpt version
