@@ -187,9 +187,11 @@ var ExportLong = `
     output is stdout
 `
 var ExportExamples = `
+
   # read functions from DIR, run them against it as one step.
   # write the generated GitHub Actions pipeline to main.yaml.
   kpt fn export DIR/ --output main.yaml --workflow github-actions
+
 
   # discover functions in FUNCTIONS_DIR and run them against resource in DIR.
   # write the generated Cloud Build pipeline to stdout.
