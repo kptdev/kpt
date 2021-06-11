@@ -31,7 +31,10 @@ function addGitHubWidget(hook) {
     container.classList.add("github-widget");
     container.appendChild(createIssue);
     container.appendChild(editPage);
-    document.getElementsByClassName("pagination-item--previous").item(0).after(container);
+    document
+      .getElementsByClassName("docsify-pagination-container")
+      .item(0)
+      .append(container);
   });
 }
 
@@ -62,36 +65,30 @@ async function addVersionDropdown() {
 }
 
 function showBookPageFooters() {
-  const paginationFooters = Array.from(
-    document.getElementsByClassName("docsify-pagination-container")
-  );
   const isBookPage = document.location.pathname
     .toLowerCase()
     .startsWith("/book");
-  paginationFooters.forEach(
-    (el) => (el.style.display = isBookPage ? "flex" : "none")
-  );
 
-  // Don't show previous button on the book cover page.
+  const hideButtonsToNonBookPages = (buttons) => {
+    buttons.forEach((el) => {
+      url = new URL(el.lastElementChild.href);
+      el.style.display = isBookPage && url.pathname.toLowerCase().startsWith("/book")
+        ? "flex"
+        : "none";
+    });
+  };
+
   const previousPaginationButtons = Array.from(
     document.getElementsByClassName("pagination-item--previous")
   );
-  const isBookCover =
-    isBookPage && document.location.pathname.toLowerCase().length < 7;
-  previousPaginationButtons.forEach(
-    (el) => (el.style.display = isBookCover ? "none" : "flex")
-  );
 
-  // Don't show next button to non-book-pages.
   const nextPaginationButtons = Array.from(
     document.getElementsByClassName("pagination-item--next")
   );
-  nextPaginationButtons.forEach((el) => {
-    url = new URL(el.lastElementChild.href);
-    el.style.display = url.pathname.toLowerCase().startsWith("/book")
-      ? "flex"
-      : "none";
-  });
+
+  hideButtonsToNonBookPages(
+    previousPaginationButtons.concat(nextPaginationButtons)
+  );
 }
 
 function processBookPageTitle(content) {

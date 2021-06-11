@@ -122,7 +122,8 @@ pre.language-shell button.copy-button:hover {
 }
 
 .github-widget {
-  margin-left: auto;
+  position: absolute;
+  left: 50%;
   margin-top: 2.5em;
   padding-top: 8px;
 }
