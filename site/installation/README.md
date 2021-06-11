@@ -15,7 +15,6 @@ Download pre-compiled binaries:
 On Linux and MacOS, make it executable:
 
 ```shell
-
 $ chmod +x kpt
 ```
 
