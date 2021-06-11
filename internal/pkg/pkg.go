@@ -504,9 +504,6 @@ func (p *Pkg) ValidatePipeline() error {
 	if err != nil {
 		return err
 	}
-	if err := kptfilev1alpha2.AreKRM(resources); err != nil {
-		return fmt.Errorf("input resource list must contain only KRM resources:\n%s", err.Error())
-	}
 
 	resourcesByPath := sets.String{}
 
