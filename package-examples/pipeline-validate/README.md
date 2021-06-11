@@ -1,10 +1,11 @@
 # pipeline-validate
 
-This example package demonstrates how you can modify the config and ensure 
-that modifications are compliant with the policies. This package uses:
+This example package demonstrates how you can modify the config and ensure that
+modifications are compliant with the policies. This package uses:
 
 1. a `mutator` function called `set-labels` to customize (or modify) the config
-2. a `validator` function `gatekeeper` to ensure changes are inline with the policy 
+2. a `validator` function `gatekeeper` to ensure changes are inline with the
+   policy
 
 Putting a validation function into your package allows you to give package
 consumers instant feedback on whether their customization violates config
@@ -12,8 +13,8 @@ policy.
 
 ## Steps
 
-This is a simple workflow where you can download, configure, render,
-validate and apply the package:
+This is a simple workflow where you can download, configure, render, validate
+and apply the package:
 
 1. [Fetch the package](#fetch-the-package)
 2. [View the package contents](#view-the-package-contents)
@@ -26,7 +27,7 @@ validate and apply the package:
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate@next
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/pipeline-validate
 
 fetching package /package-examples/pipeline-validate from https://github.com/GoogleContainerTools/kpt to pipeline-validate
 ```
@@ -50,11 +51,11 @@ Package "pipeline-validate"
 
 ### Configure functions
 
-The package contains a function pipeline in the `Kptfile` which has
-one `set-labels` and `enforce-gatekeeper` functions.
-The `set-labels` function allows you to set one or more labels to every
-resource that supports labeles.  The `enforce-gatekeeper` function allows
-you to use gatekeeper for checks on the configuration.
+The package contains a function pipeline in the `Kptfile` which has one
+`set-labels` and `enforce-gatekeeper` functions. The `set-labels` function
+allows you to set one or more labels to every resource that supports labeles.
+The `enforce-gatekeeper` function allows you to use gatekeeper for checks on the
+configuration.
 
 ```yaml
 pipeline:
@@ -78,8 +79,8 @@ package "pipeline-validate": running function "gcr.io/kpt-fn/enforce-gatekeeper:
 package "pipeline-validate": rendered successfully
 ```
 
-If you remove the owner label from `resources.yaml` and re-run the rendering
-you should see an error:
+If you remove the owner label from `resources.yaml` and re-run the rendering you
+should see an error:
 
 ```shell
 $ kpt fn render pipeline-validate/

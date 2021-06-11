@@ -1,8 +1,9 @@
 # wordpress
 
-Here is an example to get, view, customize and apply contents of an example kpt package with a subpackage
-in its directory tree. As part of customization, we will be setting common namespace for both the packages
-and apply setters for individual packages.
+Here is an example to get, view, customize and apply contents of an example kpt
+package with a subpackage in its directory tree. As part of customization, we
+will be setting common namespace for both the packages and apply setters for
+individual packages.
 
 ## Steps
 
@@ -18,7 +19,7 @@ and apply setters for individual packages.
 Get the example package on to local using `kpt pkg get`
 
 ```sh
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@next
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress
 
 fetching package /package-examples/wordpress from https://github.com/GoogleContainerTools/kpt to wordpress
 ```
@@ -45,8 +46,9 @@ Package "wordpress"
 
 ### Configure namespace
 
-By default, these packages will be deployed into `default` namespace. Provide a namespace by
-adding [set-namespace] function to the pipeline definition in `wordpress/Kptfile`.
+By default, these packages will be deployed into `default` namespace. Provide a
+namespace by adding [set-namespace] function to the pipeline definition in
+`wordpress/Kptfile`.
 
 ```yaml
 - image: gcr.io/kpt-fn/set-namespace:v0.1
@@ -56,9 +58,10 @@ adding [set-namespace] function to the pipeline definition in `wordpress/Kptfile
 
 ### Configure setter values
 
-Setters are listed under `apply-setters` function in the pipeline definition of each package.
-You may declare new desired values for the setters by editing the `Kptfile` directly. Declare
-new value `wp-tag: 4.9-aapache` in `wordpress/Kptfile` and `ms-tag: 5.7` in `wordpress/mysql/Kptfile`
+Setters are listed under `apply-setters` function in the pipeline definition of
+each package. You may declare new desired values for the setters by editing the
+`Kptfile` directly. Declare new value `wp-tag: 4.9-aapache` in
+`wordpress/Kptfile` and `ms-tag: 5.7` in `wordpress/mysql/Kptfile`
 
 ### Render the declared values
 
@@ -94,4 +97,5 @@ persistentvolumeclaim/wp-pv-claim created
 deployment.apps/wordpress created
 ```
 
-[set-namespace]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/set-namespace
+[set-namespace]:
+  https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/set-namespace

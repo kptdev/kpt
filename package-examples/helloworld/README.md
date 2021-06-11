@@ -1,7 +1,7 @@
 # helloworld
 
-Sample helloworld package. Showcases what a bare bones package is which
-doesn't do anything beyond declaring the current directory as a `kpt` package.
+Sample helloworld package. Showcases what a bare bones package is which doesn't
+do anything beyond declaring the current directory as a `kpt` package.
 
 ## Steps
 
@@ -14,7 +14,7 @@ doesn't do anything beyond declaring the current directory as a `kpt` package.
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@next
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld
 
 fetching package /package-examples/helloworld from https://github.com/GoogleContainerTools/kpt to helloworld
 ```

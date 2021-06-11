@@ -83,5 +83,5 @@ don't have to alias it. It is pronounced "kept".
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
 [roadmap document]:
-  https://github.com/GoogleContainerTools/kpt/blob/next/docs/ROADMAP.md
+  https://github.com/GoogleContainerTools/kpt/blob/main/docs/ROADMAP.md
 [kpt milestones]: https://github.com/GoogleContainerTools/kpt/milestones
