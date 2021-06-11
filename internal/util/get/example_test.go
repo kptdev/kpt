@@ -26,7 +26,7 @@ func ExampleCommand() {
 	err := get.Command{Git: &kptfilev1alpha2.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "v1.0",
-	}}.Run(fake.CtxWithNilPrinter())
+	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
@@ -36,7 +36,7 @@ func ExampleCommand_branch() {
 	err := get.Command{Git: &kptfilev1alpha2.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "refs/heads/v1.0",
-	}}.Run(fake.CtxWithNilPrinter())
+	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
@@ -46,7 +46,7 @@ func ExampleCommand_tag() {
 	err := get.Command{Git: &kptfilev1alpha2.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "refs/tags/v1.0",
-	}}.Run(fake.CtxWithNilPrinter())
+	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
@@ -56,7 +56,7 @@ func ExampleCommand_commit() {
 	err := get.Command{Git: &kptfilev1alpha2.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "8186bef8e5c0621bf80fa8106bd595aae8b62884",
-	}}.Run(fake.CtxWithNilPrinter())
+	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
@@ -69,7 +69,7 @@ func ExampleCommand_subdir() {
 			Ref:       "v1.0",
 			Directory: filepath.Join("path", "to", "package"),
 		},
-	}.Run(fake.CtxWithNilPrinter())
+	}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
@@ -81,7 +81,7 @@ func ExampleCommand_destination() {
 			Repo: "https://github.com/example-org/example-repo",
 			Ref:  "v1.0",
 		},
-		Destination: "destination-dir"}.Run(fake.CtxWithNilPrinter())
+		Destination: "destination-dir"}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}

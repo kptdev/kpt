@@ -38,8 +38,15 @@ approaches:
 
 ## Create a new package
 
+Create the directory:
+
 ```shell
 $ mkdir wordpress/mysql
+```
+
+Initialize the package:
+
+```shell
 $ kpt pkg init wordpress/mysql
 # author resources in mysql
 ```
@@ -48,8 +55,15 @@ This creates a [dependent package].
 
 ## Get an existing package
 
+Remove the existing directory if it exists:
+
 ```shell
 $ rm -rf wordpress/mysql
+```
+
+Fetch the package:
+
+```shell
 $ kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20 wordpress/mysql
 ```
 

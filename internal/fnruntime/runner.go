@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -40,7 +41,7 @@ import (
 func NewContainerRunner(
 	ctx context.Context, f *kptfilev1alpha2.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, disableCLIOutput bool) (kio.Filter, error) {
+	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -61,14 +62,13 @@ func NewContainerRunner(
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
 	}
-	return NewFunctionRunner(ctx, fltr, disableCLIOutput, fnResult, fnResults)
+	return NewFunctionRunner(ctx, fltr, fnResult, fnResults)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
-	disableCLIOutput bool,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList) (kio.Filter, error) {
 	name := fnResult.Image
@@ -76,12 +76,11 @@ func NewFunctionRunner(ctx context.Context,
 		name = fnResult.ExecPath
 	}
 	return &FunctionRunner{
-		ctx:              ctx,
-		name:             name,
-		filter:           fltr,
-		disableCLIOutput: disableCLIOutput,
-		fnResult:         fnResult,
-		fnResults:        fnResults,
+		ctx:       ctx,
+		name:      name,
+		filter:    fltr,
+		fnResult:  fnResult,
+		fnResults: fnResults,
 	}, nil
 }
 
@@ -103,7 +102,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	}
 	output, err = fr.do(input)
 	if err != nil {
-		printOpt := printer.NewOpt().Stderr()
+		printOpt := printer.NewOpt()
 		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		var fnErr *ExecError
@@ -201,7 +200,7 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return nil
 }
 
-func populateResourceRef(item *yaml.RNode, resultItem *fnresult.ResultItem) error {
+func populateResourceRef(item *yaml.RNode, resultItem *framework.ResultItem) error {
 	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
 	if err != nil {
 		return err
@@ -252,7 +251,6 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 // on kpt CLI.
 func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
-	printOpt := printer.NewOpt()
 	if len(fnErr.Stderr) > 0 {
 		errLines := &multiLineFormatter{
 			Title:          "Stderr",
@@ -260,9 +258,9 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.OptPrintf(printOpt.Stderr(), "%s", errLines.String())
+		pr.Printf("%s", errLines.String())
 	}
-	pr.OptPrintf(printOpt.Stderr(), "  Exit code: %d\n\n", fnErr.ExitCode)
+	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // path (location) of a KRM resources is tracked in a special key in
@@ -352,7 +350,7 @@ func (ri *multiLineFormatter) String() string {
 }
 
 // resultToString converts given structured result item to string format.
-func resultToString(result fnresult.ResultItem) string {
+func resultToString(result framework.ResultItem) string {
 	// TODO: Go SDK should implement Stringer method
 	// for framework.ResultItem. This is a temporary
 	// wrapper that will eventually be moved to Go SDK.

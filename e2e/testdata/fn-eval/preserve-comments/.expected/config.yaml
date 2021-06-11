@@ -1,0 +1,2 @@
+testType: eval
+image: gcr.io/kpt-fn-demo/drop-comments:unstable

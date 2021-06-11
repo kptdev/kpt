@@ -17,11 +17,7 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 testType: eval
-# This test checks function results and result output is not idempotent
-# because the results produced by search replace function gets changed
-# in the subsequent runs. So skipping it for now.
-nonIdempotent: true
 image: gcr.io/kpt-fn/search-replace:v0.1
 fnConfig: ../search-replace-conf.yaml
-# Non-error messages should be printed to stdout
-stdOut: "[INFO]"
+# Non-error messages should be printed to stderr
+stdErr: "[INFO]"

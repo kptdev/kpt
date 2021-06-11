@@ -16,12 +16,14 @@ package cmdutil
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/spf13/cobra"
@@ -30,10 +32,11 @@ import (
 )
 
 const (
-	StackTraceOnErrors = "COBRA_STACK_TRACE_ON_ERRORS"
-	trueString         = "true"
-	Stdout             = "stdout"
-	Unwrap             = "unwrap"
+	StackTraceOnErrors                 = "COBRA_STACK_TRACE_ON_ERRORS"
+	trueString                         = "true"
+	Stdout                             = "stdout"
+	Unwrap                             = "unwrap"
+	dockerVersionTimeout time.Duration = 5 * time.Second
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -89,7 +92,9 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 `
 	buffer := &bytes.Buffer{}
 
-	cmd := exec.Command("docker", "version")
+	ctx, cancel := context.WithTimeout(context.Background(), dockerVersionTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "docker", "version")
 	cmd.Stderr = buffer
 	err := cmd.Run()
 	if err != nil {

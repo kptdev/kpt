@@ -144,6 +144,8 @@ function downloadPreviousKpt {
 function buildKpt {
     set -e
     if [ -z $BUILD_DEPS_AT_HEAD ]; then
+	echo "checking go version"
+	go version
 	echo "Building kpt locally..."
 	go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
 	echo "Building kpt locally...SUCCESS"
@@ -481,7 +483,7 @@ printResult
 echo "Testing init for Kptfile/ResourceGroup"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile > $OUTPUT_DIR/status 2>&1

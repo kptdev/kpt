@@ -24,11 +24,10 @@ import (
 	"strings"
 	"testing"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -567,7 +566,7 @@ file:
 		yml, err := yaml.Parse(tc.input)
 		assert.NoError(t, err)
 
-		result := &fnresult.ResultItem{}
+		result := &framework.ResultItem{}
 		err = yaml.Unmarshal([]byte(tc.input), result)
 		assert.NoError(t, err)
 		assert.NoError(t, populateResourceRef(yml, result))

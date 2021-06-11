@@ -4,11 +4,13 @@
 package cmdsource
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
@@ -18,10 +20,11 @@ import (
 )
 
 // GetSourceRunner returns a command for Source.
-func GetSourceRunner(name string) *SourceRunner {
+func GetSourceRunner(ctx context.Context, name string) *SourceRunner {
 	r := &SourceRunner{
 		WrapKind:       kio.ResourceListKind,
 		WrapAPIVersion: kio.ResourceListAPIVersion,
+		Ctx:            ctx,
 	}
 	c := &cobra.Command{
 		Use:     "source [DIR] [flags]",
@@ -40,8 +43,8 @@ func GetSourceRunner(name string) *SourceRunner {
 	return r
 }
 
-func NewCommand(name string) *cobra.Command {
-	return GetSourceRunner(name).Command
+func NewCommand(ctx context.Context, name string) *cobra.Command {
+	return GetSourceRunner(ctx, name).Command
 }
 
 // SourceRunner contains the run function
@@ -51,6 +54,7 @@ type SourceRunner struct {
 	FunctionConfig       string
 	Command              *cobra.Command
 	IncludeMetaResources bool
+	Ctx                  context.Context
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
@@ -73,7 +77,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 
 	var outputs []kio.Writer
 	outputs = append(outputs, kio.ByteWriter{
-		Writer:                c.OutOrStdout(),
+		Writer:                printer.FromContextOrDie(r.Ctx).OutStream(),
 		KeepReaderAnnotations: true,
 		WrappingKind:          r.WrapKind,
 		WrappingAPIVersion:    r.WrapAPIVersion,
@@ -102,5 +106,5 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	}
 
 	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()
-	return runner.HandleError(c, err)
+	return runner.HandleError(r.Ctx, err)
 }

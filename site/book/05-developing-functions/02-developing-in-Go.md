@@ -1,5 +1,5 @@
-You can use the `kyaml` library to develop functions in Go. Doing so provides the
-following features:
+You can use the `kyaml` library to develop functions in Go. Doing so provides
+the following features:
 
 - **General-purpose language:** Compared to Domain Specific Languages (DSL), Go
   is a general-purpose programming language that provides:
@@ -18,8 +18,7 @@ following features:
 ### Create the go module
 
 ```shell
-$ go mod init github.com/user/repo
-$ go get sigs.k8s.io/kustomize/kyaml@v0.10.6
+$ go mod init github.com/user/repo; go get sigs.k8s.io/kustomize/kyaml@v0.10.6
 ```
 
 ### Create the `main.go`
@@ -68,11 +67,15 @@ Build the go binary:
 $ go build -o my-fn .
 ```
 
-Test it by running imperatively:
+Fetch the wordpress package:
 
 ```shell
 $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
-# run the my-fn function against the configuration in wordpress
+```
+
+Test it by running the function imperatively:
+
+```shell
 $ kpt fn eval wordpress --exec-path ./my-fn -- value=foo
 ```
 
@@ -83,17 +86,21 @@ creating the container image.
 
 ### Publish the function
 
-Build the function into a container image:
+Generate a Dockerfile for the function image:
 
 ```shell
-# optional: generate a Dockerfile to contain the function
 $ go run ./main.go gen ./
 ```
 
+Build the image:
+
 ```shell
-# build the function into an image
 $ docker build . -t gcr.io/project/fn-name:tag
-# optional: push the image to a container registry
+```
+
+Optionally, push the image to a container registry:
+
+```shell
 $ docker push gcr.io/project/fn-name:tag
 ```
 

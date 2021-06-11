@@ -36,7 +36,7 @@ DIR:
 
 ```shell
 # Show resources in the current directory.
-kpt pkg tree
+$ kpt pkg tree
 ```
 
 <!--mdtogo-->

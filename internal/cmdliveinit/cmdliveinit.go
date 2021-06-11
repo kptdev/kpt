@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -20,7 +21,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"k8s.io/kubectl/pkg/util/i18n"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 )
@@ -44,10 +44,11 @@ func NewRunner(ctx context.Context, factory cmdutil.Factory,
 	}
 
 	cmd := &cobra.Command{
-		Use:                   "init [PKG_PATH]",
-		DisableFlagsInUseLine: true,
-		Short:                 i18n.T("Initialize inventory parameters into Kptfile"),
-		RunE:                  r.runE,
+		Use:     "init [PKG_PATH]",
+		RunE:    r.runE,
+		Short:   livedocs.InitShort,
+		Long:    livedocs.InitShort + "\n" + livedocs.InitLong,
+		Example: livedocs.InitExamples,
 	}
 	r.Command = cmd
 
@@ -191,7 +192,7 @@ func updateKptfile(p *pkg.Pkg, inv *kptfilev1alpha2.Inventory, force bool) error
 	}
 	// Finally, set the inventory parameters in the Kptfile and write it.
 	kf.Inventory = inv
-	if err := kptfileutil.WriteFile(p.UniquePath.String(), *kf); err != nil {
+	if err := kptfileutil.WriteFile(p.UniquePath.String(), kf); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	return nil

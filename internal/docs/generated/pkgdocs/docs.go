@@ -12,16 +12,17 @@ var CatLong = `
   kpt pkg cat [FILE | DIR]
 
 Args:
+
   FILE | DIR:
     Path to a directory either a directory containing files with KRM resources, or
     a file with KRM resource(s). Defaults to the current directory.
 `
 var CatExamples = `
   # Print resource from a file.
-  kpt pkg cat path/to/deployment.yaml
+  $ kpt pkg cat path/to/deployment.yaml
 
   # Print resources from current directory.
-  kpt pkg cat
+  $ kpt pkg cat
 `
 
 var DiffShort = `Show differences between a local package and upstream.`
@@ -35,7 +36,7 @@ Args:
     contain a Kptfile. Defaults to the current working directory.
   
   VERSION:
-    A git tag, branch, or commit. Specified after the local_package with @, for 
+    A git tag, branch, or commit. Specified after the local_package with @, for
     example my-package@master.
     Defaults to the local package version that was last fetched.
 
@@ -57,14 +58,14 @@ Flags:
   --diff-tool:
     Command line diffing tool ('diff' by default) for showing the changes.
     Note that it overrides the KPT_EXTERNAL_DIFF environment variable.
-    
+  
     # Show changes using 'meld' commandline tool.
     kpt pkg diff @master --diff-tool meld
   
   --diff-tool-opts:
     Commandline options to use with the command line diffing tool.
     Note that it overrides the KPT_EXTERNAL_DIFF_OPTS environment variable.
-    
+  
     # Show changes using the diff command with recursive options.
     kpt pkg diff @master --diff-tool meld --diff-tool-opts "-r"
 
@@ -73,7 +74,7 @@ Environment Variables:
   KPT_EXTERNAL_DIFF:
     Commandline diffing tool ('diff; by default) that will be used to show
     changes.
-    
+  
     # Use meld to show changes
     KPT_EXTERNAL_DIFF=meld kpt pkg diff
   
@@ -81,7 +82,7 @@ Environment Variables:
     Commandline options to use for the diffing tool. For ex.
     # Using "-a" diff option
     KPT_EXTERNAL_DIFF_OPTS="-a" kpt pkg diff --diff-tool meld
-     
+  
   KPT_CACHE_DIR:
     Controls where to cache remote packages when fetching them.
     Defaults to <HOME>/.kpt/repos/
@@ -89,8 +90,9 @@ Environment Variables:
     Windows it is given by the %USERPROFILE% env variable.
 `
 var DiffExamples = `
+
   # Show changes in current package relative to upstream source package.
-  kpt pkg diff
+  $ kpt pkg diff
 `
 
 var GetShort = `Fetch a package from a git repo.`
@@ -98,6 +100,7 @@ var GetLong = `
   kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY] [flags]
 
 Args:
+
   REPO_URI:
     URI of a git repository containing 1 or more packages as subdirectories.
     In most cases the .git suffix should be specified to delimit the REPO_URI
@@ -121,10 +124,11 @@ Args:
     current working directory named after the upstream package.
 
 Flags:
+
   --strategy:
     Defines which strategy should be used to update the package. It defaults to
     'resource-merge'.
-    
+  
       * resource-merge: Perform a structural comparison of the original /
         updated resources, and merge the changes into the local package.
       * fast-forward: Fail without updating if the local package was modified
@@ -133,6 +137,7 @@ Flags:
         it with the remote version.
 
 Env Vars:
+
   KPT_CACHE_DIR:
     Controls where to cache remote packages when fetching them.
     Defaults to <HOME>/.kpt/repos/
@@ -140,19 +145,22 @@ Env Vars:
     Windows it is given by the %USERPROFILE% env variable.
 `
 var GetExamples = `
+
   # Fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
   # This creates a new subdirectory 'cockroachdb' for the downloaded package.
-  kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master
+  $ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master
+
 
   # Fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
   # This will create a new directory 'my-package' for the downloaded package if it
   # doesn't already exist.
-  kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
+  $ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
+
 
   # Fetch package examples from github.com/kubernetes/examples at the specified
-  # git hash. 
+  # git hash.
   # This will create a new directory 'examples' for the package.
-  kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792
+  $ kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792
 `
 
 var InitShort = `Initialize an empty package.`
@@ -178,12 +186,11 @@ Flags:
 var InitExamples = `
 
   # Creates a new Kptfile with metadata in the cockroachdb directory.
-  mkdir cockroachdb
-  kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
+  $ mkdir cockroachdb; kpt pkg init cockroachdb --keywords "cockroachdb,nosql,db"  \
       --description "my cockroachdb implementation"
 
   # Creates a new Kptfile without metadata in the current directory.
-  kpt pkg init
+  $ kpt pkg init
 `
 
 var TreeShort = `Display resources, files and packages in a tree structure.`
@@ -192,7 +199,7 @@ var TreeLong = `
 `
 var TreeExamples = `
   # Show resources in the current directory.
-  kpt pkg tree
+  $ kpt pkg tree
 `
 
 var UpdateShort = `Apply upstream package updates.`
@@ -219,7 +226,7 @@ Flags:
 
   --strategy:
     Defines which strategy should be used to update the package. This will change
-    the update strategy for the current kpt package for the current and future 
+    the update strategy for the current kpt package for the current and future
     updates. If a strategy is not provided, the strategy specified in the package
     Kptfile will be used.
   
@@ -240,14 +247,14 @@ Env Vars:
 `
 var UpdateExamples = `
   # Update package in the current directory.
-  git add . && git commit -m 'some message'
-  kpt pkg update
+  # git add . && git commit -m 'some message'
+  $ kpt pkg update
 
   # Update my-package-dir/ to match the v1.3 branch or tag.
-  git add . && git commit -m 'some message'
-  kpt pkg update my-package-dir/@v1.3
+  # git add . && git commit -m 'some message'
+  $ kpt pkg update my-package-dir/@v1.3
 
   # Update with the fast-forward strategy.
-  git add . && git commit -m "package updates"
-  kpt pkg update my-package-dir/@master --strategy fast-forward
+  # git add . && git commit -m "some message"
+  $ kpt pkg update my-package-dir/@master --strategy fast-forward
 `

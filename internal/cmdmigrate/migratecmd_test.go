@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -140,7 +140,7 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
 
-			ctx := fake.CtxWithNilPrinter()
+			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "updateKptfile"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
@@ -156,8 +156,10 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			kf, err := kptfileutil.ReadFile(dir)
-			assert.NoError(t, err)
+			kf, err := pkg.ReadKptfile(dir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 			// Check the kptfile inventory section now has values.
 			if !tc.dryRun {
 				assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
@@ -199,7 +201,7 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			ctx := fake.CtxWithNilPrinter()
+			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewResourceGroupProvider(tf)
@@ -302,7 +304,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			ctx := fake.CtxWithNilPrinter()
+			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
 			rgProvider := live.NewFakeResourceGroupProvider(tf, tc.objs)
@@ -361,7 +363,7 @@ inventory:
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
 var kptFile = `
-apiVersion: kpt.dev/v1alph2
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1

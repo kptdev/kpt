@@ -13,13 +13,13 @@ import (
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
-	"k8s.io/kubectl/pkg/util/i18n"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -56,9 +56,10 @@ func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider pro
 		dir:        "",
 	}
 	cmd := &cobra.Command{
-		Use:                   "migrate [DIR | -]",
-		DisableFlagsInUseLine: true,
-		Short:                 i18n.T("Migrate inventory from ConfigMap to ResourceGroup custom resource"),
+		Use:     "migrate [DIR | -]",
+		Short:   livedocs.MigrateShort,
+		Long:    livedocs.MigrateShort + "\n" + livedocs.MigrateLong,
+		Example: livedocs.MigrateExamples,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				// default to current working directory

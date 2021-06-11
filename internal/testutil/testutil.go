@@ -16,7 +16,6 @@ package testutil
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -28,6 +27,8 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -127,11 +128,11 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string, addMergeCommentsToSou
 
 		// Read the Kptfiles and set the Commit field to an empty
 		// string before we compare.
-		pkg1kf, err := kptfileutil.ReadFile(filepath.Dir(pkg1Path))
+		pkg1kf, err := pkg.ReadKptfile(filepath.Dir(pkg1Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		pkg2kf, err := kptfileutil.ReadFile(filepath.Dir(pkg2Path))
+		pkg2kf, err := pkg.ReadKptfile(filepath.Dir(pkg2Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -438,7 +439,7 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 		t.FailNow()
 	}
 
-	rr, err := gr.Run(context.Background(), "init")
+	rr, err := gr.Run(fake.CtxWithDefaultPrinter(), "init")
 	if !assert.NoError(t, err) {
 		assert.FailNowf(t, "%s %s", rr.Stdout, rr.Stderr)
 	}
@@ -449,7 +450,7 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 
 // AddKptfileToWorkspace writes the provided Kptfile to the workspace
 // and makes a commit.
-func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.KptFile) {
+func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf *kptfilev1alpha2.KptFile) {
 	err := os.MkdirAll(w.FullPackagePath(), 0700)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -464,7 +465,7 @@ func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.Kp
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	_, err = gitRunner.Run(context.Background(), "add", ".")
+	_, err = gitRunner.Run(fake.CtxWithDefaultPrinter(), "add", ".")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -639,12 +640,12 @@ func replaceData(repo, data string) error {
 		// For Kptfiles we want to keep the Upstream section if the Kptfile
 		// in the data directory doesn't already include one.
 		if filepath.Base(path) == "Kptfile" {
-			dataKptfile, err := kptfileutil.ReadFile(filepath.Dir(path))
+			dataKptfile, err := pkg.ReadKptfile(filepath.Dir(path))
 			if err != nil {
 				return err
 			}
 			repoKptfileDir := filepath.Dir(filepath.Join(repo, rel))
-			repoKptfile, err := kptfileutil.ReadFile(repoKptfileDir)
+			repoKptfile, err := pkg.ReadKptfile(repoKptfileDir)
 			if err != nil {
 				return err
 			}

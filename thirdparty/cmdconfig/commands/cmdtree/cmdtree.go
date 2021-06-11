@@ -4,9 +4,11 @@
 package cmdtree
 
 import (
+	"context"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
@@ -14,8 +16,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
-func GetTreeRunner(name string) *TreeRunner {
-	r := &TreeRunner{}
+func GetTreeRunner(ctx context.Context, name string) *TreeRunner {
+	r := &TreeRunner{
+		Ctx: ctx,
+	}
 	c := &cobra.Command{
 		Use:     "tree [DIR]",
 		Short:   pkgdocs.TreeShort,
@@ -29,13 +33,14 @@ func GetTreeRunner(name string) *TreeRunner {
 	return r
 }
 
-func NewCommand(name string) *cobra.Command {
-	return GetTreeRunner(name).Command
+func NewCommand(ctx context.Context, name string) *cobra.Command {
+	return GetTreeRunner(ctx, name).Command
 }
 
 // TreeRunner contains the run function
 type TreeRunner struct {
 	Command *cobra.Command
+	Ctx     context.Context
 }
 
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
@@ -50,12 +55,12 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		IncludeLocalConfig: true,
 	}}
 
-	return runner.HandleError(c, kio.Pipeline{
+	return runner.HandleError(r.Ctx, kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
 		Outputs: []kio.Writer{TreeWriter{
 			Root:   root,
-			Writer: c.OutOrStdout(),
+			Writer: printer.FromContextOrDie(r.Ctx).OutStream(),
 		}},
 	}.Execute())
 }

@@ -34,7 +34,6 @@ import (
 	cluster "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
-	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
@@ -42,16 +41,6 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 		Use:   "live",
 		Short: livedocs.LiveShort,
 		Long:  livedocs.LiveShort + "\n" + livedocs.LiveLong,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			h, err := cmd.Flags().GetBool("help")
-			if err != nil {
-				return err
-			}
-			if h {
-				return cmd.Help()
-			}
-			return cmd.Usage()
-		},
 	}
 
 	ioStreams := genericclioptions.IOStreams{
@@ -94,12 +83,6 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 		Delegate:  kubeConfigFlags,
 		UserAgent: fmt.Sprintf("kpt/%s", version),
 	}
-	matchVersionKubeConfigFlags := cluster.NewMatchVersionFlags(
-		&factory.CachingRESTClientGetter{
-			Delegate: userAgentKubeConfigFlags,
-		},
-	)
-	matchVersionKubeConfigFlags.AddFlags(cmd.PersistentFlags())
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	return cluster.NewFactory(matchVersionKubeConfigFlags)
+	return cluster.NewFactory(userAgentKubeConfigFlags)
 }

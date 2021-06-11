@@ -251,7 +251,7 @@ deployment.apps/foo is InProgress: inProgress
 			defer revert()
 
 			provider := live.NewFakeResourceGroupProvider(tf, tc.inventory)
-			runner := NewRunner(fake.CtxWithNilPrinter(), provider, ioStreams)
+			runner := NewRunner(fake.CtxWithDefaultPrinter(), provider, ioStreams)
 			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
 			}

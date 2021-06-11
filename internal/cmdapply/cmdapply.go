@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
@@ -49,6 +50,9 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 		Use:     "apply [PKG_PATH | -]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
+		Short:   livedocs.ApplyShort,
+		Long:    livedocs.ApplyShort + "\n" + livedocs.ApplyLong,
+		Example: livedocs.ApplyExamples,
 	}
 	r.Command = c
 

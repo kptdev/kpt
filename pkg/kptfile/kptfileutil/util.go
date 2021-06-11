@@ -17,11 +17,14 @@ package kptfileutil
 import (
 	"bytes"
 	goerrors "errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
@@ -29,26 +32,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
-// ReadFile reads the KptFile in the given directory
-func ReadFile(dir string) (kptfilev1alpha2.KptFile, error) {
-	const op errors.Op = "kptfileutil.ReadFile"
-	kpgfile := kptfilev1alpha2.KptFile{ResourceMeta: kptfilev1alpha2.TypeMeta}
-
-	f, err := os.Open(filepath.Join(dir, kptfilev1alpha2.KptFileName))
-	if err != nil {
-		return kptfilev1alpha2.KptFile{}, errors.E(op, errors.IO, types.UniquePath(dir), err)
-	}
-	defer f.Close()
-
-	d := yaml.NewDecoder(f)
-	d.KnownFields(true)
-	if err = d.Decode(&kpgfile); err != nil {
-		return kptfilev1alpha2.KptFile{}, errors.E(op, errors.YAML, types.UniquePath(dir), err)
-	}
-	return kpgfile, nil
-}
-
-func WriteFile(dir string, k kptfilev1alpha2.KptFile) error {
+func WriteFile(dir string, k *kptfilev1alpha2.KptFile) error {
 	const op errors.Op = "kptfileutil.WriteFile"
 	b, err := yaml.Marshal(k)
 	if err != nil {
@@ -78,7 +62,33 @@ func WriteFile(dir string, k kptfilev1alpha2.KptFile) error {
 	return nil
 }
 
-func Equal(kf1, kf2 kptfilev1alpha2.KptFile) (bool, error) {
+// ValidateInventory returns true and a nil error if the passed inventory
+// is valid; otherwiste, false and the reason the inventory is not valid
+// is returned. A valid inventory must have a non-empty namespace, name,
+// and id.
+func ValidateInventory(inv *kptfilev1alpha2.Inventory) (bool, error) {
+	const op errors.Op = "kptfileutil.ValidateInventory"
+	if inv == nil {
+		return false, errors.E(op, errors.MissingParam,
+			fmt.Errorf("kptfile missing inventory section"))
+	}
+	// Validate the name, namespace, and inventory id
+	if strings.TrimSpace(inv.Name) == "" {
+		return false, errors.E(op, errors.MissingParam,
+			fmt.Errorf("kptfile inventory empty name"))
+	}
+	if strings.TrimSpace(inv.Namespace) == "" {
+		return false, errors.E(op, errors.MissingParam,
+			fmt.Errorf("kptfile inventory empty namespace"))
+	}
+	if strings.TrimSpace(inv.InventoryID) == "" {
+		return false, errors.E(op, errors.MissingParam,
+			fmt.Errorf("kptfile inventory missing inventoryID"))
+	}
+	return true, nil
+}
+
+func Equal(kf1, kf2 *kptfilev1alpha2.KptFile) (bool, error) {
 	const op errors.Op = "kptfileutil.Equal"
 	kf1Bytes, err := yaml.Marshal(kf1)
 	if err != nil {
@@ -94,8 +104,8 @@ func Equal(kf1, kf2 kptfilev1alpha2.KptFile) (bool, error) {
 }
 
 // DefaultKptfile returns a new minimal Kptfile.
-func DefaultKptfile(name string) kptfilev1alpha2.KptFile {
-	return kptfilev1alpha2.KptFile{
+func DefaultKptfile(name string) *kptfilev1alpha2.KptFile {
+	return &kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			TypeMeta: yaml.TypeMeta{
 				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
@@ -117,23 +127,29 @@ func DefaultKptfile(name string) kptfilev1alpha2.KptFile {
 // sections will also be copied into local.
 func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
-	localKf, err := ReadFile(localPath)
-	if err != nil && !goerrors.Is(err, os.ErrNotExist) {
-		return errors.E(op, types.UniquePath(localPath), err)
+	localKf, err := pkg.ReadKptfile(localPath)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, types.UniquePath(localPath), err)
+		}
+		localKf = &kptfilev1alpha2.KptFile{}
 	}
 
-	updatedKf, err := ReadFile(updatedPath)
-	if err != nil && !goerrors.Is(err, os.ErrNotExist) {
-		return errors.E(op, types.UniquePath(updatedPath), err)
+	updatedKf, err := pkg.ReadKptfile(updatedPath)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, types.UniquePath(updatedPath), err)
+		}
+		updatedKf = &kptfilev1alpha2.KptFile{}
 	}
 
-	localKf, err = merge(localKf, updatedKf, kptfilev1alpha2.KptFile{})
+	err = merge(localKf, updatedKf, &kptfilev1alpha2.KptFile{})
 	if err != nil {
 		return err
 	}
 
 	if updateUpstream {
-		localKf = updateUpstreamAndUpstreamLock(localKf, updatedKf)
+		updateUpstreamAndUpstreamLock(localKf, updatedKf)
 	}
 
 	err = WriteFile(localPath, localKf)
@@ -150,28 +166,37 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 // sections will also be copied into local.
 func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfile"
-	localKf, err := ReadFile(localPath)
-	if err != nil && !goerrors.Is(err, os.ErrNotExist) {
-		return errors.E(op, types.UniquePath(localPath), err)
+	localKf, err := pkg.ReadKptfile(localPath)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, types.UniquePath(localPath), err)
+		}
+		localKf = &kptfilev1alpha2.KptFile{}
 	}
 
-	updatedKf, err := ReadFile(updatedPath)
-	if err != nil && !goerrors.Is(err, os.ErrNotExist) {
-		return errors.E(op, types.UniquePath(localPath), err)
+	updatedKf, err := pkg.ReadKptfile(updatedPath)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, types.UniquePath(localPath), err)
+		}
+		updatedKf = &kptfilev1alpha2.KptFile{}
 	}
 
-	originKf, err := ReadFile(originPath)
-	if err != nil && !goerrors.Is(err, os.ErrNotExist) {
-		return errors.E(op, types.UniquePath(localPath), err)
+	originKf, err := pkg.ReadKptfile(originPath)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, types.UniquePath(localPath), err)
+		}
+		originKf = &kptfilev1alpha2.KptFile{}
 	}
 
-	localKf, err = merge(localKf, updatedKf, originKf)
+	err = merge(localKf, updatedKf, originKf)
 	if err != nil {
 		return err
 	}
 
 	if updateUpstream {
-		localKf = updateUpstreamAndUpstreamLock(localKf, updatedKf)
+		updateUpstreamAndUpstreamLock(localKf, updatedKf)
 	}
 
 	err = WriteFile(localPath, localKf)
@@ -188,7 +213,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLockFromGit"
 	// read KptFile cloned with the package if it exists
-	kpgfile, err := ReadFile(path)
+	kpgfile, err := pkg.ReadKptfile(path)
 	if err != nil {
 		return errors.E(op, types.UniquePath(path), err)
 	}
@@ -210,93 +235,50 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	return nil
 }
 
-func merge(localKf, updatedKf, originalKf kptfilev1alpha2.KptFile) (kptfilev1alpha2.KptFile, error) {
+func merge(localKf, updatedKf, originalKf *kptfilev1alpha2.KptFile) error {
 	localBytes, err := yaml.Marshal(localKf)
 	if err != nil {
-		return kptfilev1alpha2.KptFile{}, err
+		return err
 	}
 
 	updatedBytes, err := yaml.Marshal(updatedKf)
 	if err != nil {
-		return kptfilev1alpha2.KptFile{}, err
+		return err
 	}
 
 	originalBytes, err := yaml.Marshal(originalKf)
 	if err != nil {
-		return kptfilev1alpha2.KptFile{}, err
+		return err
 	}
 
 	mergedBytes, err := merge3.MergeStrings(string(localBytes), string(originalBytes), string(updatedBytes), false)
 	if err != nil {
-		return kptfilev1alpha2.KptFile{}, err
+		return err
 	}
 
 	var mergedKf kptfilev1alpha2.KptFile
 	err = yaml.Unmarshal([]byte(mergedBytes), &mergedKf)
 	if err != nil {
-		return mergedKf, err
+		return err
 	}
 
-	// The merge algorithm currently lets values from upstream take precedence,
-	// and we don't want that for name and namespace. So updating those values
-	// in the merge Kptfile.
-	mergedKf.ObjectMeta.Name = localKf.Name
-	mergedKf.ObjectMeta.Namespace = localKf.Namespace
-
-	// We don't want the values from upstream here, so we set the values back
-	// to what was already in local.
-	mergedKf.Upstream = nil
-	mergedKf.UpstreamLock = nil
-
-	if localKf.Upstream != nil {
-		mergedKf.Upstream = &kptfilev1alpha2.Upstream{
-			Type: localKf.Upstream.Type,
-			Git: &kptfilev1alpha2.Git{
-				Directory: localKf.Upstream.Git.Directory,
-				Repo:      localKf.Upstream.Git.Repo,
-				Ref:       localKf.Upstream.Git.Ref,
-			},
-			UpdateStrategy: localKf.Upstream.UpdateStrategy,
-		}
-	}
-
-	if localKf.UpstreamLock != nil {
-		mergedKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
-			Type: localKf.UpstreamLock.Type,
-			Git: &kptfilev1alpha2.GitLock{
-				Commit:    localKf.UpstreamLock.Git.Commit,
-				Directory: localKf.UpstreamLock.Git.Directory,
-				Repo:      localKf.UpstreamLock.Git.Repo,
-				Ref:       localKf.UpstreamLock.Git.Ref,
-			},
-		}
-	}
-	return mergedKf, nil
+	// Copy the merged content into the local Kptfile struct. We don't copy
+	// name, namespace, Upstream or UpstreamLock, since we don't want those
+	// merged.
+	localKf.Annotations = mergedKf.Annotations
+	localKf.Labels = mergedKf.Labels
+	localKf.Info = mergedKf.Info
+	localKf.Pipeline = mergedKf.Pipeline
+	localKf.Inventory = mergedKf.Inventory
+	return nil
 }
 
-func updateUpstreamAndUpstreamLock(localKf, updatedKf kptfilev1alpha2.KptFile) kptfilev1alpha2.KptFile {
+func updateUpstreamAndUpstreamLock(localKf, updatedKf *kptfilev1alpha2.KptFile) {
 	if updatedKf.Upstream != nil {
-		localKf.Upstream = &kptfilev1alpha2.Upstream{
-			Type: updatedKf.Upstream.Type,
-			Git: &kptfilev1alpha2.Git{
-				Directory: updatedKf.Upstream.Git.Directory,
-				Repo:      updatedKf.Upstream.Git.Repo,
-				Ref:       updatedKf.Upstream.Git.Ref,
-			},
-			UpdateStrategy: updatedKf.Upstream.UpdateStrategy,
-		}
+		localKf.Upstream = updatedKf.Upstream
 	}
 
 	if updatedKf.UpstreamLock != nil {
-		localKf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
-			Type: updatedKf.UpstreamLock.Type,
-			Git: &kptfilev1alpha2.GitLock{
-				Commit:    updatedKf.UpstreamLock.Git.Commit,
-				Directory: updatedKf.UpstreamLock.Git.Directory,
-				Repo:      updatedKf.UpstreamLock.Git.Repo,
-				Ref:       updatedKf.UpstreamLock.Git.Ref,
-			},
-		}
+		localKf.UpstreamLock = updatedKf.UpstreamLock
 	}
-	return localKf
 }

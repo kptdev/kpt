@@ -26,10 +26,11 @@ to [Chaining functions].
 <!--mdtogo:Long-->
 
 ```
-kpt fn sink DIR [flags]
+kpt fn sink [DIR] [flags]
 
 DIR:
-  Path to a local directory to write resources to. Directory must exist.
+  Path to a local directory to write resources to. Defaults to the current
+  working directory. Directory must exist.
 ```
 
 <!--mdtogo-->
@@ -38,7 +39,7 @@ DIR:
 
 <!--mdtogo:Examples-->
 
-```
+```shell
 # read resources from DIR directory, execute my-fn on them and write the
 # output to DIR directory.
 $ kpt fn source DIR |

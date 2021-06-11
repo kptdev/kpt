@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
+	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 )
 
 //nolint:gochecknoinits
@@ -80,6 +81,15 @@ Error: The inventory information is not valid. Please update the information in 
 Details:
 {{- range .err.Violations}}
 {{printf "%s" .Reason }}
+{{- end}}
+`
+
+	unknownTypesMsg = `
+Error: {{ printf "%d" (len .err.GroupKinds) }} resource types could not be found in the cluster or as CRDs among the applied resources.
+
+Resource types:
+{{- range .err.GroupKinds}}
+{{ printf "%s" .String }}
 {{- end}}
 `
 
@@ -151,6 +161,13 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	if errors.As(err, &inventoryInfoValidationError) {
 		return ResolvedResult{
 			Message: ExecuteTemplate(inventoryInfoValidationMsg, tmplArgs),
+		}, true
+	}
+
+	var unknownTypesError *manifestreader.UnknownTypesError
+	if errors.As(err, &unknownTypesError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(unknownTypesMsg, tmplArgs),
 		}, true
 	}
 	return ResolvedResult{}, false
