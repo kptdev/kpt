@@ -16,7 +16,7 @@ name: Check Licenses
 on:
   push:
     branches:
-      - master
+      - v0
       - main
   pull_request:
     branches:
