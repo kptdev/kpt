@@ -3,15 +3,15 @@ name: "Kpt Live - KinD Tests"
 on:
   push:
     branches:
-      - master
-      - next
+      - v0
+      - main
     paths-ignore: # do not run these tests when only changes to documentation are detected
       - 'docs/**'
       - 'site/**'
   pull_request:
     branches:
-      - master
-      - next
+      - v0
+      - main
     paths-ignore:
       - 'docs/**'
       - 'site/**'

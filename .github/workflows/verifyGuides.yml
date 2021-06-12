@@ -16,10 +16,10 @@ name: VerifyGuides
 on:
   push:
     branches:
-      - master
+      - v0
   pull_request:
     branches:
-      - master
+      - v0
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -16,12 +16,12 @@ name: SiteCheck
 on:
   push:
     branches:
-      - master
+      - v0
     paths:
       - "site/**"
   pull_request:
     branches:
-      - master
+      - v0
     paths:
       - "site/**"
 jobs:
