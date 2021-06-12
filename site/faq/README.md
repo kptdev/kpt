@@ -128,4 +128,4 @@ don't have to alias it. It is pronounced "kept".
 [kpt milestones]: https://github.com/GoogleContainerTools/kpt/milestones
 [kustomize solution]: /solutions/kustomize/
 [kustomize]: https://kustomize.io
-[workflow]: /book/02-concepts/02-workflows/
+[workflow]: /book/02-concepts/02-workflows
