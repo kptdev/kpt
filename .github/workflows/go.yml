@@ -15,13 +15,13 @@
 name: Go
 on:
   # Trigger the workflow on push or pull request,
-  # but only for the master branch
+  # but only for the v0 branch
   push:
     branches:
-      - master
+      - v0
   pull_request:
     branches:
-      - master
+      - v0
 jobs:
 
   build:
