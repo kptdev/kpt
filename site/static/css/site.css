@@ -122,10 +122,10 @@ pre.language-shell button.copy-button:hover {
 }
 
 .github-widget {
-  display: flex;
-  justify-content: center;
-  width: fit-content;
-  margin: auto;
+  position: absolute;
+  left: 50%;
+  margin-top: 2.5em;
+  padding-top: 8px;
 }
 
 .github-widget .material-icons-outlined {
