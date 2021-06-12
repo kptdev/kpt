@@ -50,13 +50,18 @@ func setupWorkspace(t *testing.T) (*testutil.TestGitRepo, *testutil.TestWorkspac
 }
 
 func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1alpha2.Git, strategy kptfilev1alpha2.UpdateStrategyType) error {
-	kf := kptfileutil.DefaultKptfile(workspace.PackageDir)
+	kf := newKptfile(workspace, git, strategy)
+	return kptfileutil.WriteFile(workspace.FullPackagePath(), kf)
+}
+
+func newKptfile(w *testutil.TestWorkspace, git *kptfilev1alpha2.Git, strategy kptfilev1alpha2.UpdateStrategyType) *kptfilev1alpha2.KptFile {
+	kf := kptfileutil.DefaultKptfile(w.PackageDir)
 	kf.Upstream = &kptfilev1alpha2.Upstream{
 		Type:           kptfilev1alpha2.GitOrigin,
 		Git:            git,
 		UpdateStrategy: strategy,
 	}
-	return kptfileutil.WriteFile(workspace.FullPackagePath(), kf)
+	return kf
 }
 
 func setKptfileName(workspace *testutil.TestWorkspace, name string) error {
@@ -694,5 +699,82 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	}
 	if !assert.Contains(t, err.Error(), "exit status 128") {
 		t.FailNow()
+	}
+}
+
+func TestCommand_Run_specificCommit(t *testing.T) {
+	testCases := map[string]struct {
+		setCommit bool
+		expected  *pkgbuilder.RootPkg
+	}{
+		"ref is branch without commit specified": {
+			setCommit: false,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "foo", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "foo", 1),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"ref is branch with commit specified": {
+			setCommit: true,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "foo", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "foo", 0),
+				).
+				WithResource(pkgbuilder.SecretResource),
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repoContent := map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource),
+						Branch: "foo",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			}
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+			defer clean()
+			if err := testutil.UpdateRepos(t, repos, repoContent); err != nil {
+				t.FailNow()
+			}
+
+			g := repos[testutil.Upstream]
+			w.PackageDir = g.RepoName
+
+			kf := newKptfile(w, &kptfilev1alpha2.Git{
+				Repo:      g.RepoDirectory,
+				Directory: "/",
+				Ref:       "foo",
+			}, kptfilev1alpha2.ResourceMerge)
+			testutil.AddKptfileToWorkspace(t, w, kf)
+
+			actualPkg := pkgtesting.CreatePkgOrFail(t, w.FullPackagePath())
+			var commit string
+			if tc.setCommit {
+				commit = g.Commits[0]
+			}
+			err := Command{
+				Pkg:    actualPkg,
+				Commit: commit,
+			}.Run(fake.CtxWithDefaultPrinter())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			expectedPath := tc.expected.ExpandPkgWithName(t, w.PackageDir, testutil.ToReposInfo(repos))
+			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), false)
+		})
 	}
 }
