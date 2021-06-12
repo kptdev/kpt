@@ -16,9 +16,11 @@
     - [Function Results](#Function-Results)
   - [`live`](#live)
 - [Migration steps](#Migration-steps)
-  - [Automated portion of migration](#Automated-portion-of-migration)
-    - [Changes made by the function](#Changes-made-by-the-function)
-  - [Manual portion of migration](#Manual-portion-of-migration)
+  - [For Package Publishers](#For-Package-Publishers)
+    - [Automated portion of migration](#Automated-portion-of-migration)
+      - [Changes made by the function](#Changes-made-by-the-function)
+    - [Manual portion of migration](#Manual-portion-of-migration)
+  - [For Package Consumers](#For-Package-Consumers)
 - [Timeline](#Timeline)
 
 kpt `v1.0` is going to be the latest major release of the kpt CLI. The
@@ -193,21 +195,28 @@ CRD. Please refer to the detailed guide on [migrating inventory objects] to the
 
 ## Migration Steps
 
-Based on the changes discussed above, this section walks you through an end to
-end workflow to migrate an [example kpt package] which is compatible with
-`v0.39` version of kpt, and make it compatible with kpt `v1.0`.
+### For Package Publishers
 
-### Automated portion of migration
+Based on the changes discussed above, this section walks package publishers through an end to
+end workflow to migrate their existing packages which are compatible with
+`v0.39` version of kpt, and make them compatible with kpt `v1.0`.
 
-Invoke `gcr.io/kpt-fn/fix` function from the root directory of the target kpt
-package.
+#### Automated portion of migration
+
+Since you are the package publisher, you are expected to have the latest version
+of published package on your local. If you do not already have it, you can [git clone]
+the latest version of remote package on to your local.
+
+Invoke `gcr.io/kpt-fn/fix` function from the root directory of the kpt package.
 
 ```shell
-# you must be using v1.0 version of kpt
+$ cd path/to/your/package
+
+# you must be using v1.0 version of kpt to run this command
 $ kpt fn eval --image gcr.io/kpt-fn/fix:unstable --include-meta-resources
 ```
 
-#### Changes made by the function
+##### Changes made by the function
 
 1. Best effort is made by the function to transform the `packageMetaData`
    section to the `info` section.
@@ -227,7 +236,7 @@ $ kpt fn eval --image gcr.io/kpt-fn/fix:unstable --include-meta-resources
 Note: This function modifies only the local package files and doesn’t make any
 changes to the resources in the live cluster.
 
-### Manual portion of migration
+#### Manual portion of migration
 
 1. All the functions are treated as `mutators` by the `gcr.io/kpt-fn/fix`
    function and are added to the `mutators` section in the pipeline. Users must
@@ -248,14 +257,55 @@ changes to the resources in the live cluster.
    setters are migrated to a new and simple declarative version, package
    consumers can easily declare all the setter values and render them all at
    once.
-5. The `gcr.io/kpt-fn/fix` function doesn’t migrate the `inventory object` to
-   `ResourceGroup`. If you are using the inventory object to manage live
-   resources, please refer to `live migrate` command docs to perform [live
-   migration] separately.
 
-Finally, test your migrated kpt package end-to-end and make sure that the
+Test your migrated kpt package end-to-end and make sure that the
 functionality is as expected. `gcr.io/kpt-fn/fix` is a helper for migration and
 doesn't guarantee functional parity.
+
+Finally, publish your package to git by upgrading the major version so that your
+consumers can fetch with the specific version.
+
+### For Package Consumers
+
+This section walks package consumers through an end to end workflow in order to
+fetch the latest version of the published package which is compatible with kpt `v1.0`
+and migrate the local customizations(if any) already performed to their existing package.
+
+- As a package consumer, you are expected to have some version of the kpt package
+  which is compatible with kpt `v0.39` on your local.
+  Fetch the latest version of published remote package in to a new directory different
+  from your existing package directory.
+
+```shell
+mkdir v1_pkg_dir; cd v1_pkg_dir
+
+# you must be using v1.0 version of kpt to run this command
+$ kpt pkg get https://example.com/some-pkg@latest
+```
+
+- You might have performed some customizations to your existing package such as,
+  updated setter values, made some in-place edits to your resources etc.
+  Please make sure that you capture those customizations and add them to the newly
+  fetched package.
+
+- Render the package resources with customizations
+
+```shell
+$ kpt fn render
+```
+
+- Skip this point if you are not using `kpt live` functionality.
+  a. If you are using the inventory object in order to manage live resources in the cluster,
+  please refer to `live migrate` command docs to perform [live migration].
+  b. If you are using ResourceGroup CRD to manage live resources, copy the inventory
+  section in the Kptfile of existing package to the Kptfile of new package.
+
+- Once you test your new package and confirm that all the changes are as expected,
+  you can simply discard the existing package and move forward with the new version
+  of the fetched and customized package.
+
+Here is an [example kpt package], migrated from `v1alpha1` version(compatible with
+kpt `v0.39`) to `v1alpha2` version(compatible with kpt `v1.0`).
 
 ## Timeline
 
@@ -274,42 +324,28 @@ doesn't guarantee functional parity.
 
 [v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/cli/
-[v1alpha2 kptfile]:
-  https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1alpha2/types.go
+[v1alpha2 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1alpha2/types.go
 [starlark functions]: https://catalog.kpt.dev/starlark/v0.1/
 [starlark function]: https://catalog.kpt.dev/starlark/v0.1/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
-[setter inheritance]:
-  https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
-[openapi validations]:
-  https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations
-[required setters]:
-  https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
-[auto-setters]:
-  https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
-[migrating inventory objects]:
-  https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
-[live migration]:
-  https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
-[configpath]:
-  https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
-[example kpt package]:
-  https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
-[simple example]:
-  https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
-[function config]:
-  https://kpt.dev/book/04-using-functions/02-imperative-function-execution?id=specifying-functionconfig
-[starlark runtime]:
-  https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/
+[setter inheritance]: https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
+[openapi validations]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations
+[required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
+[auto-setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
+[migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
+[live migration]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
+[configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
+[example kpt package]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
+[simple example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
+[function config]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution?id=specifying-functionconfig
+[starlark runtime]: https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/
 [update guide]: https://kpt.dev/book/03-packages/05-updating-a-package
-[render guide]:
-  https://kpt.dev/book/04-using-functions/01-declarative-function-execution
-[eval guide]:
-  https://kpt.dev/book/04-using-functions/02-imperative-function-execution
+[render guide]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
+[eval guide]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution
 [function results]: https://kpt.dev/book/04-using-functions/03-function-results
 [the kpt book]: https://kpt.dev/book/
 [installation instructions]: https://kpt.dev/installation/
 [install]: https://kpt.dev/installation/
 [kpt-functions-catalog]: https://catalog.kpt.dev/
-[v1alpha1 kptfile]:
-  https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
+[v1alpha1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
+[git clone]: https://git-scm.com/docs/git-clone
