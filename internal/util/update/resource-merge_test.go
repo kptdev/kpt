@@ -224,6 +224,31 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 				).
 				WithResource(pkgbuilder.SecretResource),
 		},
+		"does not remove a file from local if it has local changes": {
+			origin: pkgbuilder.NewRootPkg().
+				WithResource(pkgbuilder.SecretResource).
+				WithResource(pkgbuilder.DeploymentResource),
+			local: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "def456"),
+				).
+				WithResource(pkgbuilder.SecretResource).
+				WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+			updated: pkgbuilder.NewRootPkg().
+				WithResource(pkgbuilder.SecretResource),
+			relPackagePath: "/",
+			isRoot:         true,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "resource-merge").
+						WithUpstreamLock("github.com/GoogleContainerTools/kpt", "/", "feature-branch", "def456"),
+				).
+				WithResource(pkgbuilder.SecretResource).
+				WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+		},
 	}
 
 	for tn, tc := range testCases {
