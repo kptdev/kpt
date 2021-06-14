@@ -91,28 +91,6 @@ function showBookPageFooters() {
   );
 }
 
-function processBookPageTitle(content) {
-  const pathname = window.location.pathname.toLowerCase();
-
-  const bookPathMatch = pathname.match(bookPath);
-
-  if (bookPathMatch) {
-    const pageNumber = parseInt(bookPathMatch[3]);
-
-    // Use chapter name if on intro page and page name otherwise.
-    const chapterNum = `# ${parseInt(bookPathMatch[1])}${
-      pageNumber > 0 ? `.${pageNumber}` : ""
-    }`;
-    const pageTitle = pageNumber > 0 ? bookPathMatch[4] : bookPathMatch[2];
-
-    content =
-      `${chapterNum} ${pageTitle.replaceAll("-", " ").toTitleCase()}\n` +
-      content;
-  }
-
-  return content;
-}
-
 function addSidebarCollapsibility(sidebar) {
   const tocLists = Array.from(sidebar?.getElementsByTagName("ul"));
 
@@ -172,9 +150,6 @@ function localPlugins(hook, _vm) {
     content = convertFromHugo(content);
     return content;
   });
-
-  // Add title to book Markdown pages based on directory structure.
-  hook.beforeEach(processBookPageTitle);
 
   hook.mounted(addVersionDropdown);
 
