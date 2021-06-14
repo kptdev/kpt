@@ -17,9 +17,9 @@ package cmddestroy
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
@@ -107,16 +107,17 @@ func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
 // runE handles the input flags and args, sets up the Destroyer, and
 // invokes the
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		// default to the current working directory
-		cwd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		args = append(args, cwd)
+	args, stdinReader, err := cmdutil.ResolveInputSource(c, args)
+	if err != nil {
+		return err
 	}
 
-	_, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	}
+
+	_, inv, err := live.Load(r.provider.Factory(), path, stdinReader)
 	if err != nil {
 		return err
 	}

@@ -230,3 +230,24 @@ type NoResourceGroupCRDError struct{}
 func (*NoResourceGroupCRDError) Error() string {
 	return "type ResourceGroup not found"
 }
+
+// ResolveInputSource resolves the source from which the input must be accepted
+func ResolveInputSource(c *cobra.Command, args []string) ([]string, io.Reader, error) {
+	if InputFromStdin() {
+		if len(args) > 0 {
+			return args, nil, fmt.Errorf("input can either be passed from stdin or directory but not both")
+		}
+		return []string{}, c.InOrStdin(), nil
+	}
+
+	if len(args) == 0 {
+		// default to the current working directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			return args, nil, err
+		}
+		args = append(args, cwd)
+	}
+
+	return args, nil, nil
+}

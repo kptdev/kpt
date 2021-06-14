@@ -6,10 +6,10 @@ package status
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
@@ -100,21 +100,22 @@ func (r *Runner) preRunE(*cobra.Command, []string) error {
 // poller to compute status for each of the resources. One of the printer
 // implementations takes care of printing the output.
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		// default to the current working directory
-		cwd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		args = append(args, cwd)
-	}
-
-	_, err := common.DemandOneDirectory(args)
+	args, stdinReader, err := cmdutil.ResolveInputSource(c, args)
 	if err != nil {
 		return err
 	}
 
-	_, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	}
+
+	_, err = common.DemandOneDirectory(args)
+	if err != nil {
+		return err
+	}
+
+	_, inv, err := live.Load(r.provider.Factory(), path, stdinReader)
 	if err != nil {
 		return err
 	}

@@ -16,8 +16,8 @@ package resolver
 
 import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
-	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/inventory"

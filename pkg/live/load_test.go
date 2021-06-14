@@ -172,8 +172,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 				_ = os.RemoveAll(dir)
 			}()
 
-			var buf bytes.Buffer
-			objs, inv, err := Load(tf, dir, &buf)
+			objs, inv, err := Load(tf, dir, nil)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {

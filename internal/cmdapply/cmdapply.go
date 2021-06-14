@@ -17,7 +17,6 @@ package cmdapply
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
@@ -145,21 +144,17 @@ func (r *Runner) preRunE(cmd *cobra.Command, _ []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
-	if cmdutil.InputFromStdin() {
-		if len(args) > 0 {
-			return fmt.Errorf("foo")
-		}
-	}
-	if len(args) == 0 {
-		// default to the current working directory
-		cwd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		args = append(args, cwd)
+	args, stdinReader, err := cmdutil.ResolveInputSource(c, args)
+	if err != nil {
+		return err
 	}
 
-	objs, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
+	var path string
+	if len(args) > 0 {
+		path = args[0]
+	}
+
+	objs, inv, err := live.Load(r.provider.Factory(), path, stdinReader)
 	if err != nil {
 		return err
 	}
