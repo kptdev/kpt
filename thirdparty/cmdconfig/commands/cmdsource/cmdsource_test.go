@@ -22,6 +22,7 @@ func TestSourceCommand(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -32,6 +33,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: apps/v1
 kind: Service
 metadata:
   name: foo
@@ -83,7 +85,8 @@ spec:
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-  - kind: Deployment
+  - apiVersion: apps/v1
+    kind: Deployment
     metadata:
       labels:
         app: nginx2
@@ -94,7 +97,8 @@ items:
         config.kubernetes.io/path: 'f1.yaml'
     spec:
       replicas: 1
-  - kind: Service
+  - apiVersion: apps/v1
+    kind: Service
     metadata:
       name: foo
       annotations:
@@ -279,6 +283,7 @@ func TestSourceCommand_DefaultDir(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -289,6 +294,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: apps/v1
 kind: Service
 metadata:
   name: foo
@@ -345,7 +351,8 @@ spec:
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-  - kind: Deployment
+  - apiVersion: apps/v1
+    kind: Deployment
     metadata:
       labels:
         app: nginx2
@@ -356,7 +363,8 @@ items:
         config.kubernetes.io/path: 'f1.yaml'
     spec:
       replicas: 1
-  - kind: Service
+  - apiVersion: apps/v1
+    kind: Service
     metadata:
       name: foo
       annotations:
