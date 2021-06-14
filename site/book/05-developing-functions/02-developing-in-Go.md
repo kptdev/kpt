@@ -107,7 +107,7 @@ $ docker push gcr.io/project/fn-name:tag
 Run the function imperatively as a container function:
 
 ```shell
-$ kpt fn eval wordpress --image gcr.io/project/fn-name:tag -- value=foo
+$ kpt fn eval wordpress -i gcr.io/project/fn-name:tag -- value=foo
 ```
 
 ## Next Steps

@@ -75,7 +75,11 @@ info:
   description: This is an example mysql package.
 pipeline:
   mutators:
+<<<<<<< HEAD
     - image: gcr.io/kpt-fn/set-labels:v0.1
+=======
+    - image: set-label:v0.1
+>>>>>>> 52d24872 (Update book and package examples docs)
       configMap:
         tier: mysql
 ```

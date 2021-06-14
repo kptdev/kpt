@@ -97,7 +97,7 @@ command:
 ```shell
 cat >> Kptfile <<EOF
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: set-labels:v0.1
       configMap:
         env: dev
 EOF

@@ -8,6 +8,6 @@ info:
   description: This is an example nginx package.
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/kubeval:v0.1
+    - image: kubeval:v0.1
       configMap:
         strict: "true"

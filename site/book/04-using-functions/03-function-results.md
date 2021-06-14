@@ -40,7 +40,7 @@ items:
     exitCode: 0
   - image: gcr.io/kpt-fn/set-labels:v0.1
     exitCode: 0
-  - image: gcr.io/kpt-fn/kubeval:v0.1
+  - image: kubeval:v0.1
     exitCode: 0
 ```
 
@@ -79,7 +79,7 @@ items:
     exitCode: 0
   - image: gcr.io/kpt-fn/set-labels:v0.1
     exitCode: 0
-  - image: gcr.io/kpt-fn/kubeval:v0.1
+  - image: kubeval:v0.1
     exitCode: 1
     results:
       - message: "Invalid type. Expected: integer, given: string"
