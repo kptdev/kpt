@@ -47,8 +47,5 @@ func CtxWithDefaultPrinter() context.Context {
 // CtxWithPrinter returns a new context with Printer added.
 func CtxWithPrinter(outStream, errStream io.Writer) context.Context {
 	ctx := context.Background()
-	return printer.WithContext(ctx, &Printer{
-		outStream: outStream,
-		errStream: errStream,
-	})
+	return printer.WithContext(ctx, printer.New(outStream, errStream))
 }

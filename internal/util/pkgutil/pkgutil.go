@@ -239,9 +239,14 @@ func RootPkgFirstSorter(paths []string) func(i, j int) bool {
 		if jPath == "." {
 			return false
 		}
-		iSegmentCount := len(strings.Split(iPath, "/"))
-		jSegmentCount := len(strings.Split(jPath, "/"))
-		return iSegmentCount < jSegmentCount
+		// First sort based on the number of segments.
+		iSegmentCount := len(filepath.SplitList(iPath))
+		jSegmentCount := len(filepath.SplitList(jPath))
+		if jSegmentCount != iSegmentCount {
+			return iSegmentCount < jSegmentCount
+		}
+		// If two paths are at the same depth, just sort lexicographically.
+		return iPath < jPath
 	}
 }
 
