@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"os"
 	"strings"
 	"testing"
 
@@ -37,22 +36,6 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 			name: "config map",
 			args: []string{"eval", "dir", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
-			expected: `
-metadata:
-  name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
-data: {a: b, c: d, e: f}
-kind: ConfigMap
-apiVersion: v1
-`,
-		},
-		{
-			name:   "config map stdin / stdout",
-			args:   []string{"eval", "-", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
-			input:  os.Stdin,
-			output: &bytes.Buffer{},
 			expected: `
 metadata:
   name: function-input
