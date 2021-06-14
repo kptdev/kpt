@@ -331,7 +331,7 @@ func TestLoad_StdIn(t *testing.T) {
 				t.FailNow()
 			}
 
-			objs, inv, err := Load(tf, "-", &buf)
+			objs, inv, err := Load(tf, "", &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {

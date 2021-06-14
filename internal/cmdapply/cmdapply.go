@@ -20,8 +20,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
@@ -145,6 +145,11 @@ func (r *Runner) preRunE(cmd *cobra.Command, _ []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	if cmdutil.InputFromStdin() {
+		if len(args) > 0 {
+			return fmt.Errorf("foo")
+		}
+	}
 	if len(args) == 0 {
 		// default to the current working directory
 		cwd, err := os.Getwd()

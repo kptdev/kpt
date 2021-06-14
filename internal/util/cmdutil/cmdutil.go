@@ -26,7 +26,10 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
@@ -177,4 +180,53 @@ func InputFromStdin() bool {
 		return false
 	}
 	return true
+}
+
+// InstallResourceGroupCRD will install the ResourceGroup CRD into the cluster.
+// The function will block until the CRD is either installed and established, or
+// an error was encountered.
+// If the CRD could not be installed, an error of the type
+// ResourceGroupCRDInstallError will be returned.
+func InstallResourceGroupCRD(ctx context.Context, f util.Factory) error {
+	pr := printer.FromContextOrDie(ctx)
+	pr.Printf("installing inventory ResourceGroup CRD.\n")
+	err := live.InstallResourceGroupCRD(f)
+	if err != nil {
+		return &ResourceGroupCRDInstallError{
+			Err: err,
+		}
+	}
+	return nil
+}
+
+// ResourceGroupCRDInstallError is an error that will be returned if the
+// ResourceGroup CRD can't be applied to the cluster.
+type ResourceGroupCRDInstallError struct {
+	Err error
+}
+
+func (*ResourceGroupCRDInstallError) Error() string {
+	return "error installing ResourceGroup crd"
+}
+
+func (i *ResourceGroupCRDInstallError) Unwrap() error {
+	return i.Err
+}
+
+// VerifyResourceGroupCRD verifies that the ResourceGroupCRD exists in
+// the cluster. If it doesn't an error of type NoResourceGroupCRDError
+// was returned.
+func VerifyResourceGroupCRD(f util.Factory) error {
+	if !live.ResourceGroupCRDApplied(f) {
+		return &NoResourceGroupCRDError{}
+	}
+	return nil
+}
+
+// NoResourceGroupCRDError is an error type that will be used when a
+// cluster doesn't have the ResourceGroup CRD installed.
+type NoResourceGroupCRDError struct{}
+
+func (*NoResourceGroupCRDError) Error() string {
+	return "type ResourceGroup not found"
 }
