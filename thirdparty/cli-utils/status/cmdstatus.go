@@ -49,7 +49,7 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 		ioStreams:         ioStreams,
 	}
 	c := &cobra.Command{
-		Use:     "status [PKG_PATH | -]",
+		Use:     "status [PKG_PATH]",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Short:   livedocs.StatusShort,

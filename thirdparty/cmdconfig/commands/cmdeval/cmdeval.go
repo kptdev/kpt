@@ -27,7 +27,7 @@ import (
 func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r := &EvalFnRunner{Ctx: ctx}
 	c := &cobra.Command{
-		Use:     "eval [DIR | -] [flags] [--fn-args]",
+		Use:     "eval [DIR] [flags] [--fn-args]",
 		Short:   docs.EvalShort,
 		Long:    docs.EvalShort + "\n" + docs.EvalLong,
 		Example: docs.EvalExamples,
@@ -274,7 +274,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	var output io.Writer
 	var input io.Reader
 	r.OutContent = bytes.Buffer{}
-	if args[0] == "-" {
+	if cmdutil.InputFromStdin() {
 		output = &r.OutContent
 		input = c.InOrStdin()
 		r.FromStdin = true
@@ -325,7 +325,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *EvalFnRunner) postRun(_ *cobra.Command, args []string) {
-	if len(args) > 0 && args[0] == "-" {
+	if r.FromStdin {
 		return
 	}
 	path := "."

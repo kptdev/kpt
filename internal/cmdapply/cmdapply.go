@@ -47,7 +47,7 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 		applyRunner: runApply,
 	}
 	c := &cobra.Command{
-		Use:     "apply [PKG_PATH | -]",
+		Use:     "apply [PKG_PATH]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 		Short:   livedocs.ApplyShort,

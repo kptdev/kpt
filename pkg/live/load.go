@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -59,7 +60,7 @@ func (e *MultipleInventoryInfoError) Error() string {
 // It returns the resources in unstructured format and the inventory information.
 // If no inventory information is found, that is not considered an error here.
 func Load(f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1alpha2.Inventory, error) {
-	if path == "-" {
+	if cmdutil.InputFromStdin() {
 		return loadFromStream(f, stdIn)
 	}
 	return loadFromDisk(f, path)

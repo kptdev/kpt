@@ -43,7 +43,7 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 		destroyRunner: runDestroy,
 	}
 	c := &cobra.Command{
-		Use:     "destroy [PKG_PATH | -]",
+		Use:     "destroy [PKG_PATH]",
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 		Short:   livedocs.DestroyShort,

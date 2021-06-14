@@ -166,3 +166,15 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
 		Outputs: outputs}.Execute()
 }
+
+// InputFromStdin returns true if the input is from stdin
+func InputFromStdin() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		return false
+	}
+	return true
+}
