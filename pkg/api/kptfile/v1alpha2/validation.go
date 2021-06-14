@@ -23,6 +23,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -179,6 +180,16 @@ func IsKRM(n *yaml.RNode) error {
 	}
 	if meta.Name == "" {
 		return fmt.Errorf("resource must have `metadata.name`")
+	}
+	return nil
+}
+
+func AreKRM(nodes []*yaml.RNode) error {
+	for i := range nodes {
+		if err := IsKRM(nodes[i]); err != nil {
+			path, _, _ := kioutil.GetFileAnnotations(nodes[i])
+			return fmt.Errorf("%s: %s", path, err.Error())
+		}
 	}
 	return nil
 }

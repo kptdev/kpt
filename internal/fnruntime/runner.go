@@ -124,11 +124,17 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 // do executes the kpt function and returns the modified resources.
 // fnResult is updated with the function results returned by the kpt function.
 func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	fnResult := fr.fnResult
+	if krmErr := kptfilev1alpha2.AreKRM(input); krmErr != nil {
+		return output, fmt.Errorf("input resource list must contain only KRM resources: %s", krmErr.Error())
+	}
 
+	fnResult := fr.fnResult
 	output, err = fr.filter.Filter(input)
 	if pathErr := enforcePathInvariants(output); pathErr != nil {
 		return output, pathErr
+	}
+	if krmErr := kptfilev1alpha2.AreKRM(output); krmErr != nil {
+		return output, fmt.Errorf("output resource list must contain only KRM resources: %s", krmErr.Error())
 	}
 
 	// parse the results irrespective of the success/failure of fn exec
