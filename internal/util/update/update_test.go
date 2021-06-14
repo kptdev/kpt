@@ -3291,6 +3291,88 @@ func TestRun_remote_subpackages(t *testing.T) {
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 		},
+		"unfetched subpackage is deleted in upstream": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg1").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
+									),
+								pkgbuilder.NewSubPkg("subpkg2").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", masterBranch, "resource-merge"),
+									),
+							),
+						Branch: masterBranch,
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: masterBranch,
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg1").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+									WithUpstreamLockRef("foo", "/", masterBranch, 0),
+							).
+							WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+						pkgbuilder.NewSubPkg("subpkg2").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+									WithUpstreamLockRef("foo", "/", masterBranch, 0),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					),
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1),
+				).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg1").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
+								WithUpstreamLockRef("foo", "/", masterBranch, 1),
+						).
+						WithResource(pkgbuilder.ConfigMapResource).
+						WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+				),
+		},
 	}
 
 	for tn, tc := range testCases {

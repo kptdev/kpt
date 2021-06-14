@@ -374,7 +374,45 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 
 	// Package deleted from upstream
 	case originExists && localExists && !updatedExists:
-		// Check the diff. If there are local changes, we keep the subpackage.
+		// If the package has been deleted from upstream, we only want to delete
+		// it from local if it has no changes.
+		originUnfetched, err := pkg.IsPackageUnfetched(originPath)
+		if err != nil {
+			return errors.E(op, types.UniquePath(localPath), err)
+		}
+		// If the package in origin is in the unfetched state, we need to fetch
+		// it before we can diff with local.
+		if originUnfetched {
+			// We want to fetch the package here, but we need to use the
+			// commit sha from the package in local to make sure we get the correct
+			// ref from origin. So we read the Kptfile in local and use the
+			// commit sha from there.
+			localKf, err := pkg.ReadKptfile(localPath)
+			if err != nil {
+				return errors.E(op, types.UniquePath(localPath), err)
+			}
+			localOriginSha := localKf.UpstreamLock.Git.Commit
+			p, err := pkg.New(originPath)
+			if err != nil {
+				return errors.E(op, types.UniquePath(localPath), err)
+			}
+			// Fetch the package, but provide the correct commit sha rather
+			// than just fetching based on the ref in the Kptfile. If the ref
+			// points to a branch, we don't want to end up getting a different
+			// ref than was used by local.
+			if err := (fetch.Command{
+				Pkg:    p,
+				Commit: localOriginSha,
+			}).Run(ctx); err != nil {
+				return errors.E(op, types.UniquePath(localPath), err)
+			}
+			// Add the merge comments to make sure we don't get unnecessary
+			// diffs.
+			if err := addmergecomment.Process(originPath); err != nil {
+				return errors.E(op, types.UniquePath(localPath), err)
+			}
+		}
+		// Perform a diff to check if local has changes compared to origin.
 		diff, err := copyutil.Diff(originPath, localPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
