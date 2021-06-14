@@ -27,7 +27,7 @@ PKG_PATH | -:
   Path to the local package for which the status of the package in the cluster
   should be displayed. It must contain a Kptfile with inventory information.
   Defaults to the current working directory.
-  Using '-' as the package path will cause kpt to read resources from stdin.
+  Reads from stdin, if the resources are passed from stdin.
 ```
 
 #### Flags

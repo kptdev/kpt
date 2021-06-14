@@ -105,7 +105,7 @@ $ kpt fn render -o unwrap | kubectl apply -f -
 # to stdout which are piped to 'set-annotations' function,
 # the transformed resources are written to another directory
 $ kpt fn render -o stdout \
-| kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
+| kpt fn eval -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
 ```
 
 <!--mdtogo-->

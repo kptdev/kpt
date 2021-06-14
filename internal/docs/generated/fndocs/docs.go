@@ -146,8 +146,8 @@ var EvalExamples = `
   # chaining functions using the unix pipe to set namespace and set labels on
   # wordpress package
   $ kpt fn source wordpress \
-    | kpt fn eval - -i gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
-    | kpt fn eval - -i gcr.io/kpt-fn/set-labels:v0.1 -- label_name=color label_value=orange \
+    | kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
+    | kpt fn eval -i gcr.io/kpt-fn/set-labels:v0.1 -- label_name=color label_value=orange \
     | kpt fn sink wordpress
 
   # execute container 'set-namespace' on the resources in current directory and write
@@ -163,7 +163,7 @@ var EvalExamples = `
   # the wrapped output resources to stdout which are passed to 'set-annotations' function
   # and the output resources after setting namespace and annotation is written to another directory
   $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
+  | kpt fn eval -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
 `
 
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
@@ -250,7 +250,7 @@ var RenderExamples = `
   # to stdout which are piped to 'set-annotations' function,
   # the transformed resources are written to another directory
   $ kpt fn render -o stdout \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
+  | kpt fn eval -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
 `
 
 var SinkShort = `Write resources to a local directory`
@@ -265,7 +265,7 @@ var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn eval - --image gcr.io/example.com/my-fn - |
+    kpt fn eval --image gcr.io/example.com/my-fn - |
     kpt fn sink DIR
 `
 
@@ -296,6 +296,6 @@ var SourceExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn eval - --image gcr.io/example.com/my-fn - |
+    kpt fn eval --image gcr.io/example.com/my-fn - |
     kpt fn sink DIR
 `

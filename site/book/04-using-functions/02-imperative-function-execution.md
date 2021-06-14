@@ -156,8 +156,8 @@ Here is an example:
 
 ```shell
 $ kpt fn source wordpress \
-  | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
-  | kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 -- app=wordpress env=prod \
+  | kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
+  | kpt fn eval --image gcr.io/kpt-fn/set-labels:v0.1 -- app=wordpress env=prod \
   | kpt fn sink wordpress
 ```
 

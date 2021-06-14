@@ -10,8 +10,8 @@ description: >
     Execute function on resources
 -->
 
-`eval` executes a function on resources in a directory. Functions are packaged
-as container images.
+`eval` executes a function on resources, in a directory or from stdin. Functions 
+are packaged as container images.
 
 If the function fails (i.e. exits with non-zero status code), `eval` will abort
 and the local filesystem is left intact.
@@ -174,8 +174,8 @@ $ kpt fn eval -i gcr.io/kpt-fn/kubeval:v0.1 \
 # chaining functions using the unix pipe to set namespace and set labels on
 # wordpress package
 $ kpt fn source wordpress \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-labels:v0.1 -- label_name=color label_value=orange \
+  | kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
+  | kpt fn eval -i gcr.io/kpt-fn/set-labels:v0.1 -- label_name=color label_value=orange \
   | kpt fn sink wordpress
 ```
 
@@ -197,7 +197,7 @@ $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordp
 # the wrapped output resources to stdout which are passed to 'set-annotations' function
 # and the output resources after setting namespace and annotation is written to another directory
 $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging \
-| kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
+| kpt fn eval -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
 ```
 
 <!--mdtogo-->

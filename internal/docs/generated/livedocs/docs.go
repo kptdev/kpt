@@ -9,15 +9,15 @@ The ` + "`" + `live` + "`" + ` command group contains subcommands for deploying 
 
 var ApplyShort = `Apply a package to the cluster (create, update, prune).`
 var ApplyLong = `
-  kpt live apply [PKG_PATH | -] [flags]
+  kpt live apply [PKG_PATH] [flags]
 
 Args:
 
-  PKG_PATH | -:
+  PKG_PATH:
     Path to the local package which should be applied to the cluster. It must
     contain a Kptfile with inventory information. Defaults to the current working
     directory.
-    Using '-' as the package path will cause kpt to read resources from stdin.
+    Reads from stdin, if the resources are passed from stdin.
 
 Flags:
 
@@ -98,6 +98,10 @@ var ApplyExamples = `
 
   # apply resources and specify how often to poll the cluster for resource status
   $ kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir
+
+  # update tag using apply-setters function and apply the resources
+  $ k fn eval -i gcr.io/kpt-fn/apply-setters:v0.1 --include-meta-resources -o stdout -- tag=1.2 \
+  | k live apply
 `
 
 var DestroyShort = `Remove all previously applied resources in a package from the cluster`
@@ -110,7 +114,7 @@ Args:
     Path to the local package which should be deleted from the cluster. It must
     contain a Kptfile with inventory information. Defaults to the current working
     directory.
-    Using '-' as the package path will cause kpt to read resources from stdin.
+    Reads from stdin, if the resources are passed from stdin.
 
 Flags:
 
@@ -238,7 +242,7 @@ Args:
     Path to the local package for which the status of the package in the cluster
     should be displayed. It must contain a Kptfile with inventory information.
     Defaults to the current working directory.
-    Using '-' as the package path will cause kpt to read resources from stdin.
+    Reads from stdin, if the resources are passed from stdin.
 
 Flags:
 
