@@ -464,3 +464,40 @@ items:
 		return
 	}
 }
+
+func TestSourceCommandNonKrm(t *testing.T) {
+	d, err := ioutil.TempDir("", "source-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+
+	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+apiVersion: v1
+kind: Custom
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	err = r.Command.Execute()
+	if !assert.Error(t, err) {
+		return
+	}
+	assert.Equal(t, "f1.yaml: resource must have `metadata.name`", err.Error())
+}

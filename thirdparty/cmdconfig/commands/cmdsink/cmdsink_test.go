@@ -15,7 +15,7 @@ import (
 )
 
 func TestSinkCommand(t *testing.T) {
-	d, err := ioutil.TempDir("", "source-test")
+	d, err := ioutil.TempDir("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -137,7 +137,7 @@ spec:
 }
 
 func TestSinkCommandJSON(t *testing.T) {
-	d, err := ioutil.TempDir("", "source-test")
+	d, err := ioutil.TempDir("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -179,4 +179,33 @@ items:
 	if !assert.Equal(t, expected, string(actual)) {
 		t.FailNow()
 	}
+}
+func TestSinkCommandNonKrm(t *testing.T) {
+	d, err := ioutil.TempDir("", "sink-test")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer os.RemoveAll(d)
+
+	r := GetSinkRunner(fake.CtxWithDefaultPrinter(), "")
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+kind: ResourceList
+items:
+- kind: Deployment
+  metadata:
+    labels:
+      app: nginx2
+    annotations:
+      app: nginx2
+      config.kubernetes.io/index: '0'
+      config.kubernetes.io/path: 'f1.yaml'
+  spec:
+    replicas: 1
+`))
+	r.Command.SetArgs([]string{d})
+	err = r.Command.Execute()
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Equal(t, "f1.yaml: resource must have `apiVersion`", err.Error())
 }

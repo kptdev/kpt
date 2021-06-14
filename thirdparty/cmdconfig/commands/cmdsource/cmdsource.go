@@ -121,6 +121,17 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		})
 	}
 
-	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()
+	f := kio.FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		if err := kptfile.AreKRM(nodes); err != nil {
+			return nodes, err
+		}
+		return nodes, nil
+	})
+
+	err := kio.Pipeline{
+		Inputs: inputs,
+		Outputs: outputs,
+		Filters: []kio.Filter{f}}.Execute()
+
 	return runner.HandleError(r.Ctx, err)
 }

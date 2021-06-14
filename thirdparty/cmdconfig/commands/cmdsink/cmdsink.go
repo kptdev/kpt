@@ -8,9 +8,11 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // GetSinkRunner returns a command for Sink.
@@ -46,8 +48,18 @@ func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
 	}
 	outputs := []kio.Writer{&kio.LocalPackageWriter{PackagePath: dir}}
 
+	f := kio.FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+		if err := kptfile.AreKRM(nodes); err != nil {
+			return nodes, err
+		}
+		return nodes, nil
+	})
+
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}},
-		Outputs: outputs}.Execute()
+		Outputs: outputs,
+		Filters: []kio.Filter{f},
+	}.Execute()
+
 	return runner.HandleError(r.Ctx, err)
 }
