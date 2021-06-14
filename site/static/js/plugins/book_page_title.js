@@ -4,7 +4,7 @@ function processBookPageTitle(content) {
 
   const bookPathMatch = pathname.match(/^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/);
 
-  if (bookPathMatch) {
+  if (content && !content.startsWith("<!DOCTYPE html>") && bookPathMatch) {
     const pageNumber = parseInt(bookPathMatch[3]);
 
     // Use chapter name if on intro page and page name otherwise.

@@ -20,3 +20,36 @@ test.each([
   );
   expect(transformedContent.split("\n")[0]).toBe(`# ${expectedTitle}`);
 });
+
+test("title is not set on non-book pages", () => {
+  delete window.location;
+  window.location = new URL("non-book/url", "https://test.test");
+  const originalContent = "Placeholder content";
+  const transformedContent = plugins.processBookPageTitle(
+    originalContent
+  );
+  expect(transformedContent).toBe(originalContent);
+});
+
+
+test("title is not set on pages without content", () => {
+  delete window.location;
+  window.location = new URL("book/01-book-chapter/01-book-page", "https://test.test");
+  const originalContent = "";
+  const transformedContent = plugins.processBookPageTitle(
+    originalContent
+  );
+  expect(transformedContent).toBe(originalContent);
+});
+
+
+
+test("title is not set on pages that return default HTML", () => {
+  delete window.location;
+  window.location = new URL("book/01-book-chapter/01-book-page", "https://test.test");
+  const originalContent = "<!DOCTYPE html><html></html>";
+  const transformedContent = plugins.processBookPageTitle(
+    originalContent
+  );
+  expect(transformedContent).toBe(originalContent);
+});
