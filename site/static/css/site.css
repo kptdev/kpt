@@ -101,6 +101,8 @@ h1 {
 }
 
 .docsify-pagination-container {
+  overflow: hidden;
+  height: 76px;
   margin-bottom: -24px;
 }
 
