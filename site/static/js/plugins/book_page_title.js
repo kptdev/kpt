@@ -2,7 +2,7 @@
 function processBookPageTitle(content) {
   const pathname = window.location.pathname.toLowerCase();
 
-  const bookPathMatch = pathname.match(bookPath);
+  const bookPathMatch = pathname.match(/^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/);
 
   if (bookPathMatch) {
     const pageNumber = parseInt(bookPathMatch[3]);
@@ -14,7 +14,7 @@ function processBookPageTitle(content) {
     const pageTitle = pageNumber > 0 ? bookPathMatch[4] : bookPathMatch[2];
 
     content =
-      `${chapterNum} ${pageTitle.replaceAll("-", " ").toTitleCase()}\n` +
+      `${chapterNum} ${pageTitle.replace(/-/g, " ").toTitleCase()}\n` +
       content;
   }
 
