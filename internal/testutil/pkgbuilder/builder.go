@@ -511,8 +511,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 }
 
 // TODO: Consider using the Kptfile struct for this instead of a template.
-var kptfileTemplate = `
-apiVersion: kpt.dev/v1
+var kptfileTemplate = `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: {{.PkgName}}
