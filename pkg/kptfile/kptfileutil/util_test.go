@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,13 +33,13 @@ func TestValidateInventory(t *testing.T) {
 		t.Errorf("nil inventory should not validate")
 	}
 	// Empty inventory should not validate
-	inv := &kptfilev1alpha2.Inventory{}
+	inv := &kptfilev1.Inventory{}
 	isValid, err = ValidateInventory(inv)
 	if isValid || err == nil {
 		t.Errorf("empty inventory should not validate")
 	}
 	// Empty inventory parameters strings should not validate
-	inv = &kptfilev1alpha2.Inventory{
+	inv = &kptfilev1.Inventory{
 		Namespace:   "",
 		Name:        "",
 		InventoryID: "",
@@ -49,7 +49,7 @@ func TestValidateInventory(t *testing.T) {
 		t.Errorf("empty inventory parameters strings should not validate")
 	}
 	// Inventory with non-empty namespace, name, and id should validate.
-	inv = &kptfilev1alpha2.Inventory{
+	inv = &kptfilev1.Inventory{
 		Namespace:   "test-namespace",
 		Name:        "test-name",
 		InventoryID: "test-id",
@@ -66,7 +66,7 @@ func TestUpdateKptfile(t *testing.T) {
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(content), 0600)
+		err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -82,26 +82,26 @@ func TestUpdateKptfile(t *testing.T) {
 	}{
 		"no pipeline and no upstream info": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: base
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: base
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updateUpstream: false,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -110,7 +110,7 @@ metadata:
 
 		"upstream information is not copied from upstream unless updateUpstream is true": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -122,7 +122,7 @@ upstream:
     ref: v1
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -134,14 +134,14 @@ upstream:
     ref: v2
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updateUpstream: false,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -150,7 +150,7 @@ metadata:
 
 		"upstream information is copied from upstream when updateUpstream is true": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -162,7 +162,7 @@ upstream:
     ref: v1
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -181,14 +181,14 @@ upstreamLock:
     commit: abc123
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -210,7 +210,7 @@ upstreamLock:
 
 		"pipeline in upstream replaces local": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -219,7 +219,7 @@ pipeline:
     - image: foo:bar
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -231,7 +231,7 @@ pipeline:
     - image: some:image
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -244,7 +244,7 @@ pipeline:
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -259,7 +259,7 @@ pipeline:
 
 		"pipeline in local remains if there are no changes in upstream": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -268,7 +268,7 @@ pipeline:
     - image: foo:bar
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -277,7 +277,7 @@ pipeline:
     - image: foo:bar
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -290,7 +290,7 @@ pipeline:
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -305,19 +305,19 @@ pipeline:
 
 		"pipeline remains if it is only added locally": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -328,7 +328,7 @@ pipeline:
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -341,7 +341,7 @@ pipeline:
 
 		"pipeline in local is emptied if it is gone from upstream": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -350,13 +350,13 @@ pipeline:
     - image: foo:bar
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -367,7 +367,7 @@ pipeline:
 `,
 			updateUpstream: false,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -399,7 +399,7 @@ pipeline: {}
 				t.FailNow()
 			}
 
-			c, err := ioutil.ReadFile(filepath.Join(dirs["local"], kptfilev1alpha2.KptFileName))
+			c, err := ioutil.ReadFile(filepath.Join(dirs["local"], kptfilev1.KptFileName))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

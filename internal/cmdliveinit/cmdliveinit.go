@@ -16,7 +16,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -159,7 +159,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 		inventoryID = c.InventoryID
 	}
 	// Finally, update these values in the Inventory section of the Kptfile.
-	err = updateKptfile(c.Pkg, &kptfilev1alpha2.Inventory{
+	err = updateKptfile(c.Pkg, &kptfilev1.Inventory{
 		Namespace:   namespace,
 		Name:        name,
 		InventoryID: inventoryID,
@@ -178,7 +178,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 }
 
 // Run fills in the inventory object values into the Kptfile.
-func updateKptfile(p *pkg.Pkg, inv *kptfilev1alpha2.Inventory, force bool) error {
+func updateKptfile(p *pkg.Pkg, inv *kptfilev1.Inventory, force bool) error {
 	const op errors.Op = "cmdliveinit.updateKptfile"
 	// Read the Kptfile io io.dir
 	kf, err := p.Kptfile()
@@ -229,6 +229,6 @@ func generateHash(namespace string, name string) (string, error) {
 
 // kptfileInventoryEmpty returns true if the Inventory structure
 // in the Kptfile is empty; false otherwise.
-func kptfileInventoryEmpty(inv *kptfilev1alpha2.Inventory) bool {
+func kptfileInventoryEmpty(inv *kptfilev1.Inventory) bool {
 	return inv == nil
 }

@@ -26,7 +26,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
 
