@@ -13,6 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: |
-  Error: input resource list must contain only KRM resources:
-  non-krm.yaml: resource must have `apiVersion`
+stdErr: "Error: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`"
