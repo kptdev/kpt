@@ -17,8 +17,6 @@ package fnruntime
 import (
 	"fmt"
 	"strings"
-
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 )
 
 const (
@@ -41,9 +39,6 @@ type ExecError struct {
 
 	// ExitCode is the exit code returned from function
 	ExitCode int `yaml:"exitCode,omitempty"`
-
-	// FnResult is the structured result returned from the function
-	FnResult *fnresult.Result
 }
 
 // String returns string representation of the failure.

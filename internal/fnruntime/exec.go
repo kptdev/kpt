@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 )
 
 type ExecFn struct {
@@ -35,6 +36,9 @@ type ExecFn struct {
 	// Container function will be killed after this timeour.
 	// The default value is 5 minutes.
 	Timeout time.Duration
+	// FnResult is used to store the information about the result from
+	// the function.
+	FnResult *fnresult.Result
 }
 
 // Run runs the executable file which reads the input from r and
@@ -66,6 +70,10 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 			}
 		}
 		return fmt.Errorf("unexpected function error: %w", err)
+	}
+
+	if errSink.Len() > 0 {
+		f.FnResult.Stderr = errSink.String()
 	}
 
 	return nil
