@@ -16,17 +16,17 @@ name: "Kpt Live - KinD Tests"
 on:
   pull_request:
     branches:
-      - next
+      - main
     paths-ignore:
-      - 'docs/**'
-      - 'site/**'
+      - "docs/**"
+      - "site/**"
 
 jobs:
   kind:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: [ 1.18, 1.19 ]
+        version: [1.18, 1.19]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2

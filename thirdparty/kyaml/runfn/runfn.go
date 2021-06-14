@@ -402,6 +402,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			UIDGID:          uidgid,
 			StorageMounts:   r.StorageMounts,
 			Env:             spec.Container.Env,
+			FnResult:        fnResult,
 			Perm: fnruntime.ContainerFnPermission{
 				AllowNetwork: spec.Container.Network,
 				// mounts are always from CLI flags so we allow
@@ -419,7 +420,8 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 
 	if spec.Exec.Path != "" {
 		e := &fnruntime.ExecFn{
-			Path: spec.Exec.Path,
+			Path:     spec.Exec.Path,
+			FnResult: fnResult,
 		}
 		fltr = &runtimeutil.FunctionFilter{
 			Run:            e.Run,

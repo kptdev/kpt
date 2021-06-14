@@ -1,9 +1,9 @@
 # helloworld-tshirt
 
-This is a package that has both a setter and a simple hydration function.  The
+This is a package that has both a setter and a simple hydration function. The
 hydration function examines the configuration and looks for the t-shirt size
-value.  Depending on the size (small, medium, large) it then sets the 
-resource sizes.
+value. Depending on the size (small, medium, large) it then sets the resource
+sizes.
 
 ## Steps
 
@@ -18,7 +18,7 @@ resource sizes.
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt@next
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-tshirt
 
 fetching package /package-examples/helloworld-tshirt from https://github.com/GoogleContainerTools/kpt to helloworld-tshirt
 ```
@@ -38,11 +38,10 @@ Package "helloworld-tshirt"
 
 ### Configure functions
 
-The package contains a function pipeline in the `Kptfile` which has
-one `apply-setters` and 'example-tshirt' functions.  The `apply-setters` 
-function allows you to set a simple value throughout the package 
-configuration.  In this case the value sets the t-shirt size.  You can 
-set it to medium.
+The package contains a function pipeline in the `Kptfile` which has one
+`apply-setters` and 'example-tshirt' functions. The `apply-setters` function
+allows you to set a simple value throughout the package configuration. In this
+case the value sets the t-shirt size. You can set it to medium.
 
 ```yaml
 pipeline:

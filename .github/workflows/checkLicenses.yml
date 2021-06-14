@@ -16,12 +16,12 @@ name: Check Licenses
 on:
   push:
     branches:
-      - master
-      - next
+      - v0
+      - main
   pull_request:
     branches:
-      - master
-      - next
+      - v0
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest

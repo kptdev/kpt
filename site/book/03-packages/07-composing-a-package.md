@@ -71,7 +71,7 @@ This creates an [independent package]. If you wish to make this a dependent
 package, you can delete the `upstream` and `upstreamLock` sections of the
 `Kptfile` in `mysql` directory.
 
-[create a new package]: /book/03-packages/05-creating-a-package
+[create a new package]: /book/03-packages/06-creating-a-package
 [get an existing package]: /book/03-packages/01-getting-a-package
 [dependent package]: /book/03-packages/01-getting-a-package
 [independent package]: /book/03-packages/01-getting-a-package

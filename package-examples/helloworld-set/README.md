@@ -16,7 +16,7 @@ setters in it.
 Get the example package on to local using `kpt pkg get`
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set@next
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld-set
 
 fetching package /package-examples/helloworld-set from https://github.com/GoogleContainerTools/kpt to helloworld-set
 ```
@@ -36,10 +36,10 @@ Package "helloworld-set"
 
 ### Configure functions
 
-The package contains a function pipeline in the `Kptfile` which has
-one `apply-setters` function.  The `apply-setters` function allows you to
-set a simple value throughout the package configuration.  In this case
-you can set the replicas, image, tag and http-port of a simple application.
+The package contains a function pipeline in the `Kptfile` which has one
+`apply-setters` function. The `apply-setters` function allows you to set a
+simple value throughout the package configuration. In this case you can set the
+replicas, image, tag and http-port of a simple application.
 
 ```yaml
 pipeline:

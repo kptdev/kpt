@@ -26,6 +26,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
 
@@ -75,6 +76,9 @@ type ContainerFn struct {
 	StorageMounts []runtimeutil.StorageMount
 	// Env is a slice of env string that will be exposed to container
 	Env []string
+	// FnResult is used to store the information about the result from
+	// the function.
+	FnResult *fnresult.Result
 }
 
 // Run runs the container function using docker runtime.
@@ -108,6 +112,9 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 		return fmt.Errorf("unexpected function error: %w", err)
 	}
 
+	if errSink.Len() > 0 {
+		f.FnResult.Stderr = errSink.String()
+	}
 	return nil
 }
 

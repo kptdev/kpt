@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-const plugins = require("./plugins");
+const plugins = require("./copy_buttons");
 
 const originalClipboard = { ...global.navigator.clipboard };
 beforeEach(() => {
