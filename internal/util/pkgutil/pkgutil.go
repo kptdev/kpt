@@ -240,10 +240,8 @@ func RootPkgFirstSorter(paths []string) func(i, j int) bool {
 			return false
 		}
 		// First sort based on the number of segments.
-		// TODO: Verify whether this works on Windows. It looks like it
-		// probably wont.
-		iSegmentCount := len(strings.Split(iPath, "/"))
-		jSegmentCount := len(strings.Split(jPath, "/"))
+		iSegmentCount := len(filepath.SplitList(iPath))
+		jSegmentCount := len(filepath.SplitList(jPath))
 		if jSegmentCount != iSegmentCount {
 			return iSegmentCount < jSegmentCount
 		}
