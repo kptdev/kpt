@@ -128,7 +128,7 @@ metadata:
 
 This rendered configuration can be deployed with `kubectl` but you can also take 
 advantage of `kpt live apply` if you extend your kustomization.yaml to include
-the necessary kpt metadata.  You can learn more about kpt `apply` command in the
+the Kptfile.  You can learn more about kpt `apply` command in the
 [deployment chapter]. 
 
 In our case we created Kptfiles in the overlay

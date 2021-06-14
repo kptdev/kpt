@@ -52,37 +52,29 @@ resource configuration provides a number of desirable properties:
    YAML/JSON directly.
 
 
-### Does kpt and kustomize work together?
+### Do kpt and kustomize work together?
 
-Yes!  Because both tools subscribe to template/DSL free approach to configuraiton it's possible to use both tools together.  We have created a 
+Yes!  Because both tools subscribe to template/DSL free approach to 
+configuration it's possible to use both tools together.  We have created a 
 [kustomize solution] which shows how you can leverage both of these tools
 in your environment.
 
 #### Kustomize background
-[Kustomize] is a CNCF project that is a part of Kubernetes.  It's included in 
-the `kubectl` in order to allow users to customize their configurations without introducing templates.   Kustomize was started by Googlers and still has 
-large contributions by Google engineers.  A lot of the Google engineers working
-on kpt also work on kustomize and a lot of the underlying libraries are shared.
-
-While kpt and kustomize support customization of configuration yaml there are 
-important differences and scope to these projects.  Kpt supports end to end 
-scenarios of packaging, customization and application of resource to the 
-clusters.  For kustomize packaging is explicitly out of scope and application 
-is deferred to whatever kubectl provides.
+[Kustomize] is a CNCF project that is a part of Kubernetes.  While kpt and 
+kustomize support customization of KRM manifests without templates there 
+are important differences and scope to these projects. Kpt supports end to end scenarios of packaging, customization and actuation of resources to the  
+clusters.  For kustomize packaging is explicitly out of scope and application is deferred to whatever kubectl provides.
 
 #### kpt vs kustomize customization approach.
-While kpt is set to support both in place and out-of-place customization,
-kustomize is only focused on providing out-of-place hydration using the 
-overlay pattern.  Here are the strengths and investment areas for these 
-products:
+While kpt supports both in place and out-of-place customization, kustomize is 
+only focused on providing out-of-place hydration using the  [overlay pattern].  
+Here are the strengths and investment areas for these products:
 
 *kpt*
 - Allows you to edit the configuration in-place without creating complex patches
 - Focuses on rebase with resource merge strategy allowing for edited config to 
 be updated
-- Is more intuitive and has a continuous learning curve as you usually start 
-small with modifying several YAML files using an editor and then want to scale 
-with complexity of the application
+- Allows one to start customization by modifying a few YAML files using an editor.
 - Allows to mix programmatic changes (functions) with manual edits in the same 
 [workflow]
 
@@ -129,3 +121,4 @@ don't have to alias it. It is pronounced "kept".
 [kustomize solution]: /solutions/kustomize/
 [kustomize]: https://kustomize.io
 [workflow]: /book/02-concepts/02-workflows
+[overlay pattern]: https://github.com/kubernetes-sigs/kustomize/tree/master/examples/multibases
