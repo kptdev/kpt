@@ -29,10 +29,7 @@ to [Chaining functions].
 kpt fn sink [DIR] [flags]
 
 DIR:
-  Path to a local directory to write resources to. Defaults to the current
-  working directory.
-  1. If the directory doesn't already exist, it will be created.
-  2. If the directory already exists, the existing files in it are not deleted.
+  Path to a local directory to write resources to. The directory must not already exist.
 ```
 
 <!--mdtogo-->

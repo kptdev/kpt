@@ -103,8 +103,7 @@ Flags:
     1. stdout: output resources are wrapped in ResourceList and written to stdout.
     2. unwrap: output resources are written to stdout, in multi-object yaml format.
     3. OUT_DIR_PATH: output resources are written to provided directory.
-       a. If the directory doesn't already exist, it will be created.
-       b. If the directory already exists, the existing files in it are not deleted.
+       The provided directory must not already exist.
   
   --results-dir:
     Path to a directory to write structured results. Directory will be created if
@@ -224,8 +223,7 @@ Flags:
     1. stdout: output resources are wrapped in ResourceList and written to stdout.
     2. unwrap: output resources are written to stdout, in multi-object yaml format.
     3. OUT_DIR_PATH: output resources are written to provided directory.
-       a. If the directory doesn't already exist, it will be created.
-       b. If the directory already exists, the existing files in it are not deleted.
+       The provided directory must not already exist.
   
   --results-dir:
     Path to a directory to write structured results. Directory will be created if
@@ -262,10 +260,7 @@ var SinkLong = `
   kpt fn sink [DIR] [flags]
   
   DIR:
-    Path to a local directory to write resources to. Defaults to the current
-    working directory.
-    1. If the directory doesn't already exist, it will be created.
-    2. If the directory already exists, the existing files in it are not deleted.
+    Path to a local directory to write resources to. The directory must not already exist.
 `
 var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
