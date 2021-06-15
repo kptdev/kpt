@@ -18,7 +18,7 @@ pipeline:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: wordpress
@@ -49,7 +49,7 @@ The `mysql` subpackage declares only a mutator function:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql
@@ -130,7 +130,7 @@ For example:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql
@@ -160,7 +160,7 @@ The following is equivalent to what we showed before:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql

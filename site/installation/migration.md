@@ -96,12 +96,12 @@ directory by default.
 ### Kptfile schema changes
 
 The existing [v1alpha1 Kptfile] format/schema is not compatible with kpt `v1.0`.
-Here is the schema for [v1alpha2 Kptfile] which is compatible with kpt `v1.0`.
+Here is the schema for [v1 Kptfile] which is compatible with kpt `v1.0`.
 
 1. The `packageMetaData` section in `v1alpha1` Kptfile is transformed to `info`
-   section in `v1alpha2` Kptfile.
+   section in `v1` Kptfile.
 2. `upstream` section, in the `v1alpha1` Kptfile is split into `upstream` and
-   `upstreamLock` sections in `v1alpha2` Kptfile. `upstream` section can be
+   `upstreamLock` sections in `v1` Kptfile. `upstream` section can be
    modified by users to declare the desired version of the package,
    `upstreamLock` is the resolved package state and should not be modified by
    users.
@@ -112,7 +112,7 @@ Here is the schema for [v1alpha2 Kptfile] which is compatible with kpt `v1.0`.
 5. `functions` section in `v1alpha1` Kptfile holds definitions for Starlark
    functions only. This section is deprecated and all the functions can be
    declared in the `pipeline` section including [Starlark functions].
-6. `inventory-object` is moved to `inventory` section in `v1alpha2` Kptfile.
+6. `inventory-object` is moved to `inventory` section in `v1` Kptfile.
    [Details below](#live-group-changes).
 
 ### `pkg`
@@ -212,7 +212,7 @@ $ kpt fn eval --image gcr.io/kpt-fn/fix:unstable --include-meta-resources
 1. Best effort is made by the function to transform the `packageMetaData`
    section to the `info` section.
 2. `upstream` section, in the `v1alpha1` Kptfile is converted to `upstream` and
-   `upstreamLock` sections in `v1alpha2` version of Kptfile.
+   `upstreamLock` sections in `v1` version of Kptfile.
 3. `dependencies` section is removed from Kptfile.
 4. Starlark functions section is removed from Kptfile.
 5. `Setters` and `substitutions` are converted to new and simple setter
@@ -232,7 +232,7 @@ changes to the resources in the live cluster.
 1. All the functions are treated as `mutators` by the `gcr.io/kpt-fn/fix`
    function and are added to the `mutators` section in the pipeline. Users must
    manually go through the functions and move the validator functions to the
-   `validators` section in the pipeline section of `v1alpha2` Kptfile.
+   `validators` section in the pipeline section of `v1` Kptfile.
    1. The order of functions also must be re-arranged manually by users if
       needed.
    2. Also, note that the [function config] is used to configure the function
@@ -274,42 +274,27 @@ doesn't guarantee functional parity.
 
 [v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/cli/
-[v1alpha2 kptfile]:
-  https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1alpha2/types.go
+[v1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1/types.go
 [starlark functions]: https://catalog.kpt.dev/starlark/v0.1/
 [starlark function]: https://catalog.kpt.dev/starlark/v0.1/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
-[setter inheritance]:
-  https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
-[openapi validations]:
-  https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations
-[required setters]:
-  https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
-[auto-setters]:
-  https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
-[migrating inventory objects]:
-  https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
-[live migration]:
-  https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
-[configpath]:
-  https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
-[example kpt package]:
-  https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
-[simple example]:
-  https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
-[function config]:
-  https://kpt.dev/book/04-using-functions/02-imperative-function-execution?id=specifying-functionconfig
-[starlark runtime]:
-  https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/
+[setter inheritance]: https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
+[openapi validations]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations
+[required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
+[auto-setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
+[migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
+[live migration]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
+[configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
+[example kpt package]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
+[simple example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
+[function config]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution?id=specifying-functionconfig
+[starlark runtime]: https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/
 [update guide]: https://kpt.dev/book/03-packages/05-updating-a-package
-[render guide]:
-  https://kpt.dev/book/04-using-functions/01-declarative-function-execution
-[eval guide]:
-  https://kpt.dev/book/04-using-functions/02-imperative-function-execution
+[render guide]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
+[eval guide]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution
 [function results]: https://kpt.dev/book/04-using-functions/03-function-results
 [the kpt book]: https://kpt.dev/book/
 [installation instructions]: https://kpt.dev/installation/
 [install]: https://kpt.dev/installation/
 [kpt-functions-catalog]: https://catalog.kpt.dev/
-[v1alpha1 kptfile]:
-  https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
+[v1alpha1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
