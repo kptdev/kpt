@@ -7,7 +7,7 @@ uses:
 
 - kpt for packaging (`kpt pkg`)
 - kpt for actuation (`kpt live`)
-- kustomize for customize (`kustomize build`)
+- kustomize for customization (`kustomize build`)
 
 ## Steps
 
