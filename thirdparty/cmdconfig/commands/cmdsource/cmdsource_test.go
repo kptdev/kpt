@@ -134,6 +134,143 @@ items:
 	}
 }
 
+func TestSourceCommand_Unwrap(t *testing.T) {
+	d, err := ioutil.TempDir("", "source-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+
+	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`
+apiVersion: v1
+kind: Abstraction
+metadata:
+  name: foo
+spec:
+  replicas: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "-o", "unwrap"})
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, `kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+---
+apiVersion: v1
+kind: Abstraction
+metadata:
+  name: foo
+spec:
+  replicas: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`, b.String()) {
+		return
+	}
+}
+
+func TestSourceCommand_InvalidInput(t *testing.T) {
+	d, err := ioutil.TempDir("", "source-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+
+	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	r := GetSourceRunner(fake.CtxWithDefaultPrinter(), "")
+	r.Command.SetArgs([]string{d, "-o", "foo/bar"})
+	err = r.Command.Execute()
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+
+	if !assert.Equal(t, "invalid input for --output flag, allowed values: stdout|unwrap", err.Error()) {
+		t.FailNow()
+	}
+
+}
+
 func TestSourceCommand_DefaultDir(t *testing.T) {
 	d, err := ioutil.TempDir("", "source-test")
 	if !assert.NoError(t, err) {
