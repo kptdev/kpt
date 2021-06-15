@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: kpt Documentation
+    url: https://kpt.dev/
+    about: Learn more about using kpt
+  - name: kpt Slack Channel
+    url: https://kubernetes.slack.com/app_redirect?channel=kpt
+    about: Discuss kpt topics with the kpt team on Slack
+  - name: kpt Mailing List
+    url: https://groups.google.com/forum/#!forum/kpt-users
+    about: Join the kpt mailing list
