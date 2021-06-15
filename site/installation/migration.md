@@ -204,16 +204,14 @@ end workflow to migrate their existing packages which are compatible with
 #### Automated portion of migration
 
 Since you are the package publisher, you are expected to have the latest version
-of published package on your local. If you do not already have it, you can [git clone]
-the latest version of remote package on to your local.
+of published package on your local disk. If you do not already have it, you can [git clone]
+the latest version of remote package on to your local disk.
 
-Invoke `gcr.io/kpt-fn/fix` function from the root directory of the kpt package.
+Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
-$ cd path/to/your/package
-
-# you must be using v1.0 version of kpt to run this command
-$ kpt fn eval --image gcr.io/kpt-fn/fix:unstable --include-meta-resources
+# you must be using 1.0+ version of kpt
+$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:unstable --include-meta-resources
 ```
 
 ##### Changes made by the function
@@ -277,8 +275,6 @@ and migrate the local customizations(if any) already performed to their existing
   from your existing package directory.
 
 ```shell
-mkdir v1_pkg_dir; cd v1_pkg_dir
-
 # you must be using v1.0 version of kpt to run this command
 $ kpt pkg get https://example.com/some-pkg@latest
 ```
@@ -294,7 +290,7 @@ $ kpt pkg get https://example.com/some-pkg@latest
 $ kpt fn render
 ```
 
-- Skip this point if you are not using `kpt live` functionality.
+- The step is only applicable if you're using `kpt live` functionality.
   a. If you are using the inventory object in order to manage live resources in the cluster,
   please refer to `live migrate` command docs to perform [live migration].
   b. If you are using ResourceGroup CRD to manage live resources, copy the inventory
