@@ -24,7 +24,7 @@ kustomize support customization of KRM manifests without use of templates or
 DSL(s), there are important differences in both feature set and the scope of
 these projects. Kpt supports end-to-end solutions for packaging, customization
 and actuation of resources. For kustomize, packaging is explicitly out of scope
-and application is deferred to kubectl.
+and actuation is deferred to kubectl.
 
 Here are the strengths and investment areas for these products:
 
