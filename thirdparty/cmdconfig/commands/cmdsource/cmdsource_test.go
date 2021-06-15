@@ -33,7 +33,7 @@ metadata:
 spec:
   replicas: 1
 ---
-apiVersion: apps/v1
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -97,7 +97,7 @@ items:
         config.kubernetes.io/path: 'f1.yaml'
     spec:
       replicas: 1
-  - apiVersion: apps/v1
+  - apiVersion: v1
     kind: Service
     metadata:
       name: foo
@@ -294,7 +294,7 @@ metadata:
 spec:
   replicas: 1
 ---
-apiVersion: apps/v1
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -363,7 +363,7 @@ items:
         config.kubernetes.io/path: 'f1.yaml'
     spec:
       replicas: 1
-  - apiVersion: apps/v1
+  - apiVersion: v1
     kind: Service
     metadata:
       name: foo

@@ -22,10 +22,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"strings"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -165,4 +167,11 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 	return kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
 		Outputs: outputs}.Execute()
+}
+
+func AreKrmFilter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+	if err := kptfile.AreKRM(nodes); err != nil {
+		return nodes, err
+	}
+	return nodes, nil
 }
