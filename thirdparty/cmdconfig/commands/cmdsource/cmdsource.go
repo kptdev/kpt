@@ -64,7 +64,7 @@ type SourceRunner struct {
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	if r.Output != cmdutil.Stdout && r.Output != cmdutil.Unwrap {
-		return fmt.Errorf("invalid input for --output flag, allowed values: %s|%s", cmdutil.Stdout, cmdutil.Unwrap)
+		return fmt.Errorf("invalid input for --output flag, must be %q or %q", cmdutil.Stdout, cmdutil.Unwrap)
 	}
 	if len(args) == 0 {
 		// default to current working directory

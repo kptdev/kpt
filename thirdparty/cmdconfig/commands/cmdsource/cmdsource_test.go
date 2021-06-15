@@ -265,7 +265,7 @@ spec:
 		t.FailNow()
 	}
 
-	if !assert.Equal(t, "invalid input for --output flag, allowed values: stdout|unwrap", err.Error()) {
+	if !assert.Equal(t, `invalid input for --output flag, must be "stdout" or "unwrap"`, err.Error()) {
 		t.FailNow()
 	}
 
