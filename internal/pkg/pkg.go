@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -41,6 +42,11 @@ const ParentDir = ".."
 
 var DeprecatedKptfileVersions = []string{
 	"v1alpha1",
+}
+
+var SupportedKptfileVersions = []string{
+	kptfilev1alpha2.KptFileVersion,
+	kptfilev1.KptFileVersion,
 }
 
 // KptfileError records errors regarding reading or parsing of a Kptfile.
@@ -219,8 +225,8 @@ func CheckKptfileVersion(content []byte) error {
 	switch {
 	// If the resource type matches what we are looking for, just return nil.
 	case gv.Group == kptfilev1.KptFileGroup &&
-		gv.Version == kptfilev1.KptFileVersion &&
-		kind == kptfilev1.KptFileKind:
+		kind == kptfilev1.KptFileKind &&
+		isSupportedKptfileVersion(gv.Version):
 		return nil
 	// If the kind and group is correct and the version is a known deprecated
 	// schema for the Kptfile, return DeprecatedKptfileError.
@@ -241,6 +247,10 @@ func CheckKptfileVersion(content []byte) error {
 
 func isDeprecatedKptfileVersion(version string) bool {
 	return slice.ContainsString(DeprecatedKptfileVersions, version, nil)
+}
+
+func isSupportedKptfileVersion(version string) bool {
+	return slice.ContainsString(SupportedKptfileVersions, version, nil)
 }
 
 // Pipeline returns the Pipeline section of the pkg's Kptfile.
