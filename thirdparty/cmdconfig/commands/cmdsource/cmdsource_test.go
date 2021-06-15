@@ -146,6 +146,7 @@ func TestSourceCommand_Unwrap(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -156,6 +157,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -199,7 +201,8 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `kind: Deployment
+	if !assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
 metadata:
   labels:
     app: nginx2
@@ -209,6 +212,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
