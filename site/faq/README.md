@@ -19,7 +19,7 @@ Kubernetes Resource Model].
 
 ### What's the difference between kpt and kustomize?
 
-[Kustomize] is a CNCF project that is a part of Kubernetes. While kpt and
+[Kustomize] is a CNCF project that is a part of Kubernetes. While both kpt and
 kustomize support customization of KRM manifests without use of templates or
 DSL(s), there are important differences in both feature set and the scope of
 these projects. Kpt supports end-to-end solutions for packaging, customization
@@ -30,23 +30,23 @@ Here are the strengths and investment areas for these products:
 
 _kpt_
 
-- Supports both in place and out-of-place customization, kustomize is only.
+- Supports both in place and out-of-place customization. kustomize is only
   focused on providing out-of-place hydration using the [overlay pattern].
-- Allows you to edit the configuration in-place without creating complex patches
+- Allows you to edit the configuration in-place without creating complex patches.
 - Focuses on rebase with resource merge strategy allowing for edited config to
   be updated.
 - Has a continuous learning curve as you usually start small with modifying
   several YAML files using an editor and then want to scale with complexity of
   the application.
 - Enables workflows that combine programmatic changes (functions) with manual
-  edits
+  edits.
 
 _kustomize_
 
-- Treats base layers as immutable
-- Programmatic changes (plugins) do not have to be idempotent
+- Treats base layers as immutable.
+- Programmatic changes (plugins) do not have to be idempotent.
 - Provide overlays and components that assemble that “build” the final
-  configuration
+  configuration.
 
 ### Do kpt and kustomize work together?
 
