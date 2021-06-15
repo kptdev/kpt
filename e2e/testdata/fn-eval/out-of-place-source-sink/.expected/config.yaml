@@ -15,4 +15,3 @@
 stdErr: |
   [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
   [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  directory "out" doesn't exist, creating the directory...

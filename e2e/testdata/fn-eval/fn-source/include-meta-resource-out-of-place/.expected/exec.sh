@@ -15,6 +15,8 @@
 
 set -eo pipefail
 
+rm -rf out
+
 kpt fn source --include-meta-resources\
 | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1.3 -- namespace=staging \
 | kpt fn sink out
