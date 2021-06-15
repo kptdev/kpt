@@ -64,7 +64,7 @@ $ kpt live init
 ```
 
 ```shell
-# initialize a package with a specific name for the group of resources.
+# initialize a package with explicit namespace for the ResourceGroup.
 $ kpt live init --namespace=test my-dir
 ```
 
