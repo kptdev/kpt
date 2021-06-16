@@ -417,6 +417,7 @@ func TestSourceCommandJSON(t *testing.T) {
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.json"), []byte(`
 {
+  "apiVersion": "apps/v1",
   "kind": "Deployment",
   "metadata": {
     "labels": {
@@ -468,7 +469,7 @@ func TestSourceCommandJSON(t *testing.T) {
 	expected := `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-  - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo", "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
+  - {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo", "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
   - {"apiVersion": "v1", "kind": "Abstraction", "metadata": {"name": "foo", "annotations": {"config.kubernetes.io/function": "container:\n  image: gcr.io/example/reconciler:v1\n", "config.kubernetes.io/local-config": "true", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f2.json'}}, "spec": {"replicas": 3}}
 `
 

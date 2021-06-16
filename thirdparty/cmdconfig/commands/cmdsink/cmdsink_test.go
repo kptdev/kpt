@@ -151,7 +151,7 @@ func TestSinkCommandJSON(t *testing.T) {
 	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
 items:
-- {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
+- {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",
     "annotations": {"app": "nginx2", config.kubernetes.io/index: '0',
       config.kubernetes.io/path: 'f1.json'}}, "spec": {"replicas": 1}}
 `))
@@ -165,6 +165,7 @@ items:
 		t.FailNow()
 	}
 	expected := `{
+  "apiVersion": "apps/v1",
   "kind": "Deployment",
   "metadata": {
     "annotations": {

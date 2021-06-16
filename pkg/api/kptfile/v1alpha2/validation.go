@@ -186,11 +186,7 @@ func IsKRM(n *yaml.RNode) error {
 
 func AreKRM(nodes []*yaml.RNode) error {
 	for i := range nodes {
-		// don't do this check for .json files
 		path, _, _ := kioutil.GetFileAnnotations(nodes[i])
-		if strings.HasSuffix(path, ".json") {
-			continue
-		}
 		if err := IsKRM(nodes[i]); err != nil {
 			return fmt.Errorf("%s: %s", path, err.Error())
 		}
