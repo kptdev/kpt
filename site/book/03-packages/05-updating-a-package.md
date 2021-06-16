@@ -117,7 +117,7 @@ the three different sources as local, upstream and origin.
 In the discussion, we will be referring to non-associative and associative lists. A
 non-associative list either has elements that are scalars or another list, or it has elements
 that are mappings but without an associative key. An example of this in the kubernetes
-API is the command property on containers:
+API is the `command` property on containers:
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -159,6 +159,8 @@ associative keys:
 * `name`
 * `containerPort`
 
+The 3-way merge algorithm operates both on the level of each resource and on
+each individual field with a resource. The rules are:
 
 | Resource level |
 | --- |
