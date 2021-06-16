@@ -12,3 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 exitCode: 1
+stdErr: 'has an old version ("v1alpha1") of the Kptfile schema'
