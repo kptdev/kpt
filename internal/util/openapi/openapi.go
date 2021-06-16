@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/openapi/augments"
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"net/http"
+	"runtime"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kubernetesapi"
 	"sigs.k8s.io/kustomize/kyaml/openapi/kustomizationapi"
@@ -74,6 +75,18 @@ func GetJSONSchema() ([]byte, error) {
 		return nil, err
 	}
 	return output, nil
+}
+
+func ServerUrl() string {
+	var url string
+	fmt.Println("os is", runtime.GOOS)
+	switch runtime.GOOS {
+	case "linux":
+		url = "172.17.0.1"
+	default:
+		url = "host.docker.internal"
+	}
+	return fmt.Sprintf("http://%s:%s%s", url, "8080", endpoint)
 }
 
 func StartLocalServer() error {

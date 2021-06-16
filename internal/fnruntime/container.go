@@ -20,7 +20,9 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
@@ -125,8 +127,16 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--network", string(network),
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
-		"--add-host=host.docker.internal:host-gateway",
 	}
+	if runtime.GOOS == "linux" {
+		if _, err := os.Stat("/.dockerenv"); err == nil {
+			// docker in docker case
+			args = append(args, "--add-host=host.docker.internal:host-gateway")
+		} else {
+			args = append(args, "--add-host=host.docker.internal:172.17.0.1")
+		}
+	}
+
 	if f.ImagePullPolicy == NeverPull {
 		args = append(args, "--pull", "never")
 	}
