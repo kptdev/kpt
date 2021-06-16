@@ -39,6 +39,10 @@ import (
 const CurDir = "."
 const ParentDir = ".."
 
+const (
+	PkgPathAnnotation = "orchestrator.kpt.dev/packagePath"
+)
+
 var DeprecatedKptfileVersions = []string{
 	"v1alpha1",
 	"v1alpha2",
@@ -483,6 +487,9 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: false,
 		MatchFilesGlob:     kio.MatchAll,
+		SetAnnotations: map[string]string{
+			PkgPathAnnotation: string(p.UniquePath),
+		},
 	}
 	resources, err = pkgReader.Read()
 	if err != nil {

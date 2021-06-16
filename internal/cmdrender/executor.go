@@ -21,7 +21,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
@@ -72,6 +71,12 @@ func (e *Executor) Execute(ctx context.Context) error {
 		// don't disable the CLI output in case of error
 		_ = e.saveFnResults(ctx, hctx.fnResults)
 		return errors.E(op, root.pkg.UniquePath, err)
+	}
+
+	// adjust the path and remove annotation
+	err = adjustRelPath(string(hctx.root.pkg.UniquePath), hctx.root.resources)
+	if err != nil {
+		return err
 	}
 
 	if err = trackOutputFiles(hctx); err != nil {
@@ -275,13 +280,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
 
-	// ensure input resource's paths are relative to root pkg.
-	currPkgResources, err = adjustRelPath(currPkgResources, relPath)
-	if err != nil {
-		return nil, fmt.Errorf("adjust relative path: %w", err)
-	}
-
-	err = trackInputFiles(hctx, currPkgResources)
+	err = trackInputFiles(hctx, relPath, currPkgResources)
 	if err != nil {
 		return nil, err
 	}
@@ -292,12 +291,6 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
-	}
-
-	// ensure generated resource's file path are relative to root pkg.
-	output, err = adjustRelPath(output, relPath)
-	if err != nil {
-		return nil, fmt.Errorf("adjust relative path: %w", err)
 	}
 
 	// pkg is hydrated, mark the pkg as wet and update the resources
@@ -435,25 +428,44 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 // path annotation in each resource points to path relative to that package.
 // But the resources are written to the file system at the root package level, so
 // the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
-func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, error) {
-	if relPath == "" {
-		return resources, nil
-	}
+func adjustRelPath(rootPath string, resources []*yaml.RNode) error {
 	for _, r := range resources {
-		currPath, _, err := kioutil.GetFileAnnotations(r)
+		pkgPath, err := GetPkgPathAnnotation(r)
 		if err != nil {
-			return resources, err
+			return err
 		}
-		// if currPath is relative to root pkg i.e. already has relPath, skip it
-		if !strings.HasPrefix(currPath, relPath+"/") {
+		if pkgPath != "" {
+			relPath, err := filepath.Rel(rootPath, pkgPath)
+			if err != nil {
+				return err
+			}
+			currPath, _, err := kioutil.GetFileAnnotations(r)
+			if err != nil {
+				return err
+			}
+			// fmt.Printf("currPath %q relPath %q \n", currPath, relPath)
 			newPath := path.Join(relPath, currPath)
+			// fmt.Printf("newPath %q \n", newPath)
 			err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath))
 			if err != nil {
-				return resources, err
+				return err
 			}
 		}
+		err = r.PipeE(yaml.ClearAnnotation(pkg.PkgPathAnnotation))
+		if err != nil {
+			return err
+		}
 	}
-	return resources, nil
+	return nil
+}
+
+func GetPkgPathAnnotation(rn *yaml.RNode) (string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return "", err
+	}
+	pkgPath := meta.Annotations[pkg.PkgPathAnnotation]
+	return pkgPath, nil
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
@@ -471,7 +483,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 }
 
 // trackInputFiles records file paths of input resources in the hydration context.
-func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
+func trackInputFiles(hctx *hydrationContext, relPath string, input []*yaml.RNode) error {
 	if hctx.inputFiles == nil {
 		hctx.inputFiles = sets.String{}
 	}
@@ -480,6 +492,7 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 		if err != nil {
 			return fmt.Errorf("path annotation missing: %w", err)
 		}
+		path = filepath.Join(relPath, filepath.Clean(path))
 		hctx.inputFiles.Insert(path)
 	}
 	return nil
