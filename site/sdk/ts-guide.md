@@ -162,7 +162,7 @@ runtime.
    using the exec runtime.
 
    ```shell
-   $ kpt fn eval DIR --exec-path ./my_func_run-macos
+   $ kpt fn eval DIR --exec ./my_func_run-macos
    ```
 
 ## Build and push container images

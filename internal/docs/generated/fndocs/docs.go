@@ -59,7 +59,7 @@ Flags:
     container running the function. The value can be in ` + "`" + `key=value` + "`" + ` format or only
     the key of an already exported environment variable.
   
-  --exec-path:
+  --exec:
     Path to the local executable binary to execute as a function. ` + "`" + `eval` + "`" + ` executes
     only one function, so do not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful
     for testing function locally during development. It enables faster dev iterations
@@ -70,7 +70,7 @@ Flags:
   
   --image, i:
     Container image of the function to execute e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
-    ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec-path` + "`" + ` flag with this flag.
+    ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec` + "`" + ` flag with this flag.
   
   --image-pull-policy:
     If the image should be pulled before rendering the package(s). It can be set
@@ -124,7 +124,7 @@ var EvalExamples = `
 
   # execute executable my-fn on the resources in DIR directory and
   # write output back to DIR
-  $ kpt fn eval DIR --exec-path ./my-fn
+  $ kpt fn eval DIR --exec ./my-fn
 
   # execute container my-fn on the resources in DIR directory,
   # save structured results in /tmp/my-results dir and write output back to DIR

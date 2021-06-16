@@ -42,7 +42,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
 	r.Command.Flags().StringVar(
-		&r.ExecPath, "exec-path", "", "run an executable as a function.")
+		&r.ExecPath, "exec", "", "run an executable as a function.")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
 	r.Command.Flags().BoolVar(
@@ -232,7 +232,7 @@ func checkFnConfigPathExistence(path string) error {
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Image == "" && r.ExecPath == "" {
-		return errors.Errorf("must specify --image or --exec-path")
+		return errors.Errorf("must specify --image or --exec")
 	}
 	if r.Image != "" {
 		err := cmdutil.DockerCmdAvailable()
