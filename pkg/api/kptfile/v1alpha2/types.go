@@ -205,9 +205,6 @@ type PackageInfo struct {
 	// Relative slash-delimited path to the license file (e.g. LICENSE.txt)
 	LicenseFile string `yaml:"licenseFile,omitempty"`
 
-	// Doc is the path to documentation about the package.
-	Doc string `yaml:"doc,omitempty"`
-
 	// Description contains a short description of the package.
 	Description string `yaml:"description,omitempty"`
 
