@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -42,10 +41,10 @@ const ParentDir = ".."
 
 var DeprecatedKptfileVersions = []string{
 	"v1alpha1",
+	"v1alpha2",
 }
 
 var SupportedKptfileVersions = []string{
-	kptfilev1alpha2.KptFileVersion,
 	kptfilev1.KptFileVersion,
 }
 
