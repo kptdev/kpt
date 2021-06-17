@@ -285,12 +285,16 @@ type resourceHandler struct {
 func (r *resourceHandler) Handle(origin, upstream, local *yaml.RNode) (filters.ResourceMergeStrategy, error) {
 	var strategy filters.ResourceMergeStrategy
 	switch {
+	// Keep the resource if added locally.
 	case origin == nil && upstream == nil && local != nil:
 		strategy = filters.KeepDest
-	case upstream != nil && local == nil:
+	// Add the resource if added in upstream.
+	case origin == nil && upstream != nil && local == nil:
 		strategy = filters.KeepUpdated
+	// Do not re-add the resource if deleted from both upstream and local
 	case upstream == nil && local == nil:
 		strategy = filters.Skip
+	// If deleted from upstream, only delete if local fork does not have changes.
 	case origin != nil && upstream == nil:
 		equal, err := r.equals(origin, local)
 		if err != nil {
@@ -302,6 +306,7 @@ func (r *resourceHandler) Handle(origin, upstream, local *yaml.RNode) (filters.R
 			r.keptResources = append(r.keptResources, local)
 			strategy = filters.KeepDest
 		}
+	// Do not re-add if deleted from local.
 	case origin != nil && local == nil:
 		strategy = filters.Skip
 	default:

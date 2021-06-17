@@ -262,13 +262,6 @@ metadata:
   namespace: my-space
 spec:
   replicas: 3
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 4
 `},
 
 		`Conflict: User fetches package, copies a resource in same file, adds different name suffix`: {
