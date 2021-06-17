@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -51,7 +52,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		if err != nil {
 			return objs, err
 		}
-		if fcPaths.Has(relPath) {
+		if fcPaths.Has(relPath) && !isExplicitNotLocalConfig(n) {
 			continue
 		}
 
@@ -66,6 +67,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		objs = append(objs, u)
 	}
 
+	objs = filterLocalConfig(objs)
 	err = manifestreader.SetNamespaces(r.Mapper, objs, r.Namespace, r.EnforceNamespace)
 	return objs, err
 }
@@ -99,4 +101,34 @@ func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) 
 	return &unstructured.Unstructured{
 		Object: m,
 	}, nil
+}
+
+const NoLocalConfigAnnoVal = "false"
+
+// isExplicitNotLocalConfig checks whether the resource has been explicitly
+// label as NOT being local config. It checks for the config.kubernetes.io/local-config
+// annotation with a value of "false".
+func isExplicitNotLocalConfig(n *yaml.RNode) bool {
+	if val, found := n.GetAnnotations()[filters.LocalConfigAnnotation]; found {
+		if val == NoLocalConfigAnnoVal {
+			return true
+		}
+	}
+	return false
+}
+
+// filterLocalConfig returns a new slice of Unstructured where all resources
+// that are designated as local config have been filtered out. It does this
+// by looking at the config.kubernetes.io/local-config annotation. Any value
+// except "false" is considered to mean the resource is local config.
+func filterLocalConfig(objs []*unstructured.Unstructured) []*unstructured.Unstructured {
+	var filteredObjs []*unstructured.Unstructured
+	for _, obj := range objs {
+		annoVal, found := obj.GetAnnotations()[filters.LocalConfigAnnotation]
+		if found && annoVal != NoLocalConfigAnnoVal {
+			continue
+		}
+		filteredObjs = append(filteredObjs, obj)
+	}
+	return filteredObjs
 }
