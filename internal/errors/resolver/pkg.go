@@ -19,7 +19,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
 //nolint:gochecknoinits

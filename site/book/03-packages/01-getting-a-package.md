@@ -17,7 +17,7 @@ look at the content of the `Kptfile` on your local filesystem:
 
 ```yaml
 # wordpress/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: wordpress
@@ -63,7 +63,7 @@ Now, let's look at the `Kptfile` for the `mysql` subpackage:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql

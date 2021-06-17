@@ -12,7 +12,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
@@ -52,7 +52,7 @@ func TestStatusCommand(t *testing.T) {
 		pollUntil      string
 		printer        string
 		timeout        time.Duration
-		kptfileInv     *kptfilev1alpha2.Inventory
+		kptfileInv     *kptfilev1.Inventory
 		inventory      []object.ObjMetadata
 		events         []pollevent.Event
 		expectedErrMsg string
@@ -67,7 +67,7 @@ func TestStatusCommand(t *testing.T) {
 			expectedErrMsg: "pollUntil must be one of \"known\", \"current\", \"deleted\", \"forever\"",
 		},
 		"no inventory in live state": {
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -77,7 +77,7 @@ func TestStatusCommand(t *testing.T) {
 		"wait for all known": {
 			pollUntil: "known",
 			printer:   "events",
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -112,7 +112,7 @@ statefulset.apps/bar is Current: current
 		"wait for all current": {
 			pollUntil: "current",
 			printer:   "events",
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -165,7 +165,7 @@ deployment.apps/foo is Current: current
 		"wait for all deleted": {
 			pollUntil: "deleted",
 			printer:   "events",
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -201,7 +201,7 @@ deployment.apps/foo is NotFound: notFound
 			pollUntil: "forever",
 			printer:   "events",
 			timeout:   2 * time.Second,
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
