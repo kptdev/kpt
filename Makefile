@@ -24,10 +24,10 @@ GOBIN := $(shell go env GOPATH)/bin
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
+all: generate license fix vet fmt lint test build buildall tidy
+
 build:
 	go build -o $(GOBIN)/kpt -v .
-
-all: license fix vet fmt lint test build buildall tidy
 
 buildall:
 	GOOS=windows go build -o /dev/null
