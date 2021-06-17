@@ -101,4 +101,22 @@ kind: Custom
 metadata:
   name: cr
 `
+	localConfig = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data: {}
+`
+	notLocalConfig = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  annotations:
+    config.kubernetes.io/local-config: "false"
+data: {}
+`
 )
