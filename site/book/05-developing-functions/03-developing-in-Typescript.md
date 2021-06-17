@@ -95,7 +95,7 @@ Currently supported platforms: amd64 Linux/Mac
 
    ```shell
    $ kpt fn source $CONFIGS \
-     | node dist/label_namespace_run.js -d label_name=color -d label_value=orange \
+     | kpt fn eval - --exec "node dist/label_namespace_run.js -d label_name=color -d label_value=orange" \
      | kpt fn sink $CONFIGS
    ```
 
@@ -143,7 +143,7 @@ Currently supported platforms: amd64 Linux/Mac
 
    ```shell
    $ kpt fn source $CONFIGS \
-     | node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com \
+     | kpt fn eval - --exec "node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com" \
      | kpt fn sink $CONFIGS
    ```
 
@@ -220,7 +220,7 @@ Currently supported platforms: amd64 Linux/Mac
 
    ```shell
    $ kpt fn source $CONFIGS \
-    | node dist/expand_team_cr_run.js \
+    | kpt fn eval - --exec "node dist/expand_team_cr_run.js" \
     | kpt fn sink $CONFIGS
    ```
 
