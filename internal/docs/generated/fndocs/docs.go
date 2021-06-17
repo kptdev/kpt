@@ -60,10 +60,11 @@ Flags:
     the key of an already exported environment variable.
   
   --exec:
-    Path to the local executable binary to execute as a function. ` + "`" + `eval` + "`" + ` executes
-    only one function, so do not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful
-    for testing function locally during development. It enables faster dev iterations
-    by avoiding the function to be published as container image.
+    Path to the local executable binary to execute as a function. Quotes are needed
+    if the executable requires arguments. ` + "`" + `eval` + "`" + ` executes only one function, so do
+    not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful for testing function locally
+    during development. It enables faster dev iterations by avoiding the function to
+    be published as container image.
   
   --fn-config:
     Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
@@ -126,6 +127,10 @@ var EvalExamples = `
   # execute executable my-fn on the resources in DIR directory and
   # write output back to DIR
   $ kpt fn eval DIR --exec ./my-fn
+
+  # execute executable my-fn with arguments on the resources in DIR directory and
+  # write output back to DIR
+  $ kpt fn eval DIR --exec "./my-fn arg1 arg2"
 
   # execute container my-fn on the resources in DIR directory,
   # save structured results in /tmp/my-results dir and write output back to DIR
