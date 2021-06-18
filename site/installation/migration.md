@@ -211,7 +211,7 @@ Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:unstable --include-meta-resources --truncate-output=false
+$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:v0.1 --include-meta-resources --truncate-output=false
 ```
 
 ##### Changes made by the function
