@@ -59,7 +59,7 @@ instance, you can automatically search and replace all the occurrences of `app`
 name on resources in the package using path expressions:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-path=spec.**.app' 'put-value=my-nginx'
+$ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-path='spec.**.app' put-value=my-nginx
 ```
 
 To see what changes were made to the local package:
