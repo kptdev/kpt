@@ -58,7 +58,7 @@ $ vim deployment.yaml
 ### Automating One-time Edits with Functions
 
 The `kpt fn`set of commands enable you to execute programs called _kpt functions_. These
-programs are packaged as Docker containers and take in YAML files, modify or validate them, and then
+programs are packaged as containers and take in YAML files, modify or validate them, and then
 output YAML.
 
 For instance, you can use a function (`gcr.io/kpt-fn/search-replace:v0.1`)to search and replace all
