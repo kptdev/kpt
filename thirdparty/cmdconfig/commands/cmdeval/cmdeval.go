@@ -231,6 +231,12 @@ func checkFnConfigPathExistence(path string) error {
 }
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
+	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
+		if err := cmdutil.CheckDirectoryNotPresent(args[0]); err != nil {
+			return err
+		}
+	}
+
 	if r.Image == "" && r.ExecPath == "" {
 		return errors.Errorf("must specify --image or --exec")
 	}

@@ -14,4 +14,4 @@
 
 exitCode: 1
 stdErr: |
-  directory "out" already exists, the resources will not be written to "out" even if the function run is successful, please delete the directory and retry
+  directory "out" already exists, please delete the directory and retry

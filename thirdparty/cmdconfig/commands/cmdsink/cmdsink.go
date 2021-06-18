@@ -39,5 +39,8 @@ type SinkRunner struct {
 }
 
 func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
+	if err := cmdutil.CheckDirectoryNotPresent(args[0]); err != nil {
+		return err
+	}
 	return cmdutil.WriteToOutput(c.InOrStdin(), nil, args[0])
 }
