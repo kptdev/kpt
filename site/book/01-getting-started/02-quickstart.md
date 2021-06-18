@@ -46,6 +46,8 @@ $ git init; git add .; git commit -m "Pristine nginx package"
 At this point, you typically want to customize the package. With kpt, you can
 use different approaches depending on your use case.
 
+### Manual Editing
+
 You may want to manually edit the files. For example, modify the value of
 `spec.replicas` in `deployment.yaml` using your favorite editor:
 
@@ -53,10 +55,17 @@ You may want to manually edit the files. For example, modify the value of
 $ vim deployment.yaml
 ```
 
-Often, you want to automatically mutate and/or validate resources in a package.
-`kpt fn` commands enable you to execute programs called _kpt functions_. For
-instance, you can automatically search and replace all the occurrences of `app`
-name on resources in the package using path expressions:
+### Automating One-time Edits with Functions
+
+The `kpt fn`set of commands enable you to execute programs called _kpt functions_. These
+programs are packaged as Docker containers and take in YAML files, modify or validate them, and then
+output YAML.
+
+For instance, you can use a function (`gcr.io/kpt-fn/search-replace:v0.1`)to search and replace all
+the occurrences of the `app` key in the `spec` section of the YAML document (`spec.**.app`) and
+set the value to `my-nginx`. 
+
+You can use the `kpt fn eval` command to run this mutation on your local files a single time. 
 
 ```shell
 $ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-path='spec.**.app' put-value=my-nginx
@@ -68,18 +77,30 @@ To see what changes were made to the local package:
 $ git diff
 ```
 
-`eval` command can be used for one-time _imperative_ operations. For operations
-that need to be performed repeatedly, there is a _declarative_ way to define a
-pipeline of functions as part of the package (in the `Kptfile`). For example,
-you might want label all resources in the package. To achieve that, you can
-declare `set-labels` function in the `pipeline` section of `Kptfile`:
+### Declaratively Defining Edits
+
+For operations that need to be performed repeatedly, there is a _declarative_ way to define a
+pipeline of functions as part of the package (in the `Kptfile`). In this `nginx` package, the author 
+has already declared a function (`kubeval`) that validates the resources 
+using their OpenAPI schema.
 
 ```yaml
 pipeline:
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
+```
+
+You might want to label all resources in the package. To achieve that, you can
+declare `set-labels` function in the `pipeline` section of `Kptfile`. Add this by running the following
+command:
+
+```shell
+cat >> Kptfile <<EOF
   mutators:
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         env: dev
+EOF
 ```
 
 This function will ensure that the label `env: dev` is added to all the
@@ -91,11 +112,8 @@ The pipeline is executed using the `render` command:
 $ kpt fn render
 ```
 
-In this case, the author of the `nginx` package has already declared a function
-(`kubeval`) that validates the resources using their OpenAPI schema.
-
-In general, regardless of how you choose to customize the package — whether by
-manually editing it or running imperative functions — you need to _render_ the
+Regardless of how you choose to customize the package — whether by
+manually editing it or running one-time functions using `kpt fn eval` — you need to _render_ the
 package before applying it the cluster. This ensures all the functions declared
 in the package are executed, and the package is ready to be applied to the
 cluster.
@@ -105,15 +123,21 @@ cluster.
 `kpt live` commands provide the functionality for deploying packages to a
 Kubernetes cluster.
 
-First, initialize the package:
+Install the Resource Group CRD. The Resource Group CRD
+allows you Kpt to group resources so that they can be applied, udpated, pruned, and
+deleted together.
+
+```shell
+$ kpt live install-resource-group
+```
+
+Now, initialize the Kpt package. This adds some metadata to the `Kptfile` required to keep track of changes made
+to the state of the cluster. For example, if a resource is deleted from the package in the future,
+it will be pruned from the cluster.
 
 ```shell
 $ kpt live init
 ```
-
-This adds some metadata to the `Kptfile` required to keep track of changes made
-to the state of the cluster. For example, if a resource is deleted from the
-package in the future, it will be pruned from the cluster.
 
 You can validate the resources and verify that the expected changes will be made
 to the cluster:
