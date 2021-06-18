@@ -62,10 +62,10 @@ Use one of the kpt docker images.
 
 | Feature   | `kpt` | `kpt-gcloud` |
 | --------- | :---: | :----------: |
-| kpt       |   X   |      X       |
-| git       |   X   |      X       |
-| diffutils |   X   |      X       |
-| gcloud    |       |      X       |
+| kpt       |   ✓   |      ✓       |
+| git       |   ✓   |      ✓       |
+| diffutils |   ✓   |      ✓       |
+| gcloud    |       |      ✓       |
 
 ### `kpt`
 
