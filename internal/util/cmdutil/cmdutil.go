@@ -153,7 +153,8 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 		_, err := os.Stat(outDir)
 
 		if err == nil || os.IsExist(err) {
-			return fmt.Errorf("directory %q already exists, please delete the directory and retry", outDir)
+			return fmt.Errorf("directory %q already exists, the resources will not be " +
+				"written to %q even if the function run is successful, please delete the directory and retry", outDir, outDir)
 		}
 
 		if !os.IsNotExist(err) {
