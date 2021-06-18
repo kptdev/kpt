@@ -211,7 +211,7 @@ Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:unstable --include-meta-resources
+$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:unstable --include-meta-resources --truncate-output=false
 ```
 
 ##### Changes made by the function
@@ -287,14 +287,14 @@ $ kpt pkg get https://example.com/some-pkg@latest
 - Render the package resources with customizations
 
 ```shell
-$ kpt fn render
+$ kpt fn render PKG_PATH
 ```
 
 - The step is only applicable if you're using `kpt live` functionality.
   a. If you are using the inventory object in order to manage live resources in the cluster,
-  please refer to `live migrate` command docs to perform [live migration].
+     please refer to `live migrate` command docs to perform [live migration].
   b. If you are using ResourceGroup CRD to manage live resources, copy the inventory
-  section in the Kptfile of existing package to the Kptfile of new package.
+     section in the Kptfile of existing package to the Kptfile of new package.
 
 - Once you test your new package and confirm that all the changes are as expected,
   you can simply discard the existing package and move forward with the new version
