@@ -30,7 +30,7 @@ The results are provided as resource of kind `FunctionResultList`:
 
 ```yaml
 # /tmp/results.yaml
-apiVersion: kpt.dev/v1
+apiVersion: kpt.dev/v1alpha2
 kind: FunctionResultList
 metadata:
   name: fnresults
@@ -69,7 +69,7 @@ The results resource will now contain failure details:
 
 ```yaml
 # /tmp/results.yaml
-apiVersion: kpt.dev/v1
+apiVersion: kpt.dev/v1alpha2
 kind: FunctionResultList
 metadata:
   name: fnresults

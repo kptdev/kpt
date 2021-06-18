@@ -25,7 +25,7 @@ import (
 	"testing"
 	"text/template"
 
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -469,7 +469,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 	if pkg.Kptfile != nil {
 		content := buildKptfile(pkg, pkgName, reposInfo)
 
-		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfilev1.KptFileName),
+		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfilev1alpha2.KptFileName),
 			[]byte(content), 0600)
 		if err != nil {
 			return err
@@ -511,7 +511,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 }
 
 // TODO: Consider using the Kptfile struct for this instead of a template.
-var kptfileTemplate = `apiVersion: kpt.dev/v1
+var kptfileTemplate = `apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: {{.PkgName}}

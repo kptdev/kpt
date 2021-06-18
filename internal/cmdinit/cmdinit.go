@@ -29,7 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -88,9 +88,9 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	pr := printer.FromContextOrDie(r.Ctx)
 
-	if _, err = os.Stat(filepath.Join(up, kptfilev1.KptFileName)); os.IsNotExist(err) {
+	if _, err = os.Stat(filepath.Join(up, kptfilev1alpha2.KptFileName)); os.IsNotExist(err) {
 		pr.Printf("writing %s\n", filepath.Join(args[0], "Kptfile"))
-		k := kptfilev1.KptFile{
+		k := kptfilev1alpha2.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
 				ObjectMeta: yaml.ObjectMeta{
 					NameMeta: yaml.NameMeta{
@@ -98,7 +98,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 					},
 				},
 			},
-			Info: &kptfilev1.PackageInfo{
+			Info: &kptfilev1alpha2.PackageInfo{
 				Description: r.Description,
 				Site:        r.Site,
 				Keywords:    r.Keywords,
@@ -106,11 +106,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 
 		// serialize the gvk when writing the Kptfile
-		k.Kind = kptfilev1.TypeMeta.Kind
-		k.APIVersion = kptfilev1.TypeMeta.APIVersion
+		k.Kind = kptfilev1alpha2.TypeMeta.Kind
+		k.APIVersion = kptfilev1alpha2.TypeMeta.APIVersion
 
 		err = func() error {
-			f, err := os.Create(filepath.Join(up, kptfilev1.KptFileName))
+			f, err := os.Create(filepath.Join(up, kptfilev1alpha2.KptFileName))
 			if err != nil {
 				return err
 			}

@@ -25,7 +25,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -249,7 +249,7 @@ kind: Custom
 spec:
   image: nginx:1.2.3`,
 				`
-apiVersion: kpt.dev/v1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: mysql
@@ -260,7 +260,7 @@ pipeline:
         replicas: 5
 `,
 				`
-apiVersion: kpt.dev/v1
+apiVersion: kpt.dev/v1alpha2
 kind: Pipeline
 sources:
   - "."`,
@@ -327,7 +327,7 @@ func TestDirectSubpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1.ResourceMerge)),
+									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
 						).
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
@@ -361,7 +361,7 @@ func TestDirectSubpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1.ResourceMerge)),
+									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
 						).
 						WithResource(pkgbuilder.ConfigMapResource).
 						WithSubPackages(
@@ -371,7 +371,7 @@ func TestDirectSubpackages(t *testing.T) {
 										WithKptfile(
 											pkgbuilder.NewKptfile().
 												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1.ResourceMerge)),
+													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
 										).
 										WithResource(pkgbuilder.ConfigMapResource),
 								),
@@ -464,7 +464,7 @@ func TestSubpackages(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1.ResourceMerge)),
+									"/", "main", string(kptfilev1alpha2.ResourceMerge)),
 						).
 						WithSubPackages(
 							pkgbuilder.NewSubPkg("directory").
@@ -473,7 +473,7 @@ func TestSubpackages(t *testing.T) {
 										WithKptfile(
 											pkgbuilder.NewKptfile().
 												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1.ResourceMerge)),
+													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
 										),
 								),
 						),
@@ -486,7 +486,7 @@ func TestSubpackages(t *testing.T) {
 										WithKptfile(
 											pkgbuilder.NewKptfile().
 												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1.ResourceMerge)),
+													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
 										),
 								),
 							pkgbuilder.NewSubPkg("local-sub2").
@@ -678,7 +678,7 @@ func TestFunctionConfigFilePaths(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1.ResourceMerge)).
+									"/", "main", string(kptfilev1alpha2.ResourceMerge)).
 								WithPipeline(
 									pkgbuilder.NewFunction("image").
 										WithConfigPath("fn-config.yaml"),
@@ -692,7 +692,7 @@ func TestFunctionConfigFilePaths(t *testing.T) {
 										WithKptfile(
 											pkgbuilder.NewKptfile().
 												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1.ResourceMerge)).
+													"/", "main", string(kptfilev1alpha2.ResourceMerge)).
 												WithPipeline(
 													pkgbuilder.NewFunction("image").
 														WithConfigPath("fn-config1.yaml"),
@@ -718,7 +718,7 @@ func TestFunctionConfigFilePaths(t *testing.T) {
 										WithKptfile(
 											pkgbuilder.NewKptfile().
 												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1.ResourceMerge)),
+													"/", "main", string(kptfilev1alpha2.ResourceMerge)),
 										),
 								),
 							pkgbuilder.NewSubPkg("local-sub2").

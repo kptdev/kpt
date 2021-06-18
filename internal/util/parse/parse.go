@@ -22,12 +22,12 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
 type Target struct {
-	kptfilev1.Git
+	kptfilev1alpha2.Git
 	Destination string
 }
 

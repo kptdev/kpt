@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 )
 
@@ -47,9 +47,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
-	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1.ResourceMerge),
+	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1alpha2.ResourceMerge),
 		"update strategy that should be used when updating this package -- must be one of: "+
-			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
+			strings.Join(kptfilev1alpha2.UpdateStrategiesAsStrings(), ","))
 	return r
 }
 
@@ -82,7 +82,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	r.Get.Destination = string(p.UniquePath)
 
-	strategy, err := kptfilev1.ToUpdateStrategy(r.strategy)
+	strategy, err := kptfilev1alpha2.ToUpdateStrategy(r.strategy)
 	if err != nil {
 		return err
 	}

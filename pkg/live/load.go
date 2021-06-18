@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -58,7 +58,7 @@ func (e *MultipleInventoryInfoError) Error() string {
 // for inventory information inside Kptfile resources.
 // It returns the resources in unstructured format and the inventory information.
 // If no inventory information is found, that is not considered an error here.
-func Load(f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func Load(f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1alpha2.Inventory, error) {
 	if path == "-" {
 		return loadFromStream(f, stdIn)
 	}
@@ -69,18 +69,18 @@ func Load(f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstruc
 // filtered resources and any inventory information found in Kptfile resources.
 // If there is more than one Kptfile in the stream with inventory information, that
 // is considered an error.
-func loadFromStream(f util.Factory, r io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func loadFromStream(f util.Factory, r io.Reader) ([]*unstructured.Unstructured, kptfilev1alpha2.Inventory, error) {
 	var stdInBuf bytes.Buffer
 	tee := io.TeeReader(r, &stdInBuf)
 
 	invInfo, err := readInvInfoFromStream(tee)
 	if err != nil {
-		return nil, kptfilev1.Inventory{}, err
+		return nil, kptfilev1alpha2.Inventory{}, err
 	}
 
 	ro, err := toReaderOptions(f)
 	if err != nil {
-		return nil, kptfilev1.Inventory{}, err
+		return nil, kptfilev1alpha2.Inventory{}, err
 	}
 
 	objs, err := (&ResourceGroupStreamManifestReader{
@@ -89,12 +89,12 @@ func loadFromStream(f util.Factory, r io.Reader) ([]*unstructured.Unstructured, 
 		ReaderOptions: ro,
 	}).Read()
 	if err != nil {
-		return nil, kptfilev1.Inventory{}, err
+		return nil, kptfilev1alpha2.Inventory{}, err
 	}
 	return objs, invInfo, nil
 }
 
-func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
+func readInvInfoFromStream(in io.Reader) (kptfilev1alpha2.Inventory, error) {
 	invFilter := &InventoryFilter{}
 	if err := (&kio.Pipeline{
 		Inputs: []kio.Reader{
@@ -106,32 +106,32 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 			kio.FilterAll(invFilter),
 		},
 	}).Execute(); err != nil {
-		return kptfilev1.Inventory{}, err
+		return kptfilev1alpha2.Inventory{}, err
 	}
 
 	if len(invFilter.Inventories) > 1 {
-		return kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
+		return kptfilev1alpha2.Inventory{}, &MultipleInventoryInfoError{}
 	}
 
 	if len(invFilter.Inventories) == 1 {
 		return *invFilter.Inventories[0], nil
 	}
-	return kptfilev1.Inventory{}, nil
+	return kptfilev1alpha2.Inventory{}, nil
 }
 
 // loadFromdisk reads resources from the provided directory and any subfolder.
 // It returns the filtered resources and any inventory information found in
 // Kptfile resources.
 // Only the Kptfile in the root directory will be checked for inventory information.
-func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kptfilev1alpha2.Inventory, error) {
 	invInfo, err := readInvInfoFromDisk(path)
 	if err != nil {
-		return nil, kptfilev1.Inventory{}, err
+		return nil, kptfilev1alpha2.Inventory{}, err
 	}
 
 	ro, err := toReaderOptions(f)
 	if err != nil {
-		return nil, kptfilev1.Inventory{}, err
+		return nil, kptfilev1alpha2.Inventory{}, err
 	}
 
 	objs, err := (&ResourceGroupPathManifestReader{
@@ -139,28 +139,28 @@ func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kp
 		ReaderOptions: ro,
 	}).Read()
 	if err != nil {
-		return nil, kptfilev1.Inventory{}, err
+		return nil, kptfilev1alpha2.Inventory{}, err
 	}
 
 	return objs, invInfo, nil
 }
 
-func readInvInfoFromDisk(path string) (kptfilev1.Inventory, error) {
+func readInvInfoFromDisk(path string) (kptfilev1alpha2.Inventory, error) {
 	p, err := pkg.New(path)
 	if err != nil {
-		return kptfilev1.Inventory{}, err
+		return kptfilev1alpha2.Inventory{}, err
 	}
 
 	kf, err := p.Kptfile()
 	if err != nil && errors.Is(err, os.ErrNotExist) {
-		return kptfilev1.Inventory{}, nil
+		return kptfilev1alpha2.Inventory{}, nil
 	}
 	if err != nil {
-		return kptfilev1.Inventory{}, err
+		return kptfilev1alpha2.Inventory{}, err
 	}
 
 	if kf.Inventory == nil {
-		return kptfilev1.Inventory{}, nil
+		return kptfilev1alpha2.Inventory{}, nil
 	}
 
 	return *kf.Inventory, nil
@@ -169,12 +169,12 @@ func readInvInfoFromDisk(path string) (kptfilev1.Inventory, error) {
 // InventoryFilter is an implementation of the yaml.Filter interface
 // that extracts inventory information from Kptfile resources.
 type InventoryFilter struct {
-	Inventories []*kptfilev1.Inventory
+	Inventories []*kptfilev1alpha2.Inventory
 }
 
 func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if object.GetApiVersion() != kptfilev1.KptFileAPIVersion ||
-		object.GetKind() != kptfilev1.KptFileName {
+	if object.GetApiVersion() != kptfilev1alpha2.KptFileAPIVersion ||
+		object.GetKind() != kptfilev1alpha2.KptFileName {
 		return object, nil
 	}
 
@@ -212,7 +212,7 @@ func toReaderOptions(f util.Factory) (manifestreader.ReaderOptions, error) {
 
 // ToInventoryInfo takes the information in the provided inventory object and
 // return an InventoryResourceGroup implementation of the InventoryInfo interface.
-func ToInventoryInfo(inventory kptfilev1.Inventory) (inventory.InventoryInfo, error) {
+func ToInventoryInfo(inventory kptfilev1alpha2.Inventory) (inventory.InventoryInfo, error) {
 	if err := validateInventory(inventory); err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func ToInventoryInfo(inventory kptfilev1.Inventory) (inventory.InventoryInfo, er
 	return WrapInventoryInfoObj(invObj), nil
 }
 
-func validateInventory(inventory kptfilev1.Inventory) error {
+func validateInventory(inventory kptfilev1alpha2.Inventory) error {
 	var violations errors.Violations
 	if inventory.Name == "" {
 		violations = append(violations, errors.Violation{
@@ -256,7 +256,7 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 	return nil
 }
 
-func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {
+func generateInventoryObj(inv kptfilev1alpha2.Inventory) *unstructured.Unstructured {
 	// Create and return ResourceGroup custom resource as inventory object.
 	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
 	var inventoryObj = &unstructured.Unstructured{
