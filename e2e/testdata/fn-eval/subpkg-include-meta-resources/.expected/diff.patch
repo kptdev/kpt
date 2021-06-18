@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index f5bb2df..4fad916 100644
+index 39dec05..47f7bf4 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1
+@@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1alpha2
  kind: Kptfile
  metadata:
    name: app
@@ -11,10 +11,10 @@ index f5bb2df..4fad916 100644
    mutators:
      - image: gcr.io/kpt-fn/set-labels:v0.1.4
 diff --git a/db/Kptfile b/db/Kptfile
-index 6218d66..b776983 100644
+index 268f438..ab19d9f 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
-@@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1
+@@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1alpha2
  kind: Kptfile
  metadata:
    name: db

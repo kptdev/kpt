@@ -30,7 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -69,7 +69,7 @@ func (c Command) Run(ctx context.Context) error {
 
 // validate makes sure the Kptfile has the necessary information to fetch
 // the package.
-func (c Command) validate(kf *kptfilev1.KptFile) error {
+func (c Command) validate(kf *kptfilev1alpha2.KptFile) error {
 	const op errors.Op = "validate"
 	if kf.Upstream == nil {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile doesn't contain upstream information"))

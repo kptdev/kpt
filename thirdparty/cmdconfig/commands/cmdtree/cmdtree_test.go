@@ -276,7 +276,7 @@ spec:
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, "Kptfile"), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: mainpkg
@@ -286,7 +286,7 @@ openAPI:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, "subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: subpkg
@@ -364,7 +364,7 @@ spec:
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: Mainpkg
@@ -372,7 +372,7 @@ metadata:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: Subpkg

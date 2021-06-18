@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package v1alpha2
 
 import (
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -41,8 +41,8 @@ type Result struct {
 
 const (
 	ResultListKind       = "FunctionResultList"
-	ResultListGroup      = kptfilev1.KptFileGroup
-	ResultListVersion    = kptfilev1.KptFileVersion
+	ResultListGroup      = kptfilev1alpha2.KptFileGroup
+	ResultListVersion    = kptfilev1alpha2.KptFileVersion
 	ResultListAPIVersion = ResultListGroup + "/" + ResultListVersion
 )
 

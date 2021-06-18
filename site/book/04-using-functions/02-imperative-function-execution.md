@@ -17,7 +17,7 @@ For comparison, this has the same effect as the following declaration:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
-apiVersion: kpt.dev/v1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: wordpress

@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -35,7 +35,7 @@ import (
 func TestFunctionConfig(t *testing.T) {
 	type input struct {
 		name              string
-		fn                kptfilev1.Function
+		fn                kptfilev1alpha2.Function
 		configFileContent string
 		expected          string
 	}
@@ -43,12 +43,12 @@ func TestFunctionConfig(t *testing.T) {
 	cases := []input{
 		{
 			name:     "no config",
-			fn:       kptfilev1.Function{},
+			fn:       kptfilev1alpha2.Function{},
 			expected: "",
 		},
 		{
 			name: "file config",
-			fn:   kptfilev1.Function{},
+			fn:   kptfilev1alpha2.Function{},
 			configFileContent: `apiVersion: cft.dev/v1alpha1
 kind: ResourceHierarchy
 metadata:
@@ -63,7 +63,7 @@ metadata:
 		},
 		{
 			name: "map config",
-			fn: kptfilev1.Function{
+			fn: kptfilev1alpha2.Function{
 				ConfigMap: map[string]string{
 					"foo": "bar",
 				},

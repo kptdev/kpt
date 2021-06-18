@@ -28,7 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -51,8 +51,8 @@ func TestMain(m *testing.M) {
 // - Modify upstream with new content
 // - Update the local package to fetch the upstream content
 func TestCommand_Run_noRefChanges(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -100,8 +100,8 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 }
 
 func TestCommand_Run_subDir(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -153,13 +153,13 @@ func TestCommand_Run_subDir(t *testing.T) {
 
 func TestCommand_Run_noChanges(t *testing.T) {
 	updates := []struct {
-		updater kptfilev1.UpdateStrategyType
+		updater kptfilev1alpha2.UpdateStrategyType
 		err     string
 	}{
-		{kptfilev1.FastForward, ""},
-		{kptfilev1.ForceDeleteReplace, ""},
+		{kptfilev1alpha2.FastForward, ""},
+		{kptfilev1alpha2.ForceDeleteReplace, ""},
 		// {AlphaGitPatch, "no updates"},
-		{kptfilev1.ResourceMerge, ""},
+		{kptfilev1alpha2.ResourceMerge, ""},
 	}
 	for i := range updates {
 		u := updates[i]
@@ -212,8 +212,8 @@ func TestCommand_Run_noChanges(t *testing.T) {
 }
 
 func TestCommand_Run_noCommit(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -259,8 +259,8 @@ func TestCommand_Run_noCommit(t *testing.T) {
 }
 
 func TestCommand_Run_noAdd(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -309,18 +309,18 @@ func TestCommand_Run_noGitRepo(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	kf := kptfileutil.DefaultKptfile(filepath.Base(d))
-	kf.Upstream = &kptfilev1.Upstream{
-		Type: kptfilev1.GitOrigin,
-		Git: &kptfilev1.Git{
+	kf.Upstream = &kptfilev1alpha2.Upstream{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.Git{
 			Repo:      "https://github.com/GoogleContainerTools/kpt",
 			Directory: "/",
 			Ref:       "main",
 		},
-		UpdateStrategy: kptfilev1.ResourceMerge,
+		UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 	}
-	kf.UpstreamLock = &kptfilev1.UpstreamLock{
-		Type: kptfilev1.GitOrigin,
-		Git: &kptfilev1.GitLock{
+	kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
+		Type: kptfilev1alpha2.GitOrigin,
+		Git: &kptfilev1alpha2.GitLock{
 			Repo:      "https://github.com/GoogleContainerTools/kpt",
 			Directory: "/",
 			Ref:       "main",
@@ -339,7 +339,7 @@ func TestCommand_Run_noGitRepo(t *testing.T) {
 
 func TestCommand_Run_localPackageChanges(t *testing.T) {
 	testCases := map[string]struct {
-		strategy        kptfilev1.UpdateStrategyType
+		strategy        kptfilev1alpha2.UpdateStrategyType
 		initialUpstream testutil.Content
 		updatedUpstream testutil.Content
 		updatedLocal    testutil.Content
@@ -348,7 +348,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 		expectedCommit  func(writer *testutil.TestSetupManager) (string, error)
 	}{
 		"update using resource-merge strategy with local changes": {
-			strategy: kptfilev1.ResourceMerge,
+			strategy: kptfilev1alpha2.ResourceMerge,
 			initialUpstream: testutil.Content{
 				Data:   testutil.Dataset1,
 				Branch: masterBranch,
@@ -367,7 +367,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			},
 		},
 		"update using fast-forward strategy with local changes": {
-			strategy: kptfilev1.FastForward,
+			strategy: kptfilev1alpha2.FastForward,
 			initialUpstream: testutil.Content{
 				Data:   testutil.Dataset1,
 				Branch: masterBranch,
@@ -392,7 +392,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			},
 		},
 		"update using force-delete-replace strategy with local changes": {
-			strategy: kptfilev1.ForceDeleteReplace,
+			strategy: kptfilev1alpha2.ForceDeleteReplace,
 			initialUpstream: testutil.Content{
 				Data:   testutil.Dataset1,
 				Branch: masterBranch,
@@ -411,7 +411,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			},
 		},
 		"conflicting field with resource-merge strategy": {
-			strategy: kptfilev1.ResourceMerge,
+			strategy: kptfilev1alpha2.ResourceMerge,
 			initialUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
@@ -437,7 +437,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			},
 		},
 		"conflicting field with force-delete-replace strategy": {
-			strategy: kptfilev1.ForceDeleteReplace,
+			strategy: kptfilev1alpha2.ForceDeleteReplace,
 			initialUpstream: testutil.Content{
 				Pkg: pkgbuilder.NewRootPkg().
 					WithResource(pkgbuilder.DeploymentResource),
@@ -531,8 +531,8 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 // TestCommand_Run_toBranchRef verifies the package contents are set to the contents of the branch
 // it was updated to.
 func TestCommand_Run_toBranchRef(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -592,8 +592,8 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
 // it was updated to.
 func TestCommand_Run_toTagRef(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			// Setup the test upstream and local packages
 			g := &testutil.TestSetupManager{
@@ -651,7 +651,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 
 // TestCommand_ResourceMerge_NonKRMUpdates tests if the local non KRM files are updated
 func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
-	strategies := []kptfilev1.UpdateStrategyType{kptfilev1.ResourceMerge}
+	strategies := []kptfilev1alpha2.UpdateStrategyType{kptfilev1alpha2.ResourceMerge}
 	for i := range strategies {
 		strategy := strategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
@@ -731,8 +731,8 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid
 func TestCommand_Run_failInvalidPath(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			path := filepath.Join("fake", "path")
 			err := Command{
@@ -813,8 +813,8 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 
 // TestCommand_Run_failInvalidRef verifies Run fails if the ref is invalid
 func TestCommand_Run_failInvalidRef(t *testing.T) {
-	for i := range kptfilev1.UpdateStrategies {
-		strategy := kptfilev1.UpdateStrategies[i]
+	for i := range kptfilev1alpha2.UpdateStrategies {
+		strategy := kptfilev1alpha2.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			g := &testutil.TestSetupManager{
 				T: t,
@@ -972,7 +972,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 }
 
 func TestCommand_Run_badStrategy(t *testing.T) {
-	strategy := kptfilev1.UpdateStrategyType("foo")
+	strategy := kptfilev1alpha2.UpdateStrategyType("foo")
 
 	// Setup the test upstream and local packages
 	g := &testutil.TestSetupManager{
@@ -1043,10 +1043,10 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
-						kptfilev1.FastForward,
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
+						kptfilev1alpha2.FastForward,
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1094,8 +1094,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1111,14 +1111,14 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 						),
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.FastForward,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.FastForward,
 					},
 					expectedErrMsg: "use a different update --strategy",
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1170,8 +1170,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1189,14 +1189,14 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 						),
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.FastForward,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.FastForward,
 					},
 					expectedErrMsg: "use a different update --strategy",
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1250,20 +1250,20 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
 					},
 					expectedErrMsg: "subpackage \"abc\" added in both upstream and local",
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.FastForward,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.FastForward,
 					},
 					expectedErrMsg: "use a different update --strategy",
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1301,10 +1301,10 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
-						kptfilev1.FastForward,
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
+						kptfilev1alpha2.FastForward,
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1340,10 +1340,10 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
-						kptfilev1.FastForward,
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
+						kptfilev1alpha2.FastForward,
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1391,8 +1391,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 				// shouldn't be deleted here since it doesn't really have any
 				// local changes.
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1407,9 +1407,9 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 						),
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.FastForward,
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.FastForward,
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1459,8 +1459,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1476,14 +1476,14 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 						),
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.FastForward,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.FastForward,
 					},
 					expectedErrMsg: "use a different update --strategy",
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1521,10 +1521,10 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
-						kptfilev1.FastForward,
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
+						kptfilev1alpha2.FastForward,
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1567,8 +1567,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1584,14 +1584,14 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 						),
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.FastForward,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.FastForward,
 					},
 					expectedErrMsg: "use a different update --strategy",
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1628,10 +1628,10 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
-						kptfilev1.FastForward,
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
+						kptfilev1alpha2.FastForward,
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1677,10 +1677,10 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
-						kptfilev1.FastForward,
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
+						kptfilev1alpha2.FastForward,
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1721,8 +1721,8 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 			},
 			expectedResults: []resultForStrategy{
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ResourceMerge,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ResourceMerge,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1733,14 +1733,14 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 						WithFile("data.txt", "local content"),
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.FastForward,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.FastForward,
 					},
 					expectedErrMsg: "use a different update --strategy",
 				},
 				{
-					strategies: []kptfilev1.UpdateStrategyType{
-						kptfilev1.ForceDeleteReplace,
+					strategies: []kptfilev1alpha2.UpdateStrategyType{
+						kptfilev1alpha2.ForceDeleteReplace,
 					},
 					expectedLocal: pkgbuilder.NewRootPkg().
 						WithKptfile(
@@ -1797,7 +1797,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 				rw := &kio.LocalPackageReadWriter{
 					NoDeleteFiles:  true,
 					PackagePath:    g.LocalWorkspace.FullPackagePath(),
-					MatchFilesGlob: []string{kptfilev1.KptFileName},
+					MatchFilesGlob: []string{kptfilev1alpha2.KptFileName},
 				}
 				err = kio.Pipeline{
 					Inputs:  []kio.Reader{rw},
@@ -1827,13 +1827,13 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 }
 
 type resultForStrategy struct {
-	strategies     []kptfilev1.UpdateStrategyType
+	strategies     []kptfilev1alpha2.UpdateStrategyType
 	expectedLocal  *pkgbuilder.RootPkg
 	expectedErrMsg string
 }
 
-func findStrategiesForTestCase(expectedResults []resultForStrategy) []kptfilev1.UpdateStrategyType {
-	var strategies []kptfilev1.UpdateStrategyType
+func findStrategiesForTestCase(expectedResults []resultForStrategy) []kptfilev1alpha2.UpdateStrategyType {
+	var strategies []kptfilev1alpha2.UpdateStrategyType
 	for _, er := range expectedResults {
 		strategies = append(strategies, er.strategies...)
 	}
@@ -1841,7 +1841,7 @@ func findStrategiesForTestCase(expectedResults []resultForStrategy) []kptfilev1.
 }
 
 func findExpectedResultForStrategy(strategyResults []resultForStrategy,
-	strategy kptfilev1.UpdateStrategyType) resultForStrategy {
+	strategy kptfilev1alpha2.UpdateStrategyType) resultForStrategy {
 	for _, sr := range strategyResults {
 		for _, s := range sr.strategies {
 			if s == strategy {
@@ -3329,7 +3329,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 			rw := &kio.LocalPackageReadWriter{
 				NoDeleteFiles:  true,
 				PackagePath:    g.LocalWorkspace.FullPackagePath(),
-				MatchFilesGlob: []string{kptfilev1.KptFileName},
+				MatchFilesGlob: []string{kptfilev1alpha2.KptFileName},
 			}
 			err = kio.Pipeline{
 				Inputs:  []kio.Reader{rw},
@@ -3441,14 +3441,14 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 
 			w.PackageDir = testPackageName
 			kf := kptfileutil.DefaultKptfile(testPackageName)
-			kf.Upstream = &kptfilev1.Upstream{
-				Type: kptfilev1.GitOrigin,
-				Git: &kptfilev1.Git{
+			kf.Upstream = &kptfilev1alpha2.Upstream{
+				Type: kptfilev1alpha2.GitOrigin,
+				Git: &kptfilev1alpha2.Git{
 					Repo:      repos[testutil.Upstream].RepoDirectory,
 					Directory: tc.directory,
 					Ref:       tc.ref,
 				},
-				UpdateStrategy: kptfilev1.ResourceMerge,
+				UpdateStrategy: kptfilev1alpha2.ResourceMerge,
 			}
 			testutil.AddKptfileToWorkspace(t, w, kf)
 

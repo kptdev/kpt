@@ -46,7 +46,7 @@ func TestCmd(t *testing.T) {
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(d, "my-pkg", "Kptfile"))
 	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: kpt.dev/v1
+	assert.Equal(t, `apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: my-pkg
@@ -108,7 +108,7 @@ func TestCmd_currentDir(t *testing.T) {
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
 	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: kpt.dev/v1
+	assert.Equal(t, `apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: my-pkg
@@ -145,7 +145,7 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
 	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: kpt.dev/v1
+	assert.Equal(t, `apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: my-pkg

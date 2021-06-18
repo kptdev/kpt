@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 

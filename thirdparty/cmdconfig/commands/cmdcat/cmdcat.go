@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -86,7 +86,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *CatRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
-	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: kptfilev1.KptFileName}
+	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: kptfilev1alpha2.KptFileName}
 	out := &bytes.Buffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{input},

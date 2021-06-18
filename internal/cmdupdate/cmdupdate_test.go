@@ -31,7 +31,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -99,7 +99,7 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertKptfile(t, dest, kptfilev1.KptFile{
+	if !g.AssertKptfile(t, dest, kptfilev1alpha2.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -107,21 +107,21 @@ func TestCmd_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.TypeMeta.APIVersion,
-				Kind:       kptfilev1.TypeMeta.Kind},
+				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
+				Kind:       kptfilev1alpha2.TypeMeta.Kind},
 		},
-		Upstream: &kptfilev1.Upstream{
-			Type: kptfilev1.GitOrigin,
-			Git: &kptfilev1.Git{
+		Upstream: &kptfilev1alpha2.Upstream{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.Git{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",
 			},
-			UpdateStrategy: kptfilev1.FastForward,
+			UpdateStrategy: kptfilev1alpha2.FastForward,
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
-			Type: kptfilev1.GitOrigin,
-			Git: &kptfilev1.GitLock{
+		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
+			Type: kptfilev1alpha2.GitOrigin,
+			Git: &kptfilev1alpha2.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",
@@ -204,7 +204,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err := r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, "", r.Update.Ref)
-	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 
 	// verify an error is thrown if multiple paths are specified
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -214,7 +214,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err = r.Command.Execute()
 	assert.EqualError(t, err, "accepts at most 1 arg(s), received 2")
 	assert.Equal(t, "", r.Update.Ref)
-	assert.Equal(t, kptfilev1.UpdateStrategyType(""), r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.UpdateStrategyType(""), r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -223,7 +223,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, "refs/heads/foo", r.Update.Ref)
-	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -231,7 +231,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, kptfilev1.ForceDeleteReplace, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ForceDeleteReplace, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -239,7 +239,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "--strategy", "resource-merge"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
+	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 }
 

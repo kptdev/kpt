@@ -16,7 +16,7 @@ package live
 
 var (
 	kptFile = `
-apiVersion: kpt.dev/v1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: test1
@@ -33,7 +33,7 @@ inventory:
   inventoryID: XXXXXXXXXX-FOOOOOO
 `
 	kptFileWithPipeline = `
-apiVersion: kpt.dev/v1
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: kptfileWithPipeline
@@ -86,7 +86,7 @@ spec:
     singular: custom
   scope: Cluster
   versions:
-  - name: v1
+  - name: v1alpha2
     schema:
       openAPIV3Schema:
         description: This is for testing
@@ -96,7 +96,7 @@ spec:
     subresources: {}
 `
 	cr = `
-apiVersion: custom.io/v1
+apiVersion: custom.io/v1alpha2
 kind: Custom
 metadata:
   name: cr

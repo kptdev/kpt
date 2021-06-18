@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	. "github.com/GoogleContainerTools/kpt/internal/util/man"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,8 +34,8 @@ func TestMan_Execute(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
-apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java
@@ -196,8 +196,8 @@ func TestMan_Execute_failNoManPage(t *testing.T) {
 	}
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
-apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java
@@ -229,8 +229,8 @@ func TestMan_Execute_failBadPath(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
-apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java
@@ -258,8 +258,8 @@ func TestMan_Execute_failLocation(t *testing.T) {
 	assert.NoError(t, err)
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
-apiVersion: kpt.dev/v1
+	err = ioutil.WriteFile(filepath.Join(d, kptfilev1alpha2.KptFileName), []byte(`
+apiVersion: kpt.dev/v1alpha2
 kind: Kptfile
 metadata:
   name: java

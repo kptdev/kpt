@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
 	"github.com/xlab/treeprint"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -94,7 +94,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		}
 		p.Root = d
 	}
-	_, err := os.Stat(filepath.Join(p.Root, kptfilev1.KptFileName))
+	_, err := os.Stat(filepath.Join(p.Root, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
 		// if Kptfile exists in the root directory, it is a kpt package
 		// print only package name and not entire path
@@ -113,7 +113,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 // and returns the branch name
 func branchName(root, dirRelPath string) string {
 	name := filepath.Base(dirRelPath)
-	_, err := os.Stat(filepath.Join(root, dirRelPath, kptfilev1.KptFileName))
+	_, err := os.Stat(filepath.Join(root, dirRelPath, kptfilev1alpha2.KptFileName))
 	if !os.IsNotExist(err) {
 		// add Package prefix indicating that it is a separate package as it has
 		// Kptfile
