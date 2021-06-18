@@ -11,7 +11,7 @@ a _subpackage_.
 Let's take a look at the wordpress package as an example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.5
 ```
 
 View the package hierarchy using the `tree` command:
