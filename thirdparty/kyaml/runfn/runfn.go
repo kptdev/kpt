@@ -91,6 +91,9 @@ type RunFns struct {
 	// ExecArgs are the arguments for exec commands
 	ExecArgs []string
 
+	// OriginalExec is the original exec commands
+	OriginalExec string
+
 	ImagePullPolicy fnruntime.ImagePullPolicy
 }
 
@@ -353,12 +356,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		if len(r.ExecArgs) == 0 {
-			fnResult.ExecPath = spec.Exec.Path
-		} else {
-			// the commands are run in shell we only show the real command
-			fnResult.ExecPath = r.ExecArgs[1]
-		}
+		fnResult.ExecPath = r.OriginalExec
 
 	}
 	return fnruntime.NewFunctionRunner(r.Ctx, fltr, fnResult, r.fnResults)

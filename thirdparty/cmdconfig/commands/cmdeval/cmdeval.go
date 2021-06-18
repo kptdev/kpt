@@ -17,6 +17,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
+	"github.com/google/shlex"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -169,15 +170,15 @@ func (r *EvalFnRunner) getFunctionSpec() (*runtimeutil.FunctionSpec, []string, e
 			len(r.Mounts) != 0 || len(r.Env) != 0 {
 			return nil, nil, fmt.Errorf("--mount, --as-current-user, --network and --env can only be used with container functions")
 		}
-		if !strings.Contains(r.Exec, " ") {
-			fn.Exec.Path = r.Exec
-		} else {
-			// we use sh to run the commands so we don't need to
-			// parse the input command string to valid format that accepted
-			// by os.exec
-			fn.Exec.Path = "sh"
-			execArgs = append(execArgs, "-c", r.Exec)
+		s, err := shlex.Split(r.Exec)
+		if err != nil {
+			return nil, nil, fmt.Errorf("exec command %q must be valid: %w", r.Exec, err)
 		}
+		if len(s) > 0 {
+			fn.Exec.Path = s[0]
+			execArgs = s[1:]
+		}
+
 	}
 	return fn, execArgs, nil
 }
@@ -284,6 +285,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		Ctx:                  r.Ctx,
 		Function:             fnSpec,
 		ExecArgs:             execArgs,
+		OriginalExec:         r.Exec,
 		Output:               output,
 		Input:                input,
 		Path:                 path,

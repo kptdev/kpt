@@ -299,14 +299,14 @@ apiVersion: v1
 		},
 		{
 			name: "exec args",
-			args: []string{"eval", "dir", "--exec", "execPath arg1 arg2", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", "dir", "--exec", "execPath arg1 'arg2 arg3'", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
 			expectedFn: &runtimeutil.FunctionSpec{
 				Exec: runtimeutil.ExecSpec{
-					Path: "sh",
+					Path: "execPath",
 				},
 			},
-			expectedExecArgs: []string{"-c", "execPath arg1 arg2"},
+			expectedExecArgs: []string{"arg1", "arg2 arg3"},
 			expectedFnConfig: `
 metadata:
   name: function-input
