@@ -57,15 +57,15 @@ $ vim deployment.yaml
 
 ### Automating One-time Edits with Functions
 
-The `kpt fn`set of commands enable you to execute programs called _kpt functions_. These
-programs are packaged as containers and take in YAML files, modify or validate them, and then
+The `kpt fn` set of commands enable you to execute programs called _kpt functions_. These
+programs are packaged as containers and take in YAML files, mutate or validate them, and then
 output YAML.
 
-For instance, you can use a function (`gcr.io/kpt-fn/search-replace:v0.1`)to search and replace all
+For instance, you can use a function (`gcr.io/kpt-fn/search-replace:v0.1`) to search and replace all
 the occurrences of the `app` key in the `spec` section of the YAML document (`spec.**.app`) and
 set the value to `my-nginx`. 
 
-You can use the `kpt fn eval` command to run this mutation on your local files a single time. 
+You can use the `kpt fn eval` command to run this mutation on your local files a single time:
 
 ```shell
 $ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-path='spec.**.app' put-value=my-nginx
@@ -123,28 +123,17 @@ cluster.
 `kpt live` commands provide the functionality for deploying packages to a
 Kubernetes cluster.
 
-Install the Resource Group CRD. The Resource Group CRD
-allows you Kpt to group resources so that they can be applied, udpated, pruned, and
-deleted together.
 
-```shell
-$ kpt live install-resource-group
-```
-
-Now, initialize the Kpt package. This adds some metadata to the `Kptfile` required to keep track of changes made
-to the state of the cluster. For example, if a resource is deleted from the package in the future,
-it will be pruned from the cluster.
+First, initialize the kpt package:
 
 ```shell
 $ kpt live init
 ```
 
-You can validate the resources and verify that the expected changes will be made
-to the cluster:
-
-```shell
-$ kpt live apply --dry-run
-```
+This adds metadata to the `Kptfile` required to keep track of changes made
+to the state of the cluster. This 
+allows kpt to group resources so that they can be applied, updated, pruned, and
+deleted together.
 
 Apply the resources to the cluster:
 
