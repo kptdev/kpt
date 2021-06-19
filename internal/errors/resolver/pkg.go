@@ -34,8 +34,11 @@ Error: No Kptfile found at {{ printf "%q" .path }}.
 
 	//nolint:lll
 	deprecatedKptfileMsg = `
-Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema. Please update the package to the latest format. See https://kpt.dev/installation/migration for more details.
+Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
 `
+	instructionForV1alpha1ToV1 = `Please update the package to the latest format by following https://kpt.dev/installation/migration.`
+
+	instructionForV1alpha2ToV1 = `Please run "kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.1" to upgrade the package and retry.`
 
 	unknownKptfileResourceMsg = `
 Error: Kptfile at {{ printf "%q" .path }} has an unknown resource type ({{ printf "%q" .gvk.String }}).
@@ -94,8 +97,14 @@ func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResul
 	var deprecatedKptfileError *pkg.DeprecatedKptfileError
 	if errors.As(err, &deprecatedKptfileError) {
 		tmplArgs["version"] = deprecatedKptfileError.Version
+		errMsg := deprecatedKptfileMsg
+		if deprecatedKptfileError.Version == "v1alpha1" {
+			errMsg += instructionForV1alpha1ToV1
+		} else if deprecatedKptfileError.Version == "v1alpha2" {
+			errMsg += instructionForV1alpha2ToV1
+		}
 		return ResolvedResult{
-			Message: ExecuteTemplate(deprecatedKptfileMsg, tmplArgs),
+			Message: ExecuteTemplate(errMsg, tmplArgs),
 		}, true
 	}
 
