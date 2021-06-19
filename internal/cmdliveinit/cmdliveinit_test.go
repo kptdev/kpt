@@ -13,7 +13,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -26,7 +26,7 @@ var (
 )
 
 var kptFile = `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1
@@ -41,7 +41,7 @@ upstreamLock:
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
 var kptFileWithInventory = `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1
@@ -136,7 +136,7 @@ func TestCmd_Run(t *testing.T) {
 		force             bool
 		expectedErrorMsg  string
 		expectAutoGenID   bool
-		expectedInventory kptfilev1alpha2.Inventory
+		expectedInventory kptfilev1.Inventory
 	}{
 		"Fields are defaulted if not provided": {
 			kptfile:         kptFile,
@@ -144,7 +144,7 @@ func TestCmd_Run(t *testing.T) {
 			namespace:       "testns",
 			inventoryID:     "",
 			expectAutoGenID: true,
-			expectedInventory: kptfilev1alpha2.Inventory{
+			expectedInventory: kptfilev1.Inventory{
 				Namespace:   "testns",
 				Name:        "inventory-*",
 				InventoryID: "33ee4887f9638ef63efe71a9a9a632d3e9e2488e-*",
@@ -155,7 +155,7 @@ func TestCmd_Run(t *testing.T) {
 			name:        "my-pkg",
 			namespace:   "my-ns",
 			inventoryID: "my-inv-id",
-			expectedInventory: kptfilev1alpha2.Inventory{
+			expectedInventory: kptfilev1.Inventory{
 				Namespace:   "my-ns",
 				Name:        "my-pkg",
 				InventoryID: "my-inv-id",
@@ -175,7 +175,7 @@ func TestCmd_Run(t *testing.T) {
 			namespace:   inventoryNamespace,
 			inventoryID: inventoryID,
 			force:       true,
-			expectedInventory: kptfilev1alpha2.Inventory{
+			expectedInventory: kptfilev1.Inventory{
 				Namespace:   inventoryNamespace,
 				Name:        inventoryName,
 				InventoryID: inventoryID,
@@ -192,7 +192,7 @@ func TestCmd_Run(t *testing.T) {
 
 			w, clean := testutil.SetupWorkspace(t)
 			defer clean()
-			err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1alpha2.KptFileName),
+			err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName),
 				[]byte(tc.kptfile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()

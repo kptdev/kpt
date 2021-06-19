@@ -1,10 +1,10 @@
 diff --git a/out/Kptfile b/out/Kptfile
 new file mode 100644
-index 0000000..47f7bf4
+index 0000000..4fad916
 --- /dev/null
 +++ b/out/Kptfile
 @@ -0,0 +1,9 @@
-+apiVersion: kpt.dev/v1alpha2
++apiVersion: kpt.dev/v1
 +kind: Kptfile
 +metadata:
 +  name: app

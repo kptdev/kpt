@@ -28,7 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -48,10 +48,10 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		SuggestFor: []string{"rebase", "replace"},
 	}
 
-	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1alpha2.ResourceMerge),
+	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1.ResourceMerge),
 		"the update strategy that will be used when updating the package. This will change "+
 			"the default strategy for the package -- must be one of: "+
-			strings.Join(kptfilev1alpha2.UpdateStrategiesAsStrings(), ","))
+			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -76,9 +76,9 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		args = append(args, pkg.CurDir)
 	}
 	if r.strategy == "" {
-		r.Update.Strategy = kptfilev1alpha2.ResourceMerge
+		r.Update.Strategy = kptfilev1.ResourceMerge
 	} else {
-		r.Update.Strategy = kptfilev1alpha2.UpdateStrategyType(r.strategy)
+		r.Update.Strategy = kptfilev1.UpdateStrategyType(r.strategy)
 	}
 
 	parts := strings.Split(args[0], "@")

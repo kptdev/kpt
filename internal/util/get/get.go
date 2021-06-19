@@ -31,7 +31,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
 
@@ -39,7 +39,7 @@ import (
 // directory, and expands any remote subpackages.
 type Command struct {
 	// Git contains information about the git repo to fetch
-	Git *kptfilev1alpha2.Git
+	Git *kptfilev1.Git
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -51,7 +51,7 @@ type Command struct {
 	// UpdateStrategy is the strategy that will be configured in the package
 	// Kptfile. This determines how changes will be merged when updating the
 	// package.
-	UpdateStrategy kptfilev1alpha2.UpdateStrategyType
+	UpdateStrategy kptfilev1.UpdateStrategyType
 }
 
 // Run runs the Command.
@@ -78,8 +78,8 @@ func (c Command) Run(ctx context.Context) error {
 	c.Git.Directory = repoDir
 
 	kf := kptfileutil.DefaultKptfile(c.Name)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type:           kptfilev1alpha2.GitOrigin,
+	kf.Upstream = &kptfilev1.Upstream{
+		Type:           kptfilev1.GitOrigin,
 		Git:            c.Git,
 		UpdateStrategy: c.UpdateStrategy,
 	}
@@ -179,7 +179,7 @@ func (c *Command) DefaultValues() error {
 
 	// default the update strategy to resource-merge
 	if len(c.UpdateStrategy) == 0 {
-		c.UpdateStrategy = kptfilev1alpha2.ResourceMerge
+		c.UpdateStrategy = kptfilev1.ResourceMerge
 	}
 
 	return nil
