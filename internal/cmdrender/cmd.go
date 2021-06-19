@@ -79,7 +79,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 		r.pkgPath = args[0]
 	}
 	if r.dest != "" && r.dest != cmdutil.Stdout && r.dest != cmdutil.Unwrap {
-		if err := cmdutil.CheckDirectoryNotPresent(args[0]); err != nil {
+		if err := cmdutil.CheckDirectoryNotPresent(r.dest); err != nil {
 			return err
 		}
 	}

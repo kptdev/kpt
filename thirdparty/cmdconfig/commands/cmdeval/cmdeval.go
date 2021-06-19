@@ -232,7 +232,7 @@ func checkFnConfigPathExistence(path string) error {
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
-		if err := cmdutil.CheckDirectoryNotPresent(args[0]); err != nil {
+		if err := cmdutil.CheckDirectoryNotPresent(r.Dest); err != nil {
 			return err
 		}
 	}
