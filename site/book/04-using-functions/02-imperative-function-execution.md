@@ -158,7 +158,7 @@ Here is an example:
 $ kpt fn source wordpress \
   | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
   | kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 -- app=wordpress env=prod \
-  | kpt fn sink hydrated-wordpress
+  | kpt fn sink my-wordpress
 ```
 
 ?> Refer to the command reference for usage of [source][source-doc] and
