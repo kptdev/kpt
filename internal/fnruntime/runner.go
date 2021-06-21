@@ -142,7 +142,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	output, err = fr.filter.Filter(input)
 
 	if fr.setPkgPathAnnotation {
-		if pkgPathErr := setPkgPathAnnotationIfNotExist(output, string(fr.pkgPath)); pkgPathErr != nil {
+		if pkgPathErr := setPkgPathAnnotationIfNotExist(output, fr.pkgPath); pkgPathErr != nil {
 			return output, pkgPathErr
 		}
 	}
@@ -176,15 +176,14 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	return output, nil
 }
 
-func setPkgPathAnnotationIfNotExist(resources []*yaml.RNode, pkgPath string) error {
+func setPkgPathAnnotationIfNotExist(resources []*yaml.RNode, pkgPath types.UniquePath) error {
 	for _, r := range resources {
-		currPkgPath, err := GetPkgPathAnnotation(r)
+		currPkgPath, err := pkg.GetPkgPathAnnotation(r)
 		if err != nil {
 			return err
 		}
 		if currPkgPath == "" {
-			err = r.PipeE(yaml.SetAnnotation(pkg.PkgPathAnnotation, pkgPath))
-			if err != nil {
+			if err = pkg.SetPkgPathAnnotation(r, pkgPath); err != nil {
 				return err
 			}
 		}
@@ -302,15 +301,6 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
-func GetPkgPathAnnotation(rn *yaml.RNode) (string, error) {
-	meta, err := rn.GetMeta()
-	if err != nil {
-		return "", err
-	}
-	pkgPath := meta.Annotations[pkg.PkgPathAnnotation]
-	return pkgPath, nil
-}
-
 // path (location) of a KRM resources is tracked in a special key in
 // metadata.annotation field. enforcePathInvariants throws an error if there is a path
 // to a file outside the package, or if the same index/path is on multiple resources
@@ -319,7 +309,7 @@ func enforcePathInvariants(nodes []*yaml.RNode) error {
 	// to keep track of paths and indexes found
 	pkgPaths := make(map[string]map[string]map[string]bool)
 	for _, node := range nodes {
-		pkgPath, err := GetPkgPathAnnotation(node)
+		pkgPath, err := pkg.GetPkgPathAnnotation(node)
 		if err != nil {
 			return err
 		}

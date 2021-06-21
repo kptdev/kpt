@@ -73,8 +73,8 @@ func (e *Executor) Execute(ctx context.Context) error {
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
 
-	// adjust the path and remove annotation
-	err = adjustRelPath(string(hctx.root.pkg.UniquePath), hctx.root.resources)
+	// adjust the relative paths of the resources.
+	err = adjustRelPath(hctx.root.resources, hctx.root.pkg.UniquePath)
 	if err != nil {
 		return err
 	}
@@ -422,20 +422,21 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 }
 
 // path (location) of a KRM resources is tracked in a special key in
-// metadata.annotation field. adjustRelPath updates that path annotation by prepending
-// the given relPath to the current path annotation if it doesn't exist already.
-// Resources are read from local filesystem or generated at a package level, so the
-// path annotation in each resource points to path relative to that package.
-// But the resources are written to the file system at the root package level, so
+// metadata.annotation field that is used to write the resources to the filesystem.
+// When resources are read from local filesystem or generated at a package level, the
+// path annotation in a resource points to path relative to that package. But the resources
+// are written to the file system at the root package level, so
 // the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
-func adjustRelPath(rootPath string, resources []*yaml.RNode) error {
+// adjustRelPath updates the path annotation by prepending the path of the package
+// a resource relative to the root package.
+func adjustRelPath(resources []*yaml.RNode, rootPath types.UniquePath) error {
 	for _, r := range resources {
-		pkgPath, err := GetPkgPathAnnotation(r)
+		pkgPath, err := pkg.GetPkgPathAnnotation(r)
 		if err != nil {
 			return err
 		}
 		if pkgPath != "" {
-			relPath, err := filepath.Rel(rootPath, pkgPath)
+			relPath, err := filepath.Rel(string(rootPath), pkgPath)
 			if err != nil {
 				return err
 			}
@@ -443,29 +444,16 @@ func adjustRelPath(rootPath string, resources []*yaml.RNode) error {
 			if err != nil {
 				return err
 			}
-			// fmt.Printf("currPath %q relPath %q \n", currPath, relPath)
 			newPath := path.Join(relPath, currPath)
-			// fmt.Printf("newPath %q \n", newPath)
-			err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath))
-			if err != nil {
+			if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
 				return err
 			}
 		}
-		err = r.PipeE(yaml.ClearAnnotation(pkg.PkgPathAnnotation))
-		if err != nil {
+		if err = pkg.RemovePkgPathAnnotation(r); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func GetPkgPathAnnotation(rn *yaml.RNode) (string, error) {
-	meta, err := rn.GetMeta()
-	if err != nil {
-		return "", err
-	}
-	pkgPath := meta.Annotations[pkg.PkgPathAnnotation]
-	return pkgPath, nil
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.

@@ -40,7 +40,7 @@ const CurDir = "."
 const ParentDir = ".."
 
 const (
-	PkgPathAnnotation = "orchestrator.kpt.dev/packagePath"
+	pkgPathAnnotation = "internal.config.kubernetes.io/package-path"
 )
 
 var DeprecatedKptfileVersions = []string{
@@ -488,7 +488,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 		IncludeSubpackages: false,
 		MatchFilesGlob:     kio.MatchAll,
 		SetAnnotations: map[string]string{
-			PkgPathAnnotation: string(p.UniquePath),
+			pkgPathAnnotation: string(p.UniquePath),
 		},
 	}
 	resources, err = pkgReader.Read()
@@ -671,4 +671,25 @@ func FunctionConfigFilterFunc(pkgPath types.UniquePath, includeMetaResources boo
 		// relPath is cleaned so we can directly use it here
 		return fnConfigPaths.Has(relPath)
 	}, nil
+}
+
+// GetPkgPathAnnotation returns the package path annotation on
+// a given resource.
+func GetPkgPathAnnotation(rn *yaml.RNode) (string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return "", err
+	}
+	pkgPath := meta.Annotations[pkgPathAnnotation]
+	return pkgPath, nil
+}
+
+// SetPkgPathAnnotation sets package path on a given resource.
+func SetPkgPathAnnotation(rn *yaml.RNode, pkgPath types.UniquePath) error {
+	return rn.PipeE(yaml.SetAnnotation(pkgPathAnnotation, string(pkgPath)))
+}
+
+// RemovePkgPathAnnotation removes the package path on a given resource.
+func RemovePkgPathAnnotation(rn *yaml.RNode) error {
+	return rn.PipeE(yaml.ClearAnnotation(pkgPathAnnotation))
 }
