@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -444,7 +443,7 @@ func adjustRelPath(resources []*yaml.RNode, rootPath types.UniquePath) error {
 			if err != nil {
 				return err
 			}
-			newPath := path.Join(relPath, currPath)
+			newPath := filepath.Join(relPath, currPath)
 			if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
 				return err
 			}
