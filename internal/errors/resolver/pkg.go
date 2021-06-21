@@ -33,12 +33,15 @@ Error: No Kptfile found at {{ printf "%q" .path }}.
 `
 
 	//nolint:lll
-	deprecatedKptfileMsg = `
+	deprecatedv1Alpha1KptfileMsg = `
 Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
+Please update the package to the latest format by following https://kpt.dev/installation/migration.
 `
-	instructionForV1alpha1ToV1 = `Please update the package to the latest format by following https://kpt.dev/installation/migration.`
 
-	instructionForV1alpha2ToV1 = `Please run "kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.1" to upgrade the package and retry.`
+	deprecatedv1Alpha2KptfileMsg = `
+Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
+Please run "kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.1" to upgrade the package and retry.
+`
 
 	unknownKptfileResourceMsg = `
 Error: Kptfile at {{ printf "%q" .path }} has an unknown resource type ({{ printf "%q" .gvk.String }}).
@@ -94,15 +97,21 @@ func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResul
 		}, true
 	}
 
-	var deprecatedKptfileError *pkg.DeprecatedKptfileError
-	if errors.As(err, &deprecatedKptfileError) {
-		tmplArgs["version"] = deprecatedKptfileError.Version
-		errMsg := deprecatedKptfileMsg
-		if deprecatedKptfileError.Version == "v1alpha1" {
-			errMsg += instructionForV1alpha1ToV1
-		} else if deprecatedKptfileError.Version == "v1alpha2" {
-			errMsg += instructionForV1alpha2ToV1
-		}
+	var deprecatedv1alpha1KptfileError *pkg.DeprecatedKptfileError
+	if errors.As(err, &deprecatedv1alpha1KptfileError) &&
+		deprecatedv1alpha1KptfileError.Version == pkg.DeprecatedKptfileVersions[0] {
+		tmplArgs["version"] = deprecatedv1alpha1KptfileError.Version
+		errMsg := deprecatedv1Alpha1KptfileMsg
+		return ResolvedResult{
+			Message: ExecuteTemplate(errMsg, tmplArgs),
+		}, true
+	}
+
+	var deprecatedv1alpha2KptfileError *pkg.DeprecatedKptfileError
+	if errors.As(err, &deprecatedv1alpha2KptfileError) &&
+		deprecatedv1alpha1KptfileError.Version == pkg.DeprecatedKptfileVersions[1] {
+		tmplArgs["version"] = deprecatedv1alpha2KptfileError.Version
+		errMsg := deprecatedv1Alpha2KptfileMsg
 		return ResolvedResult{
 			Message: ExecuteTemplate(errMsg, tmplArgs),
 		}, true
