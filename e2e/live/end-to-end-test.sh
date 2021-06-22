@@ -432,10 +432,12 @@ ${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a > $OUTPUT_
 assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
 printResult
 
-# Test: Apply forcing ResourceGroup CRD installation succeeds
+# Test: Apply installs ResourceGroup CRD
 echo "[ResourceGroup] Testing create inventory CRD before basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+# The ResourceGroup inventory CRD is automatically installed on the initial apply.
+assertContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -446,6 +448,17 @@ wait 2
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
+
+# Apply again, but the ResourceGroup CRD is not re-installed.
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertNotContains "installing inventory ResourceGroup CRD"  # Not applied again
+assertContains "namespace/rg-test-namespace"
+assertContains "pod/pod-a unchanged"
+assertContains "pod/pod-b unchanged"
+assertContains "pod/pod-c unchanged"
+assertContains "4 resource(s) applied. 0 created, 4 unchanged, 0 configured, 0 failed"
+wait 2
+
 printResult
 
 # Cleanup by resetting Kptfile
@@ -530,6 +543,8 @@ printResult
 echo "[ResourceGroup] Testing basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+# The ResourceGroup CRD is already installed.
+assertNotContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -569,6 +584,7 @@ printResult
 echo "[ResourceGroup] Testing basic prune"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1b"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+assertNotContains "installing inventory ResourceGroup CRD"  # CRD already installed
 assertContains "namespace/rg-test-namespace unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
