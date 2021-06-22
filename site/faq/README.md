@@ -22,15 +22,15 @@ Kubernetes Resource Model].
 [Kustomize] is a CNCF project that is a part of Kubernetes. While both kpt and
 kustomize support customization of KRM manifests without use of templates or
 DSL(s), there are important differences in both feature set and the scope of
-these projects. Kpt supports end-to-end solutions for packaging, customization
-and actuation of resources. For kustomize, packaging is explicitly out of scope
+these projects. kpt supports end-to-end solutions for packaging, customization
+and actuation of resources. In kustomize, packaging is explicitly out of scope
 and actuation is deferred to kubectl.
 
 Here are the strengths and investment areas for these products:
 
 _kpt_
 
-- Supports both in place and out-of-place customization. kustomize is only
+- Supports both in-place and out-of-place customization. kustomize is only
   focused on providing out-of-place hydration using the [overlay pattern].
 - Allows you to edit the configuration in-place without creating complex patches.
 - Focuses on rebase with resource merge strategy allowing for edited config to
