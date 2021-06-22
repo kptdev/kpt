@@ -25,7 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -411,7 +411,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithUpstream("github.com/GoogleContainerTools/kpt",
-										"/", "main", string(kptfilev1alpha2.ResourceMerge)),
+										"/", "main", string(kptfilev1.ResourceMerge)),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
 					),
@@ -449,7 +449,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithUpstream("github.com/GoogleContainerTools/kpt",
-										"/", "main", string(kptfilev1alpha2.ResourceMerge)),
+										"/", "main", string(kptfilev1.ResourceMerge)),
 							).
 							WithResource(pkgbuilder.ConfigMapResource).
 							WithSubPackages(
@@ -459,7 +459,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 											WithKptfile(
 												pkgbuilder.NewKptfile().
 													WithUpstream("github.com/GoogleContainerTools/kpt",
-														"/", "main", string(kptfilev1alpha2.ResourceMerge)),
+														"/", "main", string(kptfilev1.ResourceMerge)),
 											).
 											WithResource(pkgbuilder.ConfigMapResource),
 									),
@@ -522,7 +522,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithUpstream("github.com/GoogleContainerTools/kpt",
-										"/", "main", string(kptfilev1alpha2.ResourceMerge)),
+										"/", "main", string(kptfilev1.ResourceMerge)),
 							),
 					),
 			},

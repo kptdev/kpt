@@ -12,8 +12,8 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -38,7 +38,7 @@ stringMatch: Deployment
 replace: ReplicaSet
 `
 
-	KptfileData = `apiVersion: kpt.dev/v1alpha2
+	KptfileData = `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: kptfile
@@ -170,7 +170,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, v1alpha2.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
@@ -187,7 +187,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 		t.FailNow()
 	}
 	b, err := ioutil.ReadFile(
-		filepath.Join(dir, v1alpha2.KptFileName))
+		filepath.Join(dir, v1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -206,7 +206,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, v1alpha2.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
@@ -220,7 +220,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 		t.FailNow()
 	}
 	b, err := ioutil.ReadFile(
-		filepath.Join(dir, v1alpha2.KptFileName))
+		filepath.Join(dir, v1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

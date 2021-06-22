@@ -33,7 +33,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -85,10 +85,10 @@ type Updater interface {
 	Update(options UpdateOptions) error
 }
 
-var strategies = map[kptfilev1alpha2.UpdateStrategyType]func() Updater{
-	kptfilev1alpha2.FastForward:        func() Updater { return FastForwardUpdater{} },
-	kptfilev1alpha2.ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
-	kptfilev1alpha2.ResourceMerge:      func() Updater { return ResourceMergeUpdater{} },
+var strategies = map[kptfilev1.UpdateStrategyType]func() Updater{
+	kptfilev1.FastForward:        func() Updater { return FastForwardUpdater{} },
+	kptfilev1.ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
+	kptfilev1.ResourceMerge:      func() Updater { return ResourceMergeUpdater{} },
 }
 
 // Command updates the contents of a local package to a different version.
@@ -100,7 +100,7 @@ type Command struct {
 	Ref string
 
 	// Strategy is the update strategy to use
-	Strategy kptfilev1alpha2.UpdateStrategyType
+	Strategy kptfilev1.UpdateStrategyType
 }
 
 // Run runs the Command.

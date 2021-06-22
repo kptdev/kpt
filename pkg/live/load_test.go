@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"

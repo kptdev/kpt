@@ -1,0 +1,101 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: nginx
+dependencies:
+  - name: hello-world
+    updateStrategy: fast-forward
+    stdin:
+      filenamePattern: foo*
+      original: bar
+    autoSet: false
+    ensureNotExists: false
+    functions:
+      - image: gcr.io/kpt-fn/my-func:v0.1
+        config:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: function-config
+          data:
+            param1: value1
+    git:
+      directory: /package-examples/helloworld-set
+      ref: master
+      repo: https://github.com/GoogleContainerTools/kpt
+functions:
+  autoRunStarlark: true
+  starlarkFunctions:
+    - name: foo-star
+      path: path/to/foo-star.yaml
+inventory:
+  name: inventory-00933591
+  namespace: some-space
+  labels:
+    foo: bar
+  annotations:
+    abc: def
+  inventoryID: 92c234b7e9267815b0c3e17c9e4d7139a16c104f-1620493522822890000
+openAPI:
+  definitions:
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: image
+          value: nginx
+    io.k8s.cli.setters.list:
+      type: array
+      x-k8s-cli:
+        setter:
+          name: list
+          value: ""
+          listValues:
+            - dev
+            - stage
+    io.k8s.cli.setters.namespace:
+      type: string
+      maxLength: 10
+      x-k8s-cli:
+        setter:
+          name: namespace
+          value: some-space
+    io.k8s.cli.setters.tag:
+      x-k8s-cli:
+        setter:
+          name: tag
+          value: 1.14.1
+    io.k8s.cli.substitutions.fullimage:
+      x-k8s-cli:
+        substitution:
+          name: fullimage
+          pattern: ${image}:${tag}
+          values:
+            - marker: ${image}
+              ref: '#/definitions/io.k8s.cli.setters.image'
+            - marker: ${tag}
+              ref: '#/definitions/io.k8s.cli.setters.tag'
+    io.k8s.cli.substitutions.imageidentifier:
+      x-k8s-cli:
+        substitution:
+          name: imageidentifier
+          pattern: deployment-${fullimage}
+          values:
+            - marker: ${fullimage}
+              ref: '#/definitions/io.k8s.cli.substitutions.fullimage'
+packageMetadata:
+  email: foo@gmail.com
+  license: license text
+  man: nginx man text
+  shortDescription: describe this package
+  tags:
+    - tag1
+    - tag2
+  url: https://github.com/GoogleContainerTools/kpt
+  version: v0.1
+upstream:
+  type: git
+  git:
+    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
+    directory: package-examples/nginx
+    ref: v0.2
+    repo: https://github.com/GoogleContainerTools/kpt

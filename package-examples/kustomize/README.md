@@ -107,7 +107,7 @@ spec:
         ports:
         - containerPort: 80
 ---
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 info:
   description: sample description
 kind: Kptfile
