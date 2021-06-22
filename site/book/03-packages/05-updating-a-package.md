@@ -1,3 +1,4 @@
+
 An independent package records the exact commit where the local fork and the
 upstream package diverged. This enables kpt to fetch any update to the upstream
 package and merge it with local changes.
@@ -53,7 +54,6 @@ The `update` command updates the local `wordpress` package and the dependent
 2. New upstream commit
 3. Local (edited) package
 
-<<<<<<< HEAD
 Several different strategies are available to handle the merge. By default, the
 `resource-merge` strategy is used which performs a structural comparison of the
 resource using OpenAPI schema.
