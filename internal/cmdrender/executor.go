@@ -457,7 +457,7 @@ func adjustRelPath(hctx *hydrationContext) error {
 
 // pathRelToRoot computes resource's path relative to root package given
 // absolute rootPkgPath, absolute subpkgPath and resource path relative to sub package.
-// All the inputs paths are assumed to be OS specfic.
+// All the inputs paths are assumed to be OS specific.
 func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath string, err error) {
 	if !filepath.IsAbs(rootPkgPath) {
 		return "", fmt.Errorf("root package path %q must be absolute", rootPkgPath)
