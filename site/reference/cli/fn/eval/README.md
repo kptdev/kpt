@@ -107,7 +107,8 @@ fn-args:
   Allowed values: stdout|unwrap|<OUT_DIR_PATH>
   1. stdout: output resources are wrapped in ResourceList and written to stdout.
   2. unwrap: output resources are written to stdout, in multi-object yaml format.
-  3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
+  3. OUT_DIR_PATH: output resources are written to provided directory.
+     The provided directory must not already exist.
 
 --results-dir:
   Path to a directory to write structured results. Directory will be created if

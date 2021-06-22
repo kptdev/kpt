@@ -1,4 +1,3 @@
-#! /bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eo pipefail
-
-rm -rf out
-
-kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1.3 -o out -- namespace=staging
+exitCode: 1
+stdErr: |
+  directory "out" already exists, please delete the directory and retry

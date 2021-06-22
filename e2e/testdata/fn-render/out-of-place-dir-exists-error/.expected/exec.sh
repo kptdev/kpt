@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 set -eo pipefail
 
-rm -rf out
+rm -rf out; mkdir out
 
-kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1.3 -o out -- namespace=staging
+kpt fn render -o out

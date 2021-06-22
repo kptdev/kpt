@@ -7,10 +7,8 @@ import (
 	"context"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 // GetSinkRunner returns a command for Sink.
@@ -22,6 +20,7 @@ func GetSinkRunner(ctx context.Context, name string) *SinkRunner {
 		Use:     "sink DIR [flags]",
 		Short:   fndocs.SinkShort,
 		Long:    fndocs.SinkShort + "\n" + fndocs.SinkLong,
+		Args:    cobra.MinimumNArgs(1),
 		Example: fndocs.SinkExamples,
 		RunE:    r.runE,
 	}
@@ -40,14 +39,8 @@ type SinkRunner struct {
 }
 
 func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
-	dir := pkg.CurDir
-	if len(args) > 0 {
-		dir = args[0]
+	if err := cmdutil.CheckDirectoryNotPresent(args[0]); err != nil {
+		return err
 	}
-	outputs := []kio.Writer{&kio.LocalPackageWriter{PackagePath: dir}}
-
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}},
-		Outputs: outputs}.Execute()
-	return runner.HandleError(r.Ctx, err)
+	return cmdutil.WriteToOutput(c.InOrStdin(), nil, args[0])
 }
