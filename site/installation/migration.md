@@ -113,7 +113,7 @@ Here is the schema for [v1 Kptfile] which is compatible with kpt `v1.0`.
    [Details below](#sync-merged-with-update).
 5. `functions` section in `v1alpha1` Kptfile holds definitions for Starlark
    functions only. This section is deprecated and all the functions can be
-   declared in the `pipeline` section including [Starlark functions].
+   declared in the `pipeline` section including [Starlark function].
 6. `inventory-object` is moved to `inventory` section in `v1` Kptfile.
    [Details below](#live-group-changes).
 
@@ -321,7 +321,6 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/cli/
 [v1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1/types.go
-[starlark functions]: https://catalog.kpt.dev/starlark/v0.1/
 [starlark function]: https://catalog.kpt.dev/starlark/v0.1/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
 [setter inheritance]: https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
