@@ -64,8 +64,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		imagePullPolicy: e.ImagePullPolicy,
 	}
 
-	resources, err := hydrate(ctx, root, hctx)
-	if err != nil {
+	if _, err = hydrate(ctx, root, hctx); err != nil {
 		// Note(droot): ignore the error in function result saving
 		// to avoid masking the hydration error.
 		// don't disable the CLI output in case of error
@@ -74,7 +73,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 	}
 
 	// adjust the relative paths of the resources.
-	err = adjustRelPath(hctx.root.resources, hctx.root.pkg.UniquePath)
+	err = adjustRelPath(hctx)
 	if err != nil {
 		return err
 	}
@@ -84,7 +83,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 	}
 
 	// format resources before writing
-	_, err = filters.FormatFilter{UseSchema: true}.Filter(resources)
+	_, err = filters.FormatFilter{UseSchema: true}.Filter(hctx.root.resources)
 	if err != nil {
 		return err
 	}
@@ -92,7 +91,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 	if e.Output == nil {
 		// the intent of the user is to modify resources in-place
 		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
-		err = pkgWriter.Write(resources)
+		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
 			return fmt.Errorf("failed to save resources: %w", err)
 		}
@@ -110,7 +109,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 			WrappingAPIVersion:    kio.ResourceListAPIVersion,
 			WrappingKind:          kio.ResourceListKind,
 		}
-		err = writer.Write(resources)
+		err = writer.Write(hctx.root.resources)
 		if err != nil {
 			return fmt.Errorf("failed to write resources: %w", err)
 		}
@@ -429,19 +428,20 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 // the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
 // adjustRelPath updates the path annotation by prepending the path of the package
 // a resource relative to the root package.
-func adjustRelPath(resources []*yaml.RNode, rootPath types.UniquePath) error {
+func adjustRelPath(hctx *hydrationContext) error {
+	resources := hctx.root.resources
 	for _, r := range resources {
 		pkgPath, err := pkg.GetPkgPathAnnotation(r)
 		if err != nil {
 			return err
 		}
-		// Note: kioutil.GetFileAnnotation does return OS specific
-		// path today, so this is not going to work on Windos
+		// Note: kioutil.GetFileAnnotation returns OS specific
+		// paths today, https://github.com/kubernetes-sigs/kustomize/issues/3749
 		currPath, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
 			return err
 		}
-		newPath, err := pathRelToRoot(string(rootPath), pkgPath, currPath)
+		newPath, err := pathRelToRoot(string(hctx.root.pkg.UniquePath), pkgPath, currPath)
 		if err != nil {
 			return err
 		}
@@ -455,8 +455,9 @@ func adjustRelPath(resources []*yaml.RNode, rootPath types.UniquePath) error {
 	return nil
 }
 
-// pathRelToRoot commputes resource's path relative to root package given
+// pathRelToRoot computes resource's path relative to root package given
 // absolute rootPkgPath, absolute subpkgPath and resource path relative to sub package.
+// All the inputs paths are assumed to be OS specfic.
 func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath string, err error) {
 	if !filepath.IsAbs(rootPkgPath) {
 		return "", fmt.Errorf("root package path %q must be absolute", rootPkgPath)
@@ -477,6 +478,7 @@ func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath s
 		return "", fmt.Errorf("subpackage %q must be relative to %q: %w",
 			rootPkgPath, subPkgPath, err)
 	}
+	// Note: Rel("/tmp", "/a") = "../", which isn't valid for our use-case.
 	dotdot := ".." + string(os.PathSeparator)
 	if strings.HasPrefix(subPkgRelPath, dotdot) || subPkgRelPath == ".." {
 		return "", fmt.Errorf("subpackage %q is not a descendant of %q", subPkgPath, rootPkgPath)
