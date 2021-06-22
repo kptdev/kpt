@@ -78,12 +78,13 @@ func TestPathRelToRoot(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			newPath, err := pathRelToRoot(test.rootPath,
-				test.subPkgPath, test.resourcePath)
-			assert.Equal(t, newPath, test.expected)
-			if test.errString != "" {
-				assert.ErrorContains(t, err, test.errString)
+		tc := test
+		t.Run(tc.name, func(t *testing.T) {
+			newPath, err := pathRelToRoot(tc.rootPath,
+				tc.subPkgPath, tc.resourcePath)
+			assert.Equal(t, newPath, tc.expected)
+			if tc.errString != "" {
+				assert.ErrorContains(t, err, tc.errString)
 			}
 		})
 	}
