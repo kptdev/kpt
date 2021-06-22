@@ -65,10 +65,11 @@ fn-args:
   the key of an already exported environment variable.
 
 --exec:
-  Path to the local executable binary to execute as a function. `eval` executes
-  only one function, so do not use `--image` flag with this flag. This is useful
-  for testing function locally during development. It enables faster dev iterations
-  by avoiding the function to be published as container image.
+  Path to the local executable binary to execute as a function. Quotes are needed
+  if the executable requires arguments. `eval` executes only one function, so do
+  not use `--image` flag with this flag. This is useful for testing function locally
+  during development. It enables faster dev iterations by avoiding the function to
+  be published as container image.
 
 --fn-config:
   Path to the file containing `functionConfig` for the function.
@@ -144,6 +145,12 @@ $ kpt fn eval DIR -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 # execute executable my-fn on the resources in DIR directory and
 # write output back to DIR
 $ kpt fn eval DIR --exec ./my-fn
+```
+
+```shell
+# execute executable my-fn with arguments on the resources in DIR directory and
+# write output back to DIR
+$ kpt fn eval DIR --exec "./my-fn arg1 arg2"
 ```
 
 ```shell

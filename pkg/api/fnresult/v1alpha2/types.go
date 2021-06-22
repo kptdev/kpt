@@ -26,6 +26,8 @@ type Result struct {
 	// Image and Exec are mutually exclusive
 	Image string `yaml:"image,omitempty"`
 	// ExecPath is the the absolute os-specific path to the executable file
+	// If user provides an executable file with commands, ExecPath should
+	// contain the entire input string.
 	ExecPath string `yaml:"exec,omitempty"`
 	// TODO(droot): This is required for making structured results subpackage aware.
 	// Enable this once test harness supports filepath based assertions.

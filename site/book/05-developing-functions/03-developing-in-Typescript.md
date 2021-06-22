@@ -94,9 +94,7 @@ Currently supported platforms: amd64 Linux/Mac
    ```
 
    ```shell
-   $ kpt fn source $CONFIGS \
-     | node dist/label_namespace_run.js -d label_name=color -d label_value=orange \
-     | kpt fn sink $CONFIGS
+   $ kpt fn eval $CONFIGS --exec "node dist/label_namespace_run.js" -- label_name=color label_value=orange
    ```
 
    As the name suggests, this function added the given label to all `Namespace`
@@ -142,9 +140,7 @@ Currently supported platforms: amd64 Linux/Mac
 1. Run `validate-rolebinding` on `example-configs`.
 
    ```shell
-   $ kpt fn source $CONFIGS \
-     | node dist/validate_rolebinding_run.js -d subject_name=alice@foo-corp.com \
-     | kpt fn sink $CONFIGS
+   $ kpt fn eval $CONFIGS --exec "node dist/validate_rolebinding_run.js" -- subject_name=alice@foo-corp.com
    ```
 
    Look at the changes made by the function:
@@ -219,9 +215,7 @@ Currently supported platforms: amd64 Linux/Mac
 1. Run `expand-team-cr` on `example-configs`.
 
    ```shell
-   $ kpt fn source $CONFIGS \
-    | node dist/expand_team_cr_run.js \
-    | kpt fn sink $CONFIGS
+   $ kpt fn eval $CONFIGS --exec "node dist/expand_team_cr_run.js"
    ```
 
    Look at the changes made by the function:
