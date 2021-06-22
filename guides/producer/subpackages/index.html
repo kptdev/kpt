@@ -1204,7 +1204,9 @@ if (!doNotTrack) {
           </div>
           <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
             
-  
+  <div class="pageinfo pageinfo-primary" style="background-color: orange; border: none; padding-top: 8px;">
+    This is the documentation for version 0.39. For documentation on the latest version of kpt, please see <a href="https://kpt.dev/">kpt.dev</a>.
+    </div>
 
             <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
 	<ol class="breadcrumb spb-1">
@@ -1326,8 +1328,8 @@ created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
 </span><span style="color:#4e9a06"></span>--pattern <span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>image<span style="color:#ce5c00;font-weight:bold">}</span>:<span style="color:#4e9a06">\$</span><span style="color:#ce5c00;font-weight:bold">{</span>tag<span style="color:#ce5c00;font-weight:bold">}</span>
 </code></pre></div><p>Output:</p>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">wordpress/mysql/
-unable to find setter with name image, creating new setter with value wordpress
-unable to find setter with name tag, creating new setter with value 4.8
+unable to find setter with name image, creating new setter with value mysql
+unable to find setter with name tag, creating new setter with value 5.6
 created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
 </code></pre></div><h3 id="list-and-verify-setterssubstitutions">List and verify setters/substitutions</h3>
 <p>Use list-setters command to verify that the setters and substitutions are created as expected</p>
@@ -1346,8 +1348,8 @@ created substitution <span style="color:#4e9a06">&#34;image-tag&#34;</span>
 wordpress/mysql/
          NAME             VALUE      SET BY   DESCRIPTION   COUNT   REQUIRED
   gcloud.core.project   PROJECT_ID                          <span style="color:#0000cf;font-weight:bold">3</span>       No
-  image                 wordpress                           <span style="color:#0000cf;font-weight:bold">1</span>       No
-  tag                   4.8                                 <span style="color:#0000cf;font-weight:bold">1</span>       No
+  image                 mysql                               <span style="color:#0000cf;font-weight:bold">1</span>       No
+  tag                   5.6                                 <span style="color:#0000cf;font-weight:bold">1</span>       No
   teamname              YOURTEAM                            <span style="color:#0000cf;font-weight:bold">3</span>       Yes
 --------------- ----------------- --------------
   SUBSTITUTION       PATTERN       REFERENCES
@@ -1461,7 +1463,7 @@ git push origin master
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified February 10, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/4532ab1e89c1e5062b93f0dc4b19499e5426c637">Fix: consumer guide link (documentation) (#1118) (4532ab1e)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 21, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/b43d6e943a4d289c5871568a7f4ac55ef7d77b20">Docs: Fix example output in the setters section (#1824) (b43d6e94)</a>
 </div>
 </div>
 

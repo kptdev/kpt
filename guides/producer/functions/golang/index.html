@@ -1209,7 +1209,9 @@ if (!doNotTrack) {
           </div>
           <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
             
-  
+  <div class="pageinfo pageinfo-primary" style="background-color: orange; border: none; padding-top: 8px;">
+    This is the documentation for version 0.39. For documentation on the latest version of kpt, please see <a href="https://kpt.dev/">kpt.dev</a>.
+    </div>
 
             <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
 	<ol class="breadcrumb spb-1">
@@ -1284,7 +1286,7 @@ kyaml libraries&rsquo; reference below.</p>
 <h2 id="hello-world-go-function">Hello World Go Function</h2>
 <h3 id="create-the-go-module">Create the go module</h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">go mod init github.com/user/repo
-go get sigs.k8s.io/kustomize/kyaml
+go get sigs.k8s.io/kustomize/kyaml@v0.10.6
 </code></pre></div><h3 id="create-the-maingo">Create the <code>main.go</code></h3>
 <div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8f5902;font-style:italic">// main.go
 </span><span style="color:#8f5902;font-style:italic"></span><span style="color:#204a87;font-weight:bold">package</span> <span style="color:#000">main</span>
@@ -1630,7 +1632,7 @@ to a file in the specified directory.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified November 9, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/a863150c8335ea63a476301f91a161f94cfd0362">docs: fix broken links for fn (a863150c)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 20, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/1cd76e5a6eea3b976d6815cf42a31fc26de13f7f">Pin version of kyaml used in Go developer guide (#2055) (1cd76e5a)</a>
 </div>
 </div>
 

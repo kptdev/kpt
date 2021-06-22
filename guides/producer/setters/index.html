@@ -1203,7 +1203,9 @@ if (!doNotTrack) {
           </div>
           <main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
             
-  
+  <div class="pageinfo pageinfo-primary" style="background-color: orange; border: none; padding-top: 8px;">
+    This is the documentation for version 0.39. For documentation on the latest version of kpt, please see <a href="https://kpt.dev/">kpt.dev</a>.
+    </div>
 
             <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
 	<ol class="breadcrumb spb-1">
@@ -1368,7 +1370,7 @@ kpt cfg <span style="color:#204a87">set</span> . replicas <span style="color:#00
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">metadata</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">name</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span>foo<span style="color:#f8f8f8;text-decoration:underline">
 </span><span style="color:#f8f8f8;text-decoration:underline"></span><span style="color:#204a87;font-weight:bold">spec</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline">
-</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">3</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$kpt-set&#34;:&#34;replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
+</span><span style="color:#f8f8f8;text-decoration:underline">  </span><span style="color:#204a87;font-weight:bold">replicas</span><span style="color:#000;font-weight:bold">:</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#f8f8f8;text-decoration:underline"> </span><span style="color:#8f5902;font-style:italic"># {&#34;$kpt-set&#34;:&#34;replicas&#34;}</span><span style="color:#f8f8f8;text-decoration:underline">
 </span></code></pre></div><h4 id="deleting-a-setter">Deleting a Setter</h4>
 <p>Setters may be deleted either manually (by editing the Kptfile directly), or
 programmatically (through the <code>delete-setter</code> command). The <code>delete-setter</code>
@@ -1658,7 +1660,7 @@ flag is required for array setters.</p>
 
 	
 	
-	<div class="text-muted mt-5 pt-3 border-top">Last modified October 27, 2020: <a  href="https://github.com/GoogleContainerTools/kpt/commit/69c9e8e23b71a808db1d312a96d802e681a085d3">Regenerate docs (69c9e8e2)</a>
+	<div class="text-muted mt-5 pt-3 border-top">Last modified May 19, 2021: <a  href="https://github.com/GoogleContainerTools/kpt/commit/dc715857a2851dc8947e6bed13588a09614cf7b9">Docs: Fix example state after invoking a setter (#1949) (dc715857)</a>
 </div>
 </div>
 

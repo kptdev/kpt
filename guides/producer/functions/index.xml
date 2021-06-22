@@ -274,7 +274,7 @@ kyaml libraries&amp;rsquo; reference below.&lt;/p&gt;
 &lt;h2 id=&#34;hello-world-go-function&#34;&gt;Hello World Go Function&lt;/h2&gt;
 &lt;h3 id=&#34;create-the-go-module&#34;&gt;Create the go module&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;go mod init github.com/user/repo
-go get sigs.k8s.io/kustomize/kyaml
+go get sigs.k8s.io/kustomize/kyaml@v0.10.6
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;create-the-maingo&#34;&gt;Create the &lt;code&gt;main.go&lt;/code&gt;&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;// main.go
 &lt;/span&gt;&lt;span style=&#34;color:#8f5902;font-style:italic&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#204a87;font-weight:bold&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color:#000&#34;&gt;main&lt;/span&gt;

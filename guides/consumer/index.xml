@@ -287,7 +287,6 @@ as a tree.  Flags may be provided to print specific fields under the resources.&
 will print arbitrary fields by providing the &lt;code&gt;--field&lt;/code&gt; flag.&lt;/p&gt;
 &lt;h2 id=&#34;filter-resources&#34;&gt;Filter resources&lt;/h2&gt;
 &lt;h3 id=&#34;filter-command&#34;&gt;Filter Command&lt;/h3&gt;
-&lt;!-- @filterExamples @verifyGuides--&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;kpt cfg grep &lt;span style=&#34;color:#4e9a06&#34;&gt;&amp;#34;spec.replicas&amp;gt;3&amp;#34;&lt;/span&gt; examples &lt;span style=&#34;color:#000;font-weight:bold&#34;&gt;|&lt;/span&gt; kpt cfg tree --replicas
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Grep can be used to filter resources by field values.  The output of &lt;a href=&#34;../../../reference/cfg/grep/&#34;&gt;&lt;code&gt;kpt cfg grep&lt;/code&gt;&lt;/a&gt; is the matching full resource configuration, which may be
 piped to &lt;a href=&#34;../../../reference/cfg/tree/&#34;&gt;&lt;code&gt;kpt cfg tree&lt;/code&gt;&lt;/a&gt; for rendering.&lt;/p&gt;
