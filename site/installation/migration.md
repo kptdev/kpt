@@ -332,7 +332,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
 [example kpt package]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
 [simple example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
-[function config]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution?id=specifying-functionconfig
+[function config]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
 [starlark runtime]: https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/
 [update guide]: https://kpt.dev/book/03-packages/05-updating-a-package
 [render guide]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
