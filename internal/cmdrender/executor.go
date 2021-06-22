@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
@@ -434,25 +435,54 @@ func adjustRelPath(resources []*yaml.RNode, rootPath types.UniquePath) error {
 		if err != nil {
 			return err
 		}
-		if pkgPath != "" {
-			relPath, err := filepath.Rel(string(rootPath), pkgPath)
-			if err != nil {
-				return err
-			}
-			currPath, _, err := kioutil.GetFileAnnotations(r)
-			if err != nil {
-				return err
-			}
-			newPath := filepath.Join(relPath, currPath)
-			if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
-				return err
-			}
+		// Note: kioutil.GetFileAnnotation does return OS specific
+		// path today, so this is not going to work on Windos
+		currPath, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		newPath, err := pathRelToRoot(string(rootPath), pkgPath, currPath)
+		if err != nil {
+			return err
+		}
+		if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
+			return err
 		}
 		if err = pkg.RemovePkgPathAnnotation(r); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// pathRelToRoot commputes resource's path relative to root package given
+// absolute rootPkgPath, absolute subpkgPath and resource path relative to sub package.
+func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath string, err error) {
+	if !filepath.IsAbs(rootPkgPath) {
+		return "", fmt.Errorf("root package path %q must be absolute", rootPkgPath)
+	}
+
+	if !filepath.IsAbs(subPkgPath) {
+		return "", fmt.Errorf("subpackage path %q must be absolute", subPkgPath)
+	}
+
+	if subPkgPath == "" {
+		// empty subpackage path means resource belongs to the root package
+		return resourcePath, nil
+	}
+
+	// subpackage's path relative to the root package
+	subPkgRelPath, err := filepath.Rel(rootPkgPath, subPkgPath)
+	if err != nil {
+		return "", fmt.Errorf("subpackage %q must be relative to %q: %w",
+			rootPkgPath, subPkgPath, err)
+	}
+	dotdot := ".." + string(os.PathSeparator)
+	if strings.HasPrefix(subPkgRelPath, dotdot) || subPkgRelPath == ".." {
+		return "", fmt.Errorf("subpackage %q is not a descendant of %q", subPkgPath, rootPkgPath)
+	}
+	relativePath = filepath.Join(subPkgRelPath, filepath.Clean(resourcePath))
+	return relativePath, nil
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
