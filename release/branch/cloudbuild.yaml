@@ -53,14 +53,14 @@ steps:
   # Clone the kpt repo. The code already set up by cloud build is a copy
   # and not actually a git checkout, so we need to do this manually.
   - name: 'gcr.io/cloud-builders/git'
-    args: ['clone', 'git@github.com:${_GITHUB_USER}/kpt.git']
+    args: ['clone', 'git@github.com:${_GITHUB_USER}/kpt.git', 'go/src/github.com/GoogleContainerTools/kpt']
     volumes:
       - name: home
         path: /root
 
   # Make sure we check out the version of the code that triggered the run.
   - name: 'gcr.io/cloud-builders/git'
-    dir: 'kpt'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     args: ['checkout', '${COMMIT_SHA}']
     volumes:
       - name: home
@@ -70,14 +70,14 @@ steps:
   # jq, gzip, golang, bash, etc.) to build kpt tarball. This image
   # (kpt-builder) is re-used on most steps.
   - name: 'gcr.io/cloud-builders/docker'
-    dir: 'kpt'
-    args: ['build', '-f', '/workspace/kpt/release/Dockerfile.kpt-build', '-t', 'kpt-builder', '.']
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
+    args: ['build', '-f', 'release/Dockerfile.kpt-build', '-t', 'kpt-builder', '.']
 
   # run e2e tests and linting
   - name: 'kpt-builder'
     args: ['make', 'all']
     env: ['GO111MODULE=on']
-    dir: 'kpt'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     volumes:
       - name: go-modules
         path: /go
@@ -86,16 +86,16 @@ steps:
 
   # remove any dirty files after running the build
   - name: gcr.io/cloud-builders/git
-    dir: 'kpt'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     args: ['reset', '--hard']
     id: 'git-reset'
 
   # FYI: If cross-platform build issues happen, then stop caching the modules in the volume.
   # build windows
   - name: gcr.io/cloud-builders/go
-    env: ['GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-ldflags', '-X main.version=${BRANCH_NAME}', '-o', '/workspace/bin/${BRANCH_NAME}/windows_amd64/kpt.exe', '.']
-    dir: 'kpt'
+    env: ['GOPATH=/workspace/go', 'GOOS=windows', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
+    args: ['build', '-ldflags', '-X main.version=master', '-o', '/workspace/bin/master/windows_amd64/kpt.exe', '.']
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     volumes:
       - name: go-modules
         path: /go
@@ -103,9 +103,9 @@ steps:
 
   # build linux
   - name: gcr.io/cloud-builders/go
-    env: ['GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-ldflags', '-X main.version=${BRANCH_NAME}', '-o', '/workspace/bin/${BRANCH_NAME}/linux_amd64/kpt', '.']
-    dir: 'kpt'
+    env: ['GOPATH=/workspace/go', 'GOOS=linux', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
+    args: ['build', '-ldflags', '-X main.version=master', '-o', '/workspace/bin/master/linux_amd64/kpt', '.']
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     volumes:
       - name: go-modules
         path: /go
@@ -113,9 +113,9 @@ steps:
 
   # build darwin
   - name: gcr.io/cloud-builders/go
-    env: ['GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
-    args: ['go', 'build', '-ldflags', '-X main.version=${BRANCH_NAME}', '-o', '/workspace/bin/${BRANCH_NAME}/darwin_amd64/kpt', '.']
-    dir: 'kpt'
+    env: ['GOPATH=/workspace/go', 'GOOS=darwin', 'GOARCH=amd64', 'CGO_ENABLED=0', 'GO111MODULE=on']
+    args: ['build', '-ldflags', '-X main.version=master', '-o', '/workspace/bin/master/darwin_amd64/kpt', '.']
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     volumes:
       - name: go-modules
         path: /go
@@ -123,23 +123,23 @@ steps:
 
   # build docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:${BRANCH_NAME}', '-f', 'release/Dockerfile', '.' ]
-    dir: 'kpt'
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/kpt:master', '-f', 'release/Dockerfile', '.' ]
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
 
   # push the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/kpt:${BRANCH_NAME}']
-    dir: 'kpt'
+    args: ['push', 'gcr.io/$PROJECT_ID/kpt:master']
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
 
   # push the binaries
   - name: 'gcr.io/cloud-builders/gsutil'
     args: ['cp', '-r', '-a', 'public-read', '/workspace/bin/', 'gs://${_GCS_BUCKET}/']
-    dir: 'kpt'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
 
   # Check out the gh-pages branch under the public directory
   - name: 'gcr.io/cloud-builders/git'
     args: ['worktree', 'add', '-B', 'gh-pages', 'public', 'origin/gh-pages']
-    dir: 'kpt'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     volumes:
       - name: home
         path: /root
@@ -170,7 +170,7 @@ steps:
         sed -i 's/"..\/docs"/"..\/public"/g' site/config.toml
         rm -fr public/*
         (cd site && HUGO_ENV="production" /hugo/hugo)
-    dir: 'kpt'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt'
     volumes:
       - name: hugo
         path: /hugo
@@ -178,7 +178,7 @@ steps:
   # Add the new content of the public folder
   - name: 'gcr.io/cloud-builders/git'
     args: ['add', '.']
-    dir: 'kpt/public'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt/public'
     volumes:
       - name: home
         path: /root
@@ -194,7 +194,7 @@ steps:
         else
           echo "no changes";
         fi
-    dir: 'kpt/public'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt/public'
     volumes:
       - name: home
         path: /root
@@ -212,7 +212,7 @@ steps:
         else
           echo "no changes, skipping push"
         fi
-    dir: 'kpt/public'
+    dir: 'go/src/github.com/GoogleContainerTools/kpt/public'
     volumes:
       - name: home
         path: /root
