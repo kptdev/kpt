@@ -40,7 +40,7 @@ Please update the package to the latest format by following https://kpt.dev/inst
 
 	deprecatedv1Alpha2KptfileMsg = `
 Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
-Please run "kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.1" to upgrade the package and retry.
+Please run "kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.2" to upgrade the package and retry.
 `
 
 	unknownKptfileResourceMsg = `

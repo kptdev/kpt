@@ -70,7 +70,7 @@ directory by default.
 | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]`                      | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [flags] [LOCAL_DEST_DIRECTORY]` <br> Fetch a remote package from a git subdirectory and writes it to a new local directory.                                                                           |
 | `kpt pkg init DIR [flags]`                                                                        | `kpt pkg init [DIR] [flags]` <br> Initializes an existing empty directory as a kpt package by adding a Kptfile.                                                                                                                                      |
 | `kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]`                                                  | `kpt pkg update [PKG_PATH][@version] [flags]` <br> Pulls in upstream changes and merges them into a local package.                                                                                                                                   |
-| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image gcr.io/kpt-fn/fix:v0.1` <br> Fix a local package which is using deprecated features.                                                                                                                                        |
+| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image gcr.io/kpt-fn/fix:v0.2` <br> Fix a local package which is using deprecated features.                                                                                                                                        |
 | `kpt pkg desc DIR [flags]`                                                                        | Deprecated in favor of reading Kptfile directly                                                                                                                                                                                                      |
 | `kpt pkg diff DIR[@VERSION] [flags]`                                                              | `kpt pkg diff [PKG_PATH][@version] [flags]` <br> Display differences between upstream and local packages.                                                                                                                                            |
 | `kpt cfg fmt DIR/STDIN [flags]`                                                                   | `kpt fn eval --image gcr.io/kpt-fn/format:unstable`                                                                                                                                                                                                  |
@@ -211,7 +211,7 @@ Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:v0.1 --include-meta-resources --truncate-output=false
+$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
 ```
 
 ##### Changes made by the function
