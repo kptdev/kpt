@@ -1,5 +1,5 @@
 # Docs need to have a single approver to maintain consistency.
-/site @frankfarzan
+/site @droot @frankfarzan
 
 # These tests enforce the behavior for fn
 kpt/e2e/testdata/fn-render @droot
