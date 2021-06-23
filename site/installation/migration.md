@@ -190,7 +190,7 @@ information on the new structure of function results.
 
 Kpt live in `v1.0` no longer uses an inventory object to track the grouping of
 resources in the cluster. Instead, it uses a more expressive `ResourceGroup`
-CRD. Please refer to the detailed guide on [migrating inventory objects] to the
+CRD. Please refer to the user guide on [migrating inventory objects] to the
 `ResourceGroup` equivalent.
 
 ## Migration Steps
@@ -363,7 +363,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
 [auto-setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
 [migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/live/alpha/
-[live migration]: https://googlecontainertools.github.io/kpt/reference/live/alpha/
+[live migration]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
 [configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
 [example kpt package]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
 [simple example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
