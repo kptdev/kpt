@@ -18,7 +18,9 @@ window.$docsify = {
   auto2top: true,
   repo: "true",
   pagination: {
-    crossChapter: true,
+    previousText: 'PREV',
+    nextText: 'NEXT',
+    crossChapter: true
   },
   corner: {
     url: "https://github.com/GoogleContainerTools/kpt",
