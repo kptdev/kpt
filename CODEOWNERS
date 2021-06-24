@@ -4,6 +4,9 @@
 /package-examples/nginx/ @droot @mortent
 /package-examples/wordpress/ @droot @mortent
 
+# Schemas changes additional scrutiny.
+/pkg/api @droot @mortent
+
 # These tests enforce the behavior for fn
 kpt/e2e/testdata/fn-render @droot
 kpt/e2e/testdata/fn-eval @droot
