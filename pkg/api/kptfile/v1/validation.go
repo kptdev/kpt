@@ -60,7 +60,7 @@ func (p *Pipeline) validate(pkgPath types.UniquePath) error {
 }
 
 func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) error {
-	err := validateFunctionName(f.Image)
+	err := ValidateFunctionName(f.Image)
 	if err != nil {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d].image", fnType, idx),
@@ -95,7 +95,7 @@ func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) er
 	return nil
 }
 
-// validateFunctionName validates the function name.
+// ValidateFunctionName validates the function name.
 // According to Docker implementation
 // https://github.com/docker/distribution/blob/master/reference/reference.go. A valid
 // name definition is:
@@ -106,14 +106,16 @@ func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) er
 //	path-component                  := alpha-numeric [separator alpha-numeric]*
 // 	alpha-numeric                   := /[a-z0-9]+/
 //	separator                       := /[_.]|__|[-]*/
-func validateFunctionName(name string) error {
+func ValidateFunctionName(name string) error {
 	pathComponentRegexp := `(?:[a-z0-9](?:(?:[_.]|__|[-]*)[a-z0-9]+)*)`
 	domainComponentRegexp := `(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`
 	domainRegexp := fmt.Sprintf(`%s(?:\.%s)*(?:\:[0-9]+)?`, domainComponentRegexp, domainComponentRegexp)
 	nameRegexp := fmt.Sprintf(`(?:%s\/)?%s(?:\/%s)*`, domainRegexp,
 		pathComponentRegexp, pathComponentRegexp)
 	tagRegexp := `(?:[\w][\w.-]{0,127})`
-	r := fmt.Sprintf(`^(?:%s(?:\:%s)?)$`, nameRegexp, tagRegexp)
+	shaRegexp := `(sha256:[a-zA-Z0-9]{64})`
+	versionRegexp := fmt.Sprintf(`(%s|%s)`, tagRegexp, shaRegexp)
+	r := fmt.Sprintf(`^(?:%s(?:(\:|@)%s)?)$`, nameRegexp, versionRegexp)
 
 	matched, err := regexp.MatchString(r, name)
 	if err != nil {

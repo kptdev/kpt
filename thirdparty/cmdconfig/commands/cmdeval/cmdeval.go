@@ -15,6 +15,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/google/shlex"
@@ -161,6 +162,9 @@ func (r *EvalFnRunner) getFunctionSpec() (*runtimeutil.FunctionSpec, []string, e
 	fn := &runtimeutil.FunctionSpec{}
 	var execArgs []string
 	if r.Image != "" {
+		if err := kptfile.ValidateFunctionName(r.Image); err != nil {
+			return nil, nil, err
+		}
 		fn.Container.Image = r.Image
 	} else if r.Exec != "" {
 		// check the flags that doesn't make sense with exec function

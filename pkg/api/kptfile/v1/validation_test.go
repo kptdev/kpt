@@ -225,12 +225,17 @@ func TestValidateFunctionName(t *testing.T) {
 			"Foo/FarB",
 			false,
 		},
+		{
+			"example.com/foo/generate-folders@sha256:3434a5299f8fcb2c2ade9975e56ca5a622427b9d5a9a971640765e830fb90a0e",
+		true,
+		},
+
 	}
 
 	for _, n := range inputs {
 		n := n
 		t.Run(n.Name, func(t *testing.T) {
-			err := validateFunctionName(n.Name)
+			err := ValidateFunctionName(n.Name)
 			if n.Valid && err != nil {
 				t.Fatalf("function name %s should be valid", n.Name)
 			}
