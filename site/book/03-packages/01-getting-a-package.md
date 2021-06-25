@@ -41,7 +41,7 @@ info:
   description: This is an example wordpress package with mysql subpackage.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         app: wordpress
   validators:
@@ -75,7 +75,7 @@ info:
   description: This is an example mysql package.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         tier: mysql
 ```

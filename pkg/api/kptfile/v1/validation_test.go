@@ -49,7 +49,7 @@ func TestKptfileValidate(t *testing.T) {
 					},
 					Validators: []Function{
 						{
-							Image: "gcr.io/kpt-functions/policy-controller-validate",
+							Image: "gcr.io/kpt-fn/gatekeeper",
 						},
 					},
 				},
@@ -166,7 +166,7 @@ func TestValidateFunctionName(t *testing.T) {
 	}
 	inputs := []input{
 		{
-			"gcr.io/kpt-functions/generate-folders",
+			"gcr.io/kpt-fn/generate-folders",
 			true,
 		},
 		{
@@ -174,7 +174,7 @@ func TestValidateFunctionName(t *testing.T) {
 			true,
 		},
 		{
-			"gcr.io/kpt-functions/generate-folders:unstable",
+			"gcr.io/kpt-fn/generate-folders:unstable",
 			true,
 		},
 		{
@@ -182,7 +182,7 @@ func TestValidateFunctionName(t *testing.T) {
 			true,
 		},
 		{
-			"gcr.io/kpt-functions/generate-folders:v1.2.3-alpha1",
+			"gcr.io/kpt-fn/generate-folders:v1.2.3-alpha1",
 			true,
 		},
 		{
