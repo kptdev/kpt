@@ -58,13 +58,13 @@ license:
 	GOBIN=$(GOBIN) scripts/update-license.sh
 
 lint:
-	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
+	(which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
 	$(GOBIN)/golangci-lint run ./...
 
 # TODO: enable this as part of `all` target when it works for go-errors
 # https://github.com/google/go-licenses/issues/15
 license-check:
-	(which go-licensesscs || go get https://github.com/google/go-licenses)
+	(which go-licensesscs || go install https://github.com/google/go-licenses)
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
